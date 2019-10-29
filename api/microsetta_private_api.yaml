@@ -8,24 +8,25 @@
 openapi: 3.0.0
 info:
   description: Private Microsetta RESTful API
-  version: "1.0.0-oas3"
+  version: "1.0.1-oas3"
   title: Private Microsetta RESTful API (OAS 3.0)
 servers:
-  - url: http://localhost:8082/api
+  - url: 'http://localhost:8082/api'
 paths:
-  /account/{username}:
+  '/account/{username}':
     get:
       operationId: implementation.read
       tags:
         - Account
-      summary: Get user account information 
-      description: Get user account information 
+      summary: Get user account information
+      description: Get user account information
       parameters:
         - name: username
           in: path
           description: Username to get details of
-          type: string
-          required: True
+          schema:
+            type: string
+          required: true
       responses:
         '200':
           description: Successfully returned account information
@@ -65,8 +66,9 @@ paths:
         - name: username
           in: path
           description: Username to get details of
-          type: string
-          required: True
+          schema:
+            type: string
+          required: true
         - name: fname
           in: query
           description: First name of user
@@ -138,10 +140,9 @@ paths:
           required: true
           schema:
             type: string
-
       responses:
         '201':
-          description: 'Successfully registered user'
+          description: Successfully registered user
         '401':
           description: Invalid username
   '/account/{username}/verify':
@@ -292,7 +293,6 @@ paths:
           description: Invalid or missing token
         '404':
           description: Sample id not found
-
 components:
   securitySchemes:
     Oauth2Scheme:
@@ -300,6 +300,7 @@ components:
       x-tokenInfoFunc: implementation.verify_and_decode_token
       flows:
         authorizationCode:
-          authorizationUrl: 'https://example.com/oauth2/dialog'
+          authorizationUrl: 'https://example.com/oauth2/dialog' # dummy; replace with real
+          tokenUrl: 'https://example.com/oauth2/token' # dummy; replace with real
           scopes:
             uid: Unique identifier of the user accessing the service.
