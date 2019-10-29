@@ -13,13 +13,19 @@ info:
 servers:
   - url: http://localhost:8082/api
 paths:
-  /account:
+  /account/{username}:
     get:
       operationId: implementation.read
       tags:
         - Account
-      summary: Get account information for the user associated with the oauth2 access token
-      description: Get account information for the user associated with the oauth2 access token
+      summary: Get user account information 
+      description: Get user account information 
+      parameters:
+        - name: username
+          in: path
+          description: Username to get details of
+          type: string
+          required: True
       responses:
         '200':
           description: Successfully returned account information
@@ -28,12 +34,20 @@ paths:
               schema:
                 type: object
                 properties:
-                  fname:
+                  first_name:
                     type: string
-                  lname:
+                  last_name:
                     type: string
-                  consented:
-                    type: boolean
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  account_type:
+                    type: string
+                  email:
+                    type: string
+                  location:
+                    type: string
         '401':
           description: Invalid or missing token
         '404':
@@ -41,38 +55,18 @@ paths:
       security:
         - Oauth2Scheme:
             - uid
-  /account/settings:
-    get:
-      operationId: implementation.read_settings
-      tags:
-        - Settings
-      summary: Get settings for user account associated with the oauth2 access token
-      description: Get settings user account associated with the oauth2 access token
-      responses:
-        '200':
-          description: Successfully returned account settings information
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  fname:
-                    type: string
-                  lname:
-                    type: string
-                  email:
-                    type: string
-        '401':
-          description: Invalid or missing token
-        '404':
-          description: User not found
     put:
       operationId: implementation.set_settings
       tags:
         - Settings
-      summary: Set settings for account associated with the user's API token
-      description: Set settings for account associated with the user's API token
+      summary: Set settings for the user account
+      description: Set settings for the user account
       parameters:
+        - name: username
+          in: path
+          description: Username to get details of
+          type: string
+          required: True
         - name: fname
           in: query
           description: First name of user
@@ -99,93 +93,110 @@ paths:
               schema:
                 type: object
                 properties:
-                  fname:
+                  first_name:
                     type: string
-                  lname:
+                  last_name:
                     type: string
                   email:
                     type: string
         '401':
-          description: Invalid or missing token
-        '404':
-          description: User not found
-  '/account/kit/{kit_id}':
+          description: Invalid or unknown username
+    post:
+      operationId: implementation.register
+      tags:
+        - User
+      summary: Register user account
+      description: Register user account
+      parameters:
+        - name: username
+          in: path
+          description: Username to register
+          required: true
+          schema:
+            type: string
+        - name: first_name
+          in: query
+          description: First name of user
+          required: true
+          schema:
+            type: string
+        - name: last_name
+          in: query
+          description: Last name of user
+          required: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: User's email
+          required: true
+          schema:
+            type: string
+        - name: location
+          in: query
+          description: The user's address
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '201':
+          description: 'Successfully registered user'
+        '401':
+          description: Invalid username
+  '/account/{username}/verify':
     get:
       operationId: implementation.check_verified
       tags:
         - Kit
-      summary: Check if kit is registered
-      description: Check if kit is registered
+      summary: Check if username is registered
+      description: Check if username is registered
       parameters:
-        - name: kit_id
+        - name: username
           in: path
-          description: Id of kit to check if kit is verified
+          description: Username to check if verified
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         '200':
           description: >-
-            Successfully checked if kit is verified; see response for
+            Successfully checked if username is verified; see response for
             verification status
           content:
             application/json:
               schema:
                 properties:
-                  kit_id:
+                  username:
                     type: integer
                   is_verified:
                     type: boolean
         '401':
-          description: Invalid or missing token
-        '404':
-          description: Kit id not found
+          description: Invalid or unknown username
     put:
       operationId: implementation.verify
       tags:
-        - Kit
-      summary: Verify kit
-      description: Verify kit
+        - User
+      summary: Verify user
+      description: Verify user
       parameters:
-        - name: kit_id
+        - name: username
           in: path
-          description: Id of kit to verify
+          description: Username to verify
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         '200':
-          description: Successfully verified kit
+          description: Successfully verified user
           content:
             application/json:
               schema:
                 properties:
                   kit_id:
-                    type: integer
+                    type: string
         '401':
-          description: Invalid or missing token
-        '404':
-          description: Kit id not found
-    post:
-      operationId: implementation.register
-      tags:
-        - Kit
-      summary: Register kit id to user account
-      description: Register kit id to user account
-      parameters:
-        - name: kit_id
-          in: path
-          description: Id of kit to register
-          required: true
-          schema:
-            type: integer
-      responses:
-        '201':
-          description: 'Successfully registered kit id, adding it to account''s kits'
-        '401':
-          description: Invalid or missing token
-        '404':
-          description: Kit id not found
+          description: Invalid or unknown username
   /sample:
     get:
       operationId: implementation.read_samples
