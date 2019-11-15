@@ -12,6 +12,8 @@ and associated file https://github.com/realpython/materials/blob/master/flask-co
 """
 
 from flask import make_response, abort
+import jwt
+from base64 import b64decode
 
 
 # hardcoded mapping of access tokens to uid, standing in for a
@@ -21,8 +23,24 @@ USER_NAME_BY_TOKEN = {
     '456': 'rms'
 }
 
+TOKEN_KEY = "QvMWMnlOqBbNsM88AMxpzcJMbBUu/w8U9joIaNYjuEbwEYhLIB5FqEoFWnfLN3JZN4SD0LAtZOwFNqyMLmNruBLqEvbpjQzM6AY+BfXGxDVFL65c9Xw8ocd6t1nF6YvTpHGB4NJhUwngjIQmFx+6TCa5wArtEqUeoIc1ukVTYbioRkxzi5ju8cc9/PoInB0c7wugMz5ihAPWohpDc4kCotYv7C2K/e9J9CPdwbiLJKYKxO4zSQAqk+Sj4wRcn7bJqIOIT6BlvvnzRGXYG33qXAxGylM4UySj7ltwSGOIY0/JUvKEej3fX17C8wWtJvrjbFQacNhoglqfWq2GeOdRSA== "
 
-def verify_and_decode_token(access_token) -> dict:
+
+def not_yet_implemented():
+    return {'message': 'functionality not yet implemented'}
+
+
+def verify_and_decode_token(access_token= "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbXlhcHAuY29tLyIsInN1YiI6InVzZXJzL3VzZXIxMjM0Iiwic2NvcGUiOiJzZWxmLCBhZG1pbnMiLCJqdGkiOiJkMzBkMzA5ZS1iZTQ5LTRjOWEtYjdhYi1hMGU3MTIwYmFlZDMiLCJpYXQiOjE1NzIzNzY4OTUsImV4cCI6MTU3MjM4MDQ5NX0.EMooERuy2Z4tC_TsXJe6Vx8yCgzTzI_qh84a5DsKPRw") -> dict:
+    token_header = jwt.get_unverified_header(access_token)
+    print(token_header)
+    if token_header['typ'] != "JWT":
+        raise ValueError("Provided access token is not in JWT format: {0}".format(access_token))
+    alg_type = token_header['alg']
+    unverified = jwt.decode(access_token, verify=False)
+    print(unverified)
+    decoded = jwt.decode(access_token, b64decode(TOKEN_KEY), algorithms=alg_type)
+    print(decoded)
+
     user_name = USER_NAME_BY_TOKEN.get(access_token)
 
     if not user_name:
@@ -31,7 +49,7 @@ def verify_and_decode_token(access_token) -> dict:
     return {'uid': user_name, 'scope': ['uid']}
 
 
-def read(user):
+def register_account(user):
     if user is None or user not in ["jdoe", "rms"]:
         abort(
             401, "Invalid or missing user {0}".format(user)
@@ -40,73 +58,75 @@ def read(user):
         abort(
             404, "User {0} not found".format(user)
         )
-    return {"fname": "Jane", "lname": "Doe", "consented": True}
+    return {"first_name": "Jane", "last_name": "Doe",
+            "created_at": True, "updated_at:": True,
+            "type": "something", "account_type": "something",
+            "email": "jdoe@foo.com", "location": "here"}
 
 
-def check_verified(kit_id):
-    if kit_id == 1234:
-        return {"kit_id": kit_id, "is_verified": True}
-    elif kit_id == 5678:
-        return {"kit_id": kit_id, "is_verified": False}
-    else:
-        abort(
-            404, "Kit id {0} not found".format(kit_id)
-        )
-
-
-def verify(kit_id):
-    if kit_id in [1234, 5678]:
-        return {"kit_id": kit_id}
-    else:
-        abort(
-            404, "Kit id {0} not found".format(kit_id)
-        )
-
-
-def register(kit_id):
-    if kit_id in [1234, 5678]:
-        return make_response(
-            "{0} successfully registered".format(kit_id), 201
-        )
-    else:
-        abort(
-            404, "Kit id {0} not found".format(kit_id)
-        )
-
-
-def read_settings():
+def read_account():
     return {"fname": "Jane", "lname": "Doe", "email": "jdoe@gmail.com"}
 
 
-def set_settings(fname, lname, email):
+def update_account(fname, lname, email):
     return {"fname": fname, "lname": lname, "email": email}
 
 
-def read_samples():
-    return [{"sample_id": 1, "collection_date": "2016-10-01", "status": "not arrived"},
-            {"sample_id":2, "collection_date": "2019-09-04", "status": "sequenced"}]
+def read_sources(acct_id):
+    return not_yet_implemented()
 
 
-def add_sample(sample_id, collection_date):
-    if sample_id in [1, 2]:
-        abort(
-            403, "Sample id {0} already exists".format(sample_id)
-        )
-    return make_response(
-        "{0} successfully registered".format(sample_id), 201
-    )
+def create_source(acct_id):
+    return not_yet_implemented()
 
 
-def set_sample_status(sample_id, status):
-    if sample_id in [1, 2]:
-        return {"sample_id": sample_id, "status": status}
-    else:
-        abort(
-            404, "Sample id {0} not found".format(sample_id)
-        )
+def read_source(acct_id, source_id):
+    return not_yet_implemented()
 
 
-def set_password(password):
-    return make_response(
-        "Successfully updated password", 200
-    )
+def update_source(acct_id, source_id):
+    return not_yet_implemented()
+
+
+def read_answered_surveys(acct_id, source_id):
+    return not_yet_implemented()
+
+
+def read_answered_survey(acct_id, source_id, answered_survey_id):
+    return not_yet_implemented()
+
+
+def read_sample_associations(acct_id, source_id):
+    return not_yet_implemented()
+
+
+def associate_sample(acct_id, source_id):
+    return not_yet_implemented()
+
+
+def read_sample_association(acct_id, source_id, sample_association_id):
+    return not_yet_implemented()
+
+
+def unassociate_sample(acct_id, source_id, sample_association_id):
+    return not_yet_implemented()
+
+
+def read_answered_survey_associations(acct_id, source_id, sample_association_id):
+    return not_yet_implemented()
+
+
+def associate_answered_survey(acct_id, source_id, sample_association_id):
+    return not_yet_implemented()
+
+
+def unassociate_answered_survey(acct_id, source_id, sample_association_id, survey_association_id):
+    return not_yet_implemented()
+
+
+def read_kits(kit_name, kit_code):
+    return not_yet_implemented()
+
+
+def read_kit(kit_id):
+    return not_yet_implemented()

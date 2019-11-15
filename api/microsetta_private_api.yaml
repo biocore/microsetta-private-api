@@ -1,299 +1,725 @@
-# Loosely based off examples in https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
-# and associated file https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/swagger.yml,
-# but then auto-converted to OAS 3 from Swagger 2 using SwaggerHub's converter tool
-#
 # Note that in reality essentially all of these functions would require oath security, but it makes them hard to test
 # through the swagger web ui (as you have to send the authorization header, I don't yet know how to do from there...?)
 # so only /account get has oath implemented.
 openapi: 3.0.0
 info:
   description: Private Microsetta RESTful API
-  version: "1.0.1-oas3"
+  version: "0.3.0-oas3"
   title: Private Microsetta RESTful API (OAS 3.0)
 servers:
   - url: 'http://localhost:8082/api'
 paths:
-  '/account/{username}':
+  '/accounts':
+    # NB: Not including a get: seems like seeing all accounts is an extension for the future (for admin?)
+    post:
+      operationId: implementation.register_account
+      tags:
+        - Account
+      summary: Register new user account
+      description: Register new user account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/first_name'
+              - $ref: '#/components/schemas/last_name'
+              - $ref: '#/components/schemas/email'
+              - $ref: '#/components/schemas/address'
+              - $ref: '#/components/schemas/account_type'
+              - $ref: '#/components/schemas/kit_name'
+              - $ref: '#/components/schemas/kit_code'
+      responses:
+        '201':
+          description: Successfully registered new user account
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+  '/accounts/{acct_id}':
     get:
-      operationId: implementation.read
+      operationId: implementation.read_account
       tags:
         - Account
       summary: Get user account information
       description: Get user account information
       parameters:
-        - name: username
-          in: path
-          description: Username to get details of
-          schema:
-            type: string
-          required: true
+        - $ref: '#/components/parameters/acct_id'
       responses:
         '200':
           description: Successfully returned account information
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  first_name:
-                    type: string
-                  last_name:
-                    type: string
-                  created_at:
-                    type: string
-                  updated_at:
-                    type: string
-                  account_type:
-                    type: string
-                  email:
-                    type: string
-                  location:
-                    type: string
+                $ref: '#/components/schemas/account'
         '401':
-          description: Invalid or missing token
+          $ref: '#/components/responses/401Unauthorized'
         '404':
-          description: User not found
+          $ref: '#/components/responses/404NotFound'
       security:
         - Oauth2Scheme:
             - uid
     put:
-      operationId: implementation.set_settings
+      operationId: implementation.update_account
       tags:
-        - Settings
-      summary: Set settings for the user account
-      description: Set settings for the user account
+        - Account
+      summary: Update user account information
+      description: Update user account information
       parameters:
-        - name: username
-          in: path
-          description: Username to get details of
-          schema:
-            type: string
-          required: true
-        - name: fname
-          in: query
-          description: First name of user
-          required: true
-          schema:
-            type: string
-        - name: lname
-          in: query
-          description: Last name of user
-          required: true
-          schema:
-            type: string
-        - name: email
-          in: query
-          description: User's email
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/acct_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/first_name'
+                - $ref: '#/components/schemas/last_name'
+                - $ref: '#/components/schemas/email'
+                - $ref: '#/components/schemas/address'
+                - $ref: '#/components/schemas/account_type'
       responses:
         '200':
-          description: Successfully set account settings information
+          description: Successfully updated user account information
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  first_name:
-                    type: string
-                  last_name:
-                    type: string
-                  email:
-                    type: string
+                $ref: '#/components/schemas/account'
         '401':
-          description: Invalid or unknown username
-    post:
-      operationId: implementation.register
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+  '/accounts/{acct_id}/sources':
+    get:
+      operationId: implementation.read_sources
       tags:
-        - User
-      summary: Register user account
-      description: Register user account
+        - Sources
+      summary: Get sources associated with account, filtered by source type
+      description: Get sources associated with account, filtered by source type
       parameters:
-        - name: username
-          in: path
-          description: Username to register
-          required: true
-          schema:
-            type: string
-        - name: first_name
-          in: query
-          description: First name of user
-          required: true
-          schema:
-            type: string
-        - name: last_name
-          in: query
-          description: Last name of user
-          required: true
-          schema:
-            type: string
-        - name: email
-          in: query
-          description: User's email
-          required: true
-          schema:
-            type: string
-        - name: location
-          in: query
-          description: The user's address
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_type'
+      responses:
+        '200':
+          description: Successfully returned sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:  # TODO: should I return whole source objects or just their ids?
+                  type: string
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: implementation.create_source
+      tags:
+        - Source
+      summary: Create new source of specified type
+      description: Create new source of specified type
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/human_source'
+                - $ref: '#/components/schemas/animal_source'
+                - $ref: '#/components/schemas/environmental_source'
+              example:
+                source_type: human
+                source_name: Jane Doe
+                is_consented: false
+                # NB: Getting the consent text that this source should agree to is outside the scope of this api
       responses:
         '201':
-          description: Successfully registered user
-        '401':
-          description: Invalid username
-  '/account/{username}/verify':
-    get:
-      operationId: implementation.check_verified
-      tags:
-        - Kit
-      summary: Check if username is registered
-      description: Check if username is registered
-      parameters:
-        - name: username
-          in: path
-          description: Username to check if verified
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: >-
-            Successfully checked if username is verified; see response for
-            verification status
+          description: Successfully created new source
+          headers:
+            Location:
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                properties:
-                  username:
-                    type: integer
-                  is_verified:
-                    type: boolean
+                oneOf:
+                  - $ref: '#/components/schemas/human_source'
+                  - $ref: '#/components/schemas/animal_source'
+                  - $ref: '#/components/schemas/environmental_source'
         '401':
-          description: Invalid or unknown username
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+  '/accounts/{acct_id}/sources/{source_id}':
+    get:
+      operationId: implementation.read_source
+      tags:
+        - Source
+      summary: Get information about source
+      description: Get information about source
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+      responses:
+        '200':
+          description: Successfully returned source information
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/human_source'
+                  - $ref: '#/components/schemas/animal_source'
+                  - $ref: '#/components/schemas/environmental_source'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     put:
-      operationId: implementation.verify
+      operationId: implementation.update_source
       tags:
-        - User
-      summary: Verify user
-      description: Verify user
+        - Source
+      summary: Update information for source
+      description: Update information for source
       parameters:
-        - name: username
-          in: path
-          description: Username to verify
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/human_source'
+                - $ref: '#/components/schemas/animal_source'
+                - $ref: '#/components/schemas/environmental_source'
+              example:
+                source_type: human
+                source_name: Jane Doe
+                is_consented: false
       responses:
         '200':
-          description: Successfully verified user
+          description: Successfully updated source information
           content:
             application/json:
               schema:
-                properties:
-                  kit_id:
-                    type: string
+                oneOf:
+                  - $ref: '#/components/schemas/human_source'
+                  - $ref: '#/components/schemas/animal_source'
+                  - $ref: '#/components/schemas/environmental_source'
         '401':
-          description: Invalid or unknown username
-  /sample:
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+    # TODO: Can the account holder *delete* a source?
+  '/accounts/{acct_id}/sources/{source_id}/answered_surveys':
     get:
-      operationId: implementation.read_samples
+      operationId: implementation.read_answered_surveys
       tags:
-        - Sample
-      summary: Get sample information associated with the account
-      description: Get sample information associated with the account
+        - Answered Surveys
+      summary: Get answered survey instances associated with source
+      description: Get answered survey instances associated with source
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+      responses:
+        '200':
+          description: Successfully returned list of answered surveys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:  # TODO: should I return whole answered survey objects or just their ids?
+                  type: string
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    # TODO: Definitely need a post here but unsure what info to collect--survey-specific? Lengthy? could get hairy!
+  '/accounts/{acct_id}/sources/{source_id}/answered_surveys/{answered_survey_id}':
+    get:
+      operationId: implementation.read_answered_survey
+      tags:
+        - Answered Survey
+      summary: Get information about an answered survey
+      description: Get information about an answered survey
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/answered_survey_id'
+      responses:
+        '200':
+          description: Successfully returned information about answered survey
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/not_yet_implemented' # TODO: what info should be returned about answered survey?  All answers?
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    # NB: Getting the list of surveys a source *can* take is outside the scope of this api
+    # NB: NO put--you shouldn't update an answered survey, but instead should take a new one
+    # TODO: Can the account holder delete an answered survey?
+  '/accounts/{acct_id}/sources/{source_id}/sample_associations':
+    get:
+      operationId: implementation.read_sample_associations
+      tags:
+        - Sample Associations
+      summary: Get samples associated to this source
+      description: Get samples associated to this source
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+      responses:
+        '200':
+          description: Successfully returned list of samples
+          content:
+            application/json:
+              schema:
+                type: array
+                items:  # TODO: should I return whole sample objects or just their ids?
+                  type: string
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: implementation.associate_sample
+      tags:
+        - Sample Association
+      summary: Associate an unassociated sample with this source
+      description: Associate an unassociated sample with this source
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/sample_barcode'
+                # NB: Getting the sample barcode to input here is outside the scope of this endpoint--see kits
+                - $ref: '#/components/schemas/sample_site'
+                - $ref: '#/components/schemas/sample_datetime'
+                - $ref: '#/components/schemas/sample_notes'
+            example:
+              sample_barcode: 000102030004
+              sample_site: stool
+              sample_datetime: 2017-07-21T17:32:28Z
+              sample_notes: "Oops, I dropped it"
+      responses:
+        '201':
+          description: Successfully associated sample with source
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sample'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+  '/accounts/{acct_id}/sources/{source_id}/sample_associations/{sample_association_id}':
+    get:
+      operationId: implementation.read_sample_association
+      tags:
+        - Sample Association
+      summary: Get information about a sample associated to this source
+      description:  Get information about a sample associated to this source
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_association_id'
       responses:
         '200':
           description: Successfully returned sample information
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  properties:
-                    sample_id:
-                      type: integer
-                    collection_date:
-                      type: string
-                    status:
-                      type: string
+                $ref: '#/components/schemas/sample'
         '401':
-          description: Invalid or missing token
+          $ref: '#/components/responses/401Unauthorized'
         '404':
-          description: User not found
-    post:
-      operationId: implementation.add_sample
+          $ref: '#/components/responses/404NotFound'
+    delete:
       tags:
-        - Sample
-      summary: Add new sample to the associated account
-      description: Add new sample to the associated account
+        - Sample Association
+      operationId: implementation.unassociate_sample
+      summary: Unassociate a sample from a source
+      description: Unassociate a sample from a source
       parameters:
-        - name: sample_id
-          in: query
-          description: User-facing sample id
-          required: true
-          schema:
-            type: integer
-        - name: collection_date
-          in: query
-          description: Date of sample collection
-          required: true
-          schema:
-            type: string
-        - name: status
-          in: query
-          description: Sample status
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_association_id'
       responses:
-        '201':
-          description: Successfully added new sample
+        '204':
+          description: Sample was unassociated from source
         '401':
-          description: Invalid or missing token
-        '403':
-          description: Sample with provided id already exists
+          $ref: '#/components/responses/401Unauthorized'
         '404':
-          description: User not found
-  '/sample/{sample_id}/status':
-    put:
-      operationId: implementation.set_sample_status
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          # NB: This error would cover the case that you can't unassociate it bc it was already processed
+          $ref: '#/components/responses/422UnprocessableEntity'
+    # TODO: Can a user *update* info about a sample? If so, all of it or just some?
+    # TODO: Does the info about the sample--type, datetime, notes--exist *separate* from source association or no?
+  '/accounts/{acct_id}/sources/{source_id}/sample_associations/{sample_association_id}/associated_answered_surveys':
+    get:
+      operationId: implementation.read_answered_survey_associations
       tags:
-        - Sample Status
-      summary: Update sample status
-      description: Update sample status
+        - Answered Survey Associations
+      summary: Get list of answered surveys associated to this sample
+      description: Get list of answered surveys associated to this sample
       parameters:
-        - name: sample_id
-          in: path
-          description: Id of sample on which to update status
-          required: true
-          schema:
-            type: integer
-        - name: status
-          in: path
-          description: Status to be set
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_association_id'
       responses:
         '200':
-          description: Successfully updated sample status
+          description: Successfully returned list of survey associations
           content:
             application/json:
               schema:
-                properties:
-                  sample_id:
-                    type: integer
-                  status:
-                    type: string
+                type: array
+                items:  # TODO: should I also return the answered survey id that goes with each association?
+                  type: integer
         '401':
-          description: Invalid or missing token
+          $ref: '#/components/responses/401Unauthorized'
         '404':
-          description: Sample id not found
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: implementation.associate_answered_survey
+      tags:
+        - Answered Survey Association
+      summary: Associate an answered survey with this sample
+      description: Associate an answered survey with this sample
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_association_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: integer
+            example:
+              answered_survey_id: 1264
+      responses:
+        '201':
+          description: Successfully associated answered survey with sample
+          headers:
+            Location:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+  '/accounts/{acct_id}/sources/{source_id}/sample_associations/{sample_association_id}/associated_answered_surveys/{survey_association_id}':
+    # NB: I can't really see a way that this can be updated, or even viewed--the association simply exists or doesn't
+    delete:
+      tags:
+        - Answered Survey Association
+      operationId: implementation.unassociate_answered_survey
+      summary: Unassociate an answered survey from a sample
+      description: Unassociate an answered survey from a sample
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_association_id'
+        - $ref: '#/components/parameters/survey_association_id'
+      responses:
+        '204':
+          description: Answered survey was unassociated from sample
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  '/kits/':
+    get:
+      operationId: implementation.read_kits
+      tags:
+        - Kits
+      summary: Get id of kit(s) with provided name and code
+      description: Get id of kit(s) with provided name and code
+      # TODO: Someday could allow admin to look at all kits wo these filters, if desirable
+      parameters:
+        - $ref: '#/components/parameters/kit_name'
+        - $ref: '#/components/parameters/kit_code'
+      responses:
+        '200':
+          description: Successfully returned kit(s) with provided name and code
+          content:
+            application/json:
+              schema:
+                type: array
+                items:  # TODO: should I return whole kit objects or just their ids?
+                  type: integer
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+  '/kits/{kit_id}':
+    get:
+      operationId: implementation.read_kit
+      tags:
+        - Samples
+      summary: Get list of samples in kit and whether they are assigned or not
+      description: Get list of samples in kit and whether they are assigned or not
+      parameters:
+        - $ref: '#/components/parameters/kit_id'
+      responses:
+        '200':
+          description: Successfully returned list of samples and their assignment statuses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:  # TODO: should I return whole sample objects or just their ids and assignment status? Not currently doing either
+                  type: integer
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
 components:
+  parameters:
+    acct_id: # Can be referenced as '#/components/parameters/acct_id'
+      name: acct_id
+      in: path
+      description: Unique id specifying a user account
+      schema:
+        type: integer
+      required: true
+    source_type:
+      name: source_type
+      in: query
+      description: Type of sample
+      schema:
+        $ref: '#/components/schemas/source_type'
+    source_id:
+      name: source_id
+      in: path
+      description: Unique id specifying a source
+      schema:
+        type: integer
+      required: true
+    sample_association_id:
+      name: sample_association_id
+      in: path
+      description: Unique id specifying the association of a sample with a source
+      schema:
+        type: integer
+      required: true
+    kit_name:
+      name: kit_name
+      in: query
+      description: User-facing id of kit
+      schema:
+        $ref: '#/components/schemas/kit_name'
+      required: true
+    kit_code:
+      name: kit_code
+      in: query
+      description: User-facing code of kit
+      schema:
+        $ref: '#/components/schemas/kit_code'
+      required: true
+    kit_id:
+      name: kit_id
+      in: path
+      description: Unique internal id specifying a kit
+      schema:
+        type: integer
+      required: true
+    answered_survey_id:
+      name: answered_survey_id
+      in: path
+      description: Unique internal id specifying a particular answered survey
+      schema:
+        type: integer
+      required: true
+    survey_association_id:
+      name: survey_association_id
+      in: path
+      description: Unique internal id specifying a particular association of an answered survey with a sample
+      schema:
+        type: integer
+      required: true
+  responses:
+    401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
+      description: Invalid or missing token.
+    404NotFound:       # Can be referenced as '#/components/responses/404NotFound'
+      description: The specified resource was not found.
+    422UnprocessableEntity:
+      description: The instructions provided cannot be processed.
+  schemas:
+    first_name:        # Can be referenced as '#/components/schemas/first_name'
+      type: string
+    last_name:
+      type: string
+    email:
+      type: string
+      format: email
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
+    account_type: # e.g., regular user or admin--room to grow
+      type: string
+      enum: [standard]
+    address:   # taken from https://opensource.zalando.com/restful-api-guidelines/#address-fields
+      description:
+        an address of a location/destination
+      type: object
+      properties:
+        care_of:
+          description: |
+            (aka c/o) the person that resides at the address, if different from
+            addressee. E.g. used when sending a personal parcel to the
+            office /someone else's home where the addressee resides temporarily
+          type: string
+          example: Consulting Services GmbH
+        street:
+          description: |
+            the full street address including house number and street name
+          type: string
+          example: Schönhauser Allee 103
+        additional:
+          description: |
+            further details like building name, suite, apartment number, etc.
+          type: string
+          example: 2. Hinterhof rechts
+        city:
+          description: |
+            name of the city / locality
+          type: string
+          example: Berlin
+        zip:
+          description: |
+            zip code or postal code
+          type: string
+          example: 14265
+        country_code:
+          description: |
+            the country code according to
+            [iso-3166-1-alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
+          type: string
+          example: DE
+      required:
+        - street
+        - city
+        - zip
+        - country_code
+    account:
+      type: object
+      properties:
+        first_name:
+          $ref: '#/components/schemas/first_name'
+        last_name:
+          $ref: '#/components/schemas/last_name'
+        email:
+          $ref: '#/components/schemas/email'
+        address:
+          $ref: '#/components/schemas/address'
+        account_type:
+          $ref: '#/components/schemas/account_type'
+        created_at:
+          $ref: '#/components/schemas/created_at'
+        updated_at:
+          $ref: '#/components/schemas/updated_at'
+    kit_name:
+      type: string
+    kit_code:
+      type: string
+    source_type:
+      type: string
+      enum: [human, animal, environmental]
+    source_name:
+      type: string
+    human_source:
+      type: object
+      properties:
+        source_type:
+          $ref: '#/components/schemas/source_type'
+        source_name:
+          $ref: '#/components/schemas/source_name'
+        is_consented:
+          type: boolean
+      additionalProperties: false
+    animal_source:
+      type: object
+      properties:
+        source_type:
+          $ref: '#/components/schemas/source_type'
+        source_name:
+          $ref: '#/components/schemas/source_name'
+        animal_type:
+          type: string
+          enum: [Dog, Cat, Small Mammal, Large Mammal, Fish, Bird, Reptile, Amphibian, Other]
+      additionalProperties: false
+    environmental_source:
+      type: object
+      properties:
+        source_type:
+          $ref: '#/components/schemas/source_type'
+        source_name:
+          $ref: '#/components/schemas/source_name'
+      additionalProperties: false
+    sample_datetime:
+      type: string
+      format: date-time
+    sample_site:
+      type: string
+      enum: [stool, saliva, other]
+    sample_barcode:
+      type: string
+    sample_notes:
+      type: string
+    sample_status:
+      type: string
+      enum: [received, not received]
+    sample:
+      type: object
+      properties:
+        sample_barcode:
+          $ref: '#/components/schemas/sample_barcode'
+        sample_site:
+          $ref: '#/components/schemas/sample_site'
+        sample_status:
+          $ref: '#/components/schemas/sample_status'
+        sample_datetime:
+          $ref: '#/components/schemas/sample_datetime'
+        sample_notes:
+          $ref: '#/components/schemas/sample_notes'
+    not_yet_implemented:
+      type: string
   securitySchemes:
     Oauth2Scheme:
       type: oauth2

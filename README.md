@@ -14,6 +14,10 @@ Install connexion version 2.0 (which supports the OpenAPI Specification 3.0) as 
 
 `pip install connexion[swagger-ui]`
 
+Also install the JSON Web Tokens library with cryptography support:
+
+`pip install pyjwt[crypto]`
+
 Then copy the project files into the directory of your choice.
  
 ## Test Usage
