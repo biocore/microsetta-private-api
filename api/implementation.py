@@ -88,11 +88,19 @@ def update_source(acct_id, source_id):
     return not_yet_implemented()
 
 
+def delete_source(acct_id, source_id):
+    return not_yet_implemented()
+
+
 def read_answered_surveys(acct_id, source_id):
     return not_yet_implemented()
 
 
-def read_answered_survey(acct_id, source_id, answered_survey_id):
+def read_answered_survey(acct_id, source_id, survey_id):
+    return not_yet_implemented()
+
+
+def delete_answered_survey(acct_id, source_id, survey_id):
     return not_yet_implemented()
 
 
@@ -104,23 +112,27 @@ def associate_sample(acct_id, source_id):
     return not_yet_implemented()
 
 
-def read_sample_association(acct_id, source_id, sample_association_id):
+def read_sample_association(acct_id, source_id, sample_id):
     return not_yet_implemented()
 
 
-def unassociate_sample(acct_id, source_id, sample_association_id):
+def update_sample_association(acct_id, source_id, sample_id):
     return not_yet_implemented()
 
 
-def read_answered_survey_associations(acct_id, source_id, sample_association_id):
+def dissociate_sample(acct_id, source_id, sample_id):
     return not_yet_implemented()
 
 
-def associate_answered_survey(acct_id, source_id, sample_association_id):
+def read_answered_survey_associations(acct_id, source_id, sample_id):
     return not_yet_implemented()
 
 
-def unassociate_answered_survey(acct_id, source_id, sample_association_id, survey_association_id):
+def associate_answered_survey(acct_id, source_id, sample_id):
+    return not_yet_implemented()
+
+
+def dissociate_answered_survey(acct_id, source_id, sample_id, survey_id):
     return not_yet_implemented()
 
 

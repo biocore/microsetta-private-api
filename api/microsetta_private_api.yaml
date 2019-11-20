@@ -84,7 +84,6 @@ paths:
                 - $ref: '#/components/schemas/last_name'
                 - $ref: '#/components/schemas/email'
                 - $ref: '#/components/schemas/address'
-                - $ref: '#/components/schemas/account_type'
       responses:
         '200':
           description: Successfully updated user account information
@@ -115,8 +114,11 @@ paths:
             application/json:
               schema:
                 type: array
-                items:  # TODO: should I return whole source objects or just their ids?
-                  type: string
+                items:  # NB: return whole source objects, unless returning >5KB compressed data
+                  oneOf:
+                  - $ref: '#/components/schemas/human_source'
+                  - $ref: '#/components/schemas/animal_source'
+                  - $ref: '#/components/schemas/environmental_source'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -125,8 +127,8 @@ paths:
       operationId: implementation.create_source
       tags:
         - Source
-      summary: Create new source of specified type
-      description: Create new source of specified type
+      summary: Create new source of a specific type
+      description: Create new source of a specific type
       parameters:
         - $ref: '#/components/parameters/acct_id'
       requestBody:
@@ -223,12 +225,32 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
-    # TODO: Can the account holder *delete* a source?
-  '/accounts/{acct_id}/sources/{source_id}/answered_surveys':
+    delete:
+      operationId: implementation.delete_source
+      tags:
+        - Source
+      summary: Delete source
+      description: Delete source
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+      responses:
+        '204':
+          description: Successfully deleted source
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+          # NB: This would be returned if source cannot be deleted bc has a sample assigned to it
+  '/accounts/{acct_id}/sources/{source_id}/surveys':
+    # NB: "survey" refers to an instance of an answered survey.
+    # The set of questions comprising a survey is called a "survey template" and is outside the scope of this api
     get:
       operationId: implementation.read_answered_surveys
       tags:
-        - Answered Surveys
+        - Surveys
       summary: Get answered survey instances associated with source
       description: Get answered survey instances associated with source
       parameters:
@@ -241,45 +263,69 @@ paths:
             application/json:
               schema:
                 type: array
-                items:  # TODO: should I return whole answered survey objects or just their ids?
-                  type: string
+                items:
+                  type: object
+                  properties:
+                    survey_id:
+                      type: integer
+                    survey_type:
+                      type: string # Someday this could be an enum if we wanted ...
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
     # TODO: Definitely need a post here but unsure what info to collect--survey-specific? Lengthy? could get hairy!
-  '/accounts/{acct_id}/sources/{source_id}/answered_surveys/{answered_survey_id}':
+  '/accounts/{acct_id}/sources/{source_id}/surveys/{survey_id}':
     get:
       operationId: implementation.read_answered_survey
       tags:
-        - Answered Survey
+        - Survey
       summary: Get information about an answered survey
       description: Get information about an answered survey
       parameters:
         - $ref: '#/components/parameters/acct_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/answered_survey_id'
+        - $ref: '#/components/parameters/survey_id'
       responses:
         '200':
           description: Successfully returned information about answered survey
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/not_yet_implemented' # TODO: what info should be returned about answered survey?  All answers?
+                $ref: '#/components/schemas/not_yet_implemented' # TODO: return all answers
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
     # NB: Getting the list of surveys a source *can* take is outside the scope of this api
-    # NB: NO put--you shouldn't update an answered survey, but instead should take a new one
-    # TODO: Can the account holder delete an answered survey?
-  '/accounts/{acct_id}/sources/{source_id}/sample_associations':
+    # NB: NO "put"--you shouldn't update an answered survey, but instead should take a new one
+    delete:
+      operationId: implementation.delete_answered_survey
+      tags:
+        - Survey
+      summary: Get information about an answered survey
+      description: Get information about an answered survey
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/survey_id'
+      responses:
+        '204':
+          description: Successfully deleted answered survey
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+          # NB: This would be returned if survey cannot be deleted bc has a sample assigned to it
+  '/accounts/{acct_id}/sources/{source_id}/samples':
     get:
       operationId: implementation.read_sample_associations
       tags:
-        - Sample Associations
-      summary: Get samples associated to this source
-      description: Get samples associated to this source
+        - Samples
+      summary: Get samples associated with this source
+      description: Get samples associated with this source
       parameters:
         - $ref: '#/components/parameters/acct_id'
         - $ref: '#/components/parameters/source_id'
@@ -299,7 +345,7 @@ paths:
     post:
       operationId: implementation.associate_sample
       tags:
-        - Sample Association
+        - Sample
       summary: Associate an unassociated sample with this source
       description: Associate an unassociated sample with this source
       parameters:
@@ -337,17 +383,19 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
-  '/accounts/{acct_id}/sources/{source_id}/sample_associations/{sample_association_id}':
+  '/accounts/{acct_id}/sources/{source_id}/samples/{sample_id}':
+    # NB: info about the sample--type, datetime, notes--does NOT exist *separate* from source association, so
+    # it can only be read/updated/deleted in the context of a source association
     get:
       operationId: implementation.read_sample_association
       tags:
-        - Sample Association
-      summary: Get information about a sample associated to this source
-      description:  Get information about a sample associated to this source
+        - Sample
+      summary: Get information about a sample associated with this source
+      description:  Get information about a sample associated with this source
       parameters:
         - $ref: '#/components/parameters/acct_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_association_id'
+        - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
           description: Successfully returned sample information
@@ -359,39 +407,67 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
-    delete:
+    put:
+      operationId: implementation.update_sample_association
       tags:
-        - Sample Association
-      operationId: implementation.unassociate_sample
-      summary: Unassociate a sample from a source
-      description: Unassociate a sample from a source
+        - Sample
+      summary: Update information about a sample associated with this source
+      description:  Update information about a sample associated with this source
       parameters:
         - $ref: '#/components/parameters/acct_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_association_id'
+        - $ref: '#/components/parameters/sample_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sample'
       responses:
-        '204':
-          description: Sample was unassociated from source
+        '200':
+          description: Successfully updated sample information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sample'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
-          # NB: This error would cover the case that you can't unassociate it bc it was already processed
+          # NB: This error would cover the case where you can't update a sample's info bc we already received it
           $ref: '#/components/responses/422UnprocessableEntity'
-    # TODO: Can a user *update* info about a sample? If so, all of it or just some?
-    # TODO: Does the info about the sample--type, datetime, notes--exist *separate* from source association or no?
-  '/accounts/{acct_id}/sources/{source_id}/sample_associations/{sample_association_id}/associated_answered_surveys':
+    delete:
+      tags:
+        - Sample
+      operationId: implementation.dissociate_sample
+      summary: Dissociate a sample from a source
+      description: Dissociate a sample from a source
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '204':
+          description: Sample was dissociated from source
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          # NB: This error would cover the case where you can't dissociate it bc it was already processed
+          $ref: '#/components/responses/422UnprocessableEntity'
+  # TODO: Are we comfortable having "surveys" used as a path component in two different ways?  Feels a bit queasy ...
+  '/accounts/{acct_id}/sources/{source_id}/samples/{sample_id}/surveys':
     get:
       operationId: implementation.read_answered_survey_associations
       tags:
         - Answered Survey Associations
-      summary: Get list of answered surveys associated to this sample
-      description: Get list of answered surveys associated to this sample
+      summary: Get list of answered surveys associated with this sample
+      description: Get list of answered surveys associated with this sample
       parameters:
         - $ref: '#/components/parameters/acct_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_association_id'
+        - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
           description: Successfully returned list of survey associations
@@ -414,7 +490,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/acct_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_association_id'
+        - $ref: '#/components/parameters/sample_id'
       requestBody:
         content:
           application/json:
@@ -435,22 +511,22 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
-  '/accounts/{acct_id}/sources/{source_id}/sample_associations/{sample_association_id}/associated_answered_surveys/{survey_association_id}':
+  '/accounts/{acct_id}/sources/{source_id}/samples/{sample_id}/surveys/{survey_id}':
     # NB: I can't really see a way that this can be updated, or even viewed--the association simply exists or doesn't
     delete:
       tags:
         - Answered Survey Association
-      operationId: implementation.unassociate_answered_survey
-      summary: Unassociate an answered survey from a sample
-      description: Unassociate an answered survey from a sample
+      operationId: implementation.dissociate_answered_survey
+      summary: Dissociate an answered survey from a sample
+      description: Dissociate an answered survey from a sample
       parameters:
         - $ref: '#/components/parameters/acct_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_association_id'
-        - $ref: '#/components/parameters/survey_association_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/survey_id'
       responses:
         '204':
-          description: Answered survey was unassociated from sample
+          description: Answered survey was dissociated from sample
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -485,7 +561,7 @@ paths:
     get:
       operationId: implementation.read_kit
       tags:
-        - Samples
+        - Kit
       summary: Get list of samples in kit and whether they are assigned or not
       description: Get list of samples in kit and whether they are assigned or not
       parameters:
@@ -521,6 +597,7 @@ components:
       description: Type of sample
       schema:
         $ref: '#/components/schemas/source_type'
+      required: true
     source_id:
       name: source_id
       in: path
@@ -528,10 +605,10 @@ components:
       schema:
         type: integer
       required: true
-    sample_association_id:
-      name: sample_association_id
+    sample_id:
+      name: sample_id
       in: path
-      description: Unique id specifying the association of a sample with a source
+      description: Unique id specifying a sample associated with a source
       schema:
         type: integer
       required: true
@@ -556,8 +633,8 @@ components:
       schema:
         type: integer
       required: true
-    answered_survey_id:
-      name: answered_survey_id
+    survey_id:
+      name: survey_id
       in: path
       description: Unique internal id specifying a particular answered survey
       schema:
@@ -577,6 +654,10 @@ components:
       description: The specified resource was not found.
     422UnprocessableEntity:
       description: The instructions provided cannot be processed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
     first_name:        # Can be referenced as '#/components/schemas/first_name'
       type: string
@@ -718,6 +799,16 @@ components:
           $ref: '#/components/schemas/sample_datetime'
         sample_notes:
           $ref: '#/components/schemas/sample_notes'
+    Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
     not_yet_implemented:
       type: string
   securitySchemes:
