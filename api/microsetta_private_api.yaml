@@ -1,6 +1,8 @@
 # Note that in reality essentially all of these functions would require oath security, but it makes them hard to test
 # through the swagger web ui (as you have to send the authorization header, I don't yet know how to do from there...?)
 # so only /account get has oath implemented.
+# TODO: Where does locale go?  needs to be included ... where? Just re surveys?
+# survey identifier, survey locale, key-value pair of question id (int) and answer (int or list of ints or free form text)
 openapi: 3.0.0
 info:
   description: Private Microsetta RESTful API
@@ -244,6 +246,51 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
           # NB: This would be returned if source cannot be deleted bc has a sample assigned to it
+  '/accounts/{acct_id}/sources/{source_id}/survey_templates':
+    get:
+      operationId: implementation.read_surveys_templates
+      tags:
+        - Survey Templates
+      summary: Get survey templates available to this source
+      description: Get survey templates available to this source
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+        # TODO: Add locale iso code as query parameter
+      responses:
+        '200':
+          description: Successfully returned list of survey templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    survey_id:
+                      type: integer
+                    survey_type: # TODO: or title?
+                      type: string # Someday this could be an enum if we wanted ...
+                    # TODO: some kind of version field
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  '/accounts/{acct_id}/sources/{source_id}/survey_templates/{survey_template_id}':
+    get:
+      operationId: implementation.read_survey_template
+      tags:
+        - Survey Templates
+      summary: Get a particular survey template available to this source
+      description: Get a particular survey template available to this source
+      parameters:
+        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/source_id'
+        # TODO: Add locale iso code as query parameter
+        # right now there are 5 templates in our database and one external one
+        # external one: generate new survey id, place into payload object including a redirect url back to agp
+        # website, construct encoded url string that takes user to bioscreen website, they take questionnaire,
+        # then it sends them back
   '/accounts/{acct_id}/sources/{source_id}/surveys':
     # NB: "survey" refers to an instance of an answered survey.
     # The set of questions comprising a survey is called a "survey template" and is outside the scope of this api
@@ -533,23 +580,22 @@ paths:
           $ref: '#/components/responses/404NotFound'
   '/kits/':
     get:
-      operationId: implementation.read_kits
+      operationId: implementation.read_kit
       tags:
-        - Kits
-      summary: Get id of kit(s) with provided name and code
-      description: Get id of kit(s) with provided name and code
-      # TODO: Someday could allow admin to look at all kits wo these filters, if desirable
+        - Kit
+      summary: Get list of samples in kit that are not assigned to a source
+      description: Get list of samples in kit that are not assigned to a source
       parameters:
         - $ref: '#/components/parameters/kit_name'
         - $ref: '#/components/parameters/kit_code'
       responses:
         '200':
-          description: Successfully returned kit(s) with provided name and code
+          description: Successfully returned list of unassigned samples
           content:
             application/json:
               schema:
                 type: array
-                items:  # TODO: should I return whole kit objects or just their ids?
+                items:  # TODO: what is the data structure for a sample? Internal id and barcode?
                   type: integer
         '401':
           $ref: '#/components/responses/401Unauthorized'
@@ -557,30 +603,7 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
-  '/kits/{kit_id}':
-    get:
-      operationId: implementation.read_kit
-      tags:
-        - Kit
-      summary: Get list of samples in kit and whether they are assigned or not
-      description: Get list of samples in kit and whether they are assigned or not
-      parameters:
-        - $ref: '#/components/parameters/kit_id'
-      responses:
-        '200':
-          description: Successfully returned list of samples and their assignment statuses
-          content:
-            application/json:
-              schema:
-                type: array
-                items:  # TODO: should I return whole sample objects or just their ids and assignment status? Not currently doing either
-                  type: integer
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '404':
-          $ref: '#/components/responses/404NotFound'
-        '422':
-          $ref: '#/components/responses/422UnprocessableEntity'
+
 
 components:
   parameters:
