@@ -6,13 +6,3 @@ CREATE TABLE ag.account (
 );
 
 CREATE UNIQUE INDEX idx_account_email ON ag.account ( email );
-
-CREATE TABLE ag.
-
-CREATE TABLE barcodes.project_qiita_buffer_status (
-    id integer,
-    state varchar,
-    CONSTRAINT pk_project_qiita_buffer_status PRIMARY KEY (id)
-);
-
-INSERT INTO barcodes.project_qiita_buffer_status (id, state) VALUES (0, 'Idle');
