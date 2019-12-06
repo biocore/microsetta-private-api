@@ -19,7 +19,12 @@ def make(db, force):
     elif db == 'test':
         # Test database includes initialization and settings table already
         print("Populating the test database")
-        populate_test_db()
+        try:
+            populate_test_db()
+        except RuntimeError as err:
+            print("Something went terribly wrong but we're going to pretend"
+                  " that it's fine.")
+            print(err)
         initialize(verbose=True)
 
     print("Applying patches to database")
