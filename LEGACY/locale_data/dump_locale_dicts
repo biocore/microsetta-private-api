@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+from __future__ import division
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The American Gut Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+import importlib
+from os import mkdir
+from os.path import join
+
+import click
+from future.utils import viewitems
+
+
+def _write_file_dict(basefolder, name, outdict):
+    with open(join(basefolder, "%s.txt" % name), 'w') as f:
+        f.write("VARIABLE\tTEXT\n")
+        for variable, name in sorted(viewitems(outdict)):
+            f.write("%s\t%s\n" % (variable, name))
+
+
+@click.command()
+@click.option('--basefolder', type=click.Path(exists=True, file_okay=False),
+              default='.', help='Base folder to write out files')
+@click.option('--locale', required=True, type=str,
+              help='The locale to load, e.g. american_gut')
+def write_locale(locale, basefolder='.'):
+    # import the module given
+    current_locale_module = '.'.join(['amgut.lib.locale_data', locale])
+    try:
+        current_locale = importlib.import_module(current_locale_module)
+    except ImportError:
+        raise ImportError("Cannot import locale! %s" % current_locale_module)
+
+    # make a folder to hold all the files
+    basedir = join(basefolder, locale)
+    mkdir(basedir)
+
+    # export media_locale dict to file
+    _write_file_dict(basedir, "media_locale", current_locale.media_locale)
+
+    # export all page dicts to file
+    for page, pagedict in viewitems(current_locale.text_locale):
+        _write_file_dict(basedir, page, pagedict)
+
+
+if __name__ == "__main__":
+    write_locale()
