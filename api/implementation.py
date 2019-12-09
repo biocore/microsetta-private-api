@@ -67,7 +67,6 @@ def register_account(user):
 
 
 def read_account(acct_id):
-    print("Account id: " + str(acct_id));
     # TODO:  Authentication???
     with Transaction() as t:
         acct_repo = AccountRepo(t)
@@ -76,8 +75,27 @@ def read_account(acct_id):
             return jsonify(error=404, text="Account not found"), 404
         return jsonify(acc)
 
-def update_account(fname, lname, email):
-    return {"fname": fname, "lname": lname, "email": email}
+
+def update_account(first_name, last_name, email, address):
+    # TODO:  Authentication??
+    with Transaction() as t:
+        acct_repo = AccountRepo(t)
+        acc = acct_repo.get_account(acct_id)
+        if acc is None:
+            return jsonify(error=404, text="Account not found"), 404
+
+        if first_name is not None:
+            acc.first_name = first_name
+        if last_name is not None:
+            acc.last_name = last_name
+        if email is not None:
+            acc.email = email
+        # TODO: We likely will need to validate addresses somehow
+        if address is not None:
+            acc.address = address
+        acct_repo.update_account(acc)
+        t.commit()
+        return jsonify(acc)
 
 
 def read_sources(acct_id):
