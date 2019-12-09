@@ -11,9 +11,11 @@ Loosely based off examples in https://realpython.com/flask-connexion-rest-api/#b
 and associated file https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py
 """
 
-from flask import make_response, abort
+from flask import make_response, abort, jsonify
 import jwt
 from base64 import b64decode
+from repo.transaction import Transaction
+from repo.account_repo import AccountRepo
 
 
 # hardcoded mapping of access tokens to uid, standing in for a
@@ -64,9 +66,15 @@ def register_account(user):
             "email": "jdoe@foo.com", "location": "here"}
 
 
-def read_account():
-    return {"fname": "Jane", "lname": "Doe", "email": "jdoe@gmail.com"}
-
+def read_account(acct_id):
+    print("Account id: " + str(acct_id));
+    # TODO:  Authentication???
+    with Transaction() as t:
+        acct_repo = AccountRepo(t)
+        acc = acct_repo.get_account(acct_id)
+        if acc is None:
+            return jsonify(error=404, text="Account not found"), 404
+        return jsonify(acc)
 
 def update_account(fname, lname, email):
     return {"fname": fname, "lname": lname, "email": email}
@@ -141,4 +149,8 @@ def read_kits(kit_name, kit_code):
 
 
 def read_kit(kit_id):
+    return not_yet_implemented()
+
+
+def read_survey_templates(acct_id, source_id):
     return not_yet_implemented()
