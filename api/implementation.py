@@ -16,6 +16,9 @@ import jwt
 from base64 import b64decode
 from repo.transaction import Transaction
 from repo.account_repo import AccountRepo
+from repo.source_repo import SourceRepo
+from model.source import Source
+import uuid
 
 
 # hardcoded mapping of access tokens to uid, standing in for a
@@ -76,7 +79,7 @@ def read_account(acct_id):
         return jsonify(acc)
 
 
-def update_account(first_name, last_name, email, address):
+def update_account(acct_id, first_name, last_name, email, address):
     # TODO:  Authentication??
     with Transaction() as t:
         acct_repo = AccountRepo(t)
@@ -98,25 +101,53 @@ def update_account(first_name, last_name, email, address):
         return jsonify(acc)
 
 
-def read_sources(acct_id):
-    return not_yet_implemented()
+def read_sources(acct_id, source_type):
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        return jsonify(
+            source_repo.get_sources_in_account(acct_id, source_type))
 
 
-def create_source(acct_id):
-    return not_yet_implemented()
+def create_source(acct_id, source_info):
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        source_id = str(uuid.uuid4())
+        new_source = Source.from_json(source_id, acct_id, source_info)
+        source_repo.create_source(new_source)
+        # Must pull from db to get creation_time, update_time
+        s = source_repo.get_source(acct_id, new_source.id)
+        t.commit()
+        return jsonify(s)
 
 
 def read_source(acct_id, source_id):
-    return not_yet_implemented()
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        return source_repo.get_source(acct_id, source_id)
 
 
 def update_source(acct_id, source_id):
-    return not_yet_implemented()
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        source = source_repo.get_source(acct_id, source_id)
+
+        # Uhhh, where do I get source_data from???
+        # source.source_data = something?
+
+        source_repo.update_source_data(source)
+        # I wonder if there's some way to get the creation_time/update_time
+        # during the insert/update...
+        source = source_repo.get_source(acct_id, source_id)
+        t.commit()
+        return jsonify(source)
 
 
 def delete_source(acct_id, source_id):
-    return not_yet_implemented()
-
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        if not source_repo.delete_source(acct_id, source_id):
+            return jsonify(error = 404, text="No source found"), 404
+        return '', 204
 
 def read_answered_surveys(acct_id, source_id):
     return not_yet_implemented()

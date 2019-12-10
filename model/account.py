@@ -1,7 +1,7 @@
 class Account:
     def __init__(self, account_id, email, auth_provider,
                  first_name, last_name, address, account_type,
-                 creation_time = None, update_time = None):
+                 creation_time=None, update_time=None):
         self.id = account_id
         self.email = email
         self.auth_provider = auth_provider
