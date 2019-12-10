@@ -1,6 +1,8 @@
 from repo.base_repo import BaseRepo
-from model.source import HumanInfo, CanineInfo, EnvironmentInfo, Source
+from model.source import HumanInfo, CanineInfo, EnvironmentInfo, \
+    Source, DECODER_HOOKS
 import json
+from util.util import json_converter
 
 
 # Note: By convention, this references sources by both account_id AND source_id
@@ -17,12 +19,13 @@ class SourceRepo(BaseRepo):
 
     @classmethod
     def _row_to_source(cls, r):
-        hook = Source.DECODER_HOOKS[r[2]]
+        hook = DECODER_HOOKS[r[2]]
         return Source(r[0], r[1], r[2], json.loads(r[3], object_hook=hook))
 
     @classmethod
     def _source_to_row(cls, s):
-        row = (s.id, s.account_id, s.source_type, json.dumps(s.source_data))
+        row = (s.id, s.account_id, s.source_type,
+               json.dumps(s.source_data, default=json_converter))
         return row
 
     def get_sources_in_account(self, account_id, source_type=None):
@@ -41,7 +44,7 @@ class SourceRepo(BaseRepo):
                             (account_id, source_type))
 
             rows = cur.fetchall()
-            return map(SourceRepo._row_to_source, rows)
+            return [SourceRepo._row_to_source(x) for x in rows]
 
     def get_source(self, account_id, source_id):
         with self._transaction.cursor() as cur:
