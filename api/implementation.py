@@ -17,6 +17,7 @@ from base64 import b64decode
 from repo.transaction import Transaction
 from repo.account_repo import AccountRepo
 from repo.source_repo import SourceRepo
+from repo.kit_repo import KitRepo
 from model.source import Source
 import uuid
 
@@ -193,12 +194,17 @@ def dissociate_answered_survey(acct_id, source_id, sample_id, survey_id):
     return not_yet_implemented()
 
 
-def read_kits(kit_name, kit_code):
-    return not_yet_implemented()
-
-
-def read_kit(kit_id):
-    return not_yet_implemented()
+def read_kit(kit_id, kit_code):
+    with Transaction() as t:
+        kit_repo = KitRepo(t)
+        kit = kit_repo.get_kit(kit_id, kit_code)
+        if kit is None:
+            return jsonify(error=404, text="No such kit"), 404
+        unused = []
+        for s in kit.samples:
+            if not s.deposited:
+                unused.append(s)
+        return jsonify(unused)
 
 
 def read_survey_templates(acct_id, source_id):
