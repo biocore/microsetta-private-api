@@ -150,11 +150,24 @@ def delete_source(acct_id, source_id):
             return jsonify(error = 404, text="No source found"), 404
         return '', 204
 
+
+def read_survey_templates(acct_id, source_id, locale_code):
+    return not_yet_implemented()
+
+
+def read_survey_template(acct_id, source_id, survey_template_id, locale_code):
+    return not_yet_implemented()
+
+
 def read_answered_surveys(acct_id, source_id):
     return not_yet_implemented()
 
 
 def read_answered_survey(acct_id, source_id, survey_id):
+    return not_yet_implemented()
+
+
+def submit_answered_survey(acct_id, source_id, locale_code, survey_template_id, survey_text):
     return not_yet_implemented()
 
 
