@@ -72,15 +72,11 @@ def update_account(acct_id, first_name, last_name, email, address):
         if acc is None:
             return jsonify(error=404, text="Account not found"), 404
 
-        if first_name is not None:
-            acc.first_name = first_name
-        if last_name is not None:
-            acc.last_name = last_name
-        if email is not None:
-            acc.email = email
-        # TODO: We likely will need to validate addresses somehow
-        if address is not None:
-            acc.address = address
+        acc.first_name = first_name
+        acc.last_name = last_name
+        acc.email = email
+        acc.address = address
+
         acct_repo.update_account(acc)
         t.commit()
         return jsonify(acc)
