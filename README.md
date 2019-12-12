@@ -2,9 +2,9 @@
 A private microservice to support The Microsetta Initiative
 
 ## Installation
-Create a new `conda` environment containing `flask`:
+Create a new `conda` environment containing `flask` and `psycopg2`:
 
-`conda create -n microsetta-private-api flask`
+`conda create -n microsetta-private-api flask psycopg2`
 
 Once the conda environment is created, activate it:
 
