@@ -22,15 +22,23 @@ paths:
       requestBody:
         content:
           application/json:
-            schema:
-              allOf:
-              - $ref: '#/components/schemas/first_name'
-              - $ref: '#/components/schemas/last_name'
-              - $ref: '#/components/schemas/email'
-              - $ref: '#/components/schemas/address'
-              - $ref: '#/components/schemas/account_type'
-              - $ref: '#/components/schemas/kit_name'
-              - $ref: '#/components/schemas/kit_code'
+              schema:
+                type: object
+                properties:
+                  first_name:
+                    $ref: '#/components/schemas/first_name'
+                  last_name:
+                    $ref: '#/components/schemas/last_name'
+                  email:
+                    $ref: '#/components/schemas/email'
+                  address:
+                    $ref: '#/components/schemas/address'
+                  account_type:
+                    $ref: '#/components/schemas/account_type'
+                  kit_name:
+                    $ref: '#/components/schemas/kit_name'
+                  kit_code:
+                    $ref: '#/components/schemas/kit_code'
       responses:
         '201':
           description: Successfully registered new user account
@@ -46,7 +54,6 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
-
 
   '/accounts/{acct_id}':
     get:
@@ -83,11 +90,16 @@ paths:
         content:
           application/json:
             schema:
-              allOf:
-                - $ref: '#/components/schemas/first_name'
-                - $ref: '#/components/schemas/last_name'
-                - $ref: '#/components/schemas/email'
-                - $ref: '#/components/schemas/address'
+              type: object
+              properties:
+                first_name:
+                  $ref: '#/components/schemas/first_name'
+                last_name:
+                  $ref: '#/components/schemas/last_name'
+                email:
+                  $ref: '#/components/schemas/email'
+                address:
+                  $ref: '#/components/schemas/address'
       responses:
         '200':
           description: Successfully updated user account information
@@ -329,7 +341,7 @@ paths:
     get:
       operationId: implementation.read_answered_surveys
       tags:
-        - Surveys
+        - Surveys (By Source)
       summary: Get answered survey instances associated with source
       description: Get answered survey instances associated with source
       parameters:
@@ -362,7 +374,7 @@ paths:
     post:
       operationId: implementation.submit_answered_survey
       tags:
-        - Surveys
+        - Surveys (By Source)
       summary: Submit new answered survey
       description: Submit new answered survey
       parameters:
@@ -373,9 +385,12 @@ paths:
         content:
           application/json:
             schema:
-              allOf:
-              - $ref: '#/components/schemas/survey_template_id'
-              - $ref: '#/components/schemas/survey_text'
+              type: object
+              properties:
+                survey_template_id:
+                  $ref: '#/components/schemas/survey_template_id'
+                survey_text:
+                  $ref: '#/components/schemas/survey_text'
       responses:
         '201':
           description: Successfully submitted new answered survey
@@ -397,7 +412,7 @@ paths:
     get:
       operationId: implementation.read_answered_survey
       tags:
-        - Survey
+        - Survey (By Source)
       summary: Get information about an answered survey
       description: Get information about an answered survey
       parameters:
@@ -431,7 +446,7 @@ paths:
     delete:
       operationId: implementation.delete_answered_survey
       tags:
-        - Survey
+        - Survey (By Source)
       summary: Delete an answered survey
       description: Delete an answered survey
       parameters:
@@ -485,15 +500,20 @@ paths:
         content:
           application/json:
             schema:
-              allOf:
-                - $ref: '#/components/schemas/sample_barcode'
-                # NB: Getting the sample barcode to input here is outside the scope of this endpoint--see kits
-                - $ref: '#/components/schemas/sample_site'
-                - $ref: '#/components/schemas/sample_datetime'
-                - $ref: '#/components/schemas/sample_notes'
+              type: object
+              properties:
+                sample_barcode:
+                  # NB: Getting the sample barcode to input here is outside the scope of this endpoint--see kits
+                  $ref: '#/components/schemas/sample_barcode'
+                sample_site:
+                  $ref: '#/components/schemas/sample_site'
+                sample_datetime:
+                  $ref: '#/components/schemas/sample_datetime'
+                sample_notes:
+                  $ref: '#/components/schemas/sample_notes'
             example:
-              sample_barcode: 000102030004
-              sample_site: stool
+              sample_barcode: "000102030004"
+              sample_site: "stool"
               sample_datetime: 2017-07-21T17:32:28Z
               sample_notes: "Oops, I dropped it"
       responses:
@@ -594,7 +614,7 @@ paths:
     get:
       operationId: implementation.read_answered_survey_associations
       tags:
-        - Answered Survey Associations
+        - Surveys (By Sample)
       summary: Get list of answered surveys associated with this sample
       description: Get list of answered surveys associated with this sample
       parameters:
@@ -603,13 +623,23 @@ paths:
         - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
-          description: Successfully returned list of survey associations
+          description: Successfully returned list of answered surveys associated with this sample
           content:
             application/json:
               schema:
                 type: array
-                items:  # TODO: should I also return the answered survey id that goes with each association?
-                  type: integer
+                items:
+                  type: object
+                  properties:
+                    survey_id:
+                      $ref: '#/components/schemas/survey_id'
+                    survey_template_title:
+                      $ref: '#/components/schemas/survey_template_title'
+                    survey_template_version:
+                      $ref: '#/components/schemas/survey_template_version'
+                    survey_template_type:
+                      $ref: '#/components/schemas/survey_template_type'
+                    # Wonder if someday we might want the date it was answered?
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -617,7 +647,7 @@ paths:
     post:
       operationId: implementation.associate_answered_survey
       tags:
-        - Answered Survey Association
+        - Survey (By Sample)
       summary: Associate an answered survey with this sample
       description: Associate an answered survey with this sample
       parameters:
@@ -628,9 +658,7 @@ paths:
         content:
           application/json:
             schema:
-              type: integer
-            example:
-              answered_survey_id: 1264
+              $ref: '#/components/schemas/survey_id'
       responses:
         '201':
           description: Successfully associated answered survey with sample
@@ -649,7 +677,7 @@ paths:
     # NB: I can't really see a way that this can be updated, or even viewed--the association simply exists or doesn't
     delete:
       tags:
-        - Answered Survey Association
+        - Survey (By Sample)
       operationId: implementation.dissociate_answered_survey
       summary: Dissociate an answered survey from a sample
       description: Dissociate an answered survey from a sample
@@ -670,7 +698,7 @@ paths:
     get:
       operationId: implementation.read_kit
       tags:
-        - Kit
+        - Kit Samples
       summary: Get list of samples in kit that are not assigned to a source
       description: Get list of samples in kit that are not assigned to a source
       parameters:
@@ -701,21 +729,21 @@ components:
       in: path
       description: Unique id specifying a user account
       schema:
-        type: integer
+        type: string
       required: true
     kit_id:
       name: kit_id
       in: path
       description: Unique internal id specifying a kit
       schema:
-        type: integer
+        type: string
       required: true
     sample_id:
       name: sample_id
       in: path
       description: Unique id specifying a sample associated with a source
       schema:
-        type: integer
+        type: string
       required: true
     survey_id:
       name: survey_id
@@ -736,7 +764,7 @@ components:
       in: path
       description: Unique id specifying a source
       schema:
-        type: integer
+        type: string
       required: true
 
     # query parameters
@@ -847,7 +875,7 @@ components:
           description: |
             zip code or postal code
           type: string
-          example: 14265
+          example: "14265"
         country_code:
           description: |
             the country code according to
@@ -932,7 +960,7 @@ components:
 
     # survey template section
     survey_template_id:
-      type: integer
+      type: string
     survey_template_title:
       type: string
     survey_template_type:
@@ -942,7 +970,7 @@ components:
 
     # survey section
     survey_id:
-      type: integer
+      type: string
     survey_text:
       # The contents of this string ARE structured, but their structure is not specified in THIS api.
       type: string
