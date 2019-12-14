@@ -16,7 +16,13 @@ from repo.transaction import Transaction
 from repo.account_repo import AccountRepo
 from repo.source_repo import SourceRepo
 from repo.kit_repo import KitRepo
+from repo.survey_template_repo import SurveyTemplateRepo
+
 from model.source import Source
+from model.survey_template import SurveyTemplate
+
+from util import vue_adapter
+
 import uuid
 import json
 
@@ -127,16 +133,39 @@ def delete_source(acct_id, source_id):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         if not source_repo.delete_source(acct_id, source_id):
-            return jsonify(error = 404, text="No source found"), 404
+            return jsonify(error=404, text="No source found"), 404
         return '', 204
 
 
 def read_survey_templates(acct_id, source_id, locale_code):
-    return not_yet_implemented()
+    # TODO: I don't think this query is backed by one of the existing tables
+    # I think it was just hardcoded...  Which honestly seems like a fine
+    # solution to me...  How much do we care that survey identifiers are
+    # guessable?
+
+    # TODO: I don't think surveys have names... only survey groups have names.
+    # So what can I pass down to the user that will make any sense here?
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        source = source_repo.get_source(acct_id, source_id)
+        if source.source_type == Source.SOURCE_TYPE_HUMAN:
+            return [1, 3, 4, 5]
+        elif source.source_type == Source.SOURCE_TYPE_CANINE:
+            return [2]
+        else:
+            return []
 
 
 def read_survey_template(acct_id, source_id, survey_template_id, locale_code):
-    return not_yet_implemented()
+    # TODO: can we get rid of source_id?  I don't have anything useful to do
+    # with it...  I guess I could check if the source is a dog before giving
+    # out a pet information survey?
+
+    with Transaction() as t:
+        survey_template_repo = SurveyTemplateRepo(t)
+        survey_template = survey_template_repo.get_survey_template(
+                                                            survey_template_id)
+        return vue_adapter.to_vue_schema(survey_template)
 
 
 def read_answered_surveys(acct_id, source_id):
@@ -147,7 +176,8 @@ def read_answered_survey(acct_id, source_id, survey_id):
     return not_yet_implemented()
 
 
-def submit_answered_survey(acct_id, source_id, locale_code, survey_template_id, survey_text):
+def submit_answered_survey(acct_id, source_id, locale_code,
+                           survey_template_id, survey_text):
     return not_yet_implemented()
 
 
