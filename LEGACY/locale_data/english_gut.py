@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import division
-from amgut.lib.config_manager import AMGUT_CONFIG
+from LEGACY.config_manager import AMGUT_CONFIG
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The American Gut Project Development Team.

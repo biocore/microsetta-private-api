@@ -20,12 +20,14 @@ from repo.survey_template_repo import SurveyTemplateRepo
 
 from model.source import Source
 from model.survey_template import SurveyTemplate
+from model.mock_jinja import MockJinja
 
 from util import vue_adapter
 
+from LEGACY.locale_data import american_gut, british_gut
+
 import uuid
 import json
-
 
 TOKEN_KEY = "QvMWMnlOqBbNsM88AMxpzcJMbBUu/w8U9joIaNYjuEbwEYhLIB5FqEoFWnfLN3JZN4SD0LAtZOwFNqyMLmNruBLqEvbpjQzM6AY+BfXGxDVFL65c9Xw8ocd6t1nF6YvTpHGB4NJhUwngjIQmFx+6TCa5wArtEqUeoIc1ukVTYbioRkxzi5ju8cc9/PoInB0c7wugMz5ihAPWohpDc4kCotYv7C2K/e9J9CPdwbiLJKYKxO4zSQAqk+Sj4wRcn7bJqIOIT6BlvvnzRGXYG33qXAxGylM4UySj7ltwSGOIY0/JUvKEej3fX17C8wWtJvrjbFQacNhoglqfWq2GeOdRSA== "
 TEMP_ACCESS_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbXlhcHAuY29tLyIsInN1YiI6InVzZXJzL3VzZXIxMjM0Iiwic2NvcGUiOiJzZWxmLCBhZG1pbnMiLCJqdGkiOiJkMzBkMzA5ZS1iZTQ5LTRjOWEtYjdhYi1hMGU3MTIwYmFlZDMiLCJpYXQiOjE1NzIzNzY4OTUsImV4cCI6MTU3MjM4MDQ5NX0.EMooERuy2Z4tC_TsXJe6Vx8yCgzTzI_qh84a5DsKPRw"
@@ -40,9 +42,12 @@ def not_yet_implemented():
 def verify_and_decode_oauth2_jwt(access_token=TEMP_ACCESS_TOKEN) -> dict:
     token_header = jwt.get_unverified_header(access_token)
     if token_header['typ'] != "JWT":
-        raise ValueError("Provided access token is not in JWT format: {0}".format(access_token))
+        raise ValueError(
+            "Provided access token is not in JWT format: {0}".format(
+                access_token))
     alg_type = token_header['alg']
-    decoded = jwt.decode(access_token, b64decode(TOKEN_KEY), algorithms=alg_type, verify=False)
+    decoded = jwt.decode(access_token, b64decode(TOKEN_KEY),
+                         algorithms=alg_type, verify=False)
 
     # TODO: figure out what to return and how to dig it out of JWT
     return {'uid': "not_implemented", 'scope': ['uid']}
@@ -164,7 +169,7 @@ def read_survey_template(acct_id, source_id, survey_template_id, locale_code):
     with Transaction() as t:
         survey_template_repo = SurveyTemplateRepo(t)
         survey_template = survey_template_repo.get_survey_template(
-                                                            survey_template_id)
+            survey_template_id)
         return vue_adapter.to_vue_schema(survey_template)
 
 
@@ -231,4 +236,12 @@ def read_kit(kit_id, kit_code):
 
 
 def consent_doc():
-    return render_template("new_participant.jinja2")
+    # return render_template("new_participant.jinja2",
+    #                        message=MockJinja("message"),
+    #                        media_locale=MockJinja("media_locale"),
+    #                        tl=MockJinja("tl"))
+
+    return render_template("new_participant.jinja2",
+                           message = None,
+                           media_locale = american_gut.media_locale,
+                           tl = american_gut._NEW_PARTICIPANT)
