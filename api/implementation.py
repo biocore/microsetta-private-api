@@ -9,7 +9,7 @@ Loosely based off examples in https://realpython.com/flask-connexion-rest-api/#b
 and associated file https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py
 """
 
-from flask import jsonify
+from flask import jsonify, render_template
 import jwt
 from base64 import b64decode
 from repo.transaction import Transaction
@@ -228,3 +228,7 @@ def read_kit(kit_id, kit_code):
             if not s.deposited:
                 unused.append(s)
         return jsonify(unused)
+
+
+def consent_doc():
+    return render_template("new_participant.jinja2")

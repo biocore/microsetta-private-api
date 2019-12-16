@@ -1,0 +1,192 @@
+{% from future.utils import viewitems %}
+{% from amgut import media_locale %}
+{% from amgut.connections import ag_data, redis %}
+{% set human_participants, animal_participants, environmental_samples, kit_verified = ag_data.get_menu_items(skid) %}
+{% set base_user_id = ag_data.get_user_for_kit(skid) %}
+{% set avail_barcodes = ag_data.getAvailableBarcodes(base_user_id) %}
+{% set maintenance = redis.get('maintenance') %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% raw media_locale['PROJECT_TITLE'] %}</title>
+    <script>
+      //google analytics code
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', '{{media_locale["ANALYTICS_ID"]}}', 'auto');
+      ga('send', 'pageview');
+    </script>
+    <script src="{% raw media_locale['SITEBASE'] %}/static/vendor/js/jquery-1.11.1.min.js"></script>
+    <script src="{% raw media_locale['SITEBASE'] %}/static/vendor/js/jquery-ui-1.10.1.custom.min.js"></script>
+    <script src="{% raw media_locale['SITEBASE'] %}/static/vendor/js/jquery.ui.timepicker.js"></script>
+    <script src="{% raw media_locale['SITEBASE'] %}/static/js/american_gut.js"></script>
+    <link rel="stylesheet" type="text/css" href="{% raw media_locale['SITEBASE'] %}/static/css/americangut.css">
+    <link rel="stylesheet" type="text/css" href="{% raw media_locale['SITEBASE'] %}/static/css/menu.css">
+    <link rel="stylesheet" type="text/css" href="{% raw media_locale['SITEBASE'] %}/static/vendor/css/ui-lightness/jquery-ui-1.10.1.custom.min.css">
+    <link rel="icon" type="image/ico" href="{% raw media_locale['FAVICON'] %}">
+{%block head%}
+{%end%}
+</head>
+<body>
+    <div class="wrapper clearfix" style="position:absolute; top:10px; left:50px; right:50px;">
+        <div class="header clearfix">
+            <img id="logo" style='margin-top:5px; height:100px; width:auto;' src="{% raw media_locale['LOGO'] %}">
+    {% if maintenance is not None %}
+            <big><font color="red">
+                {{ maintenance }}
+            </font></big>
+    {% end %}
+        </div>
+        <br />
+
+        <div class="left menuwrapper">  <!-- Side Menu -->
+            <div id="cssmenu">
+                <ul>
+                    <li class="active"><a href="{% raw media_locale['SITEBASE'] %}/authed/portal/"><span>{% raw media_locale['NAV_HOME'] %}</span></a></li>
+                    <li class="has-sub"><a><span>{% raw media_locale['NAV_PARTICIPANT_RESOURCES'] %}</span></a>
+                        <ul>
+                            <li><a href="{% raw media_locale['SITEBASE'] %}/introduction/" target="_blank"><span>{% raw media_locale['NAV_MICROBIOME_101'] %}</span></a></li>
+                            <li><a href="{% raw media_locale['SITEBASE'] %}/faq/" target="_blank"><span>{% raw media_locale['NAV_FAQ'] %}</span></a></li>
+                            <li><a href="{% raw media_locale['KIT_INSTRUCTIONS'] %}" target="_blank">{% raw media_locale['NAV_KIT_INSTRUCTIONS'] %}</a></li>
+                        {% if 'NAV_INTERNATIONAL' in media_locale %}
+                            <li class="last"><a href="{% raw media_locale['SITEBASE'] %}/international_shipping/">{% raw media_locale['NAV_INTERNATIONAL'] %}</a></li>
+                        {% end %}
+                            <li><a href="{% raw media_locale['SITEBASE'] %}/static/img/FAQ_Human_Microbiome.pdf" target="_blank"><span>{% raw media_locale['NAV_MICROBIOME_FAQ'] %}</span></a></li>
+                            <li><a href="{% raw media_locale['SITEBASE'] %}/authed/addendum/" target="_blank"><span>{% raw media_locale['NAV_ADDENDUM'] %}</span></a></li>
+                            <li class="last"><a href="{% raw media_locale['SITEBASE'] %}/static/img/mod1_main.pdf" target="_blank"><span>{% raw media_locale['NAV_PRELIM_RESULTS'] %}</span></a></li>
+                        </ul>
+                    </li>
+                    <li class="has-sub"><a><span>{% raw media_locale['NAV_OTHER_SITES'] %}</span></a>
+                        <ul>
+                            <li><a href="{% raw media_locale['AMERICAN_GUT_PROJECT'] %}" target="_blank">{% raw media_locale['NAV_AMERICAN_GUT_PROJECT'] %}</a></li>
+                            <li><a href="{% raw media_locale['BRITISH_GUT_PROJECT'] %}" target="_blank">{% raw media_locale['NAV_BRITISH_GUT_PROJECT'] %}</a></li>
+                        {% for alt_site in media_locale['GUT_PROJECT_SHORTHANDS'] %}
+                            {% if alt_site != media_locale['SHORTHAND'] %}
+                            <li><a href="{% raw media_locale['ALT_GUT_SITE'] %}/{% raw alt_site.replace(' ','') %}" target="_blank">{% raw alt_site %}{% raw media_locale['NAV_ALT_GUT'] %}</a></li>
+                            {% end %}
+                        {% end %}
+                        </ul>
+                    </li>
+                    <li><a href="{% raw media_locale['SITEBASE'] %}/authed/change_password/"><span>{% raw media_locale['NAV_CHANGE_PASSWORD'] %}</span></a></li>
+                    <li><a href="{% raw media_locale['SITEBASE'] %}/authed/help_request/"><span>{% raw media_locale['NAV_CONTACT_US'] %}</span></a></li>
+                    <li class="last"><a href="{% raw media_locale['SITEBASE'] %}/auth/logout/"><span>{% raw media_locale['NAV_LOGOUT'] %}</span></a></li>
+                </ul>
+            </div>
+            <div id="cssmenu">
+                <ul>
+                    <li class="has-sub"><a><span>{% raw media_locale['NAV_HUMAN_SAMPLES'] %}</span></a> <!-- list of participants-->
+                        <ul>
+{% for hp, sitebase_barcodes in viewitems(human_participants) %}
+                            <li class="has-sub">
+                                <a onclick="document.forms['participant_overview_{{hp}}'].submit(); return false;">
+                                    <form action="{% raw media_locale['SITEBASE'] %}/participants/{{hp}}" method="post" id="participant_overview_{{hp}}">
+                                        <input type="hidden" name="participant_type" value="human"/>
+                                        <span>{{hp}}</span>
+                                    </form>
+                                </a>
+                                <ul>
+    {% for sitebase_barcode in sitebase_barcodes %}
+                                    <li>
+                                        <a href="{% raw media_locale['SITEBASE'] %}/authed/sample_overview/?barcode={{sitebase_barcode['barcode']}}"
+        {% if sitebase_barcode['status'] == 'Received' %}
+            style="color:#0B0;"
+        {% end %}
+                                        >
+                                            <span>
+            {{sitebase_barcode['barcode']}}
+            {% if sitebase_barcode['status'] == 'Received' %}
+                {% raw media_locale['NAV_RECEIVED'] %}
+            {% end %}
+                                            </span>
+                                        </a>
+                                    </li>
+    {% end %}
+                                </ul>
+                            </li>
+{%end%}
+{% if kit_verified %}
+                            <li><a href="{% raw media_locale['SITEBASE'] %}/authed/new_participant_overview/"><span><strong>{% raw media_locale['NAV_ADD_HUMAN'] %}</strong></span></a></li>
+{% end %}
+                        </ul>
+                    </li> <!-- end list of participants-->
+
+                    <!-- top-level Animals header-->
+                    <li class="has-sub"><a><span>{% raw media_locale['NAV_ANIMAL_SAMPLES'] %}</span></a> <!-- list of animal participants -->
+                        <ul>
+{% for ap, sitebase_barcodes in viewitems(animal_participants) %}
+                            <li class="last">
+                                <a onclick="document.forms['participant_overview_{{ap}}'].submit(); return false;">
+                                    <form action="{% raw media_locale['SITEBASE'] %}/participants/{{ap}}" method="post" id="participant_overview_{{ap}}">
+                                        <input type="hidden" name="participant_type" value="animal"/>
+                                        <span>{{ap}}</span>
+                                    </form>
+                                </a>
+                            </li>
+                            <ul>
+    {% for sitebase_barcode in sitebase_barcodes %}
+                                <li>
+                                    <a href="{% raw media_locale['SITEBASE'] %}/authed/sample_overview/?barcode={{sitebase_barcode['barcode']}}"
+        {% if sitebase_barcode['status'] == 'Received' %}
+            style="color:#0B0;"
+        {% end %}
+                                    >
+                                        <span>
+            {{sitebase_barcode['barcode']}}
+            {% if sitebase_barcode['status'] == 'Received' %}
+                {% raw media_locale['NAV_RECEIVED'] %}
+            {% end %}
+                                        </span>
+                                    </a>
+                                </li>
+    {% end %}
+                            </ul>
+{%end%}
+{% if kit_verified %}
+                            <li><a href="{% raw media_locale['SITEBASE'] %}/authed/add_animal/"><span><strong>{% raw media_locale['NAV_ADD_ANIMAL'] %}</strong></span></a></li>
+{% end %}
+                        </ul>
+                    </li> <!-- end list of animal participants -->
+
+                    <li class="has-sub"><a><span>{% raw media_locale['NAV_ENV_SAMPLES'] %}</span></a>
+                        <ul>
+{% for sitebase_barcode in environmental_samples %}
+                            <li>
+                                <a href="{% raw media_locale['SITEBASE'] %}/authed/sample_overview/?barcode={{sitebase_barcode['barcode']}}"
+    {% if sitebase_barcode['status'] == 'Received' %}
+        style="color:#0B0;"
+    {% end %}
+                                >
+                                    <span>
+    {{sitebase_barcode['barcode']}}
+    {% if sitebase_barcode['status'] == 'Received' %}
+        {% raw media_locale['NAV_RECEIVED'] %}
+    {% end %}
+                                    </span>
+                                </a>
+                            </li>
+{% end %}
+                        </ul>
+                    </li>
+{% if avail_barcodes %}
+                    <li class="last"><a href="{% raw media_locale['SITEBASE'] %}/authed/add_sample_overview/"><strong>{% raw media_locale['NAV_LOG_SAMPLE'] %}</strong></a></li>
+{% end %}
+                </ul>
+            </div>
+            <!-- Twitter -->
+            <div id="twitter">
+                <a class="twitter-timeline" href="https://twitter.com/americangut" data-widget-id="328928986170269696">Tweets by @americangut</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div>
+        </div>
+        <div class="content">
+{%block content%}
+{%end%}
+        </div>
+{%block footer%}
+{%end%}
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!--Disabled sitebase as I think we'll just show in an iframe -Dan -->
+<!--{% extends sitebase.html %}-->
+{% block head %}
+<script src="{% raw media_locale['SITEBASE'] %}/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript">
+    function min_validation(form) {
+      // needed because Safari does not honor required flag in inputs, or jquery validate
+      var valid = true;
+      form = document.getElementById(form);
+      if(form.participant_name.value.trim().length == 0) {
+        form.participant_name.className += " highlight";
+        valid = false;
+      }
+      if(form.participant_email.value.trim().length == 0) {
+        form.participant_email.className += " highlight";
+        valid = false;
+      }
+      return valid;
+    }
+
+    function validate06() {
+      // needed because Safari does not honor required flag in inputs, or jquery validate
+      var valid = min_validation("0-6-form");
+      form = document.getElementById("0-6-form");
+      if(form.consent_parent.checked == false) {
+        form.consent_parent.className += " highlight";
+        valid = false;
+      }
+      if(form.parent_1_name.value.trim().length == 0) {
+        form.parent_1_name.className += " highlight";
+        valid = false;
+      }
+      return valid;
+    }
+
+    function validate712() {
+      // needed because Safari does not honor required flag in inputs, or jquery validate
+      var valid = min_validation("7-12-form");
+      form = document.getElementById("7-12-form");
+      if(form.consent_parent.checked == false) {
+        form.consent_parent.className += " highlight";
+        valid = false;
+      }
+      if(form.consent_child.checked == false) {
+        form.consent_child.className += " highlight";
+        valid = false;
+      }
+      if(form.consent_witness.checked == false) {
+        form.consent_witness.className += " highlight";
+        valid = false;
+      }
+      if(form.obtainer_name.value.trim().length == 0) {
+        form.obtainer_name.className += " highlight";
+        valid = false;
+      }
+      if(form.parent_1_name.value.trim().length == 0) {
+        form.parent_1_name.className += " highlight";
+        valid = false;
+      }
+      return valid;
+    }
+
+    function validate1317() {
+      // needed because Safari does not honor required flag in inputs, or jquery validate
+      var valid = min_validation("13-17-form");
+      form = document.getElementById("13-17-form");
+      if(form.consent_parent.checked == false) {
+        form.consent_parent.className += " highlight";
+        valid = false;
+      }
+      if(form.consent_child.checked == false) {
+        form.consent_child.className += " highlight";
+        valid = false;
+      }
+      if(form.parent_1_name.value.trim().length == 0) {
+        form.parent_1_name.className += " highlight";
+        valid = false;
+      }
+      return valid;
+    }
+
+    function change_consent_div(radio) {
+        $("#0-6-div").hide();
+        $("#7-12-div").hide();
+        $("#13-17-div").hide();
+        $("#18-plus-div").hide();
+        $("#"+ radio.value +"-div").show();
+    }
+
+    function relax_parents(box) {
+        var sec_parent = $("#" + box.form.id + "_parent_2_name");
+        if(box.checked) {
+            sec_parent.required = false;
+        } else {
+            sec_parent.required = true;
+        }
+    }
+
+    $(document).ready(function() {
+        $("#0-6-div").hide();
+        $("#7-12-div").hide();
+        $("#13-17-div").hide();
+        $("#18-plus-div").hide();
+    });
+</script>
+<style>
+.scrolltext {
+  height: 400px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  width: 80%;
+  margin: 0 auto;
+}
+</style>
+{% end %}
+
+{%block content%}
+{% from amgut import text_locale %}
+{% set tl = text_locale['new_participant.html'] %}
+<h2>{% raw tl['ADD_HUMAN_TITLE'] %}</h2>
+{% if message %}
+<h3 style="color: red">{{message}}</h3>
+{% end %}
+<div id="age-ranges-div" style='text-align: left;padding: 10px'>
+    <h3>{% raw tl['SEL_AGE_RANGE'] %}</h3>
+    <input type='radio' id='age-range-1' name='age-range' value='0-6' onchange="change_consent_div(this)"> <label for='age-range-1'>{% raw tl['AGE_0_6']%}</label><br />
+    <input type='radio' id='age-range-2' name='age-range' value='7-12' onchange="change_consent_div(this)"> <label for='age-range-2'>{% raw tl['AGE_7_12']%}</label><br />
+    <input type='radio' id='age-range-3' name='age-range' value='13-17' onchange="change_consent_div(this)"> <label for='age-range-3'>{% raw tl['AGE_13_17']%}</label><br />
+    <input type='radio' id='age-range-4' name='age-range' value='18-plus' onchange="change_consent_div(this)"> <label for='age-range-4'>{% raw tl['AGE_18']%}</label>
+    <hr>
+</div>
+
+<div id="0-6-div" style='text-align: left;padding: 10px'>
+<div class='scrolltext'>
+{% raw tl['CONSENT_YOUR_CHILD']%}
+{% raw tl['PARTICIPATION_AGREEMENT'] %}
+{% raw tl['EXHIBIT_A'] %}
+</div>
+    <div class="" id="consent">
+        <hr>
+        <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{% raw tl['BILL_OF_RIGHTS']%}</a><br/>
+        <form method="post" id="0-6-form" name="consent_info" onsubmit="return validate06();" action="{% raw media_locale['SITEBASE'] %}/authed/new_participant/">
+           <input type="hidden" name="age_range" value="0-6">
+           <p><input value="Yes" type="checkbox" name="consent_parent" id="consent_parent" required data-rule-required="true"> {% raw tl['TEXT_I_HAVE_READ_PARENT'] %}</p>
+    </div>
+    <table>
+        <tr><td><label for='participant_name'>{% raw tl['PARTICIPANT_NAME'] %}</label></td><td><input tabindex="2" type="text" name="participant_name" id="participant_name" required data-rule-required="true"><div class="red right">*</div></td></tr>
+        <tr><td>{% raw tl['PARTICIPANT_EMAIL'] %}</td><td><input tabindex="3" type="email"  name="participant_email" id="participant_email" required data-rule-required="true"><div class="red right" required data-rule-required="true">*</div></td></tr>
+        <tr><td>{% raw tl['PARTICIPANT_PARENT_1'] %}</td><td><input tabindex="7" type="text" name="parent_1_name" id="0-6-form_parent_1_name" required data-rule-required="true"></td></tr>
+        <tr><td>{% raw tl['PARTICIPANT_PARENT_2'] %}</td><td><input tabindex="8" type="text" name="parent_2_name" id="0-6-form_parent_2_name" required data-rule-required="true"></td></tr>
+        <tr><td>{% raw tl['PARTICIPANT_DECEASED_PARENTS'] %}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="yes" onclick="relax_parents(this)"></td></tr>
+        <tr><td><input type="submit" value="I Accept"></td><td></td></tr>
+    </table>
+    </form>
+</div>
+<div id="7-12-div" style='text-align: left;padding: 10px'>
+<div class='scrolltext'>
+{% raw tl['ASSENT_7_12']%}
+</div>
+    <div class="" id="consent">
+        <hr>
+        <form method="post" id="7-12-form" name="consent_info" onsubmit="return validate712();" action="{% raw media_locale['SITEBASE'] %}/authed/new_participant/">
+        <input type="hidden" name="age_range" value="7-12">
+           <p><input value="Yes" type="checkbox" name="consent_child" id="consent_child" required data-rule-required="true"> {% raw tl['TEXT_I_HAVE_READ_SIMPLIFIED'] %}</p>
+    </div>
+    <p><table>
+        <tr><td><label for='participant_name'>{% raw tl['PARTICIPANT_NAME'] %}</label></td><td><input tabindex="2" type="text" name="participant_name" id="participant_name" required data-rule-required="true"><div class="red right">*</div></td></tr>
+        <tr><td>{% raw tl['PARTICIPANT_EMAIL'] %}</td><td><input tabindex="3" type="email"  name="participant_email" id="participant_email" required data-rule-required="true"><div class="red right">*</div></td></tr>
+    </table></p>
+    <div>
+    <h4>{% raw tl['PERSON_ATTAINING_ASSENT'] %}</h4>
+    <p><input value="Yes" type="checkbox" name="consent_witness" id="consent_witness" required data-rule-required="true"> {% raw tl['TEXT_ASSENT_WITNESS'] %}</p>
+    </div>
+    <p><table>
+        <tr><td><label for='obtainer_name'>{% raw tl['OBTAINER_NAME'] %}</label></td><td><input tabindex="2" type="text" name="obtainer_name" id="obtainer_name" required data-rule-required="true"><div class="red right">*</div></td></tr>
+    </table></p>
+    <hr>
+<div class='scrolltext'>
+{% raw tl['CONSENT_YOUR_CHILD']%}
+{% raw tl['PARTICIPATION_AGREEMENT'] %}
+{% raw tl['EXHIBIT_A'] %}
+</div>
+<div class="" id="consent">
+        <hr>
+            <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{% raw tl['BILL_OF_RIGHTS']%}</a><br/>
+           <p><input value="Yes" type="checkbox" name="consent_parent" id="consent_parent" required data-rule-required="true"> {% raw tl['TEXT_I_HAVE_READ_PARENT'] %}</p>
+    </div>
+    <table>
+        <tr><td>{% raw tl['PARTICIPANT_PARENT_1'] %}</td><td><input tabindex="7" type="text" name="parent_1_name" id="7-12-form_parent_1_name" required data-rule-required="true"></td></tr>
+        <tr><td>{% raw tl['PARTICIPANT_PARENT_2'] %}</td><td><input tabindex="8" type="text" name="parent_2_name" id="7-12-form_parent_2_name" required data-rule-required="true"></td></tr>
+        <tr><td>{% raw tl['PARTICIPANT_DECEASED_PARENTS'] %}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="yes" onclick="relax_parents(this)"></td></tr>
+        <tr><td><input type="submit" value="I Accept"></td><td></td></tr>
+    </table>
+    </form>
+</div>
+
+<div id="13-17-div" style='text-align: left;padding: 10px'>
+<div class='scrolltext'>
+    {% raw tl['ASSENT_13_17']%}
+</div>
+    <div class="" id="consent">
+        <hr>
+        <form method="post" id="13-17-form" name="consent_info" onsubmit="return validate1317();" action="{% raw media_locale['SITEBASE'] %}/authed/new_participant/">
+           <input type="hidden" name="age_range" value="13-17">
+           <p><input value="Yes" type="checkbox" name="consent_child" id="consent_child" required data-rule-required="true"> {% raw tl['TEXT_I_HAVE_READ_1'] %}</p>
+    </div>
+    <p><table>
+        <tr><td><label for='participant_name'>{% raw tl['PARTICIPANT_NAME'] %}</label></td><td><input tabindex="2" type="text" name="participant_name" id="participant_name" required data-rule-required="true"><div class="red right">*</div></td></tr>
+        <tr><td>{% raw tl['PARTICIPANT_EMAIL'] %}</td><td><input tabindex="3" type="email"  name="participant_email" id="participant_email" required data-rule-required="true"><div class="red right">*</div></td></tr>
+    </table></p>
+    <hr>
+    <div class='scrolltext'>
+    {% raw tl['CONSENT_YOUR_CHILD']%}
+    {% raw tl['PARTICIPATION_AGREEMENT'] %}
+    {% raw tl['EXHIBIT_A'] %}
+    </div>
+    <div class="" id="consent">
+        <hr>
+        <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{% raw tl['BILL_OF_RIGHTS']%}</a><br/>
+           <p><input value="Yes" type="checkbox" name="consent_parent" id="consent_parent" required data-rule-required="true"> {% raw tl['TEXT_I_HAVE_READ_PARENT'] %}</p>
+    </div>
+    <table>
+        <tr><td>{% raw tl['PARTICIPANT_PARENT_1'] %}</td><td><input tabindex="7" type="text" name="parent_1_name" id="13-17-form_parent_1_name" required data-rule-required="true"></td></tr>
+        <tr><td>{% raw tl['PARTICIPANT_PARENT_2'] %}</td><td><input tabindex="7" type="text" name="parent_2_name" id="13-17-form_parent_2_name" required data-rule-required="true"></td></tr>
+        <tr><td>{% raw tl['PARTICIPANT_DECEASED_PARENTS'] %}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="yes" onclick="relax_parents(this)"></td></tr>
+        <tr><td><input type="submit" value="I Accept"></td><td></td></tr>
+    </table>
+    </form>
+</div>
+
+<div id="18-plus-div" style='text-align: left;padding: 10px'>
+<div class='scrolltext'>
+{% raw tl['CONSENT_18']%}
+{% raw tl['PARTICIPATION_AGREEMENT'] %}
+{% raw tl['EXHIBIT_A'] %}
+</div>
+<div class="" id="consent">
+        <hr>
+        <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{% raw tl['BILL_OF_RIGHTS']%}</a><br/>
+        <form method="post" id="18-form" name="consent_info" onsubmit="return min_validation('18-form');" action="{% raw media_locale['SITEBASE'] %}/authed/new_participant/">
+        <input type="hidden" name="age_range" value="18-plus">
+           <p><input value="Yes" type="checkbox" name="consent" id="consent" required data-rule-required="true"> {% raw tl['TEXT_I_HAVE_READ_1'] %}</p>
+    </div>
+    <p><table>
+        <tr><td><label for='participant_name'>{% raw tl['PARTICIPANT_NAME'] %}</label></td><td><input tabindex="2" type="text" name="participant_name" id="participant_name" required data-rule-required="true"><div class="red right">*</div></td></tr>
+        <tr><td>{% raw tl['PARTICIPANT_EMAIL'] %}</td><td><input tabindex="3" type="email"  name="participant_email" id="participant_email" required data-rule-required="true"><div class="red right">*</div></td></tr>
+        <tr><td><input type="submit" value="I Accept"></td><td></td></tr>
+    </table></p>
+    </form>
+</div>
+{% end %}
