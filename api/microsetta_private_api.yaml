@@ -168,8 +168,13 @@ paths:
                 - $ref: '#/components/schemas/human_source'
                 - $ref: '#/components/schemas/nonhuman_source'
             examples:
+              human_adult_source:
+                $ref: '#/components/examples/human_adult_source'
+              human_child_source:
+                $ref: '#/components/examples/human_child_source'
               nonhuman_source:
                 $ref: '#/components/examples/nonhuman_source'
+
       responses:
         '201':
           description: Successfully created new source
@@ -184,6 +189,10 @@ paths:
                   - $ref: '#/components/schemas/human_source'
                   - $ref: '#/components/schemas/nonhuman_source'
               examples:
+                human_adult_source:
+                  $ref: '#/components/examples/human_adult_source'
+                human_child_source:
+                  $ref: '#/components/examples/human_child_source'
                 nonhuman_source:
                   $ref: '#/components/examples/nonhuman_source'
         '401':
@@ -350,10 +359,7 @@ paths:
                   survey_template_type:
                     $ref: '#/components/schemas/survey_template_type'
                   survey_template_text:
-                    # The contents of this string ARE structured, but their structure is not specified in THIS api.
-                    # Could be *either* vue-compatible json to be used to generate an HTML form OR
-                    # a customized link to direct to an external survey
-                    type: string
+                    $ref: '#/components/schemas/survey_template_text'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -399,7 +405,7 @@ paths:
     post:
       operationId: implementation.submit_answered_survey
       tags:
-        - Surveys (By Source)
+        - Survey (By Source)
       summary: Submit new answered survey
       description: Submit new answered survey
       parameters:
@@ -423,11 +429,6 @@ paths:
             Location:
               schema:
                 type: string
-          content:
-            application/json:
-              schema:
-                # TODO: Should I return any contents here, or just link to new answered survey URL in header?
-                $ref: '#/components/schemas/not_yet_implemented'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '422':
@@ -468,26 +469,7 @@ paths:
           $ref: '#/components/responses/404NotFound'
     # TODO: true?->NB: Getting the list of surveys a source *can* take is outside the scope of this api
     # NB: NO "put"--you shouldn't update an answered survey, but instead should take a new one
-    delete:
-      operationId: implementation.delete_answered_survey
-      tags:
-        - Survey (By Source)
-      summary: Delete an answered survey
-      description: Delete an answered survey
-      parameters:
-        - $ref: '#/components/parameters/acct_id'
-        - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/survey_id'
-      responses:
-        '204':
-          description: Successfully deleted answered survey
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '404':
-          $ref: '#/components/responses/404NotFound'
-        '422':
-          $ref: '#/components/responses/422UnprocessableEntity'
-          # NB: This would be returned if survey cannot be deleted bc has a sample assigned to it
+    # NB: Currently no delete ... can unassociate a survey from a sample but not delete the survey itself
 
   '/accounts/{acct_id}/sources/{source_id}/samples':
     get:
@@ -652,7 +634,7 @@ paths:
                     # Wonder if someday we might want the date it was answered?
               example:
                 - survey_id: 1a7697cc-e202-4397-b12c-ab7e6d23bebd
-                  survey_template_title: "Food Survey"
+                  survey_template_title: "Food Frequency Questionnaire"
                   survey_template_version: "1.2"
                   survey_template_type: remote
                 - survey_id: a302f47c-8090-4ecd-b92f-14331b2807d3
@@ -677,7 +659,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/survey_id'
+              type: object
+              properties:
+                survey_id:
+                  $ref: '#/components/schemas/survey_id'
       responses:
         '201':
           description: Successfully associated answered survey with sample
@@ -1037,12 +1022,76 @@ components:
       example: "e928f910-bf11-4cda-93b5-c34c8914b97f"
     survey_template_title:
       type: string
+      example: "Personal Information"
     survey_template_type:
       type: string # someday could be an enum if we know choices
-      example: "remote"
+      example: "local"
     survey_template_version:
       type: number
       example: 0.1
+    survey_template_text:
+      # The contents of this string ARE structured, but their structure is not specified in THIS api.
+      # Could be *either* vue-compatible json to be used to generate an HTML form OR
+      # a customized link to direct to an external survey
+      type: string
+      example: '{ |
+                  "groups": [ |
+                    { |
+                      "legend": "Personal Information", |
+                      "fields": [ |
+                        { |
+                          "type": "select", |
+                          "label": "Gender:", |
+                          "model": "107", |
+                          "id": "107", |
+                          "inputName": "107", |
+                          "featured": false, |
+                          "visible": true, |
+                          "disabled": false, |
+                          "required": true, |
+                          "multi": false, |
+                          "default": null, |
+                          "hint": null, |
+                          "help": null, |
+                          "validator": null, |
+                          "validateDebounceTime": null, |
+                          "styleClasses": null, |
+                          "buttons": null, |
+                          "attributes": null, |
+                          "values": [
+                            "Unspecified", |
+                            "Male", |
+                            "Female", |
+                            "Other" |
+                          ], |
+                          "selectOptions": {} |
+                        }, |
+                        { |
+                          "type": "input", |
+                          "label": "Height:", |
+                          "model": "108", |
+                          "id": "108", |
+                          "inputName": "108", |
+                          "featured": false, |
+                          "visible": true, |
+                          "disabled": false, |
+                          "required": true, |
+                          "multi": false, |
+                          "default": null, |
+                          "hint": null, |
+                          "help": null, |
+                          "validator": "string", |
+                          "validateDebounceTime": null, |
+                          "styleClasses": null, |
+                          "buttons": null, |
+                          "attributes": null, |
+                          "inputType": "text" |
+                        } |
+                      ] |
+                    } |
+                  ], |
+                  "fields": null |
+                }'
 
     # survey section
     survey_id:
@@ -1051,6 +1100,27 @@ components:
     survey_text:
       # The contents of this string ARE structured, but their structure is not specified in THIS api.
       type: string
+      example: '{ |
+                    "1": "Omnivore", |
+                                          "2": "No", |
+                                          "3": "Never", |
+                                          "4": "Never", |
+                                          "5": "Daily", |
+                                          "6": "No", |
+                                          "107": "Female", |
+                                          "108": "60", |
+                                          "109": "inches", |
+                                          "110": "Canada", |
+                                          "111": "January", |
+                                          "112": "1969", |
+                                          "113": "120", |
+                                          "114": "pounds", |
+                                          "115": "44074", |
+                                          "148": "United States", |
+                                          "162": [ |
+                                            "Exclude refined sugars" |
+                                          ] |
+                }'
 
     # error section
     Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/
@@ -1063,8 +1133,6 @@ components:
       required:
         - code
         - message
-    not_yet_implemented:
-      type: string
 
   examples:
     human_adult_source:
