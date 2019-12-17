@@ -242,6 +242,6 @@ def consent_doc():
     #                        tl=MockJinja("tl"))
 
     return render_template("new_participant.jinja2",
-                           message = None,
-                           media_locale = american_gut.media_locale,
-                           tl = american_gut._NEW_PARTICIPANT)
+                           message=None,
+                           media_locale=american_gut.media_locale,
+                           tl=american_gut._NEW_PARTICIPANT)

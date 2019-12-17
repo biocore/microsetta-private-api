@@ -256,7 +256,7 @@ You will be told if any important new information is found during the course of 
 </p>
 <p style='font-weight: bold;'><i>Can you be withdrawn from the study without your consent?</i></p>
 <p>You may be withdrawn from the study if you do not complete the consent. You may also be withdrawn from the study if you do not follow the instructions given you by the study personnel.</p>
-<p style='font-weight: bold;'><i>Will you be compensated for participating in this study?<i/></p>
+<p style='font-weight: bold;'><i>Will you be compensated for participating in this study?</i></p>
 <p>You will not be financially compensated in this study.</p>
 <p style='font-weight: bold;'><i>Are there any costs associated with participating in this study?</i></p>
 <p>
@@ -289,9 +289,9 @@ You may call the Human Research Protections Program Office at 858-246-4777 to in
     'CONSENT_YOUR_CHILD': '''<p align='center'><b>University of California, San Diego</b><br/>
 Parent Consent for Child to Act as a Research Subject<br/></p>
 <p align='center' style='font-weight: bold;'>American Gut Project</p>
-<p style='font-weight: bold;'><i>Who is conducting the study, why your child been asked to participate, how your child was selected, and what is the approximate number of participants in the study?<i></p>
+<p style='font-weight: bold;'><i>Who is conducting the study, why your child been asked to participate, how your child was selected, and what is the approximate number of participants in the study?</i></p>
 <p>Dr. Rob Knight is conducting a research study to find out more about the trillions of bacteria and other organisms (called the microbiome) that live in and on the body. You are volunteering your child for this study because you want to know more about the microbiome of your child. Children like all humans have a unique microbiome and including them in the study will help elucidate the development of the microbiome. There will be approximately 20,000 participants in the study from across the USA and from other countries around the world.</p>
-<p style='font-weight: bold;'><i>Why is this study being done?<i></p>
+<p style='font-weight: bold;'><i>Why is this study being done?</i></p>
 <p>The purpose of this study is to more accurately assess the differences between people and whether these differences can be attributable to lifestyle, diet, body type, age or the presence of associated diseases.  The results will be used to create a database of sequence data derived from bacterial DNA in various body sites (e.g. skin, mouth, gut) and details about the child participant supplying the sample  that can be used by other researchers when they need samples to compare to what they are studying e.g. certain diseases where gut abnormalities are common.</p>
 <p style='font-weight: bold;'>What will happen to your child in this study and which procedures are standard of care and which are experimental?</p>
 <p>You are being asked if you want your child to be in this study because you signed up for microbial testing on the American gut website. When you signed up we sent you a sample kit with instructions on how to login to the website so that you can consent to the study formally.</p>
