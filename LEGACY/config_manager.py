@@ -15,4 +15,9 @@ class DBConfig(object):
         self.host = 'localhost'
         self.port = 5432
 
+        self.project_name = "PROJECT_NAME"
+        self.project_shorthand = "PROJECT_SHORTHAND"
+        self.sitebase = "PROJECT_SITEBASE"
+        self.locale = "american_gut"
+
 AMGUT_CONFIG = DBConfig()

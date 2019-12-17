@@ -22,4 +22,7 @@ if __name__ == '__main__':
     # Note: app.app is the actual Flask application instance, so any Flask
     # settings have to be set there.
     app.app.json_encoder = JsonifyDefaultEncoder
+
+    app.app.template_folder = "../templates"
+    app.app.static_folder = "../static"
     app.run(port=8082, debug=True)

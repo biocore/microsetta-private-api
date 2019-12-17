@@ -739,6 +739,28 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  # TODO: Move this out of /api ?
+  '/consent':
+    get:
+      operationId: implementation.consent_doc
+      tags:
+        - Consent
+      summary: Retrieve consent forms for display to user
+      description: Retrieve consent forms for display to user
+      responses:
+        '200':
+          description: Consent form
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            text/html:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
 
 components:
   parameters:

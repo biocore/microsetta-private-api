@@ -63,6 +63,10 @@ class EnvironmentInfo:
 
 
 class Source:
+    SOURCE_TYPE_HUMAN = "human"
+    SOURCE_TYPE_CANINE = "canine"
+    SOURCE_TYPE_ENVIRONMENT = "environment"
+
     def __init__(self, source_id, account_id, source_type, source_data):
         self.id = source_id
         self.account_id = account_id

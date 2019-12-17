@@ -1,0 +1,248 @@
+{% extends "sitebase.jinja2" %}
+{% block head %}
+<script src="/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript">
+    function min_validation(form) {
+      // needed because Safari does not honor required flag in inputs, or jquery validate
+      var valid = true;
+      form = document.getElementById(form);
+      if(form.participant_name.value.trim().length == 0) {
+        form.participant_name.className += " highlight";
+        valid = false;
+      }
+      if(form.participant_email.value.trim().length == 0) {
+        form.participant_email.className += " highlight";
+        valid = false;
+      }
+      return valid;
+    }
+
+    function validate06() {
+      // needed because Safari does not honor required flag in inputs, or jquery validate
+      var valid = min_validation("0-6-form");
+      form = document.getElementById("0-6-form");
+      if(form.consent_parent.checked == false) {
+        form.consent_parent.className += " highlight";
+        valid = false;
+      }
+      if(form.parent_1_name.value.trim().length == 0) {
+        form.parent_1_name.className += " highlight";
+        valid = false;
+      }
+      return valid;
+    }
+
+    function validate712() {
+      // needed because Safari does not honor required flag in inputs, or jquery validate
+      var valid = min_validation("7-12-form");
+      form = document.getElementById("7-12-form");
+      if(form.consent_parent.checked == false) {
+        form.consent_parent.className += " highlight";
+        valid = false;
+      }
+      if(form.consent_child.checked == false) {
+        form.consent_child.className += " highlight";
+        valid = false;
+      }
+      if(form.consent_witness.checked == false) {
+        form.consent_witness.className += " highlight";
+        valid = false;
+      }
+      if(form.obtainer_name.value.trim().length == 0) {
+        form.obtainer_name.className += " highlight";
+        valid = false;
+      }
+      if(form.parent_1_name.value.trim().length == 0) {
+        form.parent_1_name.className += " highlight";
+        valid = false;
+      }
+      return valid;
+    }
+
+    function validate1317() {
+      // needed because Safari does not honor required flag in inputs, or jquery validate
+      var valid = min_validation("13-17-form");
+      form = document.getElementById("13-17-form");
+      if(form.consent_parent.checked == false) {
+        form.consent_parent.className += " highlight";
+        valid = false;
+      }
+      if(form.consent_child.checked == false) {
+        form.consent_child.className += " highlight";
+        valid = false;
+      }
+      if(form.parent_1_name.value.trim().length == 0) {
+        form.parent_1_name.className += " highlight";
+        valid = false;
+      }
+      return valid;
+    }
+
+    function change_consent_div(radio) {
+        $("#0-6-div").hide();
+        $("#7-12-div").hide();
+        $("#13-17-div").hide();
+        $("#18-plus-div").hide();
+        $("#"+ radio.value +"-div").show();
+    }
+
+    function relax_parents(box) {
+        var sec_parent = $("#" + box.form.id + "_parent_2_name");
+        if(box.checked) {
+            sec_parent.required = false;
+        } else {
+            sec_parent.required = true;
+        }
+    }
+
+    $(document).ready(function() {
+        $("#0-6-div").hide();
+        $("#7-12-div").hide();
+        $("#13-17-div").hide();
+        $("#18-plus-div").hide();
+    });
+</script>
+<style>
+.scrolltext {
+  height: 400px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  width: 80%;
+  margin: 0 auto;
+}
+</style>
+{% endblock %}
+
+{% block content%}
+<h2>{{ tl['ADD_HUMAN_TITLE'] |e}}</h2>
+{% if message %}
+<h3 style="color: red">{{message |e}}</h3>
+{% endif %}
+<div id="age-ranges-div" style='text-align: left;padding: 10px'>
+    <h3>{{ tl['SEL_AGE_RANGE'] |e}}</h3>
+    <input type='radio' id='age-range-1' name='age-range' value='0-6' onchange="change_consent_div(this)"> <label for='age-range-1'>{{ tl['AGE_0_6'] |e}}</label><br />
+    <input type='radio' id='age-range-2' name='age-range' value='7-12' onchange="change_consent_div(this)"> <label for='age-range-2'>{{ tl['AGE_7_12'] |e}}</label><br />
+    <input type='radio' id='age-range-3' name='age-range' value='13-17' onchange="change_consent_div(this)"> <label for='age-range-3'>{{ tl['AGE_13_17'] |e}}</label><br />
+    <input type='radio' id='age-range-4' name='age-range' value='18-plus' onchange="change_consent_div(this)"> <label for='age-range-4'>{{ tl['AGE_18'] |e}}</label>
+    <hr>
+</div>
+
+<div id="0-6-div" style='text-align: left;padding: 10px'>
+<div class='scrolltext'>
+{{ tl['CONSENT_YOUR_CHILD'] }}
+{{ tl['PARTICIPATION_AGREEMENT'] }}
+{{ tl['EXHIBIT_A'] }}
+</div>
+    <div class="" id="consent">
+        <hr>
+        <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{{ tl['BILL_OF_RIGHTS']|e}}</a><br/>
+        <form method="post" id="0-6-form" name="consent_info" onsubmit="return validate06();" action="{{ media_locale['SITEBASE'] |e}}/authed/new_participant/">
+           <input type="hidden" name="age_range" value="0-6">
+           <p><input value="Yes" type="checkbox" name="consent_parent" id="consent_parent" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_PARENT'] |e}}</p>
+    </div>
+    <table>
+        <tr><td><label for='participant_name'>{{ tl['PARTICIPANT_NAME'] |e}}</label></td><td><input tabindex="2" type="text" name="participant_name" id="participant_name" required data-rule-required="true"><div class="red right">*</div></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_EMAIL'] |e}}</td><td><input tabindex="3" type="email"  name="participant_email" id="participant_email" required data-rule-required="true"><div class="red right" required data-rule-required="true">*</div></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_PARENT_1'] |e}}</td><td><input tabindex="7" type="text" name="parent_1_name" id="0-6-form_parent_1_name" required data-rule-required="true"></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_PARENT_2'] |e}}</td><td><input tabindex="8" type="text" name="parent_2_name" id="0-6-form_parent_2_name" required data-rule-required="true"></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_DECEASED_PARENTS'] |e}}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="yes" onclick="relax_parents(this)"></td></tr>
+        <tr><td><input type="submit" value="I Accept"></td><td></td></tr>
+    </table>
+    </form>
+</div>
+<div id="7-12-div" style='text-align: left;padding: 10px'>
+<div class='scrolltext'>
+{{ tl['ASSENT_7_12'] }}
+</div>
+    <div class="" id="consent">
+        <hr>
+        <form method="post" id="7-12-form" name="consent_info" onsubmit="return validate712();" action="{{ media_locale['SITEBASE'] |e}}/authed/new_participant/">
+        <input type="hidden" name="age_range" value="7-12">
+           <p><input value="Yes" type="checkbox" name="consent_child" id="consent_child" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_SIMPLIFIED'] |e}}</p>
+    </div>
+    <p><table>
+        <tr><td><label for='participant_name'>{{ tl['PARTICIPANT_NAME'] |e}}</label></td><td><input tabindex="2" type="text" name="participant_name" id="participant_name" required data-rule-required="true"><div class="red right">*</div></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_EMAIL'] |e}}</td><td><input tabindex="3" type="email"  name="participant_email" id="participant_email" required data-rule-required="true"><div class="red right">*</div></td></tr>
+    </table></p>
+    <div>
+    <h4>{{ tl['PERSON_ATTAINING_ASSENT'] |e}}</h4>
+    <p><input value="Yes" type="checkbox" name="consent_witness" id="consent_witness" required data-rule-required="true"> {{ tl['TEXT_ASSENT_WITNESS'] |e}}</p>
+    </div>
+    <p><table>
+        <tr><td><label for='obtainer_name'>{{ tl['OBTAINER_NAME'] |e}}</label></td><td><input tabindex="2" type="text" name="obtainer_name" id="obtainer_name" required data-rule-required="true"><div class="red right">*</div></td></tr>
+    </table></p>
+    <hr>
+<div class='scrolltext'>
+{{ tl['CONSENT_YOUR_CHILD'] }}
+{{ tl['PARTICIPATION_AGREEMENT'] }}
+{{ tl['EXHIBIT_A'] }}
+</div>
+<div class="" id="consent">
+        <hr>
+            <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{{ tl['BILL_OF_RIGHTS']|e}}</a><br/>
+           <p><input value="Yes" type="checkbox" name="consent_parent" id="consent_parent" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_PARENT'] |e}}</p>
+    </div>
+    <table>
+        <tr><td>{{ tl['PARTICIPANT_PARENT_1'] |e}}</td><td><input tabindex="7" type="text" name="parent_1_name" id="7-12-form_parent_1_name" required data-rule-required="true"></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_PARENT_2'] |e}}</td><td><input tabindex="8" type="text" name="parent_2_name" id="7-12-form_parent_2_name" required data-rule-required="true"></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_DECEASED_PARENTS'] |e}}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="yes" onclick="relax_parents(this)"></td></tr>
+        <tr><td><input type="submit" value="I Accept"></td><td></td></tr>
+    </table>
+    </form>
+</div>
+
+<div id="13-17-div" style='text-align: left;padding: 10px'>
+<div class='scrolltext'>
+    {{ tl['ASSENT_13_17'] }}
+</div>
+    <div class="" id="consent">
+        <hr>
+        <form method="post" id="13-17-form" name="consent_info" onsubmit="return validate1317();" action="{{ media_locale['SITEBASE'] |e}}/authed/new_participant/">
+           <input type="hidden" name="age_range" value="13-17">
+           <p><input value="Yes" type="checkbox" name="consent_child" id="consent_child" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_1'] |e}}</p>
+    </div>
+    <p><table>
+        <tr><td><label for='participant_name'>{{ tl['PARTICIPANT_NAME'] |e}}</label></td><td><input tabindex="2" type="text" name="participant_name" id="participant_name" required data-rule-required="true"><div class="red right">*</div></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_EMAIL'] |e}}</td><td><input tabindex="3" type="email"  name="participant_email" id="participant_email" required data-rule-required="true"><div class="red right">*</div></td></tr>
+    </table></p>
+    <hr>
+    <div class='scrolltext'>
+    {{ tl['CONSENT_YOUR_CHILD'] }}
+    {{ tl['PARTICIPATION_AGREEMENT'] }}
+    {{ tl['EXHIBIT_A'] }}
+    </div>
+    <div class="" id="consent">
+        <hr>
+        <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{{ tl['BILL_OF_RIGHTS']|e}}</a><br/>
+           <p><input value="Yes" type="checkbox" name="consent_parent" id="consent_parent" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_PARENT'] |e}}</p>
+    </div>
+    <table>
+        <tr><td>{{ tl['PARTICIPANT_PARENT_1'] |e}}</td><td><input tabindex="7" type="text" name="parent_1_name" id="13-17-form_parent_1_name" required data-rule-required="true"></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_PARENT_2'] |e}}</td><td><input tabindex="7" type="text" name="parent_2_name" id="13-17-form_parent_2_name" required data-rule-required="true"></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_DECEASED_PARENTS'] |e}}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="yes" onclick="relax_parents(this)"></td></tr>
+        <tr><td><input type="submit" value="I Accept"></td><td></td></tr>
+    </table>
+    </form>
+</div>
+
+<div id="18-plus-div" style='text-align: left;padding: 10px'>
+<div class='scrolltext'>
+{{ tl['CONSENT_18'] }}
+{{ tl['PARTICIPATION_AGREEMENT'] }}
+{{ tl['EXHIBIT_A'] }}
+</div>
+<div class="" id="consent">
+        <hr>
+        <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{{ tl['BILL_OF_RIGHTS']|e}}</a><br/>
+        <form method="post" id="18-form" name="consent_info" onsubmit="return min_validation('18-form');" action="{{ media_locale['SITEBASE'] |e}}/authed/new_participant/">
+        <input type="hidden" name="age_range" value="18-plus">
+           <p><input value="Yes" type="checkbox" name="consent" id="consent" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_1'] |e}}</p>
+    </div>
+    <p><table>
+        <tr><td><label for='participant_name'>{{ tl['PARTICIPANT_NAME'] |e}}</label></td><td><input tabindex="2" type="text" name="participant_name" id="participant_name" required data-rule-required="true"><div class="red right">*</div></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_EMAIL'] |e}}</td><td><input tabindex="3" type="email"  name="participant_email" id="participant_email" required data-rule-required="true"><div class="red right">*</div></td></tr>
+        <tr><td><input type="submit" value="I Accept"></td><td></td></tr>
+    </table></p>
+    </form>
+</div>
+{% endblock %}

@@ -3,7 +3,6 @@ from model.survey_template import SurveyTemplate
 from model.survey_template_group import SurveyTemplateGroup
 from model.survey_template_question import SurveyTemplateQuestion
 from model.survey_template_trigger import SurveyTemplateTrigger
-import json
 
 
 class SurveyTemplateRepo(BaseRepo):
@@ -38,7 +37,8 @@ class SurveyTemplateRepo(BaseRepo):
                 "LEFT JOIN survey_question_response_type ON "
                 "survey_question.survey_question_id = "
                 "survey_question_response_type.survey_question_id "
-                "WHERE surveys.survey_id = %s"
+                "WHERE surveys.survey_id = %s AND "
+                "survey_question.retired = false "
                 "ORDER BY group_questions.survey_group, "
                 "group_questions.display_index",
                 (survey_id,))
@@ -58,24 +58,45 @@ class SurveyTemplateRepo(BaseRepo):
 
                 if group_id != cur_group_id:
                     if cur_group_id is not None:
-                        all_groups.append(SurveyTemplateGroup(cur_questions))
+                        group_localized_text = self._get_group_localized_text(
+                                                                cur_group_id)
+                        all_groups.append(SurveyTemplateGroup(
+                            group_localized_text,
+                            cur_questions))
                     cur_group_id = group_id
                     cur_questions = []
 
-                valid_responses = self._get_question_valid_responses(question_id)
+                responses = self._get_question_valid_responses(question_id)
                 triggers = self._get_question_triggers(question_id)
 
-                question = SurveyTemplateQuestion(localized_text,
+                question = SurveyTemplateQuestion(question_id,
+                                                  localized_text,
                                                   short_name,
                                                   response_type,
-                                                  valid_responses,
+                                                  responses,
                                                   triggers)
                 cur_questions.append(question)
 
             if cur_group_id is not None:
-                all_groups.append(SurveyTemplateGroup(cur_questions))
+                group_localized_text = self._get_group_localized_text(
+                    cur_group_id)
+                all_groups.append(SurveyTemplateGroup(
+                    group_localized_text,
+                    cur_questions))
 
             return SurveyTemplate(survey_id, "american", all_groups)
+
+    def _get_group_localized_text(self, group_id):
+        # TODO: Localization!
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT american "
+                        "FROM survey_group "
+                        "WHERE "
+                        "group_order = %s", (group_id,))
+            row = cur.fetchone()
+            if row is None:
+                return None
+            return row[0]
 
     def _get_question_valid_responses(self, survey_question_id):
         with self._transaction.cursor() as cur:
