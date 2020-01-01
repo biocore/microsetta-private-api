@@ -17,6 +17,7 @@ from repo.account_repo import AccountRepo
 from repo.source_repo import SourceRepo
 from repo.kit_repo import KitRepo
 from repo.survey_template_repo import SurveyTemplateRepo
+from repo.sample_repo import SampleRepo
 
 from model.source import Source
 from model.survey_template import SurveyTemplate
@@ -71,6 +72,7 @@ def read_account(acct_id):
         acct_repo = AccountRepo(t)
         acc = acct_repo.get_account(acct_id)
         if acc is None:
+            # TODO: Think this should be "code", "message" to match api?
             return jsonify(error=404, text="Account not found"), 404
         return jsonify(acc)
 
@@ -82,6 +84,8 @@ def update_account(acct_id, first_name, last_name, email, address):
         acc = acct_repo.get_account(acct_id)
         if acc is None:
             return jsonify(error=404, text="Account not found"), 404
+
+        # TODO: add 422 handling
 
         acc.first_name = first_name
         acc.last_name = last_name
@@ -96,6 +100,7 @@ def update_account(acct_id, first_name, last_name, email, address):
 def read_sources(acct_id, source_type):
     with Transaction() as t:
         source_repo = SourceRepo(t)
+        # TODO: Also support 404? Or is that not necessary?
         return jsonify(
             source_repo.get_sources_in_account(acct_id, source_type))
 
@@ -109,12 +114,14 @@ def create_source(acct_id, source_info):
         # Must pull from db to get creation_time, update_time
         s = source_repo.get_source(acct_id, new_source.id)
         t.commit()
+        # TODO: What about 404 and 422 errors?
         return jsonify(s)
 
 
 def read_source(acct_id, source_id):
     with Transaction() as t:
         source_repo = SourceRepo(t)
+        # TODO: What about 404?
         return source_repo.get_source(acct_id, source_id)
 
 
@@ -125,12 +132,14 @@ def update_source(acct_id, source_id):
 
         # Uhhh, where do I get source_data from???
         # source.source_data = something?
+        # Answer: source data is coming in in the request body
 
         source_repo.update_source_data(source)
         # I wonder if there's some way to get the creation_time/update_time
         # during the insert/update...
         source = source_repo.get_source(acct_id, source_id)
         t.commit()
+        # TODO: 404 and 422?
         return jsonify(source)
 
 
@@ -139,6 +148,7 @@ def delete_source(acct_id, source_id):
         source_repo = SourceRepo(t)
         if not source_repo.delete_source(acct_id, source_id):
             return jsonify(error=404, text="No source found"), 404
+        # TODO: 422?
         return '', 204
 
 
@@ -199,7 +209,13 @@ def associate_sample(acct_id, source_id):
 
 
 def read_sample_association(acct_id, source_id, sample_id):
-    return not_yet_implemented()
+    with Transaction() as t:
+        sample_repo = SampleRepo(t)
+        sample = sample_repo.get_sample(sample_id)
+        if sample is None:
+            return jsonify(error=404, text="Sample not found"), 404
+
+        return jsonify(sample)
 
 
 def update_sample_association(acct_id, source_id, sample_id):
