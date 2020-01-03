@@ -1,14 +1,14 @@
-from repo.transaction import Transaction
-from model.account import Account
-from model.source import Source, CanineInfo, EnvironmentInfo
-from repo.kit_repo import KitRepo
-from repo.account_repo import AccountRepo
-from repo.source_repo import SourceRepo
-from repo.survey_template_repo import SurveyTemplateRepo
-from repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.transaction import Transaction
+from microsetta_private_api.model.account import Account
+from microsetta_private_api.model.source import Source, CanineInfo, EnvironmentInfo
+from microsetta_private_api.repo.kit_repo import KitRepo
+from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 import datetime
 import json
-import util.vue_adapter
+import microsetta_private_api.util.vue_adapter
 
 # TODO: Refactor me into proper unit tests!
 
@@ -98,7 +98,7 @@ with Transaction() as t:
     #                  default=json_converter,
     #                  indent=2))
 
-    in_vue = util.vue_adapter.to_vue_schema(the_stuff)
+    in_vue = microsetta_private_api.util.vue_adapter.to_vue_schema(the_stuff)
     # print(json.dumps(in_vue, default=json_converter, indent=2))
 
     with open("surveySchema.json", "w") as outFile:

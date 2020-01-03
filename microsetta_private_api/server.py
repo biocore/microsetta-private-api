@@ -8,7 +8,7 @@ Modified from https://github.com/zalando/connexion/blob/master/examples/swagger2
 """
 
 import connexion
-from util.util import JsonifyDefaultEncoder
+from microsetta_private_api.util.util import JsonifyDefaultEncoder
 
 # If we're running in stand alone mode, run the application
 if __name__ == '__main__':
