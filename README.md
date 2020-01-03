@@ -18,13 +18,15 @@ Also install the JSON Web Tokens library with cryptography support:
 
 `pip install pyjwt[crypto]`
 
-Then copy the project files into the directory of your choice.
+Then install the microsetta-private-api in editable mode:
+
+`pip install -e .`
  
 ## Test Usage
 
 In the activated conda environment, start the microservice using flask's built-in server by running, e.g., 
 
-`./api/server.py`
+`python ./microsetta_private_api/server.py`
 
 which will start the server on http://localhost:8082 . Note that this usage is suitable for 
 **development ONLY**--real use of the service would require a production-level server. 

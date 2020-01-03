@@ -1,6 +1,6 @@
-from repo.base_repo import BaseRepo
-from model.sample import Sample
-from model.kit import Kit
+from microsetta_private_api.repo.base_repo import BaseRepo
+from microsetta_private_api.model.sample import Sample
+from microsetta_private_api.model.kit import Kit
 
 
 class KitRepo(BaseRepo):
