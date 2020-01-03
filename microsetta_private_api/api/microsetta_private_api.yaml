@@ -53,7 +53,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/accounts/{acct_id}':
+  '/accounts/{account_id}':
     get:
       operationId: microsetta_private_api.api.implementation.read_account
       tags:
@@ -61,7 +61,7 @@ paths:
       summary: Get user account information
       description: Get user account information
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
       responses:
         '200':
           description: Successfully returned account information
@@ -83,7 +83,7 @@ paths:
       summary: Update user account information
       description: Update user account information
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
       requestBody:
         content:
           application/json:
@@ -112,7 +112,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/accounts/{acct_id}/sources':
+  '/accounts/{account_id}/sources':
     get:
       operationId: microsetta_private_api.api.implementation.read_sources
       tags:
@@ -120,7 +120,7 @@ paths:
       summary: Get sources associated with account, filtered by source type
       description: Get sources associated with account, filtered by source type
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_type'
       responses:
         '200':
@@ -159,7 +159,7 @@ paths:
       summary: Create new source of a specific type
       description: Create new source of a specific type
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
       requestBody:
         content:
           application/json:
@@ -202,7 +202,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/accounts/{acct_id}/sources/{source_id}':
+  '/accounts/{account_id}/sources/{source_id}':
     get:
       operationId: microsetta_private_api.api.implementation.read_source
       tags:
@@ -210,7 +210,7 @@ paths:
       summary: Get information about source
       description: Get information about source
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
       responses:
         '200':
@@ -239,7 +239,7 @@ paths:
       summary: Update information for source
       description: Update information for source
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
       requestBody:
         content:
@@ -284,7 +284,7 @@ paths:
       summary: Delete source
       description: Delete source
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
       responses:
         '204':
@@ -297,7 +297,7 @@ paths:
           $ref: '#/components/responses/422UnprocessableEntity'
           # NB: This would be returned if source cannot be deleted bc has a sample assigned to it
 
-  '/accounts/{acct_id}/sources/{source_id}/survey_templates':
+  '/accounts/{account_id}/sources/{source_id}/survey_templates':
     get:
       operationId: microsetta_private_api.api.implementation.read_survey_templates
       tags:
@@ -305,7 +305,7 @@ paths:
       summary: Get survey templates available to this source
       description: Get survey templates available to this source
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/language_tag'
       responses:
@@ -330,7 +330,7 @@ paths:
           $ref: '#/components/responses/404NotFound'
     # NB: No delete, put, or post for survey templates--can maybe expand to that for admin user in future
 
-  '/accounts/{acct_id}/sources/{source_id}/survey_templates/{survey_template_id}':
+  '/accounts/{account_id}/sources/{source_id}/survey_templates/{survey_template_id}':
     get:
       operationId: microsetta_private_api.api.implementation.read_survey_template
       tags:
@@ -338,7 +338,7 @@ paths:
       summary: Get a particular survey template available to this source
       description: Get a particular survey template available to this source
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/survey_template_id'
         - $ref: '#/components/parameters/language_tag'
@@ -366,7 +366,7 @@ paths:
           $ref: '#/components/responses/404NotFound'
     # NB: No delete, put, or post for a particular survey template--can maybe expand to that for admin user in future
 
-  '/accounts/{acct_id}/sources/{source_id}/surveys':
+  '/accounts/{account_id}/sources/{source_id}/surveys':
     # NB: "survey" refers to an instance of an answered survey. In contrast, the set of *questions* comprising a survey
     # is called a "survey template" (see elsewhere in this api)
     get:
@@ -376,7 +376,7 @@ paths:
       summary: Get answered survey instances associated with source
       description: Get answered survey instances associated with source
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/language_tag'
       responses:
@@ -409,7 +409,7 @@ paths:
       summary: Submit new answered survey
       description: Submit new answered survey
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/language_tag'
       requestBody:
@@ -434,7 +434,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/accounts/{acct_id}/sources/{source_id}/surveys/{survey_id}':
+  '/accounts/{account_id}/sources/{source_id}/surveys/{survey_id}':
     get:
       operationId: microsetta_private_api.api.implementation.read_answered_survey
       tags:
@@ -442,7 +442,7 @@ paths:
       summary: Get information about an answered survey
       description: Get information about an answered survey
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/survey_id'
       responses:
@@ -470,7 +470,7 @@ paths:
     # NB: NO "put"--you shouldn't update an answered survey, but instead should take a new one
     # NB: Currently no delete ... can dissociate a survey from a sample but not delete the survey itself
 
-  '/accounts/{acct_id}/sources/{source_id}/samples':
+  '/accounts/{account_id}/sources/{source_id}/samples':
     get:
       operationId: microsetta_private_api.api.implementation.read_sample_associations
       tags:
@@ -478,7 +478,7 @@ paths:
       summary: Get samples associated with this source
       description: Get samples associated with this source
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
       responses:
         '200':
@@ -500,7 +500,7 @@ paths:
       summary: Associate an unassociated sample with this source
       description: Associate an unassociated sample with this source
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
       requestBody:
         content:
@@ -525,7 +525,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/accounts/{acct_id}/sources/{source_id}/samples/{sample_id}':
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}':
     # NB: info about the sample--type, datetime, notes--does NOT exist *separate* from source association, so
     # it can only be read/updated/deleted in the context of a source association
     get:
@@ -535,7 +535,7 @@ paths:
       summary: Get information about a sample associated with this source
       description:  Get information about a sample associated with this source
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
       responses:
@@ -556,7 +556,7 @@ paths:
       summary: Update information about a sample associated with this source
       description:  Update information about a sample associated with this source
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
       requestBody:
@@ -585,7 +585,7 @@ paths:
       summary: Dissociate a sample from a source
       description: Dissociate a sample from a source
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
       responses:
@@ -601,7 +601,7 @@ paths:
 
   # NB: "surveys" is used as a path component in two different ways (here nested under sample and above nested
   # directly under source.  The dev team assessed this and decided this dual usage was not unacceptably confusing.
-  '/accounts/{acct_id}/sources/{source_id}/samples/{sample_id}/surveys':
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/surveys':
     get:
       operationId: microsetta_private_api.api.implementation.read_answered_survey_associations
       tags:
@@ -609,7 +609,7 @@ paths:
       summary: Get list of answered surveys associated with this sample
       description: Get list of answered surveys associated with this sample
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
       responses:
@@ -651,7 +651,7 @@ paths:
       summary: Associate an answered survey with this sample
       description: Associate an answered survey with this sample
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
       requestBody:
@@ -676,7 +676,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/accounts/{acct_id}/sources/{source_id}/samples/{sample_id}/surveys/{survey_id}':
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/surveys/{survey_id}':
     # NB: I can't really see a way that this can be updated, or even viewed--the association simply exists or doesn't
     delete:
       tags:
@@ -685,7 +685,7 @@ paths:
       summary: Dissociate an answered survey from a sample
       description: Dissociate an answered survey from a sample
       parameters:
-        - $ref: '#/components/parameters/acct_id'
+        - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
         - $ref: '#/components/parameters/survey_id'
@@ -749,8 +749,8 @@ paths:
 components:
   parameters:
     # path parameters
-    acct_id: # Can be referenced as '#/components/parameters/acct_id'
-      name: acct_id
+    account_id: # Can be referenced as '#/components/parameters/account_id'
+      name: account_id
       in: path
       description: Unique id specifying a user account
       schema:
