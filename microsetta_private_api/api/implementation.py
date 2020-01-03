@@ -63,7 +63,7 @@ def verify_and_decode_token(access_token) -> dict:
     return token_obj
 
 
-def register_account(token_info):
+def register_account(body):
     return not_yet_implemented()
 
 
@@ -78,7 +78,7 @@ def read_account(account_id):
         return jsonify(acc.to_api())
 
 
-def update_account(account_id, first_name, last_name, email, address):
+def update_account(account_id, body):
     # TODO:  Authentication??
     with Transaction() as t:
         acct_repo = AccountRepo(t)
@@ -88,10 +88,10 @@ def update_account(account_id, first_name, last_name, email, address):
 
         # TODO: add 422 handling
 
-        acc.first_name = first_name
-        acc.last_name = last_name
-        acc.email = email
-        acc.address = address
+        acc.first_name = body["first_name"]
+        acc.last_name = body["last_name"]
+        acc.email = body["email"]
+        acc.address = body["address"]
 
         acct_repo.update_account(acc)
         t.commit()

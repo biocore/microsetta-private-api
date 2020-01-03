@@ -1,6 +1,7 @@
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.model.account import Account
-from microsetta_private_api.model.source import Source, CanineInfo, EnvironmentInfo
+from microsetta_private_api.model.source import Source, \
+    AnimalInfo, EnvironmentInfo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
