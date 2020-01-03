@@ -17,6 +17,7 @@ from repo.account_repo import AccountRepo
 from repo.source_repo import SourceRepo
 from repo.kit_repo import KitRepo
 from repo.survey_template_repo import SurveyTemplateRepo
+from repo.survey_answers_repo import SurveyAnswersRepo
 from repo.sample_repo import SampleRepo
 
 from model.source import Source
@@ -173,8 +174,8 @@ def read_survey_templates(acct_id, source_id, locale_code):
 
 def read_survey_template(acct_id, source_id, survey_template_id, locale_code):
     # TODO: can we get rid of source_id?  I don't have anything useful to do
-    # with it...  I guess I could check if the source is a dog before giving
-    # out a pet information survey?
+    #  with it...  I guess I could check if the source is a dog before giving
+    #  out a pet information survey?
 
     with Transaction() as t:
         survey_template_repo = SurveyTemplateRepo(t)
@@ -184,20 +185,41 @@ def read_survey_template(acct_id, source_id, survey_template_id, locale_code):
 
 
 def read_answered_surveys(acct_id, source_id):
-    return not_yet_implemented()
+    # TODO: source_id is participant name until we make the proper schema
+    #  changes.  Sorry bout that
+    print(acct_id)
+    print(source_id)
+    with Transaction() as t:
+        survey_answers_repo = SurveyAnswersRepo(t)
+        return survey_answers_repo.list_answered_surveys(acct_id, source_id)
 
 
 def read_answered_survey(acct_id, source_id, survey_id):
-    return not_yet_implemented()
+    # TODO: Don't need source_id, drop it or include for validation at db
+    #  layer?
+    with Transaction() as t:
+        survey_answers_repo = SurveyAnswersRepo(t)
+        return survey_answers_repo.get_answered_survey(acct_id, survey_id)
 
 
 def submit_answered_survey(acct_id, source_id, locale_code,
                            survey_template_id, survey_text):
-    return not_yet_implemented()
+    # TODO: source_id still needs to be participant name til we refactor
+    # TODO: Is this supposed to return new survey id?
+    # TODO: Rename survey_text to survey_model/model to match Vue's naming?
+    with Transaction() as t:
+        survey_answers_repo = SurveyAnswersRepo(t)
+        return survey_answers_repo.submit_answered_survey(acct_id,
+                                                          source_id,
+                                                          locale_code,
+                                                          survey_template_id,
+                                                          survey_text)
 
 
 def delete_answered_survey(acct_id, source_id, survey_id):
-    return not_yet_implemented()
+    with Transaction() as t:
+        survey_answers_repo = SurveyAnswersRepo(t)
+        return survey_answers_repo.delete_answered_survey(acct_id, survey_id)
 
 
 def read_sample_associations(acct_id, source_id):
