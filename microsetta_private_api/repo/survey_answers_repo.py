@@ -26,13 +26,11 @@ class SurveyAnswersRepo(BaseRepo):
         #  of the survey's title...  This should be addressed as we transform
         #  the data as well
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT "
-                              "survey_id "
-                              "FROM "
-                              "ag_login_surveys "
-                              "WHERE "
-                              "ag_login_id = %s AND participant_name = %s",
-                              (ag_login_id, participant_name))
+            cur.execute("SELECT survey_id "
+                        "FROM ag_login_surveys "
+                        "WHERE ag_login_id = %s "
+                        "    AND participant_name = %s",
+                        (ag_login_id, participant_name))
 
             rows = cur.fetchall()
             answered_surveys = [r[0] for r in rows]
