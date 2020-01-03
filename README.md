@@ -24,7 +24,7 @@ Then copy the project files into the directory of your choice.
 
 In the activated conda environment, start the microservice using flask's built-in server by running, e.g., 
 
-`./api/server.py`
+`./microsetta_private_api/server.py`
 
 which will start the server on http://localhost:8082 . Note that this usage is suitable for 
 **development ONLY**--real use of the service would require a production-level server. 
