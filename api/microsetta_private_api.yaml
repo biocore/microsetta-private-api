@@ -948,6 +948,17 @@ components:
     sample_locked:
       type: boolean
       example: true
+    sample_projects:
+      type: array
+      items:
+        $ref: '#/components/schemas/sample_project'
+      example:
+        - "American Gut Project"
+        - "British Gut Project"
+    sample_project:
+      type: string
+      example: "British Gut Project"
+
     sample:
       type: object
       properties:
@@ -961,6 +972,8 @@ components:
           $ref: '#/components/schemas/sample_datetime'
         sample_notes:
           $ref: '#/components/schemas/sample_notes'
+        sample_projects:
+          $ref: '#/components/schemas/sample_projects'
 
     # source section
     adult_consent:
