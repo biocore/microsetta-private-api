@@ -467,7 +467,6 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
-    # TODO: true?->NB: Getting the list of surveys a source *can* take is outside the scope of this api
     # NB: NO "put"--you shouldn't update an answered survey, but instead should take a new one
     # NB: Currently no delete ... can dissociate a survey from a sample but not delete the survey itself
 
