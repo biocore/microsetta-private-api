@@ -1,5 +1,5 @@
-from repo.base_repo import BaseRepo
-from repo.survey_template_repo import SurveyTemplateRepo
+from microsetta_private_api.repo.base_repo import BaseRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 
 import uuid
 

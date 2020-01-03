@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-from api.implementation import verify_and_decode_token
+from microsetta_private_api.api.implementation import verify_and_decode_token
 
 
 class ImplementationTests(TestCase):

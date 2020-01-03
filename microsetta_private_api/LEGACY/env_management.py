@@ -7,8 +7,8 @@ from psycopg2 import (connect, OperationalError)
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from natsort import natsorted
 
-from config_manager import AMGUT_CONFIG
-from sql_connection import TRN
+from microsetta_private_api.config_manager import AMGUT_CONFIG
+from microsetta_private_api.sql_connection import TRN
 
 
 get_db_file = partial(join, join(dirname(dirname(abspath(__file__))),

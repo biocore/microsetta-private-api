@@ -12,7 +12,7 @@ paths:
   '/accounts':
     # NB: Not including a get: seems like seeing all accounts is an extension for the future (for admin?)
     post:
-      operationId: implementation.register_account
+      operationId: microsetta_private_api.api.implementation.register_account
       tags:
         - Account
       summary: Register new user account
@@ -55,7 +55,7 @@ paths:
 
   '/accounts/{acct_id}':
     get:
-      operationId: implementation.read_account
+      operationId: microsetta_private_api.api.implementation.read_account
       tags:
         - Account
       summary: Get user account information
@@ -77,7 +77,7 @@ paths:
         - Oauth2Scheme:
             - uid
     put:
-      operationId: implementation.update_account
+      operationId: microsetta_private_api.api.implementation.update_account
       tags:
         - Account
       summary: Update user account information
@@ -114,7 +114,7 @@ paths:
 
   '/accounts/{acct_id}/sources':
     get:
-      operationId: implementation.read_sources
+      operationId: microsetta_private_api.api.implementation.read_sources
       tags:
         - Sources
       summary: Get sources associated with account, filtered by source type
@@ -153,7 +153,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
-      operationId: implementation.create_source
+      operationId: microsetta_private_api.api.implementation.create_source
       tags:
         - Source
       summary: Create new source of a specific type
@@ -204,7 +204,7 @@ paths:
 
   '/accounts/{acct_id}/sources/{source_id}':
     get:
-      operationId: implementation.read_source
+      operationId: microsetta_private_api.api.implementation.read_source
       tags:
         - Source
       summary: Get information about source
@@ -233,7 +233,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     put:
-      operationId: implementation.update_source
+      operationId: microsetta_private_api.api.implementation.update_source
       tags:
         - Source
       summary: Update information for source
@@ -278,7 +278,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
     delete:
-      operationId: implementation.delete_source
+      operationId: microsetta_private_api.api.implementation.delete_source
       tags:
         - Source
       summary: Delete source
@@ -299,7 +299,7 @@ paths:
 
   '/accounts/{acct_id}/sources/{source_id}/survey_templates':
     get:
-      operationId: implementation.read_survey_templates
+      operationId: microsetta_private_api.api.implementation.read_survey_templates
       tags:
         - Survey Templates
       summary: Get survey templates available to this source
@@ -332,7 +332,7 @@ paths:
 
   '/accounts/{acct_id}/sources/{source_id}/survey_templates/{survey_template_id}':
     get:
-      operationId: implementation.read_survey_template
+      operationId: microsetta_private_api.api.implementation.read_survey_template
       tags:
         - Survey Template
       summary: Get a particular survey template available to this source
@@ -370,7 +370,7 @@ paths:
     # NB: "survey" refers to an instance of an answered survey. In contrast, the set of *questions* comprising a survey
     # is called a "survey template" (see elsewhere in this api)
     get:
-      operationId: implementation.read_answered_surveys
+      operationId: microsetta_private_api.api.implementation.read_answered_surveys
       tags:
         - Surveys (By Source)
       summary: Get answered survey instances associated with source
@@ -403,7 +403,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
-      operationId: implementation.submit_answered_survey
+      operationId: microsetta_private_api.api.implementation.submit_answered_survey
       tags:
         - Survey (By Source)
       summary: Submit new answered survey
@@ -436,7 +436,7 @@ paths:
 
   '/accounts/{acct_id}/sources/{source_id}/surveys/{survey_id}':
     get:
-      operationId: implementation.read_answered_survey
+      operationId: microsetta_private_api.api.implementation.read_answered_survey
       tags:
         - Survey (By Source)
       summary: Get information about an answered survey
@@ -467,13 +467,12 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
-    # TODO: true?->NB: Getting the list of surveys a source *can* take is outside the scope of this api
     # NB: NO "put"--you shouldn't update an answered survey, but instead should take a new one
     # NB: Currently no delete ... can dissociate a survey from a sample but not delete the survey itself
 
   '/accounts/{acct_id}/sources/{source_id}/samples':
     get:
-      operationId: implementation.read_sample_associations
+      operationId: microsetta_private_api.api.implementation.read_sample_associations
       tags:
         - Samples
       summary: Get samples associated with this source
@@ -495,7 +494,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
-      operationId: implementation.associate_sample
+      operationId: microsetta_private_api.api.implementation.associate_sample
       tags:
         - Sample
       summary: Associate an unassociated sample with this source
@@ -530,7 +529,7 @@ paths:
     # NB: info about the sample--type, datetime, notes--does NOT exist *separate* from source association, so
     # it can only be read/updated/deleted in the context of a source association
     get:
-      operationId: implementation.read_sample_association
+      operationId: microsetta_private_api.api.implementation.read_sample_association
       tags:
         - Sample
       summary: Get information about a sample associated with this source
@@ -551,7 +550,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     put:
-      operationId: implementation.update_sample_association
+      operationId: microsetta_private_api.api.implementation.update_sample_association
       tags:
         - Sample
       summary: Update information about a sample associated with this source
@@ -582,7 +581,7 @@ paths:
     delete:
       tags:
         - Sample
-      operationId: implementation.dissociate_sample
+      operationId: microsetta_private_api.api.implementation.dissociate_sample
       summary: Dissociate a sample from a source
       description: Dissociate a sample from a source
       parameters:
@@ -604,7 +603,7 @@ paths:
   # directly under source.  The dev team assessed this and decided this dual usage was not unacceptably confusing.
   '/accounts/{acct_id}/sources/{source_id}/samples/{sample_id}/surveys':
     get:
-      operationId: implementation.read_answered_survey_associations
+      operationId: microsetta_private_api.api.implementation.read_answered_survey_associations
       tags:
         - Surveys (By Sample)
       summary: Get list of answered surveys associated with this sample
@@ -646,7 +645,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
-      operationId: implementation.associate_answered_survey
+      operationId: microsetta_private_api.api.implementation.associate_answered_survey
       tags:
         - Survey (By Sample)
       summary: Associate an answered survey with this sample
@@ -682,7 +681,7 @@ paths:
     delete:
       tags:
         - Survey (By Sample)
-      operationId: implementation.dissociate_answered_survey
+      operationId: microsetta_private_api.api.implementation.dissociate_answered_survey
       summary: Dissociate an answered survey from a sample
       description: Dissociate an answered survey from a sample
       parameters:
@@ -700,7 +699,7 @@ paths:
 
   '/kits/':
     get:
-      operationId: implementation.read_kit
+      operationId: microsetta_private_api.api.implementation.read_kit
       tags:
         - Kit Samples
       summary: Get list of samples in kit that are not assigned to a source
@@ -727,7 +726,7 @@ paths:
   # TODO: Move this out of /api ?
   '/consent':
     get:
-      operationId: implementation.consent_doc
+      operationId: microsetta_private_api.api.implementation.consent_doc
       tags:
         - Consent
       summary: Retrieve consent forms for display to user
@@ -1174,7 +1173,7 @@ components:
   securitySchemes:
     Oauth2Scheme:
       type: oauth2
-      x-tokenInfoFunc: implementation.verify_and_decode_token
+      x-tokenInfoFunc: microsetta_private_api.api.implementation.verify_and_decode_token
       flows:
         authorizationCode:
           authorizationUrl: 'https://example.com/oauth2/dialog' # dummy; replace with real
