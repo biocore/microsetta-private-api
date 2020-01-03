@@ -42,7 +42,7 @@ def get_config():
     cfg.VCS = "git"
     cfg.style = "pep440"
     cfg.tag_prefix = ""
-    cfg.parentdir_prefix = "microsetta-priavte-api-"
+    cfg.parentdir_prefix = "microsetta-private-api-"
     cfg.versionfile_source = "microsetta_private_api/_version.py"
     cfg.verbose = False
     return cfg
