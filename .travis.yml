@@ -1,0 +1,34 @@
+sudo: false
+os:
+  - linux
+  - os
+
+env:
+  - CONDA_PY=3.7
+  - CONDA_PY=3.6
+  - CONDA_PY=3.5
+
+addons:
+  postgresql: "9.5"
+
+services:
+  - postgresql 
+
+before_install:
+  # resizing became necessary due to the test database size, and variation
+  # in travis instances w.r.t. ramfs where postgres runs out of
+  - sudo mount -o remount,size=25% /var/ramfs
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh; fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - conda update --yes conda
+
+install:
+  - conda create --yes -n env_name python=$CONDA_PY
+  - conda install --yes -n env_name --file ci/conda_requirements.txt
+  - source activate env_name
+  - pip install -r ci/pip_requirements.txt
+  - pip install . --no-deps
+
+script:
+  - flake8 microsetta_private_api
