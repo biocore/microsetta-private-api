@@ -3,7 +3,7 @@
 """
 Basic flask/connexion-based web application
 
-Modified from https://github.com/zalando/connexion/blob/master/examples/swagger2/oauth2/app.py
+Modified from https://github.com/zalando/connexion/blob/master/examples/swagger2/oauth2/app.py  # noqa: E501
 
 """
 

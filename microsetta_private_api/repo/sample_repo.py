@@ -23,7 +23,8 @@ class SampleRepo(BaseRepo):
                 "WHERE ag_kit_barcodes.ag_kit_barcode_id = %s",
                 (sample_id,))
 
-            # TODO: Daniel said "should also provide the names of the projects that a sample (barcode) participates in";
+            # TODO: Daniel said "should also provide the names of the projects
+            # that a sample (barcode) participates in";
             # where to get this in db?
 
             r = cur.fetchone()
