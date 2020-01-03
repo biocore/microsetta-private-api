@@ -1,5 +1,5 @@
-from repo.base_repo import BaseRepo
-from model.sample import Sample
+from microsetta_private_api.repo.base_repo import BaseRepo
+from microsetta_private_api.model.sample import Sample
 
 
 class SampleRepo(BaseRepo):

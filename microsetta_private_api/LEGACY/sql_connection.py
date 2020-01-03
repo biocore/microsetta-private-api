@@ -15,7 +15,7 @@ from psycopg2 import (connect, ProgrammingError, Error as PostgresError,
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import TRANSACTION_STATUS_IDLE
 
-from config_manager import AMGUT_CONFIG
+from microsetta_private_api.config_manager import AMGUT_CONFIG
 
 
 def _checker(func):

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import division
-from LEGACY.config_manager import AMGUT_CONFIG
-from LEGACY.locale_data import english_gut as ENG
+from microsetta_private_api.config_manager import AMGUT_CONFIG
+from microsetta_private_api.LEGACY.locale_data import english_gut as ENG
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The American Gut Project Development Team.

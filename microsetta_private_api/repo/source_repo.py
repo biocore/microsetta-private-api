@@ -1,8 +1,9 @@
-from repo.base_repo import BaseRepo
-from model.source import HumanInfo, CanineInfo, EnvironmentInfo, \
-    Source, DECODER_HOOKS
+from microsetta_private_api.repo.base_repo import BaseRepo
+from microsetta_private_api.model.source import (HumanInfo, CanineInfo,
+                                                 EnvironmentInfo, Source,
+                                                 DECODER_HOOKS)
 import json
-from util.util import json_converter
+from microsetta_private_api.util.util import json_converter
 
 
 # Note: By convention, this references sources by both account_id AND source_id
@@ -48,7 +49,7 @@ class SourceRepo(BaseRepo):
 
     def get_source(self, account_id, source_id):
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT " + SourceRepo.read_cols + " FROM " 
+            cur.execute("SELECT " + SourceRepo.read_cols + " FROM "
                         "source "
                         "WHERE "
                         "source.id = %s AND "
