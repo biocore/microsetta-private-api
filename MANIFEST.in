@@ -1,0 +1,2 @@
+include versioneer.py
+include microsetta_private_api/_version.py
