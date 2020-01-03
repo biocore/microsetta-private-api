@@ -1,7 +1,9 @@
-from model.vue.vue_field import VueInputField, VueTextAreaField, \
-                                VueSelectField, VueChecklistField
-from model.vue.vue_group import VueGroup
-from model.vue.vue_schema import VueSchema
+from microsetta_private_api.model.vue.vue_field import (VueInputField,
+                                                        VueTextAreaField,
+                                                        VueSelectField,
+                                                        VueChecklistField)
+from microsetta_private_api.model.vue.vue_group import VueGroup
+from microsetta_private_api.model.vue.vue_schema import VueSchema
 
 
 def to_vue_field(question):

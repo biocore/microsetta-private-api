@@ -1,8 +1,11 @@
-from repo.base_repo import BaseRepo
-from model.survey_template import SurveyTemplate
-from model.survey_template_group import SurveyTemplateGroup
-from model.survey_template_question import SurveyTemplateQuestion
-from model.survey_template_trigger import SurveyTemplateTrigger
+from microsetta_private_api.repo.base_repo import BaseRepo
+from microsetta_private_api.model.survey_template import SurveyTemplate
+from microsetta_private_api.model.survey_template_group import \
+        SurveyTemplateGroup
+from microsetta_private_api.model.survey_template_question import \
+        SurveyTemplateQuestion
+from microsetta_private_api.model.survey_template_trigger import \
+        SurveyTemplateTrigger
 
 
 class SurveyTemplateRepo(BaseRepo):

@@ -1,4 +1,4 @@
-from LEGACY.config_manager import AMGUT_CONFIG
+from microsetta_private_api.config_manager import AMGUT_CONFIG
 import psycopg2
 
 
