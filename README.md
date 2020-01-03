@@ -18,7 +18,9 @@ Also install the JSON Web Tokens library with cryptography support:
 
 `pip install pyjwt[crypto]`
 
-Then copy the project files into the directory of your choice.
+Then install the microsetta-private-api in editable mode:
+
+`pip install -e .`
  
 ## Test Usage
 
