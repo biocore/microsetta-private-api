@@ -12,21 +12,21 @@ and associated file https://github.com/realpython/materials/blob/master/flask-co
 from flask import jsonify, render_template
 import jwt
 from base64 import b64decode
-from repo.transaction import Transaction
-from repo.account_repo import AccountRepo
-from repo.source_repo import SourceRepo
-from repo.kit_repo import KitRepo
-from repo.survey_template_repo import SurveyTemplateRepo
-from repo.survey_answers_repo import SurveyAnswersRepo
-from repo.sample_repo import SampleRepo
+from microsetta_private_api.repo.transaction import Transaction
+from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.repo.kit_repo import KitRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.sample_repo import SampleRepo
 
-from model.source import Source
-from model.survey_template import SurveyTemplate
-from model.mock_jinja import MockJinja
+from microsetta_private_api.model.source import Source
+from microsetta_private_api.model.survey_template import SurveyTemplate
+from microsetta_private_api.model.mock_jinja import MockJinja
 
-from util import vue_adapter
+from microsetta_private_api.util import vue_adapter
 
-from LEGACY.locale_data import american_gut, british_gut
+from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 
 import uuid
 import json
