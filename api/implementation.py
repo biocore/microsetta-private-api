@@ -75,7 +75,7 @@ def read_account(acct_id):
         if acc is None:
             # TODO: Think this should be "code", "message" to match api?
             return jsonify(error=404, text="Account not found"), 404
-        return jsonify(acc)
+        return jsonify(acc.to_api())
 
 
 def update_account(acct_id, first_name, last_name, email, address):
@@ -95,15 +95,16 @@ def update_account(acct_id, first_name, last_name, email, address):
 
         acct_repo.update_account(acc)
         t.commit()
-        return jsonify(acc)
+        return jsonify(acc.to_api())
 
 
 def read_sources(acct_id, source_type):
     with Transaction() as t:
         source_repo = SourceRepo(t)
+        sources = source_repo.get_sources_in_account(acct_id, source_type)
+        api_sources = [x.to_api() for x in sources]
         # TODO: Also support 404? Or is that not necessary?
-        return jsonify(
-            source_repo.get_sources_in_account(acct_id, source_type))
+        return jsonify(api_sources)
 
 
 def create_source(acct_id, source_info):
@@ -116,14 +117,14 @@ def create_source(acct_id, source_info):
         s = source_repo.get_source(acct_id, new_source.id)
         t.commit()
         # TODO: What about 404 and 422 errors?
-        return jsonify(s)
+        return jsonify(s.to_api())
 
 
 def read_source(acct_id, source_id):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         # TODO: What about 404?
-        return source_repo.get_source(acct_id, source_id)
+        return jsonify(source_repo.get_source(acct_id, source_id).to_api())
 
 
 def update_source(acct_id, source_id):
@@ -141,7 +142,7 @@ def update_source(acct_id, source_id):
         source = source_repo.get_source(acct_id, source_id)
         t.commit()
         # TODO: 404 and 422?
-        return jsonify(source)
+        return jsonify(source.to_api())
 
 
 def delete_source(acct_id, source_id):
@@ -266,12 +267,7 @@ def read_kit(kit_id, kit_code):
         kit = kit_repo.get_kit(kit_id, kit_code)
         if kit is None:
             return jsonify(error=404, text="No such kit"), 404
-        unused = []
-        for s in kit.samples:
-            if not s.deposited:
-                unused.append(s)
-        return jsonify(unused)
-
+        return jsonify(kit.to_api())
 
 def consent_doc():
     # return render_template("new_participant.jinja2",

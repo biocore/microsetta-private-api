@@ -1,4 +1,5 @@
 import json
+from model.model_base import ModelBase
 
 
 def human_decoder(obj):
@@ -16,9 +17,9 @@ def human_decoder(obj):
     return obj
 
 
-def canine_decoder(obj):
+def animal_decoder(obj):
     if isinstance(obj, dict):
-        return CanineInfo(obj["name"])
+        return AnimalInfo(obj["name"])
     return obj
 
 
@@ -30,7 +31,7 @@ def environment_decoder(obj):
 
 DECODER_HOOKS = {
     'human': human_decoder,
-    'canine': canine_decoder,
+    'animal': animal_decoder,
     'environment': environment_decoder
 }
 
@@ -51,7 +52,7 @@ class HumanInfo:
         self.age_range = age_range
 
 
-class CanineInfo:
+class AnimalInfo:
     def __init__(self, name):
         self.name = name
 
@@ -62,9 +63,9 @@ class EnvironmentInfo:
         self.description = description
 
 
-class Source:
+class Source(ModelBase):
     SOURCE_TYPE_HUMAN = "human"
-    SOURCE_TYPE_CANINE = "canine"
+    SOURCE_TYPE_ANIMAL = "animal"
     SOURCE_TYPE_ENVIRONMENT = "environment"
 
     def __init__(self, source_id, account_id, source_type, source_data):
@@ -73,13 +74,45 @@ class Source:
         self.source_type = source_type
         self.source_data = source_data
 
+    def to_api(self):
+        if self.source_type == 'human':
+            consent = None
+
+            if self.source_data.consent_date is not None:
+                if self.source_data.is_juvenile:
+                    consent = {
+                        "participant_name": self.source_data.name,
+                        "participant_email": self.source_data.email,
+                        "parent_1_name": self.parent1_name,
+                        "parent_2_name": self.parent2_name,
+                        "deceased_parent": (self.parent1_deceased or
+                                            self.parent2_deceased),
+                        "obtainer_name": None  # TODO: What is this???
+                    }
+                else:
+                    consent = {
+                        "participant_name": self.source_data.name,
+                        "participant_email": self.source_data.email
+                    }
+
+            return {
+                "source_type": self.source_type,
+                "source_name": self.source_name,
+                "consent": consent
+            }
+        if self.source_type == "animal" or self.source_type == "environment":
+            return {
+                        "source_type": self.source_type,
+                        "source_name": self.name
+            }
+
     @classmethod
     def create_human(cls, source_id, account_id, human_info):
         return Source(source_id, account_id, 'human', human_info)
 
     @classmethod
-    def create_canine(cls, source_id, account_id, canine_info):
-        return Source(source_id, account_id, 'canine', canine_info)
+    def create_animal(cls, source_id, account_id, animal_info):
+        return Source(source_id, account_id, 'animal', animal_info)
 
     @classmethod
     def create_environment(cls, source_id, account_id, env_info):

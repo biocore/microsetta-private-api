@@ -1,7 +1,8 @@
 from datetime import datetime
+from model.model_base import ModelBase
 
 
-class Sample:
+class Sample(ModelBase):
     def __init__(self, sample_id, datetime_collected, site, notes, barcode, scan_date):
         self.id = sample_id
         # NB: datetime_collected may be None if sample not yet used
@@ -26,3 +27,13 @@ class Sample:
         if date_collected is not None and time_collected is not None:
             datetime_collected = datetime.combine(date_collected, time_collected)
         return Sample(sample_id, datetime_collected, site, notes, barcode, scan_date)
+
+    def to_api(self):
+        return {
+            "sample_barcode": self.barcode,
+            "sample_site": self.site,
+            "sample_locked": self.is_locked(),
+            "sample_datetime": self.datetime_collected,
+            "sample_notes": self.notes,
+            "sample_projects": None  # TODO: Where is this info?
+        }

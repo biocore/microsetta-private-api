@@ -843,7 +843,7 @@ components:
       type: string
       enum: ["standard"]
       example: "standard"
-    created_at:
+    creation_time:
       type: string
       format: date-time
       example: "2007-04-05T12:30-02:00"
@@ -860,7 +860,7 @@ components:
     language_tag:
       type: string
       example: "en-US"
-    updated_at:
+    update_time:
       type: string
       format: date-time
       example: "2019-12-13T00:54:28.712Z"
@@ -877,10 +877,10 @@ components:
           $ref: '#/components/schemas/address'
         account_type:
           $ref: '#/components/schemas/account_type'
-        created_at:
-          $ref: '#/components/schemas/created_at'
-        updated_at:
-          $ref: '#/components/schemas/updated_at'
+        creation_time:
+          $ref: '#/components/schemas/creation_time'
+        update_time:
+          $ref: '#/components/schemas/update_time'
     address:   # taken from https://opensource.zalando.com/restful-api-guidelines/#address-fields
       description:
         an address of a location/destination
@@ -901,7 +901,7 @@ components:
             state, province, or district
           type: string
           example: "ON"
-        zip:
+        postcode:
           description: |
             zip code or postal code
           type: string
@@ -916,7 +916,7 @@ components:
         # Note that state is NOT required as not all countries (e.g. New Zealand) include this in their addresses
         - street
         - city
-        - zip
+        - postcode
         - country_code
 
     # kit section
@@ -1003,7 +1003,7 @@ components:
       type: string
     source_type:
       type: string
-      enum: [human, animal, environmental]
+      enum: [human, animal, environment]
       example: human
     nonhuman_source:
       type: object
@@ -1014,7 +1014,7 @@ components:
           $ref: '#/components/schemas/source_name'
       example:
         source_name: "office windowsill"
-        source_type: environmental
+        source_type: environment
       additionalProperties: false
     human_source:
       type: object
