@@ -900,7 +900,7 @@ components:
             state, province, or district
           type: string
           example: "ON"
-        zip:
+        post_code:
           description: |
             zip code or postal code
           type: string
@@ -915,7 +915,7 @@ components:
         # Note that state is NOT required as not all countries (e.g. New Zealand) include this in their addresses
         - street
         - city
-        - zip
+        - post_code
         - country_code
 
     # kit section
