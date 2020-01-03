@@ -1,4 +1,4 @@
-from model.model_base import ModelBase
+from microsetta_private_api.model.model_base import ModelBase
 
 
 class Account(ModelBase):
