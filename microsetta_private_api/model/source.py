@@ -24,6 +24,8 @@ def animal_decoder(obj):
 
 
 def environment_decoder(obj):
+    print("PLANTY: ")
+    print(obj)
     if isinstance(obj, dict):
         return EnvironmentInfo(obj["name"], obj["description"])
     return obj
@@ -103,7 +105,7 @@ class Source(ModelBase):
         if self.source_type == "animal" or self.source_type == "environment":
             return {
                         "source_type": self.source_type,
-                        "source_name": self.name
+                        "source_name": self.source_data.name
             }
 
     @classmethod
