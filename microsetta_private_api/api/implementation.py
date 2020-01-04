@@ -159,7 +159,7 @@ def delete_source(account_id, source_id):
         return '', 204
 
 
-def read_survey_templates(account_id, source_id, locale_code):
+def read_survey_templates(account_id, source_id, language_tag):
     # TODO: I don't think this query is backed by one of the existing tables
     # I think it was just hardcoded...  Which honestly seems like a fine
     # solution to me...  How much do we care that survey identifiers are
@@ -172,13 +172,14 @@ def read_survey_templates(account_id, source_id, locale_code):
         source = source_repo.get_source(account_id, source_id)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return [1, 3, 4, 5]
-        elif source.source_type == Source.SOURCE_TYPE_CANINE:
+        elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return [2]
         else:
             return []
 
 
-def read_survey_template(account_id, source_id, survey_template_id, locale_code):
+def read_survey_template(account_id, source_id, survey_template_id,
+                         language_tag):
     # TODO: can we get rid of source_id?  I don't have anything useful to do
     #  with it...  I guess I could check if the source is a dog before giving
     #  out a pet information survey?
@@ -190,7 +191,7 @@ def read_survey_template(account_id, source_id, survey_template_id, locale_code)
         return vue_adapter.to_vue_schema(survey_template)
 
 
-def read_answered_surveys(account_id, source_id):
+def read_answered_surveys(account_id, source_id, language_tag):
     # TODO: source_id is participant name until we make the proper schema
     #  changes.  Sorry bout that
     print(account_id)
@@ -208,24 +209,22 @@ def read_answered_survey(account_id, source_id, survey_id):
         return survey_answers_repo.get_answered_survey(account_id, survey_id)
 
 
-def submit_answered_survey(account_id, source_id, locale_code,
-                           survey_template_id, survey_text):
+def submit_answered_survey(account_id, source_id, language_tag, body):
     # TODO: source_id still needs to be participant name til we refactor
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        return survey_answers_repo.submit_answered_survey(account_id,
-                                                          source_id,
-                                                          locale_code,
-                                                          survey_template_id,
-                                                          survey_text)
-
-
-def delete_answered_survey(account_id, source_id, survey_id):
-    with Transaction() as t:
-        survey_answers_repo = SurveyAnswersRepo(t)
-        return survey_answers_repo.delete_answered_survey(account_id, survey_id)
+        success = survey_answers_repo.submit_answered_survey(
+            account_id,
+            source_id,
+            language_tag,
+            body["survey_template_id"],
+            body["survey_text"]
+        )
+        if success:
+            t.commit()
+        return success
 
 
 def read_sample_associations(account_id, source_id):
