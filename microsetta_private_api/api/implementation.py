@@ -231,7 +231,7 @@ def read_sample_associations(account_id, source_id):
     return not_yet_implemented()
 
 
-def associate_sample(account_id, source_id):
+def associate_sample(account_id, source_id, body):
     return not_yet_implemented()
 
 
@@ -245,7 +245,7 @@ def read_sample_association(account_id, source_id, sample_id):
         return jsonify(sample)
 
 
-def update_sample_association(account_id, source_id, sample_id):
+def update_sample_association(account_id, source_id, sample_id, body):
     return not_yet_implemented()
 
 
@@ -257,7 +257,7 @@ def read_answered_survey_associations(account_id, source_id, sample_id):
     return not_yet_implemented()
 
 
-def associate_answered_survey(account_id, source_id, sample_id):
+def associate_answered_survey(account_id, source_id, sample_id, body):
     return not_yet_implemented()
 
 
@@ -265,13 +265,15 @@ def dissociate_answered_survey(account_id, source_id, sample_id, survey_id):
     return not_yet_implemented()
 
 
-def read_kit(kit_id, kit_code):
+def read_kit(kit_name, kit_password):
     with Transaction() as t:
         kit_repo = KitRepo(t)
-        kit = kit_repo.get_kit(kit_id, kit_code)
+        # TODO: Ensure this name and password are what the repo layer expects
+        kit = kit_repo.get_kit(kit_name, kit_password)
         if kit is None:
             return jsonify(error=404, text="No such kit"), 404
         return jsonify(kit.to_api())
+
 
 def consent_doc():
     # return render_template("new_participant.jinja2",
