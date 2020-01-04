@@ -4,8 +4,8 @@ from microsetta_private_api.model.model_base import ModelBase
 class Address(ModelBase):
     def __init__(self, street, city, state, postcode, country_code):
         self.street = street
-        self.city = city,
-        self.state = state,
+        self.city = city
+        self.state = state
         self.postcode = postcode
         self.country_code = country_code
 
