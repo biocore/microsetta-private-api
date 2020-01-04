@@ -107,7 +107,7 @@ def read_sources(account_id, source_type):
         return jsonify(api_sources)
 
 
-def create_source(account_id, source_info):
+def create_source(account_id, body):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source_id = str(uuid.uuid4())
@@ -124,17 +124,21 @@ def read_source(account_id, source_id):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         # TODO: What about 404?
-        return jsonify(source_repo.get_source(account_id, source_id).to_api())
+        source = source_repo.get_source(account_id, source_id)
+        if source is None:
+            return jsonify(error=404, text="Source not found"), 404
+        return jsonify(source.to_api())
 
 
-def update_source(account_id, source_id):
+def update_source(account_id, source_id, body):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
 
         # Uhhh, where do I get source_data from???
         # source.source_data = something?
-        # Answer: source data is coming in in the request body
+        # TODO: Answer: source data is coming in in the request body,
+        #  Fill it in!
 
         source_repo.update_source_data(source)
         # I wonder if there's some way to get the creation_time/update_time
@@ -151,6 +155,7 @@ def delete_source(account_id, source_id):
         if not source_repo.delete_source(account_id, source_id):
             return jsonify(error=404, text="No source found"), 404
         # TODO: 422?
+        t.commit()
         return '', 204
 
 

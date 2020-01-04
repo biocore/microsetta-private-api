@@ -24,6 +24,7 @@ ACCT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 DOGGY_ID = "dddddddd-dddd-dddd-dddd-dddddddddddd"
 PLANTY_ID = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
 
+
 with Transaction() as t:
     kit_repo = KitRepo(t)
     kit = kit_repo.get_kit("eba20873-b88d-33cc-e040-8a80115d392c", "#6á$E")
@@ -62,10 +63,10 @@ with Transaction() as t:
     source_repo = SourceRepo(t)
     source_repo.delete_source(ACCT_ID, DOGGY_ID)
     source_repo.delete_source(ACCT_ID, PLANTY_ID)
-    source_repo.create_source(Source.create_canine(
+    source_repo.create_source(Source.create_animal(
         DOGGY_ID,
         ACCT_ID,
-        CanineInfo("Doggy")))
+        AnimalInfo("Doggy")))
     source_repo.create_source(Source.create_environment(
         PLANTY_ID,
         ACCT_ID,
