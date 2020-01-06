@@ -170,6 +170,8 @@ def read_survey_templates(account_id, source_id, language_tag):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
+        if source is None:
+            return jsonify(error=404, text="No source found"), 404
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return [1, 3, 4, 5]
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
@@ -194,8 +196,6 @@ def read_survey_template(account_id, source_id, survey_template_id,
 def read_answered_surveys(account_id, source_id, language_tag):
     # TODO: source_id is participant name until we make the proper schema
     #  changes.  Sorry bout that
-    print(account_id)
-    print(source_id)
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
         return survey_answers_repo.list_answered_surveys(account_id, source_id)
