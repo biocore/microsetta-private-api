@@ -75,18 +75,18 @@ class Source:
 
     @classmethod
     def create_human(cls, source_id, account_id, human_info):
-        return Source(source_id, account_id, 'human', human_info)
+        return cls(source_id, account_id, 'human', human_info)
 
     @classmethod
     def create_canine(cls, source_id, account_id, canine_info):
-        return Source(source_id, account_id, 'canine', canine_info)
+        return cls(source_id, account_id, 'canine', canine_info)
 
     @classmethod
     def create_environment(cls, source_id, account_id, env_info):
-        return Source(source_id, account_id, 'environment', env_info)
+        return cls(source_id, account_id, 'environment', env_info)
 
     @classmethod
     def from_json(cls, source_id, account_id, typed_json_data):
         decoder_hook = DECODER_HOOKS[typed_json_data["source_type"]]
-        return Source(source_id, account_id, typed_json_data["source_type"],
-                      json.loads(typed_json_data, object_hook=decoder_hook))
+        return cls(source_id, account_id, typed_json_data["source_type"],
+                   json.loads(typed_json_data, object_hook=decoder_hook))
