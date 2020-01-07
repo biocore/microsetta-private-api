@@ -68,8 +68,6 @@ class Source(ModelBase):
         self.source_data = source_data
 
     def to_api(self):
-        
-
         if self.source_type == Source.SOURCE_TYPE_HUMAN:
             consent = None
 
@@ -106,7 +104,7 @@ class Source(ModelBase):
 
     @classmethod
     def create_human(cls, source_id, account_id, human_info):
-        return Source(
+        return cls(
             source_id,
             account_id,
             Source.SOURCE_TYPE_HUMAN,
@@ -114,7 +112,7 @@ class Source(ModelBase):
 
     @classmethod
     def create_animal(cls, source_id, account_id, animal_info):
-        return Source(
+        return cls(
             source_id,
             account_id,
             Source.SOURCE_TYPE_ANIMAL,
@@ -122,16 +120,17 @@ class Source(ModelBase):
 
     @classmethod
     def create_environment(cls, source_id, account_id, env_info):
-        return Source(
+        return cls(
             source_id,
             account_id,
             Source.SOURCE_TYPE_ENVIRONMENT,
             env_info)
 
+
     @classmethod
     def from_json(cls, source_id, account_id, typed_json_data):
         decoder_hook = DECODER_HOOKS[typed_json_data["source_type"]]
-        return Source(source_id, account_id, typed_json_data["source_type"],
+        return cls(source_id, account_id, typed_json_data["source_type"],
                       json.loads(typed_json_data, object_hook=decoder_hook))
 
 

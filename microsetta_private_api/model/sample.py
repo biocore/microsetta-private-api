@@ -26,7 +26,7 @@ class Sample(ModelBase):
         # NB a sample may NOT have date and time collected if it has been sent out but not yet used
         if date_collected is not None and time_collected is not None:
             datetime_collected = datetime.combine(date_collected, time_collected)
-        return Sample(sample_id, datetime_collected, site, notes, barcode, scan_date)
+        return cls(sample_id, datetime_collected, site, notes, barcode, scan_date)
 
     def to_api(self):
         return {
