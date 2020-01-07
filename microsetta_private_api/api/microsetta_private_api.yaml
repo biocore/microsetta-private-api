@@ -144,10 +144,11 @@ paths:
                   consent:
                     participant_name: "Persephone Doe"
                     participant_email: "pomegranate@example.com"
-                    parent_1_name: "Demeter Doe"
-                    parent_2_name: "Zeus Doe"
-                    deceased_parent: false
-                    obtainer_name: "Hades Doe"
+                    child_info:
+                      parent_1_name: "Demeter Doe"
+                      parent_2_name: "Zeus Doe"
+                      deceased_parent: false
+                      obtainer_name: "Hades Doe"
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -900,7 +901,7 @@ components:
             state, province, or district
           type: string
           example: "ON"
-        zip:
+        post_code:
           description: |
             zip code or postal code
           type: string
@@ -915,7 +916,7 @@ components:
         # Note that state is NOT required as not all countries (e.g. New Zealand) include this in their addresses
         - street
         - city
-        - zip
+        - post_code
         - country_code
 
     # kit section
@@ -975,31 +976,6 @@ components:
           $ref: '#/components/schemas/sample_projects'
 
     # source section
-    adult_consent:
-      type: object
-      properties:
-        participant_name:
-          type: string
-        participant_email:
-          type: string
-    child_consent:
-      type: object
-      properties:
-        participant_name:
-          type: string
-        participant_email:
-          type: string
-        parent_1_name:
-          type: string
-        parent_2_name:
-          type: string
-        deceased_parent:
-          type: boolean
-        obtainer_name:
-          type: string
-      additionalProperties: false
-    source_name:
-      type: string
     source_type:
       type: string
       enum: [human, animal, environmental]
@@ -1008,9 +984,10 @@ components:
       type: object
       properties:
         source_type:
-          $ref: '#/components/schemas/source_type'
+          type: string
+          enum: [animal, environmental]
         source_name:
-          $ref: '#/components/schemas/source_name'
+          type: string
       example:
         source_name: "office windowsill"
         source_type: environmental
@@ -1019,13 +996,29 @@ components:
       type: object
       properties:
         source_type:
-          $ref: '#/components/schemas/source_type'
+          type: string
+          enum: [human]
         source_name:
-          $ref: '#/components/schemas/source_name'
+          type: string
         consent:
-          oneOf:
-            - $ref: '#/components/schemas/adult_consent'
-            - $ref: '#/components/schemas/child_consent'
+          type: object
+          properties:
+            participant_name:
+              type: string
+            participant_email:
+              type: string
+            child_info:
+              type: object
+              properties:
+                parent_1_name:
+                  type: string
+                parent_2_name:
+                  type: string
+                deceased_parent:
+                  type: boolean
+                obtainer_name:
+                  type: string
+              additionalProperties: false
       additionalProperties: false
 
     # survey template section
@@ -1161,10 +1154,11 @@ components:
         consent:
           participant_name: "Kelly Doe"
           participant_email: "kd@kidsmail.com"
-        parent_1_name: "Maman Doe"
-        parent_2_name: "Pere Doe"
-        deceased_parent: false
-        obtainer_name: "Maman M. Doe"
+          child_info:
+            parent_1_name: "Maman Doe"
+            parent_2_name: "Pere Doe"
+            deceased_parent: false
+            obtainer_name: "Maman M. Doe"
     nonhuman_source:
       value:
         source_name: "Fluffy"

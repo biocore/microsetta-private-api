@@ -17,13 +17,13 @@ class SourceRepo(BaseRepo):
                 "creation_time, update_time"
     write_cols = "id, account_id, source_type, source_data"
 
-    @classmethod
-    def _row_to_source(cls, r):
+    @staticmethod
+    def _row_to_source(r):
         hook = DECODER_HOOKS[r[2]]
         return Source(r[0], r[1], r[2], json.loads(r[3], object_hook=hook))
 
-    @classmethod
-    def _source_to_row(cls, s):
+    @staticmethod
+    def _source_to_row(s):
         row = (s.id, s.account_id, s.source_type,
                json.dumps(s.source_data, default=json_converter))
         return row

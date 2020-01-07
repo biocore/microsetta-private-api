@@ -30,5 +30,5 @@ class Sample:
         if date_collected is not None and time_collected is not None:
             datetime_collected = datetime.combine(date_collected,
                                                   time_collected)
-        return Sample(sample_id, datetime_collected, site, notes, barcode,
-                      scan_date)
+        return cls(sample_id, datetime_collected, site, notes, barcode,
+                   scan_date)
