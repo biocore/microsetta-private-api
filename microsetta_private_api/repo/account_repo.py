@@ -12,13 +12,13 @@ class AccountRepo(BaseRepo):
     write_cols = "id, email, auth_provider, first_name, last_name, address, " \
                  "account_type"
 
-    @classmethod
-    def _row_to_account(cls, r):
+    @staticmethod
+    def _row_to_account(r):
         return Account(r[0], r[1], r[2], r[3], r[4],
                        json.loads(r[5]), r[6], r[7], r[8])
 
-    @classmethod
-    def _account_to_row(cls, a):
+    @staticmethod
+    def _account_to_row(a):
         return (a.id, a.email, a.auth_provider, a.first_name, a.last_name,
                 json.dumps(a.address), a.account_type)
 
