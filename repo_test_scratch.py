@@ -83,7 +83,7 @@ with Transaction() as t:
     doggy = source_repo.get_source(ACCT_ID, DOGGY_ID)
     planty = source_repo.get_source(ACCT_ID, PLANTY_ID)
     all_sources = source_repo.get_sources_in_account(ACCT_ID)
-    just_plants = source_repo.get_sources_in_account(ACCT_ID, "environment")
+    just_plants = source_repo.get_sources_in_account(ACCT_ID, "environmental")
 
     print("Doggy:")
     print(json.dumps(doggy, default=json_converter, indent=2))

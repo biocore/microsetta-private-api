@@ -29,13 +29,6 @@ def environment_decoder(obj):
     return obj
 
 
-DECODER_HOOKS = {
-    'human': human_decoder,
-    'animal': animal_decoder,
-    'environment': environment_decoder
-}
-
-
 class HumanInfo:
     def __init__(self, name, email, is_juvenile,
                  parent1_name, parent1_deceased,
@@ -66,7 +59,7 @@ class EnvironmentInfo:
 class Source(ModelBase):
     SOURCE_TYPE_HUMAN = "human"
     SOURCE_TYPE_ANIMAL = "animal"
-    SOURCE_TYPE_ENVIRONMENT = "environment"
+    SOURCE_TYPE_ENVIRONMENT = "environmental"
 
     def __init__(self, source_id, account_id, source_type, source_data):
         self.id = source_id
@@ -75,7 +68,9 @@ class Source(ModelBase):
         self.source_data = source_data
 
     def to_api(self):
-        if self.source_type == 'human':
+        
+
+        if self.source_type == Source.SOURCE_TYPE_HUMAN:
             consent = None
 
             if self.source_data.consent_date is not None:
@@ -100,26 +95,48 @@ class Source(ModelBase):
                 "source_name": self.source_name,
                 "consent": consent
             }
-        if self.source_type == "animal" or self.source_type == "environment":
+        if self.source_type in [
+                                Source.SOURCE_TYPE_ANIMAL,
+                                Source.SOURCE_TYPE_ENVIRONMENT
+                               ]:
             return {
-                        "source_type": self.source_type,
-                        "source_name": self.source_data.name
+                "source_type": self.source_type,
+                "source_name": self.source_data.name
             }
 
     @classmethod
     def create_human(cls, source_id, account_id, human_info):
-        return Source(source_id, account_id, 'human', human_info)
+        return Source(
+            source_id,
+            account_id,
+            Source.SOURCE_TYPE_HUMAN,
+            human_info)
 
     @classmethod
     def create_animal(cls, source_id, account_id, animal_info):
-        return Source(source_id, account_id, 'animal', animal_info)
+        return Source(
+            source_id,
+            account_id,
+            Source.SOURCE_TYPE_ANIMAL,
+            animal_info)
 
     @classmethod
     def create_environment(cls, source_id, account_id, env_info):
-        return Source(source_id, account_id, 'environment', env_info)
+        return Source(
+            source_id,
+            account_id,
+            Source.SOURCE_TYPE_ENVIRONMENT,
+            env_info)
 
     @classmethod
     def from_json(cls, source_id, account_id, typed_json_data):
         decoder_hook = DECODER_HOOKS[typed_json_data["source_type"]]
         return Source(source_id, account_id, typed_json_data["source_type"],
                       json.loads(typed_json_data, object_hook=decoder_hook))
+
+
+DECODER_HOOKS = {
+    Source.SOURCE_TYPE_HUMAN: human_decoder,
+    Source.SOURCE_TYPE_ANIMAL: animal_decoder,
+    Source.SOURCE_TYPE_ENVIRONMENT: environment_decoder
+}

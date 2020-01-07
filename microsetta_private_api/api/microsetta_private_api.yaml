@@ -976,7 +976,7 @@ components:
     # source section
     source_type:
       type: string
-      enum: [human, animal, environment]
+      enum: [human, animal, environmental]
       example: human
     nonhuman_source:
       type: object
@@ -988,7 +988,7 @@ components:
           type: string
       example:
         source_name: "office windowsill"
-        source_type: environment
+        source_type: environmental
       additionalProperties: false
     human_source:
       type: object
