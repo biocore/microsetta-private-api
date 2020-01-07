@@ -10,10 +10,4 @@ class Address(ModelBase):
         self.country_code = country_code
 
     def to_api(self):
-        return {
-            "street": self.street,
-            "city": self.city,
-            "state": self.state,
-            "post_code": self.post_code,
-            "country_code": self.country_code
-        }
+        return self.__dict__.copy()
