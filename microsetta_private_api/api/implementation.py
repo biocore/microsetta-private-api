@@ -224,7 +224,8 @@ def submit_answered_survey(account_id, source_id, language_tag, body):
         )
         if success:
             t.commit()
-        return success
+            return '', 201
+        raise Exception("Couldn't submit answered survey...")
 
 
 def read_sample_associations(account_id, source_id):
