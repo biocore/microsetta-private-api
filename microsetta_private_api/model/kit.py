@@ -8,8 +8,6 @@ class Kit(ModelBase):
 
     def to_api(self):
         # API requires an array of the unused samples
-        unused = []
-        for s in self.samples:
-            if not s.deposited:
-                unused.append(s.to_api())
-        return unused
+        # TODO: Null sample site may just be an approximation of unused,
+        #  what should we use as the exact policy here?
+        return [s.to_api() for s in self.samples if s.site is None]
