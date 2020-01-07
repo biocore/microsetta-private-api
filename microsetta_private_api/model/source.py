@@ -68,9 +68,13 @@ class Source(ModelBase):
         self.source_data = source_data
 
     def to_api(self):
+        result = {
+                    "source_type": self.source_type,
+                    "source_name": self.source_data.name
+                 }
+
         if self.source_type == Source.SOURCE_TYPE_HUMAN:
             consent = None
-
             if self.source_data.consent_date is not None:
                 if self.source_data.is_juvenile:
                     consent = {
@@ -87,20 +91,9 @@ class Source(ModelBase):
                         "participant_name": self.source_data.name,
                         "participant_email": self.source_data.email
                     }
+            result["consent"] = consent
 
-            return {
-                "source_type": self.source_type,
-                "source_name": self.source_name,
-                "consent": consent
-            }
-        if self.source_type in [
-                                Source.SOURCE_TYPE_ANIMAL,
-                                Source.SOURCE_TYPE_ENVIRONMENT
-                               ]:
-            return {
-                "source_type": self.source_type,
-                "source_name": self.source_data.name
-            }
+        return result
 
     @classmethod
     def create_human(cls, source_id, account_id, human_info):
