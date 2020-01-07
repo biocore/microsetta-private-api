@@ -1,7 +1,7 @@
 sudo: false
 os:
   - linux
-  - os
+  - osx
 
 env:
   - CONDA_PY=3.8
@@ -9,7 +9,7 @@ env:
   - CONDA_PY=3.6
 
 addons:
-  postgresql: "9.5"
+  postgresql: "12"
 
 services:
   - postgresql 
