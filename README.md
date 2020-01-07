@@ -33,10 +33,10 @@ which will start the server on http://localhost:8082 . Note that this usage is s
 
 The Swagger UI should now be available at http://localhost:8082/api/ui .
 
-Currently the `/account` `get` interface (only) requires oath2 authentication.  This can be tested from the command line
- using the following two commands to see two different (authorized) responses:
+Currently the `/account` `get` interface (only) requires oath2 authentication, but this is currently mocked to return
+the same token info no matter what bearer token value is passed in.  This dummy-authenticated method can be tested from 
+the command line using the following command to examine an account record added by `repo_test_scratch.py`
 
-`curl -H 'Authorization: Bearer 123' http://localhost:8082/api/account`
+`curl -H 'Authorization: Bearer dummy' http://localhost:8082/api/accounts/aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff`
 
-`curl -H 'Authorization: Bearer 456' http://localhost:8082/api/account`
 

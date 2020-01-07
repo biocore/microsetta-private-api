@@ -57,7 +57,7 @@ def verify_and_decode_oauth2_jwt(access_token=TEMP_ACCESS_TOKEN) -> dict:
 
 # temporary function that simply decodes a base64-encoded json string
 def verify_and_decode_token(access_token) -> dict:
-    decoded_token = b64decode(access_token)
+    decoded_token = b64decode(TEMP_DUMMY_ACCESS_TOKEN)
     token_obj = json.loads(decoded_token)
     token_obj["scope"] = ['uid']
     return token_obj
@@ -67,7 +67,7 @@ def register_account(body):
     return not_yet_implemented()
 
 
-def read_account(account_id):
+def read_account(token_info, account_id):
     # TODO:  Authentication???
     with Transaction() as t:
         acct_repo = AccountRepo(t)
