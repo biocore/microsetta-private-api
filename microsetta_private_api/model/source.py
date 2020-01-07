@@ -24,8 +24,6 @@ def animal_decoder(obj):
 
 
 def environment_decoder(obj):
-    print("PLANTY: ")
-    print(obj)
     if isinstance(obj, dict):
         return EnvironmentInfo(obj["name"], obj["description"])
     return obj
