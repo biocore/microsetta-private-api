@@ -65,11 +65,12 @@ with Transaction() as t:
     source_repo.delete_source(ACCT_ID, DOGGY_ID)
     source_repo.delete_source(ACCT_ID, PLANTY_ID)
     source_repo.delete_source(ACCT_ID, HUMAN_ID)
+
     source_repo.create_source(Source.create_human(
         HUMAN_ID,
         ACCT_ID,
-        HumanInfo("Bo", "bo@bo.com", False, None, None, False, False,
-                  datetime.datetime.utcnow(), "TODO,WutDis?")
+        HumanInfo("Bo", "bo@bo.com", False, "Mr Bo", False, "Mrs Bo",
+                  False, datetime.datetime.utcnow(), "TODO,WutDis?")
     ))
     source_repo.create_source(Source.create_animal(
         DOGGY_ID,
