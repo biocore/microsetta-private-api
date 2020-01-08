@@ -119,12 +119,11 @@ class Source(ModelBase):
             Source.SOURCE_TYPE_ENVIRONMENT,
             env_info)
 
-
     @classmethod
     def from_json(cls, source_id, account_id, typed_json_data):
         decoder_hook = DECODER_HOOKS[typed_json_data["source_type"]]
         return cls(source_id, account_id, typed_json_data["source_type"],
-                      json.loads(typed_json_data, object_hook=decoder_hook))
+                   json.loads(typed_json_data, object_hook=decoder_hook))
 
 
 DECODER_HOOKS = {

@@ -115,6 +115,7 @@ def create_source(account_id, body):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source_id = str(uuid.uuid4())
+        source_info = None
         new_source = Source.from_json(source_id, account_id, source_info)
         source_repo.create_source(new_source)
         # Must pull from db to get creation_time, update_time
@@ -202,7 +203,10 @@ def read_answered_surveys(account_id, source_id, language_tag):
     #  changes.  Sorry bout that
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        return jsonify(survey_answers_repo.list_answered_surveys(account_id, source_id)), 200
+        return jsonify(
+            survey_answers_repo.list_answered_surveys(
+                account_id,
+                source_id)), 200
 
 
 def read_answered_survey(account_id, source_id, survey_id):
@@ -210,7 +214,10 @@ def read_answered_survey(account_id, source_id, survey_id):
     #  layer?
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        return jsonify(survey_answers_repo.get_answered_survey(account_id, survey_id)), 200
+        survey_answers = survey_answers_repo.get_answered_survey(
+            account_id,
+            survey_id)
+        return jsonify(survey_answers), 200
 
 
 def submit_answered_survey(account_id, source_id, language_tag, body):
