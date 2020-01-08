@@ -1,8 +1,26 @@
 from microsetta_private_api.config_manager import AMGUT_CONFIG
 import psycopg2
+from psycopg2 import pool
+import atexit
 
 
 class Transaction:
+    # Note: SimpleConnectionPool works only for single threaded applications
+    #  Should we make the server multi threaded, we must switch to a
+    #  ThreadedConnectionPool
+    _POOL = psycopg2.pool.SimpleConnectionPool(
+        1,
+        20,
+        user=AMGUT_CONFIG.user,
+        password=AMGUT_CONFIG.password,
+        database=AMGUT_CONFIG.database,
+        host=AMGUT_CONFIG.host,
+        port=AMGUT_CONFIG.port)
+
+    @staticmethod
+    @atexit.register
+    def shutdown_pool():
+        Transaction._POOL.closeall()
 
     def __init__(self):
         self._closed = True
@@ -10,30 +28,24 @@ class Transaction:
 
     def __enter__(self):
         self._closed = False
-        # Note, we may want to switch to a connection pool in the future
-        self._conn = psycopg2.connect(user=AMGUT_CONFIG.user,
-                                      password=AMGUT_CONFIG.password,
-                                      database=AMGUT_CONFIG.database,
-                                      host=AMGUT_CONFIG.host,
-                                      port=AMGUT_CONFIG.port)
+        self._conn = Transaction._POOL.getconn()
         return self
 
     def __exit__(self, type, value, traceback):
         if not self._closed:
             self.rollback()
+        Transaction._POOL.putconn(self._conn)
 
     def commit(self):
         if self._closed:
             raise RuntimeError("Cannot commit closed Transaction")
         self._conn.commit()
-        self._conn.close()
         self._closed = True
 
     def rollback(self):
         if self._closed:
             raise RuntimeError("Cannot rollback closed Transaction")
         self._conn.rollback()
-        self._conn.close()
         self._closed = True
 
     def cursor(self):
