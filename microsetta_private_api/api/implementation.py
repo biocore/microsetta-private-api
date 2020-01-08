@@ -75,7 +75,7 @@ def read_account(token_info, account_id):
         if acc is None:
             # TODO: Think this should be "code", "message" to match api?
             return jsonify(error=404, text="Account not found"), 404
-        return jsonify(acc.to_api())
+        return jsonify(acc.to_api()), 200
 
 
 def update_account(account_id, body):
@@ -95,7 +95,7 @@ def update_account(account_id, body):
 
         acct_repo.update_account(acc)
         t.commit()
-        return jsonify(acc.to_api())
+        return jsonify(acc.to_api()), 200
 
 
 def read_sources(account_id, source_type):
@@ -104,7 +104,7 @@ def read_sources(account_id, source_type):
         sources = source_repo.get_sources_in_account(account_id, source_type)
         api_sources = [x.to_api() for x in sources]
         # TODO: Also support 404? Or is that not necessary?
-        return jsonify(api_sources)
+        return jsonify(api_sources), 200
 
 
 def create_source(account_id, body):
@@ -117,7 +117,7 @@ def create_source(account_id, body):
         s = source_repo.get_source(account_id, new_source.id)
         t.commit()
         # TODO: What about 404 and 422 errors?
-        return jsonify(s.to_api())
+        return jsonify(s.to_api()), 200
 
 
 def read_source(account_id, source_id):
@@ -127,7 +127,7 @@ def read_source(account_id, source_id):
         source = source_repo.get_source(account_id, source_id)
         if source is None:
             return jsonify(error=404, text="Source not found"), 404
-        return jsonify(source.to_api())
+        return jsonify(source.to_api()), 200
 
 
 def update_source(account_id, source_id, body):
@@ -146,7 +146,7 @@ def update_source(account_id, source_id, body):
         source = source_repo.get_source(account_id, source_id)
         t.commit()
         # TODO: 404 and 422?
-        return jsonify(source.to_api())
+        return jsonify(source.to_api()), 200
 
 
 def delete_source(account_id, source_id):
@@ -173,11 +173,11 @@ def read_survey_templates(account_id, source_id, language_tag):
         if source is None:
             return jsonify(error=404, text="No source found"), 404
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
-            return [1, 3, 4, 5]
+            return jsonify([1, 3, 4, 5]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
-            return [2]
+            return jsonify([2]), 200
         else:
-            return []
+            return jsonify([]), 200
 
 
 def read_survey_template(account_id, source_id, survey_template_id,
@@ -190,7 +190,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
         survey_template_repo = SurveyTemplateRepo(t)
         survey_template = survey_template_repo.get_survey_template(
             survey_template_id)
-        return vue_adapter.to_vue_schema(survey_template)
+        return jsonify(vue_adapter.to_vue_schema(survey_template)), 200
 
 
 def read_answered_surveys(account_id, source_id, language_tag):
@@ -198,7 +198,7 @@ def read_answered_surveys(account_id, source_id, language_tag):
     #  changes.  Sorry bout that
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        return survey_answers_repo.list_answered_surveys(account_id, source_id)
+        return jsonify(survey_answers_repo.list_answered_surveys(account_id, source_id)), 200
 
 
 def read_answered_survey(account_id, source_id, survey_id):
@@ -206,7 +206,7 @@ def read_answered_survey(account_id, source_id, survey_id):
     #  layer?
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        return survey_answers_repo.get_answered_survey(account_id, survey_id)
+        return jsonify(survey_answers_repo.get_answered_survey(account_id, survey_id)), 200
 
 
 def submit_answered_survey(account_id, source_id, language_tag, body):
@@ -224,8 +224,9 @@ def submit_answered_survey(account_id, source_id, language_tag, body):
         )
         if success:
             t.commit()
-            return '', 201
-        raise Exception("Couldn't submit answered survey...")
+            return jsonify(''), 201
+        return jsonify(code=422,
+                       message="Could not submit answered survey"), 422
 
 
 def read_sample_associations(account_id, source_id):
@@ -243,7 +244,7 @@ def read_sample_association(account_id, source_id, sample_id):
         if sample is None:
             return jsonify(error=404, text="Sample not found"), 404
 
-        return jsonify(sample)
+        return jsonify(sample), 200
 
 
 def update_sample_association(account_id, source_id, sample_id, body):
@@ -273,7 +274,7 @@ def read_kit(kit_name, kit_password):
         kit = kit_repo.get_kit(kit_name, kit_password)
         if kit is None:
             return jsonify(error=404, text="No such kit"), 404
-        return jsonify(kit.to_api())
+        return jsonify(kit.to_api()), 200
 
 
 def consent_doc():
