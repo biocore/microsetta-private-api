@@ -1,0 +1,2 @@
+connexion[swagger-ui]
+pyjwt[crypto]

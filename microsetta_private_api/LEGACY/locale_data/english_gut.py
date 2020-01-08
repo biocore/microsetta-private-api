@@ -12,7 +12,8 @@ from microsetta_private_api.config_manager import AMGUT_CONFIG
 # -----------------------------------------------------------------------------
 
 # Any media specific localizations
-HELP_EMAIL = "info@%(email)s.org" % {'email': AMGUT_CONFIG.locale.replace('_','')}
+HELP_EMAIL = "info@%(email)s.org" % \
+    {'email': AMGUT_CONFIG.locale.replace('_', '')}
 
 _SITEBASE = AMGUT_CONFIG.sitebase
 

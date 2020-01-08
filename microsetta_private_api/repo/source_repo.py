@@ -1,6 +1,5 @@
 from microsetta_private_api.repo.base_repo import BaseRepo
-from microsetta_private_api.model.source import (HumanInfo, CanineInfo,
-                                                 EnvironmentInfo, Source,
+from microsetta_private_api.model.source import (Source,
                                                  DECODER_HOOKS)
 import json
 from microsetta_private_api.util.util import json_converter

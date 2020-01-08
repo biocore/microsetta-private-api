@@ -20,4 +20,5 @@ class DBConfig(object):
         self.sitebase = "PROJECT_SITEBASE"
         self.locale = "american_gut"
 
+
 AMGUT_CONFIG = DBConfig()

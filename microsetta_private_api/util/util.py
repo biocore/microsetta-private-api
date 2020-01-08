@@ -11,4 +11,3 @@ def json_converter(o):
     if isinstance(o, datetime.datetime) or isinstance(o, datetime.date):
         return str(o)
     return o.__dict__
-
