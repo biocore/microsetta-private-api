@@ -1,12 +1,15 @@
 """
 Functions to implement OpenAPI 3.0 interface to access private PHI.
 
-Underlies the resource server in the oauth2 workflow. "Resource Server: The server hosting user-owned resources that are
-protected by OAuth2. The resource server validates the access-token and serves the protected resources."
+Underlies the resource server in the oauth2 workflow. "Resource Server: The
+server hosting user-owned resources that are protected by OAuth2. The resource
+server validates the access-token and serves the protected resources."
 --https://dzone.com/articles/oauth-20-beginners-guide
 
-Loosely based off examples in https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
-and associated file https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py
+Loosely based off examples in
+https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
+and associated file
+https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
 """
 
 from flask import jsonify, render_template
@@ -21,19 +24,16 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 
 from microsetta_private_api.model.source import Source
-from microsetta_private_api.model.survey_template import SurveyTemplate
-from microsetta_private_api.model.mock_jinja import MockJinja
+from microsetta_private_api.LEGACY.locale_data import american_gut
 
 from microsetta_private_api.util import vue_adapter
-
-from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 
 import uuid
 import json
 
-TOKEN_KEY = "QvMWMnlOqBbNsM88AMxpzcJMbBUu/w8U9joIaNYjuEbwEYhLIB5FqEoFWnfLN3JZN4SD0LAtZOwFNqyMLmNruBLqEvbpjQzM6AY+BfXGxDVFL65c9Xw8ocd6t1nF6YvTpHGB4NJhUwngjIQmFx+6TCa5wArtEqUeoIc1ukVTYbioRkxzi5ju8cc9/PoInB0c7wugMz5ihAPWohpDc4kCotYv7C2K/e9J9CPdwbiLJKYKxO4zSQAqk+Sj4wRcn7bJqIOIT6BlvvnzRGXYG33qXAxGylM4UySj7ltwSGOIY0/JUvKEej3fX17C8wWtJvrjbFQacNhoglqfWq2GeOdRSA== "
-TEMP_ACCESS_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbXlhcHAuY29tLyIsInN1YiI6InVzZXJzL3VzZXIxMjM0Iiwic2NvcGUiOiJzZWxmLCBhZG1pbnMiLCJqdGkiOiJkMzBkMzA5ZS1iZTQ5LTRjOWEtYjdhYi1hMGU3MTIwYmFlZDMiLCJpYXQiOjE1NzIzNzY4OTUsImV4cCI6MTU3MjM4MDQ5NX0.EMooERuy2Z4tC_TsXJe6Vx8yCgzTzI_qh84a5DsKPRw"
-TEMP_DUMMY_ACCESS_TOKEN = "eyJ1aWQiOiJKYW5lIiwgImVtYWlsIjogImphbmVAc29tZXdoZXJlLmNvbSJ9"
+TOKEN_KEY = "QvMWMnlOqBbNsM88AMxpzcJMbBUu/w8U9joIaNYjuEbwEYhLIB5FqEoFWnfLN3JZN4SD0LAtZOwFNqyMLmNruBLqEvbpjQzM6AY+BfXGxDVFL65c9Xw8ocd6t1nF6YvTpHGB4NJhUwngjIQmFx+6TCa5wArtEqUeoIc1ukVTYbioRkxzi5ju8cc9/PoInB0c7wugMz5ihAPWohpDc4kCotYv7C2K/e9J9CPdwbiLJKYKxO4zSQAqk+Sj4wRcn7bJqIOIT6BlvvnzRGXYG33qXAxGylM4UySj7ltwSGOIY0/JUvKEej3fX17C8wWtJvrjbFQacNhoglqfWq2GeOdRSA== "  # noqa: E501
+TEMP_ACCESS_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbXlhcHAuY29tLyIsInN1YiI6InVzZXJzL3VzZXIxMjM0Iiwic2NvcGUiOiJzZWxmLCBhZG1pbnMiLCJqdGkiOiJkMzBkMzA5ZS1iZTQ5LTRjOWEtYjdhYi1hMGU3MTIwYmFlZDMiLCJpYXQiOjE1NzIzNzY4OTUsImV4cCI6MTU3MjM4MDQ5NX0.EMooERuy2Z4tC_TsXJe6Vx8yCgzTzI_qh84a5DsKPRw"  # noqa: E501
+TEMP_DUMMY_ACCESS_TOKEN = "eyJ1aWQiOiJKYW5lIiwgImVtYWlsIjogImphbmVAc29tZXdoZXJlLmNvbSJ9"  # noqa: E501
 
 
 def not_yet_implemented():
@@ -48,8 +48,12 @@ def verify_and_decode_oauth2_jwt(access_token=TEMP_ACCESS_TOKEN) -> dict:
             "Provided access token is not in JWT format: {0}".format(
                 access_token))
     alg_type = token_header['alg']
+
     decoded = jwt.decode(access_token, b64decode(TOKEN_KEY),
                          algorithms=alg_type, verify=False)
+    # NOTE: doing a noop to avoid a flake8 item until this function goes into
+    # actual use
+    decoded = decoded
 
     # TODO: figure out what to return and how to dig it out of JWT
     return {'uid': "not_implemented", 'scope': ['uid']}
