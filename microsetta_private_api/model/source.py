@@ -1,4 +1,5 @@
 import json
+from microsetta_private_api.model.model_base import ModelBase
 
 
 def human_decoder(obj):
@@ -16,9 +17,9 @@ def human_decoder(obj):
     return obj
 
 
-def canine_decoder(obj):
+def animal_decoder(obj):
     if isinstance(obj, dict):
-        return CanineInfo(obj["name"])
+        return AnimalInfo(obj["name"])
     return obj
 
 
@@ -26,13 +27,6 @@ def environment_decoder(obj):
     if isinstance(obj, dict):
         return EnvironmentInfo(obj["name"], obj["description"])
     return obj
-
-
-DECODER_HOOKS = {
-    'human': human_decoder,
-    'canine': canine_decoder,
-    'environment': environment_decoder
-}
 
 
 class HumanInfo:
@@ -51,7 +45,7 @@ class HumanInfo:
         self.age_range = age_range
 
 
-class CanineInfo:
+class AnimalInfo:
     def __init__(self, name):
         self.name = name
 
@@ -62,10 +56,10 @@ class EnvironmentInfo:
         self.description = description
 
 
-class Source:
+class Source(ModelBase):
     SOURCE_TYPE_HUMAN = "human"
-    SOURCE_TYPE_CANINE = "canine"
-    SOURCE_TYPE_ENVIRONMENT = "environment"
+    SOURCE_TYPE_ANIMAL = "animal"
+    SOURCE_TYPE_ENVIRONMENT = "environmental"
 
     def __init__(self, source_id, account_id, source_type, source_data):
         self.id = source_id
@@ -73,20 +67,67 @@ class Source:
         self.source_type = source_type
         self.source_data = source_data
 
-    @classmethod
-    def create_human(cls, source_id, account_id, human_info):
-        return cls(source_id, account_id, 'human', human_info)
+    def to_api(self):
+        result = {
+                    "source_type": self.source_type,
+                    "source_name": self.source_data.name
+                 }
+
+        if self.source_type == Source.SOURCE_TYPE_HUMAN:
+            consent = None
+            if self.source_data.consent_date is not None:
+                if self.source_data.is_juvenile:
+                    consent = {
+                        "participant_name": self.source_data.name,
+                        "participant_email": self.source_data.email,
+                        "parent_1_name": self.parent1_name,
+                        "parent_2_name": self.parent2_name,
+                        "deceased_parent": (self.parent1_deceased or
+                                            self.parent2_deceased),
+                        "obtainer_name": None  # TODO: What is this???
+                    }
+                else:
+                    consent = {
+                        "participant_name": self.source_data.name,
+                        "participant_email": self.source_data.email
+                    }
+            result["consent"] = consent
+
+        return result
 
     @classmethod
-    def create_canine(cls, source_id, account_id, canine_info):
-        return cls(source_id, account_id, 'canine', canine_info)
+    def create_human(cls, source_id, account_id, human_info):
+        return cls(
+            source_id,
+            account_id,
+            Source.SOURCE_TYPE_HUMAN,
+            human_info)
+
+    @classmethod
+    def create_animal(cls, source_id, account_id, animal_info):
+        return cls(
+            source_id,
+            account_id,
+            Source.SOURCE_TYPE_ANIMAL,
+            animal_info)
 
     @classmethod
     def create_environment(cls, source_id, account_id, env_info):
-        return cls(source_id, account_id, 'environment', env_info)
+        return cls(
+            source_id,
+            account_id,
+            Source.SOURCE_TYPE_ENVIRONMENT,
+            env_info)
 
     @classmethod
     def from_json(cls, source_id, account_id, typed_json_data):
         decoder_hook = DECODER_HOOKS[typed_json_data["source_type"]]
         return cls(source_id, account_id, typed_json_data["source_type"],
                    json.loads(typed_json_data, object_hook=decoder_hook))
+
+
+DECODER_HOOKS = {
+    Source.SOURCE_TYPE_HUMAN: human_decoder,
+    Source.SOURCE_TYPE_ANIMAL: animal_decoder,
+    Source.SOURCE_TYPE_ENVIRONMENT: environment_decoder
+}

@@ -1,7 +1,8 @@
 from datetime import datetime
+from microsetta_private_api.model.model_base import ModelBase
 
 
-class Sample:
+class Sample(ModelBase):
     def __init__(self, sample_id, datetime_collected, site, notes, barcode,
                  scan_date):
         self.id = sample_id
@@ -32,3 +33,13 @@ class Sample:
                                                   time_collected)
         return cls(sample_id, datetime_collected, site, notes, barcode,
                    scan_date)
+
+    def to_api(self):
+        return {
+            "sample_barcode": self.barcode,
+            "sample_site": self.site,
+            "sample_locked": self.is_locked(),
+            "sample_datetime": self.datetime_collected,
+            "sample_notes": self.notes,
+            "sample_projects": None  # TODO: Where is this info?
+        }

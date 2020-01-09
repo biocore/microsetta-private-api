@@ -67,97 +67,104 @@ def verify_and_decode_token(access_token) -> dict:
     return token_obj
 
 
-def register_account(token_info):
+def register_account(body):
     return not_yet_implemented()
 
 
-def read_account(token_info, acct_id):
+def read_account(token_info, account_id):
     # TODO:  Authentication???
     with Transaction() as t:
         acct_repo = AccountRepo(t)
-        acc = acct_repo.get_account(acct_id)
+        acc = acct_repo.get_account(account_id)
         if acc is None:
             # TODO: Think this should be "code", "message" to match api?
             return jsonify(error=404, text="Account not found"), 404
-        return jsonify(acc)
+        return jsonify(acc.to_api()), 200
 
 
-def update_account(acct_id, first_name, last_name, email, address):
+def update_account(account_id, body):
     # TODO:  Authentication??
     with Transaction() as t:
         acct_repo = AccountRepo(t)
-        acc = acct_repo.get_account(acct_id)
+        acc = acct_repo.get_account(account_id)
         if acc is None:
             return jsonify(error=404, text="Account not found"), 404
 
         # TODO: add 422 handling
 
-        acc.first_name = first_name
-        acc.last_name = last_name
-        acc.email = email
-        acc.address = address
+        acc.first_name = body["first_name"]
+        acc.last_name = body["last_name"]
+        acc.email = body["email"]
+        acc.address = body["address"]
 
         acct_repo.update_account(acc)
         t.commit()
-        return jsonify(acc)
+        return jsonify(acc.to_api()), 200
 
 
-def read_sources(acct_id, source_type):
+def read_sources(account_id, source_type):
     with Transaction() as t:
         source_repo = SourceRepo(t)
+        sources = source_repo.get_sources_in_account(account_id, source_type)
+        api_sources = [x.to_api() for x in sources]
         # TODO: Also support 404? Or is that not necessary?
-        return jsonify(
-            source_repo.get_sources_in_account(acct_id, source_type))
+        return jsonify(api_sources), 200
 
 
-def create_source(acct_id, source_info):
+def create_source(account_id, body):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source_id = str(uuid.uuid4())
-        new_source = Source.from_json(source_id, acct_id, source_info)
+        source_info = None
+        new_source = Source.from_json(source_id, account_id, source_info)
         source_repo.create_source(new_source)
         # Must pull from db to get creation_time, update_time
-        s = source_repo.get_source(acct_id, new_source.id)
+        s = source_repo.get_source(account_id, new_source.id)
         t.commit()
         # TODO: What about 404 and 422 errors?
-        return jsonify(s)
+        return jsonify(s.to_api()), 200
 
 
-def read_source(acct_id, source_id):
+def read_source(account_id, source_id):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         # TODO: What about 404?
-        return source_repo.get_source(acct_id, source_id)
+        source = source_repo.get_source(account_id, source_id)
+        if source is None:
+            return jsonify(error=404, text="Source not found"), 404
+        return jsonify(source.to_api()), 200
 
 
-def update_source(acct_id, source_id):
+def update_source(account_id, source_id, body):
     with Transaction() as t:
         source_repo = SourceRepo(t)
-        source = source_repo.get_source(acct_id, source_id)
+        source = source_repo.get_source(account_id, source_id)
 
         # Uhhh, where do I get source_data from???
         # source.source_data = something?
-        # Answer: source data is coming in in the request body
+        # TODO: Answer: source data is coming in in the request body,
+        #  Fill it in!
 
         source_repo.update_source_data(source)
         # I wonder if there's some way to get the creation_time/update_time
         # during the insert/update...
-        source = source_repo.get_source(acct_id, source_id)
+        source = source_repo.get_source(account_id, source_id)
         t.commit()
         # TODO: 404 and 422?
-        return jsonify(source)
+        return jsonify(source.to_api()), 200
 
 
-def delete_source(acct_id, source_id):
+def delete_source(account_id, source_id):
     with Transaction() as t:
         source_repo = SourceRepo(t)
-        if not source_repo.delete_source(acct_id, source_id):
+        if not source_repo.delete_source(account_id, source_id):
             return jsonify(error=404, text="No source found"), 404
         # TODO: 422?
+        t.commit()
         return '', 204
 
 
-def read_survey_templates(acct_id, source_id, locale_code):
+def read_survey_templates(account_id, source_id, language_tag):
     # TODO: I don't think this query is backed by one of the existing tables
     # I think it was just hardcoded...  Which honestly seems like a fine
     # solution to me...  How much do we care that survey identifiers are
@@ -167,16 +174,19 @@ def read_survey_templates(acct_id, source_id, locale_code):
     # So what can I pass down to the user that will make any sense here?
     with Transaction() as t:
         source_repo = SourceRepo(t)
-        source = source_repo.get_source(acct_id, source_id)
+        source = source_repo.get_source(account_id, source_id)
+        if source is None:
+            return jsonify(error=404, text="No source found"), 404
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
-            return [1, 3, 4, 5]
-        elif source.source_type == Source.SOURCE_TYPE_CANINE:
-            return [2]
+            return jsonify([1, 3, 4, 5]), 200
+        elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
+            return jsonify([2]), 200
         else:
-            return []
+            return jsonify([]), 200
 
 
-def read_survey_template(acct_id, source_id, survey_template_id, locale_code):
+def read_survey_template(account_id, source_id, survey_template_id,
+                         language_tag):
     # TODO: can we get rid of source_id?  I don't have anything useful to do
     #  with it...  I guess I could check if the source is a dog before giving
     #  out a pet information survey?
@@ -185,96 +195,97 @@ def read_survey_template(acct_id, source_id, survey_template_id, locale_code):
         survey_template_repo = SurveyTemplateRepo(t)
         survey_template = survey_template_repo.get_survey_template(
             survey_template_id)
-        return vue_adapter.to_vue_schema(survey_template)
+        return jsonify(vue_adapter.to_vue_schema(survey_template)), 200
 
 
-def read_answered_surveys(acct_id, source_id):
+def read_answered_surveys(account_id, source_id, language_tag):
     # TODO: source_id is participant name until we make the proper schema
     #  changes.  Sorry bout that
-    print(acct_id)
-    print(source_id)
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        return survey_answers_repo.list_answered_surveys(acct_id, source_id)
+        return jsonify(
+            survey_answers_repo.list_answered_surveys(
+                account_id,
+                source_id)), 200
 
 
-def read_answered_survey(acct_id, source_id, survey_id):
+def read_answered_survey(account_id, source_id, survey_id):
     # TODO: Don't need source_id, drop it or include for validation at db
     #  layer?
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        return survey_answers_repo.get_answered_survey(acct_id, survey_id)
+        survey_answers = survey_answers_repo.get_answered_survey(
+            account_id,
+            survey_id)
+        return jsonify(survey_answers), 200
 
 
-def submit_answered_survey(acct_id, source_id, locale_code,
-                           survey_template_id, survey_text):
+def submit_answered_survey(account_id, source_id, language_tag, body):
     # TODO: source_id still needs to be participant name til we refactor
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        return survey_answers_repo.submit_answered_survey(acct_id,
-                                                          source_id,
-                                                          locale_code,
-                                                          survey_template_id,
-                                                          survey_text)
+        success = survey_answers_repo.submit_answered_survey(
+            account_id,
+            source_id,
+            language_tag,
+            body["survey_template_id"],
+            body["survey_text"]
+        )
+        if success:
+            t.commit()
+            return jsonify(''), 201
+        return jsonify(code=422,
+                       message="Could not submit answered survey"), 422
 
 
-def delete_answered_survey(acct_id, source_id, survey_id):
-    with Transaction() as t:
-        survey_answers_repo = SurveyAnswersRepo(t)
-        return survey_answers_repo.delete_answered_survey(acct_id, survey_id)
-
-
-def read_sample_associations(acct_id, source_id):
+def read_sample_associations(account_id, source_id):
     return not_yet_implemented()
 
 
-def associate_sample(acct_id, source_id):
+def associate_sample(account_id, source_id, body):
     return not_yet_implemented()
 
 
-def read_sample_association(acct_id, source_id, sample_id):
+def read_sample_association(account_id, source_id, sample_id):
     with Transaction() as t:
         sample_repo = SampleRepo(t)
         sample = sample_repo.get_sample(sample_id)
         if sample is None:
             return jsonify(error=404, text="Sample not found"), 404
 
-        return jsonify(sample)
+        return jsonify(sample), 200
 
 
-def update_sample_association(acct_id, source_id, sample_id):
+def update_sample_association(account_id, source_id, sample_id, body):
     return not_yet_implemented()
 
 
-def dissociate_sample(acct_id, source_id, sample_id):
+def dissociate_sample(account_id, source_id, sample_id):
     return not_yet_implemented()
 
 
-def read_answered_survey_associations(acct_id, source_id, sample_id):
+def read_answered_survey_associations(account_id, source_id, sample_id):
     return not_yet_implemented()
 
 
-def associate_answered_survey(acct_id, source_id, sample_id):
+def associate_answered_survey(account_id, source_id, sample_id, body):
     return not_yet_implemented()
 
 
-def dissociate_answered_survey(acct_id, source_id, sample_id, survey_id):
+def dissociate_answered_survey(account_id, source_id, sample_id, survey_id):
     return not_yet_implemented()
 
 
-def read_kit(kit_id, kit_code):
+def read_kit(kit_name, kit_password):
     with Transaction() as t:
         kit_repo = KitRepo(t)
-        kit = kit_repo.get_kit(kit_id, kit_code)
+        # TODO: Ensure this name and password are what the repo layer expects
+        kit = kit_repo.get_kit(kit_name, kit_password)
         if kit is None:
             return jsonify(error=404, text="No such kit"), 404
-        unused = []
-        for s in kit.samples:
-            if not s.deposited:
-                unused.append(s)
-        return jsonify(unused)
+        return jsonify(kit.to_api()), 200
 
 
 def consent_doc():
