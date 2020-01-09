@@ -131,12 +131,14 @@ paths:
                   consent:
                     participant_name: "Ophelia Q. Doe"
                     participant_email: "nunnery@example.com"
+                    age_range: "18+"
                 - source_id: "df077cd7-f2c7-42e4-b8ed-9c7e9dd47ce5"
                   source_name: "P. Doe"
                   source_type: human
                   consent:
                     participant_name: "Persephone Doe"
                     participant_email: "pomegranate@example.com"
+                    age_range: "0-6"
                     child_info:
                       parent_1_name: "Demeter Doe"
                       parent_2_name: "Zeus Doe"
@@ -1025,6 +1027,9 @@ components:
               type: string
             participant_email:
               type: string
+            age_range:
+              type: string
+              enum: ["0-6", "7-12", "13-17", "18+"]
             child_info:
               type: object
               properties:
@@ -1165,6 +1170,7 @@ components:
         consent:
           participant_name: "Nellie Doe"
           participant_email: "nell@example.com"
+          age_range: "18+"
     human_child_source:
       value:
         source_name: "K. Doe"
@@ -1172,6 +1178,7 @@ components:
         consent:
           participant_name: "Kelly Doe"
           participant_email: "kd@kidsmail.com"
+          age_range: "7-12"
           child_info:
             parent_1_name: "Maman Doe"
             parent_2_name: "Pere Doe"
