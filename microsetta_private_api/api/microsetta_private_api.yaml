@@ -20,21 +20,23 @@ paths:
       requestBody:
         content:
           application/json:
-              schema:
-                type: object
-                properties:
-                  first_name:
-                    $ref: '#/components/schemas/first_name'
-                  last_name:
-                    $ref: '#/components/schemas/last_name'
-                  email:
-                    $ref: '#/components/schemas/email'
-                  address:
-                    $ref: '#/components/schemas/address'
-                  kit_name:
-                    $ref: '#/components/schemas/kit_name'
-                  kit_password:
-                    $ref: '#/components/schemas/kit_password'
+            # NB: this doesn't use $ref: '#/components/schemas/account' because--for account creation ONLY--it is
+            # required to pass in kit info, which is not part of the account object schema
+            schema:
+              type: object
+              properties:
+                first_name:
+                  $ref: '#/components/schemas/first_name'
+                last_name:
+                  $ref: '#/components/schemas/last_name'
+                email:
+                  $ref: '#/components/schemas/email'
+                address:
+                  $ref: '#/components/schemas/address'
+                kit_name:
+                  $ref: '#/components/schemas/kit_name'
+                kit_password:
+                  $ref: '#/components/schemas/kit_password'
       responses:
         '201':
           description: Successfully registered new user account
@@ -86,16 +88,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                first_name:
-                  $ref: '#/components/schemas/first_name'
-                last_name:
-                  $ref: '#/components/schemas/last_name'
-                email:
-                  $ref: '#/components/schemas/email'
-                address:
-                  $ref: '#/components/schemas/address'
+              $ref: '#/components/schemas/account'
       responses:
         '200':
           description: Successfully updated user account information
@@ -132,12 +125,14 @@ paths:
                   - $ref: '#/components/schemas/human_source'
                   - $ref: '#/components/schemas/nonhuman_source'
               example:
-                - source_name: "Ophelia Doe"
+                - source_id: "7cb1b4a9-5d42-42b2-9364-7bceb6630ac3"
+                  source_name: "Ophelia Doe"
                   source_type: human
                   consent:
                     participant_name: "Ophelia Q. Doe"
                     participant_email: "nunnery@example.com"
-                - source_name: "P. Doe"
+                - source_id: "df077cd7-f2c7-42e4-b8ed-9c7e9dd47ce5"
+                  source_name: "P. Doe"
                   source_type: human
                   consent:
                     participant_name: "Persephone Doe"
@@ -189,11 +184,11 @@ paths:
                   - $ref: '#/components/schemas/nonhuman_source'
               examples:
                 human_adult_source:
-                  $ref: '#/components/examples/human_adult_source'
+                  $ref: '#/components/examples/human_adult_source_w_id'
                 human_child_source:
-                  $ref: '#/components/examples/human_child_source'
+                  $ref: '#/components/examples/human_child_source_w_id'
                 nonhuman_source:
-                  $ref: '#/components/examples/nonhuman_source'
+                  $ref: '#/components/examples/nonhuman_source_w_id'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -222,11 +217,11 @@ paths:
                   - $ref: '#/components/schemas/nonhuman_source'
               examples:
                 human_adult_source:
-                  $ref: '#/components/examples/human_adult_source'
+                  $ref: '#/components/examples/human_adult_source_w_id'
                 human_child_source:
-                  $ref: '#/components/examples/human_child_source'
+                  $ref: '#/components/examples/human_child_source_w_id'
                 nonhuman_source:
-                  $ref: '#/components/examples/nonhuman_source'
+                  $ref: '#/components/examples/nonhuman_source_w_id'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -265,11 +260,11 @@ paths:
                   - $ref: '#/components/schemas/nonhuman_source'
               examples:
                 human_adult_source:
-                  $ref: '#/components/examples/human_adult_source'
+                  $ref: '#/components/examples/human_adult_source_w_id'
                 human_child_source:
-                  $ref: '#/components/examples/human_child_source'
+                  $ref: '#/components/examples/human_child_source_w_id'
                 nonhuman_source:
-                  $ref: '#/components/examples/nonhuman_source'
+                  $ref: '#/components/examples/nonhuman_source_w_id'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -509,7 +504,13 @@ paths:
               properties:
                 sample_id:
                   # NB: Getting the sample id to input here is outside the scope of this endpoint--see kits
-                  $ref: '#/components/schemas/sample_id'
+                  # NB: Can't use $ref: '#/components/schemas/sample_id' here because that is a readOnly property
+                  # and thus is NOT SENT with posts (the readOnly functionality didn't really anticipate
+                  # this use case of creating a new *association* rather than creating a new *object*).
+                  type: string
+                  example: "384fd128-3a42-4a6b-a37c-3fc3cbf027bc"
+              required:
+                - sample_id
       responses:
         '201':
           description: Successfully associated sample with source
@@ -753,8 +754,7 @@ components:
       in: path
       description: Unique id specifying a user account
       schema:
-        type: string
-        example: "11fabf81-7a77-411e-bb82-a3aa4d6cced2"
+        $ref: '#/components/schemas/account_id'
       required: true
     kit_id:
       name: kit_id
@@ -790,8 +790,7 @@ components:
       in: path
       description: Unique id specifying a source
       schema:
-        type: string
-        example: "59688a9b-c664-4a0d-9125-ccdc04909c8e"
+        $ref: '#/components/schemas/source_id'
       required: true
 
     # query parameters
@@ -837,12 +836,18 @@ components:
             $ref: '#/components/schemas/Error'
   schemas:
     # account section
+    account_id:
+      type: string
+      readOnly: true
+      example: "11fabf81-7a77-411e-bb82-a3aa4d6cced2"
     account_type: # e.g., regular user or admin--room to grow
       type: string
+      readOnly: true
       enum: ["standard"]
       example: "standard"
     creation_time:
       type: string
+      readOnly: true
       format: date-time
       example: "2007-04-05T12:30-02:00"
     email:
@@ -860,11 +865,14 @@ components:
       example: "en-US"
     update_time:
       type: string
+      readOnly: true
       format: date-time
       example: "2019-12-13T00:54:28.712Z"
     account:
       type: object
       properties:
+        account_id:
+          $ref: '#/components/schemas/account_id'
         first_name:
           $ref: '#/components/schemas/first_name'
         last_name:
@@ -934,14 +942,15 @@ components:
       example: "2017-07-21T17:32:28Z"
     sample_id:
       type: string
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
       example: "dae21127-27bb-4f52-9fd3-a2aa5eb5b86f"
     sample_notes:
       type: string
       example: "Oops, I dropped it"
     sample_site:
       type: string
-      enum: ["", "Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
-             "Please select...", "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", "Null"]
+      enum: ["Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
+             "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", "Null"]
       example: "Stool"
     sample_locked:
       type: boolean
@@ -960,6 +969,8 @@ components:
     sample:
       type: object
       properties:
+        sample_id:
+          $ref: '#/components/schemas/sample_id'
         sample_barcode:
           $ref: '#/components/schemas/sample_barcode'
         sample_site:
@@ -974,6 +985,10 @@ components:
           $ref: '#/components/schemas/sample_projects'
 
     # source section
+    source_id:
+      type: string
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
+      example: "59688a9b-c664-4a0d-9125-ccdc04909c8e"
     source_type:
       type: string
       enum: [human, animal, environmental]
@@ -981,18 +996,23 @@ components:
     nonhuman_source:
       type: object
       properties:
+        source_id:
+          $ref: '#/components/schemas/source_id'
         source_type:
           type: string
           enum: [animal, environmental]
         source_name:
           type: string
       example:
+        source_id: "bda6867f-fb9d-4f21-ba24-5fba64976ee2"
         source_name: "office windowsill"
         source_type: environmental
       additionalProperties: false
     human_source:
       type: object
       properties:
+        source_id:
+          $ref: '#/components/schemas/source_id'
         source_type:
           type: string
           enum: [human]
@@ -1159,6 +1179,34 @@ components:
             obtainer_name: "Maman M. Doe"
     nonhuman_source:
       value:
+        source_name: "Fluffy"
+        source_type: animal
+    human_adult_source_w_id:
+      value:
+        source_id: "5fa970c6-d36b-4d54-9bed-c45c3c85adac"
+        source_name: "Nell Doe"
+        source_type: human
+        consent:
+          participant_name: "Nellie Doe"
+          participant_email: "nell@example.com"
+          age_range: "18+"
+    human_child_source_w_id:
+      value:
+        source_id: "b06825c2-e808-4606-8819-861b0fa8a5ce"
+        source_name: "K. Doe"
+        source_type: human
+        consent:
+          participant_name: "Kelly Doe"
+          participant_email: "kd@kidsmail.com"
+          age_range: "7-12"
+          child_info:
+            parent_1_name: "Maman Doe"
+            parent_2_name: "Pere Doe"
+            deceased_parent: false
+            obtainer_name: "Maman M. Doe"
+    nonhuman_source_w_id:
+      value:
+        source_id: "42f799a8-e814-4b91-a291-2dbd50fda75d"
         source_name: "Fluffy"
         source_type: animal
 
