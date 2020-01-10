@@ -23,11 +23,32 @@ class SampleRepo(BaseRepo):
                 "WHERE ag_kit_barcodes.ag_kit_barcode_id = %s",
                 (sample_id,))
 
-            # TODO: Daniel said "should also provide the names of the projects
-            # that a sample (barcode) participates in";
-            # where to get this in db?
-
-            r = cur.fetchone()
-            if r is None:
+            sample_row = cur.fetchone()
+            if sample_row is None:
                 return None
-            return Sample.load_from_db_record(sample_id, *r)
+
+            sample_barcode = sample_row[4]
+
+            # If there is a sample, we can look for the projects associated
+            #  with it.  We do this as a secondary query:
+            cur.execute("SELECT barcodes.project.project FROM "
+                        "barcodes.barcode "
+                        "LEFT JOIN "
+                        "barcodes.project_barcode "
+                        "ON "
+                        "barcodes.barcode.barcode = "
+                        "barcodes.project_barcode.barcode "
+                        "LEFT JOIN barcodes.project "
+                        "ON "
+                        "barcodes.project_barcode.project_id = "
+                        "barcodes.project.project_id "
+                        "WHERE "
+                        "barcodes.barcode.barcode = %s",
+                        (sample_barcode,))
+
+            project_rows = cur.fetchall()
+            sample_projects = [project[0] for project in project_rows]
+
+            return Sample.from_db(sample_id,
+                                  *sample_row,
+                                  sample_projects)
