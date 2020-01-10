@@ -108,8 +108,8 @@ paths:
       operationId: microsetta_private_api.api.implementation.read_sources
       tags:
         - Sources
-      summary: Get sources associated with account, filtered by source type
-      description: Get sources associated with account, filtered by source type
+      summary: Get sources associated with account, filtered by source type if a source type is provided
+      description: Get sources associated with account, filtered by source type if a source type is provided
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_type'
@@ -124,7 +124,7 @@ paths:
                   oneOf:
                   - $ref: '#/components/schemas/human_source'
                   - $ref: '#/components/schemas/nonhuman_source'
-              example:
+              example: # explicit examples hardcoded here because connexion can't seem to infer examples for lists
                 - source_id: "7cb1b4a9-5d42-42b2-9364-7bceb6630ac3"
                   source_name: "Ophelia Doe"
                   source_type: human
@@ -310,16 +310,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  survey_template_id:
-                    $ref: '#/components/schemas/survey_template_id'
-                  survey_template_title:
-                    $ref: '#/components/schemas/survey_template_title'
-                  survey_template_version:
-                    $ref: '#/components/schemas/survey_template_version'
-                  survey_template_type:
-                    $ref: '#/components/schemas/survey_template_type'
+                type: array
+                items:
+                  $ref: '#/components/schemas/thin_survey_template_info'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -344,18 +337,15 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  survey_template_id:
-                    $ref: '#/components/schemas/survey_template_id'
-                  survey_template_title:
-                    $ref: '#/components/schemas/survey_template_title'
-                  survey_template_version:
-                    $ref: '#/components/schemas/survey_template_version'
-                  survey_template_type:
-                    $ref: '#/components/schemas/survey_template_type'
-                  survey_template_text:
-                    $ref: '#/components/schemas/survey_template_text'
+                allOf:
+                  - $ref: '#/components/schemas/thin_survey_template_info'
+                  - type: "object"
+                    properties:
+                      survey_template_text:
+                        $ref: '#/components/schemas/survey_template_text'
+                    required:
+                      - survey_template_text
+
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -383,17 +373,14 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    survey_id:
-                      $ref: '#/components/schemas/survey_id'
-                    survey_template_title:
-                      $ref: '#/components/schemas/survey_template_title'
-                    survey_template_version:
-                      $ref: '#/components/schemas/survey_template_version'
-                    survey_template_type:
-                      $ref: '#/components/schemas/survey_template_type'
-                    # Wonder if someday we might want the date it was answered?
+                  allOf:
+                    - $ref: '#/components/schemas/thin_survey_template_info'
+                    - type: "object"
+                      properties:
+                        survey_id:
+                          $ref: '#/components/schemas/survey_id'
+                      required:
+                        - survey_id
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -447,18 +434,17 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  survey_id:
-                    $ref: '#/components/schemas/survey_id'
-                  survey_template_title:
-                    $ref: '#/components/schemas/survey_template_title'
-                  survey_template_version:
-                    $ref: '#/components/schemas/survey_template_version'
-                  survey_template_type:
-                    $ref: '#/components/schemas/survey_template_type'
-                  survey_text:
-                    $ref: '#/components/schemas/survey_text'
+                allOf:
+                  - $ref: '#/components/schemas/thin_survey_template_info'
+                  - type: "object"
+                    properties:
+                      survey_id:
+                        $ref: '#/components/schemas/survey_id'
+                      survey_text:
+                        $ref: '#/components/schemas/survey_text'
+                    required:
+                      - survey_id
+                      - survey_text
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -622,23 +608,22 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    survey_id:
-                      $ref: '#/components/schemas/survey_id'
-                    survey_template_title:
-                      $ref: '#/components/schemas/survey_template_title'
-                    survey_template_version:
-                      $ref: '#/components/schemas/survey_template_version'
-                    survey_template_type:
-                      $ref: '#/components/schemas/survey_template_type'
-                    # Wonder if someday we might want the date it was answered?
-              example:
+                  allOf:
+                    - $ref: '#/components/schemas/thin_survey_template_info'
+                    - type: "object"
+                      properties:
+                        survey_id:
+                          $ref: '#/components/schemas/survey_id'
+                      required:
+                        - survey_id
+              example: # explicit examples hardcoded here because connexion can't seem to infer examples for lists
                 - survey_id: 1a7697cc-e202-4397-b12c-ab7e6d23bebd
+                  survey_template_id: bb5ca7de-98ae-457c-99c5-419931824d1c
                   survey_template_title: "Food Frequency Questionnaire"
                   survey_template_version: "1.2"
                   survey_template_type: remote
                 - survey_id: a302f47c-8090-4ecd-b92f-14331b2807d3
+                  survey_template_id: 2afb9f63-c733-4fc6-b2c4-e5ccac8331ff
                   survey_template_title: "Dream Survey"
                   survey_template_version: "0.1"
                   survey_template_type: local
@@ -824,7 +809,6 @@ components:
       description: Type of sample
       schema:
         $ref: '#/components/schemas/source_type'
-      required: true
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
       description: Invalid or missing token.
@@ -841,7 +825,7 @@ components:
     account_id:
       type: string
       readOnly: true
-      example: "11fabf81-7a77-411e-bb82-a3aa4d6cced2"
+      example: "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
     account_type: # e.g., regular user or admin--room to grow
       type: string
       readOnly: true
@@ -989,7 +973,7 @@ components:
     source_id:
       type: string
       readOnly: true # sent in GET, not in POST/PUT/PATCH
-      example: "59688a9b-c664-4a0d-9125-ccdc04909c8e"
+      example: "b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0"
     source_type:
       type: string
       enum: [human, animal, environmental]
@@ -1119,6 +1103,23 @@ components:
                   ], |
                   "fields": null |
                 }'
+    thin_survey_template_info:
+      type: object
+      properties:
+        survey_template_id:
+          $ref: '#/components/schemas/survey_template_id'
+        survey_template_title:
+          $ref: '#/components/schemas/survey_template_title'
+        survey_template_version:
+          $ref: '#/components/schemas/survey_template_version'
+        survey_template_type:
+          $ref: '#/components/schemas/survey_template_type'
+      required:
+        - survey_template_id
+        - survey_template_title
+        - survey_template_version
+        - survey_template_type
+      additionalProperties: false
 
     # survey section
     survey_id:
