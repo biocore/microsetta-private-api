@@ -102,7 +102,7 @@ def update_account(account_id, body):
         return jsonify(acc.to_api()), 200
 
 
-def read_sources(account_id, source_type):
+def read_sources(account_id, source_type=None):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         sources = source_repo.get_sources_in_account(account_id, source_type)

@@ -108,8 +108,8 @@ paths:
       operationId: microsetta_private_api.api.implementation.read_sources
       tags:
         - Sources
-      summary: Get sources associated with account, filtered by source type
-      description: Get sources associated with account, filtered by source type
+      summary: Get sources associated with account, filtered by source type if a source type is provided
+      description: Get sources associated with account, filtered by source type if a source type is provided
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_type'
@@ -809,7 +809,6 @@ components:
       description: Type of sample
       schema:
         $ref: '#/components/schemas/source_type'
-      required: true
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
       description: Invalid or missing token.
