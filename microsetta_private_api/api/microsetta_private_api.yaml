@@ -950,9 +950,8 @@ components:
       type: string
       example: "Oops, I dropped it"
     sample_site:
-      type: string
       enum: ["Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
-             "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", "Null"]
+             "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", null]
       example: "Stool"
     sample_locked:
       type: boolean
