@@ -4,7 +4,7 @@ from microsetta_private_api.model.model_base import ModelBase
 
 class Sample(ModelBase):
     def __init__(self, sample_id, datetime_collected, site, notes, barcode,
-                 scan_date):
+                 scan_date, sample_projects):
         self.id = sample_id
         # NB: datetime_collected may be None if sample not yet used
         self.datetime_collected = datetime_collected
@@ -15,6 +15,7 @@ class Sample(ModelBase):
         self.site = site
         # NB: _scan_date may be None if sample not yet returned to lab
         self._scan_date = scan_date
+        self.sample_projects = sample_projects
 
     @property
     def is_locked(self):
@@ -23,8 +24,8 @@ class Sample(ModelBase):
         return self._scan_date is not None
 
     @classmethod
-    def load_from_db_record(cls, sample_id, date_collected, time_collected,
-                            site, notes, barcode, scan_date):
+    def from_db(cls, sample_id, date_collected, time_collected,
+                site, notes, barcode, scan_date, sample_projects):
         datetime_collected = None
         # NB a sample may NOT have date and time collected if it has been sent
         # out but not yet used
@@ -32,14 +33,14 @@ class Sample(ModelBase):
             datetime_collected = datetime.combine(date_collected,
                                                   time_collected)
         return cls(sample_id, datetime_collected, site, notes, barcode,
-                   scan_date)
+                   scan_date, sample_projects)
 
     def to_api(self):
         return {
             "sample_barcode": self.barcode,
             "sample_site": self.site,
-            "sample_locked": self.is_locked(),
+            "sample_locked": self.is_locked,
             "sample_datetime": self.datetime_collected,
             "sample_notes": self.notes,
-            "sample_projects": None  # TODO: Where is this info?
+            "sample_projects": list(self.sample_projects)
         }

@@ -1,5 +1,5 @@
 from microsetta_private_api.repo.base_repo import BaseRepo
-from microsetta_private_api.model.sample import Sample
+from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.model.kit import Kit
 
 
@@ -8,13 +8,13 @@ class KitRepo(BaseRepo):
         super().__init__(transaction)
 
     def get_kit(self, supplied_kit_id, kit_password):
+
+        sample_repo = SampleRepo(self._transaction)
+
         with self._transaction.cursor() as cur:
             cur.execute("SELECT "
                         "ag_kit.ag_kit_id, "
-                        "ag_kit_barcodes.ag_kit_barcode_id, "
-                        "ag_kit_barcodes.barcode, "
-                        "ag_kit_barcodes.notes, "
-                        "ag_kit_barcodes.deposited "
+                        "ag_kit_barcodes.ag_kit_barcode_id "
                         "FROM ag_kit LEFT JOIN ag_kit_barcodes ON "
                         "ag_kit.ag_kit_id = ag_kit_barcodes.ag_kit_id "
                         "WHERE "
@@ -25,7 +25,5 @@ class KitRepo(BaseRepo):
             if len(rows) == 0:
                 return None
             else:
-                samples = []
-                for r in rows:
-                    samples.append(Sample(r[1], r[2], r[3], r[4] == "t"))
+                samples = [sample_repo.get_sample(r[1]) for r in rows]
                 return Kit(rows[0][0], samples)
