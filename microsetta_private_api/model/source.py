@@ -12,6 +12,7 @@ def human_decoder(obj):
             obj["parent2_name"],
             obj["deceased_parent"],
             obj["consent_date"],
+            obj["date_revoked"],
             obj["assent_obtainer"],
             obj["age_range"])
     return obj
