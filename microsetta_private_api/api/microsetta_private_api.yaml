@@ -20,23 +20,17 @@ paths:
       requestBody:
         content:
           application/json:
-            # NB: this doesn't use $ref: '#/components/schemas/account' because--for account creation ONLY--it is
-            # required to pass in kit info, which is not part of the account object schema
+            # Send (non-readOnly) values of account schema PLUS kit name
             schema:
-              type: object
-              properties:
-                first_name:
-                  $ref: '#/components/schemas/first_name'
-                last_name:
-                  $ref: '#/components/schemas/last_name'
-                email:
-                  $ref: '#/components/schemas/email'
-                address:
-                  $ref: '#/components/schemas/address'
-                kit_name:
-                  $ref: '#/components/schemas/kit_name'
-                kit_password:
-                  $ref: '#/components/schemas/kit_password'
+              allOf:
+                - $ref: '#/components/schemas/account'
+                - type: "object"
+                  properties:
+                    kit_name:
+                      $ref: '#/components/schemas/kit_name'
+                  required:
+                    - account
+                    - kit_name
       responses:
         '201':
           description: Successfully registered new user account
@@ -103,6 +97,97 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/accounts/{account_id}/consent':
+    get:
+      operationId: microsetta_private_api.api.implementation.render_consent_doc
+      tags:
+        - Consent
+      summary: Retrieve personalized consent form for display to user
+      description: Retrieve personalized consent form for display to user
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '200':
+          description: Consent form
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            text/html:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+    post:
+      operationId: microsetta_private_api.api.implementation.create_human_source_from_consent
+      tags:
+        - Source (from Consent)
+      summary: Create a new human source based on a consent form
+      description: Create a new human source based on a consent form
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:  # each is a form field name
+                age_range:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/age_range'
+                participant_name:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/participant_name'
+                participant_email:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/participant_email'
+                parent_1_name:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/parent_1_name'
+                parent_2_name:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/parent_2_name'
+                deceased_parent:
+                  type: array
+                  items:
+                    type: boolean
+                    example: true
+                obtainer_name:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/obtainer_name'
+              required:
+                - age_range
+                - participant_name
+                - participant_email
+      responses:
+        '201':
+          description: Successfully created new human source based on consent form
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/human_source'
+              examples:
+                human_adult_source:
+                  $ref: '#/components/examples/human_adult_source_w_id'
+                human_child_source:
+                  $ref: '#/components/examples/human_child_source_w_id'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
   '/accounts/{account_id}/sources':
     get:
       operationId: microsetta_private_api.api.implementation.read_sources
@@ -131,7 +216,7 @@ paths:
                   consent:
                     participant_name: "Ophelia Q. Doe"
                     participant_email: "nunnery@example.com"
-                    age_range: "18+"
+                    age_range: "18-plus"
                 - source_id: "df077cd7-f2c7-42e4-b8ed-9c7e9dd47ce5"
                   source_name: "P. Doe"
                   source_type: human
@@ -170,7 +255,6 @@ paths:
                 $ref: '#/components/examples/human_child_source'
               nonhuman_source:
                 $ref: '#/components/examples/nonhuman_source'
-
       responses:
         '201':
           description: Successfully created new source
@@ -709,28 +793,6 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  # TODO: Move this out of /api ?
-  '/consent':
-    get:
-      operationId: microsetta_private_api.api.implementation.consent_doc
-      tags:
-        - Consent
-      summary: Retrieve consent forms for display to user
-      description: Retrieve consent forms for display to user
-      responses:
-        '200':
-          description: Consent form
-          headers:
-            Location:
-              schema:
-                type: string
-          content:
-            text/html:
-              schema:
-                type: string
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-
 
 components:
   parameters:
@@ -968,6 +1030,29 @@ components:
       type: string
       enum: [human, animal, environmental]
       example: human
+    participant_name:
+      type: string
+      example: "Hija Doe"
+    participant_email:
+      type: string
+      format: email
+      example: "mdoe@example.com"
+    age_range:
+      type: string
+      enum: ["0-6", "7-12", "13-17", "18-plus"]
+    parent_1_name:
+      type: string
+      example: "Madre Doe"
+    parent_2_name:
+      type: string
+      nullable: true
+      example: "Padre Doe"
+    deceased_parent:
+      type: boolean
+      example: false
+    obtainer_name:
+      type: string
+      example: "Professor X"
     nonhuman_source:
       type: object
       properties:
@@ -997,21 +1082,20 @@ components:
           type: object
           properties:
             participant_name:
-              type: string
+              $ref: '#/components/schemas/participant_name'
             participant_email:
-              type: string
+              $ref: '#/components/schemas/participant_email'
             age_range:
-              type: string
-              enum: ["0-6", "7-12", "13-17", "18+"]
+              $ref: '#/components/schemas/age_range'
             child_info:
               type: object
               properties:
                 parent_1_name:
-                  type: string
+                  $ref: '#/components/schemas/parent_1_name'
                 parent_2_name:
-                  type: string
+                  $ref: '#/components/schemas/parent_2_name'
                 deceased_parent:
-                  type: boolean
+                  $ref: '#/components/schemas/deceased_parent'
                 obtainer_name:
                   type: string
               additionalProperties: false
@@ -1160,7 +1244,7 @@ components:
         consent:
           participant_name: "Nellie Doe"
           participant_email: "nell@example.com"
-          age_range: "18+"
+          age_range: "18-plus"
     human_child_source:
       value:
         source_name: "K. Doe"
@@ -1186,7 +1270,7 @@ components:
         consent:
           participant_name: "Nellie Doe"
           participant_email: "nell@example.com"
-          age_range: "18+"
+          age_range: "18-plus"
     human_child_source_w_id:
       value:
         source_id: "b06825c2-e808-4606-8819-861b0fa8a5ce"

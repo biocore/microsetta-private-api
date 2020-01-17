@@ -288,13 +288,31 @@ def read_kit(kit_name):
         return jsonify(kit.to_api()), 200
 
 
-def consent_doc():
+def render_consent_doc(account_id):
     # return render_template("new_participant.jinja2",
     #                        message=MockJinja("message"),
     #                        media_locale=MockJinja("media_locale"),
     #                        tl=MockJinja("tl"))
 
+    # NB: Do NOT need to explicitly pass account_id into template for integration into form submission URL
+    # because form submit URL builds on the base of the URL that called it (which includes account_id)
     return render_template("new_participant.jinja2",
                            message=None,
                            media_locale=american_gut.media_locale,
                            tl=american_gut._NEW_PARTICIPANT)
+
+
+def create_human_source_from_consent(account_id, body):
+    parsed_form = dict()
+    for key, value in body.items():
+        if len(value) != 1:
+            raise ValueError("For form field '{0}', received unexpected values '{1}'".format(key, value))
+        parsed_form[key] = value[0]
+
+    # TODO: boolean deceased_parent will come through as
+    #  'deceased_parent': 'true'
+    # and will need to be converted to a boolean True ...
+    # think this should probably happen in source.HumanInfo.__init__
+
+    # NB: Don't expect to handle errors 404, 422 in this function; expect to farm out to `create_source`
+    return create_source(account_id, parsed_form)
