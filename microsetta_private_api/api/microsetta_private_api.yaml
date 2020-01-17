@@ -693,7 +693,6 @@ paths:
       description: Get list of samples in kit that are not assigned to a source
       parameters:
         - $ref: '#/components/parameters/kit_name'
-        - $ref: '#/components/parameters/kit_password'
       responses:
         '200':
           description: Successfully returned list of unassigned samples
@@ -781,13 +780,6 @@ components:
       required: true
 
     # query parameters
-    kit_password:
-      name: kit_password
-      in: query
-      description: User-facing code of kit
-      schema:
-        $ref: '#/components/schemas/kit_password'
-      required: true
     kit_name:
       name: kit_name
       in: query
@@ -912,8 +904,6 @@ components:
         - country_code
 
     # kit section
-    kit_password:
-      type: string
     kit_name:
       type: string
       example: "jb_qhxqe"

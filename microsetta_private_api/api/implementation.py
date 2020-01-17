@@ -278,11 +278,11 @@ def dissociate_answered_survey(account_id, source_id, sample_id, survey_id):
     return not_yet_implemented()
 
 
-def read_kit(kit_name, kit_password):
+def read_kit(kit_name):
     with Transaction() as t:
         kit_repo = KitRepo(t)
-        # TODO: Ensure this name and password are what the repo layer expects
-        kit = kit_repo.get_kit(kit_name, kit_password)
+        # TODO: Ensure this name is what the repo layer expects
+        kit = kit_repo.get_kit(kit_name)
         if kit is None:
             return jsonify(error=404, text="No such kit"), 404
         return jsonify(kit.to_api()), 200
