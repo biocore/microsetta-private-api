@@ -53,3 +53,10 @@ class Transaction:
         cur = self._conn.cursor()
         cur.execute('SET search_path TO ag, barcodes, public')
         return cur
+
+    def dict_cursor(self):
+        if self._closed:
+            raise RuntimeError("Cannot open cursor from closed Transaction")
+        cur = self._conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute('SET search_path TO ag, barcodes, public')
+        return cur
