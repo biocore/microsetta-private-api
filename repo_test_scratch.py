@@ -17,6 +17,8 @@ import microsetta_private_api.util.vue_adapter
 def json_converter(o):
     if isinstance(o, datetime.datetime):
         return str(o)
+    elif isinstance(o, datetime.date):
+        return str(o)
     return o.__dict__
 
 
@@ -36,11 +38,17 @@ with Transaction() as t:
     acct_repo.delete_account(ACCT_ID)
     acc = Account(ACCT_ID,
                   "foo@baz.com",
-                  "globus",
+                  "standard",
+                  "GLOBUS",
                   "Dan",
                   "H",
-                  '{"a":5, "b":7}',
-                  "USER")
+                  {
+                      "street": "123 Dan Lane",
+                      "city": "Danville",
+                      "state": "CA",
+                      "post_code": 12345,
+                      "country_code": "US"
+                  })
     print(acct_repo.create_account(acc))
     t.commit()
 
@@ -69,8 +77,8 @@ with Transaction() as t:
     source_repo.create_source(Source.create_human(
         HUMAN_ID,
         ACCT_ID,
-        HumanInfo("Bo", "bo@bo.com", False, "Mr Bo", False, "Mrs Bo",
-                  False, datetime.datetime.utcnow(), "TODO,WutDis?")
+        HumanInfo("Bo", "bo@bo.com", False, "Mr Bo", "Mrs Bo",
+                  False, datetime.datetime.utcnow(), None, "Mr. Obtainer", "18+")
     ))
     source_repo.create_source(Source.create_animal(
         DOGGY_ID,

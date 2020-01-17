@@ -33,7 +33,7 @@ def environment_decoder(obj):
 class HumanInfo:
     def __init__(self, name, email, is_juvenile,
                  parent1_name, parent2_name, deceased_parent,
-                 consent_date, assent_obtainer, age_range):
+                 consent_date, date_revoked, assent_obtainer, age_range):
         self.name = name
         self.email = email
         self.is_juvenile = is_juvenile
@@ -41,6 +41,7 @@ class HumanInfo:
         self.parent2_name = parent2_name
         self.deceased_parent = deceased_parent
         self.consent_date = consent_date
+        self.date_revoked = date_revoked
         self.assent_obtainer = assent_obtainer
         self.age_range = age_range
 

@@ -1,5 +1,6 @@
 from microsetta_private_api.config_manager import AMGUT_CONFIG
 import psycopg2.pool
+import psycopg2.extras
 import atexit
 
 
