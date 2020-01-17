@@ -23,7 +23,7 @@ CREATE TABLE ag.source (
     account_id uuid NOT NULL,
     source_type varchar NOT NULL,
     participant_name varchar(200) NOT NULL,
-    participant_email varchar NOT NULL,
+    participant_email varchar,
     is_juvenile bool,
     parent_1_name varchar(200),
     parent_2_name varchar(200),
@@ -34,6 +34,7 @@ CREATE TABLE ag.source (
     date_revoked date,
     assent_obtainer varchar,
     age_range varchar,
+    description varchar,
     creation_time timestamp default current_timestamp,
     update_time timestamp default current_timestamp
 );
