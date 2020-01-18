@@ -43,7 +43,7 @@ CREATE TABLE ag.source (
 -- migration.
 -- TODO: Add foreign key ref from source_id to source table
 -- TODO: Add not null constraint to source_id
---   TODO's can be done until after migration, verify they are in 0049.sql
+--   TODO's can't be done until after migration, verify they are in 0049.sql
 
 ALTER TABLE ag.ag_login_surveys
 ADD COLUMN source_id uuid;

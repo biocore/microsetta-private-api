@@ -85,7 +85,7 @@ class Source(ModelBase):
                         "parent_2_name": self.parent2_name,
                         "deceased_parent": (self.parent1_deceased or
                                             self.parent2_deceased),
-                        "obtainer_name": None  # TODO: What is this???
+                        "obtainer_name": self.source_data.assent_obtainer
                     }
                 else:
                     consent = {
