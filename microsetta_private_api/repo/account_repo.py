@@ -1,6 +1,5 @@
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.account import Account
-import json
 
 
 class AccountRepo(BaseRepo):

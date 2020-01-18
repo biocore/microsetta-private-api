@@ -1,7 +1,5 @@
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.source import (Source, DECODER_HOOKS)
-import json
-from microsetta_private_api.util.util import json_converter
 
 
 # Note: By convention, this references sources by both account_id AND source_id
@@ -116,7 +114,7 @@ class SourceRepo(BaseRepo):
                         "date_revoked = %s, "
                         "assent_obtainer = %s, "
                         "age_range = %s, "
-                        "description = %s"                        
+                        "description = %s "
                         "WHERE "
                         "source.id = %s AND "
                         "source.account_id = %s",

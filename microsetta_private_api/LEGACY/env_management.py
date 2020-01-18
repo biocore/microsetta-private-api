@@ -200,7 +200,6 @@ def patch_db(patches_dir=PATCHES_DIR, verbose=False):
                 MigrationSupport.run_migration(TRN, patch_filename)
 
 
-
 def rebuild_test(verbose=False):
     conn = connect(user=AMGUT_CONFIG.user, password=AMGUT_CONFIG.password,
                    host=AMGUT_CONFIG.host, port=AMGUT_CONFIG.port,

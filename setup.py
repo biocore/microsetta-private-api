@@ -21,4 +21,3 @@ setup(
     description="A RESTful API to support The Microsetta Initiative",
     license='BSD-3-Clause',
 )
-

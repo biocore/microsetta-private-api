@@ -13,6 +13,7 @@ import microsetta_private_api.util.vue_adapter
 
 # TODO: Refactor me into proper unit tests!
 
+
 def json_converter(o):
     if isinstance(o, datetime.datetime):
         return str(o)
@@ -83,7 +84,8 @@ with Transaction() as t:
         HUMAN_ID,
         ACCT_ID,
         HumanInfo("Bo", "bo@bo.com", False, "Mr Bo", "Mrs Bo",
-                  False, datetime.datetime.utcnow(), None, "Mr. Obtainer", "18+")
+                  False, datetime.datetime.utcnow(), None, "Mr. Obtainer",
+                  "18+")
     ))
     source_repo.create_source(Source.create_animal(
         DOGGY_ID,
@@ -158,4 +160,3 @@ with Transaction() as t:
     print(survey_model == survey_model2)
 
     survey_answers_repo.delete_answered_survey(ACCT_ID, answer_id)
-

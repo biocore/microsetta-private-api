@@ -1,6 +1,7 @@
 import uuid
 import pycountry
 
+
 class MigrationSupport:
     """
     Contains methods for data migrations that are difficult to express as
@@ -182,7 +183,6 @@ class MigrationSupport:
                      r['address'], r['city'], r['state'], r['zip'], cc,
                      r['latitude'], r['longitude'],
                      r['cannot_geocode'], r['elevation']))
-
 
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
