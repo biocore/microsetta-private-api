@@ -13,7 +13,6 @@ import microsetta_private_api.util.vue_adapter
 
 # TODO: Refactor me into proper unit tests!
 
-
 def json_converter(o):
     if isinstance(o, datetime.datetime):
         return str(o)
@@ -29,13 +28,22 @@ PLANTY_ID = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
 
 
 with Transaction() as t:
+    source_repo = SourceRepo(t)
+    acct_repo = AccountRepo(t)
+    source_repo.delete_source(ACCT_ID, DOGGY_ID)
+    source_repo.delete_source(ACCT_ID, PLANTY_ID)
+    source_repo.delete_source(ACCT_ID, HUMAN_ID)
+    acct_repo.delete_account(ACCT_ID)
+    t.commit()
+
+
+with Transaction() as t:
+    acct_repo = AccountRepo(t)
     kit_repo = KitRepo(t)
     kit = kit_repo.get_kit("eba20873-b88d-33cc-e040-8a80115d392c", "#6á$E")
     print("Kit: ")
     print(json.dumps(kit, default=json_converter, indent=2))
 
-    acct_repo = AccountRepo(t)
-    acct_repo.delete_account(ACCT_ID)
     acc = Account(ACCT_ID,
                   "foo@baz.com",
                   "standard",
@@ -70,9 +78,6 @@ with Transaction() as t:
 
 with Transaction() as t:
     source_repo = SourceRepo(t)
-    source_repo.delete_source(ACCT_ID, DOGGY_ID)
-    source_repo.delete_source(ACCT_ID, PLANTY_ID)
-    source_repo.delete_source(ACCT_ID, HUMAN_ID)
 
     source_repo.create_source(Source.create_human(
         HUMAN_ID,
@@ -127,7 +132,7 @@ with Transaction() as t:
     survey_answers_repo = SurveyAnswersRepo(t)
     survey_ids = survey_answers_repo.list_answered_surveys(
         'd8592c74-7fc4-2135-e040-8a80115d6401',
-        'Name - 7O],Gß[1Y1')
+        'f1ee05c8-7d0d-466a-b200-868eded0edec')
 
     print(survey_ids)
 
@@ -138,15 +143,15 @@ with Transaction() as t:
     print(survey_model)
 
     answer_id = survey_answers_repo.submit_answered_survey(
-        'd8592c74-7fc4-2135-e040-8a80115d6401',
-        "DOGGY!",
+        ACCT_ID,
+        DOGGY_ID,
         "en_us",
         1,
         survey_model
     )
 
     survey_model2 = survey_answers_repo.get_answered_survey(
-        'd8592c74-7fc4-2135-e040-8a80115d6401',
+        ACCT_ID,
         answer_id)
 
     print(survey_model2)

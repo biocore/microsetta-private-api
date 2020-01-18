@@ -16,11 +16,7 @@ import uuid
 #  insane???
 class SurveyAnswersRepo(BaseRepo):
 
-    def list_answered_surveys(self, ag_login_id, participant_name):
-        # TODO: ag_login_surveys needs to be migrated.  Right now answered
-        #  surveys are stored by login id and participant name.  This will
-        #  need to instead be account id and source id
-
+    def list_answered_surveys(self, account_id, source_id):
         # TODO: No obvious way in the current schema to go from an answered
         #  survey's id back to a survey template id, preventing retrieval
         #  of the survey's title...  This should be addressed as we transform
@@ -29,8 +25,8 @@ class SurveyAnswersRepo(BaseRepo):
             cur.execute("SELECT survey_id "
                         "FROM ag_login_surveys "
                         "WHERE ag_login_id = %s "
-                        "    AND participant_name = %s",
-                        (ag_login_id, participant_name))
+                        "AND source_id = %s",
+                        (account_id, source_id))
 
             rows = cur.fetchall()
             answered_surveys = [r[0] for r in rows]
@@ -83,15 +79,8 @@ class SurveyAnswersRepo(BaseRepo):
 
         return model
 
-    # TODO: Again, we don't have a matching schema yet, can only use login_id
-    #  and name :(
-    def submit_answered_survey(self, ag_login_id, participant_name,
+    def submit_answered_survey(self, ag_login_id, source_id,
                                locale_code, survey_template_id, survey_model):
-        print(ag_login_id)
-        print(participant_name)
-        print(locale_code)
-        print(survey_template_id)
-        print(survey_model)
         # This is actually pretty complicated in the current schema:
         #   We need to filter the model down to questions that are in the
         #       template
@@ -113,13 +102,13 @@ class SurveyAnswersRepo(BaseRepo):
 
             # Log that the user submitted this survey
             cur.execute("INSERT INTO ag_login_surveys "
-                        "(ag_login_id, survey_id, participant_name) "
+                        "(ag_login_id, survey_id, source_id) "
                         "VALUES(%s, %s, %s)",
-                        (ag_login_id, survey_answers_id, participant_name))
+                        (ag_login_id, survey_answers_id, source_id))
 
             # Write each answer
             for survey_template_group in survey_template.groups:
-                for survey_question in survey_template_group:
+                for survey_question in survey_template_group.questions:
                     survey_question_id = survey_question.id
                     if str(survey_question_id) not in survey_model:
                         # TODO: Is this supposed to leave the question blank
@@ -163,15 +152,15 @@ class SurveyAnswersRepo(BaseRepo):
             return False
 
         with self._transaction.cursor() as cur:
-            cur.execute("DELETE FROM ag_login_surveys WHERE "
-                        "ag_login_id = %s AND survey_id = %s",
-                        (acct_id, survey_id))
             cur.execute("DELETE FROM survey_answers WHERE "
                         "survey_id = %s",
                         (survey_id,))
             cur.execute("DELETE FROM survey_answers_other WHERE "
                         "survey_id = %s",
                         (survey_id,))
+            cur.execute("DELETE FROM ag_login_surveys WHERE "
+                        "ag_login_id = %s AND survey_id = %s",
+                        (acct_id, survey_id))
 
     # True if this account owns this survey_answer_id, else False
     def _acct_owns_survey(self, acct_id, survey_id):
@@ -186,7 +175,7 @@ class SurveyAnswersRepo(BaseRepo):
             return cur.fetchone() is not None
 
     # True if this account + participant owns this survey_answer_id else False
-    def _acct_source_owns_survey(self, acct_id, participant_name, survey_id):
+    def _acct_source_owns_survey(self, acct_id, source_id, survey_id):
         with self._transaction.cursor() as cur:
             cur.execute("SELECT "
                         "survey_id "
@@ -194,7 +183,7 @@ class SurveyAnswersRepo(BaseRepo):
                         "ag_login_surveys "
                         "WHERE "
                         "ag_login_id = %s AND "
-                        "participant_name = %s AND "
+                        "source_id = %s AND "
                         "survey_id = %s",
-                        (acct_id, participant_name, survey_id))
+                        (acct_id, source_id, survey_id))
             return cur.fetchone() is not None
