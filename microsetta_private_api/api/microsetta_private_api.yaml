@@ -131,36 +131,23 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
+              type: object
               properties:  # each is a form field name
                 age_range:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/age_range'
+                  $ref: '#/components/schemas/age_range'
                 participant_name:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/participant_name'
+                  $ref: '#/components/schemas/participant_name'
                 participant_email:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/participant_email'
+                  $ref: '#/components/schemas/participant_email'
                 parent_1_name:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/parent_1_name'
+                  $ref: '#/components/schemas/parent_1_name'
                 parent_2_name:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/parent_2_name'
+                  $ref: '#/components/schemas/parent_2_name'
                 deceased_parent:
-                  type: array
-                  items:
-                    type: boolean
-                    example: true
+                  type: boolean
+                  example: true
                 obtainer_name:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/obtainer_name'
+                  $ref: '#/components/schemas/obtainer_name'
               required:
                 - age_range
                 - participant_name

@@ -303,19 +303,12 @@ def render_consent_doc(account_id):
                            tl=american_gut._NEW_PARTICIPANT)
 
 
+# This function simply passes its arguments on to the create_source function;
+# however, it is necessary because connexion will not allow two endpoints to
+# use the same implementation function (it throws an error
+# "AssertionError: View function mapping is overwriting an existing endpoint
+# function")
 def create_human_source_from_consent(account_id, body):
-    parsed_form = dict()
-    for key, value in body.items():
-        if len(value) != 1:
-            raise ValueError("For form field '{0}', received unexpected values"
-                             " '{1}'".format(key, value))
-        parsed_form[key] = value[0]
-
-    # TODO: boolean deceased_parent will come through as
-    #  'deceased_parent': 'true'
-    # and will need to be converted to a boolean True ...
-    # think this should probably happen in source.HumanInfo.__init__
-
     # NB: Don't expect to handle errors 404, 422 in this function; expect to
     # farm out to `create_source`
-    return create_source(account_id, parsed_form)
+    return create_source(account_id, body)
