@@ -136,7 +136,7 @@
     <div class="" id="consent">
         <hr>
         <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{{ tl['BILL_OF_RIGHTS']|e}}</a><br/>
-        <form method="post" id="0-6-form" name="consent_info" onsubmit="return validate06();" action="{{ media_locale['SITEBASE'] |e}}/authed/new_participant/">
+        <form method="post" id="0-6-form" name="consent_info" onsubmit="return validate06();" action="consent">
            <input type="hidden" name="age_range" value="0-6">
            <p><input value="Yes" type="checkbox" name="consent_parent" id="consent_parent" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_PARENT'] |e}}</p>
     </div>
@@ -145,7 +145,7 @@
         <tr><td>{{ tl['PARTICIPANT_EMAIL'] |e}}</td><td><input tabindex="3" type="email"  name="participant_email" id="participant_email" required data-rule-required="true"><div class="red right" required data-rule-required="true">*</div></td></tr>
         <tr><td>{{ tl['PARTICIPANT_PARENT_1'] |e}}</td><td><input tabindex="7" type="text" name="parent_1_name" id="0-6-form_parent_1_name" required data-rule-required="true"></td></tr>
         <tr><td>{{ tl['PARTICIPANT_PARENT_2'] |e}}</td><td><input tabindex="8" type="text" name="parent_2_name" id="0-6-form_parent_2_name" required data-rule-required="true"></td></tr>
-        <tr><td>{{ tl['PARTICIPANT_DECEASED_PARENTS'] |e}}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="yes" onclick="relax_parents(this)"></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_DECEASED_PARENTS'] |e}}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="true" onclick="relax_parents(this)"></td></tr>
         <tr><td><input type="submit" value="I Accept"></td><td></td></tr>
     </table>
     </form>
@@ -156,7 +156,7 @@
 </div>
     <div class="" id="consent">
         <hr>
-        <form method="post" id="7-12-form" name="consent_info" onsubmit="return validate712();" action="{{ media_locale['SITEBASE'] |e}}/authed/new_participant/">
+        <form method="post" id="7-12-form" name="consent_info" onsubmit="return validate712();" action="consent">
         <input type="hidden" name="age_range" value="7-12">
            <p><input value="Yes" type="checkbox" name="consent_child" id="consent_child" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_SIMPLIFIED'] |e}}</p>
     </div>
@@ -185,7 +185,7 @@
     <table>
         <tr><td>{{ tl['PARTICIPANT_PARENT_1'] |e}}</td><td><input tabindex="7" type="text" name="parent_1_name" id="7-12-form_parent_1_name" required data-rule-required="true"></td></tr>
         <tr><td>{{ tl['PARTICIPANT_PARENT_2'] |e}}</td><td><input tabindex="8" type="text" name="parent_2_name" id="7-12-form_parent_2_name" required data-rule-required="true"></td></tr>
-        <tr><td>{{ tl['PARTICIPANT_DECEASED_PARENTS'] |e}}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="yes" onclick="relax_parents(this)"></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_DECEASED_PARENTS'] |e}}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="true" onclick="relax_parents(this)"></td></tr>
         <tr><td><input type="submit" value="I Accept"></td><td></td></tr>
     </table>
     </form>
@@ -197,7 +197,7 @@
 </div>
     <div class="" id="consent">
         <hr>
-        <form method="post" id="13-17-form" name="consent_info" onsubmit="return validate1317();" action="{{ media_locale['SITEBASE'] |e}}/authed/new_participant/">
+        <form method="post" id="13-17-form" name="consent_info" onsubmit="return validate1317();" action="consent">
            <input type="hidden" name="age_range" value="13-17">
            <p><input value="Yes" type="checkbox" name="consent_child" id="consent_child" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_1'] |e}}</p>
     </div>
@@ -219,7 +219,7 @@
     <table>
         <tr><td>{{ tl['PARTICIPANT_PARENT_1'] |e}}</td><td><input tabindex="7" type="text" name="parent_1_name" id="13-17-form_parent_1_name" required data-rule-required="true"></td></tr>
         <tr><td>{{ tl['PARTICIPANT_PARENT_2'] |e}}</td><td><input tabindex="7" type="text" name="parent_2_name" id="13-17-form_parent_2_name" required data-rule-required="true"></td></tr>
-        <tr><td>{{ tl['PARTICIPANT_DECEASED_PARENTS'] |e}}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="yes" onclick="relax_parents(this)"></td></tr>
+        <tr><td>{{ tl['PARTICIPANT_DECEASED_PARENTS'] |e}}</td><td><input  tabindex="9" type="checkbox" name="deceased_parent" id="deceased_parent" value="true" onclick="relax_parents(this)"></td></tr>
         <tr><td><input type="submit" value="I Accept"></td><td></td></tr>
     </table>
     </form>
@@ -234,7 +234,7 @@
 <div class="" id="consent">
         <hr>
         <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{{ tl['BILL_OF_RIGHTS']|e}}</a><br/>
-        <form method="post" id="18-form" name="consent_info" onsubmit="return min_validation('18-form');" action="{{ media_locale['SITEBASE'] |e}}/authed/new_participant/">
+        <form method="post" id="18-form" name="consent_info" onsubmit="return min_validation('18-form');" action="consent">
         <input type="hidden" name="age_range" value="18-plus">
            <p><input value="Yes" type="checkbox" name="consent" id="consent" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_1'] |e}}</p>
     </div>
