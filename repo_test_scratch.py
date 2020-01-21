@@ -85,7 +85,7 @@ with Transaction() as t:
         ACCT_ID,
         HumanInfo("Bo", "bo@bo.com", False, "Mr Bo", "Mrs Bo",
                   False, datetime.datetime.utcnow(), None, "Mr. Obtainer",
-                  "18+")
+                  "18-plus")
     ))
     source_repo.create_source(Source.create_animal(
         DOGGY_ID,
