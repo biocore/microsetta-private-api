@@ -275,23 +275,37 @@ def dissociate_answered_survey(account_id, source_id, sample_id, survey_id):
     return not_yet_implemented()
 
 
-def read_kit(kit_name, kit_password):
+def read_kit(kit_name):
     with Transaction() as t:
         kit_repo = KitRepo(t)
-        # TODO: Ensure this name and password are what the repo layer expects
-        kit = kit_repo.get_kit(kit_name, kit_password)
+        # TODO: Ensure this name is what the repo layer expects
+        kit = kit_repo.get_kit(kit_name)
         if kit is None:
             return jsonify(error=404, text="No such kit"), 404
         return jsonify(kit.to_api()), 200
 
 
-def consent_doc():
+def render_consent_doc(account_id):
     # return render_template("new_participant.jinja2",
     #                        message=MockJinja("message"),
     #                        media_locale=MockJinja("media_locale"),
     #                        tl=MockJinja("tl"))
 
+    # NB: Do NOT need to explicitly pass account_id into template for
+    # integration into form submission URL because form submit URL builds on
+    # the base of the URL that called it (which includes account_id)
     return render_template("new_participant.jinja2",
                            message=None,
                            media_locale=american_gut.media_locale,
                            tl=american_gut._NEW_PARTICIPANT)
+
+
+# This function simply passes its arguments on to the create_source function;
+# however, it is necessary because connexion will not allow two endpoints to
+# use the same implementation function (it throws an error
+# "AssertionError: View function mapping is overwriting an existing endpoint
+# function")
+def create_human_source_from_consent(account_id, body):
+    # NB: Don't expect to handle errors 404, 422 in this function; expect to
+    # farm out to `create_source`
+    return create_source(account_id, body)

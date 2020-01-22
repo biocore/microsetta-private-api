@@ -7,7 +7,7 @@ class KitRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
 
-    def get_kit(self, supplied_kit_id, kit_password):
+    def get_kit(self, supplied_kit_id):
 
         sample_repo = SampleRepo(self._transaction)
 
@@ -18,9 +18,8 @@ class KitRepo(BaseRepo):
                         "FROM ag_kit LEFT JOIN ag_kit_barcodes ON "
                         "ag_kit.ag_kit_id = ag_kit_barcodes.ag_kit_id "
                         "WHERE "
-                        "ag_kit.supplied_kit_id = %s AND "
-                        "ag_kit.kit_password = %s",
-                        (supplied_kit_id, kit_password))
+                        "ag_kit.supplied_kit_id = %s",
+                        supplied_kit_id)
             rows = cur.fetchall()
             if len(rows) == 0:
                 return None
