@@ -29,7 +29,7 @@ CREATE TABLE ag.source (
     parent_2_name varchar(200),
 --    parent_1_code varchar(200), -- TODO: Can we drop these two columns?
 --    parent_2_code varchar(200),
-    deceased_parent varchar(10),
+    deceased_parent bool,
     date_signed date,
     date_revoked date,
     assent_obtainer varchar,

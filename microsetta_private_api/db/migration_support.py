@@ -89,6 +89,18 @@ class MigrationSupport:
                 source_type = "animal"
                 new_age_range = None
 
+            new_deceased_parent = None
+            if r['deceased_parent'] is not None:
+                existing = r['deceased_parent'].lower()
+                if existing in ['yes', 'true']:
+                    new_deceased_parent = True
+                elif existing in ['no', 'false']:
+                    new_deceased_parent = False
+                else:
+                    raise RuntimeError(
+                        "ERROR: Cannot migrate source.deceased_parent: "
+                        "Unknown input: " + str(existing))
+
             TRN.add("INSERT INTO source("
                     "id, account_id, source_type, "
                     "participant_name, participant_email, "
@@ -112,7 +124,7 @@ class MigrationSupport:
                      r["is_juvenile"],
                      r["parent_1_name"], r["parent_2_name"],
                      # r["parent_1_code"], r["parent_2_code"],
-                     r["deceased_parent"],
+                     new_deceased_parent,
                      r["date_signed"], r["date_revoked"],
                      r["assent_obtainer"], new_age_range)
                     )
