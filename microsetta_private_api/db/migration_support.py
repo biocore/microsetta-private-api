@@ -28,14 +28,15 @@ class MigrationSupport:
 
         * Adding a new source table (Done in the 0048.sql)
         * Mapping each ag_login_id, participant_name pair to a new unique id
-        * Migrating all data from the
         * Migrating all data from the ag_consent table to source
         * Migrating all data from the consent_revoked table to source
+        * Migrating ag_kit_barcodes.environment_sampled to source
 
         :param TRN: The active transaction
         :return:
         """
 
+        # Migrate all human and animal sources from ag_consent
         # TODO: We need to throw away the legacy sql_connection code.
         TRN.add("SELECT "
                 "ag_login_id, "
@@ -78,11 +79,6 @@ class MigrationSupport:
             # Convert data formats:
             # Fix age range to not store type information
 
-            # TODO: !!CRITICAL!! @Daniel, Can you verify this is the
-            #  correct logic for migrating source type, there doesn't
-            #  appear to be any way to specify an environment source type,
-            #  and there are existing primary surveys associated even when
-            #  age_range is None!!
             new_age_range = r["age_range"]
             source_type = "human"
             if r["age_range"] == "ANIMAL_SURVEY":
@@ -129,6 +125,58 @@ class MigrationSupport:
                      r["assent_obtainer"], new_age_range)
                     )
 
+        # Migrate all environmental sources from ag_kit_barcodes
+        TRN.add("SELECT environment_sampled, ag_login.ag_login_id "
+                "FROM ag_kit_barcodes "
+                "LEFT JOIN ag_kit USING (ag_kit_id) "
+                "LEFT JOIN ag_login "
+                "ON "
+                "ag_kit.ag_login_id=ag_login.ag_login_id "
+                "WHERE "
+                "environment_sampled is not NULL "
+                "ORDER BY ag_login.ag_login_id")
+
+        last_account_id = None
+        name_suffix = 1
+        env_rows = TRN.execute()[-1]
+        for r in env_rows:
+            if r['ag_login_id'] == last_account_id:
+                name_suffix = name_suffix + 1
+            else:
+                name_suffix = 1
+                last_account_id = r['ag_login_id']
+
+            # Generate a new id
+            source_id = str(uuid.uuid4())
+            source_type = "environmental"
+            TRN.add("INSERT INTO source("
+                    "id, account_id, source_type, "
+                    "participant_name, participant_email, "
+                    "is_juvenile, "
+                    "parent_1_name, parent_2_name, "
+                    # "parent_1_code, parent_2_code " # Drop?
+                    "deceased_parent, "
+                    "date_signed, date_revoked, "
+                    "assent_obtainer, age_range, description) "
+                    "VALUES ("
+                    "%s, %s, %s, "
+                    "%s, %s, "
+                    "%s, "
+                    "%s, %s, "
+                    # "%s, %s, " # Drop parent_1_code?
+                    "%s, "
+                    "%s, %s, "
+                    "%s, %s, %s)",
+                    (source_id, r["ag_login_id"], source_type,
+                     "Environmental Sample-" + str(name_suffix).zfill(3), None,
+                     None,
+                     None, None,
+                     # r["parent_1_code"], r["parent_2_code"],
+                     None,
+                     None, None,
+                     None, None, r['environment_sampled'])
+                    )
+
     @staticmethod
     def migrate_50(TRN):
         country_map = {x.name: x.alpha_2 for x in pycountry.countries}
@@ -172,7 +220,7 @@ class MigrationSupport:
                 if len(names) == 1:
                     first_name = names[0]
                 elif len(names) >= 2:
-                    first_name = names[0]
+                    first_name = " ".join(names[0:-1])
                     last_name = names[-1]
 
             # Look up country code
