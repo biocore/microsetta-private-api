@@ -45,8 +45,6 @@ class MigrationSupport:
                 "is_juvenile, "
                 "parent_1_name, "
                 "parent_2_name, "
-                # "parent_1_code, " # TODO: Can we drop these two?
-                # "parent_2_code, "
                 "deceased_parent, "
                 "date_signed, "
                 "assent_obtainer, "
@@ -102,7 +100,6 @@ class MigrationSupport:
                     "participant_name, participant_email, "
                     "is_juvenile, "
                     "parent_1_name, parent_2_name, "
-                    # "parent_1_code, parent_2_code " # Drop?
                     "deceased_parent, "
                     "date_signed, date_revoked, "
                     "assent_obtainer, age_range) "
@@ -111,7 +108,6 @@ class MigrationSupport:
                     "%s, %s, "
                     "%s, "
                     "%s, %s, "
-                    # "%s, %s, " # Drop parent_1_code?
                     "%s, "
                     "%s, %s, "
                     "%s, %s)",
@@ -119,7 +115,6 @@ class MigrationSupport:
                      r["participant_name"], r["participant_email"],
                      r["is_juvenile"],
                      r["parent_1_name"], r["parent_2_name"],
-                     # r["parent_1_code"], r["parent_2_code"],
                      new_deceased_parent,
                      r["date_signed"], r["date_revoked"],
                      r["assent_obtainer"], new_age_range)
@@ -154,7 +149,6 @@ class MigrationSupport:
                     "participant_name, participant_email, "
                     "is_juvenile, "
                     "parent_1_name, parent_2_name, "
-                    # "parent_1_code, parent_2_code " # Drop?
                     "deceased_parent, "
                     "date_signed, date_revoked, "
                     "assent_obtainer, age_range, description) "
@@ -163,7 +157,6 @@ class MigrationSupport:
                     "%s, %s, "
                     "%s, "
                     "%s, %s, "
-                    # "%s, %s, " # Drop parent_1_code?
                     "%s, "
                     "%s, %s, "
                     "%s, %s, %s)",
@@ -171,7 +164,6 @@ class MigrationSupport:
                      "Environmental Sample-" + str(name_suffix).zfill(3), None,
                      None,
                      None, None,
-                     # r["parent_1_code"], r["parent_2_code"],
                      None,
                      None, None,
                      None, None, r['environment_sampled'])

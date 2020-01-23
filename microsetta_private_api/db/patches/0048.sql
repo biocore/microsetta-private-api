@@ -27,8 +27,6 @@ CREATE TABLE ag.source (
     is_juvenile bool,
     parent_1_name varchar(200),
     parent_2_name varchar(200),
---    parent_1_code varchar(200), -- TODO: Can we drop these two columns?
---    parent_2_code varchar(200),
     deceased_parent bool,
     date_signed date,
     date_revoked date,
@@ -41,9 +39,6 @@ CREATE TABLE ag.source (
 
 -- We add space for the new source id, we will need to fill it in during the
 -- migration.
--- TODO: Add foreign key ref from source_id to source table
--- TODO: Add not null constraint to source_id
---   TODO's can't be done until after migration, verify they are in 0049.sql
 
 ALTER TABLE ag.ag_login_surveys
 ADD COLUMN source_id uuid;
@@ -52,8 +47,7 @@ ALTER TABLE ag.ag_login_surveys
 DROP CONSTRAINT fk_ag_login_surveys0;
 
 -- We deprecate the ag_consent and consent_revoked tables, we will migrate
--- all the data out of them, and then remove them in the next change script
--- TODO: Remove ag_consent_backup, consent_revoked_backup in 0049.sql
+-- all the data from them
 
 ALTER TABLE ag.ag_consent RENAME TO ag_consent_backup;
 

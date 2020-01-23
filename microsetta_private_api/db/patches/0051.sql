@@ -23,7 +23,3 @@ REFERENCES ag.account (id);
 ALTER TABLE ag.source
 ADD CONSTRAINT fk_source_account FOREIGN KEY (account_id)
 REFERENCES ag.account (id);
-
--- TODO: !!CRITICAL!! Are we confident to remove the backup table at this time
---  due to existence of other backup mechanisms?
---DROP TABLE ag.ag_login_backup
