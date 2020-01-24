@@ -97,7 +97,7 @@ class MigrationSupport:
 
             TRN.add("INSERT INTO source("
                     "id, account_id, source_type, "
-                    "participant_name, participant_email, "
+                    "source_name, participant_email, "
                     "is_juvenile, "
                     "parent_1_name, parent_2_name, "
                     "deceased_parent, "
@@ -146,7 +146,7 @@ class MigrationSupport:
             source_type = "environmental"
             TRN.add("INSERT INTO source("
                     "id, account_id, source_type, "
-                    "participant_name, participant_email, "
+                    "source_name, participant_email, "
                     "is_juvenile, "
                     "parent_1_name, parent_2_name, "
                     "deceased_parent, "

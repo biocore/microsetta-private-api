@@ -17,12 +17,12 @@ $$ language 'plpgsql';
 -- source represents sources/participants.  We are migrating information
 -- from ag_login_surveys, ag_consent, consent_revoked into this table to
 -- make sources their own separate objects with types and ids rather than
--- being accessed by a combination of ag_login_id and participant_name
+-- being accessed by a combination of login id and name
 CREATE TABLE ag.source (
     id uuid PRIMARY KEY NOT NULL,
     account_id uuid NOT NULL,
     source_type varchar NOT NULL,
-    participant_name varchar(200) NOT NULL,
+    source_name varchar(200) NOT NULL,
     participant_email varchar,
     is_juvenile bool,
     parent_1_name varchar(200),

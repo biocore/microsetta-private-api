@@ -11,14 +11,14 @@ class SourceRepo(BaseRepo):
         super().__init__(transaction)
 
     read_cols = "id, account_id, " \
-                "source_type, participant_name, participant_email, " \
+                "source_type, source_name, participant_email, " \
                 "is_juvenile, parent_1_name, parent_2_name, " \
                 "deceased_parent, date_signed, date_revoked, " \
                 "assent_obtainer, age_range, description, " \
                 "creation_time, update_time"
 
     write_cols = "id, account_id, source_type, " \
-                 "participant_name, participant_email, " \
+                 "source_name, participant_email, " \
                  "is_juvenile, parent_1_name, parent_2_name, " \
                  "deceased_parent, date_signed, date_revoked, " \
                  "assent_obtainer, age_range, description"
@@ -27,7 +27,7 @@ class SourceRepo(BaseRepo):
     def _row_to_source(r):
         hook = DECODER_HOOKS[r['source_type']]
         source_data = {
-            'name': r['participant_name'],
+            'name': r['source_name'],
             'email': r['participant_email'],
             'is_juvenile': r['is_juvenile'],
             'parent1_name': r['parent_1_name'],
@@ -107,7 +107,7 @@ class SourceRepo(BaseRepo):
             cur.execute("UPDATE source "
                         "SET "
                         "source_type = %s, "
-                        "participant_name = %s, "
+                        "source_name = %s, "
                         "participant_email = %s, "
                         "is_juvenile = %s, "
                         "parent_1_name = %s, "
