@@ -30,8 +30,8 @@ CREATE TABLE ag.account (
     longitude double precision,
     cannot_geocode character(1),
     elevation double precision,
-    creation_time timestamp default current_timestamp,
-    update_time timestamp default current_timestamp
+    creation_time timestamptz default current_timestamp,
+    update_time timestamptz default current_timestamp
 );
 
 CREATE UNIQUE INDEX idx_account_email ON ag.account ( email );

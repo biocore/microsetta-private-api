@@ -33,8 +33,8 @@ CREATE TABLE ag.source (
     assent_obtainer varchar,
     age_range varchar,
     description varchar,
-    creation_time timestamp default current_timestamp,
-    update_time timestamp default current_timestamp
+    creation_time timestamptz default current_timestamp,
+    update_time timestamptz default current_timestamp
 );
 
 -- We add space for the new source id, we will need to fill it in during the
