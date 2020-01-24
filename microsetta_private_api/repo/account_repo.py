@@ -66,9 +66,12 @@ class AccountRepo(BaseRepo):
     def update_account(self, account):
         with self._transaction.cursor() as cur:
             row = AccountRepo._account_to_row(account)
+
+            # Shift id to end since it appears in the WHERE clause
             row_id = row[0:1]
             row_email_to_cc = row[1:]
             final_row = row_email_to_cc + row_id
+
             cur.execute("UPDATE account "
                         "SET "
                         "email = %s, "

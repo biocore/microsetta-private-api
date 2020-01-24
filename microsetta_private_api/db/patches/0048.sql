@@ -40,11 +40,17 @@ CREATE TABLE ag.source (
 -- We add space for the new source id, we will need to fill it in during the
 -- migration.
 
+-- Note:  We cannot make source_id NOT NULL until after we have filled it
+-- during the migration.  That constraint will be added in 0049.
 ALTER TABLE ag.ag_login_surveys
 ADD COLUMN source_id uuid;
 
+-- Note:  This foreign key reference needs to be detached from ag_consent,
+-- as we are detaching that table.  We will replace this foreign key with a
+-- new one linking the source table in schema 0049 after the data migration.
 ALTER TABLE ag.ag_login_surveys
 DROP CONSTRAINT fk_ag_login_surveys0;
+
 
 -- We deprecate the ag_consent and consent_revoked tables, we will migrate
 -- all the data from them
