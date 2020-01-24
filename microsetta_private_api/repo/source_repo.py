@@ -97,9 +97,12 @@ class SourceRepo(BaseRepo):
 
     def update_source_data(self, source):
         row = SourceRepo._source_to_row(source)
+
+        # Rotate id, account.id to end for the where clause
         row_type_to_desc = row[2:]
         row_id_and_acct = row[0:2]
         final_row = row_type_to_desc + row_id_and_acct
+
         with self._transaction.cursor() as cur:
             cur.execute("UPDATE source "
                         "SET "
