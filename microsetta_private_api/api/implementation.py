@@ -199,8 +199,6 @@ def read_survey_template(account_id, source_id, survey_template_id,
 
 
 def read_answered_surveys(account_id, source_id, language_tag):
-    # TODO: source_id is participant name until we make the proper schema
-    #  changes.  Sorry bout that
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
         return jsonify(
@@ -221,7 +219,6 @@ def read_answered_survey(account_id, source_id, survey_id):
 
 
 def submit_answered_survey(account_id, source_id, language_tag, body):
-    # TODO: source_id still needs to be participant name til we refactor
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
     with Transaction() as t:

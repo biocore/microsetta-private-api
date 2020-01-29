@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/biocore/microsetta-private-api/badge.svg?branch=master)](https://coveralls.io/github/biocore/microsetta-private-api?branch=master)
+
 # microsetta-private-api
 A private microservice to support The Microsetta Initiative
 
