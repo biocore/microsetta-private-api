@@ -120,16 +120,59 @@ class MigrationSupport:
                      r["assent_obtainer"], new_age_range)
                     )
 
+            # Mark all samples associated with this source directly into the
+            # ag_kit_barcodes table
+            TRN.add("SELECT barcode "
+                    "FROM ag_kit_barcodes "
+                    "LEFT JOIN source_barcodes_surveys USING (barcode) "
+                    "LEFT JOIN ag_login_surveys USING (survey_id) "
+                    "LEFT JOIN ag_kit USING (ag_kit_id) "
+                    "WHERE "
+                    "ag_kit.ag_login_id=%s AND "
+                    "participant_name=%s "
+                    "GROUP BY "
+                    "barcode",
+                    (r["ag_login_id"], r["participant_name"]))
+
+            # All these n+1 queries are bad for performance, but only
+            # ~30000 rows at the time we're migrating, so no big deal.
+            associated_barcodes = TRN.execute()[-1]
+            for barcode_row in associated_barcodes:
+                TRN.add("UPDATE ag_kit_barcodes "
+                        "SET source_id=%s "
+                        "WHERE barcode=%s",
+                        (source_id, barcode_row['barcode']))
+
         # Migrate all environmental sources from ag_kit_barcodes
-        TRN.add("SELECT environment_sampled, ag_login.ag_login_id "
+        # NOTE: Looking through the existing data, we found several samples
+        # which have both an environment_sampled field and a human participant
+        # name and associated survey.  We are therefore going to treat any
+        # environment sample which has an associated participant name as
+        # human sourced, rather than associated with the environment
+        # We also found a number of environment_sampled='' rows.  (As opposed
+        # to environment_sampled is null) As part of this migration, we are
+        # either associating these samples with human sources (if that link
+        # already exists), or we are discarding the ideas that these are env
+        # samples and leaving them completely unassociated.
+
+        # Thus the only samples we are going to migrate as environmental srcs
+        # are those with an environment_sampled that is neither null nor empty
+        # and with no association with any participant_name via surveys
+        TRN.add("SELECT ag_kit.ag_login_id, barcode, environment_sampled "
                 "FROM ag_kit_barcodes "
-                "LEFT JOIN ag_kit USING (ag_kit_id) "
-                "LEFT JOIN ag_login "
-                "ON "
-                "ag_kit.ag_login_id=ag_login.ag_login_id "
+                "LEFT JOIN source_barcodes_surveys "
+                "USING (barcode) "
+                "LEFT JOIN ag_login_surveys "
+                "USING (survey_id) "
+                "LEFT JOIN ag_consent_backup "
+                "USING (ag_login_id, participant_name) "
+                "LEFT JOIN ag_kit "
+                "USING (ag_kit_id) "
                 "WHERE "
-                "environment_sampled is not NULL "
-                "ORDER BY ag_login.ag_login_id")
+                "environment_sampled is not null AND "
+                "environment_sampled != '' AND "
+                "participant_name is null "
+                "ORDER BY (ag_kit.ag_login_id, environment_sampled, barcode)")
 
         last_account_id = None
         name_suffix = 1
@@ -144,6 +187,7 @@ class MigrationSupport:
             # Generate a new id
             source_id = str(uuid.uuid4())
             source_type = "environmental"
+            # Add a new source
             TRN.add("INSERT INTO source("
                     "id, account_id, source_type, "
                     "source_name, participant_email, "
@@ -168,6 +212,12 @@ class MigrationSupport:
                      None, None,
                      None, None, r['environment_sampled'])
                     )
+            # Write that source into the sample to keep it linked up
+            TRN.add("UPDATE ag_kit_barcodes "
+                    "SET source_id=%s "
+                    "WHERE barcode=%s",
+                    (source_id, r['barcode']))
+
 
     @staticmethod
     def migrate_50(TRN):

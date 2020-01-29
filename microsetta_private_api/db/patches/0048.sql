@@ -45,12 +45,24 @@ CREATE TABLE ag.source (
 ALTER TABLE ag.ag_login_surveys
 ADD COLUMN source_id uuid;
 
+-- We add space for the source id in samples as well, as any environmental
+-- sourced samples used to specify their environment directly, but now must
+-- link to the source table.
+-- Note:  We cannot make source_id NOT NULL in ag_kit_barcodes ever, as
+-- there is a time point during the process when samples are unassociated with
+-- sources.  That said, we can still enforce that samples are assigned sources
+-- that do exist within the source table.
+ALTER TABLE ag_kit_barcodes
+ADD COLUMN source_id uuid;
+
+ALTER TABLE ag_kit_barcodes ADD CONSTRAINT fk_ag_kit_barcodes_sources
+FOREIGN KEY (source_id) REFERENCES ag.source (id);
+
 -- Note:  This foreign key reference needs to be detached from ag_consent,
 -- as we are detaching that table.  We will replace this foreign key with a
 -- new one linking the source table in schema 0049 after the data migration.
 ALTER TABLE ag.ag_login_surveys
 DROP CONSTRAINT fk_ag_login_surveys0;
-
 
 -- We deprecate the ag_consent and consent_revoked tables, we will migrate
 -- all the data from them
