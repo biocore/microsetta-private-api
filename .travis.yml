@@ -30,6 +30,8 @@ install:
   - make install
 
 script:
+  - pg_isready
+  - pg_isready -h localhost
   - make lint
   - make test-cov
 
