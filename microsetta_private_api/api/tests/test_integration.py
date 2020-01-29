@@ -26,22 +26,19 @@ def setup_test_data():
         acct_repo = AccountRepo(t)
         acct_repo.delete_account(ACCT_ID)
 
-        creation_time = None
-        update_time = None
-
         acc = Account(ACCT_ID,
-                  "foo@baz.com",
-                  "standard",
-                  "GLOBUS",
-                  "Dan",
-                  "H",
-                  {
-                      "street": "123 Dan Lane",
-                      "city": "Danville",
-                      "state": "CA",
-                      "post_code": 12345,
-                      "country_code": "US"
-                  })
+                      "foo@baz.com",
+                      "standard",
+                      "GLOBUS",
+                      "Dan",
+                      "H",
+                      {
+                          "street": "123 Dan Lane",
+                          "city": "Danville",
+                          "state": "CA",
+                          "post_code": 12345,
+                          "country_code": "US"
+                      })
         acct_repo.create_account(acc)
 
         source_repo = SourceRepo(t)
