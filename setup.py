@@ -20,5 +20,5 @@ setup(
     url="https://github.com/biocore/microsetta-private-api",
     description="A RESTful API to support The Microsetta Initiative",
     license='BSD-3-Clause',
+    package_data={'microsetta_private_api': ['db/*.*', 'db/patches/*.sql']},
 )
-
