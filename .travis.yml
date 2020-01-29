@@ -7,11 +7,11 @@ env:
   - CONDA_PY=3.7
   - CONDA_PY=3.6
 
-addons:
-  postgresql: "12"
-
 services:
   - postgresql 
+
+addons:
+  postgresql: "12"
 
 before_install:
   # resizing became necessary due to the test database size, and variation
@@ -28,6 +28,9 @@ install:
   - source activate env_name
   - pip install -r ci/pip_requirements.txt
   - make install
+
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
 
 script:
   - pg_isready
