@@ -11,7 +11,11 @@ services:
   - postgresql 
 
 addons:
-  postgresql: "11"
+  postgresql: "12"
+  apt:
+    packages:
+    - postgresql-12
+    - postgresql-client-12
 
 before_install:
   # resizing became necessary due to the test database size, and variation
