@@ -29,6 +29,9 @@ install:
   - pip install -r ci/pip_requirements.txt
   - make install
 
+before_script:
+  - psql -c 'create database ag_test;' -U postgres
+
 script:
   - pg_isready
   - pg_isready -h localhost
