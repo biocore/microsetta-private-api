@@ -135,8 +135,8 @@ paths:
               properties:  # each is a form field name
                 age_range:
                   $ref: '#/components/schemas/age_range'
-                participant_name:
-                  $ref: '#/components/schemas/participant_name'
+                participant_name:  # Field is named participant_name, but contents are used to fill source's name
+                  $ref: '#/components/schemas/source_name'
                 participant_email:
                   $ref: '#/components/schemas/participant_email'
                 parent_1_name:
@@ -201,14 +201,12 @@ paths:
                   source_name: "Ophelia Doe"
                   source_type: human
                   consent:
-                    participant_name: "Ophelia Q. Doe"
                     participant_email: "nunnery@example.com"
                     age_range: "18-plus"
                 - source_id: "df077cd7-f2c7-42e4-b8ed-9c7e9dd47ce5"
                   source_name: "P. Doe"
                   source_type: human
                   consent:
-                    participant_name: "Persephone Doe"
                     participant_email: "pomegranate@example.com"
                     age_range: "0-6"
                     child_info:
@@ -1013,13 +1011,12 @@ components:
       type: string
       readOnly: true # sent in GET, not in POST/PUT/PATCH
       example: "b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0"
+    source_name:
+      type: string
     source_type:
       type: string
       enum: [human, animal, environmental]
       example: human
-    participant_name:
-      type: string
-      example: "Hija Doe"
     participant_email:
       type: string
       format: email
@@ -1048,12 +1045,14 @@ components:
         source_type:
           type: string
           enum: [animal, environmental]
-        source_name:
+        source_description:
           type: string
+          nullable: true
       example:
         source_id: "bda6867f-fb9d-4f21-ba24-5fba64976ee2"
         source_name: "office windowsill"
         source_type: environmental
+        source_description: "my office windowsill"
       additionalProperties: false
     human_source:
       type: object
@@ -1068,8 +1067,6 @@ components:
         consent:
           type: object
           properties:
-            participant_name:
-              $ref: '#/components/schemas/participant_name'
             participant_email:
               $ref: '#/components/schemas/participant_email'
             age_range:
@@ -1229,7 +1226,6 @@ components:
         source_name: "Nell Doe"
         source_type: human
         consent:
-          participant_name: "Nellie Doe"
           participant_email: "nell@example.com"
           age_range: "18-plus"
     human_child_source:
@@ -1237,7 +1233,6 @@ components:
         source_name: "K. Doe"
         source_type: human
         consent:
-          participant_name: "Kelly Doe"
           participant_email: "kd@kidsmail.com"
           age_range: "7-12"
           child_info:
@@ -1249,13 +1244,13 @@ components:
       value:
         source_name: "Fluffy"
         source_type: animal
+        source_description: "A fluffy cat"
     human_adult_source_w_id:
       value:
         source_id: "5fa970c6-d36b-4d54-9bed-c45c3c85adac"
         source_name: "Nell Doe"
         source_type: human
         consent:
-          participant_name: "Nellie Doe"
           participant_email: "nell@example.com"
           age_range: "18-plus"
     human_child_source_w_id:
@@ -1264,7 +1259,6 @@ components:
         source_name: "K. Doe"
         source_type: human
         consent:
-          participant_name: "Kelly Doe"
           participant_email: "kd@kidsmail.com"
           age_range: "7-12"
           child_info:
@@ -1277,6 +1271,7 @@ components:
         source_id: "42f799a8-e814-4b91-a291-2dbd50fda75d"
         source_name: "Fluffy"
         source_type: animal
+        source_description: "A fluffy cat"
 
   securitySchemes:
     Oauth2Scheme:

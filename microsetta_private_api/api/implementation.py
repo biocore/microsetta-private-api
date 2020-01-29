@@ -300,12 +300,13 @@ def render_consent_doc(account_id):
                            tl=american_gut._NEW_PARTICIPANT)
 
 
-# This function simply passes its arguments on to the create_source function;
-# however, it is necessary because connexion will not allow two endpoints to
-# use the same implementation function (it throws an error
-# "AssertionError: View function mapping is overwriting an existing endpoint
-# function")
 def create_human_source_from_consent(account_id, body):
+    # A human source's participant name becomes the source name. Note pop
+    # removes the existing `participant_name` key if exists, else errors.
+    # Not adding any error handling here because if 'participant_name' isn't
+    # here, we SHOULD be getting an error.
+    body['source_name'] = body.pop('participant_name')
+
     # NB: Don't expect to handle errors 404, 422 in this function; expect to
     # farm out to `create_source`
     return create_source(account_id, body)
