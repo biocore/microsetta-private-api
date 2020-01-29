@@ -30,11 +30,9 @@ install:
   - make install
 
 before_script:
-  - psql -c 'create database ag_test;' -U postgres
+  - python microsetta_private_api/LEGACY/build_db.py
 
 script:
-  - pg_isready
-  - pg_isready -h localhost
   - make lint
   - make test-cov
 
