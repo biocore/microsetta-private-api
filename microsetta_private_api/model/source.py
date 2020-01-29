@@ -9,10 +9,11 @@ def human_decoder(obj):
             obj["email"],
             obj["is_juvenile"],
             obj["parent1_name"],
-            obj["parent1_deceased"],
             obj["parent2_name"],
-            obj["parent2_deceased"],
+            obj["deceased_parent"],
             obj["consent_date"],
+            obj["date_revoked"],
+            obj["assent_obtainer"],
             obj["age_range"])
     return obj
 
@@ -31,17 +32,17 @@ def environment_decoder(obj):
 
 class HumanInfo:
     def __init__(self, name, email, is_juvenile,
-                 parent1_name, parent1_deceased,
-                 parent2_name, parent2_deceased,
-                 consent_date, age_range):
+                 parent1_name, parent2_name, deceased_parent,
+                 consent_date, date_revoked, assent_obtainer, age_range):
         self.name = name
         self.email = email
         self.is_juvenile = is_juvenile
         self.parent1_name = parent1_name
-        self.parent1_deceased = parent1_deceased
         self.parent2_name = parent2_name
-        self.parent2_deceased = parent2_deceased
+        self.deceased_parent = deceased_parent
         self.consent_date = consent_date
+        self.date_revoked = date_revoked
+        self.assent_obtainer = assent_obtainer
         self.age_range = age_range
 
 
@@ -84,7 +85,7 @@ class Source(ModelBase):
                         "parent_2_name": self.parent2_name,
                         "deceased_parent": (self.parent1_deceased or
                                             self.parent2_deceased),
-                        "obtainer_name": None  # TODO: What is this???
+                        "obtainer_name": self.source_data.assent_obtainer
                     }
                 else:
                     consent = {
