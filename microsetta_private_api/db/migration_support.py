@@ -218,7 +218,6 @@ class MigrationSupport:
                     "WHERE barcode=%s",
                     (source_id, r['barcode']))
 
-
     @staticmethod
     def migrate_50(TRN):
         country_map = {x.name: x.alpha_2 for x in pycountry.countries}
