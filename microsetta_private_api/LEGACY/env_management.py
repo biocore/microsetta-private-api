@@ -10,6 +10,8 @@ from natsort import natsorted
 from microsetta_private_api.config_manager import AMGUT_CONFIG
 from microsetta_private_api.LEGACY.sql_connection import TRN
 
+from microsetta_private_api.db.migration_support import MigrationSupport
+
 
 get_db_file = partial(join, join(dirname(dirname(abspath(__file__))),
                                  'db'))
@@ -195,6 +197,7 @@ def patch_db(patches_dir=PATCHES_DIR, verbose=False):
 
                 TRN.add(patch_file.read())
                 TRN.add(patch_update_sql, [patch_filename])
+                MigrationSupport.run_migration(TRN, patch_filename)
 
 
 def rebuild_test(verbose=False):

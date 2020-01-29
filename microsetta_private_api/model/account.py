@@ -2,16 +2,18 @@ from microsetta_private_api.model.model_base import ModelBase
 
 
 class Account(ModelBase):
-    def __init__(self, account_id, email, auth_provider,
-                 first_name, last_name, address, account_type,
+    def __init__(self, account_id, email,
+                 account_type, auth_provider,
+                 first_name, last_name,
+                 address,
                  creation_time=None, update_time=None):
         self.id = account_id
         self.email = email
+        self.account_type = account_type
         self.auth_provider = auth_provider
         self.first_name = first_name
         self.last_name = last_name
         self.address = address
-        self.account_type = account_type
         self.creation_time = creation_time
         self.update_time = update_time
 
