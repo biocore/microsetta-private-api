@@ -27,7 +27,11 @@ install:
   - conda install --yes -n env_name --file ci/conda_requirements.txt
   - source activate env_name
   - pip install -r ci/pip_requirements.txt
-  - pip install . --no-deps
+  - make install
 
 script:
-  - flake8 microsetta_private_api
+  - make lint
+  - make test-cov
+
+after_success:
+  - coveralls
