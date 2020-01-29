@@ -1047,7 +1047,7 @@ components:
           enum: [animal, environmental]
         source_description:
           type: string
-          nullable: true  # TODO: Dan Hakim, do you agree?
+          nullable: true
       example:
         source_id: "bda6867f-fb9d-4f21-ba24-5fba64976ee2"
         source_name: "office windowsill"
