@@ -11,11 +11,11 @@ services:
   - postgresql 
 
 addons:
-  postgresql: "12"
+  postgresql: "11"
   apt:
     packages:
-    - postgresql-12
-    - postgresql-client-12
+    - postgresql-11
+    - postgresql-client-11
 
 before_install:
   # resizing became necessary due to the test database size, and variation
@@ -32,9 +32,6 @@ install:
   - source activate env_name
   - pip install -r ci/pip_requirements.txt
   - make install
-
-before_script:
-  - psql -c 'create database travis_ci_test;' -U postgres
 
 script:
   - pg_isready
