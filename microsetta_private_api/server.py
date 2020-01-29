@@ -10,8 +10,8 @@ Modified from https://github.com/zalando/connexion/blob/master/examples/swagger2
 import connexion
 from microsetta_private_api.util.util import JsonifyDefaultEncoder
 
-# If we're running in stand alone mode, run the application
-if __name__ == '__main__':
+
+def build_app():
     # Create the application instance
     app = connexion.FlaskApp(__name__)
 
@@ -22,5 +22,10 @@ if __name__ == '__main__':
     # Note: app.app is the actual Flask application instance, so any Flask
     # settings have to be set there.
     app.app.json_encoder = JsonifyDefaultEncoder
+    return app
 
+
+# If we're running in stand alone mode, run the application
+if __name__ == '__main__':
+    app = build_app()
     app.run(port=8082, debug=True)

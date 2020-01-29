@@ -145,4 +145,3 @@ with Transaction() as t:
     print(survey_model == survey_model2)
 
     survey_answers_repo.delete_answered_survey(ACCT_ID, answer_id)
-
