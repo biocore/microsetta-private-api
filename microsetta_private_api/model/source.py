@@ -71,7 +71,8 @@ class Source(ModelBase):
     def to_api(self):
         result = {
                     "source_type": self.source_type,
-                    "source_name": self.source_data.name
+                    "source_name": self.source_data.name,
+                    "source_id": self.id
                  }
 
         if self.source_type == Source.SOURCE_TYPE_HUMAN:

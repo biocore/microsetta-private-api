@@ -25,13 +25,23 @@ def setup_test_data():
     with Transaction() as t:
         acct_repo = AccountRepo(t)
         acct_repo.delete_account(ACCT_ID)
+
+        creation_time = None
+        update_time = None
+
         acc = Account(ACCT_ID,
-                      "foo@baz.com",
-                      "globus",
-                      "Dan",
-                      "H",
-                      '{"a":5, "b":7}',
-                      "USER")
+                  "foo@baz.com",
+                  "standard",
+                  "GLOBUS",
+                  "Dan",
+                  "H",
+                  {
+                      "street": "123 Dan Lane",
+                      "city": "Danville",
+                      "state": "CA",
+                      "post_code": 12345,
+                      "country_code": "US"
+                  })
         acct_repo.create_account(acc)
 
         source_repo = SourceRepo(t)
@@ -42,8 +52,9 @@ def setup_test_data():
         source_repo.create_source(Source.create_human(
             HUMAN_ID,
             ACCT_ID,
-            HumanInfo("Bo", "bo@bo.com", False, "Mr Bo", False, "Mrs Bo",
-                      False, datetime.datetime.utcnow(), "TODO,WutDis?")
+            HumanInfo("Bo", "bo@bo.com", False, "Mr Bo", "Mrs Bo",
+                      False, datetime.datetime.utcnow(), None, "Mr. Obtainer",
+                      "18-plus")
         ))
         source_repo.create_source(Source.create_animal(
             DOGGY_ID,
@@ -86,25 +97,28 @@ def test_get_sources(client):
     assert len([x for x in sources if x['source_name'] == 'Planty']) == 1
 
 
-# BROKEN
-# def test_external_surveys(client):
-#     # I can't even find a test that we can pass for demo purposes!
-#     resp = client.get('/api/accounts/%s/sources' % ACCT_ID).data
-#     sources = json.loads(resp)
-#     bobo = [x for x in sources if x['source_name'] == 'Bo'][0]
-#     doggy = [x for x in sources if x['source_name'] == 'Doggy'][0]
-#     env = [x for x in sources if x['source_name'] == 'Planty'][0]
-#
-#     resp = client.get('/accounts/%s/sources/%s/survey_templates' %
-#                       (ACCT_ID, bobo.id))
-#     bobo_surveys = json.loads(resp.data)
-#     resp = client.get('/accounts/%s/sources/%s/survey_templates' %
-#                       (ACCT_ID, doggy.id))
-#     doggy_surveys = json.loads(resp.data)
-#     resp = client.get('/accounts/%s/sources/%s/survey_templates' %
-#                       (ACCT_ID, env.id))
-#     env_surveys = json.loads(resp.data)
-#
-#     assert bobo_surveys == [1, 3, 4, 5]
-#     assert doggy_surveys == [2]
-#     assert env_surveys == [3]
+def test_surveys(client):
+    # I can't even find a test that we can pass for demo purposes!
+    resp = client.get('/api/accounts/%s/sources' % ACCT_ID).data
+
+    sources = json.loads(resp)
+    bobo = [x for x in sources if x['source_name'] == 'Bo'][0]
+    doggy = [x for x in sources if x['source_name'] == 'Doggy'][0]
+    env = [x for x in sources if x['source_name'] == 'Planty'][0]
+
+    resp = client.get(
+        '/api/accounts/%s/sources/%s/survey_templates?language_tag=en_us' %
+        (ACCT_ID, bobo['source_id']), )
+    bobo_surveys = json.loads(resp.data)
+    resp = client.get(
+        '/api/accounts/%s/sources/%s/survey_templates?language_tag=en_us' %
+        (ACCT_ID, doggy['source_id']))
+    doggy_surveys = json.loads(resp.data)
+    resp = client.get(
+        '/api/accounts/%s/sources/%s/survey_templates?language_tag=en_us' %
+        (ACCT_ID, env['source_id']))
+    env_surveys = json.loads(resp.data)
+
+    assert bobo_surveys == [1, 3, 4, 5]
+    assert doggy_surveys == [2]
+    assert env_surveys == []
