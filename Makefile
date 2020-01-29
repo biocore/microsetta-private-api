@@ -6,7 +6,7 @@ PYTHON ?= python
 all: ;
 
 lint:
-	flake8
+	flake8 microsetta_private_api
 
 test: all
 	py.test
