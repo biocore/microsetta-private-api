@@ -17,6 +17,8 @@ paths:
         - Account
       summary: Register new user account
       description: Register new user account
+      parameters:
+        - $ref: '#/components/parameters/language_tag'
       requestBody:
         content:
           application/json:
@@ -29,7 +31,6 @@ paths:
                     kit_name:
                       $ref: '#/components/schemas/kit_name'
                   required:
-                    - account
                     - kit_name
       responses:
         '201':
@@ -56,6 +57,7 @@ paths:
       description: Get user account information
       parameters:
         - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
           description: Successfully returned account information
@@ -78,6 +80,7 @@ paths:
       description: Update user account information
       parameters:
         - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/language_tag'
       requestBody:
         content:
           application/json:
@@ -106,6 +109,7 @@ paths:
       description: Retrieve personalized consent form for display to user
       parameters:
         - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
           description: Consent form
@@ -127,6 +131,7 @@ paths:
       description: Create a new human source based on a consent form
       parameters:
         - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/language_tag'
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -185,6 +190,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_type'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
           description: Successfully returned sources
@@ -226,6 +232,7 @@ paths:
       description: Create new source of a specific type
       parameters:
         - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/language_tag'
       requestBody:
         content:
           application/json:
@@ -277,6 +284,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
           description: Successfully returned source information
@@ -306,6 +314,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/language_tag'
       requestBody:
         content:
           application/json:
@@ -351,6 +360,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '204':
           description: Successfully deleted source
@@ -497,6 +507,7 @@ paths:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/survey_id'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
           description: Successfully returned information about answered survey
@@ -531,6 +542,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
           description: Successfully returned list of samples
@@ -553,6 +565,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/language_tag'
       requestBody:
         content:
           application/json:
@@ -595,6 +608,7 @@ paths:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
           description: Successfully returned sample information
@@ -616,6 +630,7 @@ paths:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/language_tag'
       requestBody:
         content:
           application/json:
@@ -645,6 +660,7 @@ paths:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '204':
           description: Sample was dissociated from source
@@ -669,6 +685,7 @@ paths:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
           description: Successfully returned list of answered surveys associated with this sample
@@ -710,6 +727,7 @@ paths:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/language_tag'
       requestBody:
         content:
           application/json:
@@ -745,6 +763,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
         - $ref: '#/components/parameters/survey_id'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '204':
           description: Answered survey was dissociated from sample
@@ -762,6 +781,7 @@ paths:
       description: Get list of samples in kit that are not assigned to a source
       parameters:
         - $ref: '#/components/parameters/kit_name'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
           description: Successfully returned list of unassigned samples
