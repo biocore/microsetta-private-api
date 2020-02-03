@@ -7,6 +7,7 @@ from microsetta_private_api.model.account import Account
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.model.source import \
     Source, HumanInfo, AnimalInfo, EnvironmentInfo
+from microsetta_private_api.model.address import Address
 import datetime
 import json
 from unittest import TestCase
@@ -30,9 +31,12 @@ def client(request):
     IntegrationTests.teardown_test_data()
 
 
-def check_response(response):
-    if response.status_code >= 400:
+def check_response(response, expected_status=None):
+    if expected_status is not None:
+        assert expected_status == response.status_code
+    elif response.status_code >= 400:
         raise Exception("Scary response code: " + str(response.status_code))
+
     resp_obj = json.loads(response.data)
     if isinstance(resp_obj, dict) and resp_obj["message"] is not None:
         msg = resp_obj["message"].lower()
@@ -49,7 +53,7 @@ def fuzz(val):
     if isinstance(val, list):
         return ["Q(*.*)Q"] + [fuzz(x) for x in val] + ["P(*.*)p"]
     if isinstance(val, dict):
-        fuzzy = {x : fuzz(y) for x, y in val}
+        fuzzy = {x: fuzz(y) for x, y in val}
         fuzzy['account_type'] = "Voldemort"
         return fuzzy
 
@@ -99,13 +103,13 @@ class IntegrationTests(TestCase):
                           "GLOBUS",
                           "Dan",
                           "H",
-                          {
-                              "street": "123 Dan Lane",
-                              "city": "Danville",
-                              "state": "CA",
-                              "post_code": 12345,
-                              "country_code": "US"
-                          })
+                          Address(
+                              "123 Dan Lane",
+                              "Danville",
+                              "CA",
+                              12345,
+                              "US"
+                          ))
             acct_repo.create_account(acc)
 
             source_repo.create_source(Source.create_human(
@@ -180,26 +184,48 @@ class IntegrationTests(TestCase):
         assert env_surveys == []
 
     def test_create_new_account(self):
+
+        # Clean up before the test in case we already have a janedoe
+        with Transaction() as t:
+            AccountRepo(t).delete_account_by_email("janedoe@example.com")
+            t.commit()
+
         """ Test: Create a new account using a kit id """
+        acct_json = json.dumps(
+            {
+                "address": {
+                    "city": "Springfield",
+                    "country_code": "US",
+                    "post_code": "12345",
+                    "state": "CA",
+                    "street": "123 Main St. E. Apt. 2"
+                },
+                "email": "janedoe@example.com",
+                "first_name": "Jane",
+                "last_name": "Doe",
+                "kit_name": "jb_qhxqe"
+            })
+
+        # First register should succeed
         response = self.client.post(
             '/api/accounts?language_tag=en_us',
             content_type='application/json',
-            data=json.dumps(
-                {
-                    "address": {
-                        "city": "Springfield",
-                        "country_code": "US",
-                        "post_code": "12345",
-                        "state": "CA",
-                        "street": "123 Main St. E. Apt. 2"
-                    },
-                    "email": "janedoe@example.com",
-                    "first_name": "Jane",
-                    "last_name": "Doe",
-                    "kit_name": "jb_qhxqe"
-                }
-            ))
+            data=acct_json
+        )
         check_response(response)
+
+        # Second should fail with duplicate email 422
+        response = self.client.post(
+            '/api/accounts?language_tag=en_us',
+            content_type='application/json',
+            data=acct_json
+        )
+        check_response(response, 422)
+
+        # Clean up after this test so we don't leave the account around
+        with Transaction() as t:
+            AccountRepo(t).delete_account_by_email("janedoe@example.com")
+            t.commit()
 
     def test_edit_account_info(self):
         """ Test: Can we edit account information """

@@ -15,6 +15,8 @@ https://github.com/realpython/materials/blob/master/flask-connexion-rest/version
 from flask import jsonify, render_template
 import jwt
 from base64 import b64decode
+
+from microsetta_private_api.model.address import Address
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
@@ -23,6 +25,7 @@ from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 
+from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source
 from microsetta_private_api.LEGACY.locale_data import american_gut
 
@@ -68,7 +71,37 @@ def verify_and_decode_token(access_token) -> dict:
 
 
 def register_account(body):
-    return not_yet_implemented()
+    # TODO: Do they register with GLOBUS first, then make the account here?
+    #  What should be done with the kit_name?
+    new_acct_id = str(uuid.uuid4())
+    with Transaction() as t:
+        kit_repo = KitRepo(t)
+        kit = kit_repo.get_kit(body['kit_name'])
+        if kit is None:
+            return jsonify(error=403, text="Incorrect kit_name"), 403
+
+        acct_repo = AccountRepo(t)
+        acct_repo.create_account(Account(
+            new_acct_id,
+            body['email'],
+            "standard",
+            "GLOBUS",  # TODO: This is dependent on their login token!
+            body['first_name'],
+            body['last_name'],
+            Address(
+                body['address']['street'],
+                body['address']['city'],
+                body['address']['state'],
+                body['address']['post_code'],
+                body['address']['country_code'],
+            )
+        ))
+        t.commit()
+
+    response = jsonify('')
+    response.status_code = 201
+    response.headers['location'] = '/api/accounts/%s' % new_acct_id
+    return response
 
 
 def read_account(token_info, account_id):

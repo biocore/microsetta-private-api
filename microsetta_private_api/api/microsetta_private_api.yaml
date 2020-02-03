@@ -45,6 +45,8 @@ paths:
                 $ref: '#/components/schemas/account'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
@@ -871,6 +873,12 @@ components:
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
       description: Invalid or missing token.
+    403Forbidden:      # Can be referenced as '#/components/responses/403Forbidden'
+      description: Incorrect required parameter.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     404NotFound:       # Can be referenced as '#/components/responses/404NotFound'
       description: The specified resource was not found.
     422UnprocessableEntity:

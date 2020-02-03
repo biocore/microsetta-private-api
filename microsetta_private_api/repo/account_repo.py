@@ -1,5 +1,8 @@
+import psycopg2
+
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.account import Account
+from microsetta_private_api.exceptions import RepoException
 
 
 class AccountRepo(BaseRepo):
@@ -29,11 +32,11 @@ class AccountRepo(BaseRepo):
 
     @staticmethod
     def _addr_to_row(addr):
-        return (addr["street"],
-                addr["city"],
-                addr["state"],
-                addr["post_code"],
-                addr["country_code"])
+        return (addr.street,
+                addr.city,
+                addr.state,
+                addr.post_code,
+                addr.country_code)
 
     @staticmethod
     def _row_to_account(r):
@@ -91,20 +94,34 @@ class AccountRepo(BaseRepo):
             return cur.rowcount == 1
 
     def create_account(self, account):
-        with self._transaction.cursor() as cur:
-            cur.execute("INSERT INTO account (" +
-                        AccountRepo.write_cols +
-                        ") "
-                        "VALUES("
-                        "%s, %s, "
-                        "%s, %s, "
-                        "%s, %s, "
-                        "%s, %s, %s, %s, %s)",
-                        AccountRepo._account_to_row(account))
-            return cur.rowcount == 1
+        try:
+            with self._transaction.cursor() as cur:
+                cur.execute("INSERT INTO account (" +
+                            AccountRepo.write_cols +
+                            ") "
+                            "VALUES("
+                            "%s, %s, "
+                            "%s, %s, "
+                            "%s, %s, "
+                            "%s, %s, %s, %s, %s)",
+                            AccountRepo._account_to_row(account))
+                return cur.rowcount == 1
+        except psycopg2.errors.UniqueViolation as e:
+            if e.diag.constraint_name == 'idx_account_email':
+                # TODO: Ugh. Localization of error messages is needed someday.
+                raise RepoException("Email %s is not available"
+                                    % account.email) from e
+            # Unknown exception, re raise it.
+            raise e
 
     def delete_account(self, account_id):
         with self._transaction.cursor() as cur:
             cur.execute("DELETE FROM account WHERE account.id = %s",
                         (account_id,))
+            return cur.rowcount == 1
+
+    def delete_account_by_email(self, email):
+        with self._transaction.cursor() as cur:
+            cur.execute("DELETE FROM account WHERE account.email = %s",
+                        (email,))
             return cur.rowcount == 1
