@@ -95,6 +95,8 @@ class SampleRepo(BaseRepo):
     # TODO: Should this throw if the sample is already associated with
     #  another source in the same account?  Technically they could disassociate
     #  the sample first...
+    # TODO: Should this throw if the sample is "locked"?
+    #  ie: If barcodes.barcode.scan_date is not null?
     def associate_sample(self, account_id, source_id, sample_id):
         with self._transaction.cursor() as cur:
             cur.execute("SELECT "

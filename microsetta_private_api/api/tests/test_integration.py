@@ -1,10 +1,13 @@
 import pytest
+import werkzeug
+
 import microsetta_private_api.server
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.model.source import \
     Source, HumanInfo, AnimalInfo, EnvironmentInfo
 from microsetta_private_api.model.address import Address
@@ -33,7 +36,7 @@ def client(request):
 
 def check_response(response, expected_status=None):
     if expected_status is not None:
-        assert expected_status == response.status_code
+        assert response.status_code == expected_status
     elif response.status_code >= 400:
         raise Exception("Scary response code: " + str(response.status_code))
 
@@ -56,6 +59,29 @@ def fuzz(val):
         fuzzy = {x: fuzz(y) for x, y in val}
         fuzzy['account_type'] = "Voldemort"
         return fuzzy
+
+
+def fuzz_field(field, model):
+    if field['type'] == "input" or field['type'] == "textArea":
+        model[field['id']] = 'bo'
+    if field['type'] == "select":
+        model[field['id']] = field['values'][0]
+    if field['type'] == 'checklist':
+        model[field['id']] = [field['values'][0]]
+
+
+def fuzz_form(form):
+    """ Fills in a vue form with junk data """
+    model = {}
+    if form['fields'] is not None:
+        for field in form['fields']:
+            fuzz_field(field, model)
+    if form['groups'] is not None:
+        for group in form['groups']:
+            if group['fields'] is not None:
+                for field in group['fields']:
+                    fuzz_field(field, model)
+    return model
 
 
 @pytest.mark.usefixtures("client")
@@ -88,9 +114,15 @@ class IntegrationTests(TestCase):
             acct_repo = AccountRepo(t)
             source_repo = SourceRepo(t)
             kit_repo = KitRepo(t)
+            survey_answers_repo = SurveyAnswersRepo(t)
 
             # Clean up any possible leftovers from failed tests
             kit_repo.remove_mock_kit()
+
+            answers = survey_answers_repo.list_answered_surveys(ACCT_ID,
+                                                                HUMAN_ID)
+            for survey_id in answers:
+                survey_answers_repo.delete_answered_survey(ACCT_ID, survey_id)
             source_repo.delete_source(ACCT_ID, DOGGY_ID)
             source_repo.delete_source(ACCT_ID, PLANTY_ID)
             source_repo.delete_source(ACCT_ID, HUMAN_ID)
@@ -182,6 +214,62 @@ class IntegrationTests(TestCase):
         assert bobo_surveys == [1, 3, 4, 5]
         assert doggy_surveys == [2]
         assert env_surveys == []
+
+    def test_bobo_takes_a_survey(self):
+        """
+           Check that a user can login to an account,
+           list sources,
+           pick a source,
+           list surveys for that source,
+           pick a survey,
+           retrieve that survey
+           submit answers to that survey
+        """
+        resp = self.client.get(
+            '/api/accounts/%s/sources?language_tag=en_us' % ACCT_ID)
+        check_response(resp)
+        sources = json.loads(resp.data)
+        bobo = [x for x in sources if x['source_name'] == 'Bo'][0]
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates?language_tag=en_us' %
+            (ACCT_ID, bobo['source_id']))
+        bobo_surveys = json.loads(resp.data)
+        chosen_survey = bobo_surveys[0]
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/%s'
+            '?language_tag=en_us' %
+            (ACCT_ID, bobo['source_id'], chosen_survey))
+        check_response(resp)
+
+        model = fuzz_form(json.loads(resp.data))
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_us'
+            % (ACCT_ID, bobo['source_id']),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': chosen_survey,
+                    'survey_text': model
+                })
+        )
+        check_response(resp, 201)
+        loc = resp.headers.get("Location")
+        url = werkzeug.urls.url_parse(loc)
+        survey_id = url.path.split('/')[-1]
+
+        # TODO: Need a sanity check, is returned Location supposed to specify
+        #  query parameters?
+        resp = self.client.get(loc + "?language_tag=en_us")
+        check_response(resp)
+        retrieved_survey = json.loads(resp.data)
+        self.assertDictEqual(retrieved_survey, model)
+
+        # Clean up after the new survey
+        with Transaction() as t:
+            repo = SurveyAnswersRepo(t)
+            found = repo.delete_answered_survey(ACCT_ID, survey_id)
+            assert found
+            t.commit()
 
     def test_create_new_account(self):
 

@@ -256,18 +256,24 @@ def submit_answered_survey(account_id, source_id, language_tag, body):
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        success = survey_answers_repo.submit_answered_survey(
+        survey_answers_id = survey_answers_repo.submit_answered_survey(
             account_id,
             source_id,
             language_tag,
             body["survey_template_id"],
             body["survey_text"]
         )
-        if success:
-            t.commit()
-            return jsonify(''), 201
-        return jsonify(code=422,
-                       message="Could not submit answered survey"), 422
+        t.commit()
+
+        response = jsonify('')
+        response.status_code = 201
+        response.headers['location'] = '/api/accounts/%s' \
+                                       '/sources/%s' \
+                                       '/surveys/%s' % \
+                                       (account_id,
+                                        source_id,
+                                        survey_answers_id)
+        return response
 
 
 def read_sample_associations(account_id, source_id):

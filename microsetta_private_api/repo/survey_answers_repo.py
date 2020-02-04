@@ -161,6 +161,7 @@ class SurveyAnswersRepo(BaseRepo):
             cur.execute("DELETE FROM ag_login_surveys WHERE "
                         "ag_login_id = %s AND survey_id = %s",
                         (acct_id, survey_id))
+        return True
 
     # True if this account owns this survey_answer_id, else False
     def _acct_owns_survey(self, acct_id, survey_id):
