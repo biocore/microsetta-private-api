@@ -37,6 +37,7 @@ class Sample(ModelBase):
 
     def to_api(self):
         return {
+            "sample_id": self.id,
             "sample_barcode": self.barcode,
             "sample_site": self.site,
             "sample_locked": self.is_locked,

@@ -271,11 +271,26 @@ def submit_answered_survey(account_id, source_id, language_tag, body):
 
 
 def read_sample_associations(account_id, source_id):
-    return not_yet_implemented()
+    with Transaction() as t:
+        sample_repo = SampleRepo(t)
+        samples = sample_repo.get_samples_by_source(account_id, source_id)
+
+    api_samples = [x.to_api() for x in samples]
+    return jsonify(api_samples), 200
 
 
 def associate_sample(account_id, source_id, body):
-    return not_yet_implemented()
+    with Transaction() as t:
+        sample_repo = SampleRepo(t)
+        sample_repo.associate_sample(account_id,
+                                     source_id,
+                                     body['sample_id'])
+        t.commit()
+    response = jsonify('')
+    response.status_code = 201
+    response.headers['location'] = '/api/accounts/%s/sources/%s/samples/%s' % \
+                                   (account_id, source_id, ['sample_id'])
+    return response
 
 
 def read_sample_association(account_id, source_id, sample_id):
@@ -285,7 +300,7 @@ def read_sample_association(account_id, source_id, sample_id):
         if sample is None:
             return jsonify(error=404, text="Sample not found"), 404
 
-        return jsonify(sample), 200
+        return jsonify(sample.to_api()), 200
 
 
 def update_sample_association(account_id, source_id, sample_id, body):

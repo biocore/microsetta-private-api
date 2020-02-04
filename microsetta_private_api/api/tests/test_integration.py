@@ -38,7 +38,7 @@ def check_response(response, expected_status=None):
         raise Exception("Scary response code: " + str(response.status_code))
 
     resp_obj = json.loads(response.data)
-    if isinstance(resp_obj, dict) and resp_obj["message"] is not None:
+    if isinstance(resp_obj, dict) and "message" in resp_obj:
         msg = resp_obj["message"].lower()
         if "not" in msg and "implemented" in msg:
             raise Exception(response.data)
@@ -90,11 +90,11 @@ class IntegrationTests(TestCase):
             kit_repo = KitRepo(t)
 
             # Clean up any possible leftovers from failed tests
+            kit_repo.remove_mock_kit()
             source_repo.delete_source(ACCT_ID, DOGGY_ID)
             source_repo.delete_source(ACCT_ID, PLANTY_ID)
             source_repo.delete_source(ACCT_ID, HUMAN_ID)
             acct_repo.delete_account(ACCT_ID)
-            kit_repo.remove_mock_kit()
 
             # Set up test account with sources
             acc = Account(ACCT_ID,
@@ -139,11 +139,11 @@ class IntegrationTests(TestCase):
             acct_repo = AccountRepo(t)
             source_repo = SourceRepo(t)
             kit_repo = KitRepo(t)
+            kit_repo.remove_mock_kit()
             source_repo.delete_source(ACCT_ID, DOGGY_ID)
             source_repo.delete_source(ACCT_ID, PLANTY_ID)
             source_repo.delete_source(ACCT_ID, HUMAN_ID)
             acct_repo.delete_account(ACCT_ID)
-            kit_repo.remove_mock_kit()
 
             t.commit()
 
@@ -284,8 +284,8 @@ class IntegrationTests(TestCase):
             '/api/kits/?language_tag=en_us&kit_name=%s' % SUPPLIED_KIT_ID)
         check_response(response)
 
-        unused_barcodes = json.loads(response.data)
-        barcode = unused_barcodes[0]['sample_barcode']
+        unused_samples = json.loads(response.data)
+        sample_id = unused_samples[0]['sample_id']
 
         response = self.client.post(
             '/api/accounts/%s/sources/%s/samples?language_tag=en_us' %
@@ -293,14 +293,14 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "sample_id": barcode
+                    "sample_id": sample_id
                 })
         )
         check_response(response)
 
         response = self.client.get(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us',
-            (ACCT_ID, DOGGY_ID, barcode)
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+            (ACCT_ID, DOGGY_ID, sample_id)
         )
-        check_response(response)
         print(response)
+        check_response(response)

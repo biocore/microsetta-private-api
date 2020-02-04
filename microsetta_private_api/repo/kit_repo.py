@@ -47,7 +47,7 @@ class KitRepo(BaseRepo):
                         "VALUES(%s, %s, %s)",
                         (linker_id, kit_id, barcode))
 
-        return kit_id
+        return self.get_kit(supplied_kit_id)
 
     def remove_mock_kit(self):
         with self._transaction.cursor() as cur:
