@@ -125,10 +125,16 @@ def update_account(account_id, body):
 
         # TODO: add 422 handling
 
-        acc.first_name = body["first_name"]
-        acc.last_name = body["last_name"]
-        acc.email = body["email"]
-        acc.address = body["address"]
+        acc.first_name = body['first_name']
+        acc.last_name = body['last_name']
+        acc.email = body['email']
+        acc.address = Address(
+            body['address']['street'],
+            body['address']['city'],
+            body['address']['state'],
+            body['address']['post_code'],
+            body['address']['country_code']
+        )
 
         acct_repo.update_account(acc)
         t.commit()

@@ -56,8 +56,7 @@ def fuzz(val):
     if isinstance(val, list):
         return ["Q(*.*)Q"] + [fuzz(x) for x in val] + ["P(*.*)p"]
     if isinstance(val, dict):
-        fuzzy = {x: fuzz(y) for x, y in val}
-        fuzzy['account_type'] = "Voldemort"
+        fuzzy = {x: fuzz(y) for x, y in val.items()}
         return fuzzy
 
 
@@ -318,18 +317,20 @@ class IntegrationTests(TestCase):
     def test_edit_account_info(self):
         """ Test: Can we edit account information """
         response = self.client.get(
-            '/api/accounts/%s?language_tag=en_us' % (ACCT_ID,))
+            '/api/accounts/%s?language_tag=en_us' % (ACCT_ID,),
+            headers={'Authorization': 'Bearer PutMySecureOauthTokenHere'})
         check_response(response)
 
         acc = json.loads(response.data)
 
         regular_data = \
             {
+                "account_type": "standard",
                 "address": {
                     "street": "123 Dan Lane",
                     "city": "Danville",
                     "state": "CA",
-                    "post_code": 12345,
+                    "post_code": "12345",
                     "country_code": "US"
                 },
                 "email": "foo@baz.com",
@@ -337,29 +338,52 @@ class IntegrationTests(TestCase):
                 "last_name": "H"
             }
 
+        # Hard to guess these two, so let's pop em out
+        acc.pop("creation_time")
+        acc.pop("update_time")
         self.assertDictEqual(acc, regular_data, "Check Initial Account Match")
 
         fuzzy_data = fuzz(regular_data)
 
+        fuzzy_data['account_type'] = "Voldemort"
+        print("---\nYou should see a validation error in unittest:")
         response = self.client.put(
             '/api/accounts/%s?language_tag=en_us' % (ACCT_ID,),
             content_type='application/json',
             data=json.dumps(fuzzy_data)
         )
+        print("---")
+        # Check that malicious user can't write any field they want
+        check_response(response, 400)
+
+        # Check that data can be written once request is not malformed
+        fuzzy_data.pop('account_type')
+        response = self.client.put(
+            '/api/accounts/%s?language_tag=en_us' % (ACCT_ID,),
+            content_type='application/json',
+            data=json.dumps(fuzzy_data)
+        )
+
         check_response(response)
 
         acc = json.loads(response.data)
-        # TODO: These actually probably shouldn't match exactly.  The api
-        #  should only allow writing of certain fields, so need to check those
-        #  fields were written and others were left out!!
+        fuzzy_data['account_type'] = 'standard'
+        acc.pop('creation_time')
+        acc.pop('update_time')
         self.assertDictEqual(fuzzy_data, acc, "Check Fuzz Account Match")
 
+        regular_data.pop('account_type')
         response = self.client.put(
             '/api/accounts/%s?language_tag=en_us' % (ACCT_ID,),
             content_type='application/json',
             data=json.dumps(regular_data)
         )
         check_response(response)
+
+        acc = json.loads(response.data)
+        acc.pop('creation_time')
+        acc.pop('update_time')
+        regular_data['account_type'] = 'standard'
         self.assertDictEqual(regular_data, acc, "Check restore to regular")
 
     def test_add_sample_from_kit(self):
