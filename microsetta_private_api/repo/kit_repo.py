@@ -24,7 +24,7 @@ class KitRepo(BaseRepo):
             if len(rows) == 0:
                 return None
             else:
-                samples = [sample_repo.get_sample(r[1]) for r in rows]
+                samples = [sample_repo._get_sample_by_id(r[1]) for r in rows]
                 return Kit(rows[0][0], samples)
 
     # NOTE: This should only be used for unit tests!

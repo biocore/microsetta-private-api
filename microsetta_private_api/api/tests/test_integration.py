@@ -426,11 +426,26 @@ class IntegrationTests(TestCase):
         )
         check_response(response)
 
+        # Check that we can now see this sample
         response = self.client.get(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
             (ACCT_ID, DOGGY_ID, sample_id)
         )
         check_response(response)
+
+        # Check that we can't see this sample from outside the account/source
+        NOT_ACCT_ID = "12341234-1234-1234-1234-123412341234"
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+            (NOT_ACCT_ID, DOGGY_ID, sample_id)
+        )
+        check_response(response, 404)
+
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+            (ACCT_ID, HUMAN_ID, sample_id)
+        )
+        check_response(response, 404)
 
     def test_create_non_human_sources(self):
         # TODO: Looks like the 201 for sources are specified to

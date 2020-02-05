@@ -64,7 +64,9 @@ class SampleRepo(BaseRepo):
             sample_projects = [project[0] for project in project_rows]
             return sample_projects
 
-    def get_sample(self, sample_id):
+
+    def _get_sample_by_id(self, sample_id):
+        """ Do not use from api layer, you must validate account and source."""
         with self._transaction.cursor() as cur:
             cur.execute(
                 "SELECT "
@@ -75,11 +77,51 @@ class SampleRepo(BaseRepo):
                 "barcodes.barcode.barcode, "
                 "barcodes.barcode.scan_date "
                 "FROM "
-                "ag.ag_kit_barcodes  "
-                "LEFT JOIN barcodes.barcode ON "
+                "ag.ag_kit_barcodes "
+                "LEFT JOIN barcodes.barcode "
+                "ON "
                 "ag.ag_kit_barcodes.barcode = barcodes.barcode.barcode "
-                "WHERE ag_kit_barcodes.ag_kit_barcode_id = %s",
+                "LEFT JOIN source "
+                "ON "
+                "ag.ag_kit_barcodes.source_id = source.id "
+                "WHERE "
+                "ag_kit_barcodes.ag_kit_barcode_id = %s",
                 (sample_id,))
+
+            sample_row = cur.fetchone()
+            if sample_row is None:
+                return None
+
+            sample_barcode = sample_row[4]
+            sample_projects = self._retrieve_projects(sample_barcode)
+
+            return Sample.from_db(sample_id,
+                                  *sample_row,
+                                  sample_projects)
+
+    def get_sample(self, account_id, source_id, sample_id):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT "
+                "ag.ag_kit_barcodes.sample_date, "
+                "ag.ag_kit_barcodes.sample_time, "
+                "ag.ag_kit_barcodes.site_sampled, "
+                "ag.ag_kit_barcodes.notes, "
+                "barcodes.barcode.barcode, "
+                "barcodes.barcode.scan_date "
+                "FROM "
+                "ag.ag_kit_barcodes "
+                "LEFT JOIN barcodes.barcode "
+                "ON "
+                "ag.ag_kit_barcodes.barcode = barcodes.barcode.barcode "
+                "LEFT JOIN source "
+                "ON "
+                "ag.ag_kit_barcodes.source_id = source.id "
+                "WHERE "
+                "ag_kit_barcodes.ag_kit_barcode_id = %s AND "
+                "source.id = %s AND "
+                "source.account_id = %s",
+                (sample_id, source_id, account_id))
 
             sample_row = cur.fetchone()
             if sample_row is None:

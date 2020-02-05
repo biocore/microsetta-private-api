@@ -329,7 +329,7 @@ def associate_sample(account_id, source_id, body):
 def read_sample_association(account_id, source_id, sample_id):
     with Transaction() as t:
         sample_repo = SampleRepo(t)
-        sample = sample_repo.get_sample(sample_id)
+        sample = sample_repo.get_sample(account_id, source_id, sample_id)
         if sample is None:
             return jsonify(error=404, text="Sample not found"), 404
 
