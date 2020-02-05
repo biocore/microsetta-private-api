@@ -1,11 +1,35 @@
 import json
+
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.model_base import ModelBase
+
+
+def human_info_from_api(human_source, consent_date, date_revoked):
+    consent = human_source["consent"]
+    age_range = consent['age_range']
+    is_juvenile = age_range in ['0-6', '7-12', '13-17']
+    if is_juvenile:
+        child_info = consent.get("child_info")
+    else:
+        child_info = {}
+
+    return HumanInfo(
+        human_source["source_name"],
+        consent["participant_email"],
+        is_juvenile,
+        child_info.get("parent_1_name"),
+        child_info.get("parent_2_name"),
+        child_info.get("deceased_parent"),
+        consent_date,
+        date_revoked,
+        child_info.get("obtainer_name"),
+        age_range)
 
 
 def human_decoder(obj):
     if isinstance(obj, dict):
         return HumanInfo(
-            obj["name"],
+            obj["source_name"],
             obj["email"],
             obj["is_juvenile"],
             obj["parent1_name"],
@@ -20,13 +44,13 @@ def human_decoder(obj):
 
 def animal_decoder(obj):
     if isinstance(obj, dict):
-        return AnimalInfo(obj["name"])
+        return AnimalInfo(obj["source_name"], obj["source_description"])
     return obj
 
 
 def environment_decoder(obj):
     if isinstance(obj, dict):
-        return EnvironmentInfo(obj["name"], obj["description"])
+        return EnvironmentInfo(obj["source_name"], obj["source_description"])
     return obj
 
 
@@ -47,8 +71,9 @@ class HumanInfo:
 
 
 class AnimalInfo:
-    def __init__(self, name):
+    def __init__(self, name, description):
         self.name = name
+        self.description = description
 
 
 class EnvironmentInfo:
@@ -122,10 +147,12 @@ class Source(ModelBase):
             env_info)
 
     @classmethod
-    def from_json(cls, source_id, account_id, typed_json_data):
-        decoder_hook = DECODER_HOOKS[typed_json_data["source_type"]]
-        return cls(source_id, account_id, typed_json_data["source_type"],
-                   json.loads(typed_json_data, object_hook=decoder_hook))
+    def build_source(cls, source_id, account_id, source_info_dict):
+        decoder_hook = DECODER_HOOKS[source_info_dict["source_type"]]
+        return cls(source_id,
+                   account_id,
+                   source_info_dict["source_type"],
+                   decoder_hook(source_info_dict))
 
 
 DECODER_HOOKS = {

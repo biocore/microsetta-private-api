@@ -21,6 +21,7 @@ class Account(ModelBase):
         # api users are not given the account id
         # or the auth_provider
         return {
+            "account_id": self.id,
             "first_name": self.first_name,
             "last_name": self.last_name,
             "email": self.email,

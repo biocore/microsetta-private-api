@@ -1073,6 +1073,8 @@ components:
         source_type:
           type: string
           enum: [animal, environmental]
+        source_name:
+          type: string
         source_description:
           type: string
           nullable: true

@@ -27,7 +27,7 @@ class SourceRepo(BaseRepo):
     def _row_to_source(r):
         hook = DECODER_HOOKS[r['source_type']]
         source_data = {
-            'name': r['source_name'],
+            'source_name': r['source_name'],
             'email': r['participant_email'],
             'is_juvenile': r['is_juvenile'],
             'parent1_name': r['parent_1_name'],
@@ -37,7 +37,7 @@ class SourceRepo(BaseRepo):
             'date_revoked': r['date_revoked'],
             'assent_obtainer': r['assent_obtainer'],
             'age_range': r['age_range'],
-            'description': r['description']
+            'source_description': r['description']
         }
         return Source(r[0], r[1], r[2], hook(source_data))
 

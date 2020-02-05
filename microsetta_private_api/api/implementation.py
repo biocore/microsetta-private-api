@@ -27,12 +27,14 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source
+from microsetta_private_api.model.source import human_info_from_api
 from microsetta_private_api.LEGACY.locale_data import american_gut
 
 from microsetta_private_api.util import vue_adapter
 
 import uuid
 import json
+from datetime import date
 
 TOKEN_KEY = "QvMWMnlOqBbNsM88AMxpzcJMbBUu/w8U9joIaNYjuEbwEYhLIB5FqEoFWnfLN3JZN4SD0LAtZOwFNqyMLmNruBLqEvbpjQzM6AY+BfXGxDVFL65c9Xw8ocd6t1nF6YvTpHGB4NJhUwngjIQmFx+6TCa5wArtEqUeoIc1ukVTYbioRkxzi5ju8cc9/PoInB0c7wugMz5ihAPWohpDc4kCotYv7C2K/e9J9CPdwbiLJKYKxO4zSQAqk+Sj4wRcn7bJqIOIT6BlvvnzRGXYG33qXAxGylM4UySj7ltwSGOIY0/JUvKEej3fX17C8wWtJvrjbFQacNhoglqfWq2GeOdRSA== "  # noqa: E501
 TEMP_ACCESS_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbXlhcHAuY29tLyIsInN1YiI6InVzZXJzL3VzZXIxMjM0Iiwic2NvcGUiOiJzZWxmLCBhZG1pbnMiLCJqdGkiOiJkMzBkMzA5ZS1iZTQ5LTRjOWEtYjdhYi1hMGU3MTIwYmFlZDMiLCJpYXQiOjE1NzIzNzY4OTUsImV4cCI6MTU3MjM4MDQ5NX0.EMooERuy2Z4tC_TsXJe6Vx8yCgzTzI_qh84a5DsKPRw"  # noqa: E501
@@ -96,11 +98,12 @@ def register_account(body):
                 body['address']['country_code'],
             )
         ))
+        new_acct = acct_repo.get_account(new_acct_id)
         t.commit()
 
-    response = jsonify('')
+    response = jsonify(new_acct.to_api())
     response.status_code = 201
-    response.headers['location'] = '/api/accounts/%s' % new_acct_id
+    response.headers['Location'] = '/api/accounts/%s' % new_acct_id
     return response
 
 
@@ -154,14 +157,32 @@ def create_source(account_id, body):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source_id = str(uuid.uuid4())
-        source_info = None
-        new_source = Source.from_json(source_id, account_id, source_info)
+
+        if body['source_type'] == 'human':
+            # TODO: Unfortunately, humans require a lot of special handling,
+            #  and we started mixing Source calls used for transforming to/
+            #  from the database with source calls to/from the api.
+            #  Would be nice to split this out better.
+            new_source = Source(source_id,
+                                account_id,
+                                'human',
+                                human_info_from_api(body,
+                                                    consent_date=date.today(),
+                                                    date_revoked=None))
+        else:
+            new_source = Source.build_source(source_id, account_id, body)
+
         source_repo.create_source(new_source)
+
         # Must pull from db to get creation_time, update_time
         s = source_repo.get_source(account_id, new_source.id)
         t.commit()
-        # TODO: What about 404 and 422 errors?
-        return jsonify(s.to_api()), 200
+
+    response = jsonify(s.to_api())
+    response.status_code = 201
+    response.headers['Location'] = '/api/accounts/%s/sources/%s' % \
+                                   (account_id, source_id)
+    return response
 
 
 def read_source(account_id, source_id):
@@ -273,7 +294,7 @@ def submit_answered_survey(account_id, source_id, language_tag, body):
 
         response = jsonify('')
         response.status_code = 201
-        response.headers['location'] = '/api/accounts/%s' \
+        response.headers['Location'] = '/api/accounts/%s' \
                                        '/sources/%s' \
                                        '/surveys/%s' % \
                                        (account_id,
@@ -300,7 +321,7 @@ def associate_sample(account_id, source_id, body):
         t.commit()
     response = jsonify('')
     response.status_code = 201
-    response.headers['location'] = '/api/accounts/%s/sources/%s/samples/%s' % \
+    response.headers['Location'] = '/api/accounts/%s/sources/%s/samples/%s' % \
                                    (account_id, source_id, ['sample_id'])
     return response
 
@@ -361,12 +382,33 @@ def render_consent_doc(account_id):
 
 
 def create_human_source_from_consent(account_id, body):
-    # A human source's participant name becomes the source name. Note pop
-    # removes the existing `participant_name` key if exists, else errors.
+    # Must convert consent form body into object processable by create_source.
+
     # Not adding any error handling here because if 'participant_name' isn't
     # here, we SHOULD be getting an error.
-    body['source_name'] = body.pop('participant_name')
+    source = {
+        'source_type': "human",
+        'source_name': body['participant_name'],
+        'consent': {
+            'participant_email': body['participant_email'],
+            'age_range': body['age_range']
+        }
+    }
+
+    child_keys = ['parent_1_name', 'parent_2_name',
+                  'deceased_parent', 'obtainer_name']
+
+    any_in = False
+    for key in child_keys:
+        if key in body:
+            any_in = True
+
+    if any_in:
+        source['consent']['child_info'] = {}
+        for key in child_keys:
+            if key in body:
+                source['consent']['child_info'][key] = body[key]
 
     # NB: Don't expect to handle errors 404, 422 in this function; expect to
     # farm out to `create_source`
-    return create_source(account_id, body)
+    return create_source(account_id, source)
