@@ -509,4 +509,3 @@ class IntegrationTests(TestCase):
         assert source_id_from_obj == source_id_from_obj
 
         self.client.delete(loc + "?language_tag=en_us")
-

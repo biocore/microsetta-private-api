@@ -1,6 +1,3 @@
-import json
-
-from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.model_base import ModelBase
 
 
