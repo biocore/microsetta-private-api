@@ -64,7 +64,6 @@ class SampleRepo(BaseRepo):
             sample_projects = [project[0] for project in project_rows]
             return sample_projects
 
-
     def _get_sample_by_id(self, sample_id):
         """ Do not use from api layer, you must validate account and source."""
         with self._transaction.cursor() as cur:
