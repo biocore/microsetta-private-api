@@ -11,7 +11,7 @@ https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
 and associated file
 https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
 """
-
+import flask
 from flask import jsonify, render_template
 import jwt
 from base64 import b64decode
@@ -294,7 +294,7 @@ def submit_answered_survey(account_id, source_id, language_tag, body):
         )
         t.commit()
 
-        response = jsonify('')
+        response = flask.Response()
         response.status_code = 201
         response.headers['Location'] = '/api/accounts/%s' \
                                        '/sources/%s' \
@@ -321,7 +321,7 @@ def associate_sample(account_id, source_id, body):
                                      source_id,
                                      body['sample_id'])
         t.commit()
-    response = jsonify('')
+    response = flask.Response()
     response.status_code = 201
     response.headers['Location'] = '/api/accounts/%s/sources/%s/samples/%s' % \
                                    (account_id, source_id, ['sample_id'])
@@ -368,17 +368,25 @@ def dissociate_sample(account_id, source_id, sample_id):
         sample_repo = SampleRepo(t)
         sample_repo.dissociate_sample(account_id, source_id, sample_id)
         t.commit()
-        return jsonify('', 204)
+        return '', 204
 
 
 def read_answered_survey_associations(account_id, source_id, sample_id):
     with Transaction() as t:
         answers_repo = SurveyAnswersRepo(t)
+        template_repo = SurveyTemplateRepo(t)
         answers = answers_repo.list_answered_surveys_by_sample(account_id,
                                                                source_id,
                                                                sample_id)
+
+        resp_obj = []
+        for answer in answers:
+            template_id = answers_repo.find_survey_template_id(answer)
+            info = template_repo.get_survey_template_link_info(template_id)
+            resp_obj.append(info.to_api(answer))
+
         t.commit()
-        return jsonify(answers, 200)
+        return jsonify(resp_obj), 200
 
 
 def associate_answered_survey(account_id, source_id, sample_id, body):
@@ -391,7 +399,7 @@ def associate_answered_survey(account_id, source_id, sample_id, body):
 
     # TODO: Which location is this supposed to return exactly? The one to
     #  the survey itself?
-    response = jsonify('')
+    response = flask.Response()
     response.status_code = 201
     response.headers['Location'] = '/api/accounts/%s' \
                                    '/sources/%s' \
@@ -405,10 +413,10 @@ def associate_answered_survey(account_id, source_id, sample_id, body):
 def dissociate_answered_survey(account_id, source_id, sample_id, survey_id):
     with Transaction() as t:
         answers_repo = SurveyAnswersRepo(t)
-        answers_repo.dissocate_answered_survey_from_sample(
+        answers_repo.dissociate_answered_survey_from_sample(
             account_id, source_id, sample_id, survey_id)
         t.commit()
-    return jsonify('', 204)
+    return '', 204
 
 
 def read_kit(kit_name):

@@ -1,5 +1,6 @@
 from microsetta_private_api.repo.base_repo import BaseRepo
-from microsetta_private_api.model.survey_template import SurveyTemplate
+from microsetta_private_api.model.survey_template import SurveyTemplate, \
+    SurveyTemplateLinkInfo
 from microsetta_private_api.model.survey_template_group import \
         SurveyTemplateGroup
 from microsetta_private_api.model.survey_template_question import \
@@ -9,6 +10,41 @@ from microsetta_private_api.model.survey_template_trigger import \
 
 
 class SurveyTemplateRepo(BaseRepo):
+
+    # TODO FIXME HACK:  Where do I get user display names for surveys?
+    SURVEY_INFO = {
+        1: SurveyTemplateLinkInfo(
+            1,
+            "Primary",
+            "1.0",
+            "local"
+        ),
+        2: SurveyTemplateLinkInfo(
+            2,
+            "Pet Information",
+            "1.0",
+            "local"
+        ),
+        3: SurveyTemplateLinkInfo(
+            3,
+            "Fermented Foods Questionnaire",
+            "1.0",
+            "local"
+        ),
+        4: SurveyTemplateLinkInfo(
+            4,
+            "Surfer Questionnaire",
+            "1.0",
+            "local"
+        ),
+        5: SurveyTemplateLinkInfo(
+            5,
+            "Personal Microbiome Information",
+            "1.0",
+            "local"
+        )
+    }
+
     def __init__(self, transaction):
         super().__init__(transaction)
 
@@ -17,6 +53,10 @@ class SurveyTemplateRepo(BaseRepo):
             cur.execute("SELECT DISTINCT survey_id from surveys")
             rows = cur.fetchall()
         return [x[0] for x in rows]
+
+    @staticmethod
+    def get_survey_template_link_info(survey_id):
+        return SurveyTemplateRepo.SURVEY_INFO[survey_id]
 
     def get_survey_template(self, survey_id):
 

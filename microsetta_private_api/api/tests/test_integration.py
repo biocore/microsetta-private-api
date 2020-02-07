@@ -2,7 +2,6 @@ import pytest
 import werkzeug
 
 import microsetta_private_api.server
-from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.model.account import Account
@@ -16,11 +15,16 @@ import json
 from unittest import TestCase
 
 ACCT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
+NOT_ACCT_ID = "12341234-1234-1234-1234-123412341234"
 HUMAN_ID = "b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0"
+BOBO_FAVORITE_SURVEY_TEMPLATE = 1
 DOGGY_ID = "dddddddd-dddd-dddd-dddd-dddddddddddd"
 PLANTY_ID = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
 
 SUPPLIED_KIT_ID = "FooFooFoo"
+KIT_ID = '77777777-8888-9999-aaaa-bbbbcccccccc'
+LINKER_ID = '99999999-aaaa-aaaa-aaaa-bbbbcccccccc'
+BARCODE = '777777777'
 
 
 @pytest.fixture(scope="class")
@@ -40,7 +44,10 @@ def check_response(response, expected_status=None):
     elif response.status_code >= 400:
         raise Exception("Scary response code: " + str(response.status_code))
 
-    if response.headers.get("Content-Type") == "application/json":
+    if response.status_code == 204 and len(response.data) == 0:
+        # No content to check.
+        pass
+    elif response.headers.get("Content-Type") == "application/json":
         resp_obj = json.loads(response.data)
         if isinstance(resp_obj, dict) and "message" in resp_obj:
             msg = resp_obj["message"].lower()
@@ -113,11 +120,10 @@ class IntegrationTests(TestCase):
         with Transaction() as t:
             acct_repo = AccountRepo(t)
             source_repo = SourceRepo(t)
-            kit_repo = KitRepo(t)
             survey_answers_repo = SurveyAnswersRepo(t)
 
             # Clean up any possible leftovers from failed tests
-            kit_repo.remove_mock_kit()
+            _remove_mock_kit(t)
 
             answers = survey_answers_repo.list_answered_surveys(ACCT_ID,
                                                                 HUMAN_ID)
@@ -160,7 +166,7 @@ class IntegrationTests(TestCase):
                 ACCT_ID,
                 EnvironmentInfo("Planty", "The green one")))
 
-            kit_repo.create_mock_kit(SUPPLIED_KIT_ID)
+            _create_mock_kit(t)
 
             t.commit()
 
@@ -169,8 +175,7 @@ class IntegrationTests(TestCase):
         with Transaction() as t:
             acct_repo = AccountRepo(t)
             source_repo = SourceRepo(t)
-            kit_repo = KitRepo(t)
-            kit_repo.remove_mock_kit()
+            _remove_mock_kit(t)
             source_repo.delete_source(ACCT_ID, DOGGY_ID)
             source_repo.delete_source(ACCT_ID, PLANTY_ID)
             source_repo.delete_source(ACCT_ID, HUMAN_ID)
@@ -434,7 +439,6 @@ class IntegrationTests(TestCase):
         check_response(response)
 
         # Check that we can't see this sample from outside the account/source
-        NOT_ACCT_ID = "12341234-1234-1234-1234-123412341234"
         response = self.client.get(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
             (NOT_ACCT_ID, DOGGY_ID, sample_id)
@@ -524,3 +528,168 @@ class IntegrationTests(TestCase):
         assert source_id_from_obj == source_id_from_obj
 
         self.client.delete(loc + "?language_tag=en_us")
+
+    def test_associate_sample_and_survey(self):
+        """
+            Submit a survey for a source
+            Assign a sample to that source
+            Associate the sample and the survey answers
+        """
+
+        # Part 1: Submit a survey
+        chosen_survey = BOBO_FAVORITE_SURVEY_TEMPLATE
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/%s'
+            '?language_tag=en_us' %
+            (ACCT_ID, HUMAN_ID, chosen_survey))
+        check_response(resp)
+
+        model = fuzz_form(json.loads(resp.data))
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_us'
+            % (ACCT_ID, HUMAN_ID),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': chosen_survey,
+                    'survey_text': model
+                })
+        )
+        check_response(resp, 201)
+        loc = resp.headers.get("Location")
+        url = werkzeug.urls.url_parse(loc)
+        survey_id = url.path.split('/')[-1]
+
+        resp = self.client.get(
+            '/api/kits/?language_tag=en_us&kit_name=%s' % SUPPLIED_KIT_ID)
+        check_response(resp)
+
+        # Part 2: Claim a sample
+        unused_samples = json.loads(resp.data)
+        sample_id = unused_samples[0]['sample_id']
+
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/samples?language_tag=en_us' %
+            (ACCT_ID, HUMAN_ID),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_id": sample_id
+                })
+        )
+        check_response(resp)
+
+        # Part 3: Link the sample with the survey
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en_us'
+            % (ACCT_ID, HUMAN_ID, sample_id),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "survey_id": survey_id
+                })
+        )
+        check_response(resp, 201)
+
+        # Check that we can see the association
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en_us'
+            % (ACCT_ID, HUMAN_ID, sample_id),
+        )
+        check_response(resp)
+        assoc_surveys = json.loads(resp.data)
+        found = False
+        for assoc_survey in assoc_surveys:
+            if assoc_survey['survey_id'] == survey_id:
+                found = True
+        assert found
+
+        # Check that we can delete the association
+        resp = self.client.delete(
+            '/api/accounts/%s/sources/%s/samples/%s/surveys/%s'
+            '?language_tag=en_us'
+            % (ACCT_ID, HUMAN_ID, sample_id, survey_id)
+        )
+        check_response(resp, 204)
+
+        # Check that we no longer see the association
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en_us'
+            % (ACCT_ID, HUMAN_ID, sample_id),
+        )
+        check_response(resp)
+        assoc_surveys = json.loads(resp.data)
+        found = False
+        for assoc_survey in assoc_surveys:
+            if assoc_survey.survey_id == survey_id:
+                found = True
+        assert not found
+
+        # Check that we can't assign a sample to a survey owned by a source
+        #  other than the source which is associated with the sample
+        #  ie - bobo's sample can't associate a survey from bobo's dog
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en_us'
+            % (ACCT_ID, DOGGY_ID, sample_id),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "survey_id": survey_id
+                })
+        )
+        check_response(resp, 404)
+
+        # Check that we can't assign a sample to a survey in another account
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en_us'
+            % (NOT_ACCT_ID, HUMAN_ID, sample_id),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "survey_id": survey_id
+                })
+        )
+        check_response(resp, 404)
+
+        # Clean up after the new survey
+        with Transaction() as t:
+            repo = SurveyAnswersRepo(t)
+            found = repo.delete_answered_survey(ACCT_ID, survey_id)
+            assert found
+            t.commit()
+
+
+def _create_mock_kit(transaction):
+    with transaction.cursor() as cur:
+        cur.execute("INSERT INTO barcode (barcode, status) "
+                    "VALUES(%s, %s)",
+                    (BARCODE,
+                     'MOCK SAMPLE FOR UNIT TEST'))
+        cur.execute("INSERT INTO ag_kit "
+                    "(ag_kit_id, "
+                    "supplied_kit_id, swabs_per_kit) "
+                    "VALUES(%s, %s, %s)",
+                    (KIT_ID, SUPPLIED_KIT_ID, 1))
+        cur.execute("INSERT INTO ag_kit_barcodes "
+                    "(ag_kit_barcode_id, ag_kit_id, barcode) "
+                    "VALUES(%s, %s, %s)",
+                    (LINKER_ID, KIT_ID, BARCODE))
+
+
+def _remove_mock_kit(transaction):
+    with transaction.cursor() as cur:
+        cur.execute("DELETE FROM ag_kit_barcodes "
+                    "WHERE ag_kit_barcode_id=%s",
+                    (LINKER_ID,))
+        cur.execute("DELETE FROM ag_kit_barcodes "
+                    "WHERE ag_kit_barcode_id=%s",
+                    (LINKER_ID,))
+        cur.execute("DELETE FROM ag_kit WHERE ag_kit_id=%s",
+                    (KIT_ID,))
+
+        # Some tests may leak leftover surveys, wipe those out also
+        cur.execute("DELETE FROM source_barcodes_surveys WHERE barcode = %s",
+                    (BARCODE,))
+
+        cur.execute("DELETE FROM barcode WHERE barcode = %s",
+                    (BARCODE,))

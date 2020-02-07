@@ -1,5 +1,6 @@
 import werkzeug
 
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
@@ -18,6 +19,38 @@ import uuid
 #  table, build out a SurveyAnswersRepo, or modify the schema so its not so
 #  insane???
 class SurveyAnswersRepo(BaseRepo):
+
+    def find_survey_template_id(self, survey_answers_id):
+        # TODO FIXME HACK:  There has GOT TO BE an easier way!
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT survey_id, survey_question_id "
+                        "FROM survey_answers "
+                        "WHERE survey_id=%s "
+                        "LIMIT 1",
+                        (survey_answers_id,))
+
+            rows = cur.fetchall()
+
+            cur.execute("SELECT survey_id, survey_question_id "
+                        "FROM survey_answers_other "
+                        "WHERE survey_id=%s "
+                        "LIMIT 1",
+                        (survey_answers_id,))
+            rows += cur.fetchall()
+
+            if len(rows) == 0:
+                raise RepoException("No answers in survey: %s" +
+                                    survey_answers_id)
+
+            arbitrary_question_id = rows[0][1]
+            cur.execute("SELECT surveys.survey_id FROM "
+                        "group_questions "
+                        "LEFT JOIN surveys USING (survey_group) "
+                        "WHERE survey_question_id = %s",
+                        (arbitrary_question_id,))
+
+            survey_template_id = cur.fetchone()[0]
+            return survey_template_id
 
     def list_answered_surveys(self, account_id, source_id):
         # TODO: No obvious way in the current schema to go from an answered
@@ -47,7 +80,7 @@ class SurveyAnswersRepo(BaseRepo):
 
         with self._transaction.cursor() as cur:
             cur.execute("SELECT "
-                        "survey_id "
+                        "barcode, survey_id "
                         "FROM "
                         "ag_kit_barcodes "
                         "LEFT JOIN source_barcodes_surveys "
@@ -56,7 +89,7 @@ class SurveyAnswersRepo(BaseRepo):
                         "ag_kit_barcode_id = %s",
                         (sample_id,))
             rows = cur.fetchall()
-            answered_surveys = [r[0] for r in rows]
+            answered_surveys = [r[1] for r in rows if r[1] is not None]
         return answered_surveys
 
     def get_answered_survey(self, ag_login_id, survey_id):
@@ -219,7 +252,7 @@ class SurveyAnswersRepo(BaseRepo):
 
         with self._transaction.cursor() as cur:
             cur.execute("DELETE FROM source_barcodes_surveys "
-                        "WHERE"
+                        "WHERE "
                         "barcode = %s AND "
                         "survey_id = %s",
                         (s.barcode, survey_id))
