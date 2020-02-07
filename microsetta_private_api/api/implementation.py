@@ -17,6 +17,7 @@ import jwt
 from base64 import b64decode
 
 from microsetta_private_api.model.address import Address
+from microsetta_private_api.model.sample import Sample
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
@@ -113,8 +114,7 @@ def read_account(token_info, account_id):
         acct_repo = AccountRepo(t)
         acc = acct_repo.get_account(account_id)
         if acc is None:
-            # TODO: Think this should be "code", "message" to match api?
-            return jsonify(error=404, text="Account not found"), 404
+            return jsonify(code=404, message="Account not found"), 404
         return jsonify(acc.to_api()), 200
 
 
@@ -124,7 +124,7 @@ def update_account(account_id, body):
         acct_repo = AccountRepo(t)
         acc = acct_repo.get_account(account_id)
         if acc is None:
-            return jsonify(error=404, text="Account not found"), 404
+            return jsonify(code=404, message="Account not found"), 404
 
         # TODO: add 422 handling
 
@@ -166,9 +166,11 @@ def create_source(account_id, body):
             new_source = Source(source_id,
                                 account_id,
                                 'human',
-                                human_info_from_api(body,
-                                                    consent_date=date.today(),
-                                                    date_revoked=None))
+                                human_info_from_api(
+                                    body,
+                                    consent_date=date.today(),
+                                    date_revoked=None)
+                                )
         else:
             new_source = Source.build_source(source_id, account_id, body)
 
@@ -191,7 +193,7 @@ def read_source(account_id, source_id):
         # TODO: What about 404?
         source = source_repo.get_source(account_id, source_id)
         if source is None:
-            return jsonify(error=404, text="Source not found"), 404
+            return jsonify(code=404, message="Source not found"), 404
         return jsonify(source.to_api()), 200
 
 
@@ -218,7 +220,7 @@ def delete_source(account_id, source_id):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         if not source_repo.delete_source(account_id, source_id):
-            return jsonify(error=404, text="No source found"), 404
+            return jsonify(code=404, message="No source found"), 404
         # TODO: 422?
         t.commit()
         return '', 204
@@ -226,17 +228,17 @@ def delete_source(account_id, source_id):
 
 def read_survey_templates(account_id, source_id, language_tag):
     # TODO: I don't think this query is backed by one of the existing tables
-    # I think it was just hardcoded...  Which honestly seems like a fine
-    # solution to me...  How much do we care that survey identifiers are
-    # guessable?
+    #  I think it was just hardcoded...  Which honestly seems like a fine
+    #  solution to me...  How much do we care that survey identifiers are
+    #  guessable?
 
     # TODO: I don't think surveys have names... only survey groups have names.
-    # So what can I pass down to the user that will make any sense here?
+    #  So what can I pass down to the user that will make any sense here?
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
         if source is None:
-            return jsonify(error=404, text="No source found"), 404
+            return jsonify(code=404, message="No source found"), 404
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([1, 3, 4, 5]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
@@ -331,29 +333,82 @@ def read_sample_association(account_id, source_id, sample_id):
         sample_repo = SampleRepo(t)
         sample = sample_repo.get_sample(account_id, source_id, sample_id)
         if sample is None:
-            return jsonify(error=404, text="Sample not found"), 404
+            return jsonify(code=404, message="Sample not found"), 404
 
         return jsonify(sample.to_api()), 200
 
 
 def update_sample_association(account_id, source_id, sample_id, body):
-    return not_yet_implemented()
+    with Transaction() as t:
+        sample_repo = SampleRepo(t)
+
+        # TODO FIXME HACK:  Our Sample model, Sample db table, and Sample api
+        #  objects are considerably different, and the transforms are not
+        #  idempotent.  We MUST specify exactly which of these fields are
+        #  writable by the end user in our update logic, and -should- update
+        #  the yaml to mark non writable fields as read only.
+        #  I believe the readonly fields are:
+        #  sample_barcode, sample_id, sample_locked, sample_projects
+        sample_info = Sample(
+            sample_id,
+            body["sample_datetime"],
+            body["sample_site"],
+            body["sample_notes"],
+            body["sample_barcode"],
+            None,  # Note: scan_date is not sent over api
+            body["sample_projects"]
+        )
+        sample_repo.update_info(account_id, source_id, sample_info)
+
+        t.commit()
 
 
 def dissociate_sample(account_id, source_id, sample_id):
-    return not_yet_implemented()
+    with Transaction() as t:
+        sample_repo = SampleRepo(t)
+        sample_repo.dissociate_sample(account_id, source_id, sample_id)
+        t.commit()
+        return jsonify('', 204)
 
 
 def read_answered_survey_associations(account_id, source_id, sample_id):
-    return not_yet_implemented()
+    with Transaction() as t:
+        answers_repo = SurveyAnswersRepo(t)
+        answers = answers_repo.list_answered_surveys_by_sample(account_id,
+                                                               source_id,
+                                                               sample_id)
+        t.commit()
+        return jsonify(answers, 200)
 
 
 def associate_answered_survey(account_id, source_id, sample_id, body):
-    return not_yet_implemented()
+    with Transaction() as t:
+        answers_repo = SurveyAnswersRepo(t)
+        answers_repo.associate_answered_survey_with_sample(
+            account_id, source_id, sample_id, body['survey_id']
+        )
+        t.commit()
+
+    # TODO: Which location is this supposed to return exactly? The one to
+    #  the survey itself?
+    response = jsonify('')
+    response.status_code = 201
+    response.headers['Location'] = '/api/accounts/%s' \
+                                   '/sources/%s' \
+                                   '/surveys/%s' % \
+                                   (account_id,
+                                    source_id,
+                                    body['survey_id'])
+    return response
 
 
 def dissociate_answered_survey(account_id, source_id, sample_id, survey_id):
-    return not_yet_implemented()
+    with Transaction() as t:
+        answers_repo = SurveyAnswersRepo(t)
+        answers_repo.dissocate_answered_survey_from_sample(
+            account_id, source_id, sample_id, survey_id)
+        t.commit()
+    return jsonify('', 204)
 
 
 def read_kit(kit_name):
@@ -362,7 +417,7 @@ def read_kit(kit_name):
         # TODO: Ensure this name is what the repo layer expects
         kit = kit_repo.get_kit(kit_name)
         if kit is None:
-            return jsonify(error=404, text="No such kit"), 404
+            return jsonify(code=404, message="No such kit"), 404
         return jsonify(kit.to_api()), 200
 
 
