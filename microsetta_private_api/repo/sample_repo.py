@@ -133,11 +133,52 @@ class SampleRepo(BaseRepo):
                                   *sample_row,
                                   sample_projects)
 
+    def update_info(self, account_id, source_id, sample):
+        """
+        Updates end user writable information about a sample that is assigned
+        to a source.
+        """
+        existing_sample = self.get_sample(account_id, source_id, sample.id)
+        if existing_sample is None:
+            raise werkzeug.exceptions.NotFound("No sample ID: %s" %
+                                               sample.id)
+
+        if existing_sample.is_locked:
+            raise RepoException("Sample edits locked: Sample already received")
+
+        sample_date = None
+        sample_time = None
+        if sample.datetime_collected is not None:
+            sample_date = sample.datetime_collected.date()
+            sample_time = sample.datetime_collected.time()
+        # TODO:  Need to get the exact policy on which fields user is allowed
+        #  to set.  For starters: I think: datetime_collected, site, notes
+        with self._transaction.cursor() as cur:
+            cur.execute("UPDATE "
+                        "ag_kit_barcodes "
+                        "SET "
+                        "sample_date = %s, "
+                        "sample_time = %s, "
+                        "site_sampled = %s, "
+                        "notes = %s "
+                        "WHERE "
+                        "ag_kit_barcode_id = %s",
+                        (
+                            sample_date,
+                            sample_time,
+                            sample.site,
+                            sample.notes,
+                            sample.id
+                        ))
+
     # TODO: Should this throw if the sample is already associated with
     #  another source in the same account?  Technically they could disassociate
     #  the sample first...
     # TODO: Should this throw if the sample is "locked"?
     #  ie: If barcodes.barcode.scan_date is not null?
+    # TODO FIXME HACK: Is this function supposed to null out end user fields?
+    #  (datetime_collected, site, notes) since these were written for (by?) a
+    #  different source?
     def associate_sample(self, account_id, source_id, sample_id):
         with self._transaction.cursor() as cur:
             cur.execute("SELECT "
@@ -168,6 +209,22 @@ class SampleRepo(BaseRepo):
                 # This is the case where the sample is not yet assigned
                 self._update_sample_association(sample_id, source_id)
 
+    def dissociate_sample(self, account_id, source_id, sample_id):
+        existing_sample = self.get_sample(account_id, source_id, sample_id)
+        if existing_sample is None:
+            raise werkzeug.exceptions.NotFound("No sample ID: %s" %
+                                               sample_id)
+        if existing_sample.is_locked:
+            raise RepoException(
+                "Sample edits locked: Sample already received")
+
+        # Wipe any user entered fields from the sample:
+        self.update_info(Sample(sample_id, None, None, None,
+                                None, None, None))
+
+        # And detach the sample from the source
+        self._update_sample_association(sample_id, source_id)
+
     # TODO: I'm still not entirely happy with the linking between samples and
     #  sources.  The new source_id is direct (and required for environmental
     #  samples, which have no surveys) but samples can also link to
@@ -177,6 +234,12 @@ class SampleRepo(BaseRepo):
     #  itself is required for linking samples to surveys!)
     def _update_sample_association(self, sample_id, source_id):
         with self._transaction.cursor() as cur:
+
+            existing_sample = self._get_sample_by_id(sample_id)
+            if existing_sample.is_locked:
+                raise RepoException(
+                    "Sample edits locked: Sample already received")
+
             cur.execute("UPDATE "
                         "ag_kit_barcodes "
                         "SET "

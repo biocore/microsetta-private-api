@@ -1,4 +1,7 @@
+import werkzeug
+
 from microsetta_private_api.repo.base_repo import BaseRepo
+from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 
 import uuid
@@ -28,6 +31,30 @@ class SurveyAnswersRepo(BaseRepo):
                         "AND source_id = %s",
                         (account_id, source_id))
 
+            rows = cur.fetchall()
+            answered_surveys = [r[0] for r in rows]
+        return answered_surveys
+
+    def list_answered_surveys_by_sample(
+            self, account_id, source_id, sample_id):
+        sample_repo = SampleRepo(self._transaction)
+
+        # Note: Retrieving sample in this way validates permissions.
+        sample = sample_repo.get_sample(account_id, source_id, sample_id)
+        if sample is None:
+            raise werkzeug.exceptions.NotFound("No sample ID: %s" %
+                                               sample.id)
+
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT "
+                        "survey_id "
+                        "FROM "
+                        "ag_kit_barcodes "
+                        "LEFT JOIN source_barcodes_surveys "
+                        "USING (barcode)"
+                        "WHERE "
+                        "ag_kit_barcode_id = %s",
+                        (sample_id,))
             rows = cur.fetchall()
             answered_surveys = [r[0] for r in rows]
         return answered_surveys
@@ -162,6 +189,40 @@ class SurveyAnswersRepo(BaseRepo):
                         "ag_login_id = %s AND survey_id = %s",
                         (acct_id, survey_id))
         return True
+
+    def associate_answered_survey_with_sample(self, account_id, source_id,
+                                              sample_id, survey_id):
+        sample_repo = SampleRepo(self._transaction)
+        s = sample_repo.get_sample(account_id, source_id, sample_id)
+
+        if not self._acct_owns_survey(account_id, survey_id):
+            raise werkzeug.exceptions.NotFound("No survey ID: %s" % survey_id)
+
+        if s is None:
+            raise werkzeug.exceptions.NotFound("No sample ID: %s" % sample_id)
+
+        with self._transaction.cursor() as cur:
+            cur.execute("INSERT INTO source_barcodes_surveys "
+                        "(barcode, survey_id) "
+                        "VALUES(%s, %s)", (s.barcode, survey_id))
+
+    def dissociate_answered_survey_from_sample(self, account_id, source_id,
+                                               sample_id, survey_id):
+        sample_repo = SampleRepo(self._transaction)
+        s = sample_repo.get_sample(account_id, source_id, sample_id)
+
+        if not self._acct_source_owns_survey(account_id, source_id, survey_id):
+            raise werkzeug.exceptions.NotFound("No survey ID: %s" % survey_id)
+
+        if s is None:
+            raise werkzeug.exceptions.NotFound("No sample ID: %s" % sample_id)
+
+        with self._transaction.cursor() as cur:
+            cur.execute("DELETE FROM source_barcodes_surveys "
+                        "WHERE"
+                        "barcode = %s AND "
+                        "survey_id = %s",
+                        (s.barcode, survey_id))
 
     # True if this account owns this survey_answer_id, else False
     def _acct_owns_survey(self, acct_id, survey_id):
