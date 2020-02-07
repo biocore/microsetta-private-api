@@ -1,7 +1,7 @@
 import werkzeug
 
 from microsetta_private_api.repo.base_repo import BaseRepo
-from microsetta_private_api.model.sample import Sample
+from microsetta_private_api.model.sample import Sample, SampleInfo
 
 from microsetta_private_api.exceptions import RepoException
 
@@ -133,24 +133,25 @@ class SampleRepo(BaseRepo):
                                   *sample_row,
                                   sample_projects)
 
-    def update_info(self, account_id, source_id, sample):
+    def update_info(self, account_id, source_id, sample_info):
         """
         Updates end user writable information about a sample that is assigned
         to a source.
         """
-        existing_sample = self.get_sample(account_id, source_id, sample.id)
+        existing_sample = self.get_sample(account_id, source_id,
+                                          sample_info.id)
         if existing_sample is None:
             raise werkzeug.exceptions.NotFound("No sample ID: %s" %
-                                               sample.id)
+                                               sample_info.id)
 
         if existing_sample.is_locked:
             raise RepoException("Sample edits locked: Sample already received")
 
         sample_date = None
         sample_time = None
-        if sample.datetime_collected is not None:
-            sample_date = sample.datetime_collected.date()
-            sample_time = sample.datetime_collected.time()
+        if sample_info.datetime_collected is not None:
+            sample_date = sample_info.datetime_collected.date()
+            sample_time = sample_info.datetime_collected.time()
         # TODO:  Need to get the exact policy on which fields user is allowed
         #  to set.  For starters: I think: datetime_collected, site, notes
         with self._transaction.cursor() as cur:
@@ -166,9 +167,9 @@ class SampleRepo(BaseRepo):
                         (
                             sample_date,
                             sample_time,
-                            sample.site,
-                            sample.notes,
-                            sample.id
+                            sample_info.site,
+                            sample_info.notes,
+                            sample_info.id
                         ))
 
     # TODO: Should this throw if the sample is already associated with
@@ -219,8 +220,8 @@ class SampleRepo(BaseRepo):
                 "Sample edits locked: Sample already received")
 
         # Wipe any user entered fields from the sample:
-        self.update_info(Sample(sample_id, None, None, None,
-                                None, None, None))
+        self.update_info(account_id, source_id,
+                         SampleInfo(sample_id, None, None, None))
 
         # And detach the sample from the source
         self._update_sample_association(sample_id, source_id)

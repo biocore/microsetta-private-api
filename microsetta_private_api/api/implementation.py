@@ -11,13 +11,14 @@ https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
 and associated file
 https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
 """
+
 import flask
 from flask import jsonify, render_template
 import jwt
 from base64 import b64decode
 
 from microsetta_private_api.model.address import Address
-from microsetta_private_api.model.sample import Sample
+from microsetta_private_api.model.sample import SampleInfo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
@@ -35,7 +36,7 @@ from microsetta_private_api.util import vue_adapter
 
 import uuid
 import json
-from datetime import date
+from datetime import date, datetime
 
 TOKEN_KEY = "QvMWMnlOqBbNsM88AMxpzcJMbBUu/w8U9joIaNYjuEbwEYhLIB5FqEoFWnfLN3JZN4SD0LAtZOwFNqyMLmNruBLqEvbpjQzM6AY+BfXGxDVFL65c9Xw8ocd6t1nF6YvTpHGB4NJhUwngjIQmFx+6TCa5wArtEqUeoIc1ukVTYbioRkxzi5ju8cc9/PoInB0c7wugMz5ihAPWohpDc4kCotYv7C2K/e9J9CPdwbiLJKYKxO4zSQAqk+Sj4wRcn7bJqIOIT6BlvvnzRGXYG33qXAxGylM4UySj7ltwSGOIY0/JUvKEej3fX17C8wWtJvrjbFQacNhoglqfWq2GeOdRSA== "  # noqa: E501
 TEMP_ACCESS_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbXlhcHAuY29tLyIsInN1YiI6InVzZXJzL3VzZXIxMjM0Iiwic2NvcGUiOiJzZWxmLCBhZG1pbnMiLCJqdGkiOiJkMzBkMzA5ZS1iZTQ5LTRjOWEtYjdhYi1hMGU3MTIwYmFlZDMiLCJpYXQiOjE1NzIzNzY4OTUsImV4cCI6MTU3MjM4MDQ5NX0.EMooERuy2Z4tC_TsXJe6Vx8yCgzTzI_qh84a5DsKPRw"  # noqa: E501
@@ -342,25 +343,22 @@ def update_sample_association(account_id, source_id, sample_id, body):
     with Transaction() as t:
         sample_repo = SampleRepo(t)
 
-        # TODO FIXME HACK:  Our Sample model, Sample db table, and Sample api
-        #  objects are considerably different, and the transforms are not
-        #  idempotent.  We MUST specify exactly which of these fields are
-        #  writable by the end user in our update logic, and -should- update
-        #  the yaml to mark non writable fields as read only.
-        #  I believe the readonly fields are:
-        #  sample_barcode, sample_id, sample_locked, sample_projects
-        sample_info = Sample(
+        sample_datetime = body['sample_datetime']
+        if sample_datetime is not None:
+            sample_datetime = datetime.strptime(sample_datetime,
+                                                "%Y-%m-%dT%H:%M:%S.%f")
+            # One day Python 3.7, one day :(
+            # sample_datetime = datetime.fromisoformat(sample_datetime)
+        sample_info = SampleInfo(
             sample_id,
-            body["sample_datetime"],
+            sample_datetime,
             body["sample_site"],
-            body["sample_notes"],
-            body["sample_barcode"],
-            None,  # Note: scan_date is not sent over api
-            body["sample_projects"]
+            body["sample_notes"]
         )
         sample_repo.update_info(account_id, source_id, sample_info)
-
+        final_sample = sample_repo.get_sample(account_id, source_id, sample_id)
         t.commit()
+    return jsonify(final_sample), 200
 
 
 def dissociate_sample(account_id, source_id, sample_id):

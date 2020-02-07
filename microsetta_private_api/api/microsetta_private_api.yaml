@@ -986,10 +986,12 @@ components:
     # sample section
     sample_barcode:
       type: string
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
       example: "000038448"
     sample_datetime:
       type: string
       format: date-time
+      nullable: true
       example: "2017-07-21T17:32:28Z"
     sample_id:
       type: string
@@ -997,16 +999,20 @@ components:
       example: "dae21127-27bb-4f52-9fd3-a2aa5eb5b86f"
     sample_notes:
       type: string
+      nullable: true
       example: "Oops, I dropped it"
     sample_site:
       enum: ["Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
              "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", null]
+      nullable: true
       example: "Stool"
     sample_locked:
       type: boolean
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
       example: true
     sample_projects:
       type: array
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
       items:
         $ref: '#/components/schemas/sample_project'
       example:

@@ -10,6 +10,7 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.model.source import \
     Source, HumanInfo, AnimalInfo, EnvironmentInfo
 from microsetta_private_api.model.address import Address
+from microsetta_private_api.util.util import json_converter, fromisotime
 import datetime
 import json
 from unittest import TestCase
@@ -560,11 +561,11 @@ class IntegrationTests(TestCase):
         url = werkzeug.urls.url_parse(loc)
         survey_id = url.path.split('/')[-1]
 
+        # Part 2: Claim a sample
         resp = self.client.get(
             '/api/kits/?language_tag=en_us&kit_name=%s' % SUPPLIED_KIT_ID)
         check_response(resp)
 
-        # Part 2: Claim a sample
         unused_samples = json.loads(resp.data)
         sample_id = unused_samples[0]['sample_id']
 
@@ -657,6 +658,142 @@ class IntegrationTests(TestCase):
             found = repo.delete_answered_survey(ACCT_ID, survey_id)
             assert found
             t.commit()
+
+    def test_edit_sample_info(self):
+        """
+        This test will claim a sample, write some data, edit that data
+        Dissociate that sample, grab it with a different source, edit some data
+        Mark the sample as received and check that editing is locked
+        """
+        # Claim a sample
+        response = self.client.get(
+            '/api/kits/?language_tag=en_us&kit_name=%s' % SUPPLIED_KIT_ID)
+        check_response(response)
+
+        unused_samples = json.loads(response.data)
+        sample_id = unused_samples[0]['sample_id']
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/samples?language_tag=en_us' %
+            (ACCT_ID, HUMAN_ID),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_id": sample_id
+                })
+        )
+        check_response(response)
+
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+            (ACCT_ID, HUMAN_ID, sample_id)
+        )
+        sample_info = json.loads(response.data)
+
+        # Edit that sample info
+        fuzzy_info = fuzz(sample_info)
+
+        # Many fields are not writable, each should individually cause failure.
+        readonly_fields = [
+            'sample_id', 'sample_barcode',
+            'sample_locked', 'sample_projects'
+        ]
+
+        for readonly_field in readonly_fields:
+            fuzzy_info.pop(readonly_field)
+
+        for readonly_field in readonly_fields:
+            print("---\nYou should see a validation error in unittest:")
+            fuzzy_info[readonly_field] = "Voldemort"
+            response = self.client.put(
+                '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+                (ACCT_ID, HUMAN_ID, sample_id),
+                content_type='application/json',
+                data=json.dumps(fuzzy_info)
+            )
+            check_response(response, 400)
+            fuzzy_info.pop(readonly_field)
+            print("---")
+
+        # But after removing all these fields, we should be able to edit.
+        response = self.client.put(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+            (ACCT_ID, HUMAN_ID, sample_id),
+            content_type='application/json',
+            data=json.dumps(fuzzy_info)
+        )
+        check_response(response, 200)
+
+        # Now we can try writing and checking that our updates went through
+        fuzzy_info['sample_notes'] = "Oboe Is For Bobo"
+        fuzzy_info['sample_site'] = "Forehead"
+        fuzzy_info['sample_datetime'] = datetime.datetime.now()
+
+        response = self.client.put(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+            (ACCT_ID, HUMAN_ID, sample_id),
+            content_type='application/json',
+            data=json.dumps(fuzzy_info, default=json_converter)
+        )
+        check_response(response, 200)
+
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+            (ACCT_ID, HUMAN_ID, sample_id)
+        )
+        check_response(response, 200)
+        new_info = json.loads(response.data)
+
+        assert fuzzy_info['sample_notes'] == new_info['sample_notes']
+        assert fuzzy_info['sample_site'] == new_info['sample_site']
+        assert fuzzy_info['sample_datetime'] == fromisotime(
+            new_info['sample_datetime'])
+
+        # Now dissociate the sample from HUMAN_ID
+        response = self.client.delete(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+            (ACCT_ID, HUMAN_ID, sample_id)
+        )
+
+        # All of those fields should be gone when we claim it again
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/samples?language_tag=en_us' %
+            (ACCT_ID, PLANTY_ID),  # This sample now belong to nature.
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_id": sample_id
+                })
+        )
+        check_response(response)
+
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+            (ACCT_ID, PLANTY_ID, sample_id)
+        )
+        check_response(response, 200)
+        plant_info = json.loads(response.data)
+        assert plant_info['sample_notes'] is None
+        assert plant_info['sample_site'] is None
+        assert plant_info['sample_datetime'] is None
+
+        # Finally, we lock the sample to prevent further edits
+        with Transaction() as t:
+            with t.cursor() as cur:
+                cur.execute("UPDATE barcode "
+                            "SET scan_date = %s "
+                            "WHERE "
+                            "barcode = %s",
+                            (datetime.datetime.now(), BARCODE))
+            t.commit()
+
+        response = self.client.put(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+            (ACCT_ID, PLANTY_ID, sample_id),
+            content_type='application/json',
+            data=json.dumps(fuzzy_info, default=json_converter)
+        )
+        check_response(response, 422)
 
 
 def _create_mock_kit(transaction):
