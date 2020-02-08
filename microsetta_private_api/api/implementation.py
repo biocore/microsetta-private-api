@@ -30,7 +30,7 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source
 from microsetta_private_api.model.source import human_info_from_api
-from microsetta_private_api.LEGACY.locale_data import american_gut
+from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 
 from microsetta_private_api.util import vue_adapter
 
@@ -427,7 +427,7 @@ def read_kit(kit_name):
         return jsonify(kit.to_api()), 200
 
 
-def render_consent_doc(account_id):
+def render_consent_doc(account_id, language_tag):
     # return render_template("new_participant.jinja2",
     #                        message=MockJinja("message"),
     #                        media_locale=MockJinja("media_locale"),
@@ -436,10 +436,23 @@ def render_consent_doc(account_id):
     # NB: Do NOT need to explicitly pass account_id into template for
     # integration into form submission URL because form submit URL builds on
     # the base of the URL that called it (which includes account_id)
+
+    # TODO !!CRITICAL!! Is this the right way to choose which consent docs to
+    #  send based on language_tag?  Or should it always send american_gut but
+    #  a different language field somewhere else?
+    media_locales = {
+        'en_us': american_gut.media_locale,
+        'en_gb': british_gut.media_locale
+    }
+    tls = {
+        'en_us': american_gut._NEW_PARTICIPANT,
+        'en_gb': british_gut._NEW_PARTICIPANT
+    }
+
     return render_template("new_participant.jinja2",
                            message=None,
-                           media_locale=american_gut.media_locale,
-                           tl=american_gut._NEW_PARTICIPANT)
+                           media_locale=media_locales[language_tag],
+                           tl=tls[language_tag])
 
 
 def create_human_source_from_consent(account_id, body):

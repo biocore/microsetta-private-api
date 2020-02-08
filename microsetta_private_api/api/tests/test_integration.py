@@ -14,6 +14,8 @@ from microsetta_private_api.util.util import json_converter, fromisotime
 import datetime
 import json
 from unittest import TestCase
+from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
+import copy
 
 ACCT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 NOT_ACCT_ID = "12341234-1234-1234-1234-123412341234"
@@ -118,6 +120,14 @@ class IntegrationTests(TestCase):
 
     @staticmethod
     def setup_test_data():
+
+        american_gut._NEW_PARTICIPANT = \
+            copy.deepcopy(american_gut._NEW_PARTICIPANT)
+        american_gut._NEW_PARTICIPANT['SEL_AGE_RANGE'] = "Murica!"
+        british_gut._NEW_PARTICIPANT = \
+            copy.deepcopy(british_gut._NEW_PARTICIPANT)
+        british_gut._NEW_PARTICIPANT['SEL_AGE_RANGE'] = "QQBritannia"
+
         with Transaction() as t:
             acct_repo = AccountRepo(t)
             source_repo = SourceRepo(t)
@@ -947,6 +957,18 @@ class IntegrationTests(TestCase):
             found = repo.delete_answered_survey(ACCT_ID, survey_id)
             assert found
             t.commit()
+
+    def test_consent_localization(self):
+        resp_us = self.client.get('/api/accounts/%s/consent?language_tag=en_us'
+                                  % (ACCT_ID,))
+        check_response(resp_us)
+        resp_gb = self.client.get('/api/accounts/%s/consent?language_tag=en_gb'
+                                  % (ACCT_ID,))
+        check_response(resp_gb)
+
+        assert resp_us.data != resp_gb.data
+        assert "Murica!" in str(resp_us.data)
+        assert "QQBritannia" in str(resp_gb.data)
 
 
 def _create_mock_kit(transaction):
