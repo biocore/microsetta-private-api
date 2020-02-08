@@ -1,3 +1,5 @@
+from werkzeug.exceptions import NotFound
+
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.survey_template import SurveyTemplate, \
     SurveyTemplateLinkInfo
@@ -58,16 +60,24 @@ class SurveyTemplateRepo(BaseRepo):
     def get_survey_template_link_info(survey_id):
         return SurveyTemplateRepo.SURVEY_INFO[survey_id]
 
-    def get_survey_template(self, survey_id):
+    def get_survey_template(self, survey_id, language_tag):
 
-        # TODO: Need to add support for locales, will require changing
-        # the survey_question table.
+        tag_to_col = {
+            "en_us": "survey_question.american",
+            "en_gb": "survey_question.british"
+        }
+
+        if language_tag not in tag_to_col:
+            raise NotFound("Survey localization unavailable: %s" %
+                           language_tag)
+
         with self._transaction.cursor() as cur:
             cur.execute(
                 "SELECT "
                 "group_questions.survey_group, "
-                "survey_question.survey_question_id, "
-                "survey_question.american, "
+                "survey_question.survey_question_id, " +
+                # WARNING: NEVER DO THIS WITH USER ENTERED DATA
+                tag_to_col[language_tag] + ", " +
                 "survey_question.question_shortname, "
                 "survey_question_response_type.survey_response_type "
                 "FROM "
@@ -102,14 +112,16 @@ class SurveyTemplateRepo(BaseRepo):
                 if group_id != cur_group_id:
                     if cur_group_id is not None:
                         group_localized_text = self._get_group_localized_text(
-                                                                cur_group_id)
+                                                                cur_group_id,
+                                                                language_tag)
                         all_groups.append(SurveyTemplateGroup(
                             group_localized_text,
                             cur_questions))
                     cur_group_id = group_id
                     cur_questions = []
 
-                responses = self._get_question_valid_responses(question_id)
+                responses = self._get_question_valid_responses(question_id,
+                                                               language_tag)
                 triggers = self._get_question_triggers(question_id)
 
                 question = SurveyTemplateQuestion(question_id,
@@ -122,17 +134,23 @@ class SurveyTemplateRepo(BaseRepo):
 
             if cur_group_id is not None:
                 group_localized_text = self._get_group_localized_text(
-                    cur_group_id)
+                    cur_group_id,
+                    language_tag)
                 all_groups.append(SurveyTemplateGroup(
                     group_localized_text,
                     cur_questions))
 
-            return SurveyTemplate(survey_id, "american", all_groups)
+            return SurveyTemplate(survey_id, language_tag, all_groups)
 
-    def _get_group_localized_text(self, group_id):
-        # TODO: Localization!
+    def _get_group_localized_text(self, group_id, language_tag):
+        tag_to_col = {
+            "en_us": "american",
+            "en_gb": "british"
+        }
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT american "
+            cur.execute("SELECT " +
+                        # WARNING: NEVER DO THIS WITH USER ENTERED DATA
+                        tag_to_col[language_tag] + " " +
                         "FROM survey_group "
                         "WHERE "
                         "group_order = %s", (group_id,))
@@ -141,11 +159,23 @@ class SurveyTemplateRepo(BaseRepo):
                 return None
             return row[0]
 
-    def _get_question_valid_responses(self, survey_question_id):
+    def _get_question_valid_responses(self, survey_question_id, language_tag):
+        tag_to_col = {
+            "en_us": "survey_response.american",
+            "en_gb": "survey_response.british"
+        }
+
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT response "
+            cur.execute("SELECT " +
+                        # WARNING: NEVER DO THIS WITH USER ENTERED DATA
+                        tag_to_col[language_tag] + " "
                         "FROM "
                         "survey_question_response "
+                        "LEFT JOIN "
+                        "survey_response "
+                        "ON "
+                        "survey_question_response.response = "
+                        "survey_response.american "
                         "WHERE "
                         "survey_question_id = %s "
                         "ORDER BY "

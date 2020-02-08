@@ -257,7 +257,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
     with Transaction() as t:
         survey_template_repo = SurveyTemplateRepo(t)
         survey_template = survey_template_repo.get_survey_template(
-            survey_template_id)
+            survey_template_id, language_tag)
         return jsonify(vue_adapter.to_vue_schema(survey_template)), 200
 
 
@@ -270,14 +270,14 @@ def read_answered_surveys(account_id, source_id, language_tag):
                 source_id)), 200
 
 
-def read_answered_survey(account_id, source_id, survey_id):
-    # TODO: Don't need source_id, drop it or include for validation at db
-    #  layer?
+def read_answered_survey(account_id, source_id, survey_id, language_tag):
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
         survey_answers = survey_answers_repo.get_answered_survey(
             account_id,
-            survey_id)
+            source_id,
+            survey_id,
+            language_tag)
         return jsonify(survey_answers), 200
 
 

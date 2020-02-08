@@ -129,34 +129,3 @@ with Transaction() as t:
 
     with open("surveySchema.json", "w") as outFile:
         outFile.write(json.dumps(in_vue, default=json_converter, indent=2))
-
-with Transaction() as t:
-    survey_answers_repo = SurveyAnswersRepo(t)
-    survey_ids = survey_answers_repo.list_answered_surveys(
-        'd8592c74-7fc4-2135-e040-8a80115d6401',
-        'f1ee05c8-7d0d-466a-b200-868eded0edec')
-
-    print(survey_ids)
-
-    survey_model = survey_answers_repo.get_answered_survey(
-        'd8592c74-7fc4-2135-e040-8a80115d6401',
-        survey_ids[0])
-
-    print(survey_model)
-
-    answer_id = survey_answers_repo.submit_answered_survey(
-        ACCT_ID,
-        DOGGY_ID,
-        "en_us",
-        1,
-        survey_model
-    )
-
-    survey_model2 = survey_answers_repo.get_answered_survey(
-        ACCT_ID,
-        answer_id)
-
-    print(survey_model2)
-    print(survey_model == survey_model2)
-
-    survey_answers_repo.delete_answered_survey(ACCT_ID, answer_id)

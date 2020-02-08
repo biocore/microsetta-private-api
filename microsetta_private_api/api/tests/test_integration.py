@@ -169,10 +169,50 @@ class IntegrationTests(TestCase):
 
             _create_mock_kit(t)
 
+            with t.cursor() as cur:
+                # american and british are ALWAYS the same!
+                # Need to mock a row where they differ, which will be on
+                # question 107.
+                cur.execute("SELECT american, british FROM survey_question "
+                            "WHERE survey_question_id = 107")
+                row = cur.fetchone()
+                # If this fails, it most likely means the teardown failed
+                # last time the tests were run.  But it could also mean
+                # someone changed survey question 107!!!
+                assert row[0] == "Gender:"
+                assert row[1] == "Gender:"
+
+                cur.execute("UPDATE survey_question "
+                            "SET "
+                            "american = 'Gender:', "
+                            "british = 'Gandalf:' "
+                            "WHERE survey_question_id = 107")
+
+                cur.execute("UPDATE survey_response SET "
+                            "british = 'Wizard' "
+                            "WHERE "
+                            "american = 'Male'")
+
             t.commit()
 
     @staticmethod
     def teardown_test_data():
+        with Transaction() as t:
+            with t.cursor() as cur:
+                # TODO:  This restoration plan is terrible!  We need a better
+                #  way to mock out the database!!
+                cur.execute("UPDATE survey_question "
+                            "SET "
+                            "american = 'Gender:', "
+                            "british = 'Gender:' "
+                            "WHERE survey_question_id = 107")
+
+                cur.execute("UPDATE survey_response SET "
+                            "british = 'Male' "
+                            "WHERE "
+                            "american = 'Male'")
+            t.commit()
+
         with Transaction() as t:
             acct_repo = AccountRepo(t)
             source_repo = SourceRepo(t)
@@ -794,6 +834,120 @@ class IntegrationTests(TestCase):
             data=json.dumps(fuzzy_info, default=json_converter)
         )
         check_response(response, 422)
+
+    def test_survey_localization(self):
+        # Retrieve Survey Template!
+        # Should fail for en_qq
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/%s'
+            '?language_tag=en_qq' %
+            (ACCT_ID, HUMAN_ID, BOBO_FAVORITE_SURVEY_TEMPLATE))
+        check_response(resp, 404)
+
+        # Should work for en_us
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/%s'
+            '?language_tag=en_us' %
+            (ACCT_ID, HUMAN_ID, BOBO_FAVORITE_SURVEY_TEMPLATE))
+        check_response(resp)
+        form_us = json.loads(resp.data)
+
+        # Should work for en_gb
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/%s'
+            '?language_tag=en_gb' %
+            (ACCT_ID, HUMAN_ID, BOBO_FAVORITE_SURVEY_TEMPLATE))
+        check_response(resp)
+        form_gb = json.loads(resp.data)
+
+        # Responses should differ by locale
+        assert form_us['groups'][0]['fields'][0]['id'] == '107'
+        assert form_us['groups'][0]['fields'][0]['label'] == 'Gender:'
+        assert form_gb['groups'][0]['fields'][0]['id'] == '107'
+        assert form_gb['groups'][0]['fields'][0]['label'] == 'Gandalf:'
+
+        assert 'Male' in form_us['groups'][0]['fields'][0]['values']
+        assert 'Wizard' in form_gb['groups'][0]['fields'][0]['values']
+
+        model_gb = fuzz_form(form_gb)
+        model_gb['107'] = 'Wizard'  # British for 'Male' per test setup.
+
+        # Submit a survey response!
+        # Should fail for en_qq
+        model = fuzz_form(json.loads(resp.data))
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_qq'
+            % (ACCT_ID, HUMAN_ID),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': BOBO_FAVORITE_SURVEY_TEMPLATE,
+                    'survey_text': model_gb
+                })
+        )
+        check_response(resp, 404)
+
+        # But should work for en_gb
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_gb'
+            % (ACCT_ID, HUMAN_ID),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': BOBO_FAVORITE_SURVEY_TEMPLATE,
+                    'survey_text': model_gb
+                })
+        )
+        check_response(resp, 201)
+        loc = resp.headers.get("Location")
+        url = werkzeug.urls.url_parse(loc)
+        survey_id = url.path.split('/')[-1]
+
+        # Also, posting an en_gb model as en_us should explode as Wizard is
+        # invalid in american
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_us'
+            % (ACCT_ID, HUMAN_ID),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': BOBO_FAVORITE_SURVEY_TEMPLATE,
+                    'survey_text': model_gb
+                })
+            )
+        check_response(resp, 400)
+
+        # Lastly, posting an answer that does translate but is wrong
+        # for the question should also fail out.
+        # British for 'Large Mammal', an invalid choice for Gender
+        model_gb['107'] = 'Large Mammal'
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_gb'
+            % (ACCT_ID, HUMAN_ID),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': BOBO_FAVORITE_SURVEY_TEMPLATE,
+                    'survey_text': model_gb
+                })
+            )
+        check_response(resp, 400)
+
+        with Transaction() as t:
+            repo = SurveyAnswersRepo(t)
+            # Though we passed up an en_gb model, answers stored should be
+            # in en_us and converted to either locale
+            result = repo.get_answered_survey(ACCT_ID, HUMAN_ID,
+                                              survey_id, 'en_us')
+            assert result['107'] == 'Male'
+            result = repo.get_answered_survey(ACCT_ID, HUMAN_ID,
+                                              survey_id, 'en_gb')
+            assert result['107'] == 'Wizard'
+
+            # Clean up after the new survey
+            found = repo.delete_answered_survey(ACCT_ID, survey_id)
+            assert found
+            t.commit()
 
 
 def _create_mock_kit(transaction):

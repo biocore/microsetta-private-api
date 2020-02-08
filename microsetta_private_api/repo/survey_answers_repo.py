@@ -1,4 +1,6 @@
+import psycopg2
 import werkzeug
+from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.base_repo import BaseRepo
@@ -53,10 +55,6 @@ class SurveyAnswersRepo(BaseRepo):
             return survey_template_id
 
     def list_answered_surveys(self, account_id, source_id):
-        # TODO: No obvious way in the current schema to go from an answered
-        #  survey's id back to a survey template id, preventing retrieval
-        #  of the survey's title...  This should be addressed as we transform
-        #  the data as well
         with self._transaction.cursor() as cur:
             cur.execute("SELECT survey_id "
                         "FROM ag_login_surveys "
@@ -92,16 +90,24 @@ class SurveyAnswersRepo(BaseRepo):
             answered_surveys = [r[1] for r in rows if r[1] is not None]
         return answered_surveys
 
-    def get_answered_survey(self, ag_login_id, survey_id):
+    def get_answered_survey(self, ag_login_id, source_id,
+                            survey_id, language_tag):
         model = {}
-        if not self._acct_owns_survey(ag_login_id, survey_id):
+        if not self._acct_source_owns_survey(ag_login_id,
+                                             source_id,
+                                             survey_id):
             return None
+
+        tag_to_col = {
+            "en_us": "american",
+            "en_gb": "british"
+        }
 
         with self._transaction.cursor() as cur:
             # Grab selection and multi selection responses
             cur.execute("SELECT "
                         "survey_answers.survey_question_id, "
-                        "response, "
+                        + tag_to_col[language_tag] + ", "
                         "survey_response_type "
                         "FROM "
                         "survey_answers "
@@ -110,6 +116,10 @@ class SurveyAnswersRepo(BaseRepo):
                         "ON "
                         "survey_answers.survey_question_id = "
                         "survey_question_response_type.survey_question_id "
+                        "LEFT JOIN "
+                        "survey_response "
+                        "ON "
+                        "survey_answers.response = survey_response.american "
                         "WHERE "
                         "survey_id = %s",
                         (survey_id,))
@@ -117,7 +127,6 @@ class SurveyAnswersRepo(BaseRepo):
 
             for r in rows:
                 str_id = str(r[0])
-
                 if r[2] == "SINGLE":
                     model[str_id] = r[1]
                 elif r[2] == "MULTIPLE":
@@ -140,7 +149,7 @@ class SurveyAnswersRepo(BaseRepo):
         return model
 
     def submit_answered_survey(self, ag_login_id, source_id,
-                               locale_code, survey_template_id, survey_model):
+                               language_tag, survey_template_id, survey_model):
         # This is actually pretty complicated in the current schema:
         #   We need to filter the model down to questions that are in the
         #       template
@@ -156,7 +165,7 @@ class SurveyAnswersRepo(BaseRepo):
 
         survey_template_repo = SurveyTemplateRepo(self._transaction)
         survey_template = survey_template_repo.get_survey_template(
-            survey_template_id)
+            survey_template_id, language_tag)
 
         with self._transaction.cursor() as cur:
 
@@ -178,16 +187,11 @@ class SurveyAnswersRepo(BaseRepo):
 
                     q_type = survey_question.response_type
                     if q_type == "SINGLE":
-                        cur.execute("INSERT INTO survey_answers "
-                                    "(survey_id, "
-                                    "survey_question_id, "
-                                    "response) "
-                                    "VALUES(%s, %s, %s)",
-                                    (survey_answers_id,
-                                     survey_question_id,
-                                     answer))
-                    if q_type == "MULTIPLE":
-                        for ans in answer:
+                        # Normalize localized answer
+                        normalized_answer = self._unlocalize(answer,
+                                                             language_tag)
+
+                        try:
                             cur.execute("INSERT INTO survey_answers "
                                         "(survey_id, "
                                         "survey_question_id, "
@@ -195,8 +199,30 @@ class SurveyAnswersRepo(BaseRepo):
                                         "VALUES(%s, %s, %s)",
                                         (survey_answers_id,
                                          survey_question_id,
-                                         ans))
+                                         normalized_answer))
+                        except psycopg2.errors.ForeignKeyViolation:
+                            raise BadRequest(
+                                "Invalid survey response: %s" % answer)
+
+                    if q_type == "MULTIPLE":
+                        for ans in answer:
+                            normalized_answer = self._unlocalize(ans,
+                                                                 language_tag)
+                            try:
+                                cur.execute("INSERT INTO survey_answers "
+                                            "(survey_id, "
+                                            "survey_question_id, "
+                                            "response) "
+                                            "VALUES(%s, %s, %s)",
+                                            (survey_answers_id,
+                                             survey_question_id,
+                                             normalized_answer))
+                            except psycopg2.errors.ForeignKeyViolation:
+                                raise BadRequest(
+                                    "Invalid survey response: %s" % ans)
+
                     if q_type == "STRING" or q_type == "TEXT":
+                        # Note:  Can't convert language on free text...
                         cur.execute("INSERT INTO survey_answers_other "
                                     "(survey_id, "
                                     "survey_question_id, "
@@ -282,3 +308,26 @@ class SurveyAnswersRepo(BaseRepo):
                         "survey_id = %s",
                         (acct_id, source_id, survey_id))
             return cur.fetchone() is not None
+
+    def _unlocalize(self, answer, language_tag):
+        # TODO: This is EXTREMELY SHAKY.  There is no guarantee
+        #  that a word translates the same way independent of
+        #  any other context.  We will NEED a better framework
+        #  for localization than what currently exists!
+        tag_to_col = {
+            "en_us": "american",
+            "en_gb": "british"
+        }
+        with self._transaction.cursor() as cur:
+            # Normalize localized answer
+            cur.execute("SELECT american "
+                        "FROM "
+                        "survey_response "
+                        "WHERE "
+                        + tag_to_col[language_tag] + "=%s",
+                        (answer,))
+            row = cur.fetchone()
+            if row is None:
+                raise BadRequest("Invalid survey response: %s" % answer)
+            normalized_answer = row[0]
+            return normalized_answer
