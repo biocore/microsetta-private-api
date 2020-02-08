@@ -874,7 +874,6 @@ class IntegrationTests(TestCase):
 
         # Submit a survey response!
         # Should fail for en_qq
-        model = fuzz_form(json.loads(resp.data))
         resp = self.client.post(
             '/api/accounts/%s/sources/%s/surveys?language_tag=en_qq'
             % (ACCT_ID, HUMAN_ID),
