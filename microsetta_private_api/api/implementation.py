@@ -22,11 +22,13 @@ from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
+from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 
 from microsetta_private_api.model.source import Source
 from microsetta_private_api.LEGACY.locale_data import american_gut
 
 from microsetta_private_api.util import vue_adapter
+from microsetta_private_api.util import vioscreen
 
 import uuid
 import json
@@ -219,6 +221,10 @@ def read_answered_survey(account_id, source_id, survey_id):
 
 
 def submit_answered_survey(account_id, source_id, language_tag, body):
+    # TODO:  What template id number is assigned for vioscreen?
+    if body["survey_template_id"] < 0 or body["survey_template_id"] > 5:
+        return _submit_vioscreen_status(body["survey_text"])
+
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
     with Transaction() as t:
@@ -310,3 +316,23 @@ def create_human_source_from_consent(account_id, body):
     # NB: Don't expect to handle errors 404, 422 in this function; expect to
     # farm out to `create_source`
     return create_source(account_id, body)
+
+
+def _submit_vioscreen_status(key):
+    # get information out of encrypted vioscreen url
+    info = vioscreen.decode_key('key')
+    vio_info = {}
+    for keyval in info.split("&"):
+        key, val = keyval.split("=")
+        vio_info[key] = val
+
+    with Transaction() as t:
+        vio_repo = VioscreenRepo(t)
+
+        # Add the status to the survey
+        vio_repo.update_vioscreen_status(vio_info["username"],
+                                         int(vio_info["status"]))
+        t.commit()
+
+    # TODO: Any reason to respond with anything?
+    return '', 204

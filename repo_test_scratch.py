@@ -10,6 +10,7 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 import datetime
 import json
 import microsetta_private_api.util.vue_adapter
+import microsetta_private_api.util.vioscreen
 
 # TODO: Refactor me into proper unit tests!
 
@@ -27,6 +28,10 @@ HUMAN_ID = "b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0"
 DOGGY_ID = "dddddddd-dddd-dddd-dddd-dddddddddddd"
 PLANTY_ID = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
 
+
+stuff = microsetta_private_api.util.vioscreen.gen_survey_url(6, 'en_us')
+print(stuff)
+exit(-1)
 
 with Transaction() as t:
     source_repo = SourceRepo(t)
