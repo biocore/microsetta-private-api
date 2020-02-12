@@ -32,13 +32,11 @@ BARCODE = '777777777'
 
 @pytest.fixture(scope="class")
 def client(request):
-    IntegrationTests.setup_test_data()
     app = microsetta_private_api.server.build_app()
     app.app.testing = True
     with app.app.test_client() as client:
         request.cls.client = client
         yield client
-    IntegrationTests.teardown_test_data()
 
 
 def check_response(response, expected_status=None):
