@@ -10,7 +10,7 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.model.source import \
     Source, HumanInfo, AnimalInfo, EnvironmentInfo
 from microsetta_private_api.model.address import Address
-from microsetta_private_api.util.util import json_converter, fromisotime
+from microsetta_private_api.util.util import json_converter
 import datetime
 import json
 from unittest import TestCase
