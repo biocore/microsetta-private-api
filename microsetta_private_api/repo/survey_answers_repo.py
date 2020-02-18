@@ -2,6 +2,7 @@ import psycopg2
 import werkzeug
 from werkzeug.exceptions import BadRequest
 
+from microsetta_private_api import localization
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
@@ -99,8 +100,8 @@ class SurveyAnswersRepo(BaseRepo):
             return None
 
         tag_to_col = {
-            "en_us": "american",
-            "en_gb": "british"
+            localization.EN_US: "american",
+            localization.EN_GB: "british"
         }
 
         with self._transaction.cursor() as cur:
@@ -315,8 +316,8 @@ class SurveyAnswersRepo(BaseRepo):
         #  independent of any other context.  We will eventually move to a
         #  better framework for localization than what currently exists!
         tag_to_col = {
-            "en_us": "american",
-            "en_gb": "british"
+            localization.EN_US: "american",
+            localization.EN_GB: "british"
         }
         with self._transaction.cursor() as cur:
             # Normalize localized answer

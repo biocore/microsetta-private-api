@@ -17,6 +17,7 @@ from flask import jsonify, render_template
 import jwt
 from base64 import b64decode
 
+from microsetta_private_api import localization
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.model.sample import SampleInfo
 from microsetta_private_api.repo.transaction import Transaction
@@ -455,12 +456,12 @@ def render_consent_doc(account_id, language_tag):
     #  send based on language_tag?  Or should it always send american_gut but
     #  a different language field somewhere else?
     media_locales = {
-        'en_us': american_gut.media_locale,
-        'en_gb': british_gut.media_locale
+        localization.EN_US: american_gut.media_locale,
+        localization.EN_GB: british_gut.media_locale
     }
     tls = {
-        'en_us': american_gut._NEW_PARTICIPANT,
-        'en_gb': british_gut._NEW_PARTICIPANT
+        localization.EN_US: american_gut._NEW_PARTICIPANT,
+        localization.EN_GB: british_gut._NEW_PARTICIPANT
     }
 
     return render_template("new_participant.jinja2",

@@ -1,5 +1,6 @@
 from werkzeug.exceptions import NotFound
 
+from microsetta_private_api import localization
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.survey_template import SurveyTemplate, \
     SurveyTemplateLinkInfo
@@ -62,8 +63,8 @@ class SurveyTemplateRepo(BaseRepo):
     def get_survey_template(self, survey_id, language_tag):
 
         tag_to_col = {
-            "en_us": "survey_question.american",
-            "en_gb": "survey_question.british"
+            localization.EN_US: "survey_question.american",
+            localization.EN_GB: "survey_question.british"
         }
 
         if language_tag not in tag_to_col:
@@ -142,8 +143,8 @@ class SurveyTemplateRepo(BaseRepo):
 
     def _get_group_localized_text(self, group_id, language_tag):
         tag_to_col = {
-            "en_us": "american",
-            "en_gb": "british"
+            localization.EN_US: "american",
+            localization.EN_GB: "british"
         }
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
@@ -158,8 +159,8 @@ class SurveyTemplateRepo(BaseRepo):
 
     def _get_question_valid_responses(self, survey_question_id, language_tag):
         tag_to_col = {
-            "en_us": "survey_response.american",
-            "en_gb": "survey_response.british"
+            localization.EN_US: "survey_response.american",
+            localization.EN_GB: "survey_response.british"
         }
 
         with self._transaction.cursor() as cur:
