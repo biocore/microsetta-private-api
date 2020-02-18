@@ -228,11 +228,6 @@ def delete_source(account_id, source_id):
 
 
 def read_survey_templates(account_id, source_id, language_tag):
-    # TODO: I don't think this query is backed by one of the existing tables
-    #  I think it was just hardcoded...  Which honestly seems like a fine
-    #  solution to me...  How much do we care that survey identifiers are
-    #  guessable?
-
     # TODO: I don't think surveys have names... only survey groups have names.
     #  So what can I pass down to the user that will make any sense here?
     with Transaction() as t:

@@ -1004,7 +1004,6 @@ components:
     sample_site:
       enum: ["Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
              "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", null]
-      nullable: true
       example: "Stool"
     sample_locked:
       type: boolean
