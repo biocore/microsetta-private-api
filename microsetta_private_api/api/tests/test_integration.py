@@ -237,9 +237,18 @@ class IntegrationTests(TestCase):
             '/api/accounts/%s/sources?language_tag=en_us' % ACCT_ID)
         check_response(resp)
         sources = json.loads(resp.data)
-        assert len([x for x in sources if x['source_name'] == 'Bo']) == 1
-        assert len([x for x in sources if x['source_name'] == 'Doggy']) == 1
-        assert len([x for x in sources if x['source_name'] == 'Planty']) == 1
+        self.assertEqual(
+            len([x for x in sources if x['source_name'] == 'Bo']),
+            1,
+            "Expected one source named Bo")
+        self.assertEqual(
+            len([x for x in sources if x['source_name'] == 'Doggy']),
+            1,
+            "Expected 1 source named Doggy")
+        self.assertEqual(
+            len([x for x in sources if x['source_name'] == 'Planty']),
+            1,
+            "Expected 1 source named Planty")
 
     def test_surveys(self):
         resp = self.client.get(
@@ -264,9 +273,9 @@ class IntegrationTests(TestCase):
             (ACCT_ID, env['source_id']))
         env_surveys = json.loads(resp.data)
 
-        assert bobo_surveys == [1, 3, 4, 5]
-        assert doggy_surveys == [2]
-        assert env_surveys == []
+        self.assertListEqual(bobo_surveys, [1, 3, 4, 5])
+        self.assertListEqual(doggy_surveys, [2])
+        self.assertListEqual(env_surveys, [])
 
     def test_bobo_takes_a_survey(self):
         """
@@ -321,7 +330,7 @@ class IntegrationTests(TestCase):
         with Transaction() as t:
             repo = SurveyAnswersRepo(t)
             found = repo.delete_answered_survey(ACCT_ID, survey_id)
-            assert found
+            self.assertTrue(found, "Couldn't find survey to delete, oops!")
             t.commit()
 
     def test_create_new_account(self):
@@ -363,8 +372,11 @@ class IntegrationTests(TestCase):
         acct_id_from_loc = url.path.split('/')[-1]
         new_acct = json.loads(response.data)
         acct_id_from_obj = new_acct['account_id']
-        assert acct_id_from_loc is not None
-        assert acct_id_from_loc == acct_id_from_obj
+        self.assertIsNotNone(acct_id_from_loc,
+                             "Couldn't retrieve acct from Location header")
+        self.assertEqual(acct_id_from_loc, acct_id_from_obj,
+                         "Different account ids in location header and json "
+                         "response")
 
         # Second register should fail with duplicate email 422
         response = self.client.post(
@@ -531,8 +543,11 @@ class IntegrationTests(TestCase):
             source_id_from_loc = url.path.split('/')[-1]
             new_source = json.loads(resp.data)
             source_id_from_obj = new_source['source_id']
-            assert source_id_from_loc is not None
-            assert source_id_from_obj == source_id_from_obj
+            self.assertIsNotNone(source_id_from_loc,
+                                 "Couldn't parse source id from location "
+                                 "header")
+            self.assertEqual(source_id_from_obj, source_id_from_obj,
+                             "Different source id from loc header and resp")
 
             # TODO: It would be standard to make a test database and delete it
             #  or keep it entirely in memory.  But the change scripts add in
@@ -573,8 +588,10 @@ class IntegrationTests(TestCase):
         source_id_from_loc = url.path.split('/')[-1]
         new_source = json.loads(resp.data)
         source_id_from_obj = new_source['source_id']
-        assert source_id_from_loc is not None
-        assert source_id_from_obj == source_id_from_obj
+        self.assertIsNotNone(source_id_from_loc,
+                             "Couldn't parse source_id from loc header")
+        self.assertEqual(source_id_from_obj, source_id_from_obj,
+                         "Different source id from loc header and json resp")
 
         self.client.delete(loc + "?language_tag=en_us")
 
@@ -651,7 +668,7 @@ class IntegrationTests(TestCase):
         for assoc_survey in assoc_surveys:
             if assoc_survey['survey_id'] == survey_id:
                 found = True
-        assert found
+        self.assertTrue(found, "Couldn't find newly linked survey association")
 
         # Check that we can delete the association
         resp = self.client.delete(
@@ -672,7 +689,7 @@ class IntegrationTests(TestCase):
         for assoc_survey in assoc_surveys:
             if assoc_survey.survey_id == survey_id:
                 found = True
-        assert not found
+        self.assertFalse(found, "Deleted survey association was still around")
 
         # Check that we can't assign a sample to a survey owned by a source
         #  other than the source which is associated with the sample
@@ -704,7 +721,7 @@ class IntegrationTests(TestCase):
         with Transaction() as t:
             repo = SurveyAnswersRepo(t)
             found = repo.delete_answered_survey(ACCT_ID, survey_id)
-            assert found
+            self.assertTrue(found, "Couldn't find survey for database cleanup")
             t.commit()
 
     def test_edit_sample_info(self):
@@ -792,10 +809,15 @@ class IntegrationTests(TestCase):
         check_response(response, 200)
         new_info = json.loads(response.data)
 
-        assert fuzzy_info['sample_notes'] == new_info['sample_notes']
-        assert fuzzy_info['sample_site'] == new_info['sample_site']
-        assert fuzzy_info['sample_datetime'] == fromisotime(
-            new_info['sample_datetime'])
+        self.assertEqual(fuzzy_info['sample_notes'],
+                         new_info['sample_notes'],
+                         "sample_notes not written")
+        self.assertEqual(fuzzy_info['sample_site'],
+                         new_info['sample_site'],
+                         "sample_site not written")
+        self.assertEqual(fuzzy_info['sample_datetime'],
+                         new_info['sample_datetime'],
+                         "sample_datetime not written")
 
         # Now dissociate the sample from HUMAN_ID
         response = self.client.delete(
@@ -821,9 +843,16 @@ class IntegrationTests(TestCase):
         )
         check_response(response, 200)
         plant_info = json.loads(response.data)
-        assert plant_info['sample_notes'] is None
-        assert plant_info['sample_site'] is None
-        assert plant_info['sample_datetime'] is None
+
+        self.assertIsNone(plant_info['sample_notes'],
+                          "Reclaiming a sample with a new source should not "
+                          "retain any data from the old association")
+        self.assertIsNone(plant_info['sample_site'],
+                          "Reclaiming a sample with a new source should not "
+                          "retain any data from the old association")
+        self.assertIsNone(plant_info['sample_datetime'],
+                          "Reclaiming a sample with a new source should not "
+                          "retain any data from the old association")
 
         # Finally, we lock the sample to prevent further edits
         with Transaction() as t:
@@ -869,13 +898,22 @@ class IntegrationTests(TestCase):
         form_gb = json.loads(resp.data)
 
         # Responses should differ by locale
-        assert form_us['groups'][0]['fields'][0]['id'] == '107'
-        assert form_us['groups'][0]['fields'][0]['label'] == 'Gender:'
-        assert form_gb['groups'][0]['fields'][0]['id'] == '107'
-        assert form_gb['groups'][0]['fields'][0]['label'] == 'Gandalf:'
+        self.assertEqual(form_us['groups'][0]['fields'][0]['id'], '107',
+                         "Survey question 107 moved, update the test!")
+        self.assertEqual(form_us['groups'][0]['fields'][0]['label'], 'Gender:',
+                         "Survey question 107 should say 'Gender:' in en_us")
+        self.assertEqual(form_gb['groups'][0]['fields'][0]['id'], '107',
+                         "Survey question 107 moved, update the test!")
+        self.assertEqual(
+            form_gb['groups'][0]['fields'][0]['label'],
+            'Gandalf:',
+            "Survey question 107 should say 'Gandalf:' (test setup for en_gb)")
 
-        assert 'Male' in form_us['groups'][0]['fields'][0]['values']
-        assert 'Wizard' in form_gb['groups'][0]['fields'][0]['values']
+        self.assertIn('Male', form_us['groups'][0]['fields'][0]['values'],
+                      "One choice for 107 should be 'Male' in en_us")
+        self.assertIn('Wizard', form_gb['groups'][0]['fields'][0]['values'],
+                      "One choice for 107 should be 'Wizard' in en_gb"
+                      "(After test setup for en_gb)")
 
         model_gb = fuzz_form(form_gb)
         model_gb['107'] = 'Wizard'  # British for 'Male' per test setup.
@@ -946,14 +984,16 @@ class IntegrationTests(TestCase):
             # in en_us and converted to either locale
             result = repo.get_answered_survey(ACCT_ID, HUMAN_ID,
                                               survey_id, 'en_us')
-            assert result['107'] == 'Male'
+            self.assertEqual(result['107'], 'Male',
+                             "Couldn't read answer from db in en_us")
             result = repo.get_answered_survey(ACCT_ID, HUMAN_ID,
                                               survey_id, 'en_gb')
-            assert result['107'] == 'Wizard'
+            self.assertEqual(result['107'], 'Wizard',
+                             "Couldn't read answer from db in en_gb")
 
             # Clean up after the new survey
             found = repo.delete_answered_survey(ACCT_ID, survey_id)
-            assert found
+            self.assertTrue(found, "Couldn't find survey answers in db")
             t.commit()
 
     def test_consent_localization(self):
@@ -964,9 +1004,15 @@ class IntegrationTests(TestCase):
                                   % (ACCT_ID,))
         check_response(resp_gb)
 
-        assert resp_us.data != resp_gb.data
-        assert "Murica!" in str(resp_us.data)
-        assert "QQBritannia" in str(resp_gb.data)
+        self.assertNotEqual(resp_us.data, resp_gb.data,
+                            "en_us and en_gb consent shouldn't be equal "
+                            "(after test setup)")
+        self.assertIn("Murica!", str(resp_us.data),
+                      "String inserted into consent doc during test setup"
+                      "not found (en_us)")
+        self.assertIn("QQBritannia", str(resp_gb.data),
+                      "String inserted into consent doc during test setup"
+                      "not found (en_us)")
 
 
 def _create_mock_kit(transaction):
