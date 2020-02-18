@@ -824,6 +824,7 @@ class IntegrationTests(TestCase):
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
             (ACCT_ID, HUMAN_ID, sample_id)
         )
+        check_response(response, 204)
 
         # All of those fields should be gone when we claim it again
         response = self.client.post(

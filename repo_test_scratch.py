@@ -6,7 +6,6 @@ from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
-from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 import datetime
 import json
 import microsetta_private_api.util.vue_adapter

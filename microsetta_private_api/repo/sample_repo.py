@@ -189,6 +189,7 @@ class SampleRepo(BaseRepo):
             if row is None:
                 raise werkzeug.exceptions.NotFound("No sample ID: %s" %
                                                    sample_id)
+
             if row[2] is not None:
                 if row[1] != account_id:
                     # This is the case where the sample is already assigned in
@@ -216,7 +217,7 @@ class SampleRepo(BaseRepo):
                          SampleInfo(sample_id, None, None, None))
 
         # And detach the sample from the source
-        self._update_sample_association(sample_id, source_id)
+        self._update_sample_association(sample_id, None)
 
     # TODO: I'm still not entirely happy with the linking between samples and
     #  sources.  The new source_id is direct (and required for environmental
