@@ -32,6 +32,8 @@ from microsetta_private_api.model.source import Source
 from microsetta_private_api.model.source import human_info_from_api
 from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 
+from werkzeug.exceptions import BadRequest
+
 from microsetta_private_api.util import vue_adapter
 
 import uuid
@@ -337,6 +339,23 @@ def read_sample_association(account_id, source_id, sample_id):
 def update_sample_association(account_id, source_id, sample_id, body):
     with Transaction() as t:
         sample_repo = SampleRepo(t)
+        source_repo = SourceRepo(t)
+
+        source = source_repo.get_source(account_id, source_id)
+        if source.source_type in [Source.SOURCE_TYPE_HUMAN,
+                                  Source.SOURCE_TYPE_ANIMAL]:
+            # Human/Animal sources require sample_site to be set
+            if "sample_site" not in body or body["sample_site"] is None:
+                raise BadRequest("human/animal samples require sample_site")
+        elif source.source_type in [Source.SOURCE_TYPE_ENVIRONMENT]:
+            if "sample_site" in body and body["sample_site"] is not None:
+                print("sample_site" in body)
+                print(body["sample_site"])
+                print(body["sample_site"] is not None)
+                raise BadRequest("environmental samples cannot specify "
+                                 "sample_site")
+        else:
+            raise Exception("Unhandled source type")
 
         sample_datetime = body['sample_datetime']
         if sample_datetime is not None:
@@ -464,19 +483,14 @@ def create_human_source_from_consent(account_id, body):
         }
     }
 
-    child_keys = ['parent_1_name', 'parent_2_name',
-                  'deceased_parent', 'obtainer_name']
+    child_keys = {'parent_1_name', 'parent_2_name', 'deceased_parent',
+                  'obtainer_name'}
 
-    any_in = False
-    for key in child_keys:
-        if key in body:
-            any_in = True
-
-    if any_in:
+    intersection = child_keys.intersection(body)
+    if len(intersection) > 0:
         source['consent']['child_info'] = {}
-        for key in child_keys:
-            if key in body:
-                source['consent']['child_info'][key] = body[key]
+        for key in intersection:
+            source['consent']['child_info'][key] = body[key]
 
     # NB: Don't expect to handle errors 404, 422 in this function; expect to
     # farm out to `create_source`

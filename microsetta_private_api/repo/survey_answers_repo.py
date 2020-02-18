@@ -310,10 +310,10 @@ class SurveyAnswersRepo(BaseRepo):
             return cur.fetchone() is not None
 
     def _unlocalize(self, answer, language_tag):
-        # TODO: This is EXTREMELY SHAKY.  There is no guarantee
-        #  that a word translates the same way independent of
-        #  any other context.  We will NEED a better framework
-        #  for localization than what currently exists!
+        # TODO: This is shaky due to the user of natural en_us primary keys.
+        #  There is no guarantee that a word translates the same way
+        #  independent of any other context.  We will eventually move to a
+        #  better framework for localization than what currently exists!
         tag_to_col = {
             "en_us": "american",
             "en_gb": "british"

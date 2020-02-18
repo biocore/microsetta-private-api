@@ -172,14 +172,6 @@ class SampleRepo(BaseRepo):
                             sample_info.id
                         ))
 
-    # TODO: Should this throw if the sample is already associated with
-    #  another source in the same account?  Technically they could disassociate
-    #  the sample first...
-    # TODO: Should this throw if the sample is "locked"?
-    #  ie: If barcodes.barcode.scan_date is not null?
-    # TODO FIXME HACK: Is this function supposed to null out end user fields?
-    #  (datetime_collected, site, notes) since these were written for (by?) a
-    #  different source?
     def associate_sample(self, account_id, source_id, sample_id):
         with self._transaction.cursor() as cur:
             cur.execute("SELECT "
@@ -204,8 +196,8 @@ class SampleRepo(BaseRepo):
                     raise RepoException("Sample is already assigned")
                 else:
                     # This is the case where the sample is already assigned in
-                    # the same account
-                    self._update_sample_association(sample_id, source_id)
+                    # the same account.  We will make them dissociate first.
+                    raise RepoException("Sample is already assigned")
             else:
                 # This is the case where the sample is not yet assigned
                 self._update_sample_association(sample_id, source_id)

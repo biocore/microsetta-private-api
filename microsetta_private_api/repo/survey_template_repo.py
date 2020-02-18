@@ -13,7 +13,6 @@ from microsetta_private_api.model.survey_template_trigger import \
 
 class SurveyTemplateRepo(BaseRepo):
 
-    # TODO FIXME HACK:  Where do I get user display names for surveys?
     SURVEY_INFO = {
         1: SurveyTemplateLinkInfo(
             1,
@@ -76,7 +75,6 @@ class SurveyTemplateRepo(BaseRepo):
                 "SELECT "
                 "group_questions.survey_group, "
                 "survey_question.survey_question_id, " +
-                # WARNING: NEVER DO THIS WITH USER ENTERED DATA
                 tag_to_col[language_tag] + ", " +
                 "survey_question.question_shortname, "
                 "survey_question_response_type.survey_response_type "
@@ -149,7 +147,6 @@ class SurveyTemplateRepo(BaseRepo):
         }
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
-                        # WARNING: NEVER DO THIS WITH USER ENTERED DATA
                         tag_to_col[language_tag] + " " +
                         "FROM survey_group "
                         "WHERE "
@@ -167,7 +164,6 @@ class SurveyTemplateRepo(BaseRepo):
 
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
-                        # WARNING: NEVER DO THIS WITH USER ENTERED DATA
                         tag_to_col[language_tag] + " "
                         "FROM "
                         "survey_question_response "

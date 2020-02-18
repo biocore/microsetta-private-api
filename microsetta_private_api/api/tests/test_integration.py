@@ -10,7 +10,7 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.model.source import \
     Source, HumanInfo, AnimalInfo, EnvironmentInfo
 from microsetta_private_api.model.address import Address
-from microsetta_private_api.util.util import json_converter
+from microsetta_private_api.util.util import json_converter, fromisotime
 import datetime
 import json
 from unittest import TestCase
@@ -664,11 +664,9 @@ class IntegrationTests(TestCase):
         )
         check_response(resp)
         assoc_surveys = json.loads(resp.data)
-        found = False
-        for assoc_survey in assoc_surveys:
-            if assoc_survey['survey_id'] == survey_id:
-                found = True
-        self.assertTrue(found, "Couldn't find newly linked survey association")
+        self.assertTrue(any([survey_id == survey['survey_id']
+                             for survey in assoc_surveys]),
+                        "Couldn't find newly linked survey association")
 
         # Check that we can delete the association
         resp = self.client.delete(
@@ -685,11 +683,9 @@ class IntegrationTests(TestCase):
         )
         check_response(resp)
         assoc_surveys = json.loads(resp.data)
-        found = False
-        for assoc_survey in assoc_surveys:
-            if assoc_survey.survey_id == survey_id:
-                found = True
-        self.assertFalse(found, "Deleted survey association was still around")
+        self.assertFalse(any([survey_id == survey['survey_id']
+                             for survey in assoc_surveys]),
+                         "Deleted survey association was still around")
 
         # Check that we can't assign a sample to a survey owned by a source
         #  other than the source which is associated with the sample
@@ -758,6 +754,10 @@ class IntegrationTests(TestCase):
         # Edit that sample info
         fuzzy_info = fuzz(sample_info)
 
+        # Ensure that we have required fields
+        fuzzy_info['sample_site'] = "Tears"
+        fuzzy_info['sample_datetime'] = datetime.datetime.utcnow()
+
         # Many fields are not writable, each should individually cause failure.
         readonly_fields = [
             'sample_id', 'sample_barcode',
@@ -774,7 +774,7 @@ class IntegrationTests(TestCase):
                 '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
                 (ACCT_ID, HUMAN_ID, sample_id),
                 content_type='application/json',
-                data=json.dumps(fuzzy_info)
+                data=json.dumps(fuzzy_info, default=json_converter)
             )
             check_response(response, 400)
             fuzzy_info.pop(readonly_field)
@@ -785,7 +785,7 @@ class IntegrationTests(TestCase):
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
             (ACCT_ID, HUMAN_ID, sample_id),
             content_type='application/json',
-            data=json.dumps(fuzzy_info)
+            data=json.dumps(fuzzy_info, default=json_converter)
         )
         check_response(response, 200)
 
@@ -816,7 +816,7 @@ class IntegrationTests(TestCase):
                          new_info['sample_site'],
                          "sample_site not written")
         self.assertEqual(fuzzy_info['sample_datetime'],
-                         new_info['sample_datetime'],
+                         fromisotime(new_info['sample_datetime']),
                          "sample_datetime not written")
 
         # Now dissociate the sample from HUMAN_ID
@@ -854,6 +854,20 @@ class IntegrationTests(TestCase):
                           "Reclaiming a sample with a new source should not "
                           "retain any data from the old association")
 
+        # And planty should be able to edit info without setting sample_site
+        response = self.client.put(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
+            (ACCT_ID, PLANTY_ID, sample_id),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_site": None,
+                    "sample_datetime": datetime.datetime.utcnow(),
+                    "sample_notes": "Nature Nature Nature"
+                }, default=json_converter)
+        )
+        check_response(response)
+
         # Finally, we lock the sample to prevent further edits
         with Transaction() as t:
             with t.cursor() as cur:
@@ -868,7 +882,12 @@ class IntegrationTests(TestCase):
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_us' %
             (ACCT_ID, PLANTY_ID, sample_id),
             content_type='application/json',
-            data=json.dumps(fuzzy_info, default=json_converter)
+            data=json.dumps(
+                {
+                    "sample_site": None,
+                    "sample_datetime": datetime.datetime.utcnow(),
+                    "sample_notes": "Mother Nature Mother Nature"
+                }, default=json_converter)
         )
         check_response(response, 422)
 
