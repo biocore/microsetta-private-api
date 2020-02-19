@@ -350,9 +350,6 @@ def update_sample_association(account_id, source_id, sample_id, body):
                 raise BadRequest("human/animal samples require sample_site")
         elif source.source_type in [Source.SOURCE_TYPE_ENVIRONMENT]:
             if "sample_site" in body and body["sample_site"] is not None:
-                print("sample_site" in body)
-                print(body["sample_site"])
-                print(body["sample_site"] is not None)
                 raise BadRequest("environmental samples cannot specify "
                                  "sample_site")
         else:
@@ -488,7 +485,7 @@ def create_human_source_from_consent(account_id, body):
                   'obtainer_name'}
 
     intersection = child_keys.intersection(body)
-    if len(intersection) > 0:
+    if intersection:
         source['consent']['child_info'] = {}
         for key in intersection:
             source['consent']['child_info'][key] = body[key]
