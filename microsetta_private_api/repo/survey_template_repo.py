@@ -72,6 +72,14 @@ class SurveyTemplateRepo(BaseRepo):
                            language_tag)
 
         with self._transaction.cursor() as cur:
+
+            cur.execute(
+                "SELECT count(*) FROM surveys WHERE survey_id=%s",
+                (survey_id,)
+            )
+            if cur.fetchone()[0] == 0:
+                raise NotFound("No such survey")
+
             cur.execute(
                 "SELECT "
                 "group_questions.survey_group, "
