@@ -95,7 +95,7 @@ class AccountRepo(BaseRepo):
                 return cur.rowcount == 1
             except psycopg2.errors.UniqueViolation as e:
                 if e.diag.constraint_name == 'idx_account_email':
-                    # TODO: Ugh. Localization of error messages is needed someday.
+                    # TODO: Ugh. Localization of error messages is needed.
                     raise RepoException("Email %s is not available"
                                         % account.email) from e
                 # Unknown exception, re raise it.

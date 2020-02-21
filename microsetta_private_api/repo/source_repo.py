@@ -1,5 +1,8 @@
+from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.source import (Source, DECODER_HOOKS)
+
+from werkzeug.exceptions import NotFound
 
 
 # Note: By convention, this references sources by both account_id AND source_id
@@ -126,6 +129,10 @@ class SourceRepo(BaseRepo):
 
     def create_source(self, source):
         with self._transaction.cursor() as cur:
+            acct_repo = AccountRepo(self._transaction)
+            if acct_repo.get_account(source.account_id) is None:
+                raise NotFound("No such account_id")
+
             cur.execute("INSERT INTO source (" + SourceRepo.write_cols + ") "
                         "VALUES("
                         "%s, %s, %s, "
