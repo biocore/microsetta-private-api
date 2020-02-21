@@ -162,14 +162,14 @@ def create_source(account_id, body):
         source_repo = SourceRepo(t)
         source_id = str(uuid.uuid4())
 
-        if body['source_type'] == 'human':
+        if body['source_type'] == Source.SOURCE_TYPE_HUMAN:
             # TODO: Unfortunately, humans require a lot of special handling,
             #  and we started mixing Source calls used for transforming to/
             #  from the database with source calls to/from the api.
             #  Would be nice to split this out better.
             new_source = Source(source_id,
                                 account_id,
-                                'human',
+                                Source.SOURCE_TYPE_HUMAN,
                                 human_info_from_api(
                                     body,
                                     consent_date=date.today(),
@@ -473,7 +473,7 @@ def create_human_source_from_consent(account_id, body):
     # Not adding any error handling here because if 'participant_name' isn't
     # here, we SHOULD be getting an error.
     source = {
-        'source_type': "human",
+        'source_type': Source.SOURCE_TYPE_HUMAN,
         'source_name': body['participant_name'],
         'consent': {
             'participant_email': body['participant_email'],
