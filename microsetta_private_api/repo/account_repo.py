@@ -75,23 +75,31 @@ class AccountRepo(BaseRepo):
             row_email_to_cc = row[1:]
             final_row = row_email_to_cc + row_id
 
-            cur.execute("UPDATE account "
-                        "SET "
-                        "email = %s, "
-                        "account_type = %s, "
-                        "auth_provider = %s, "
-                        "first_name = %s, "
-                        "last_name = %s, "
-                        "street = %s, "
-                        "city = %s, "
-                        "state = %s, "
-                        "post_code = %s, "
-                        "country_code = %s "
-                        "WHERE "
-                        "account.id = %s",
-                        final_row
-                        )
-            return cur.rowcount == 1
+            try:
+                cur.execute("UPDATE account "
+                            "SET "
+                            "email = %s, "
+                            "account_type = %s, "
+                            "auth_provider = %s, "
+                            "first_name = %s, "
+                            "last_name = %s, "
+                            "street = %s, "
+                            "city = %s, "
+                            "state = %s, "
+                            "post_code = %s, "
+                            "country_code = %s "
+                            "WHERE "
+                            "account.id = %s",
+                            final_row
+                            )
+                return cur.rowcount == 1
+            except psycopg2.errors.UniqueViolation as e:
+                if e.diag.constraint_name == 'idx_account_email':
+                    # TODO: Ugh. Localization of error messages is needed someday.
+                    raise RepoException("Email %s is not available"
+                                        % account.email) from e
+                # Unknown exception, re raise it.
+                raise e
 
     def create_account(self, account):
         try:
