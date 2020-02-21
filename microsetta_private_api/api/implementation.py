@@ -282,6 +282,9 @@ def read_answered_survey(account_id, source_id, survey_id, language_tag):
             source_id,
             survey_id,
             language_tag)
+        if not survey_answers:
+            return jsonify(code=404, message="No survey answers found"), 404
+
         return jsonify(survey_answers), 200
 
 
