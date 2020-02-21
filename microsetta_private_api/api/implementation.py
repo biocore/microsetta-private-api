@@ -194,7 +194,6 @@ def create_source(account_id, body):
 def read_source(account_id, source_id):
     with Transaction() as t:
         source_repo = SourceRepo(t)
-        # TODO: What about 404?
         source = source_repo.get_source(account_id, source_id)
         if source is None:
             return jsonify(code=404, message="Source not found"), 404
@@ -233,6 +232,13 @@ def delete_source(account_id, source_id):
 def read_survey_templates(account_id, source_id, language_tag):
     # TODO: I don't think surveys have names... only survey groups have names.
     #  So what can I pass down to the user that will make any sense here?
+
+    # Note to future maintainers,
+    # 2/21/20: currently the only way to figure this out
+    # is to look through the "surveys" and "survey_group" tables, try:
+    # select survey_id, american from surveys left join survey_group on
+    # survey_group = group_order;
+
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
