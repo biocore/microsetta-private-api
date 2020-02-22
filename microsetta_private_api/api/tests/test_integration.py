@@ -441,6 +441,7 @@ class IntegrationTests(TestCase):
         acc.pop('update_time')
         self.assertDictEqual(fuzzy_data, acc, "Check Fuzz Account Match")
 
+        # Attempt to restore back to old data.
         regular_data.pop('account_type')
         response = self.client.put(
             '/api/accounts/%s?language_tag=en-US' % (ACCT_ID,),
