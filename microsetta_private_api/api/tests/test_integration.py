@@ -459,9 +459,7 @@ class IntegrationTests(TestCase):
         self.assertDictEqual(regular_data, acc, "Check restore to regular")
 
     def test_add_sample_from_kit(self):
-        """ Test:  Can we add a kit to an existing account?
-            Note: With the changes in this api, rather than adding a kit
-            we instead list the samples in that kit, grab an unassociated one,
+        """ We list the samples in a kit, grab an unassociated one,
             and then associate that sample with our account
         """
         response = self.client.get(
