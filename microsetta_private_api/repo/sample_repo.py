@@ -1,9 +1,12 @@
 import werkzeug
+from werkzeug.exceptions import NotFound
 
+from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.sample import Sample, SampleInfo
 
 from microsetta_private_api.exceptions import RepoException
+from microsetta_private_api.repo.source_repo import SourceRepo
 
 
 class SampleRepo(BaseRepo):
@@ -11,7 +14,15 @@ class SampleRepo(BaseRepo):
         super().__init__(transaction)
 
     def get_samples_by_source(self, account_id, source_id):
-        with self._transaction.cursor as cur:
+        with self._transaction.cursor() as cur:
+            acct_repo = AccountRepo(self._transaction)
+            if acct_repo.get_account(account_id) is None:
+                raise NotFound("No such account")
+
+            source_repo = SourceRepo(self._transaction)
+            if source_repo.get_source(account_id, source_id) is None:
+                raise NotFound("No such source")
+
             cur.execute(
                 "SELECT "
                 "ag_kit_barcodes.ag_kit_barcode_id, "
