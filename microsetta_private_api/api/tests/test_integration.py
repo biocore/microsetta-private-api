@@ -26,7 +26,7 @@ PLANTY_ID = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
 
 SUPPLIED_KIT_ID = "FooFooFoo"
 KIT_ID = '77777777-8888-9999-aaaa-bbbbcccccccc'
-LINKER_ID = '99999999-aaaa-aaaa-aaaa-bbbbcccccccc'
+MOCK_SAMPLE_ID = '99999999-aaaa-aaaa-aaaa-bbbbcccccccc'
 BARCODE = '777777777'
 
 
@@ -1049,17 +1049,14 @@ def _create_mock_kit(transaction):
         cur.execute("INSERT INTO ag_kit_barcodes "
                     "(ag_kit_barcode_id, ag_kit_id, barcode) "
                     "VALUES(%s, %s, %s)",
-                    (LINKER_ID, KIT_ID, BARCODE))
+                    (MOCK_SAMPLE_ID, KIT_ID, BARCODE))
 
 
 def _remove_mock_kit(transaction):
     with transaction.cursor() as cur:
         cur.execute("DELETE FROM ag_kit_barcodes "
                     "WHERE ag_kit_barcode_id=%s",
-                    (LINKER_ID,))
-        cur.execute("DELETE FROM ag_kit_barcodes "
-                    "WHERE ag_kit_barcode_id=%s",
-                    (LINKER_ID,))
+                    (MOCK_SAMPLE_ID,))
         cur.execute("DELETE FROM ag_kit WHERE ag_kit_id=%s",
                     (KIT_ID,))
 
