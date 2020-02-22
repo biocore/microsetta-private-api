@@ -428,8 +428,6 @@ def associate_answered_survey(account_id, source_id, sample_id, body):
         )
         t.commit()
 
-    # TODO: Which location is this supposed to return exactly? The one to
-    #  the survey itself?
     response = flask.Response()
     response.status_code = 201
     response.headers['Location'] = '/api/accounts/%s' \
