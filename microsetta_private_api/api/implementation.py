@@ -347,29 +347,40 @@ def read_sample_association(account_id, source_id, sample_id):
 
 
 def update_sample_association(account_id, source_id, sample_id, body):
+    # TODO: API layer doesn't understand that BadRequest can be thrown,
+    #  but that looks to be the right result if sample_site bad.
+    #  Need to update the api layer if we want to specify 400s.
+    #  (Or we leave api as is and say 400's can always be thrown if your
+    #  request is bad)
     with Transaction() as t:
         sample_repo = SampleRepo(t)
         source_repo = SourceRepo(t)
 
         source = source_repo.get_source(account_id, source_id)
-        if source.source_type in [Source.SOURCE_TYPE_HUMAN,
-                                  Source.SOURCE_TYPE_ANIMAL]:
+        if source is None:
+            return jsonify(code=404, message="No such source"), 404
+
+        needs_sample_site = source.source_type in [Source.SOURCE_TYPE_HUMAN,
+                                                   Source.SOURCE_TYPE_ANIMAL]
+
+        precludes_sample_site = source.source_type == \
+            Source.SOURCE_TYPE_ENVIRONMENT
+
+        sample_site_present = "sample_site" in body and \
+                              body["sample_site"] is not None
+
+        if needs_sample_site and not sample_site_present:
             # Human/Animal sources require sample_site to be set
-            if "sample_site" not in body or body["sample_site"] is None:
-                raise BadRequest("human/animal samples require sample_site")
-        elif source.source_type in [Source.SOURCE_TYPE_ENVIRONMENT]:
-            if "sample_site" in body and body["sample_site"] is not None:
-                raise BadRequest("environmental samples cannot specify "
-                                 "sample_site")
-        else:
-            raise Exception("Unhandled source type")
+            raise BadRequest("human/animal samples require sample_site")
+        if precludes_sample_site and sample_site_present:
+            raise BadRequest("environmental samples cannot specify "
+                             "sample_site")
 
         sample_datetime = body['sample_datetime']
-        if sample_datetime is not None:
-            sample_datetime = datetime.strptime(sample_datetime,
-                                                "%Y-%m-%dT%H:%M:%S.%f")
-            # One day Python 3.7, one day :(
-            # sample_datetime = datetime.fromisoformat(sample_datetime)
+        sample_datetime = datetime.strptime(sample_datetime,
+                                            "%Y-%m-%dT%H:%M:%S.%f")
+        # One day Python 3.7, one day :(
+        # sample_datetime = datetime.fromisoformat(sample_datetime)
         sample_info = SampleInfo(
             sample_id,
             sample_datetime,
@@ -394,15 +405,16 @@ def read_answered_survey_associations(account_id, source_id, sample_id):
     with Transaction() as t:
         answers_repo = SurveyAnswersRepo(t)
         template_repo = SurveyTemplateRepo(t)
-        answers = answers_repo.list_answered_surveys_by_sample(account_id,
-                                                               source_id,
-                                                               sample_id)
+        answered_surveys = answers_repo.list_answered_surveys_by_sample(
+            account_id,
+            source_id,
+            sample_id)
 
         resp_obj = []
-        for answer in answers:
-            template_id = answers_repo.find_survey_template_id(answer)
+        for answered_survey in answered_surveys:
+            template_id = answers_repo.find_survey_template_id(answered_survey)
             info = template_repo.get_survey_template_link_info(template_id)
-            resp_obj.append(info.to_api(answer))
+            resp_obj.append(info.to_api(answered_survey))
 
         t.commit()
         return jsonify(resp_obj), 200
