@@ -120,23 +120,11 @@ class IntegrationTests(TestCase):
             copy.deepcopy(british_gut._NEW_PARTICIPANT)
         british_gut._NEW_PARTICIPANT['SEL_AGE_RANGE'] = "QQBritannia"
 
+        IntegrationTests.teardown_test_data()
+
         with Transaction() as t:
             acct_repo = AccountRepo(t)
             source_repo = SourceRepo(t)
-            survey_answers_repo = SurveyAnswersRepo(t)
-
-            # Clean up any possible leftovers from failed tests
-            _remove_mock_kit(t)
-
-            for source in source_repo.get_sources_in_account(ACCT_ID):
-                answers = survey_answers_repo.list_answered_surveys(ACCT_ID,
-                                                                    source.id)
-                for survey_id in answers:
-                    survey_answers_repo.delete_answered_survey(ACCT_ID,
-                                                               survey_id)
-                source_repo.delete_source(ACCT_ID, source.id)
-
-            acct_repo.delete_account(ACCT_ID)
 
             # Set up test account with sources
             acc = Account(ACCT_ID,
@@ -221,9 +209,14 @@ class IntegrationTests(TestCase):
             acct_repo = AccountRepo(t)
             source_repo = SourceRepo(t)
             _remove_mock_kit(t)
-            source_repo.delete_source(ACCT_ID, DOGGY_ID)
-            source_repo.delete_source(ACCT_ID, PLANTY_ID)
-            source_repo.delete_source(ACCT_ID, HUMAN_ID)
+            survey_answers_repo = SurveyAnswersRepo(t)
+            for source in source_repo.get_sources_in_account(ACCT_ID):
+                answers = survey_answers_repo.list_answered_surveys(ACCT_ID,
+                                                                    source.id)
+                for survey_id in answers:
+                    survey_answers_repo.delete_answered_survey(ACCT_ID,
+                                                               survey_id)
+                source_repo.delete_source(ACCT_ID, source.id)
             acct_repo.delete_account(ACCT_ID)
 
             t.commit()
