@@ -79,7 +79,7 @@ class SurveyAnswersRepo(BaseRepo):
 
         with self._transaction.cursor() as cur:
             cur.execute("SELECT "
-                        "barcode, survey_id "
+                        "survey_id "
                         "FROM "
                         "ag_kit_barcodes "
                         "LEFT JOIN source_barcodes_surveys "
@@ -88,7 +88,7 @@ class SurveyAnswersRepo(BaseRepo):
                         "ag_kit_barcode_id = %s",
                         (sample_id,))
             rows = cur.fetchall()
-            answered_surveys = [r[1] for r in rows if r[1] is not None]
+            answered_surveys = [r[0] for r in rows if r[0] is not None]
         return answered_surveys
 
     def get_answered_survey(self, ag_login_id, source_id,
