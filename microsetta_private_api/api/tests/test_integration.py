@@ -111,12 +111,6 @@ class IntegrationTests(TestCase):
         IntegrationTests.teardown_test_data()
 
     @staticmethod
-    def json_converter(o):
-        if isinstance(o, datetime.datetime):
-            return str(o)
-        return o.__dict__
-
-    @staticmethod
     def setup_test_data():
 
         american_gut._NEW_PARTICIPANT = \
@@ -134,12 +128,14 @@ class IntegrationTests(TestCase):
             # Clean up any possible leftovers from failed tests
             _remove_mock_kit(t)
 
-            answers = survey_answers_repo.list_answered_surveys(ACCT_ID,
-                                                                HUMAN_ID)
-            for survey_id in answers:
-                survey_answers_repo.delete_answered_survey(ACCT_ID, survey_id)
             for source in source_repo.get_sources_in_account(ACCT_ID):
+                answers = survey_answers_repo.list_answered_surveys(ACCT_ID,
+                                                                    source.id)
+                for survey_id in answers:
+                    survey_answers_repo.delete_answered_survey(ACCT_ID,
+                                                               survey_id)
                 source_repo.delete_source(ACCT_ID, source.id)
+
             acct_repo.delete_account(ACCT_ID)
 
             # Set up test account with sources
