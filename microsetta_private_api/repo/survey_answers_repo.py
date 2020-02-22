@@ -270,10 +270,11 @@ class SurveyAnswersRepo(BaseRepo):
     def dissociate_answered_survey_from_sample(self, account_id, source_id,
                                                sample_id, survey_id):
         sample_repo = SampleRepo(self._transaction)
-        s = sample_repo.get_sample(account_id, source_id, sample_id)
 
         if not self._acct_source_owns_survey(account_id, source_id, survey_id):
             raise werkzeug.exceptions.NotFound("No survey ID: %s" % survey_id)
+
+        s = sample_repo.get_sample(account_id, source_id, sample_id)
 
         if s is None:
             raise werkzeug.exceptions.NotFound("No sample ID: %s" % sample_id)
