@@ -157,7 +157,7 @@ class IntegrationTests(TestCase):
             source_repo.create_source(Source.create_human(
                 HUMAN_ID,
                 ACCT_ID,
-                HumanInfo("Bo", "bo@bo.com", False, "Mr Bo", "Mrs Bo",
+                HumanInfo("Bo", "bo@bo.com", False, None, None,
                           False, datetime.datetime.utcnow(), None,
                           "Mr. Obtainer",
                           "18-plus")
