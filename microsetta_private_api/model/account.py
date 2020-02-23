@@ -18,9 +18,9 @@ class Account(ModelBase):
         self.update_time = update_time
 
     def to_api(self):
-        # api users are not given the account id
-        # or the auth_provider
+        # api users are not given the auth_provider
         return {
+            "account_id": self.id,
             "first_name": self.first_name,
             "last_name": self.last_name,
             "email": self.email,
