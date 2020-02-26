@@ -37,6 +37,7 @@ class Sample(ModelBase):
 
     def to_api(self):
         return {
+            "sample_id": self.id,
             "sample_barcode": self.barcode,
             "sample_site": self.site,
             "sample_locked": self.is_locked,
@@ -44,3 +45,16 @@ class Sample(ModelBase):
             "sample_notes": self.notes,
             "sample_projects": list(self.sample_projects)
         }
+
+
+# A SampleInfo represents the set of end user editable fields whose lifetime
+# matches that of the association between a sample and a source
+class SampleInfo:
+    def __init__(self, sample_id, datetime_collected, site, notes):
+        self.id = sample_id
+        # NB: datetime_collected may be None if sample not yet used
+        self.datetime_collected = datetime_collected
+        # NB: notes may be None
+        self.notes = notes
+        # NB: site may be None if sample not yet used
+        self.site = site

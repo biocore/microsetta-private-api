@@ -19,10 +19,10 @@ class KitRepo(BaseRepo):
                         "ag_kit.ag_kit_id = ag_kit_barcodes.ag_kit_id "
                         "WHERE "
                         "ag_kit.supplied_kit_id = %s",
-                        supplied_kit_id)
+                        (supplied_kit_id,))
             rows = cur.fetchall()
             if len(rows) == 0:
                 return None
             else:
-                samples = [sample_repo.get_sample(r[1]) for r in rows]
+                samples = [sample_repo._get_sample_by_id(r[1]) for r in rows]
                 return Kit(rows[0][0], samples)

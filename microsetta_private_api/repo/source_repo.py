@@ -1,5 +1,8 @@
+from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.source import (Source, DECODER_HOOKS)
+
+from werkzeug.exceptions import NotFound
 
 
 # Note: By convention, this references sources by both account_id AND source_id
@@ -27,7 +30,7 @@ class SourceRepo(BaseRepo):
     def _row_to_source(r):
         hook = DECODER_HOOKS[r['source_type']]
         source_data = {
-            'name': r['source_name'],
+            'source_name': r['source_name'],
             'email': r['participant_email'],
             'is_juvenile': r['is_juvenile'],
             'parent1_name': r['parent_1_name'],
@@ -37,7 +40,7 @@ class SourceRepo(BaseRepo):
             'date_revoked': r['date_revoked'],
             'assent_obtainer': r['assent_obtainer'],
             'age_range': r['age_range'],
-            'description': r['description']
+            'source_description': r['description']
         }
         return Source(r[0], r[1], r[2], hook(source_data))
 
@@ -126,6 +129,10 @@ class SourceRepo(BaseRepo):
 
     def create_source(self, source):
         with self._transaction.cursor() as cur:
+            acct_repo = AccountRepo(self._transaction)
+            if acct_repo.get_account(source.account_id) is None:
+                raise NotFound("No such account_id")
+
             cur.execute("INSERT INTO source (" + SourceRepo.write_cols + ") "
                         "VALUES("
                         "%s, %s, %s, "

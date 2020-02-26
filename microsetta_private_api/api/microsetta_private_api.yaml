@@ -45,6 +45,8 @@ paths:
                 $ref: '#/components/schemas/account'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
@@ -822,7 +824,7 @@ components:
       in: path
       description: Unique id specifying a sample associated with a source
       schema:
-        $ref: '#/components/schemas/survey_id'
+        $ref: '#/components/schemas/sample_id'
       required: true
     survey_id:
       name: survey_id
@@ -871,6 +873,12 @@ components:
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
       description: Invalid or missing token.
+    403Forbidden:      # Can be referenced as '#/components/responses/403Forbidden'
+      description: Incorrect required parameter.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     404NotFound:       # Can be referenced as '#/components/responses/404NotFound'
       description: The specified resource was not found.
     422UnprocessableEntity:
@@ -978,6 +986,7 @@ components:
     # sample section
     sample_barcode:
       type: string
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
       example: "000038448"
     sample_datetime:
       type: string
@@ -989,6 +998,7 @@ components:
       example: "dae21127-27bb-4f52-9fd3-a2aa5eb5b86f"
     sample_notes:
       type: string
+      nullable: true
       example: "Oops, I dropped it"
     sample_site:
       enum: ["Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
@@ -996,9 +1006,11 @@ components:
       example: "Stool"
     sample_locked:
       type: boolean
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
       example: true
     sample_projects:
       type: array
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
       items:
         $ref: '#/components/schemas/sample_project'
       example:
@@ -1065,6 +1077,8 @@ components:
         source_type:
           type: string
           enum: [animal, environmental]
+        source_name:
+          type: string
         source_description:
           type: string
           nullable: true
@@ -1107,8 +1121,8 @@ components:
 
     # survey template section
     survey_template_id:
-      type: string
-      example: "e928f910-bf11-4cda-93b5-c34c8914b97f"
+      type: integer
+      example: 3
     survey_template_title:
       type: string
       example: "Personal Information"
@@ -1205,7 +1219,7 @@ components:
       example: "69f697cb-8e52-4a4f-8db2-efffcfa186a5"
     survey_text:
       # The contents of this string ARE structured, but their structure is not specified in THIS api.
-      type: string
+      type: object
       example: '{ |
                     "1": "Omnivore", |
                                           "2": "No", |
