@@ -483,7 +483,8 @@ def render_consent_doc(account_id, language_tag):
     return render_template("new_participant.jinja2",
                            message=None,
                            media_locale=media_locales[language_tag],
-                           tl=tls[language_tag])
+                           tl=tls[language_tag],
+                           lang_tag=language_tag)
 
 
 def create_human_source_from_consent(account_id, body):

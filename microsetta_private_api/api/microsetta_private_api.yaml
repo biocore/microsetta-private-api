@@ -115,10 +115,6 @@ paths:
       responses:
         '200':
           description: Consent form
-          headers:
-            Location:
-              schema:
-                type: string
           content:
             text/html:
               schema:
@@ -940,6 +936,11 @@ components:
           $ref: '#/components/schemas/creation_time'
         update_time:
           $ref: '#/components/schemas/update_time'
+      required:
+        - first_name
+        - last_name
+        - email
+        - address
     address:   # taken from https://opensource.zalando.com/restful-api-guidelines/#address-fields
       description:
         an address of a location/destination
