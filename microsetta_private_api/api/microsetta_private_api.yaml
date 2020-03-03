@@ -1007,6 +1007,7 @@ components:
     sample_projects:
       type: array
       readOnly: true # sent in GET, not in POST/PUT/PATCH
+      nullable: true
       items:
         $ref: '#/components/schemas/sample_project'
       example:

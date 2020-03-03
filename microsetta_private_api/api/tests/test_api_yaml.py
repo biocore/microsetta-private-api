@@ -5,10 +5,13 @@ import json
 import microsetta_private_api.server
 from urllib.parse import urlencode
 from unittest import TestCase
-from microsetta_private_api.api.tests.test_integration import ACCT_ID
 
 
 # region helper methods
+QUERY_KEY = "query"
+CONTENT_KEY = "content"
+
+
 def dictionary_mangler(a_dict, delete_fields=True, parent_dicts=None):
     """Generator to delete fields or add bogus fields in nested dictionary.
 
@@ -36,11 +39,6 @@ def dictionary_mangler(a_dict, delete_fields=True, parent_dicts=None):
         if curr_dicts is None:
             curr_dicts = copy.deepcopy(parent_dicts)
         yield mangle_dictionary(a_dict, curr_dicts)
-
-
-URL_KEY = "url"
-QUERY_KEY = "query"
-CONTENT_KEY = "content"
 
 
 def mangle_dictionary(a_dict, curr_dicts, key_to_delete=None):
@@ -135,8 +133,6 @@ class IntegrationTests(TestCase):
             # next deleted field
         # next dict to test
 
-    # region account
-
     def test_accounts_post_without_required_fields(self):
         """Not providing any required field returns validation fail code"""
 
@@ -161,50 +157,3 @@ class IntegrationTests(TestCase):
                                                        dicts_to_test,
                                                        content_dict,
                                                        self.lang_query_dict)
-
-    # def test_account_get_without_required_fields(self):
-    #     """Not providing any required field returns validation fail code"""
-    #
-    #     content_dict = {}
-    #
-    #     dicts_to_test = {QUERY_KEY: self.lang_query_dict,
-    #                      CONTENT_KEY: content_dict}
-    #
-    #     url = "/api/account/{0}".format(ACCT_ID)
-    #     self.run_query_and_content_required_field_test(url,
-    #                                                    dicts_to_test,
-    #                                                    content_dict,
-    #                                                    self.lang_query_dict)
-
-    # def test_accounts_post_with_extra_fields(self):
-    #     """Providing any field not in api returns validation fail code"""
-    #     my_dict = {
-    #         "address": {
-    #             "city": "Springfield",
-    #             "country_code": "US",
-    #             "post_code": "12345",
-    #             "state": "shouldn't have to be here",
-    #             "street": "123 Main St. E. Apt. 2"
-    #         },
-    #         "email": "janedoe@example.com",
-    #         "first_name": "Jane",
-    #         "last_name": "Doe",
-    #         "kit_name": "jb_qhxqe"
-    #     }
-    #
-    #     field_adder = dictionary_mangler(my_dict, delete_fields=False)
-    #     for i in field_adder:
-    #         print(i)
-    #         acct_json = json.dumps(i)
-    #         continue
-    #
-    #         response = self.client.post(
-    #             '/api/accounts?language_tag=en-US',
-    #             content_type='application/json',
-    #             data=acct_json
-    #         )
-    #
-    #         self.assertEqual(400, response.status_code)
-    #         resp_obj = json.loads(response.data)
-    #         self.assertTrue("is a required property" in resp_obj['detail'])
-    # endregion account post
