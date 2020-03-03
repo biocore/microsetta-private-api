@@ -275,7 +275,6 @@ class IntegrationTests(TestCase):
         self.assertEqual(to_edit["source_description"],
                          edit_resp["source_description"])
 
-
     def test_surveys(self):
         resp = self.client.get(
             '/api/accounts/%s/sources?language_tag=en-US' % ACCT_ID)
