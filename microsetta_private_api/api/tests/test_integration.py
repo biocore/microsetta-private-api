@@ -1083,6 +1083,10 @@ def _create_mock_kit(transaction):
                     "(ag_kit_barcode_id, ag_kit_id, barcode) "
                     "VALUES(%s, %s, %s)",
                     (MOCK_SAMPLE_ID, KIT_ID, BARCODE))
+        # Add the mock barcode to American Gut Project
+        cur.execute("INSERT INTO project_barcode "
+                    "(project_id, barcode) "
+                    "VALUES(%s, %s)", (1, BARCODE))
 
 
 def _remove_mock_kit(transaction):
@@ -1095,6 +1099,10 @@ def _remove_mock_kit(transaction):
 
         # Some tests may leak leftover surveys, wipe those out also
         cur.execute("DELETE FROM source_barcodes_surveys WHERE barcode = %s",
+                    (BARCODE,))
+
+        # Remove the mock barcode from any projects
+        cur.execute("DELETE FROM project_barcode WHERE barcode = %s",
                     (BARCODE,))
 
         cur.execute("DELETE FROM barcode WHERE barcode = %s",
