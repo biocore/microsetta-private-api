@@ -162,20 +162,19 @@ class IntegrationTests(TestCase):
                                                        content_dict,
                                                        self.lang_query_dict)
 
-    def test_account_get_without_required_fields(self):
-        """Not providing any required field returns validation fail code"""
-
-        content_dict = {}
-
-        dicts_to_test = {QUERY_KEY: self.lang_query_dict,
-                         CONTENT_KEY: content_dict}
-
-        url = "/api/account/{0}".format(ACCT_ID)
-        self.run_query_and_content_required_field_test(url,
-                                                       dicts_to_test,
-                                                       content_dict,
-                                                       self.lang_query_dict)
-
+    # def test_account_get_without_required_fields(self):
+    #     """Not providing any required field returns validation fail code"""
+    #
+    #     content_dict = {}
+    #
+    #     dicts_to_test = {QUERY_KEY: self.lang_query_dict,
+    #                      CONTENT_KEY: content_dict}
+    #
+    #     url = "/api/account/{0}".format(ACCT_ID)
+    #     self.run_query_and_content_required_field_test(url,
+    #                                                    dicts_to_test,
+    #                                                    content_dict,
+    #                                                    self.lang_query_dict)
 
     # def test_accounts_post_with_extra_fields(self):
     #     """Providing any field not in api returns validation fail code"""

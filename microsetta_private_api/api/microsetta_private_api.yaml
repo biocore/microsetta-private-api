@@ -987,6 +987,7 @@ components:
       type: string
       format: date-time
       example: "2017-07-21T17:32:28Z"
+      nullable: true
     sample_id:
       type: string
       readOnly: true # sent in GET, not in POST/PUT/PATCH
