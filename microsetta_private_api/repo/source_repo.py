@@ -98,33 +98,28 @@ class SourceRepo(BaseRepo):
                 return None
             return SourceRepo._row_to_source(r)
 
-    def update_source_data(self, source):
-        row = SourceRepo._source_to_row(source)
-
-        # Rotate id, account.id to end for the where clause
-        row_type_to_desc = row[2:]
-        row_id_and_acct = row[0:2]
-        final_row = row_type_to_desc + row_id_and_acct
+    def update_source_data_api_fields(self, source):
+        # Business Policy: For now I will let them edit only name and
+        # description.  Anything else they have to recreate the source
+        # Everything else they send up, we currently ignore.
+        # TODO: Change yaml to remove extraneous fields?
+        #  Raise exc in this layer?
 
         with self._transaction.cursor() as cur:
             cur.execute("UPDATE source "
                         "SET "
-                        "source_type = %s, "
                         "source_name = %s, "
-                        "participant_email = %s, "
-                        "is_juvenile = %s, "
-                        "parent_1_name = %s, "
-                        "parent_2_name = %s, "
-                        "deceased_parent = %s, "
-                        "date_signed = %s, "
-                        "date_revoked = %s, "
-                        "assent_obtainer = %s, "
-                        "age_range = %s, "
                         "description = %s "
                         "WHERE "
                         "source.id = %s AND "
                         "source.account_id = %s",
-                        final_row)
+                        (
+                            getattr(source.source_data, 'name', None),
+                            getattr(source.source_data, 'description', None),
+                            source.id,
+                            source.account_id
+                        )
+                        )
             return cur.rowcount == 1
 
     def create_source(self, source):

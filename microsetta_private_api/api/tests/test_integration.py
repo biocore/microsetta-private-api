@@ -239,6 +239,43 @@ class IntegrationTests(TestCase):
             1,
             "Expected 1 source named Planty")
 
+    def test_put_source(self):
+        resp = self.client.get(
+            '/api/accounts/%s/sources?language_tag=en-US' % ACCT_ID)
+
+        check_response(resp)
+        sources = json.loads(resp.data)
+        self.assertGreaterEqual(len(sources), 3)
+        to_edit = sources[2]
+        source_id = to_edit["source_id"]
+        fuzzy = fuzz(to_edit)
+        fuzzy["source_type"] = to_edit["source_type"]
+        fuzzy.pop("source_id")
+        resp = self.client.put(
+            '/api/accounts/%s/sources/%s?language_tag=en-US' %
+            (ACCT_ID, source_id),
+            content_type='application/json',
+            data=json.dumps(fuzzy)
+        )
+        check_response(resp)
+        fuzzy_resp = json.loads(resp.data)
+        self.assertEqual(fuzzy["source_name"], fuzzy_resp["source_name"])
+        self.assertEqual(fuzzy["source_description"],
+                         fuzzy_resp["source_description"])
+        to_edit.pop("source_id")
+        resp = self.client.put(
+            '/api/accounts/%s/sources/%s?language_tag=en-US' %
+            (ACCT_ID, source_id),
+            content_type='application/json',
+            data=json.dumps(to_edit)
+        )
+        check_response(resp)
+        edit_resp = json.loads(resp.data)
+        self.assertEqual(to_edit["source_name"], edit_resp["source_name"])
+        self.assertEqual(to_edit["source_description"],
+                         edit_resp["source_description"])
+
+
     def test_surveys(self):
         resp = self.client.get(
             '/api/accounts/%s/sources?language_tag=en-US' % ACCT_ID)
@@ -557,7 +594,6 @@ class IntegrationTests(TestCase):
             # TODO: Do I -really- need to specify a language_tag to delete???
             self.client.delete(loc + "?language_tag=en-US")
 
-
     def test_create_human_source(self):
         """To add a human source, we need to get consent"""
         resp = self.client.get('/api/accounts/%s/consent?language_tag=en-US' %
@@ -682,7 +718,7 @@ class IntegrationTests(TestCase):
         check_response(resp)
         assoc_surveys = json.loads(resp.data)
         self.assertFalse(any([survey_id == survey['survey_id']
-                             for survey in assoc_surveys]),
+                              for survey in assoc_surveys]),
                          "Deleted survey association was still around")
 
         # Check that we can't assign a sample to a survey owned by a source
@@ -977,7 +1013,7 @@ class IntegrationTests(TestCase):
                     'survey_template_id': BOBO_FAVORITE_SURVEY_TEMPLATE,
                     'survey_text': model_gb
                 })
-            )
+        )
         check_response(resp, 400)
 
         # Lastly, posting an answer that does translate but is wrong
@@ -993,7 +1029,7 @@ class IntegrationTests(TestCase):
                     'survey_template_id': BOBO_FAVORITE_SURVEY_TEMPLATE,
                     'survey_text': model_gb
                 })
-            )
+        )
         check_response(resp, 400)
 
         with Transaction() as t:

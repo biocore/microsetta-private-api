@@ -205,8 +205,8 @@ def update_source(account_id, source_id, body):
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
 
-        source.source_data = Source.info_from_api(body)
-        source_repo.update_source_data(source)
+        source.source_data = info_from_api(body)
+        source_repo.update_source_data_api_fields(source)
         # I wonder if there's some way to get the creation_time/update_time
         # during the insert/update...
         source = source_repo.get_source(account_id, source_id)
