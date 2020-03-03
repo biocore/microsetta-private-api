@@ -1133,7 +1133,7 @@ components:
       # The contents of this string ARE structured, but their structure is not specified in THIS api.
       # Could be *either* vue-compatible json to be used to generate an HTML form OR
       # a customized link to direct to an external survey
-      type: string
+      type: object
       example: '{ |
                   "groups": [ |
                     { |
@@ -1208,7 +1208,6 @@ components:
         - survey_template_title
         - survey_template_version
         - survey_template_type
-      additionalProperties: false
 
     # survey section
     survey_id:

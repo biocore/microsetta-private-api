@@ -643,7 +643,7 @@ class IntegrationTests(TestCase):
             (ACCT_ID, HUMAN_ID, chosen_survey))
         check_response(resp)
 
-        model = fuzz_form(json.loads(resp.data))
+        model = fuzz_form(json.loads(resp.data)["survey_template_text"])
         resp = self.client.post(
             '/api/accounts/%s/sources/%s/surveys?language_tag=en-US'
             % (ACCT_ID, HUMAN_ID),
