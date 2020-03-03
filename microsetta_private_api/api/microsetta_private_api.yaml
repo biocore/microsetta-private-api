@@ -957,7 +957,9 @@ components:
           example: Springfield
         state:
           description: |
-            state, province, or district
+            state, province, or district; |
+            set to empty string if not applicable |
+            for country's address format (e.g. New Zealand)
           type: string
           example: "ON"
         post_code:
@@ -972,9 +974,9 @@ components:
           type: string
           example: "CA" # NB: this is the country of *canada*, not the state of california
       required:
-        # Note that state is NOT required as not all countries (e.g. New Zealand) include this in their addresses
         - street
         - city
+        - state
         - post_code
         - country_code
 
