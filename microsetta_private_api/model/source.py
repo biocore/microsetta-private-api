@@ -122,9 +122,7 @@ class Source(ModelBase):
                         "participant_email": self.source_data.email,
                         "parent_1_name": self.source_data.parent1_name,
                         "parent_2_name": self.source_data.parent2_name,
-                        "deceased_parent": (self.source_data.parent1_deceased
-                                            or
-                                            self.source_data.parent2_deceased),
+                        "deceased_parent": self.source_data.deceased_parent,
                         "obtainer_name": self.source_data.assent_obtainer
                     }
                 else:
