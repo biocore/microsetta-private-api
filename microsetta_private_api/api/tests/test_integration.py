@@ -323,10 +323,12 @@ class IntegrationTests(TestCase):
             t.commit()
 
     def test_create_new_account(self):
-
+        # Had to change from janedoe@example.com after I ran api/ui to create
+        # a janedoe@example.com address in my test db.
+        FAKE_EMAIL = "zbkhasdahl4wlnas@asdjgakljesgnoqe.com"
         # Clean up before the test in case we already have a janedoe
         with Transaction() as t:
-            AccountRepo(t).delete_account_by_email("janedoe@example.com")
+            AccountRepo(t).delete_account_by_email(FAKE_EMAIL)
             t.commit()
 
         """ Test: Create a new account using a kit id """
@@ -339,7 +341,7 @@ class IntegrationTests(TestCase):
                     "state": "CA",
                     "street": "123 Main St. E. Apt. 2"
                 },
-                "email": "janedoe@example.com",
+                "email": FAKE_EMAIL,
                 "first_name": "Jane",
                 "last_name": "Doe",
                 "kit_name": "jb_qhxqe"
@@ -377,7 +379,7 @@ class IntegrationTests(TestCase):
 
         # Clean up after this test so we don't leave the account around
         with Transaction() as t:
-            AccountRepo(t).delete_account_by_email("janedoe@example.com")
+            AccountRepo(t).delete_account_by_email(FAKE_EMAIL)
             t.commit()
 
     def test_edit_account_info(self):
@@ -529,13 +531,20 @@ class IntegrationTests(TestCase):
             loc = resp.headers.get("Location")
             url = werkzeug.urls.url_parse(loc)
             source_id_from_loc = url.path.split('/')[-1]
-            new_source = json.loads(resp.data)
-            source_id_from_obj = new_source['source_id']
+            result_source = json.loads(resp.data)
+            source_id_from_obj = result_source['source_id']
             self.assertIsNotNone(source_id_from_loc,
                                  "Couldn't parse source id from location "
                                  "header")
-            self.assertEqual(source_id_from_obj, source_id_from_obj,
+            self.assertEqual(source_id_from_loc, source_id_from_obj,
                              "Different source id from loc header and resp")
+
+            self.assertEqual(new_source["source_type"],
+                             result_source["source_type"])
+            self.assertEqual(new_source["source_description"],
+                             result_source["source_description"])
+            self.assertEqual(new_source["source_name"],
+                             result_source["source_name"])
 
             # TODO: It would be standard to make a test database and delete it
             #  or keep it entirely in memory.  But the change scripts add in
@@ -547,6 +556,7 @@ class IntegrationTests(TestCase):
             # Clean Up by deleting the new sources
             # TODO: Do I -really- need to specify a language_tag to delete???
             self.client.delete(loc + "?language_tag=en-US")
+
 
     def test_create_human_source(self):
         """To add a human source, we need to get consent"""

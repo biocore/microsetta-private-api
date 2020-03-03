@@ -1,4 +1,20 @@
 from microsetta_private_api.model.model_base import ModelBase
+from werkzeug.exceptions import BadRequest
+
+
+def info_from_api(api_obj):
+    if api_obj.source_type == Source.SOURCE_TYPE_HUMAN:
+        # Note: consent_date and date_revoked aren't sent over the api
+        # so will be lost in translation
+        return human_info_from_api(api_obj,
+                                   consent_date=None,
+                                   date_revoked=None)
+    elif api_obj.source_type == Source.SOURCE_TYPE_ANIMAL:
+        return animal_decoder(api_obj)
+    elif api_obj.source_type == Source.SOURCE_TYPE_ENVIRONMENT:
+        return environment_decoder(api_obj)
+    else:
+        raise BadRequest("Unknown source_type: " + str(api_obj.source_type))
 
 
 def human_info_from_api(human_source, consent_date, date_revoked):
@@ -104,10 +120,11 @@ class Source(ModelBase):
                     consent = {
                         "participant_name": self.source_data.name,
                         "participant_email": self.source_data.email,
-                        "parent_1_name": self.parent1_name,
-                        "parent_2_name": self.parent2_name,
-                        "deceased_parent": (self.parent1_deceased or
-                                            self.parent2_deceased),
+                        "parent_1_name": self.source_data.parent1_name,
+                        "parent_2_name": self.source_data.parent2_name,
+                        "deceased_parent": (self.source_data.parent1_deceased
+                                            or
+                                            self.source_data.parent2_deceased),
                         "obtainer_name": self.source_data.assent_obtainer
                     }
                 else:
@@ -116,6 +133,9 @@ class Source(ModelBase):
                         "participant_email": self.source_data.email
                     }
             result["consent"] = consent
+        elif self.source_type in [Source.SOURCE_TYPE_ANIMAL,
+                                  Source.SOURCE_TYPE_ENVIRONMENT]:
+            result["source_description"] = self.source_data.description
 
         return result
 

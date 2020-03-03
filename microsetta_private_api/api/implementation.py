@@ -29,7 +29,7 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 
 from microsetta_private_api.model.account import Account
-from microsetta_private_api.model.source import Source
+from microsetta_private_api.model.source import Source, info_from_api
 from microsetta_private_api.model.source import human_info_from_api
 from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 
@@ -205,11 +205,7 @@ def update_source(account_id, source_id, body):
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
 
-        # Uhhh, where do I get source_data from???
-        # source.source_data = something?
-        # TODO: Answer: source data is coming in in the request body,
-        #  Fill it in!
-
+        source.source_data = Source.info_from_api(body)
         source_repo.update_source_data(source)
         # I wonder if there's some way to get the creation_time/update_time
         # during the insert/update...
