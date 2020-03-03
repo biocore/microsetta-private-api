@@ -1127,8 +1127,8 @@ components:
       type: string # someday could be an enum if we know choices
       example: "local"
     survey_template_version:
-      type: number
-      example: 0.1
+      type: string
+      example: "0.1"
     survey_template_text:
       # The contents of this string ARE structured, but their structure is not specified in THIS api.
       # Could be *either* vue-compatible json to be used to generate an HTML form OR

@@ -256,9 +256,12 @@ def read_survey_template(account_id, source_id, survey_template_id,
 
     with Transaction() as t:
         survey_template_repo = SurveyTemplateRepo(t)
+        info = survey_template_repo.get_survey_template_link_info(
+            survey_template_id)
         survey_template = survey_template_repo.get_survey_template(
             survey_template_id, language_tag)
-        return jsonify(vue_adapter.to_vue_schema(survey_template)), 200
+        info.survey_template_text = vue_adapter.to_vue_schema(survey_template)
+        return jsonify(info), 200
 
 
 def read_answered_surveys(account_id, source_id, language_tag):
