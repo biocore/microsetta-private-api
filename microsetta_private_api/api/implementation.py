@@ -85,7 +85,7 @@ def register_account(body):
         kit_repo = KitRepo(t)
         kit = kit_repo.get_kit(body['kit_name'])
         if kit is None:
-            return jsonify(error=403, text="Incorrect kit_name"), 403
+            return jsonify(error=404, text="Kit name not found"), 404
 
         acct_repo = AccountRepo(t)
         acct_repo.create_account(Account(
