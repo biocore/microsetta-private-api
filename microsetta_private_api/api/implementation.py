@@ -240,10 +240,13 @@ def read_survey_templates(account_id, source_id, language_tag):
         source = source_repo.get_source(account_id, source_id)
         if source is None:
             return jsonify(code=404, message="No source found"), 404
+        template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
-            return jsonify([1, 3, 4, 5]), 200
+            return jsonify([template_repo.get_survey_template_link_info(x)
+                           for x in [1, 3, 4, 5]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
-            return jsonify([2]), 200
+            return jsonify([template_repo.get_survey_template_link_info(x)
+                           for x in [2]]), 200
         else:
             return jsonify([]), 200
 
@@ -284,7 +287,12 @@ def read_answered_survey(account_id, source_id, survey_id, language_tag):
         if not survey_answers:
             return jsonify(code=404, message="No survey answers found"), 404
 
-        return jsonify(survey_answers), 200
+        template_id = survey_answers_repo.find_survey_template_id(survey_id)
+        template_repo = SurveyTemplateRepo(t)
+        link_info = template_repo.get_survey_template_link_info(template_id)
+        link_info.survey_id = survey_id
+        link_info.survey_text = survey_answers
+        return jsonify(link_info), 200
 
 
 def submit_answered_survey(account_id, source_id, language_tag, body):

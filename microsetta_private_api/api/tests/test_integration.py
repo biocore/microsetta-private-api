@@ -298,9 +298,12 @@ class IntegrationTests(TestCase):
             (ACCT_ID, env['source_id']))
         env_surveys = json.loads(resp.data)
 
-        self.assertListEqual(bobo_surveys, [1, 3, 4, 5])
-        self.assertListEqual(doggy_surveys, [2])
-        self.assertListEqual(env_surveys, [])
+        self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
+                             [1, 3, 4, 5])
+        self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
+                             [2])
+        self.assertListEqual([x["survey_template_id"] for x in env_surveys],
+                             [])
 
     def test_bobo_takes_a_survey(self):
         """
@@ -321,14 +324,14 @@ class IntegrationTests(TestCase):
             '/api/accounts/%s/sources/%s/survey_templates?language_tag=en-US' %
             (ACCT_ID, bobo['source_id']))
         bobo_surveys = json.loads(resp.data)
-        chosen_survey = bobo_surveys[0]
+        chosen_survey = bobo_surveys[0]["survey_template_id"]
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en-US' %
             (ACCT_ID, bobo['source_id'], chosen_survey))
         check_response(resp)
 
-        model = fuzz_form(json.loads(resp.data))
+        model = fuzz_form(json.loads(resp.data)["survey_template_text"])
         resp = self.client.post(
             '/api/accounts/%s/sources/%s/surveys?language_tag=en-US'
             % (ACCT_ID, bobo['source_id']),
@@ -349,7 +352,7 @@ class IntegrationTests(TestCase):
         resp = self.client.get(loc + "?language_tag=en-US")
         check_response(resp)
         retrieved_survey = json.loads(resp.data)
-        self.assertDictEqual(retrieved_survey, model)
+        self.assertDictEqual(retrieved_survey["survey_text"], model)
 
         # Clean up after the new survey
         with Transaction() as t:
@@ -950,6 +953,8 @@ class IntegrationTests(TestCase):
         check_response(resp)
         form_gb = json.loads(resp.data)
 
+        form_us = form_us["survey_template_text"]
+        form_gb = form_gb["survey_template_text"]
         # Responses should differ by locale
         self.assertEqual(form_us['groups'][0]['fields'][0]['id'], '107',
                          "Survey question 107 moved, update the test!")

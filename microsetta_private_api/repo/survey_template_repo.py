@@ -10,6 +10,7 @@ from microsetta_private_api.model.survey_template_question import \
         SurveyTemplateQuestion
 from microsetta_private_api.model.survey_template_trigger import \
         SurveyTemplateTrigger
+import copy
 
 
 class SurveyTemplateRepo(BaseRepo):
@@ -58,7 +59,7 @@ class SurveyTemplateRepo(BaseRepo):
 
     @staticmethod
     def get_survey_template_link_info(survey_id):
-        return SurveyTemplateRepo.SURVEY_INFO[survey_id]
+        return copy.deepcopy(SurveyTemplateRepo.SURVEY_INFO[survey_id])
 
     def get_survey_template(self, survey_id, language_tag):
 
