@@ -136,7 +136,7 @@
     <div class="" id="consent">
         <hr>
         <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{{ tl['BILL_OF_RIGHTS']|e}}</a><br/>
-        <form method="post" id="0-6-form" name="consent_info" onsubmit="return validate06();" action="consent">
+        <form method="post" id="0-6-form" name="consent_info" onsubmit="return validate06();" action="consent?language_tag={{ lang_tag }}">
            <input type="hidden" name="age_range" value="0-6">
            <p><input value="Yes" type="checkbox" name="consent_parent" id="consent_parent" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_PARENT'] |e}}</p>
     </div>
@@ -156,7 +156,7 @@
 </div>
     <div class="" id="consent">
         <hr>
-        <form method="post" id="7-12-form" name="consent_info" onsubmit="return validate712();" action="consent">
+        <form method="post" id="7-12-form" name="consent_info" onsubmit="return validate712();" action="consent?language_tag={{ lang_tag }}">
         <input type="hidden" name="age_range" value="7-12">
            <p><input value="Yes" type="checkbox" name="consent_child" id="consent_child" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_SIMPLIFIED'] |e}}</p>
     </div>
@@ -197,7 +197,7 @@
 </div>
     <div class="" id="consent">
         <hr>
-        <form method="post" id="13-17-form" name="consent_info" onsubmit="return validate1317();" action="consent">
+        <form method="post" id="13-17-form" name="consent_info" onsubmit="return validate1317();" action="consent?language_tag={{ lang_tag }}">
            <input type="hidden" name="age_range" value="13-17">
            <p><input value="Yes" type="checkbox" name="consent_child" id="consent_child" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_1'] |e}}</p>
     </div>
@@ -234,7 +234,7 @@
 <div class="" id="consent">
         <hr>
         <a href="http://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">{{ tl['BILL_OF_RIGHTS']|e}}</a><br/>
-        <form method="post" id="18-form" name="consent_info" onsubmit="return min_validation('18-form');" action="consent">
+        <form method="post" id="18-form" name="consent_info" onsubmit="return min_validation('18-form');" action="consent?language_tag={{ lang_tag }}">
         <input type="hidden" name="age_range" value="18-plus">
            <p><input value="Yes" type="checkbox" name="consent" id="consent" required data-rule-required="true"> {{ tl['TEXT_I_HAVE_READ_1'] |e}}</p>
     </div>
