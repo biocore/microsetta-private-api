@@ -845,7 +845,6 @@ class IntegrationTests(TestCase):
         )
         check_response(response, 400)
 
-
         response = self.client.get(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
             (ACCT_ID, HUMAN_ID, sample_id)
