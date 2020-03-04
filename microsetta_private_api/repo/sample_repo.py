@@ -40,7 +40,7 @@ class SampleRepo(BaseRepo):
                 "WHERE "
                 "source.account_id = %s AND "
                 "source.id = %s",
-                (source_id, account_id)
+                (account_id, source_id)
             )
 
             samples = []

@@ -518,7 +518,16 @@ class IntegrationTests(TestCase):
         )
         check_response(response)
 
-        # Check that we can now see this sample
+        # Check that we can now see this sample in the list
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/samples?language_tag=en-US' %
+            (ACCT_ID, DOGGY_ID)
+        )
+        check_response(response)
+        dog_samples = json.loads(response.data)
+        self.assertIn(sample_id, [x["sample_id"] for x in dog_samples])
+
+        # Check that we can now see this sample individually
         response = self.client.get(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
             (ACCT_ID, DOGGY_ID, sample_id)
