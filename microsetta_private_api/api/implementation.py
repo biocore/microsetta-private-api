@@ -36,9 +36,11 @@ from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api.util import vue_adapter
+from microsetta_private_api.util.util import fromisotime
 
 import uuid
 import json
+
 from datetime import date, datetime
 
 TOKEN_KEY = "QvMWMnlOqBbNsM88AMxpzcJMbBUu/w8U9joIaNYjuEbwEYhLIB5FqEoFWnfLN3JZN4SD0LAtZOwFNqyMLmNruBLqEvbpjQzM6AY+BfXGxDVFL65c9Xw8ocd6t1nF6YvTpHGB4NJhUwngjIQmFx+6TCa5wArtEqUeoIc1ukVTYbioRkxzi5ju8cc9/PoInB0c7wugMz5ihAPWohpDc4kCotYv7C2K/e9J9CPdwbiLJKYKxO4zSQAqk+Sj4wRcn7bJqIOIT6BlvvnzRGXYG33qXAxGylM4UySj7ltwSGOIY0/JUvKEej3fX17C8wWtJvrjbFQacNhoglqfWq2GeOdRSA== "  # noqa: E501
@@ -373,10 +375,10 @@ def update_sample_association(account_id, source_id, sample_id, body):
                              "sample_site")
 
         sample_datetime = body['sample_datetime']
-        sample_datetime = datetime.strptime(sample_datetime,
-                                            "%Y-%m-%dT%H:%M:%S.%f")
-        # One day Python 3.7, one day :(
-        # sample_datetime = datetime.fromisoformat(sample_datetime)
+        try:
+            sample_datetime = fromisotime(sample_datetime)
+        except ValueError:
+            raise BadRequest("Invalid sample_datetime")
         sample_info = SampleInfo(
             sample_id,
             sample_datetime,
