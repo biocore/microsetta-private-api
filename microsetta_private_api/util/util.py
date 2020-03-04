@@ -1,8 +1,6 @@
 import datetime
 from flask.json import JSONEncoder
-
-# Need python 3.7 for datetime.fromisotime !!
-ISO_FORMAT_8601 = "%Y-%m-%dT%H:%M:%S.%f"
+from dateutil.parser import isoparse
 
 
 class JsonifyDefaultEncoder(JSONEncoder):
@@ -11,7 +9,7 @@ class JsonifyDefaultEncoder(JSONEncoder):
 
 
 def fromisotime(s):
-    return datetime.datetime.strptime(s, ISO_FORMAT_8601)
+    return isoparse(s)
 
 
 def json_converter(o):

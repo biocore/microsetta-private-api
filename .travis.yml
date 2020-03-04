@@ -5,10 +5,9 @@ os:
 env:
   - CONDA_PY=3.8
   - CONDA_PY=3.7
-  - CONDA_PY=3.6
 
 services:
-  - postgresql 
+  - postgresql
 
 addons:
   postgresql: "9.5"
