@@ -835,6 +835,17 @@ class IntegrationTests(TestCase):
         )
         check_response(response, 200)
 
+        invalid_date_fuzzy_info = copy.copy(fuzzy_info)
+        invalid_date_fuzzy_info['sample_datetime'] = "1-800-BAD-DATE"
+        response = self.client.put(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            (ACCT_ID, HUMAN_ID, sample_id),
+            content_type='application/json',
+            data=json.dumps(invalid_date_fuzzy_info, default=json_converter)
+        )
+        check_response(response, 400)
+
+
         response = self.client.get(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
             (ACCT_ID, HUMAN_ID, sample_id)
