@@ -85,7 +85,7 @@ def register_account(body):
         kit_repo = KitRepo(t)
         kit = kit_repo.get_kit(body['kit_name'])
         if kit is None:
-            return jsonify(error=403, text="Incorrect kit_name"), 403
+            return jsonify(error=404, text="Kit name not found"), 404
 
         acct_repo = AccountRepo(t)
         acct_repo.create_account(Account(
@@ -240,10 +240,13 @@ def read_survey_templates(account_id, source_id, language_tag):
         source = source_repo.get_source(account_id, source_id)
         if source is None:
             return jsonify(code=404, message="No source found"), 404
+        template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
-            return jsonify([1, 3, 4, 5]), 200
+            return jsonify([template_repo.get_survey_template_link_info(x)
+                           for x in [1, 3, 4, 5]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
-            return jsonify([2]), 200
+            return jsonify([template_repo.get_survey_template_link_info(x)
+                           for x in [2]]), 200
         else:
             return jsonify([]), 200
 
@@ -256,9 +259,12 @@ def read_survey_template(account_id, source_id, survey_template_id,
 
     with Transaction() as t:
         survey_template_repo = SurveyTemplateRepo(t)
+        info = survey_template_repo.get_survey_template_link_info(
+            survey_template_id)
         survey_template = survey_template_repo.get_survey_template(
             survey_template_id, language_tag)
-        return jsonify(vue_adapter.to_vue_schema(survey_template)), 200
+        info.survey_template_text = vue_adapter.to_vue_schema(survey_template)
+        return jsonify(info), 200
 
 
 def read_answered_surveys(account_id, source_id, language_tag):
@@ -281,7 +287,12 @@ def read_answered_survey(account_id, source_id, survey_id, language_tag):
         if not survey_answers:
             return jsonify(code=404, message="No survey answers found"), 404
 
-        return jsonify(survey_answers), 200
+        template_id = survey_answers_repo.find_survey_template_id(survey_id)
+        template_repo = SurveyTemplateRepo(t)
+        link_info = template_repo.get_survey_template_link_info(template_id)
+        link_info.survey_id = survey_id
+        link_info.survey_text = survey_answers
+        return jsonify(link_info), 200
 
 
 def submit_answered_survey(account_id, source_id, language_tag, body):
@@ -447,7 +458,6 @@ def dissociate_answered_survey(account_id, source_id, sample_id, survey_id):
 def read_kit(kit_name):
     with Transaction() as t:
         kit_repo = KitRepo(t)
-        # TODO: Ensure this name is what the repo layer expects
         kit = kit_repo.get_kit(kit_name)
         if kit is None:
             return jsonify(code=404, message="No such kit"), 404
@@ -479,7 +489,8 @@ def render_consent_doc(account_id, language_tag):
     return render_template("new_participant.jinja2",
                            message=None,
                            media_locale=media_locales[language_tag],
-                           tl=tls[language_tag])
+                           tl=tls[language_tag],
+                           lang_tag=language_tag)
 
 
 def create_human_source_from_consent(account_id, body):

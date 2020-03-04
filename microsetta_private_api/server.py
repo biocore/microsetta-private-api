@@ -23,7 +23,7 @@ def build_app():
     app = connexion.FlaskApp(__name__)
 
     # Read the microsetta api spec file to configure the endpoints
-    app.add_api('api/microsetta_private_api.yaml')
+    app.add_api('api/microsetta_private_api.yaml', validate_responses=True)
 
     # Set default json encoder
     # Note: app.app is the actual Flask application instance, so any Flask
