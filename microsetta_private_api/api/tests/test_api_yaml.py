@@ -141,7 +141,7 @@ class IntegrationTests(TestCase):
                 "city": "Springfield",
                 "country_code": "US",
                 "post_code": "12345",
-                # No state because state is optional
+                "state": "OH",
                 "street": "123 Main St. E. Apt. 2"
             },
             "email": "janedoe@example.com",
