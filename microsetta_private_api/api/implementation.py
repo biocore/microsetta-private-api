@@ -83,6 +83,9 @@ def register_account(body):
     # TODO: Do they register with GLOBUS first, then make the account here?
     #  What should be done with the kit_name?
     new_acct_id = str(uuid.uuid4())
+    body["id"] = new_acct_id
+    account_obj = Account.from_dict(body)
+
     with Transaction() as t:
         kit_repo = KitRepo(t)
         kit = kit_repo.get_kit(body['kit_name'])
@@ -90,21 +93,7 @@ def register_account(body):
             return jsonify(error=404, text="Kit name not found"), 404
 
         acct_repo = AccountRepo(t)
-        acct_repo.create_account(Account(
-            new_acct_id,
-            body['email'],
-            "standard",
-            "GLOBUS",  # TODO: This is dependent on their login token!
-            body['first_name'],
-            body['last_name'],
-            Address(
-                body['address']['street'],
-                body['address']['city'],
-                body['address']['state'],
-                body['address']['post_code'],
-                body['address']['country_code'],
-            )
-        ))
+        acct_repo.create_account(account_obj)
         new_acct = acct_repo.get_account(new_acct_id)
         t.commit()
 
