@@ -1,7 +1,6 @@
 import pytest
-
 from unittest import TestCase
-from microsetta_private_api.api.implementation import verify_and_decode_token
+import microsetta_private_api.server
 
 
 @pytest.mark.usefixtures("client")

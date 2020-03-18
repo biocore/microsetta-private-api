@@ -167,8 +167,7 @@ class FlaskTests(TestCase):
         "language_tag": "en_US"
     }
 
-    dummy_auth = {'Authorization':
-                      'Bearer PutMySecureOauthTokenHere'}
+    dummy_auth = {'Authorization': 'Bearer PutMySecureOauthTokenHere'}
 
     default_lang_tag = lang_query_dict["language_tag"]
 
@@ -321,9 +320,6 @@ class AccountsTests(FlaskTests):
 
     def test_accounts_create_fail_400_without_required_fields(self):
         """Return 400 validation fail if don't provide a required field """
-
-        dicts_to_test = {QUERY_KEY: self.lang_query_dict,
-                         CONTENT_KEY: DUMMY_ACCT_INFO}
 
         self.run_query_and_content_required_field_test("/api/accounts", "post",
                                                        self.lang_query_dict,
