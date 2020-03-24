@@ -74,10 +74,10 @@ def mapper(input, output, lang):
         # only possible at present once all questions have been translated
         # and there is a legacy survey in the system which does not make sense
         # to translate.
-        #out.write("ALTER TABLE ag.survey_question\n"
-        #          f"    ALTER COLUMN {lang} SET NOT NULL;")
-        #out.write("ALTER TABLE ag.survey_question_response\n"
-        #          f"    ALTER COLUMN {lang} SET NOT NULL;")
+        # out.write("ALTER TABLE ag.survey_question\n"
+        #           f"    ALTER COLUMN {lang} SET NOT NULL;")
+        # out.write("ALTER TABLE ag.survey_question_response\n"
+        #           f"    ALTER COLUMN {lang} SET NOT NULL;")
 
 
 if __name__ == '__main__':
