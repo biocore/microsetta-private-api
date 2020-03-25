@@ -564,7 +564,7 @@ def create_human_source_from_consent(account_id, body, token_info):
     return create_source(account_id, source, token_info)
 
 
-def _verify_authrocket(token):
+def verify_authrocket(token):
     try:
         token_info = jwt.decode(token,
                                 AUTHROCKET_PUB_KEY,
@@ -580,20 +580,10 @@ def _verify_authrocket(token):
         raise(Unauthorized("Invalid Token", e))
 
 
-def verify_authrocket(token):
-    # NOTE: Helper function serves as a method for unit test mocks
-    return _verify_authrocket(token)
-
-
-def _validate_access(token_info, account_id):
+def validate_access(token_info, account_id):
     with Transaction() as t:
         account_repo = AccountRepo(t)
         account = account_repo.get_account(account_id)
         if account.auth_issuer != token_info['iss'] or \
                 account.auth_sub != token_info['sub']:
             raise Unauthorized()
-
-
-def validate_access(token_info, account_id):
-    # NOTE: Helper function serves as a method for unit test mocks
-    return _validate_access(token_info, account_id)
