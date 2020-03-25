@@ -569,11 +569,10 @@ def verify_authrocket(token):
         token_info = jwt.decode(token,
                                 AUTHROCKET_PUB_KEY,
                                 algorithm="RS256",
-                                verify=True)
-        if token_info['iss'] != "https://authrocket.com":
-            raise(Unauthorized("Invalid issuer"))
+                                verify=True,
+                                issuer="https://authrocket.com")
 
-        # TODO: Ensure that we're checking every field that we care about
+        # TODO: Ensure that decode checks every field that we care about
 
         return token_info
     except InvalidTokenError as e:
@@ -584,6 +583,9 @@ def validate_access(token_info, account_id):
     with Transaction() as t:
         account_repo = AccountRepo(t)
         account = account_repo.get_account(account_id)
-        if account.auth_issuer != token_info['iss'] or \
+        if account is None or \
+           'iss' not in token_info or \
+           'sub' not in token_info or \
+                account.auth_issuer != token_info['iss'] or \
                 account.auth_sub != token_info['sub']:
             raise Unauthorized()
