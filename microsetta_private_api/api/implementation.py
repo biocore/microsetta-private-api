@@ -68,6 +68,9 @@ def not_yet_implemented():
 def register_account(body, token_info):
     # First register with AuthRocket, then come here to make the account
     new_acct_id = str(uuid.uuid4())
+    body["id"] = new_acct_id
+    account_obj = Account.from_dict(body, token_info['iss'], token_info['sub'])
+
     with Transaction() as t:
         kit_repo = KitRepo(t)
         kit = kit_repo.get_kit(body['kit_name'])
@@ -75,26 +78,7 @@ def register_account(body, token_info):
             return jsonify(error=404, text="Kit name not found"), 404
 
         acct_repo = AccountRepo(t)
-        # TODO: The email they provide our website may not match the email they
-        #  use for login to our Identity Provider.  If that occurs, should we
-        #  reject the account registration?  If we don't use the email from the
-        #  IDP, we have to do our own email validation...
-        acct_repo.create_account(Account(
-            new_acct_id,
-            body['email'],
-            "standard",
-            token_info['iss'],
-            token_info['sub'],
-            body['first_name'],
-            body['last_name'],
-            Address(
-                body['address']['street'],
-                body['address']['city'],
-                body['address']['state'],
-                body['address']['post_code'],
-                body['address']['country_code'],
-            )
-        ))
+        acct_repo.create_account(account_obj)
         new_acct = acct_repo.get_account(new_acct_id)
         t.commit()
 
