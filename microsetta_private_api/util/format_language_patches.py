@@ -1,20 +1,30 @@
 import pandas as pd
 import click
+from psycopg2 import connect, sql
+
+_conn = connect(host='localhost', database='ag_test')
+_update_question = sql.SQL("UPDATE ag.survey_question "
+                           "SET {lang} = {question} "
+                           "WHERE survey_question_id = {qid};")
+_update_response = sql.SQL("UPDATE ag.survey_question_response "
+                           "SET {lang} = {response} "
+                           "WHERE survey_question_id = {qid} AND "
+                           "    display_index = {response_index};")
 
 
 def _format_update_question(lang, qid, question):
-    return (f"UPDATE ag.survey_question SET {lang} = '{question}'\n"
-            f"  WHERE survey_question_id = {qid};\n\n")
+    fmt = _update_question.format(lang=sql.Identifier(lang),
+                                  question=sql.Literal(question),
+                                  qid=sql.Literal(qid))
+    return fmt.as_string(_conn) + '\n'
 
 
 def _format_update_resp(lang, qid, response, response_index):
-    # french likes to use single quotes, and postgres wants ''
-    # to escape
-    response = response.replace("'", "''")
-    return (f"UPDATE ag.survey_question_response \n"
-            f"  SET {lang} = '{response}'\n"
-            f"  WHERE survey_question_id = {qid} AND\n"
-            f"        display_index = {response_index};\n")
+    fmt = _update_response.format(lang=sql.Identifier(lang),
+                                  response=sql.Literal(response),
+                                  qid=sql.Literal(qid),
+                                  response_index=sql.Literal(response_index))
+    return fmt.as_string(_conn) + '\n'
 
 
 @click.command()
@@ -70,14 +80,6 @@ def mapper(input, output, lang):
 
                         out.write(_format_update_resp(lang, qid, resp, respix))
                     out.write('\n')
-
-        # only possible at present once all questions have been translated
-        # and there is a legacy survey in the system which does not make sense
-        # to translate.
-        # out.write("ALTER TABLE ag.survey_question\n"
-        #           f"    ALTER COLUMN {lang} SET NOT NULL;")
-        # out.write("ALTER TABLE ag.survey_question_response\n"
-        #           f"    ALTER COLUMN {lang} SET NOT NULL;")
 
 
 if __name__ == '__main__':
