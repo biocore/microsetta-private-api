@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 import copy
 import collections
@@ -77,7 +79,15 @@ def client(request):
     app.app.testing = True
     with app.app.test_client() as client:
         request.cls.client = client
-        yield client
+        with patch("microsetta_private_api.api.implementation."
+                   "verify_authrocket") as mock_verify:
+            mock_verify.return_value = {
+                "iss": "MrUnitTest.go",
+                "sub": "NotARealSub"
+            }
+            with patch("microsetta_private_api.api.implementation."
+                       "validate_access"):
+                yield client
 
 
 @pytest.mark.usefixtures("client")
@@ -124,7 +134,11 @@ class IntegrationTests(TestCase):
                 response = self.client.post(
                     '{0}?{1}'.format(url, curr_query_str),
                     content_type='application/json',
-                    data=curr_content_json
+                    data=curr_content_json,
+                    headers={
+                        "Authorization":
+                        "Bearer WooWooooo"
+                    }
                 )
 
                 self.assertEqual(400, response.status_code)
