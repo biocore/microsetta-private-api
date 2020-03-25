@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 import werkzeug
 import json
@@ -54,6 +56,27 @@ DUMMY_ACCT_INFO_2 = {
 ACCT_ID_KEY = "account_id"
 ACCT_TYPE_KEY = "account_type"
 ACCT_TYPE_VAL = "standard"
+ACCT_MOCK_ISS = "MrUnitTest.go"
+ACCT_MOCK_SUB = "NotARealSub"
+ACCT_MOCK_ISS_2 = "NewPhone"
+ACCT_MOCK_SUB_2 = "WhoDis"
+MOCK_HEADERS = {"Authorization": "Bearer BoogaBooga"}
+MOCK_HEADERS_2 = {"Authorization": "Bearer WoogaWooga"}
+
+
+def mock_verify(token):
+    if token == "BoogaBooga":
+        return {
+            'iss': ACCT_MOCK_ISS,
+            'sub': ACCT_MOCK_SUB
+        }
+    else:
+        return {
+            'iss': ACCT_MOCK_ISS_2,
+            'sub': ACCT_MOCK_SUB_2
+        }
+
+
 CREATION_TIME_KEY = "creation_time"
 UPDATE_TIME_KEY = "update_time"
 
@@ -133,7 +156,9 @@ def delete_dummy_accts():
         t.commit()
 
 
-def create_dummy_acct(create_dummy_1=True):
+def create_dummy_acct(create_dummy_1=True,
+                      iss=ACCT_MOCK_ISS,
+                      sub=ACCT_MOCK_SUB):
     if create_dummy_1:
         dummy_acct_id = "7a98df6a-e4db-40f4-91ec-627ac315d881"
         dict_to_copy = DUMMY_ACCT_INFO
@@ -145,20 +170,27 @@ def create_dummy_acct(create_dummy_1=True):
     input_obj["id"] = dummy_acct_id
     with Transaction() as t:
         acct_repo = AccountRepo(t)
-        acct_repo.create_account(Account.from_dict(input_obj))
+        acct_repo.create_account(Account.from_dict(input_obj,
+                                                   iss,
+                                                   sub))
         t.commit()
 
     return dummy_acct_id
 # endregion help methods
 
 
+# We will mock out the jwt verification, but not the iss/sub validation,
+# this means the tests have to send the right headers for the right account
 @pytest.fixture(scope="class")
 def client(request):
     app = microsetta_private_api.server.build_app()
     app.app.testing = True
     with app.app.test_client() as client:
         request.cls.client = client
-        yield client
+        with patch("microsetta_private_api.api.implementation."
+                   "verify_authrocket") as mock_v:
+            mock_v.side_effect = mock_verify
+            yield client
 
 
 @pytest.mark.usefixtures("client")
@@ -167,7 +199,7 @@ class FlaskTests(TestCase):
         "language_tag": "en_US"
     }
 
-    dummy_auth = {'Authorization': 'Bearer PutMySecureOauthTokenHere'}
+    dummy_auth = MOCK_HEADERS
 
     default_lang_tag = lang_query_dict["language_tag"]
 
@@ -298,7 +330,8 @@ class AccountsTests(FlaskTests):
         response = self.client.post(
             '/api/accounts?language_tag=%s' % self.default_lang_tag,
             content_type='application/json',
-            data=input_json
+            data=input_json,
+            headers=MOCK_HEADERS
         )
 
         # check response code
@@ -337,7 +370,8 @@ class AccountsTests(FlaskTests):
         response = self.client.post(
             '/api/accounts?language_tag=%s' % self.default_lang_tag,
             content_type='application/json',
-            data=input_json
+            data=input_json,
+            headers=MOCK_HEADERS
         )
 
         # check response code
@@ -363,7 +397,8 @@ class AccountsTests(FlaskTests):
         response = self.client.post(
             '/api/accounts?language_tag=%s' % self.default_lang_tag,
             content_type='application/json',
-            data=input_json
+            data=input_json,
+            headers=MOCK_HEADERS
         )
 
         # check response code
@@ -417,8 +452,10 @@ class AccountTests(FlaskTests):
             (MISSING_ACCT_ID, self.default_lang_tag),
             headers=self.dummy_auth)
 
-        # check response code
-        self.assertEqual(404, response.status_code)
+        # check response code, either is acceptable
+        # 401: Dunno if its missing, but you're not authorized to check
+        # 404: It's definitely missing
+        self.assertIn(response.status_code, [401, 404])
     # endregion account view/get tests
 
     # region account update/put tests
@@ -489,8 +526,10 @@ class AccountTests(FlaskTests):
             content_type='application/json',
             data=input_json)
 
-        # check response code
-        self.assertEqual(404, response.status_code)
+        # check response code, either is acceptable
+        # 401: Dunno if its missing, but you're not authorized to check
+        # 404: It's definitely missing
+        self.assertIn(response.status_code, [401, 404])
 
     def test_accounts_update_fail_422(self):
         """Return 422 if provided email is in use in db."""
@@ -500,7 +539,9 @@ class AccountTests(FlaskTests):
         # into strings that won't pass the api's email format validation :(
         create_dummy_acct(create_dummy_1=False)
 
-        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True,
+                                          iss=ACCT_MOCK_ISS_2,
+                                          sub=ACCT_MOCK_SUB_2)
         # Now try to update the account with info that is the same in
         # all respects from the dummy one EXCEPT that it has
         # an email that is already in use by ANOTHER account
@@ -513,7 +554,7 @@ class AccountTests(FlaskTests):
         response = self.client.put(
             '/api/accounts/%s?language_tag=%s' %
             (dummy_acct_id, self.default_lang_tag),
-            headers=self.dummy_auth,
+            headers=MOCK_HEADERS_2,
             content_type='application/json',
             data=input_json)
 

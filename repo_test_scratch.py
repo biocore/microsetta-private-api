@@ -47,7 +47,8 @@ with Transaction() as t:
     acc = Account(ACCT_ID,
                   "foo@baz.com",
                   "standard",
-                  "GLOBUS",
+                  "https://RepoTestScratch.dancode",
+                  "THISSUBISNOTREAL",
                   "Dan",
                   "H",
                   {

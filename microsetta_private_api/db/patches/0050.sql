@@ -18,7 +18,8 @@ CREATE TABLE ag.account (
     id uuid PRIMARY KEY NOT NULL,
     email varchar,
     account_type varchar NOT NULL,
-    auth_provider varchar NOT NULL,
+    auth_issuer varchar,
+    auth_sub varchar,
     first_name varchar,
     last_name varchar,
     street varchar,
@@ -35,6 +36,8 @@ CREATE TABLE ag.account (
 );
 
 CREATE UNIQUE INDEX idx_account_email ON ag.account ( email );
+CREATE UNIQUE INDEX idx_account_issuer_sub ON ag.account
+( auth_issuer, auth_sub );
 CREATE TRIGGER update_account_trigger BEFORE UPDATE ON account FOR EACH ROW
   EXECUTE PROCEDURE update_trigger();
 

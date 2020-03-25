@@ -268,18 +268,18 @@ class MigrationSupport:
             cc = country_map[r['country']]
 
             TRN.add("INSERT INTO account("
-                    "id, email, account_type, auth_provider, "
+                    "id, email, account_type, auth_issuer, auth_sub, "
                     "first_name, last_name, "
                     "street, city, state, post_code, country_code, "
                     "latitude, longitude, "
                     "cannot_geocode, elevation) "
                     "VALUES("
-                    "%s, %s, %s, %s, "
+                    "%s, %s, %s, %s, %s, "
                     "%s, %s, "
                     "%s, %s, %s, %s, %s, "
                     "%s, %s, "
                     "%s, %s)",
-                    (r['ag_login_id'], r['email'], 'standard', 'GLOBUS',
+                    (r['ag_login_id'], r['email'], 'standard', None, None,
                      first_name, last_name,
                      r['address'], r['city'], r['state'], r['zip'], cc,
                      r['latitude'], r['longitude'],
