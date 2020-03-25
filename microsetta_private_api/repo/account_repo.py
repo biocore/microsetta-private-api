@@ -10,13 +10,13 @@ class AccountRepo(BaseRepo):
         super().__init__(transaction)
 
     read_cols = "id, email, " \
-                "account_type, auth_provider, " \
+                "account_type, auth_issuer, auth_sub, " \
                 "first_name, last_name, " \
                 "street, city, state, post_code, country_code, " \
                 "creation_time, update_time"
 
     write_cols = "id, email, " \
-                 "account_type, auth_provider, " \
+                 "account_type, auth_issuer, auth_sub, " \
                  "first_name, last_name, " \
                  "street, city, state, post_code, country_code"
 
@@ -42,7 +42,7 @@ class AccountRepo(BaseRepo):
     def _row_to_account(r):
         return Account(
             r['id'], r['email'],
-            r['account_type'], r['auth_provider'],
+            r['account_type'], r['auth_issuer'], r['auth_sub'],
             r['first_name'], r['last_name'],
             AccountRepo._row_to_addr(r),
             r['creation_time'], r['update_time'])
@@ -50,7 +50,7 @@ class AccountRepo(BaseRepo):
     @staticmethod
     def _account_to_row(a):
         return (a.id, a.email,
-                a.account_type, a.auth_provider,
+                a.account_type, a.auth_issuer, a.auth_sub,
                 a.first_name, a.last_name) + \
                AccountRepo._addr_to_row(a.address)
 
@@ -80,7 +80,8 @@ class AccountRepo(BaseRepo):
                             "SET "
                             "email = %s, "
                             "account_type = %s, "
-                            "auth_provider = %s, "
+                            "auth_issuer = %s, "
+                            "auth_sub = %s, "
                             "first_name = %s, "
                             "last_name = %s, "
                             "street = %s, "
@@ -98,6 +99,9 @@ class AccountRepo(BaseRepo):
                     # TODO: Ugh. Localization of error messages is needed.
                     raise RepoException("Email %s is not available"
                                         % account.email) from e
+                if e.diag.constraint_name == 'idx_account_issuer_sub':
+                    # Ugh.  This is really difficult to explain to an end user.
+                    raise RepoException("Cannot claim more than one account")
                 # Unknown exception, re raise it.
                 raise e
 
@@ -109,7 +113,7 @@ class AccountRepo(BaseRepo):
                             ") "
                             "VALUES("
                             "%s, %s, "
-                            "%s, %s, "
+                            "%s, %s, %s, "
                             "%s, %s, "
                             "%s, %s, %s, %s, %s)",
                             AccountRepo._account_to_row(account))
@@ -119,6 +123,11 @@ class AccountRepo(BaseRepo):
                 # TODO: Ugh. Localization of error messages is needed someday.
                 raise RepoException("Email %s is not available"
                                     % account.email) from e
+            if e.diag.constraint_name == 'idx_account_issuer_sub':
+                # Ugh.  This is really difficult to explain to an end user.
+                raise RepoException("Cannot create two accounts on the same "
+                                    "email")
+
             # Unknown exception, re raise it.
             raise e
 

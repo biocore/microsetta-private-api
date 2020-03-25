@@ -1,6 +1,3 @@
-# Note that in reality essentially all of these functions would require oath security, but it makes them hard to test
-# through the swagger web ui (as you have to send the authorization header, I don't yet know how to do from there...?)
-# so only /account get has oath implemented.
 openapi: 3.0.0
 info:
   description: Private Microsetta RESTful API
@@ -71,9 +68,6 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
-      security:
-        - Oauth2Scheme:
-            - uid
     put:
       operationId: microsetta_private_api.api.implementation.update_account
       tags:
@@ -1305,13 +1299,16 @@ components:
         source_type: animal
         source_description: "A fluffy cat"
 
+# Defines the authRocket scheme: this is an OIDC jwt that comes in a bearer token header.
   securitySchemes:
-    Oauth2Scheme:
-      type: oauth2
-      x-tokenInfoFunc: microsetta_private_api.api.implementation.verify_and_decode_token
-      flows:
-        authorizationCode:
-          authorizationUrl: 'https://example.com/oauth2/dialog' # dummy; replace with real
-          tokenUrl: 'https://example.com/oauth2/token' # dummy; replace with real
-          scopes:
-            uid: Unique identifier of the user accessing the service.
+    authRocket:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: microsetta_private_api.api.implementation.verify_authrocket
+
+
+# END COMPONENTS
+# This enables the authRocket securityScheme defined in components for all routes
+security:
+  - authRocket: []
