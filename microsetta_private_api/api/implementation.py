@@ -15,7 +15,6 @@ https://github.com/realpython/materials/blob/master/flask-connexion-rest/version
 import flask
 from flask import jsonify, render_template
 import jwt
-from base64 import b64decode
 
 from jwt import InvalidTokenError
 
@@ -41,7 +40,6 @@ from microsetta_private_api.util import vue_adapter
 from microsetta_private_api.util.util import fromisotime
 
 import uuid
-import json
 
 from datetime import date
 
@@ -564,6 +562,7 @@ def create_human_source_from_consent(account_id, body, token_info):
     # NB: Don't expect to handle errors 404, 422 in this function; expect to
     # farm out to `create_source`
     return create_source(account_id, source, token_info)
+
 
 def _verify_authrocket(token):
     try:
