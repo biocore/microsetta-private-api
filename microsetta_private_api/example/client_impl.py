@@ -77,11 +77,11 @@ def logout():
 
 
 # States
-NEEDS_ACCOUNT = 101
-NEEDS_HUMAN_SOURCE = 102
-NEEDS_SAMPLE = 103
-NEEDS_PRIMARY_SURVEY = 105
-ALL_DONE = 0
+NEEDS_ACCOUNT = "NeedsAccount"
+NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
+NEEDS_SAMPLE = "NeedsSample"
+NEEDS_PRIMARY_SURVEY = "NeedsPrimarySurvey"
+ALL_DONE = "AllDone"
 
 
 def determine_workflow_state():
@@ -99,7 +99,7 @@ def determine_workflow_state():
     })
     if len(sources) == 0:
         return NEEDS_HUMAN_SOURCE, current_state
-    current_state['human_source_id'] = sources[0].id
+    current_state['human_source_id'] = sources[0]["source_id"]
     # Does the human source have any samples? NO-> ???.html
     # Have you taken the primary survey? NO-> main_survey.html
     surveys = ApiRequest.get("/accounts/%s/sources/%s/surveys")
@@ -116,10 +116,11 @@ def determine_workflow_state():
 
 def workflow():
     next_state, current_state = determine_workflow_state()
+    print("Next State:", next_state)
     if next_state == NEEDS_ACCOUNT:
         return redirect("/workflow_create_account")
     elif next_state == NEEDS_HUMAN_SOURCE:
-        pass
+        return redirect("/workflow_create_human_source")
     elif next_state == NEEDS_PRIMARY_SURVEY:
         return redirect("/workflow_take_primary_survey")
     elif next_state == NEEDS_SAMPLE:
@@ -150,8 +151,13 @@ def post_workflow_create_account(body):
     print(resp)
     return redirect("/workflow")
 
+
 def get_workflow_create_human_source():
     pass
+
+def post_workflow_create_human_source(body):
+    return redirect("/workflow")
+
 
 def workflow_claim_samples(body, token_info):
     pass
