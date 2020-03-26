@@ -675,14 +675,16 @@ class IntegrationTests(TestCase):
         resp = self.client.post(
             '/api/accounts/%s/consent?language_tag=en-US' %
             (ACCT_ID,),
-            content_type='application/x-www-form-urlencoded',
-            data="age_range=18-plus&"
-                 "participant_name=Joe%20Schmoe&"
-                 "participant_email=joe%40schmoe%2Ecom&"
-                 "parent_1_name=Mr%2E%20Schmoe&"
-                 "parent_2_name=Mrs%2E%20Schmoe&"
-                 "deceased_parent=false&"
-                 "obtainer_name=MojoJojo",
+            content_type='application/json',
+            data=json.dumps(
+                {"age_range":"18-plus",
+                 "participant_name":"Joe Schmoe",
+                 "participant_email":"joe@schmoe.com",
+                 "parent_1_name":"Mr. Schmoe",
+                 "parent_2_name":"Mrs. Schmoe",
+                 "deceased_parent":False,
+                 "obtainer_name":"MojoJojo"
+                 }),
             headers=MOCK_HEADERS
 
         )

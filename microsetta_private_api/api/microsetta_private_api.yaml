@@ -1310,5 +1310,5 @@ components:
 
 # END COMPONENTS
 # This enables the authRocket securityScheme defined in components for all routes
-security:
-  - authRocket: []
+#security:
+#  - authRocket: []
