@@ -11,6 +11,7 @@ https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
 and associated file
 https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
 """
+import json
 import uuid
 
 from flask import jsonify, render_template, session, redirect
@@ -89,7 +90,7 @@ def determine_workflow_state():
     accts = ApiRequest.get("/accounts")
     if len(accts) == 0:
         return NEEDS_ACCOUNT, current_state
-    acct_id = accts[0].account_id
+    acct_id = accts[0]["account_id"]
     current_state['account_id'] = acct_id
 
     # Do they have a human source? NO-> consent.html
@@ -113,8 +114,8 @@ def determine_workflow_state():
     return ALL_DONE, current_state
 
 
-def workflow(token_info):
-    next_state, current_state = determine_workflow_state(token_info)
+def workflow():
+    next_state, current_state = determine_workflow_state()
     if next_state == NEEDS_ACCOUNT:
         return redirect("/workflow_create_account")
     elif next_state == NEEDS_HUMAN_SOURCE:
@@ -127,16 +128,29 @@ def workflow(token_info):
         return redirect("/home")
 
 
-def get_workflow_create_acct(token_info):
-    return render_template('create_acct.html')
+def get_workflow_create_account():
+    return render_template('create_acct.jinja2')
 
 
-def post_workflow_create_acct(body, token_info):
-    # session['kit_id'] = body['kit_id']
-    # resp = ApiRequest.post("/accounts", params=somethingsomething(body))
+def post_workflow_create_account(body):
+    json = {
+        "first_name": body['first_name'],
+        "last_name": body['last_name'],
+        "email": body['email'],
+        "address": {
+            "street": body['street'],
+            "city": body['city'],
+            "state": body['state'],
+            "post_code": body['post_code'],
+            "country_code": body['country_code']
+        },
+        "kit_name": body["kit_name"]
+    }
+    resp = ApiRequest.post("/accounts", json=json)
+    print(resp)
     return redirect("/workflow")
 
-def get_workflow_create_human_source(body, token_info):
+def get_workflow_create_human_source():
     pass
 
 def workflow_claim_samples(body, token_info):
@@ -183,13 +197,15 @@ class ApiRequest:
                             params=cls.build_params(params)).json()
 
     @classmethod
-    def put(cls, path, params=None):
+    def put(cls, path, params=None, json=None):
         return requests.put(ApiRequest.API_URL + path,
                             auth=BearerAuth(session['token']),
-                            params=cls.build_params(params)).json()
+                            params=cls.build_params(params),
+                            json=json).json()
 
     @classmethod
-    def post(cls, path, params=None):
+    def post(cls, path, params=None, json=None):
         return requests.post(ApiRequest.API_URL + path,
                              auth=BearerAuth(session['token']),
-                             params=cls.build_params(params)).json()
+                             params=cls.build_params(params),
+                             json=json).json()
