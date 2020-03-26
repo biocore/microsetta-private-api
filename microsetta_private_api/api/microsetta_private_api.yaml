@@ -126,7 +126,7 @@ paths:
         - $ref: '#/components/parameters/language_tag'
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:  # each is a form field name
