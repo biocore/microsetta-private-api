@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import secrets
+
 from flask import jsonify
 
 from microsetta_private_api.exceptions import RepoException
@@ -24,6 +26,14 @@ def build_app():
 
     # Read the microsetta api spec file to configure the endpoints
     app.add_api('api/microsetta_private_api.yaml', validate_responses=True)
+
+    # ---
+    # Example Client Settings
+    app.add_api('example/client.yaml', validate_responses=True)
+    app.app.secret_key = secrets.token_urlsafe(16)
+    app.app.config['SESSION_TYPE'] = 'memcached'
+    # ---
+
 
     # Set default json encoder
     # Note: app.app is the actual Flask application instance, so any Flask

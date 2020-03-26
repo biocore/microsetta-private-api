@@ -7,6 +7,24 @@ servers:
   - url: 'http://localhost:8082/api'
 paths:
   '/accounts':
+    get:
+      operationId: microsetta_private_api.api.implementation.find_accounts_for_login
+      tags:
+        - Account
+      summary: Identify linked account(s)
+      description: Retrieve ids of linked account(s)
+      parameters:
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Array of linked account(s)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/account'
+
     # NB: Not including a get: seems like seeing all accounts is an extension for the future (for admin?)
     post:
       operationId: microsetta_private_api.api.implementation.register_account
@@ -1310,5 +1328,5 @@ components:
 
 # END COMPONENTS
 # This enables the authRocket securityScheme defined in components for all routes
-#security:
-#  - authRocket: []
+security:
+  - authRocket: []

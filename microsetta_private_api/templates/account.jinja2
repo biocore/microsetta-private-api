@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Microsetta Test Client - Account Info</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+    <br />
+    <div class="content">
+        Account {{acct_id}}
+        <div class="container">
+            Sources:
+            <div class="list-group">
+                {% for source in sources %}
+                <a href="#" class="list-group-item list-group-item-action {{loop.cycle('odd', 'even') }}">Source {{row}}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
