@@ -65,7 +65,12 @@ def not_yet_implemented():
     return {'message': 'functionality not yet implemented'}
 
 
-def register_account(body, token_info):
+# TODO: Remove "=None" once teach AB how to test web pages w tokens
+def register_account(body, token_info=None):
+    # TODO: Remove once teach AB how to test web pages w tokens
+    if token_info is None:
+        token_info = {'iss': "dummy_iss", 'sub': body["email"]}
+
     # First register with AuthRocket, then come here to make the account
     new_acct_id = str(uuid.uuid4())
     body["id"] = new_acct_id
@@ -173,7 +178,8 @@ def create_source(account_id, body, token_info):
     return response
 
 
-def read_source(account_id, source_id, token_info):
+# TODO: Remove "=None" once teach AB how to test web pages w tokens
+def read_source(account_id, source_id, token_info=None):
     validate_access(token_info, account_id)
 
     with Transaction() as t:
@@ -487,7 +493,8 @@ def read_kit(kit_name):
         return jsonify(kit.to_api()), 200
 
 
-def render_consent_doc(account_id, language_tag, token_info):
+# TODO: Remove "=None" once teach AB how to test web pages w tokens
+def render_consent_doc(account_id, language_tag, token_info=None):
     validate_access(token_info, account_id)
 
     # return render_template("new_participant.jinja2",
@@ -518,7 +525,8 @@ def render_consent_doc(account_id, language_tag, token_info):
                            lang_tag=language_tag)
 
 
-def create_human_source_from_consent(account_id, body, token_info):
+# TODO: Remove "=None" once teach AB how to test web pages w tokens
+def create_human_source_from_consent(account_id, body, token_info=None):
     validate_access(token_info, account_id)
 
     # Must convert consent form body into object processable by create_source.
@@ -563,7 +571,10 @@ def verify_authrocket(token):
         raise(Unauthorized("Invalid Token", e))
 
 
-def validate_access(token_info, account_id):
+# TODO: Remove "=None" once teach AB how to test web pages w tokens
+def validate_access(token_info=None, account_id=None):
+    # TODO: Remove return once teach AB how to test web pages w tokens
+    return
     with Transaction() as t:
         account_repo = AccountRepo(t)
         account = account_repo.get_account(account_id)
