@@ -13,13 +13,18 @@
         <br/>
         <a href="https://direct-juice-b878.e2.loginrocket.com/logout?redirect_uri=http://localhost:8082/logout">Log Out</a>
 
+        {% if show_wizard %}
+        <div class="alert alert-primary" role="alert">
+          Need help getting started?  <a href="/workflow" class="alert-link">Click here to set up your account</a>
+        </div>
+        {% endif %}
         <div class="container">
             Account:
             <div class="list-group">
                 {% if acct_id %}
                 <a href="#" class="list-group-item list-group-item-action">Account ID: {{acct_id}}</a>
                 {% else %}
-                <a href="/static/create_acct.html" class="list-group-item list-group-item-action">
+                <a href="/workflow" class="list-group-item list-group-item-action">
                     Create New Account...
                 </a>
                 {% endif %}

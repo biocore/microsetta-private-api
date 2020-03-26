@@ -47,21 +47,22 @@ def rootpath():
 
 
 def home():
+    user = None
+    acct_id = None
+    show_wizard = False
+
     if 'token' in session:
         user = parse_jwt(session['token'])
-    else:
-        user = None
-
-    acct_id = None
-    if user:
-        accts = ApiRequest.get("/accounts")
-        print(accts)
-        if len(accts) > 0:
-            acct_id = accts[0]
+        workflow_needs, workflow_state = determine_workflow_state()
+        acct_id = workflow_state.get("account_id", None)
+        show_wizard = workflow_needs != ALL_DONE
 
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
-    return render_template('home.jinja2', user=user, acct_id=uuid.uuid4())
+    return render_template('home.jinja2',
+                           user=user,
+                           acct_id=acct_id,
+                           show_wizard=show_wizard)
 
 
 def authrocket_callback(token):
@@ -78,8 +79,11 @@ def logout():
 NEEDS_ACCOUNT = 101
 NEEDS_HUMAN_SOURCE = 102
 NEEDS_SAMPLE = 103
+NEEDS_PRIMARY_SURVEY = 105
+ALL_DONE = 0
 
-def determine_workflow_state(token_info):
+
+def determine_workflow_state():
     current_state = {}
     # Do they need to make an account? YES-> create_acct.html
     accts = ApiRequest.get("/accounts")
@@ -95,19 +99,31 @@ def determine_workflow_state(token_info):
     if len(sources) == 0:
         return NEEDS_HUMAN_SOURCE, current_state
     current_state['human_source_id'] = sources[0].id
-
     # Does the human source have any samples? NO-> ???.html
     # Have you taken the primary survey? NO-> main_survey.html
+    surveys = ApiRequest.get("/accounts/%s/sources/%s/surveys")
+    has_primary = False
+    for survey in surveys:
+        if survey.survey_template_id == 1:
+            has_primary = True
+    if not has_primary:
+        return NEEDS_PRIMARY_SURVEY, current_state
     # ???COVID Survey??? -> covid_survey.html
     # --> home.html
-    pass
+    return ALL_DONE, current_state
 
 
 def workflow(token_info):
-    next_state = determine_workflow_state(token_info)
-    if next_state == CREATE_ACCOUNT:
+    next_state, current_state = determine_workflow_state(token_info)
+    if next_state == NEEDS_ACCOUNT:
         return redirect("/workflow_create_account")
-    else:
+    elif next_state == NEEDS_HUMAN_SOURCE:
+        pass
+    elif next_state == NEEDS_PRIMARY_SURVEY:
+        return redirect("/workflow_take_primary_survey")
+    elif next_state == NEEDS_SAMPLE:
+        pass
+    elif next_state == ALL_DONE:
         return redirect("/home")
 
 
