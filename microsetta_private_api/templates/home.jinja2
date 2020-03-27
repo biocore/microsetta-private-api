@@ -22,7 +22,7 @@
             Account:
             <div class="list-group">
                 {% if acct_id %}
-                <a href="/workflow" class="list-group-item list-group-item-action">Account ID: {{acct_id}}</a>
+                <a href="/accounts/{{acct_id}}" class="list-group-item list-group-item-action">Account ID: {{acct_id}}</a>
                 {% else %}
                 <a href="/workflow" class="list-group-item list-group-item-action">
                     Create New Account...

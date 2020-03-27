@@ -229,8 +229,21 @@ def workflow_assign_sample_metadata():
     pass
 
 
-def view_samples():
-    pass
+def view_account(account_id):
+    sources = ApiRequest.get('/accounts/%s/sources' % account_id)
+    return render_template('account.jinja2',
+                           acct_id=account_id,
+                           sources=sources)
+
+
+def view_source(account_id, source_id):
+    samples = ApiRequest.get('/accounts/%s/sources/%s/samples' %
+                             (account_id, source_id))
+    print(samples)
+    return render_template('source.jinja2',
+                           acct_id=account_id,
+                           source_id=source_id,
+                           samples=samples)
 
 
 def view_sample():
