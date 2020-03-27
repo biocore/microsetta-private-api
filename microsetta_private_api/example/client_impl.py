@@ -108,10 +108,15 @@ def determine_workflow_state():
     })
     if len(sources) == 0:
         return NEEDS_HUMAN_SOURCE, current_state
-    current_state['human_source_id'] = sources[0]["source_id"]
+    source_id = sources[0]["source_id"]
+    current_state['human_source_id'] = source_id
     # Does the human source have any samples? NO-> ???.html
+    # TODO fill in sample grabbing :)
+
     # Have you taken the primary survey? NO-> main_survey.html
-    surveys = ApiRequest.get("/accounts/%s/sources/%s/surveys")
+    surveys = ApiRequest.get("/accounts/{0}/sources/{1}/surveys".format(
+        acct_id, source_id)
+    )
     has_primary = False
     for survey in surveys:
         if survey.survey_template_id == 1:
@@ -129,7 +134,7 @@ def workflow():
     if next_state == NEEDS_ACCOUNT:
         return redirect("/workflow_create_account")
     elif next_state == NEEDS_HUMAN_SOURCE:
-        return redirect("/workflow_create_human_source")
+        return redirect("/workflow_create_human_source_wrapper")
     elif next_state == NEEDS_PRIMARY_SURVEY:
         return redirect("/workflow_take_primary_survey")
     elif next_state == NEEDS_SAMPLE:
@@ -145,7 +150,10 @@ def get_workflow_create_account():
 
 
 def post_workflow_create_account(body):
-    json = {
+    kit_name = body["kit_name"]
+    session['kit_name'] = kit_name
+
+    api_json = {
         "first_name": body['first_name'],
         "last_name": body['last_name'],
         "email": body['email'],
@@ -156,17 +164,29 @@ def post_workflow_create_account(body):
             "post_code": body['post_code'],
             "country_code": body['country_code']
         },
-        "kit_name": body["kit_name"]
+        "kit_name": kit_name
     }
-    resp = ApiRequest.post("/accounts", json=json)
+    resp = ApiRequest.post("/accounts", json=api_json)
     return redirect("/workflow")
 
 
+def get_workflow_create_human_source_wrapper():
+    return render_template('consent.jinja2')
+
+
 def get_workflow_create_human_source():
-    pass
+    next_state, current_state = determine_workflow_state()
+    acct_id = current_state["account_id"]
+    post_url = "http://localhost:8082/workflow_create_human_source"
+    json_of_html = ApiRequest.get("/accounts/{0}/consent".format(acct_id),
+                                params={"consent_post_url": post_url})
+    return json_of_html["consent_html"]
 
 
 def post_workflow_create_human_source(body):
+    next_state, current_state = determine_workflow_state()
+    acct_id = current_state["account_id"]
+    ApiRequest.post("/accounts/{0}/consent".format(acct_id), json=body)
     return redirect("/workflow")
 
 

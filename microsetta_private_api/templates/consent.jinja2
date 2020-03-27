@@ -4,25 +4,9 @@
     <meta charset="UTF-8">
     <title>Consent</title>
     <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
-    <script>
-        $( document ).ready(function() {
-            let params = (new URL(document.location)).searchParams;
-            let lang_tag = params.get("language_tag");
-            let kit_name = params.get("kit_name");
-            let acct_url_encoded = params.get("acct_api_url");
-            let acct_api_url = decodeURIComponent(acct_url_encoded);
-            let redirect_url_encoded = params.get("redirect_url");
-
-            let consent_api_url = acct_api_url + "/consent?language_tag=" + lang_tag +
-                "&redirect=" + redirect_url_encoded + "&kit_name=" + kit_name;
-
-            let consent_frame = $("#consent_frame");
-            consent_frame.attr("src", consent_api_url);
-        });
-    </script>
 </head>
 <body>
-<iframe id="consent_frame" src="{{consent_url}}" style="position:absolute;border:none;" height="100%"
+<iframe id="consent_frame" src="/workflow_create_human_source" style="position:absolute;border:none;" height="100%"
   width="100%">
 
 </iframe>
