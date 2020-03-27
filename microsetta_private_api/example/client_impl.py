@@ -14,6 +14,7 @@ https://github.com/realpython/materials/blob/master/flask-connexion-rest/version
 import json
 import uuid
 
+import flask
 from flask import jsonify, render_template, session, redirect
 import jwt
 import requests
@@ -85,6 +86,14 @@ ALL_DONE = "AllDone"
 
 
 def determine_workflow_state():
+
+    # # DAN NEEDS SURVEY STUFF WOOOOOOOOO
+    # current_state = {}
+    # current_state["account_id"] = "44cb8726-89ae-4f2c-8966-e766fcc5d9c5"
+    # current_state["human_source_id"] = "aaaaaaaa-bbbb-cccc-8966-e766fcc5d9c5"
+    # return NEEDS_PRIMARY_SURVEY, current_state
+    # # END STUPID.
+
     current_state = {}
     # Do they need to make an account? YES-> create_acct.html
     accts = ApiRequest.get("/accounts")
@@ -148,28 +157,53 @@ def post_workflow_create_account(body):
         "kit_name": body["kit_name"]
     }
     resp = ApiRequest.post("/accounts", json=json)
-    print(resp)
     return redirect("/workflow")
 
 
 def get_workflow_create_human_source():
     pass
 
+
 def post_workflow_create_human_source(body):
     return redirect("/workflow")
 
 
-def workflow_claim_samples(body, token_info):
+def workflow_claim_samples():
     pass
 
 
-def workflow_fill_primary_survey(body, token_info):
-    # DAN
-    pass
+def get_workflow_fill_primary_survey():
+    next_state, current_state = determine_workflow_state()
+    acct_id = current_state["account_id"]
+    source_id = current_state["human_source_id"]
+    primary_survey = 1
+    survey_obj = ApiRequest.get('/accounts/%s/sources/%s/survey_templates/%s' %
+                                (acct_id, source_id, primary_survey))
+    return render_template("survey.jinja2",
+                           survey_schema=survey_obj['survey_template_text'])
 
 
-def workflow_assign_sample_metadata(body, token_info):
-    # DAN
+def post_workflow_fill_primary_survey():
+    next_state, current_state = determine_workflow_state()
+    acct_id = current_state["account_id"]
+    source_id = current_state["human_source_id"]
+
+    model = {}
+    for x in flask.request.form:
+        model[x] = flask.request.form[x]
+
+    resp = ApiRequest.post("/accounts/%s/sources/%s/surveys" %
+                           (acct_id, source_id),
+                           json={
+                                  "survey_template_id": 1,
+                                  "survey_text": model
+                                }
+                           )
+    return redirect("/workflow")
+
+
+def workflow_assign_sample_metadata():
+	# DAN
     pass
 
 

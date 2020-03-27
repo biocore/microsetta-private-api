@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Foo Bar Baz</title>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.1/vue.js"></script>
+<script type="text/javascript" src="https://unpkg.com/vue@2.5.17/dist/vue.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<script type="text/javascript" src="https://unpkg.com/vue-form-generator/dist/vfg.js"></script>
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/vue-form-generator/dist/vfg.css">
+</head>
+
+<body>
+<div class="container" id="app">
+
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <form method="post" >
+        <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+      </form>
+    </div>
+  </div>
+
+<!--  <div class="panel panel-default">-->
+<!--    <div class="panel-heading">Model</div>-->
+<!--    <div class="panel-body">-->
+<!--      <pre v-if="model" v-html="prettyJSON(model)"></pre>-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  <div class="panel panel-default">-->
+<!--    <div class="panel-heading">Schema</div>-->
+<!--    <div class="panel-body">-->
+<!--      <pre v-if="model" v-html="prettyJSON(schema)"></pre>-->
+<!--    </div>-->
+<!--  </div>-->
+</div>
+
+<script type="text/javascript">
+  var survey_schema={{survey_schema|tojson}}
+  last_group = survey_schema.groups[survey_schema.groups.length-1]
+  last_group.fields.push(
+  {
+    buttonText: "WhatIs",
+    type: "input",
+    inputType: "submit",
+    onSubmit: function() {
+      console.log("SHIPIT!")
+      console.log(model)
+    }
+  });
+</script>
+<script type="text/javascript" src="/static/vue_survey_form.js"></script>
+
+
+</body>
+</html>

@@ -97,6 +97,23 @@ paths:
         '302':
           description: Redirecting to necessary action
 
+  '/workflow_take_primary_survey':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_workflow_fill_primary_survey
+      responses:
+        '200':
+          description: Primary Survey
+          content:
+            text/html:
+              schema:
+                type: string
+
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_workflow_fill_primary_survey
+      responses:
+        '302':
+          description: Redirecting to necessary action
+
 #  '/create_account_wizard':
 #    get:
 #      operationId: microsetta_private_api.example.client_impl.create_account
