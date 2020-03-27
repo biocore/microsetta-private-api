@@ -225,7 +225,19 @@ def post_workflow_fill_primary_survey():
 
 
 def workflow_assign_sample_metadata():
-	# DAN
+    # DAN
+    pass
+
+
+def view_samples():
+    pass
+
+
+def view_sample():
+    pass
+
+
+def update_sample():
     pass
 
 
