@@ -125,9 +125,25 @@ paths:
         '302':
           description: Redirecting to necessary action
 
-#  '/create_account_wizard':
-#    get:
-#      operationId: microsetta_private_api.example.client_impl.create_account
-#      responses:
-#        '200'
-#
+  '/workflow_claim_kit_samples':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_workflow_claim_kit_samples
+      responses:
+        '200':
+          description: Form to claim unassigned samples from a kit name to a human participant
+          content:
+            text/html:
+              schema:
+                type: string
+
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_workflow_claim_kit_samples
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '302':
+          description: Redirecting to necessary action
