@@ -10,4 +10,8 @@ class Kit(ModelBase):
         # API requires an array of the unused samples
         # TODO: Null sample site may just be an approximation of unused,
         #  what should we use as the exact policy here?
-        return [s.to_api() for s in self.samples if s.site is None]
+
+        if self.samples is None:
+            return []
+        else:
+            return [s.to_api() for s in self.samples if s.site is None]

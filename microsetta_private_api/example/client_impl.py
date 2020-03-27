@@ -78,6 +78,7 @@ def logout():
 
 
 # States
+NEEDS_LOGIN = "NeedsLogin"
 NEEDS_ACCOUNT = "NeedsAccount"
 NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
 NEEDS_SAMPLE = "NeedsSample"
@@ -86,6 +87,9 @@ ALL_DONE = "AllDone"
 
 
 def determine_workflow_state():
+    current_state = {}
+    if 'token' not in session:
+        return NEEDS_LOGIN, current_state
 
     # # DAN NEEDS SURVEY STUFF WOOOOOOOOO
     # current_state = {}
@@ -94,7 +98,6 @@ def determine_workflow_state():
     # return NEEDS_PRIMARY_SURVEY, current_state
     # # END STUPID.
 
-    current_state = {}
     # Do they need to make an account? YES-> create_acct.html
     accts = ApiRequest.get("/accounts")
     if len(accts) == 0:
@@ -110,8 +113,6 @@ def determine_workflow_state():
         return NEEDS_HUMAN_SOURCE, current_state
     source_id = sources[0]["source_id"]
     current_state['human_source_id'] = source_id
-    # Does the human source have any samples? NO-> ???.html
-    # TODO fill in sample grabbing :)
 
     # Have you taken the primary survey? NO-> main_survey.html
     surveys = ApiRequest.get("/accounts/{0}/sources/{1}/surveys".format(
@@ -123,23 +124,34 @@ def determine_workflow_state():
             has_primary = True
     if not has_primary:
         return NEEDS_PRIMARY_SURVEY, current_state
+
     # ???COVID Survey??? -> covid_survey.html
-    # --> home.html
+
+    # Does the human source have any samples? NO-> kit_sample_association.html
+    samples = ApiRequest.get("/accounts/{0}/sources/{1}/samples".format(
+        acct_id, source_id))
+    if len(samples) == 0:
+        return NEEDS_SAMPLE, current_state
+    current_state['sample_objs'] = samples
+
     return ALL_DONE, current_state
 
 
 def workflow():
     next_state, current_state = determine_workflow_state()
     print("Next State:", next_state)
-    if next_state == NEEDS_ACCOUNT:
+    if next_state == NEEDS_LOGIN:
+        return redirect("/home")
+    elif next_state == NEEDS_ACCOUNT:
         return redirect("/workflow_create_account")
     elif next_state == NEEDS_HUMAN_SOURCE:
         return redirect("/workflow_create_human_source_wrapper")
     elif next_state == NEEDS_PRIMARY_SURVEY:
         return redirect("/workflow_take_primary_survey")
     elif next_state == NEEDS_SAMPLE:
-        pass
+        return redirect("/workflow_claim_kit_samples")
     elif next_state == ALL_DONE:
+        # TODO: redirect to samples page
         return redirect("/home")
 
 
@@ -150,23 +162,25 @@ def get_workflow_create_account():
 
 
 def post_workflow_create_account(body):
-    kit_name = body["kit_name"]
-    session['kit_name'] = kit_name
+    next_state, current_state = determine_workflow_state()
+    if next_state == NEEDS_ACCOUNT:
+        kit_name = body["kit_name"]
+        session['kit_name'] = kit_name
 
-    api_json = {
-        "first_name": body['first_name'],
-        "last_name": body['last_name'],
-        "email": body['email'],
-        "address": {
-            "street": body['street'],
-            "city": body['city'],
-            "state": body['state'],
-            "post_code": body['post_code'],
-            "country_code": body['country_code']
-        },
-        "kit_name": kit_name
-    }
-    ApiRequest.post("/accounts", json=api_json)
+        api_json = {
+            "first_name": body['first_name'],
+            "last_name": body['last_name'],
+            "email": body['email'],
+            "address": {
+                "street": body['street'],
+                "city": body['city'],
+                "state": body['state'],
+                "post_code": body['post_code'],
+                "country_code": body['country_code']
+            },
+            "kit_name": kit_name
+        }
+        resp = ApiRequest.post("/accounts", json=api_json)
     return redirect("/workflow")
 
 
@@ -185,13 +199,41 @@ def get_workflow_create_human_source():
 
 def post_workflow_create_human_source(body):
     next_state, current_state = determine_workflow_state()
-    acct_id = current_state["account_id"]
-    ApiRequest.post("/accounts/{0}/consent".format(acct_id), json=body)
+    if next_state == NEEDS_HUMAN_SOURCE:
+        acct_id = current_state["account_id"]
+        ApiRequest.post("/accounts/{0}/consent".format(acct_id), json=body)
     return redirect("/workflow")
 
 
-def workflow_claim_samples():
-    pass
+def get_workflow_claim_kit_samples():
+    if 'kit_name' in session:
+        mock_body = {'kit_name': session['kit_name']}
+        post_workflow_claim_kit_samples(mock_body)
+    else:
+        return render_template("kit_sample_association.jinja2")
+
+
+def post_workflow_claim_kit_samples(body):
+    next_state, current_state = determine_workflow_state()
+    if next_state == NEEDS_SAMPLE:
+        acct_id = current_state["account_id"]
+        source_id = current_state["human_source_id"]
+
+        # get all the unassociated samples in the provided kit
+        kit_name = body["kit_name"]
+        print(kit_name)
+        sample_objs = ApiRequest.get('/kits', params={'kit_name': kit_name})
+        print(sample_objs)
+
+        # for each sample, associate it to the human source
+        for curr_sample_obj in sample_objs:
+            print(curr_sample_obj)
+            resp = ApiRequest.post(
+                '/accounts/{0}/sources/{1}/samples'.format(acct_id, source_id),
+                json={"sample_id": curr_sample_obj["sample_id"]}
+            )
+
+    return redirect("/workflow")
 
 
 def get_workflow_fill_primary_survey():
