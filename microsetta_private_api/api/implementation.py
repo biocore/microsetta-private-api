@@ -277,10 +277,16 @@ def read_answered_surveys(account_id, source_id, language_tag, token_info):
 
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        return jsonify(
-            survey_answers_repo.list_answered_surveys(
+        survey_template_repo = SurveyTemplateRepo(t)
+        answered_surveys = survey_answers_repo.list_answered_surveys(
                 account_id,
-                source_id)), 200
+                source_id)
+        api_objs = []
+        for ans in answered_surveys:
+            template_id = survey_answers_repo.find_survey_template_id(ans)
+            o = survey_template_repo.get_survey_template_link_info(template_id)
+            api_objs.append(o.to_api(ans))
+        return jsonify(api_objs), 200
 
 
 def read_answered_survey(account_id, source_id, survey_id, language_tag,
@@ -308,6 +314,8 @@ def read_answered_survey(account_id, source_id, survey_id, language_tag,
 def submit_answered_survey(account_id, source_id, language_tag, body,
                            token_info):
     validate_access(token_info, account_id)
+
+    print(body)
 
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?

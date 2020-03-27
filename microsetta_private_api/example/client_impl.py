@@ -120,7 +120,7 @@ def determine_workflow_state():
     )
     has_primary = False
     for survey in surveys:
-        if survey.survey_template_id == 1:
+        if survey['survey_template_id'] == 1:
             has_primary = True
     if not has_primary:
         return NEEDS_PRIMARY_SURVEY, current_state
@@ -256,18 +256,30 @@ def post_workflow_fill_primary_survey():
     for x in flask.request.form:
         model[x] = flask.request.form[x]
 
-    resp = ApiRequest.post("/accounts/%s/sources/%s/surveys" %
-                           (acct_id, source_id),
-                           json={
-                                  "survey_template_id": 1,
-                                  "survey_text": model
-                                }
-                           )
+    ApiRequest.post("/accounts/%s/sources/%s/surveys" %
+                    (acct_id, source_id),
+                    json={
+                          "survey_template_id": 1,
+                          "survey_text": model
+                        }
+                    )
     return redirect("/workflow")
 
 
 def workflow_assign_sample_metadata():
-	# DAN
+    # DAN
+    pass
+
+
+def view_samples():
+    pass
+
+
+def view_sample():
+    pass
+
+
+def update_sample():
     pass
 
 
@@ -309,7 +321,8 @@ class ApiRequest:
 
     @classmethod
     def post(cls, path, params=None, json=None):
-        return requests.post(ApiRequest.API_URL + path,
+        resp = requests.post(ApiRequest.API_URL + path,
                              auth=BearerAuth(session['token']),
                              params=cls.build_params(params),
-                             json=json).json()
+                             json=json)
+        return resp

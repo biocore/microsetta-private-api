@@ -147,3 +147,117 @@ paths:
       responses:
         '302':
           description: Redirecting to necessary action
+
+  '/accounts/{account_id}/sources/{source_id}/samples':
+    get:
+      operationId: microsetta_private_api.example.client_impl.view_samples
+      tags:
+        - Samples
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+      responses:
+        '200':
+          description: Display of samples
+          content:
+            text/html:
+              schema:
+                type: string
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}':
+    get:
+      operationId: microsetta_private_api.example.client_impl.view_sample
+      tags:
+        - Samples
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Display of sample info
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      operationId: microsetta_private_api.example.client_impl.update_sample
+      tags:
+        - Samples
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Display of sample info
+          content:
+            text/html:
+              schema:
+                type: string
+
+components:
+  parameters:
+    account_id: # Can be referenced as '#/components/parameters/account_id'
+      name: account_id
+      in: path
+      description: Unique id specifying a user account
+      schema:
+        $ref: '#/components/schemas/account_id'
+      required: true
+    kit_id:
+      name: kit_id
+      in: path
+      description: Unique internal id specifying a kit
+      schema:
+        type: string
+        example: "c442f31d-fa17-4fd1-85e2-1f251d13ec26"
+      required: true
+    sample_id:
+      name: sample_id
+      in: path
+      description: Unique id specifying a sample associated with a source
+      schema:
+        $ref: '#/components/schemas/sample_id'
+      required: true
+#    survey_id:
+#      name: survey_id
+#      in: path
+#      description: Unique internal id specifying a particular answered survey
+#      schema:
+#        $ref: '#/components/schemas/survey_id'
+#      required: true
+#    survey_template_id:
+#      name: survey_template_id
+#      in: path
+#      description: Unique internal id specifying a particular survey template
+#      schema:
+#        $ref: '#/components/schemas/survey_template_id'
+#      required: true
+    source_id:
+      name: source_id
+      in: path
+      description: Unique id specifying a source
+      schema:
+        $ref: '#/components/schemas/source_id'
+      required: true
+  schemas:
+    # account section
+    account_id:
+      type: string
+      readOnly: true
+      example: "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
+    source_id:
+      type: string
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
+      example: "b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0"
+    sample_id:
+      type: string
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
+      example: "dae21127-27bb-4f52-9fd3-a2aa5eb5b86f"
