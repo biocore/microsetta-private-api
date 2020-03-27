@@ -78,6 +78,7 @@ def logout():
 
 
 # States
+NEEDS_LOGIN = "NeedsLogin"
 NEEDS_ACCOUNT = "NeedsAccount"
 NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
 NEEDS_SAMPLE = "NeedsSample"
@@ -86,6 +87,9 @@ ALL_DONE = "AllDone"
 
 
 def determine_workflow_state():
+    current_state = {}
+    if 'token' not in session:
+        return NEEDS_LOGIN, current_state
 
     # # DAN NEEDS SURVEY STUFF WOOOOOOOOO
     # current_state = {}
@@ -94,7 +98,6 @@ def determine_workflow_state():
     # return NEEDS_PRIMARY_SURVEY, current_state
     # # END STUPID.
 
-    current_state = {}
     # Do they need to make an account? YES-> create_acct.html
     accts = ApiRequest.get("/accounts")
     if len(accts) == 0:
@@ -121,8 +124,9 @@ def determine_workflow_state():
     for survey in surveys:
         if survey.survey_template_id == 1:
             has_primary = True
-    if not has_primary:
-        return NEEDS_PRIMARY_SURVEY, current_state
+    #if not has_primary:
+    #    return NEEDS_PRIMARY_SURVEY, current_state
+
     # ???COVID Survey??? -> covid_survey.html
     # --> home.html
     return ALL_DONE, current_state
@@ -131,7 +135,9 @@ def determine_workflow_state():
 def workflow():
     next_state, current_state = determine_workflow_state()
     print("Next State:", next_state)
-    if next_state == NEEDS_ACCOUNT:
+    if next_state == NEEDS_LOGIN:
+        return redirect("/home")
+    elif next_state == NEEDS_ACCOUNT:
         return redirect("/workflow_create_account")
     elif next_state == NEEDS_HUMAN_SOURCE:
         return redirect("/workflow_create_human_source_wrapper")
@@ -140,6 +146,7 @@ def workflow():
     elif next_state == NEEDS_SAMPLE:
         pass
     elif next_state == ALL_DONE:
+        # TODO: redirect to samples page
         return redirect("/home")
 
 
@@ -150,23 +157,25 @@ def get_workflow_create_account():
 
 
 def post_workflow_create_account(body):
-    kit_name = body["kit_name"]
-    session['kit_name'] = kit_name
+    next_state, current_state = determine_workflow_state()
+    if next_state == NEEDS_ACCOUNT:
+        kit_name = body["kit_name"]
+        session['kit_name'] = kit_name
 
-    api_json = {
-        "first_name": body['first_name'],
-        "last_name": body['last_name'],
-        "email": body['email'],
-        "address": {
-            "street": body['street'],
-            "city": body['city'],
-            "state": body['state'],
-            "post_code": body['post_code'],
-            "country_code": body['country_code']
-        },
-        "kit_name": kit_name
-    }
-    resp = ApiRequest.post("/accounts", json=api_json)
+        api_json = {
+            "first_name": body['first_name'],
+            "last_name": body['last_name'],
+            "email": body['email'],
+            "address": {
+                "street": body['street'],
+                "city": body['city'],
+                "state": body['state'],
+                "post_code": body['post_code'],
+                "country_code": body['country_code']
+            },
+            "kit_name": kit_name
+        }
+        resp = ApiRequest.post("/accounts", json=api_json)
     return redirect("/workflow")
 
 
@@ -185,8 +194,9 @@ def get_workflow_create_human_source():
 
 def post_workflow_create_human_source(body):
     next_state, current_state = determine_workflow_state()
-    acct_id = current_state["account_id"]
-    ApiRequest.post("/accounts/{0}/consent".format(acct_id), json=body)
+    if next_state == NEEDS_HUMAN_SOURCE:
+        acct_id = current_state["account_id"]
+        ApiRequest.post("/accounts/{0}/consent".format(acct_id), json=body)
     return redirect("/workflow")
 
 
