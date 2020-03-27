@@ -139,7 +139,9 @@ def workflow():
 
 
 def get_workflow_create_account():
-    return render_template('create_acct.jinja2')
+    email = parse_jwt(session['token'])
+    return render_template('create_acct.jinja2',
+                           authorized_email=email)
 
 
 def post_workflow_create_account(body):

@@ -92,14 +92,7 @@
 </head>
 <body>
     <form id="acct_form" name="acct_form" method="post">
-        <div class="form-group">
-            <p>
-                NB: In future this will be disabled--value will be passed in from authentication
-            </p>
-            <label for="email" name="email_label">Email/Correo Electrónico</label>
-            <!-- in future, this will be disabled and value will be filled in from login -->
-            <input id="email" name="email" class="form-control" type="text" value="ab@example.com"/>
-        </div>
+        <input id="email" name="email" class="form-control" type="hidden" value="{{authorized_email}}"/>
         <div class="form-group">
             <label for="first_name" name="first_name_label">First Name/Nombre</label>
             <input id="first_name" name="first_name" class="form-control" type="text" value="Tester" />
