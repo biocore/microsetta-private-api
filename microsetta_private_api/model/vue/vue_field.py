@@ -120,7 +120,7 @@ class VueSelectField(VueField):
             disabled=False,
             required=False,
             multi=False,
-            default=None,
+            default=valid_responses[0],
             hint=None,
             help_=None,
             validator=None,
@@ -130,7 +130,10 @@ class VueSelectField(VueField):
             attributes=None
         )
         self.values = valid_responses
-        self.selectOptions = {}
+        self.selectOptions = {
+            "hideNoneSelectedText": True,
+            "value": valid_responses[0]
+        }
 
 
 class VueChecklistField(VueField):

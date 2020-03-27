@@ -119,7 +119,7 @@ def determine_workflow_state():
     )
     has_primary = False
     for survey in surveys:
-        if survey.survey_template_id == 1:
+        if survey['survey_template_id'] == 1:
             has_primary = True
     if not has_primary:
         return NEEDS_PRIMARY_SURVEY, current_state
