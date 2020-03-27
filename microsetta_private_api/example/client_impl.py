@@ -166,7 +166,7 @@ def post_workflow_create_account(body):
         },
         "kit_name": kit_name
     }
-    resp = ApiRequest.post("/accounts", json=api_json)
+    ApiRequest.post("/accounts", json=api_json)
     return redirect("/workflow")
 
 
@@ -214,13 +214,13 @@ def post_workflow_fill_primary_survey():
     for x in flask.request.form:
         model[x] = flask.request.form[x]
 
-    resp = ApiRequest.post("/accounts/%s/sources/%s/surveys" %
-                           (acct_id, source_id),
-                           json={
-                                  "survey_template_id": 1,
-                                  "survey_text": model
-                                }
-                           )
+    ApiRequest.post("/accounts/%s/sources/%s/surveys" %
+                    (acct_id, source_id),
+                    json={
+                          "survey_template_id": 1,
+                          "survey_text": model
+                        }
+                    )
     return redirect("/workflow")
 
 
@@ -279,7 +279,8 @@ class ApiRequest:
 
     @classmethod
     def post(cls, path, params=None, json=None):
-        return requests.post(ApiRequest.API_URL + path,
+        resp = requests.post(ApiRequest.API_URL + path,
                              auth=BearerAuth(session['token']),
                              params=cls.build_params(params),
-                             json=json).json()
+                             json=json)
+        return resp
