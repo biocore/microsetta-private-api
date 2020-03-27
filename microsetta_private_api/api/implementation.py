@@ -500,7 +500,7 @@ def read_kit(kit_name):
         return jsonify(kit.to_api()), 200
 
 
-def render_consent_doc(account_id, language_tag, token_info):
+def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
     validate_access(token_info, account_id)
 
     # return render_template("new_participant.jinja2",
@@ -524,11 +524,13 @@ def render_consent_doc(account_id, language_tag, token_info):
         localization.EN_GB: british_gut._NEW_PARTICIPANT
     }
 
-    return render_template("new_participant.jinja2",
+    consent_html = render_template("new_participant.jinja2",
                            message=None,
                            media_locale=media_locales[language_tag],
                            tl=tls[language_tag],
-                           lang_tag=language_tag)
+                           lang_tag=language_tag,
+                           post_url=consent_post_url)
+    return jsonify({"consent_html": consent_html}), 200
 
 
 def create_human_source_from_consent(account_id, body, token_info):
@@ -547,13 +549,16 @@ def create_human_source_from_consent(account_id, body, token_info):
         }
     }
 
-    child_keys = {'parent_1_name', 'parent_2_name', 'deceased_parent',
+    deceased_parent_key = 'deceased_parent'
+    child_keys = {'parent_1_name', 'parent_2_name', deceased_parent_key,
                   'obtainer_name'}
 
     intersection = child_keys.intersection(body)
     if intersection:
         source['consent']['child_info'] = {}
         for key in intersection:
+            if key == deceased_parent_key:
+                body[deceased_parent_key] = body[deceased_parent_key] == 'true'
             source['consent']['child_info'][key] = body[key]
 
     # NB: Don't expect to handle errors 404, 422 in this function; expect to

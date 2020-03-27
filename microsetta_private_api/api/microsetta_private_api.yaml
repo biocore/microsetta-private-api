@@ -124,13 +124,18 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/language_tag'
+        - $ref: '#/components/parameters/consent_post_url'
       responses:
         '200':
           description: Consent form
           content:
-            text/html:
+            application/json:
               schema:
-                type: string
+                type: object
+                properties:  # each is a form field name
+                  consent_html:
+                    type: string
+                    example: "<html><body>Consent form here</body></html>"
         '401':
           $ref: '#/components/responses/401Unauthorized'
     post:
@@ -159,8 +164,9 @@ paths:
                 parent_2_name:
                   $ref: '#/components/schemas/parent_2_name'
                 deceased_parent:
-                  type: boolean
-                  example: true
+                  type: string
+                  enum: ['true', 'false']
+                  example: 'true'
                 obtainer_name:
                   $ref: '#/components/schemas/obtainer_name'
               required:
@@ -872,6 +878,13 @@ components:
       schema:
         $ref: '#/components/schemas/language_tag'
       required: true
+    consent_post_url:
+      name: consent_post_url
+      in: query
+      description: Client url to which the customized consent form should be posted.
+      schema:
+        type: string
+        example: "http://www.microsetta.org/workflow_create_human_source"
     source_type:
       name: source_type
       in: query
