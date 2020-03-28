@@ -281,15 +281,19 @@ def view_account(account_id):
 def view_source(account_id, source_id):
     samples = ApiRequest.get('/accounts/%s/sources/%s/samples' %
                              (account_id, source_id))
-    print(samples)
     return render_template('source.jinja2',
                            acct_id=account_id,
                            source_id=source_id,
                            samples=samples)
 
 
-def view_sample():
-    pass
+def view_sample(account_id, source_id, sample_id):
+    sample = ApiRequest.get('/accounts/%s/sources/%s/samples/%s' %
+                            (account_id, source_id, sample_id))
+    return render_template('sample.jinja2',
+                           acct_id=account_id,
+                           source_id=source_id,
+                           sample=sample)
 
 
 def update_sample():

@@ -8,20 +8,20 @@
 <body>
     <br />
     <div class="content">
-        Account {{acct_id}}
+        Account {{acct_id}} <br/>
         Source {{source_id}}
         <div class="container">
             Samples:
             <div class="list-group">
                 {% for sample in samples %}
-                <a href="/accounts/{{acct_id}}/sources/{{source.source_id}}/samples/{{sample.sample_id}}" class="list-group-item list-group-item-action {{loop.cycle('odd', 'even') }}">
+                <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}" class="list-group-item list-group-item-action {{loop.cycle('odd', 'even') }}">
                 <div class="container">
                   <div class="row">
                     <div class="col-sm">
-                      {{source.source_name}}
+                      {{sample.sample_barcode}}
                     </div>
                     <div class="col-sm">
-                      {{source.source_type}}
+                      {{sample.sample_notes}}
                     </div>
                   </div>
                 </div>
