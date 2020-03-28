@@ -26,6 +26,10 @@ from requests.auth import AuthBase
 # config somewhere and reload
 
 # Python is dumb, don't put spaces anywhere in this string.
+from microsetta_private_api.model.vue.vue_factory import VueFactory
+from microsetta_private_api.model.vue.vue_field import VueInputField, \
+    VueTextAreaField, VueSelectField, VueDateTimePickerField
+
 PUB_KEY = """-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp68T9XnX7d53Zo8pt072
 y+W0sV51EDZi7f2zeBbw5qvht9coFX4LF/p9Rcac7TajVJj+YE64vHm+YAL3ToJq
@@ -54,7 +58,13 @@ def home():
     show_wizard = False
 
     if 'token' in session:
-        user = parse_jwt(session['token'])
+        try:
+            # If user leaves the page open, the token can expire before the
+            # session, so if our token goes back we need to force them to login
+            # again.
+            user = parse_jwt(session['token'])
+        except jwt.exceptions.ExpiredSignatureError:
+            return redirect('/logout')
         workflow_needs, workflow_state = determine_workflow_state()
         acct_id = workflow_state.get("account_id", None)
         show_wizard = workflow_needs != ALL_DONE
@@ -290,14 +300,42 @@ def view_source(account_id, source_id):
 def view_sample(account_id, source_id, sample_id):
     sample = ApiRequest.get('/accounts/%s/sources/%s/samples/%s' %
                             (account_id, source_id, sample_id))
+
+    sample_sites = ["Ear wax", "Forehead", "Fur", "Hair", "Left hand",
+                    "Left leg", "Mouth", "Nares", "Nasal mucus", "Right hand",
+                    "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus"]
+
+    factory = VueFactory()
+
+    schema = factory.start_group("Edit Sample Information")\
+        .add_field(VueInputField("sample_barcode", "Barcode")
+                   .set(disabled=True))\
+        .add_field(VueDateTimePickerField("sample_datetime", "Date and Time")
+                   .set(required=True))\
+        .add_field(VueTextAreaField("sample_notes", "Notes")
+                   .set(required=True))\
+        .add_field(VueSelectField("sample_site", "Site", sample_sites)
+                   .set(required=True))\
+        .end_group()\
+        .build()
+
     return render_template('sample.jinja2',
                            acct_id=account_id,
                            source_id=source_id,
-                           sample=sample)
+                           sample=sample,
+                           schema=schema)
 
 
-def update_sample():
-    pass
+def update_sample(account_id, source_id, sample_id):
+    model = {}
+    for x in flask.request.form:
+        model[x] = flask.request.form[x]
+
+    resp = ApiRequest.put('/accounts/%s/sources/%s/samples/%s' %
+                          (account_id, source_id, sample_id),
+                          json=model)
+    return redirect('/accounts/%s/sources/%s/samples/%s' %
+                    (account_id, source_id, sample_id))
 
 
 class BearerAuth(AuthBase):

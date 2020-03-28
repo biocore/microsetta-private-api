@@ -8,7 +8,12 @@
 <body>
     <br />
     <div class="content">
-        Account {{acct_id}}
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Account</li>
+          </ol>
+        </nav>
         <div class="container">
             Sources:
             <div class="list-group">
@@ -17,10 +22,10 @@
                 <div class="container">
                   <div class="row">
                     <div class="col-sm">
-                      {{source.source_name}}
+                      {{source.source_name |e}}
                     </div>
                     <div class="col-sm">
-                      {{source.source_type}}
+                      {{source.source_type |e}}
                     </div>
                   </div>
                 </div>

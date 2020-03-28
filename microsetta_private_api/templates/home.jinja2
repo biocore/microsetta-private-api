@@ -8,6 +8,12 @@
 <body>
     <br />
     <div class="content">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item active" aria-current="page">Home</li>
+          </ol>
+        </nav>
+
         {% if user %}
         Welcome Home {{user}}
         <br/>
@@ -22,7 +28,7 @@
             Account:
             <div class="list-group">
                 {% if acct_id %}
-                <a href="/accounts/{{acct_id}}" class="list-group-item list-group-item-action">Account ID: {{acct_id}}</a>
+                <a href="/accounts/{{acct_id}}" class="list-group-item list-group-item-action">Account ID: {{acct_id |e}}</a>
                 {% else %}
                 <a href="/workflow" class="list-group-item list-group-item-action">
                     Create New Account...

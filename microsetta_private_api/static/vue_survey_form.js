@@ -7,7 +7,7 @@ var vm = new Vue({
 
     data() {
 	return {
-	    model: {},
+	    model: survey_model,
         schema: survey_schema,
         formOptions: {
             validateAfterLoad: true,

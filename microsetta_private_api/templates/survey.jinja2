@@ -14,7 +14,7 @@
 
   <div class="panel panel-default">
     <div class="panel-body">
-      <form method="post" >
+      <form method="post" id="survey_form">
         <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
       </form>
     </div>
@@ -36,16 +36,16 @@
 </div>
 
 <script type="text/javascript">
+  var survey_model = {}
   var survey_schema={{survey_schema|tojson}}
   last_group = survey_schema.groups[survey_schema.groups.length-1]
   last_group.fields.push(
   {
-    buttonText: "WhatIs",
-    type: "input",
-    inputType: "submit",
-    onSubmit: function() {
-      console.log("SHIPIT!")
-      console.log(model)
+    buttonText: "Submit Survey",
+    type: "submit",
+    validateBeforeSubmit: true,
+    onSubmit: function(){
+      document.getElementById("survey_form").submit();
     }
   });
 </script>
