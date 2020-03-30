@@ -677,13 +677,13 @@ class IntegrationTests(TestCase):
             (ACCT_ID,),
             content_type='application/json',
             data=json.dumps(
-                {"age_range":"18-plus",
-                 "participant_name":"Joe Schmoe",
-                 "participant_email":"joe@schmoe.com",
-                 "parent_1_name":"Mr. Schmoe",
-                 "parent_2_name":"Mrs. Schmoe",
-                 "deceased_parent":False,
-                 "obtainer_name":"MojoJojo"
+                {"age_range": "18-plus",
+                 "participant_name": "Joe Schmoe",
+                 "participant_email": "joe@schmoe.com",
+                 "parent_1_name": "Mr. Schmoe",
+                 "parent_2_name": "Mrs. Schmoe",
+                 "deceased_parent": False,
+                 "obtainer_name": "MojoJojo"
                  }),
             headers=MOCK_HEADERS
 

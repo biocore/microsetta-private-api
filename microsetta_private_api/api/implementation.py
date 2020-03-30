@@ -533,11 +533,11 @@ def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
     }
 
     consent_html = render_template("new_participant.jinja2",
-                           message=None,
-                           media_locale=media_locales[language_tag],
-                           tl=tls[language_tag],
-                           lang_tag=language_tag,
-                           post_url=consent_post_url)
+                                   message=None,
+                                   media_locale=media_locales[language_tag],
+                                   tl=tls[language_tag],
+                                   lang_tag=language_tag,
+                                   post_url=consent_post_url)
     return jsonify({"consent_html": consent_html}), 200
 
 

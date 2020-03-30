@@ -35,7 +35,6 @@ def build_app():
     app.app.config['SESSION_TYPE'] = 'memcached'
     # ---
 
-
     # Set default json encoder
     # Note: app.app is the actual Flask application instance, so any Flask
     # settings have to be set there.

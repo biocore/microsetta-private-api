@@ -11,11 +11,9 @@ https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
 and associated file
 https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
 """
-import json
-import uuid
 
 import flask
-from flask import jsonify, render_template, session, redirect
+from flask import render_template, session, redirect
 import jwt
 import requests
 from requests.auth import AuthBase
@@ -190,7 +188,7 @@ def post_workflow_create_account(body):
             },
             "kit_name": kit_name
         }
-        resp = ApiRequest.post("/accounts", json=api_json)
+        ApiRequest.post("/accounts", json=api_json)
     return redirect("/workflow")
 
 
@@ -203,7 +201,7 @@ def get_workflow_create_human_source():
     acct_id = current_state["account_id"]
     post_url = "http://localhost:8082/workflow_create_human_source"
     json_of_html = ApiRequest.get("/accounts/{0}/consent".format(acct_id),
-                                params={"consent_post_url": post_url})
+                                  params={"consent_post_url": post_url})
     return json_of_html["consent_html"]
 
 
@@ -238,7 +236,7 @@ def post_workflow_claim_kit_samples(body):
         # for each sample, associate it to the human source
         for curr_sample_obj in sample_objs:
             print(curr_sample_obj)
-            resp = ApiRequest.post(
+            ApiRequest.post(
                 '/accounts/{0}/sources/{1}/samples'.format(acct_id, source_id),
                 json={"sample_id": curr_sample_obj["sample_id"]}
             )
@@ -274,11 +272,6 @@ def post_workflow_fill_primary_survey():
                         }
                     )
     return redirect("/workflow")
-
-
-def workflow_assign_sample_metadata():
-    # DAN
-    pass
 
 
 def view_account(account_id):
@@ -331,9 +324,9 @@ def update_sample(account_id, source_id, sample_id):
     for x in flask.request.form:
         model[x] = flask.request.form[x]
 
-    resp = ApiRequest.put('/accounts/%s/sources/%s/samples/%s' %
-                          (account_id, source_id, sample_id),
-                          json=model)
+    ApiRequest.put('/accounts/%s/sources/%s/samples/%s' %
+                   (account_id, source_id, sample_id),
+                   json=model)
     return redirect('/accounts/%s/sources/%s/samples/%s' %
                     (account_id, source_id, sample_id))
 
