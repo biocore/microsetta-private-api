@@ -132,7 +132,7 @@ paths:
             application/json:
               schema:
                 type: object
-                properties:  # each is a form field name
+                properties:
                   consent_html:
                     type: string
                     example: "<html><body>Consent form here</body></html>"
