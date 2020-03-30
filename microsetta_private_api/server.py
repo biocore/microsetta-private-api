@@ -2,6 +2,7 @@
 import secrets
 
 from flask import jsonify
+from werkzeug.utils import redirect
 
 from microsetta_private_api.exceptions import RepoException
 
@@ -42,6 +43,12 @@ def build_app():
 
     # Set mapping from exception type to response code
     app.app.register_error_handler(RepoException, handle_422)
+
+    @app.route('/americangut/static/<path:filename>')
+    def reroute_americangut(filename):
+        # This is dumb as rocks, but it fixes static images referenced in
+        # surveys without a schema change.
+        return redirect('/static/' + filename)
     return app
 
 
