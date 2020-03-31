@@ -139,7 +139,7 @@ Assent to Act as a Research Subject<br/>
 (Ages 13-17 years)</p>
 <p align='center'><b>American Gut Project</b></p>
 <p style='font-weight: bold;'><i>Who is conducting the study, why you have been asked to participate, how you were selected, and what is the approximate number of participants in the study?</i></p>
-<p>Professor Rob Knight is conducting a research study to find out more about the microbiome (harmless or good microorganisms (tiny living things such as bacteria) that live on and within your body). You have been asked to participate in this study because you, and everyone else on earth have a unique microbiome, and the more people we study of all ages will help us to understand how the micro-organisms may help or harm us. There will be approximately 20,000 participants in total.</p>
+<p>Professor Rob Knight is conducting a research study to find out more about the microbiome (harmless or good microorganisms (tiny living things such as bacteria) that live on and within your body). You have been asked to participate in this study because you, and everyone else on earth have a unique microbiome, and the more people we study of all ages will help us to understand how the micro-organisms may help or harm us. There will be approximately 100,000 participants in total.</p>
 <p style='font-weight: bold;'><i>Why is this study being done?</i></p>
 <p>The purpose of this study is to more accurately assess the differences between people and whether these differences can be attributed to lifestyle, diet, body type, age or the presence of associated diseases.  The results will be used to create a database of sequence data and metabolites from various body sites (e.g. skin, mouth, gut) and details about you (the participant supplying the sample), that can be used by other researchers when they need samples to compare to what they are studying e.g. certain diseases where gut abnormalities are common.</p>
 <p style='font-weight: bold;'><i>What will happen to you in this study and which procedures are standard of care and which are experimental?</i></p>
@@ -179,7 +179,7 @@ Research records will be kept confidential to the extent allowed by law. All dat
 </p>
 <p style='font-weight: bold;'><i>Who can you call if you have questions?</i></p>
 <p>
-If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or contact the American Gut Project at 858-534-8739.
+If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or contact Dominic Nguyen at 858-534-8739.
 </p>
 <p>
 You may call the Human Research Protections Program Office at 858-246-4777 to inquire about your rights as a research subject or to report research-related problems.
@@ -193,11 +193,11 @@ Consent to Act as a Research Subject</p>
 <p style='font-weight: bold;' align='center'>American Gut Project</p>
 <p style='font-weight: bold;'><i>Who is conducting the study, why you have been asked to participate, how you were selected, and what is the approximate number of participants in the study?</i></p>
 <p>
-Dr. Rob Knight is conducting a research study to find out more about the trillions of bacteria and other organisms (called your microbiome) that live in and on your body. You have been asked to participate in this study because your microbiome is unique – not the same as anyone else on earth. There will be approximately 20,000 participants in the study from across the USA and from other countries around the world.
+Dr. Rob Knight is conducting a research study to find out more about the trillions of bacteria and other organisms (called your microbiome) that live in and on your body. You have been asked to participate in this study because your microbiome is unique – not the same as anyone else on earth. There will be approximately 100,000 participants in the study from across the USA and from other countries around the world.
 </p>
 <p style='font-weight: bold;'><i>Why is this study being done?</i></p>
 <p>
-The purpose of this study is to more accurately assess the differences between people and whether these differences can be attributed to lifestyle, diet, body type, age or the presence of associated diseases.  The results will be used to create a database of sequence data and metabolites from various body sites (e.g. skin, mouth, gut) and details about the participant supplying the sample, that can be used by other researchers when they need samples to compare when they are studying the same type of sample in other scientific studies e.g. certain diseases where gut abnormalities are common.
+The purpose of this study is to more accurately assess the differences between people and whether these differences can be attributed to lifestyle, diet, body type, age or the presence of associated diseases. The results will be used to create a database of sequence data and metabolites from various body sites (e.g. skin, mouth, gut) and details about the participant supplying the sample, that can be used by other researchers when they need samples to compare when they are studying the same type of sample in other scientific studies e.g. certain diseases where gut abnormalities are common.
 </p>
 <p style='font-weight: bold;'><i>What will happen to you in this study?</i></p>
 <p>
@@ -279,7 +279,7 @@ We may need to report information about known or reasonably suspected incidents 
 </p>
 <p style='font-weight: bold;'><i>Who can you call if you have questions?</i></p>
 <p>
- If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or contact the American Gut Project at 858-534-8739.
+ If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or contact the Dominic Nguyen at 858-534-8739.
 </p>
 <p>
 You may call the Human Research Protections Program Office at 858-246-4777 to inquire about your rights as a research subject or to report research-related problems.
@@ -291,31 +291,32 @@ You may call the Human Research Protections Program Office at 858-246-4777 to in
 Parent Consent for Child to Act as a Research Subject<br/></p>
 <p align='center' style='font-weight: bold;'>American Gut Project</p>
 <p style='font-weight: bold;'><i>Who is conducting the study, why your child been asked to participate, how your child was selected, and what is the approximate number of participants in the study?</i></p>
-<p>Dr. Rob Knight is conducting a research study to find out more about the trillions of bacteria and other organisms (called the microbiome) that live in and on the body. You are volunteering your child for this study because you want to know more about the microbiome of your child. Children like all humans have a unique microbiome and including them in the study will help elucidate the development of the microbiome. There will be approximately 20,000 participants in the study from across the USA and from other countries around the world.</p>
+<p>Dr. Rob Knight is conducting a research study to find out more about the trillions of bacteria and other organisms (called the microbiome) that live in and on the body. You are volunteering your child for this study because you want to know more about the microbiome of your child. Children like all humans have a unique microbiome and including them in the study will help elucidate the development of the microbiome. There will be approximately 100,000 participants in the study from across the USA and from other countries around the world.</p>
 <p style='font-weight: bold;'><i>Why is this study being done?</i></p>
-<p>The purpose of this study is to more accurately assess the differences between people and whether these differences can be attributable to lifestyle, diet, body type, age or the presence of associated diseases.  The results will be used to create a database of sequence data derived from bacterial DNA in various body sites (e.g. skin, mouth, gut) and details about the child participant supplying the sample  that can be used by other researchers when they need samples to compare to what they are studying e.g. certain diseases where gut abnormalities are common.</p>
+<p>The purpose of this study is to more accurately assess the differences between people and whether these differences can be attributed to lifestyle, diet, body type, age or the presence of associated diseases. The results will be used to create a database of sequence data and metabolites from various body sites (e.g. skin, mouth, gut) and details about the child participant supplying the sample that can be used by other researchers when they are studying the same type of sample in other scientific studies e.g. certain diseases where gut abnormalities are common.</p>
 <p style='font-weight: bold;'>What will happen to your child in this study and which procedures are standard of care and which are experimental?</p>
-<p>You are being asked if you want your child to be in this study because you signed up for microbial testing on the American gut website. When you signed up we sent you a sample kit with instructions on how to login to the website so that you can consent to the study formally.</p>
-<p>The level of analysis available to you will depend on your contribution but all participants will have to consent to be a part of the study.
-The following tests are available:</p>
-<ol>
-<li>Find out who is in your microbiome - which bacteria and other microbes that are similar to bacteria called archaea are present in your child's sample ($99/swab kit);</li>
-<li>You plus the world - This is two kits: 1 for your child and one for someone from Africa, South America or Asia. Your support of for the second sample will allow us to sequence more people from around the world as part of our ongoing research ($129/kit);</li>
-<li>Microbes for two, three or four - which bacteria and other microbes that are similar to bacteria called archaea are present in your child's sample and one, two or three other samples;</li>
-<li>A week of feces - seven stool swab samples to be used any way you want - to track the effects of an antibiotic on your gut, effect of foreign travel e.g. ($500/7sample kit);</li>
-<li>All in the Family - Where bacterial DNA is sliced up into fragments and then reassembled to see what genes are present (also called "shallow shotgun metagenomic analysis") of up to four fecal samples with analysis of the pathways used by bacteria to signal other bacteria or within themselves;</li>
-<li>Beyond Bacteria - Deeper shotgun metagenome and virome characterization (where bacterial DNA is sliced up into fragments and then reassembled to see what genes are present making use of additional gene parts that can tell us if there are any associated viruses or virus products that "talk " with bacteria, fungus and parasites that may be present in the sample from your gut.  Requires shipment of a whole stool sample (materials and return FedEx postage included) ($2500/kit);</li>
-<li>Functional Feces - Additional characterization of gut samples over time (up to 7 stool samples, providing an analysis of the variability of functions over time. Here too the DNA is sliced up into fragments and then reassembled to see what genes are present (also called "shotgun metagenomic analysis").</li>
-</ol>
-<p>We will analyze all samples where the consent form and questionnaire is completed.  The samples in the project (including your child's) will be analyzed and published as a scientific article defining the range of diversity in the human microbiome.  You will get a link to view, download and print a high-resolution certificate suitable for framing of your results and access to more detailed list of the different organisms present in your sample (taxonomy summary).</p>
+<p>You are being asked if you want your child to be in this study because you signed up for microbial analysis on the American gut website. When you signed up we sent you a sample kit with instructions on how to login to the website so that you can consent to the study formally.</p>
+<p>We will analyze all samples where this consent form and the questionnaire are completed. The samples in the project (including your child’s) will be analyzed and published in scientific articles defining the range of diversity in the human microbiome. You will get a link to view, download and print high-resolution figures suitable for framing of your results and access to a more detailed taxa report of your results.</p>
 <p>We would like you to understand from the consent what we will do with your child's sample and what you will get in return.</p>
-<p>We will ask you to complete an online questionnaire about your child's lifestyle and what he/she eats.  We estimate that this should take no more than 30 minutes. You will then sample a part of your child's body (of interest to you) with a sterile Q-tip like swab by rubbing the surface of your skin, rubbing the surface of your tongue or sampling your stool by inserting the tip of the swab into used toilet tissue.  You can also sample other parts of her/his body - ear, nose, vagina, scalp, sole of foot. The swabs should be returned to us in the envelope provided using regular US mail service. DNA will be extracted from the sample and amplified by PCR (polymerase chain reaction) and then sequenced to see what bacteria are present and in what proportion in your sample. We estimate that it will take 2 months for you to learn the results.</p>
-<p>For the Beyond Bacteria package you will submit a whole stool sample in a designated collection device on special ice packs (that reliably cool the sample to -20 degrees celsius/-4 degrees Fahrenheit) packed in a container that we will provide. The results for "Beyond Bacteria" and "All in the family" will take longer because more extensive analysis is provided.  Results will be uploaded to your American Gut account when they are available.  We are also asking you to consent to having your child's sample or the bacterial DNA from it to be used in future studies.</p>
-<p style='font-weight: bold;'>Please Note: The sequencing is not for diagnostic purposes.</p>
+<p>We will ask you to complete an online questionnaire about your child’s lifestyle and what he/she eats. We estimate that this should take no more than 30 minutes. You will then sample a part of your child’s body (of interest to you) with a sterile Q-tip like swab by rubbing the surface of your skin, rubbing the surface of your tongue or sampling your stool stool in one of 3 ways:</p>
+<ol>
+<li>By inserting the tips of the swab into used toilet tissue and returning the sample in the provided plastic sleeve;</li>
+<li>By inserting the tips of the swab into used toilet tissue and applying the tips to the surface of an FOBT card, then returning the card to us. The FOBT card is the same device used by your doctor to check for blood in your stool. The FOBT card stabilizes the stool material for later analysis. We will not check if there is blood in the stool for
+diagnostic purposes because we are not a clinical laboratory;</li>
+<li>Submitting a whole stool sample refrigerated on ice (when requested - for additional analyses) in a container in a shipping container we will provide. This container will have ice packs that reliably cool the sample to -20 degrees centigrade/-4 degrees Fahrenheit.</li>
+</ol>
+<p>You can also sample other parts of her/his body – ear, nose, vagina, scalp, sole of foot.</p>
+<p>The swabs or FOBT cards should be returned to us in the envelope provided using regular domestic mail service. Whole stool samples will be returned to the Knight Lab in the provided shipping container.</p>
+<p>DNA will be extracted from the sample and amplified by PCR (polymerase chain reaction) and then sequenced to see what bacteria are present and in what proportion in your sample. We may also use the remaining sample to look at the metabolites like proteins or chemicals present that are derived from the bacteria, or to look more carefully for specific bacteria that may be interesting to us. We estimate that it will take 2 months for you to learn the results of the initial bacterial diversity estimation.</p>
+<p>Results will be uploaded to your American Gut account when they are available.</p>
+<p>We are also asking you to consent to having your child’s sample or the non-human DNA from it (e.g. bacterial DNA) used in future studies.</p>
+<p style='font-weight: bold;'>The sequencing is not for diagnostic purposes and does not target human DNA.</p>
 <p style='font-weight: bold;'>How much time will each study procedure take, what is your child's total time commitment, and how long will the study last?</p>
-<p>To complete the online questionnaire should take 30 minutes or less.  Each sample you send can be obtained in 5 minutes or less.  We expect the study to continue for 5 years but the results will be available to you before the end of the study (usually within 2 months of us receiving the sample).  You can choose to sample your child more than once.  If your child's personal details change (e.g. address, or heath status) we request that you voluntarily re-enter that information into the questionnaire.</p>
+<p>To complete the online questionnaire should take 30 minutes or less. Each sample you send can be obtained in 5 minutes or less. We expect the study to continue for 5 years but the results will be available to you before the end of the study (usually within 2 months of us receiving the sample). You can choose to sample your child more than once. If your child’s personal details change (e.g. address, or heath status) we request that you voluntarily re-enter contact information and/or responses to the questionnaire.</p>
 <p style='font-weight: bold;'>What risks are associated with this study?</p>
-<p>The sampling techniques have been used for ~5 years with no reported side effects. We do not target the human DNA that may be in the sample so personal information about your child's genome will not be available.  The investigation personnel have taken precautions to ensure that there is minimal risk of loss of confidentiality.  Should confidentiality be compromised, the implications to your child are minimal since the results are not diagnostic and have no implications for insurance companies that could compromise your child's insurability.</p>
+<p>The sampling techniques have been used for ~10 years with no reported side effects. We do not examine any human DNA that may be in the sample so personal information about your genome will not be obtained All data deposited in a publically accessible repository is filtered of known human sequence data before being deposited. The investigation personnel have taken precautions to ensure that there is minimal risk of loss of confidentiality. Should confidentiality be compromised, the implications to your child are minimal since the results are not diagnostic and have no implications for insurance companies that could compromise your child’s insurability.</p>
+<p><i>(Federal and State laws generally make it illegal for health insurance companies, group health plans, and most
+employers to discriminate against you based on your genetic information. This law generally will protect you in the following ways: a) Health insurance companies and group health plans may not request your genetic information that we get from this research. b) Health insurance companies and group health plans may not use your genetic information when making decisions regarding your eligibility or premiums. c) Employers with 5 or more employees may not use your genetic information that we get from this research when making a decision to hire, promote, or fire you or when setting the terms of your employment.)</i></p>
 <p>Because this is a research study, there may be some unknown risks that are currently unforeseeable. You will be informed of any significant new findings.</p>
 <p style='font-weight: bold;'>What are the alternatives to participating in this study?</p>
 <p>The study is entirely voluntary and not allowing your child to participate will have no consequence.  There is no alternative test.</p>
@@ -323,7 +324,7 @@ The following tests are available:</p>
 <p>There is no direct benefit to your child for participating in this study. The investigator, however, may learn more about the human microbiome in health and disease and provide a valuable resource for other researchers in other studies.</p>
 <p style='font-weight: bold;'>Can you choose to not to have your child participate or withdraw from the study without penalty or loss of benefits?</p>
 <p>There is no direct benefit to you or your child for participating in this study. We believe that there may be natural curiosity to know what bacteria are in your sample and how this compares to other people of the same gender and age. The investigator, however, will learn more about the human microbiome in health and disease and provide a valuable resource for other researchers in other studies.  Your contribution to the project may be eligible as a tax-deduction.  The receipt will be sent to you from the site that handles financial contributions.</p>
-<p style='font-weight: bold;'>We will analyze all samples where the consent form and questionnaire is completed.  The samples in the project (including your child's) will be analyzed and published as a scientific article.  You will get a link to view, download and print a high-resolution certificate suitable for framing of your results and access to more detailed taxa report of your results.</p>
+<p>We will analyze all samples where the consent form and questionnaire is completed.  The samples in the project (including your child's) will be analyzed and published as a scientific article.  You will get a link to view, download and print a high-resolution certificate suitable for framing of your results and access to more detailed taxa report of your results.</p>
 <p>The results from analysis of your sample/s cannot be used by you or your doctor to confirm a clinical diagnosis and we are not testing for infectious disease.</p>
 <p style='font-weight: bold;'>Can your child be withdrawn from the study without your consent?</p>
 <p>Participation in research is entirely voluntary. You may refuse to participate or withdraw your child from the study at any time, without penalty or loss of benefits to which you are entitled. If you decide that you no longer wish to continue in this study, you will be requested to contact the American Gut Project helpline to inform us of your intent to withdraw.  If your sample has not been processed you may request a refund which will be processed through the site where you contributed to the project.</p>
@@ -331,147 +332,44 @@ The following tests are available:</p>
 <p style='font-weight: bold;'>Will you be compensated for participating in this study?</p>
 <p>You will not be financially compensated in this study.</p>
 <p style='font-weight: bold;'>Are there any costs associated with participating in this study?</p>
-<p>You will be asked to contribute money to the project commensurate with the investigation you request ($99 for one sample, $1500 for "All in the family" (shallow shotgun metagenomic sequencing) and $2500 for "Beyond Bacteria" (deeper shotgun metagenome and virome characterization of one sample, plus additional sequencing). A receipt will be sent to you after you pay for the analysis you are requesting.  These contributions are used to partially finance the project.  Any additional funds required are provided from the funds UCSD has provided to Dr. Knight to set up his laboratory.</p>
+<p>After you have signed up for the project and mailed in your sample there will be no costs to you for participating in the study.</p>
 <p style='font-weight: bold;'>What if your child is injured as a direct result of being in this study?</p>
-<p>If your child is injured as a direct result of participation in this research, the University of California will provide any medical care you need to treat those injuries. The University will not provide any other form of compensation to you if your child is injured. You or your child may call the Human Research Protections Program Office at (858) 246-7444 for more information about this, to inquire about your rights as a research subject or to report research-related problems.</p>
+<p>If your child is injured as a direct result of participation in this research, the University of California will provide any medical care you need to treat those injuries. The University will not provide any other form of compensation to you if your child is injured. You or your child may call the Human Research Protections Program Office at 858-246-4777 for more information about this, to inquire about your rights as a research subject or to report research-related problems.</p>
 <p style='font-weight: bold;'>What about your confidentiality?</p>
 <p>Research records will be kept confidential to the extent allowed by law. All data about your child that is entered on the web site is stored on a password-protected server located at the SDSC (San Diego Supercomputer Center) card access controlled facility at UCSD.  Financial information from participants contributing to the project is not accessible to the researchers.  The code key (that relates participant personal information to sample barcodes) is retained on a separate password-protected server that is accessible only to the PI, Co-I, sample coordinator and the database coders.  All analysis is done on de-identified data and the data deposited in a public repository for use by other investigators, is similarly de-identified. Research records may be reviewed by the UCSD Institutional Review Board.</p>
 <p>You will provide information about yourself that could allow you to be identified if it was made public e.g. name, age, birthdate, address.  We have made every effort to ensure that you cannot be identified from the data you supply about yourself but retaining critical information like gender, age without compromising your personal information or the data integrity.</p>
 <p>We may need to report information about known or reasonably suspected incidents of abuse or neglect of a child, dependent adult or elder including physical, sexual, emotional, and financial abuse or neglect. The only way we could discover such abuse is if it is self-reported by the participant or the legal guardian, so this is not likely.  If any investigator has or is given such information, he or she may report such information to the appropriate authorities.</p>
 <p style='font-weight: bold;'>Who can you call if you have questions?</p>
-<p>If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or contact Brent Erickson at 858-534-8739.</p>
-<p>You may call the Human Research Protections Program Office at (858) 246-7444 to inquire about your rights as a research subject or to report research-related problems.</p>
+<p>If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or contact Dominic Nguyen at 858-534-8739.</p>
+<p>You may call the Human Research Protections Program Office at 858-246-4777 to inquire about your rights as a research subject or to report research-related problems.</p>
 <p style='font-weight: bold;'>Your Signature and Consent</p>
 <p>You have received a copy of this consent document and a copy of the "Experimental Subject's Bill of Rights" to keep.</p>
 <p>You agree to allow your child to participate.</p>''',
 
-    'PARTICIPATION_AGREEMENT': '''<p style="text-align: center;">University of California, San Diego</p>
-<p style="text-align: center;">
-Parent Consent for Child to Act as a Research Subject
-</p>
+    'PARTICIPATION_AGREEMENT': '''<p style="text-align: center;font-weight: bold;">AMERICAN GUT PROJECT</p>
+<p style="text-align: center;font-weight: bold;">University of California, San Diego</p>
+<p style="text-align: center;font-weight: bold;">PARTICIPATION AGREEMENT</p></b>
+<ol><li><b>Indemnification.</b> Each party shall defend, indemnify and hold the other party, its officers, employees, and agents harmless from and against any and all liability, loss, expense (including attorneys' fees), and claims for injury or damages arising out of the performance of this Agreement, but only in proportion to and to the extent such liability, loss, expense, attorneys' fees, or claims for injury (including death) or damages are caused by or result from the negligent or intentional acts or omissions of the indemnifying party, its officers, employees, or agents.</li>
+<li><b>Patent Infringement Indemnification.</b>  The Individual shall indemnify, defend, and hold harmless UCSD, its officers, agents, and employees against all losses, damages, liabilities, costs, and expenses (including but not limited to attorneys' fees) resulting from any judgment or proceeding in which it is determined, or any settlement agreement arising out of the allegation, that the Individual's furnishing or supplying UCSD with parts, goods, components, programs, practices, or methods under this Agreement or UCSD's use of such parts, materials, goods, components, programs, practices, or methods supplied by the Individual under this Agreement constitutes an infringement of any patent, copyright, trademark, trade name, trade secret, or other proprietary or contractual right of any third party. UCSD retains the right to participate in the defense against any such suit or action.</li>
+<li><b>Limitation of Liability.</b>  EXCEPT WITH REGARD TO ITS INDEMNIFICATION OBLIGATIONS, NEITHER PARTY WILL BE LIABLE TO THE OTHER PARTY FOR ANY INDIRECT, SPECIAL, INCIDENTAL, EXEMPLARY OR CONSEQUENTIAL DAMAGES, OR COSTS, INCLUDING, BUT NOT LIMITED TO, ANY LOST PROFITS OR REVENUES, EVEN IF SUCH PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES AND REGARDLESS OF THE LEGAL THEORY UNDER WHICH SUCH DAMAGES ARE SOUGHT.  UCSD DISCLAIMS ALL WARRANTIES, EXPRESS AND IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL UCSD'S TOTAL LIABILITY UNDER THIS AGREEMENT EXCEED THE AMOUNT PAID BY THE INDIVIDUAL FOR THE SERVICES. UCSD DOES NOT GUARANTEE A SPECIFIC RESULT OR DELIVERABLE FOR PARTICIPATING IN THIS PROJECT.</li>
+<li><b>UCSD's Ownership of Materials.</b>  UCSD will own the deliverables upon receipt of the materials from Individual.</li>
+<li><b>Use of UCSD Name.</b>  California Education Code Section 92000 prohibits use of the University of California, San Diego's name to suggest that UCSD endorses a product or service. The Individual will not use The University of California's name, or any acronym thereof publically, including UCSD, without UCSD's prior written approval.</li>
+<li><b>Excusable Delay.</b>  In the event of a delay caused by inclement weather, fire, flood, strike or other labor dispute, acts of God, acts of Governmental officials or agencies, or any other cause beyond the control of UCSD, UCSD's performance is excused hereunder for the periods of time attributable to such a delay, which may extend beyond the time lost due to one or more of the causes mentioned above. The Company's duty to pay for past or continuing costs is not suspended hereunder.</li>
+<li><b>Non-Interference.</b> Notwithstanding any other provision contained herein, the use of UCSD facilities and/or UCSD personnel in support of this Agreement can only be authorized to the extent that it will not interfere with work related to the prime missions of UCSD and/or the Department (e.g., education and research).  Accordingly, Individual's exclusive remedy for failure by either UCSD or persons acting on its behalf to perform services or furnish information or data hereunder at any particular time or in any specific manner, is limited to reimbursement of any unexpended payments under this Agreement.</li>
+<li><b>Non-Exclusive Nature of Services.</b>  The Services herein are being offered to Individual on a non-exclusive basis.  Nothing herein shall be construed as granting Company any exclusive right(s) to the Service(s) referenced herein, and UCSD retains the right to offer and perform similar or identical Services for others.</li>
+<li><b>Notice.</b>  Any notice or communication required by this Agreement shall be in writing and shall be deemed to have been duly given if delivered personally, or sent by overnight mail, or prepaid registered mail, email, or confirmed facsimile transmission, addressed to the other party at the address set forth on kit registration, or at such other address as such party hereto may hereafter specify in writing to the other party.</li>
+<li><b>Status of Parties.</b>  This Agreement is not intended to create, nor shall it be construed to be, a joint venture, association, partnership, franchise, or other form of business relationship.  Neither party shall have, nor hold itself out as having, any right, power or authority to assume, create, or incur any expenses, liability, or obligation on behalf of the other party, except as expressly provided herein.</li>
+<li><b>Third-Party Beneficiary.</b>  There are no intended third-party beneficiaries to this Agreement.</li>
+<li><b>Severability.</b>  If any provision of this Agreement is held invalid, illegal or unenforceable in any respect, such provision shall be treated as severable, leaving the remaining provisions unimpaired, provided that such does not materially prejudice either party in their respective rights and obligations contained in the valid terms, covenants, or conditions.</li>
+<li><b>Non-Waiver.</b>  The failure of either party to require the performance of any of the terms of this Agreement or the waiver by either party of any default under this Agreement shall not prevent a subsequent enforcement of such term, nor be deemed a waiver of any subsequent breach.</li>
+<li><b>Modification of Agreement.</b>  This Agreement shall be changed only by written agreement of the parties.</li>
+<li><b>Applicable Law.</b>  This Agreement shall be governed by the laws of the State of California without regard to its conflict of laws provisions.</li>
+<li><b>Signatures, Counterparts and Copies.</b>  This Agreement may be executed in counterparts, all of which, when taken together, shall constitute one contract with the same force and effect as if all signatures had been entered on one document.  Signatures may be made electronically, by clicking "I Agree" and such electronic signatures shall be valid and binding upon the parties making them, and shall serve in all respects as original signatures. Upon clicking "I Agree" this agreement shall be considered fully-executed by both parties. Signatures may be delivered among and between the parties by facsimile or electronic means.  Thereafter, the parties further agree that electronic copies of this Agreement may be used for any and all purposes for which the original may have been used.</li>
+<li><b>Arbitration.</b>  In the event of any dispute, claim, question, or disagreement arising from or relating to this Agreement or the breach thereof, the parties hereto shall use their best efforts to settle the dispute, claim, question, or disagreement.  To this effect, they shall consult and negotiate with each other in good faith and recognizing their mutual interests, attempt to reach a just and equitable solution satisfactory to both parties.  If they do not reach a solution within a period of sixty (60) days, then upon notice by either party to the other, all disputes, claims, questions, or disagreements shall be finally settled in accordance with the provisions of the American Arbitration Association ("AAA") and proceed under the provisions of Title 9 of the California Code of Civil Procedure Sections 1280 through and including 1294.2.  The discovery provisions of the California Code of Civil Procedure Section 1283.05 shall be applicable to this Agreement.  Each party shall bear its own costs.</li>
+<li><b>Export Control.</b>  No ITAR or export controlled materials shall be delivered to UCSD pursuant to this agreement.   </li>
+<li><b>Entire Agreement.</b>  This Agreement, including Exhibit A made a part hereof, sets forth the entire agreement of the parties with respect to the subject matter herein and supersedes any prior agreements, oral and written, and all other communications between the parties with respect to such subject matter.</li>
+</ol><br/>''',
 
-    <p style="text-align: center;font-weight: bold;">AMERICAN GUT PROJECT</p>
-<p><b><i>
-Who is conducting the study, why your child been asked to participate, how your child was selected, and what is the approximate number of participants in the study?
-</i></b></p>
-<p>
-Dr. Rob Knight is conducting a research study to find out more about the trillions of bacteria and other organisms (called the microbiome) that live in and on the body. You are volunteering your child for this study because you want to know more about the microbiome of your child. Children like all humans have a unique microbiome and including them in the study will help elucidate the development of the microbiome. There will be approximately 20,000 participants in the study from across the USA and from other countries around the world.
-<p>
-<p><b><i>
-Why is this study being done?
-</i></b></p>
-<p>
-The purpose of this study is to more accurately assess the differences between people and whether these differences can be attributed to lifestyle, diet, body type, age or the presence of associated diseases.  The results will be used to create a database of sequence data and metabolites from various body sites (e.g. skin, mouth, gut) and details about the child participant supplying the sample that can be used by other researchers when they are studying the same type of sample in other scientific studies e.g. certain diseases where gut abnormalities are common.
-<p>
-<p><b><i>
-What will happen to your child in this study and which procedures are standard of care and which are experimental?
-</i></b></p>
-<p>
-You are being asked if you want your child to be in this study because you signed up for microbial analysis on the American gut website. When you signed up we sent you a sample kit with instructions on how to login to the website so that you can consent to the study formally.
-</p>
-<p>
-We will analyze all samples when this consent form and the questionnaire are completed.  The samples in the project (including your child’s) will be analyzed and published in scientific articles defining the range of diversity in the human microbiome.  You will get a link to view, download and print high-resolution figures suitable for framing of your results and access to a more detailed taxa report of your results.
-</p>
-<p>
-We would like you to understand from the consent what we will do with your child’s sample and what you will get in return.
-</p>
-<p>
-We will ask you to complete an online questionnaire about your child’s lifestyle and what he/she eats.  We estimate that this should take no more than 30 minutes. You will then sample a part of your child’s body (of interest to you) with a sterile Q-tip like swab by rubbing the surface of the skin, rubbing the surface of the tongue or sampling their stool in one of 3 ways:
-</p>
-<p>
-<ol>
-<li>By inserting the tips of the swab into used toilet tissue and returning the sample in the provided plastic sleeve;</li>
-<li>By inserting the tips of the swab into used toilet tissue and applying the tips to the surface of an FOBT card, then returning the card to us.  The FOBT card is the same device used by your doctor to check for blood in your stool.  The FOBT card stabilizes the stool material for later analysis.  We will not check if there is blood in the stool for diagnostic purposes because we are not a clinical laboratory;</li>
-<li>Submitting a whole stool sample refrigerated on ice (when requested - for additional analyses) in a container in a shipping container we will provide.  This container will have ice packs that reliably cool the sample to -20 degrees centigrade/-4 degrees Fahrenheit.</li>
-</ol>
-<p>You can also sample other parts of her/his body – ear, nose, vagina, scalp, sole of foot. </p>
-<p>
-The swabs or FOBT cards should be returned to us in the envelope provided using regular domestic mail service. Whole stool samples will be returned to the Knight Lab in the provided shipping container.
-</p>
-<p>
-DNA will be extracted from the sample and amplified by PCR (polymerase chain reaction) and then sequenced to see what bacteria are present and in what proportion in your sample. We may also use the remaining sample to look at the metabolites like proteins or chemicals present that are derived from the bacteria, or to look more carefully for specific bacteria that may be interesting to us.  We estimate that it will take 2 months for you to learn the results of the initial bacterial diversity estimation.
-</p>
-<p>
-Results will be uploaded to your American Gut account when they are available.  We are also asking you to consent to having your child’s sample or the bacterial DNA from it to be used in future studies.
-</p>
-<p><b><u>Please Note</u></b>: The sequencing is not for diagnostic purposes and does not target human DNA.</p>
-<p><b><i>
-How much time will each study procedure take, what is your child’s total time commitment, and how long will the study last?
-</i></b></p>
-<p>
-To complete the online questionnaire should take 30 minutes or less.  Each sample you send can be obtained in 5 minutes or less.  We expect the study to continue for 5 years but the results will be available to you before the end of the study (usually within 2 months of us receiving the sample).  You can choose to sample your child more than once.  If your child’s personal details change (e.g. address, or heath status) we request that you voluntarily re-enter contact information and/or responses to the questionnaire.
-</p>
-<p><b><i>What risks are associated with this study?</i></b></p>
-<p>
-The sampling techniques have been used for ~10 years with no reported side effects. We do not examine any human DNA that may be in the sample so personal information about your genome will not be obtained.  All data deposited in a publically accessible repository is filtered of known human sequence data before being deposited. The investigation personnel have taken precautions to ensure that there is minimal risk of loss of confidentiality.  Should confidentiality be compromised, the implications to your child are minimal since the results are not diagnostic and have no implications for insurance companies that could compromise your child’s insurability.</br>
-<i>
-(Federal and State laws generally make it illegal for health insurance companies, group health plans, and most employers to discriminate against you based on your genetic information. This law generally will protect you in the following ways: a) Health insurance companies and group health plans may not request your genetic information that we get from this research. b) Health insurance companies and group health plans may not use your genetic information when making decisions regarding your eligibility or premiums. c) Employers with 5 or more employees may not use your genetic information that we get from this research when making a decision to hire, promote, or fire you or when setting the terms of your employment.)</br>
-</i>
-Because this is a research study, there may be some unknown risks that are currently unforeseeable. You will be informed of any significant new findings.
-</p>
-<p><b><i>
-What are the alternatives to participating in this study?
-</b></p></i>
-<p>
-The study is entirely voluntary and not allowing your child to participate will have no consequence.  There is no alternative test.
-</p>
-<p><b><i>
-What benefits can be reasonably expected?
-</b></p></i>
-<p>
-There is no direct benefit to your child for participating in this study. The investigator, however, may learn more about the human microbiome in health and disease and provide a valuable resource for other researchers in other studies.
-</p>
-<p><b><i>
-Can you choose to not to have your child participate or withdraw from the study without penalty or loss of benefits?
-</b></p></i>
-<p>
-There is no direct benefit to you or your child for participating in this study. We believe that there may be natural curiosity to know what bacteria are in your sample and how this compares to other people of the same gender and age. The investigator, however, will learn more about the human microbiome in health and disease and provide a valuable resource for other researchers in other studies.  Your contribution to the project may be eligible as a tax-deduction.  The receipt will be sent to you via Fundrazr which handles all financial contributions.
-</p>
-<p>
-We will analyze all samples where the consent form and questionnaire is completed.  The samples in the project (including your child’s) will be analyzed and published as a scientific article.  You will get a link to view, download and print high-resolution figures suitable for framing of your results and access to more detailed taxa report of your results.
-The results from the analysis cannot be used by you or your doctor to confirm a clinical diagnosis, and we are not testing for infectious disease.
-<p>
-<p><b><i>
-Can your child be withdrawn from the study without your consent?
-</b></p></i>
-<p>
-Participation in research is entirely voluntary. You may refuse to participate or withdraw your child from the study at any time, without penalty or loss of benefits to which you are entitled. If you decide that you no longer wish to continue in this study, you will be requested to contact the American Gut Project helpline to inform us of your intent to withdraw.  If your sample has not been processed you may request a refund which will be processed through the site where you contributed to the project</br>
-You will be told if any important new information is found during the course of this study that may affect your wanting to continue.
-</p>
-<p><b><i>Will you be compensated for participating in this study?</b></p></i>
-<p>You will not be financially compensated in this study.</p>
-<p><b><i>Are there any costs associated with participating in this study?</b></p></i>
-<p>
-After you have signed up for the project and mailed in your sample there will be no costs to you for participating in the study.
-</p>
-<p><b><i>What if your child is injured as a direct result of being in this study?</b></p></i>
-<p>
-If your child is injured as a direct result of participation in this research, the University of California will provide any medical care you need to treat those injuries. The University will not provide any other form of compensation to you if your child is injured. You or your child may call the Human Research Protections Program Office at 858-246-4777 for more information about this, to inquire about your rights as a research subject or to report research-related problems.
-</p>
-<p><b><i>What about your confidentiality?</i></b></p>
-<p>
-Research records will be kept confidential to the extent allowed by law. All data about your child that is entered on the web site is stored on a password-protected server located at the SDSC (San Diego Supercomputer Center) biometric feature controlled-entrance facility at UCSD.  Financial information from participants contributing to the project is not accessible to the researchers.  The code key (that relates participant personal information to sample barcodes) is retained on a separate password-protected server that is accessible only to the PI, Co-I, sample coordinator and the database coders.  All analysis is done on de-identified data and the data deposited in a public repository for use by other investigators, is similarly de-identified. Research records may be reviewed by the UCSD Institutional Review Board.
-</p>
-<p>
-You will provide information about yourself that could allow you to be identified if it was made public e.g. name, age, birthdate, address.  We have made every effort to ensure that you cannot be identified from the data you supply about yourself but retaining critical information like gender, age without compromising your personal information or the data integrity.
-</p>
-<p>
-We may need to report information about known or reasonably suspected incidents of abuse or neglect of a child, dependent adult or elder including physical, sexual, emotional, and financial abuse or neglect. The only way we could discover such abuse is if it is self-reported by the participant or the legal guardian, so this is not likely.  If any investigator has or is given such information, he or she may report such information to the appropriate authorities.
-<p><b><i>
-Who can you call if you have questions?
-</i></b></p>
-<p>
-If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or contact the American Gut Project at 858-534-8739.
-</p>
-<p>
-You may call the Human Research Protections Program Office at 858-246-4777
-to inquire about your rights as a research subject or to report research-related problems.</p>
-<p><b><i>Your Signature and Consent</i></b></p>
-<p>
-You have received a copy of this consent document and a copy of the “Experimental Subject's Bill of Rights” to keep.
-</p>
-<p>You agree to allow your child to participate.</p>
-''',
     'EXHIBIT_A': '''<p style="text-align: center;font-weight: bold;">EXHIBIT A</p>
 <p style="text-align: center;font-weight: bold;">AMERICAN GUT PROJECT STATEMENT OF SERVICES</p>
 <ol>
