@@ -17,9 +17,9 @@ LANG_SUPPORT = {
         NEW_PARTICIPANT_KEY: british_gut._NEW_PARTICIPANT,
         LANG_NAME_KEY: "british"
     }
-    #,
-    #ES_MX: {
-    #    NEW_PARTICIPANT_KEY: spanish_gut._NEW_PARTICIPANT,
-    #    LANG_NAME_KEY: "spanish"
-    #}
+    # ,
+    # ES_MX: {
+    #     NEW_PARTICIPANT_KEY: spanish_gut._NEW_PARTICIPANT,
+    #     LANG_NAME_KEY: "spanish"
+    # }
 }

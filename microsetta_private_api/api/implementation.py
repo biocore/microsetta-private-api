@@ -314,8 +314,6 @@ def submit_answered_survey(account_id, source_id, language_tag, body,
                            token_info):
     validate_access(token_info, account_id)
 
-    print(body)
-
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
     with Transaction() as t:
@@ -566,7 +564,7 @@ def verify_authrocket(token):
     try:
         token_info = jwt.decode(token,
                                 AUTHROCKET_PUB_KEY,
-                                algorithm="RS256",
+                                algorithms=["RS256"],
                                 verify=True,
                                 issuer="https://authrocket.com")
 

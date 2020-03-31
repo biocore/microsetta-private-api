@@ -42,7 +42,7 @@ YzmOf3F/k7TdpWqzic9y0ejMKzYu0ozGlKytxp3PbpI7B18nklVkGF07g/jNPwHN
 # Client might not technically care who the user is, but if they do, they
 # get the token, validate it, and pull email out of it.
 def parse_jwt(token):
-    decoded = jwt.decode(token, PUB_KEY, algorithm='RS256', verify=True)
+    decoded = jwt.decode(token, PUB_KEY, algorithms=['RS256'], verify=True)
     return decoded["name"]
 
 
