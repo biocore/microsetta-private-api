@@ -5,9 +5,6 @@ import microsetta_private_api.server
 
 @pytest.mark.usefixtures("client")
 class IntegrationTests(TestCase):
-    lang_query_dict = {
-        "language_tag": "en_US"
-    }
 
     def setUp(self):
         app = microsetta_private_api.server.build_app()

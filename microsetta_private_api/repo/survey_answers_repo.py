@@ -99,16 +99,14 @@ class SurveyAnswersRepo(BaseRepo):
                                              survey_id):
             return None
 
-        tag_to_col = {
-            localization.EN_US: "american",
-            localization.EN_GB: "british"
-        }
+        localization_info = localization.LANG_SUPPORT[language_tag]
+        lang_name = localization_info[localization.LANG_NAME_KEY]
 
         with self._transaction.cursor() as cur:
             # Grab selection and multi selection responses
             cur.execute("SELECT "
                         "survey_answers.survey_question_id, "
-                        + tag_to_col[language_tag] + ", "
+                        + lang_name + ", "
                         "survey_response_type "
                         "FROM "
                         "survey_answers "
@@ -317,17 +315,17 @@ class SurveyAnswersRepo(BaseRepo):
         #  There is no guarantee that a word translates the same way
         #  independent of any other context.  We will eventually move to a
         #  better framework for localization than what currently exists!
-        tag_to_col = {
-            localization.EN_US: "american",
-            localization.EN_GB: "british"
-        }
+
+        localization_info = localization.LANG_SUPPORT[language_tag]
+        lang_name = localization_info[localization.LANG_NAME_KEY]
+
         with self._transaction.cursor() as cur:
             # Normalize localized answer
             cur.execute("SELECT american "
                         "FROM "
                         "survey_response "
                         "WHERE "
-                        + tag_to_col[language_tag] + "=%s",
+                        + lang_name + "=%s",
                         (answer,))
             row = cur.fetchone()
             if row is None:

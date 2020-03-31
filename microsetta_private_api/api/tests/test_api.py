@@ -8,6 +8,7 @@ import collections
 from urllib.parse import urlencode
 from unittest import TestCase
 import microsetta_private_api.server
+from microsetta_private_api import localization
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.model.account import Account
@@ -195,13 +196,14 @@ def client(request):
 
 @pytest.mark.usefixtures("client")
 class FlaskTests(TestCase):
-    lang_query_dict = {
-        "language_tag": "en_US"
+    default_querystring_dict = {
+        localization.LANG_TAG_KEY: localization.EN_US
     }
 
     dummy_auth = MOCK_HEADERS
 
-    default_lang_tag = lang_query_dict["language_tag"]
+    default_lang_querystring = "{0}={1}".format(localization.LANG_TAG_KEY,
+                                                localization.EN_US)
 
     def setUp(self):
         app = microsetta_private_api.server.build_app()
@@ -311,6 +313,8 @@ class FlaskTests(TestCase):
 
 @pytest.mark.usefixtures("client")
 class AccountsTests(FlaskTests):
+    accounts_url = '/api/accounts?%s' % FlaskTests.default_lang_querystring
+
     def setUp(self):
         super().setUp()
         delete_dummy_accts()
@@ -328,7 +332,7 @@ class AccountsTests(FlaskTests):
 
         # execute accounts post (create)
         response = self.client.post(
-            '/api/accounts?language_tag=%s' % self.default_lang_tag,
+            self.accounts_url,
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
@@ -354,9 +358,10 @@ class AccountsTests(FlaskTests):
     def test_accounts_create_fail_400_without_required_fields(self):
         """Return 400 validation fail if don't provide a required field """
 
-        self.run_query_and_content_required_field_test("/api/accounts", "post",
-                                                       self.lang_query_dict,
-                                                       DUMMY_ACCT_INFO)
+        self.run_query_and_content_required_field_test(
+            "/api/accounts", "post",
+            self.default_querystring_dict,
+            DUMMY_ACCT_INFO)
 
     def test_accounts_create_fail_404(self):
         """Return 404 if provided kit name is not found in db."""
@@ -368,7 +373,7 @@ class AccountsTests(FlaskTests):
 
         # execute accounts post (create)
         response = self.client.post(
-            '/api/accounts?language_tag=%s' % self.default_lang_tag,
+            self.accounts_url,
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
@@ -395,7 +400,7 @@ class AccountsTests(FlaskTests):
 
         # execute accounts post (create)
         response = self.client.post(
-            '/api/accounts?language_tag=%s' % self.default_lang_tag,
+            self.accounts_url,
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
@@ -422,8 +427,8 @@ class AccountTests(FlaskTests):
         dummy_acct_id = create_dummy_acct(create_dummy_1=True)
 
         response = self.client.get(
-            '/api/accounts/%s?language_tag=%s' %
-            (dummy_acct_id, self.default_lang_tag),
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
             headers=self.dummy_auth)
 
         # check response code
@@ -441,15 +446,16 @@ class AccountTests(FlaskTests):
         dummy_acct_id = create_dummy_acct()
 
         input_url = "/api/accounts/{0}".format(dummy_acct_id)
-        self.run_query_and_content_required_field_test(input_url, "get",
-                                                       self.lang_query_dict)
+        self.run_query_and_content_required_field_test(
+            input_url, "get",
+            self.default_querystring_dict)
 
     def test_account_view_fail_404(self):
         """Return 404 if provided account id is not found in db."""
 
         response = self.client.get(
-            '/api/accounts/%s?language_tag=%s' %
-            (MISSING_ACCT_ID, self.default_lang_tag),
+            '/api/accounts/%s?%s' %
+            (MISSING_ACCT_ID, self.default_lang_querystring),
             headers=self.dummy_auth)
 
         # check response code, either is acceptable
@@ -484,8 +490,8 @@ class AccountTests(FlaskTests):
         input_json = json.dumps(changed_acct_dict)
 
         response = self.client.put(
-            '/api/accounts/%s?language_tag=%s' %
-            (dummy_acct_id, self.default_lang_tag),
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
             headers=self.dummy_auth,
             content_type='application/json',
             data=input_json)
@@ -507,9 +513,10 @@ class AccountTests(FlaskTests):
         changed_acct_dict = self.make_updated_acct_dict()
 
         input_url = "/api/accounts/{0}".format(dummy_acct_id)
-        self.run_query_and_content_required_field_test(input_url, "put",
-                                                       self.lang_query_dict,
-                                                       changed_acct_dict)
+        self.run_query_and_content_required_field_test(
+            input_url, "put",
+            self.default_querystring_dict,
+            changed_acct_dict)
 
     def test_account_update_fail_404(self):
         """Return 404 if provided account id is not found in db."""
@@ -520,8 +527,8 @@ class AccountTests(FlaskTests):
         input_json = json.dumps(changed_acct_dict)
 
         response = self.client.put(
-            '/api/accounts/%s?language_tag=%s' %
-            (MISSING_ACCT_ID, self.default_lang_tag),
+            '/api/accounts/%s?%s' %
+            (MISSING_ACCT_ID, self.default_lang_querystring),
             headers=self.dummy_auth,
             content_type='application/json',
             data=input_json)
@@ -552,8 +559,8 @@ class AccountTests(FlaskTests):
         input_json = json.dumps(changed_dummy_acct)
 
         response = self.client.put(
-            '/api/accounts/%s?language_tag=%s' %
-            (dummy_acct_id, self.default_lang_tag),
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
             headers=MOCK_HEADERS_2,
             content_type='application/json',
             data=input_json)

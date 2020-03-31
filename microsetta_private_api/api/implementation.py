@@ -32,7 +32,6 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source, info_from_api
 from microsetta_private_api.model.source import human_info_from_api
-from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 
 from werkzeug.exceptions import BadRequest, Unauthorized
 
@@ -520,24 +519,13 @@ def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
     # integration into form submission URL because form submit URL builds on
     # the base of the URL that called it (which includes account_id)
 
-    # TODO !!CRITICAL!! Is this the right way to choose which consent docs to
-    #  send based on language_tag?  Or should it always send american_gut but
-    #  a different language field somewhere else?
-    media_locales = {
-        localization.EN_US: american_gut.media_locale,
-        localization.EN_GB: british_gut.media_locale
-    }
-    tls = {
-        localization.EN_US: american_gut._NEW_PARTICIPANT,
-        localization.EN_GB: british_gut._NEW_PARTICIPANT
-    }
-
-    consent_html = render_template("new_participant.jinja2",
-                                   message=None,
-                                   media_locale=media_locales[language_tag],
-                                   tl=tls[language_tag],
-                                   lang_tag=language_tag,
-                                   post_url=consent_post_url)
+    localization_info = localization.LANG_SUPPORT[language_tag]
+    consent_html = render_template(
+        "new_participant.jinja2",
+        tl=localization_info[localization.NEW_PARTICIPANT_KEY],
+        lang_tag=language_tag,
+        post_url=consent_post_url
+    )
     return jsonify({"consent_html": consent_html}), 200
 
 
