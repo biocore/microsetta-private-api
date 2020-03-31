@@ -5,6 +5,8 @@ import werkzeug
 from werkzeug.exceptions import Unauthorized
 
 import microsetta_private_api.server
+from microsetta_private_api.localization import LANG_SUPPORT, \
+    NEW_PARTICIPANT_KEY, EN_US, EN_GB
 from microsetta_private_api.api.tests.utils import check_response
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
@@ -126,12 +128,14 @@ class IntegrationTests(TestCase):
     @staticmethod
     def setup_test_data():
 
-        american_gut._NEW_PARTICIPANT = \
-            copy.deepcopy(american_gut._NEW_PARTICIPANT)
-        american_gut._NEW_PARTICIPANT['SEL_AGE_RANGE'] = "Murica!"
-        british_gut._NEW_PARTICIPANT = \
-            copy.deepcopy(british_gut._NEW_PARTICIPANT)
-        british_gut._NEW_PARTICIPANT['SEL_AGE_RANGE'] = "QQBritannia"
+        LANG_SUPPORT[EN_US][NEW_PARTICIPANT_KEY] = copy.deepcopy(
+            american_gut._NEW_PARTICIPANT)
+        LANG_SUPPORT[EN_US][NEW_PARTICIPANT_KEY]['SEL_AGE_RANGE'] = "Murica!"
+
+        LANG_SUPPORT[EN_GB][NEW_PARTICIPANT_KEY] = copy.deepcopy(
+            british_gut._NEW_PARTICIPANT)
+        LANG_SUPPORT[EN_GB][NEW_PARTICIPANT_KEY]['SEL_AGE_RANGE'] = \
+            "QQBritannia"
 
         IntegrationTests.teardown_test_data()
 
@@ -1179,13 +1183,13 @@ class IntegrationTests(TestCase):
     def test_consent_localization(self):
         resp_us = self.client.get(
             '/api/accounts/%s/consent?language_tag=en-US&consent_post_url=%s' %
-            (ACCT_ID,DUMMY_CONSENT_POST_URL),
+            (ACCT_ID, DUMMY_CONSENT_POST_URL),
             headers=MOCK_HEADERS
         )
         check_response(resp_us)
         resp_gb = self.client.get(
             '/api/accounts/%s/consent?language_tag=en-GB&consent_post_url=%s' %
-            (ACCT_ID,DUMMY_CONSENT_POST_URL),
+            (ACCT_ID, DUMMY_CONSENT_POST_URL),
             headers=MOCK_HEADERS
         )
         check_response(resp_gb)
@@ -1198,7 +1202,7 @@ class IntegrationTests(TestCase):
                       "not found (en-US)")
         self.assertIn("QQBritannia", str(resp_gb.data),
                       "String inserted into consent doc during test setup"
-                      "not found (en-US)")
+                      "not found (en-GB)")
 
 
 def _create_mock_kit(transaction):
