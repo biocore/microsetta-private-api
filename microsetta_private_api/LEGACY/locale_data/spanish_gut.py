@@ -1,3 +1,5 @@
+media_locale = {}
+
 _NEW_PARTICIPANT = {
     'ADD_HUMAN_TITLE': 'Agregar una nueva fuente humana',
     'SEL_AGE_RANGE': 'Seleccione el rango de edad del participante:',
@@ -9,24 +11,24 @@ _NEW_PARTICIPANT = {
     # TODO: DO NOT MERGE WITHOUT THESE
     'PARTICIPATION_AGREEMENT': 'PENDING',
     'EXHIBIT_A': 'PENDING',
-    'BILL_OF_RIGHTS': '''Experimental Subject's Bill of Rights''',
-    'TEXT_I_HAVE_READ_1': 'I have read (or someone has read to me) this form. I am aware that I am being asked to be in a research study. I voluntarily agree to be in this study.',
-    'TEXT_I_HAVE_READ_SIMPLIFIED': 'Yes, you will be in this research study.',
-    'PERSON_ATTAINING_ASSENT': 'Signature Of Person Obtaining Assent',
-    'TEXT_ASSENT_WITNESS': 'In my judgment, the participant is voluntarily and knowingly giving assent and possesses the legal capacity to give assent to participate in the study.',
-    'OBTAINER_NAME': 'Name of person obtaining assent',
-    'TEXT_I_HAVE_READ_PARENT': 'I have read (or someone has read to me) this form. I am aware that my child is being asked to be in a research study. I voluntarily agree for my child to be in this study.',
-    'PARTICIPANT_NAME': 'Participant name',
-    'PARTICIPANT_EMAIL': 'Participant email',
-    'PARTICIPANT_PARENT_1': 'Parent/Guardian name',
-    'PARTICIPANT_PARENT_2': 'Parent/Guardian name of second parent',
-    'PARTICIPANT_DECEASED_PARENTS': 'One parent/guardian is deceased or unable to consent',
-    'DATE_SIGNED': 'Date Signed',
-    'PARTICIPANT_ADDRESS': 'Participant Address',
-    'PARTICIPANT_CITY': 'Participant City',
-    'PARTICIPANT_STATE': 'Participant State',
-    'PARTICIPANT_ZIPCODE': 'Participant Zipcode',
-    'PARTICIPANT_COUNTRY': 'Participant Country',
+    'BILL_OF_RIGHTS': '''Declaración de derechos del sujeto experimental''',
+    'TEXT_I_HAVE_READ_1': 'He leído (o alguien me ha leído) este formulario. Soy consciente de que se me pide que participe en un estudio de investigación. Acepto voluntariamente participar en este estudio.',
+    'TEXT_I_HAVE_READ_SIMPLIFIED': 'Sí, estarás en este estudio de investigación.',
+    'PERSON_ATTAINING_ASSENT': 'Firma de la persona que obtiene el consentimiento',
+    'TEXT_ASSENT_WITNESS': 'A mi juicio, el participante está dando su consentimiento voluntaria y conscientemente y posee la capacidad legal de dar su consentimiento para participar en el estudio.',
+    'OBTAINER_NAME': 'Nombre de la persona que obtiene el consentimiento',
+    'TEXT_I_HAVE_READ_PARENT': 'He leído (o alguien me ha leído) este formulario. Soy consciente de que se le está pidiendo a mi hijo que participe en un estudio de investigación. Acepto voluntariamente que mi hijo participe en este estudio',
+    'PARTICIPANT_NAME': 'Nombre del participante',
+    'PARTICIPANT_EMAIL': 'Correo electrónico del participante',
+    'PARTICIPANT_PARENT_1': 'Nombre del Padre de Familia / Guardian',
+    'PARTICIPANT_PARENT_2': 'Nombre del padre / tutor del segundo padre',
+    'PARTICIPANT_DECEASED_PARENTS': 'Uno de los padres / tutor ha fallecido o no puede dar su consentimiento',
+    'DATE_SIGNED': 'Fecha firmada',
+    'PARTICIPANT_ADDRESS': 'Dirección del participante',
+    'PARTICIPANT_CITY': 'Ciudad participante',
+    'PARTICIPANT_STATE': 'Estado participante',
+    'PARTICIPANT_ZIPCODE': 'Código postal del participante',
+    'PARTICIPANT_COUNTRY': 'País participante',
 
     'CONSENT_YOUR_CHILD': '''
         <p align='center'><b>University of California, San Diego</b><br/>
@@ -37,7 +39,7 @@ _NEW_PARTICIPANT = {
         <p style='font-weight: bold;'><i>¿Por qué se está llevando a cabo este estudio?</i></p>
         <p>El objetivo del estudio es evaluar con mayor precisión las diferencias entre las personas y determinar si dichas diferencias pueden atribuirse al modo de vida, a la dieta, al tipo de constitución corporal, a la edad o a la presencia de enfermedades relacionadas. Los resultados se utilizarán para crear una base de datos que contendrá secuencias y metabolitos de distintas zonas del cuerpo (p. ej., la piel, la boca, el estómago y los intestinos), y detalles del niño participante que provee la muestra. Otros investigadores podrán usar estos datos cuando estén estudiando el mismo tipo de muestra en otros estudios científicos (p. ej., ciertas enfermedades en las que sean comnes las anomalías del estómago y los intestinos). </p>
         <p style='font-weight: bold;'>¿Qué le sucederá a su hijo durante el estudio, y qué procedimientos forman parte de la atención estándar y cuáles son experimentales?</p>
-        <p>Se le pregunta si desea que su hijo participe en este estudio porque usted se registró en el sitio web de American Gut para un análisis microbiológico. Cuando se registró, le enviamos un kit de toma de muestras junto con las instrucciones de inicio de sesión en el sitio web, de modo que pueda dar su consentimiento formal para el estudio.>
+        <p>Se le pregunta si desea que su hijo participe en este estudio porque usted se registró en el sitio web de American Gut para un análisis microbiológico. Cuando se registró, le enviamos un kit de toma de muestras junto con las instrucciones de inicio de sesión en el sitio web, de modo que pueda dar su consentimiento formal para el estudio.</p>
         <p>Analizaremos todas las muestras para las que se hayan completado el formulario de consentimiento y el cuestionario. Se analizarán las muestras suministradas para el proyecto (incluidas las de su hijo) y los resultados se publicarán en artículos científicos en los que se definirá la diversidad del microbioma humano. Se le enviará un enlace a través del que podrá ver, descargar e imprimir diagramas en alta resolución —aptos para enmarcar— de sus resultados y acceder a un informe detallado sobre los taxones encontrados.</p>
         <p>A través de este consentimiento, queremos que comprenda lo que haremos con la muestra de su hijo y lo que usted obtendrá a cambio.</p>
         <p>Le pediremos que responda un cuestionario en línea sobre el modo de vida y los hábitos alimentarios de su hijo. Calculamos que no deberá llevarle más de 30 minutos. A continuación, tomará una muestra de una parte del cuerpo de su hijo (de interés para usted) con algo semejante a un bastoncillo de algodón estéril frotándolo por la piel o la lengua. También puede tomar una muestra de las heces de una de las siguientes tres formas:</p>

@@ -32,7 +32,7 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source, info_from_api
 from microsetta_private_api.model.source import human_info_from_api
-from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
+from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut, spanish_gut
 
 from werkzeug.exceptions import BadRequest, Unauthorized
 
@@ -525,11 +525,13 @@ def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
     #  a different language field somewhere else?
     media_locales = {
         localization.EN_US: american_gut.media_locale,
-        localization.EN_GB: british_gut.media_locale
+        localization.EN_GB: british_gut.media_locale,
+        localization.ES_MX: spanish_gut.media_locale
     }
     tls = {
         localization.EN_US: american_gut._NEW_PARTICIPANT,
-        localization.EN_GB: british_gut._NEW_PARTICIPANT
+        localization.EN_GB: british_gut._NEW_PARTICIPANT,
+        localization.ES_MX: spanish_gut._NEW_PARTICIPANT
     }
 
     consent_html = render_template("new_participant.jinja2",
