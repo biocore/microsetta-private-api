@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Microsetta Test Client - Account Info</title>
+    <!--  The Vue Form Generator date time picker requires bootstrap 3, can't use 4.0  -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <script type="text/javascript" src="https://unpkg.com/vue@2.5.17/dist/vue.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vue-form-generator/dist/vfg.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/vue-form-generator/dist/vfg.css"/>
+
+    <!--  The Vue Form Generator date time component requires jquery moment.js, and the bootstrap-datetimepicker component -->
+    <script type="text/javascript" src="/static/vendor/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.js"></script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/a549aa8780dbda16f6cff545aeabc3d71073911e/src/js/bootstrap-datetimepicker.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/a549aa8780dbda16f6cff545aeabc3d71073911e/build/css/bootstrap-datetimepicker.css"/>
+
+</head>
+<body>
+    <br />
+    <div class="content">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
+            <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Account</a></li>
+            <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}/sources/{{source_id}}">Source</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Sample</li>
+          </ol>
+        </nav>
+        <div class="container">
+            <div id="app">
+              <div class="panel panel-default">
+                <div class="panel-body">
+                  <form method="post" id="sample_form">
+                    <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+                  </form>
+                </div>
+              </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+      var survey_model={{sample|tojson}}
+      var survey_schema={{schema|tojson}}
+      last_group = survey_schema.groups[survey_schema.groups.length-1]
+      last_group.fields.push(
+      {
+        buttonText: "Update",
+        type: "submit",
+        validateBeforeSubmit: true,
+        onSubmit: function(){
+          document.getElementById("sample_form").submit();
+        }
+      });
+    </script>
+<script type="text/javascript" src="/static/vue_survey_form.js"></script>
+</body>
+</html>

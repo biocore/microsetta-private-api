@@ -36,6 +36,7 @@ BARCODE = '777777777'
 
 MOCK_HEADERS = {"Authorization": "Bearer boogabooga"}
 MOCK_HEADERS_2 = {"Authorization": "Bearer woogawooga"}
+DUMMY_CONSENT_POST_URL = "http://test.com"
 
 
 def mock_verify_func(token):
@@ -664,10 +665,11 @@ class IntegrationTests(TestCase):
 
     def test_create_human_source(self):
         """To add a human source, we need to get consent"""
-        resp = self.client.get('/api/accounts/%s/consent?language_tag=en-US' %
-                               (ACCT_ID,),
-                               headers=MOCK_HEADERS
-                               )
+        resp = self.client.get(
+            '/api/accounts/%s/consent?language_tag=en-US&consent_post_url=%s' %
+            (ACCT_ID, DUMMY_CONSENT_POST_URL),
+            headers=MOCK_HEADERS
+        )
         check_response(resp)
 
         # TODO: This should probably fail as it doesn't perfectly match one of
@@ -675,14 +677,16 @@ class IntegrationTests(TestCase):
         resp = self.client.post(
             '/api/accounts/%s/consent?language_tag=en-US' %
             (ACCT_ID,),
-            content_type='application/x-www-form-urlencoded',
-            data="age_range=18-plus&"
-                 "participant_name=Joe%20Schmoe&"
-                 "participant_email=joe%40schmoe%2Ecom&"
-                 "parent_1_name=Mr%2E%20Schmoe&"
-                 "parent_2_name=Mrs%2E%20Schmoe&"
-                 "deceased_parent=false&"
-                 "obtainer_name=MojoJojo",
+            content_type='application/json',
+            data=json.dumps(
+                {"age_range": "18-plus",
+                 "participant_name": "Joe Schmoe",
+                 "participant_email": "joe@schmoe.com",
+                 "parent_1_name": "Mr. Schmoe",
+                 "parent_2_name": "Mrs. Schmoe",
+                 "deceased_parent": 'false',
+                 "obtainer_name": "MojoJojo"
+                 }),
             headers=MOCK_HEADERS
 
         )
@@ -1173,15 +1177,17 @@ class IntegrationTests(TestCase):
             t.commit()
 
     def test_consent_localization(self):
-        resp_us = self.client.get('/api/accounts/%s/consent?language_tag=en-US'
-                                  % (ACCT_ID,),
-                                  headers=MOCK_HEADERS
-                                  )
+        resp_us = self.client.get(
+            '/api/accounts/%s/consent?language_tag=en-US&consent_post_url=%s' %
+            (ACCT_ID,DUMMY_CONSENT_POST_URL),
+            headers=MOCK_HEADERS
+        )
         check_response(resp_us)
-        resp_gb = self.client.get('/api/accounts/%s/consent?language_tag=en-GB'
-                                  % (ACCT_ID,),
-                                  headers=MOCK_HEADERS
-                                  )
+        resp_gb = self.client.get(
+            '/api/accounts/%s/consent?language_tag=en-GB&consent_post_url=%s' %
+            (ACCT_ID,DUMMY_CONSENT_POST_URL),
+            headers=MOCK_HEADERS
+        )
         check_response(resp_gb)
 
         self.assertNotEqual(resp_us.data, resp_gb.data,

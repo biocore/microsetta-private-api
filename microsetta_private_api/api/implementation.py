@@ -65,6 +65,19 @@ def not_yet_implemented():
     return {'message': 'functionality not yet implemented'}
 
 
+def find_accounts_for_login(token_info):
+    # Note: Returns an array of accounts accessible by token_info because
+    # we'll use that functionality when we add in administrator accounts.
+    with Transaction() as t:
+        acct_repo = AccountRepo(t)
+        acct = acct_repo.find_linked_account(
+            token_info['iss'],
+            token_info['sub'])
+        if acct is None:
+            return jsonify([]), 200
+        return jsonify([acct.to_api()]), 200
+
+
 def register_account(body, token_info):
     # First register with AuthRocket, then come here to make the account
     new_acct_id = str(uuid.uuid4())
@@ -264,10 +277,16 @@ def read_answered_surveys(account_id, source_id, language_tag, token_info):
 
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        return jsonify(
-            survey_answers_repo.list_answered_surveys(
+        survey_template_repo = SurveyTemplateRepo(t)
+        answered_surveys = survey_answers_repo.list_answered_surveys(
                 account_id,
-                source_id)), 200
+                source_id)
+        api_objs = []
+        for ans in answered_surveys:
+            template_id = survey_answers_repo.find_survey_template_id(ans)
+            o = survey_template_repo.get_survey_template_link_info(template_id)
+            api_objs.append(o.to_api(ans))
+        return jsonify(api_objs), 200
 
 
 def read_answered_survey(account_id, source_id, survey_id, language_tag,
@@ -295,6 +314,8 @@ def read_answered_survey(account_id, source_id, survey_id, language_tag,
 def submit_answered_survey(account_id, source_id, language_tag, body,
                            token_info):
     validate_access(token_info, account_id)
+
+    print(body)
 
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
@@ -487,7 +508,7 @@ def read_kit(kit_name):
         return jsonify(kit.to_api()), 200
 
 
-def render_consent_doc(account_id, language_tag, token_info):
+def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
     validate_access(token_info, account_id)
 
     # return render_template("new_participant.jinja2",
@@ -511,11 +532,13 @@ def render_consent_doc(account_id, language_tag, token_info):
         localization.EN_GB: british_gut._NEW_PARTICIPANT
     }
 
-    return render_template("new_participant.jinja2",
-                           message=None,
-                           media_locale=media_locales[language_tag],
-                           tl=tls[language_tag],
-                           lang_tag=language_tag)
+    consent_html = render_template("new_participant.jinja2",
+                                   message=None,
+                                   media_locale=media_locales[language_tag],
+                                   tl=tls[language_tag],
+                                   lang_tag=language_tag,
+                                   post_url=consent_post_url)
+    return jsonify({"consent_html": consent_html}), 200
 
 
 def create_human_source_from_consent(account_id, body, token_info):
@@ -534,13 +557,16 @@ def create_human_source_from_consent(account_id, body, token_info):
         }
     }
 
-    child_keys = {'parent_1_name', 'parent_2_name', 'deceased_parent',
+    deceased_parent_key = 'deceased_parent'
+    child_keys = {'parent_1_name', 'parent_2_name', deceased_parent_key,
                   'obtainer_name'}
 
     intersection = child_keys.intersection(body)
     if intersection:
         source['consent']['child_info'] = {}
         for key in intersection:
+            if key == deceased_parent_key:
+                body[deceased_parent_key] = body[deceased_parent_key] == 'true'
             source['consent']['child_info'][key] = body[key]
 
     # NB: Don't expect to handle errors 404, 422 in this function; expect to

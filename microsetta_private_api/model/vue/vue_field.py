@@ -51,6 +51,13 @@ class VueField:
         # Additional attributes to add to the field
         self.attributes = attributes
 
+    def set(self, **attributes):
+        for key in attributes:
+            if not hasattr(self, key):
+                raise Exception("Unknown property: " + key)
+            setattr(self, key, attributes[key])
+        return self
+
 
 class VueInputField(VueField):
     def __init__(self, question_id, question_text):
@@ -120,7 +127,7 @@ class VueSelectField(VueField):
             disabled=False,
             required=False,
             multi=False,
-            default=None,
+            default=valid_responses[0],
             hint=None,
             help_=None,
             validator=None,
@@ -130,7 +137,10 @@ class VueSelectField(VueField):
             attributes=None
         )
         self.values = valid_responses
-        self.selectOptions = {}
+        self.selectOptions = {
+            "hideNoneSelectedText": True,
+            "value": valid_responses[0]
+        }
 
 
 class VueChecklistField(VueField):
@@ -158,3 +168,30 @@ class VueChecklistField(VueField):
         self.listBox = False
         self.values = valid_responses
         self.selectOptions = {}
+
+
+class VueDateTimePickerField(VueField):
+    def __init__(self, question_id, question_text):
+        super().__init__(
+            type_="dateTimePicker",
+            label=question_text,
+            model=str(question_id),
+            id_=str(question_id),
+            input_name=str(question_id),
+            featured=False,
+            visible=True,
+            disabled=False,
+            required=False,
+            multi=False,
+            default=None,
+            hint=None,
+            help_=None,
+            validator=None,
+            validate_debounce_time=None,
+            style_classes=None,
+            buttons=None,
+            attributes=None
+        )
+        self.dateTimePickerOptions = {
+            "format": "YYYY-MM-DD HH:mm:ss"
+        }

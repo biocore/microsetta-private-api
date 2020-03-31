@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Microsetta Test Client - Account Info</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+    <br />
+    <div class="content">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
+            <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Account</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Source</li>
+          </ol>
+        </nav>
+        <div class="container">
+            Samples:
+            <div class="list-group">
+                {% for sample in samples %}
+                <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}" class="list-group-item list-group-item-action {{loop.cycle('odd', 'even') }}">
+                <div class="container">
+                  <div class="row">
+                    <div class="col-sm">
+                      {{sample.sample_barcode |e}}
+                    </div>
+                    <div class="col-sm">
+                      {{sample.sample_notes |e}}
+                    </div>
+                  </div>
+                </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

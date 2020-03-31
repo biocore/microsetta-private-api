@@ -54,6 +54,19 @@ class AccountRepo(BaseRepo):
                 a.first_name, a.last_name) + \
                AccountRepo._addr_to_row(a.address)
 
+    def find_linked_account(self, auth_iss, auth_sub):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
+                        "account "
+                        "WHERE "
+                        "account.auth_issuer = %s AND "
+                        "account.auth_sub = %s", (auth_iss, auth_sub))
+            r = cur.fetchone()
+            if r is None:
+                return None
+            else:
+                return AccountRepo._row_to_account(r)
+
     def get_account(self, account_id):
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
