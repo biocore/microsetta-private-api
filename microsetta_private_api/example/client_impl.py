@@ -305,8 +305,7 @@ def view_sample(account_id, source_id, sample_id):
                    .set(disabled=True))\
         .add_field(VueDateTimePickerField("sample_datetime", "Date and Time")
                    .set(required=True))\
-        .add_field(VueTextAreaField("sample_notes", "Notes")
-                   .set(required=True))\
+        .add_field(VueTextAreaField("sample_notes", "Notes"))\
         .add_field(VueSelectField("sample_site", "Site", sample_sites)
                    .set(required=True))\
         .end_group()\
