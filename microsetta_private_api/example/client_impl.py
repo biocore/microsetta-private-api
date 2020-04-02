@@ -24,6 +24,7 @@ from requests.auth import AuthBase
 # config somewhere and reload
 
 # Python is dumb, don't put spaces anywhere in this string.
+from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.vue.vue_factory import VueFactory
 from microsetta_private_api.model.vue.vue_field import VueInputField, \
     VueTextAreaField, VueSelectField, VueDateTimePickerField
@@ -72,7 +73,8 @@ def home():
     return render_template('home.jinja2',
                            user=user,
                            acct_id=acct_id,
-                           show_wizard=show_wizard)
+                           show_wizard=show_wizard,
+                           endpoint=SERVER_CONFIG["endpoint"])
 
 
 def authrocket_callback(token):
@@ -193,7 +195,8 @@ def get_workflow_create_human_source():
     next_state, current_state = determine_workflow_state()
     if next_state == NEEDS_HUMAN_SOURCE:
         acct_id = current_state["account_id"]
-        post_url = "http://localhost:8082/workflow_create_human_source"
+        endpoint = SERVER_CONFIG["endpoint"]
+        post_url = endpoint + "/workflow_create_human_source"
         json_of_html = ApiRequest.get("/accounts/{0}/consent".format(acct_id),
                                       params={"consent_post_url": post_url})
         return json_of_html["consent_html"]
@@ -226,10 +229,13 @@ def post_workflow_claim_kit_samples(body):
 
         # get all the unassociated samples in the provided kit
         kit_name = body["kit_name"]
+        print(kit_name)
         sample_objs = ApiRequest.get('/kits', params={'kit_name': kit_name})
+        print(sample_objs)
 
         # for each sample, associate it to the human source
         for curr_sample_obj in sample_objs:
+            print(curr_sample_obj)
             ApiRequest.post(
                 '/accounts/{0}/sources/{1}/samples'.format(acct_id, source_id),
                 json={"sample_id": curr_sample_obj["sample_id"]}
@@ -305,8 +311,7 @@ def view_sample(account_id, source_id, sample_id):
                    .set(disabled=True))\
         .add_field(VueDateTimePickerField("sample_datetime", "Date and Time")
                    .set(required=True))\
-        .add_field(VueTextAreaField("sample_notes", "Notes")
-                   .set(required=True))\
+        .add_field(VueTextAreaField("sample_notes", "Notes"))\
         .add_field(VueSelectField("sample_site", "Site", sample_sites)
                    .set(required=True))\
         .end_group()\
@@ -341,7 +346,7 @@ class BearerAuth(AuthBase):
 
 
 class ApiRequest:
-    API_URL = "http://localhost:8082/api"
+    API_URL = SERVER_CONFIG["endpoint"] + "/api"
     DEFAULT_PARAMS = {'language_tag': 'en-US'}
 
     @classmethod

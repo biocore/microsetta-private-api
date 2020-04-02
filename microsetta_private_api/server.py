@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import secrets
 
+from microsetta_private_api.config_manager import SERVER_CONFIG
 from flask import jsonify
 from werkzeug.utils import redirect
 
@@ -54,4 +55,16 @@ def build_app():
 # If we're running in stand alone mode, run the application
 if __name__ == '__main__':
     app = build_app()
-    app.run(port=8082, debug=True)
+
+    if SERVER_CONFIG["ssl_cert_path"] and SERVER_CONFIG["ssl_key_path"]:
+        ssl_context = [
+            SERVER_CONFIG["ssl_cert_path"], SERVER_CONFIG["ssl_key_path"]
+        ]
+    else:
+        ssl_context = None
+
+    app.run(
+        port=SERVER_CONFIG['port'],
+        debug=SERVER_CONFIG['debug'],
+        ssl_context=ssl_context
+    )

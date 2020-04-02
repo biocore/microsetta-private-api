@@ -6,6 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import json
+import os
+
 
 class DBConfig(object):
     def __init__(self):
@@ -22,3 +25,5 @@ class DBConfig(object):
 
 
 AMGUT_CONFIG = DBConfig()
+with open(os.path.join(os.path.dirname(__file__), "server_config.json")) as fp:
+    SERVER_CONFIG = json.load(fp)
