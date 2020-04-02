@@ -24,6 +24,7 @@ from requests.auth import AuthBase
 # config somewhere and reload
 
 # Python is dumb, don't put spaces anywhere in this string.
+from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.vue.vue_factory import VueFactory
 from microsetta_private_api.model.vue.vue_field import VueInputField, \
     VueTextAreaField, VueSelectField, VueDateTimePickerField
@@ -72,7 +73,8 @@ def home():
     return render_template('home.jinja2',
                            user=user,
                            acct_id=acct_id,
-                           show_wizard=show_wizard)
+                           show_wizard=show_wizard,
+                           endpoint=SERVER_CONFIG["endpoint"])
 
 
 def authrocket_callback(token):
@@ -199,7 +201,8 @@ def get_workflow_create_human_source_wrapper():
 def get_workflow_create_human_source():
     next_state, current_state = determine_workflow_state()
     acct_id = current_state["account_id"]
-    post_url = "http://localhost:8082/workflow_create_human_source"
+    endpoint = SERVER_CONFIG["endpoint"]
+    post_url = endpoint + "/workflow_create_human_source"
     json_of_html = ApiRequest.get("/accounts/{0}/consent".format(acct_id),
                                   params={"consent_post_url": post_url})
     return json_of_html["consent_html"]
@@ -340,7 +343,7 @@ class BearerAuth(AuthBase):
 
 
 class ApiRequest:
-    API_URL = "http://localhost:8082/api"
+    API_URL = SERVER_CONFIG["endpoint"] + "/api"
     DEFAULT_PARAMS = {'language_tag': 'en-US'}
 
     @classmethod
