@@ -25,7 +25,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/account'
 
-    # NB: Not including a get: seems like seeing all accounts is an extension for the future (for admin?)
+    # NB: Not including a get of all accounts: seems like seeing all accounts is an extension for the future (for admin?)
     post:
       operationId: microsetta_private_api.api.implementation.register_account
       tags:
