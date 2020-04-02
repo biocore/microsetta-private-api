@@ -1,0 +1,7 @@
+{
+  "endpoint": "http://localhost:8082",
+  "port": 8082,
+  "debug": true,
+  "ssl_cert_path": null,
+  "ssl_key_path": null
+}

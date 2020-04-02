@@ -17,7 +17,7 @@
         {% if user %}
         Welcome Home {{user}}
         <br/>
-        <a href="https://direct-juice-b878.e2.loginrocket.com/logout?redirect_uri=http://localhost:8082/logout">Log Out</a>
+        <a href="https://direct-juice-b878.e2.loginrocket.com/logout?redirect_uri={{endpoint}}/logout">Log Out</a>
 
         {% if show_wizard %}
         <div class="alert alert-primary" role="alert">
@@ -39,8 +39,8 @@
 
         {% else %}
         You are not logged in <br/>
-        <a href="https://direct-juice-b878.e2.loginrocket.com/login?redirect_uri=http://localhost:8082/authrocket_callback">Log In</a>
-        <a href="https://direct-juice-b878.e2.loginrocket.com/signup?redirect_uri=http://localhost:8082/authrocket_callback">Sign Up</a>
+        <a href="https://direct-juice-b878.e2.loginrocket.com/login?redirect_uri={{endpoint}}/authrocket_callback">Log In</a>
+        <a href="https://direct-juice-b878.e2.loginrocket.com/signup?redirect_uri={{endpoint}}/authrocket_callback">Sign Up</a>
         {% endif %}
     </div>
 </body>
