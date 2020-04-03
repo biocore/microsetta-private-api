@@ -196,4 +196,3 @@ _NEW_PARTICIPANT = {
         <p>No es necesario que participes en este estudio de investigación si no quieres. Nadie se molestará contigo si dices que no. Incluso si ahora dices que sí y cambias de opinión después de empezar a participar, podrás retirarte del estudio y nadie se molestará.</p>
         <p>No dejes de hablar con tus padres si tienes alguna duda. Si no te explican bien lo que quieras saber, puedes llamar a Dominic Nguyen para pedirle más información. Su número de teléfono es el 858-534-8739.  También hay un sitio web en Internet en que se explican las cosas: .<a href = "https://www.americangut.org">https://www.americangut.org</a></p>''',
 }
-
