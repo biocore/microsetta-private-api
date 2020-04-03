@@ -15,8 +15,6 @@
         </nav>
 
         {% if user %}
-        Welcome Home {{user}}
-        <br/>
         <a href="https://direct-juice-b878.e2.loginrocket.com/logout?redirect_uri={{endpoint}}/logout">Log Out</a>
 
         {% if show_wizard %}
@@ -25,10 +23,9 @@
         </div>
         {% endif %}
         <div class="container">
-            Account:
             <div class="list-group">
                 {% if acct_id %}
-                <a href="/accounts/{{acct_id}}" class="list-group-item list-group-item-action">Account ID: {{acct_id |e}}</a>
+                <a href="/workflow" class="list-group-item list-group-item-action">{{user}}'s account</a>
                 {% else %}
                 <a href="/workflow" class="list-group-item list-group-item-action">
                     Create New Account...
