@@ -1279,7 +1279,7 @@ def _remove_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
 
             # Some tests may leak leftover surveys, wipe those out also
             cur.execute("DELETE FROM source_barcodes_surveys "
-                        "WHERE barcode = %s",(barcode,))
+                        "WHERE barcode = %s", (barcode,))
 
             # delete the barcode from the barcode table
             cur.execute("DELETE FROM barcode WHERE barcode = %s",
