@@ -24,6 +24,7 @@ setup(
                   [
                      'db/*.*',
                      'db/patches/*.sql',
-                     'server_config.json'
+                     'server_config.json',
+                     'authrocket.pubkey'
                   ]},
 )
