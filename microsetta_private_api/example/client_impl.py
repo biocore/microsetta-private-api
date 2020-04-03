@@ -66,7 +66,7 @@ def home():
             return redirect('/logout')
         workflow_needs, workflow_state = determine_workflow_state()
         acct_id = workflow_state.get("account_id", None)
-        show_wizard = workflow_needs != ALL_DONE
+        show_wizard = False # workflow_needs != ALL_DONE
 
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
@@ -148,7 +148,7 @@ def workflow():
     elif next_state == NEEDS_ACCOUNT:
         return redirect("/workflow_create_account")
     elif next_state == NEEDS_HUMAN_SOURCE:
-        return redirect("/workflow_create_human_source_wrapper")
+        return redirect("/workflow_create_human_source")
     elif next_state == NEEDS_PRIMARY_SURVEY:
         return redirect("/workflow_take_primary_survey")
     elif next_state == NEEDS_SAMPLE:
@@ -159,9 +159,12 @@ def workflow():
 
 
 def get_workflow_create_account():
-    email = parse_jwt(session['token'])
-    return render_template('create_acct.jinja2',
-                           authorized_email=email)
+    if 'token' in session:
+        email = parse_jwt(session['token'])
+        return render_template('create_acct.jinja2',
+                               authorized_email=email)
+    else:
+        return redirect("/workflow")
 
 
 def post_workflow_create_account(body):
@@ -185,10 +188,6 @@ def post_workflow_create_account(body):
         }
         ApiRequest.post("/accounts", json=api_json)
     return redirect("/workflow")
-
-
-def get_workflow_create_human_source_wrapper():
-    return render_template('consent.jinja2')
 
 
 def get_workflow_create_human_source():
@@ -229,13 +228,10 @@ def post_workflow_claim_kit_samples(body):
 
         # get all the unassociated samples in the provided kit
         kit_name = body["kit_name"]
-        print(kit_name)
         sample_objs = ApiRequest.get('/kits', params={'kit_name': kit_name})
-        print(sample_objs)
 
         # for each sample, associate it to the human source
         for curr_sample_obj in sample_objs:
-            print(curr_sample_obj)
             ApiRequest.post(
                 '/accounts/{0}/sources/{1}/samples'.format(acct_id, source_id),
                 json={"sample_id": curr_sample_obj["sample_id"]}
@@ -311,9 +307,9 @@ def view_sample(account_id, source_id, sample_id):
                    .set(disabled=True))\
         .add_field(VueDateTimePickerField("sample_datetime", "Date and Time")
                    .set(required=True))\
-        .add_field(VueTextAreaField("sample_notes", "Notes"))\
         .add_field(VueSelectField("sample_site", "Site", sample_sites)
-                   .set(required=True))\
+                   .set(required=True)) \
+        .add_field(VueTextAreaField("sample_notes", "Notes")) \
         .end_group()\
         .build()
 
