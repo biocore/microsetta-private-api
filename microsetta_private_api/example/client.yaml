@@ -74,17 +74,6 @@ paths:
         '302':
           description: Redirecting to necessary action
 
-  '/workflow_create_human_source_wrapper':
-    get:
-      operationId: microsetta_private_api.example.client_impl.get_workflow_create_human_source_wrapper
-      responses:
-        '200':
-          description: Form to create a human source
-          content:
-            text/html:
-              schema:
-                type: string
-
   '/workflow_create_human_source':
     get:
       operationId: microsetta_private_api.example.client_impl.get_workflow_create_human_source

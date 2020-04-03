@@ -66,7 +66,7 @@ def home():
             return redirect('/logout')
         workflow_needs, workflow_state = determine_workflow_state()
         acct_id = workflow_state.get("account_id", None)
-        show_wizard = workflow_needs != ALL_DONE
+        show_wizard = False # workflow_needs != ALL_DONE
 
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
@@ -100,13 +100,6 @@ def determine_workflow_state():
     current_state = {}
     if 'token' not in session:
         return NEEDS_LOGIN, current_state
-
-    # # DAN NEEDS SURVEY STUFF WOOOOOOOOO
-    # current_state = {}
-    # current_state["account_id"] = "44cb8726-89ae-4f2c-8966-e766fcc5d9c5"
-    # current_state["human_source_id"] = "aaaaaaaa-bbbb-cccc-8966-e766fcc5d9c5"
-    # return NEEDS_PRIMARY_SURVEY, current_state
-    # # END STUPID.
 
     # Do they need to make an account? YES-> create_acct.html
     accts = ApiRequest.get("/accounts")
@@ -155,20 +148,26 @@ def workflow():
     elif next_state == NEEDS_ACCOUNT:
         return redirect("/workflow_create_account")
     elif next_state == NEEDS_HUMAN_SOURCE:
-        return redirect("/workflow_create_human_source_wrapper")
+        return redirect("/workflow_create_human_source")
     elif next_state == NEEDS_PRIMARY_SURVEY:
         return redirect("/workflow_take_primary_survey")
     elif next_state == NEEDS_SAMPLE:
         return redirect("/workflow_claim_kit_samples")
     elif next_state == ALL_DONE:
-        # TODO: redirect to samples page
-        return redirect("/home")
+        # redirect to the page showing all the samples for this source
+        samples_url = "/accounts/{account_id}/sources/{source_id}".format(
+            account_id=current_state["account_id"],
+            source_id=current_state["human_source_id"])
+        return redirect(samples_url)
 
 
 def get_workflow_create_account():
-    email = parse_jwt(session['token'])
-    return render_template('create_acct.jinja2',
-                           authorized_email=email)
+    if 'token' in session:
+        email = parse_jwt(session['token'])
+        return render_template('create_acct.jinja2',
+                               authorized_email=email)
+    else:
+        return redirect("/workflow")
 
 
 def post_workflow_create_account(body):
@@ -194,18 +193,17 @@ def post_workflow_create_account(body):
     return redirect("/workflow")
 
 
-def get_workflow_create_human_source_wrapper():
-    return render_template('consent.jinja2')
-
-
 def get_workflow_create_human_source():
     next_state, current_state = determine_workflow_state()
-    acct_id = current_state["account_id"]
-    endpoint = SERVER_CONFIG["endpoint"]
-    post_url = endpoint + "/workflow_create_human_source"
-    json_of_html = ApiRequest.get("/accounts/{0}/consent".format(acct_id),
-                                  params={"consent_post_url": post_url})
-    return json_of_html["consent_html"]
+    if next_state == NEEDS_HUMAN_SOURCE:
+        acct_id = current_state["account_id"]
+        endpoint = SERVER_CONFIG["endpoint"]
+        post_url = endpoint + "/workflow_create_human_source"
+        json_of_html = ApiRequest.get("/accounts/{0}/consent".format(acct_id),
+                                      params={"consent_post_url": post_url})
+        return json_of_html["consent_html"]
+    else:
+        return redirect("/workflow")
 
 
 def post_workflow_create_human_source(body):
@@ -213,13 +211,14 @@ def post_workflow_create_human_source(body):
     if next_state == NEEDS_HUMAN_SOURCE:
         acct_id = current_state["account_id"]
         ApiRequest.post("/accounts/{0}/consent".format(acct_id), json=body)
+
     return redirect("/workflow")
 
 
 def get_workflow_claim_kit_samples():
     if 'kit_name' in session:
         mock_body = {'kit_name': session['kit_name']}
-        post_workflow_claim_kit_samples(mock_body)
+        return post_workflow_claim_kit_samples(mock_body)
     else:
         return render_template("kit_sample_association.jinja2")
 
@@ -232,13 +231,10 @@ def post_workflow_claim_kit_samples(body):
 
         # get all the unassociated samples in the provided kit
         kit_name = body["kit_name"]
-        print(kit_name)
         sample_objs = ApiRequest.get('/kits', params={'kit_name': kit_name})
-        print(sample_objs)
 
         # for each sample, associate it to the human source
         for curr_sample_obj in sample_objs:
-            print(curr_sample_obj)
             ApiRequest.post(
                 '/accounts/{0}/sources/{1}/samples'.format(acct_id, source_id),
                 json={"sample_id": curr_sample_obj["sample_id"]}
@@ -249,31 +245,37 @@ def post_workflow_claim_kit_samples(body):
 
 def get_workflow_fill_primary_survey():
     next_state, current_state = determine_workflow_state()
-    acct_id = current_state["account_id"]
-    source_id = current_state["human_source_id"]
-    primary_survey = 1
-    survey_obj = ApiRequest.get('/accounts/%s/sources/%s/survey_templates/%s' %
-                                (acct_id, source_id, primary_survey))
-    return render_template("survey.jinja2",
-                           survey_schema=survey_obj['survey_template_text'])
+    if next_state == NEEDS_PRIMARY_SURVEY:
+        acct_id = current_state["account_id"]
+        source_id = current_state["human_source_id"]
+        primary_survey = 1
+        survey_obj = ApiRequest.get('/accounts/%s/sources/%s/'
+                                    'survey_templates/%s' %
+                                    (acct_id, source_id, primary_survey))
+        return render_template("survey.jinja2",
+                               survey_schema=survey_obj[
+                                   'survey_template_text'])
+    else:
+        return redirect("/workflow")
 
 
 def post_workflow_fill_primary_survey():
     next_state, current_state = determine_workflow_state()
-    acct_id = current_state["account_id"]
-    source_id = current_state["human_source_id"]
+    if next_state == NEEDS_PRIMARY_SURVEY:
+        acct_id = current_state["account_id"]
+        source_id = current_state["human_source_id"]
 
-    model = {}
-    for x in flask.request.form:
-        model[x] = flask.request.form[x]
+        model = {}
+        for x in flask.request.form:
+            model[x] = flask.request.form[x]
 
-    ApiRequest.post("/accounts/%s/sources/%s/surveys" %
-                    (acct_id, source_id),
-                    json={
-                          "survey_template_id": 1,
-                          "survey_text": model
-                        }
-                    )
+        ApiRequest.post("/accounts/%s/sources/%s/surveys" %
+                        (acct_id, source_id),
+                        json={
+                              "survey_template_id": 1,
+                              "survey_text": model
+                            }
+                        )
     return redirect("/workflow")
 
 
@@ -308,9 +310,9 @@ def view_sample(account_id, source_id, sample_id):
                    .set(disabled=True))\
         .add_field(VueDateTimePickerField("sample_datetime", "Date and Time")
                    .set(required=True))\
-        .add_field(VueTextAreaField("sample_notes", "Notes"))\
         .add_field(VueSelectField("sample_site", "Site", sample_sites)
-                   .set(required=True))\
+                   .set(required=True)) \
+        .add_field(VueTextAreaField("sample_notes", "Notes")) \
         .end_group()\
         .build()
 
@@ -329,8 +331,8 @@ def update_sample(account_id, source_id, sample_id):
     ApiRequest.put('/accounts/%s/sources/%s/samples/%s' %
                    (account_id, source_id, sample_id),
                    json=model)
-    return redirect('/accounts/%s/sources/%s/samples/%s' %
-                    (account_id, source_id, sample_id))
+    return redirect('/accounts/%s/sources/%s' %
+                    (account_id, source_id))
 
 
 class BearerAuth(AuthBase):
@@ -345,6 +347,7 @@ class BearerAuth(AuthBase):
 class ApiRequest:
     API_URL = SERVER_CONFIG["endpoint"] + "/api"
     DEFAULT_PARAMS = {'language_tag': 'en-US'}
+    CAfile = SERVER_CONFIG["CAfile"]
 
     @classmethod
     def build_params(cls, params):
@@ -360,12 +363,14 @@ class ApiRequest:
     def get(cls, path, params=None):
         return requests.get(ApiRequest.API_URL + path,
                             auth=BearerAuth(session['token']),
+                            verify=ApiRequest.CAfile,
                             params=cls.build_params(params)).json()
 
     @classmethod
     def put(cls, path, params=None, json=None):
         return requests.put(ApiRequest.API_URL + path,
                             auth=BearerAuth(session['token']),
+                            verify=ApiRequest.CAfile,
                             params=cls.build_params(params),
                             json=json).json()
 
@@ -373,6 +378,7 @@ class ApiRequest:
     def post(cls, path, params=None, json=None):
         resp = requests.post(ApiRequest.API_URL + path,
                              auth=BearerAuth(session['token']),
+                             verify=ApiRequest.CAfile,
                              params=cls.build_params(params),
                              json=json)
         return resp
