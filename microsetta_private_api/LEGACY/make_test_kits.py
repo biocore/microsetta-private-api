@@ -16,7 +16,6 @@ def make_test_kits(output_filename=None, num_kits=100,
     # import it without an error until after the rest of the code
     # (outside this function) actually creates that database ...
 
-
     if output_filename is None:
         output_filename = "test_kit_ids_" + datetime.datetime.now().strftime(
             "%Y%m%d%H%M%S") + ".csv"

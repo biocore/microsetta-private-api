@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 import json
-import os
 # NOTE: importlib replaces setuptools' pkg_resources as of Python 3.7
 # See: https://stackoverflow.com/questions/6028000/how-to-read-a-static-file-from-inside-a-python-package # noqa
 import importlib.resources as pkg_resources

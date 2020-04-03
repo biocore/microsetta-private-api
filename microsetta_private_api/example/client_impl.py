@@ -66,7 +66,7 @@ def home():
             return redirect('/logout')
         workflow_needs, workflow_state = determine_workflow_state()
         acct_id = workflow_state.get("account_id", None)
-        show_wizard = False # workflow_needs != ALL_DONE
+        show_wizard = False  # workflow_needs != ALL_DONE
 
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.

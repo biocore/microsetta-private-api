@@ -21,10 +21,9 @@ setup(
     description="A RESTful API to support The Microsetta Initiative",
     license='BSD-3-Clause',
     package_data={'microsetta_private_api':
-        [
-            'db/*.*',
-            'db/patches/*.sql',
-            'server_config.json'
-        ]
-    },
+                  [
+                     'db/*.*',
+                     'db/patches/*.sql',
+                     'server_config.json'
+                  ]},
 )
