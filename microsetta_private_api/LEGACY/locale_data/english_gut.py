@@ -122,8 +122,7 @@ _NEW_PARTICIPANT = {
     'AGE_7_12': '7-12 years',
     'AGE_13_17': '13-17 years',
     'AGE_18': '18+ years',
-    'ASSENT_7_12':
-'''
+    'ASSENT_7_12':'''
 <p align='center'><b>University of California, San Diego</br>
 Assent to Act as a Research Subject</br>
 <i>(Ages 7-12 years)</i></br>
@@ -153,10 +152,8 @@ can stop and no one will be mad.</p>
 
 <p>Be sure to ask your parents if you have questions. If they don’t explain it well you can call
 Dominic Nguyen for more explanation. His telephone number is: 858-534-8739. There is also a
-web site on the internet that can explain things – http://www.americangut.org.</p>
-''',
-    'ASSENT_13_17':
-'''
+web site on the internet that can explain things – http://www.americangut.org.</p>''',
+    'ASSENT_13_17':'''
 <p align='center'><b>University of California, San Diego</br>
 Assent to Act as a Research Subject</br>
 <i>(Ages 13-17 years)</i></br>
@@ -286,10 +283,8 @@ You have received a copy of this assent document and a copy of the “Experiment
 of Rights” to keep.
 </p>
 
-<p>You agree to participate.</p>
-''',
-    'CONSENT_18':
-'''
+<p>You agree to participate.</p>''',
+    'CONSENT_18':'''
 <p align='center'><b>University of California, San Diego</br>
 Consent to Act as a Research Subject</br>
 American Gut Project</p></b>
@@ -505,10 +500,8 @@ Bill of Rights” to keep.
 </p>
 
 <p>You agree to participate.
-</p>
-''',
-    'CONSENT_YOUR_CHILD':
-'''
+</p>''',
+    'CONSENT_YOUR_CHILD':'''
 <p align='center'><b>University of California, San Diego</br>
 Parent Consent for Child to Act as a Research Subject</br>
 American Gut Project</b></p>
@@ -705,8 +698,7 @@ to inquire about your rights as a research subject or to report research-related
 You have received a copy of this consent document and a copy of the “Experimental Subject's
 Bill of Rights” to keep.</p>
 
-<p>You agree to allow your child to participate.</p>
-''',
+<p>You agree to allow your child to participate.</p>''',
     'PARTICIPATION_AGREEMENT': '''<p style="text-align: center;font-weight: bold;">AMERICAN GUT PROJECT</p>
 <p style="text-align: center;font-weight: bold;">University of California, San Diego</p>
 <p style="text-align: center;font-weight: bold;">PARTICIPATION AGREEMENT</p></b>
