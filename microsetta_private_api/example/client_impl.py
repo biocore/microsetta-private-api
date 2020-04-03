@@ -154,8 +154,11 @@ def workflow():
     elif next_state == NEEDS_SAMPLE:
         return redirect("/workflow_claim_kit_samples")
     elif next_state == ALL_DONE:
-        # TODO: redirect to samples page
-        return redirect("/home")
+        # redirect to the page showing all the samples for this source
+        samples_url = "/accounts/{account_id}/sources/{source_id}".format(
+            account_id=current_state["account_id"],
+            source_id=current_state["human_source_id"])
+        return redirect(samples_url)
 
 
 def get_workflow_create_account():
@@ -328,8 +331,8 @@ def update_sample(account_id, source_id, sample_id):
     ApiRequest.put('/accounts/%s/sources/%s/samples/%s' %
                    (account_id, source_id, sample_id),
                    json=model)
-    return redirect('/accounts/%s/sources/%s/samples/%s' %
-                    (account_id, source_id, sample_id))
+    return redirect('/accounts/%s/sources/%s' %
+                    (account_id, source_id))
 
 
 class BearerAuth(AuthBase):
