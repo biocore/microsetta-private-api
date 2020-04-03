@@ -350,7 +350,6 @@ class ApiRequest:
     DEFAULT_PARAMS = {'language_tag': 'en-US'}
     CAfile = SERVER_CONFIG["CAfile"]
 
-
     @classmethod
     def build_params(cls, params):
         all_params = {}
