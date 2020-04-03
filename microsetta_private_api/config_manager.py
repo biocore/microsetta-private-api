@@ -8,6 +8,9 @@
 
 import json
 import os
+# NOTE: importlib replaces setuptools' pkg_resources as of Python 3.7
+# See: https://stackoverflow.com/questions/6028000/how-to-read-a-static-file-from-inside-a-python-package # noqa
+import importlib.resources as pkg_resources
 
 
 class DBConfig(object):
@@ -25,5 +28,6 @@ class DBConfig(object):
 
 
 AMGUT_CONFIG = DBConfig()
-with open(os.path.join(os.path.dirname(__file__), "server_config.json")) as fp:
+with pkg_resources.open_text('microsetta_private_api', "server_config.json") \
+        as fp:
     SERVER_CONFIG = json.load(fp)
