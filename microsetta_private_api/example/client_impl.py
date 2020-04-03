@@ -29,16 +29,12 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.vue.vue_factory import VueFactory
 from microsetta_private_api.model.vue.vue_field import VueInputField, \
     VueTextAreaField, VueSelectField, VueDateTimePickerField
+import importlib.resources as pkg_resources
 
-PUB_KEY = """-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp68T9XnX7d53Zo8pt072
-y+W0sV51EDZi7f2zeBbw5qvht9coFX4LF/p9Rcac7TajVJj+YE64vHm+YAL3ToJq
-XOOF/6tmPYMbbg3DRdvUopH3URCR8o7cQXN//gDKruB9+xpB3v1Wq5SCX6t8SRFw
-ixw3mKgpPoh+Ou5OohxmtJ+D7lr5R2DDW8QWAWpBdGgttdnex1OqDIsprJihx/SW
-sHK4ql+H4MzX5PvY7S/XF2Ibl1xWsYLPvSzV/eJoG4hIwf7efUrXiVkwqFKNYzpL
-YzmOf3F/k7TdpWqzic9y0ejMKzYu0ozGlKytxp3PbpI7B18nklVkGF07g/jNPwHN
-7QIDAQAB
------END PUBLIC KEY-----"""
+
+PUB_KEY = pkg_resources.read_text(
+    'microsetta_private_api',
+    "authrocket.pubkey")
 
 TOKEN_KEY_NAME = 'token'
 WORKFLOW_URL = '/workflow'
@@ -70,7 +66,7 @@ def home():
             return redirect('/logout')
         workflow_needs, workflow_state = determine_workflow_state()
         acct_id = workflow_state.get("account_id", None)
-        show_wizard = False # workflow_needs != ALL_DONE
+        show_wizard = False  # workflow_needs != ALL_DONE
 
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
@@ -78,7 +74,8 @@ def home():
                            user=user,
                            acct_id=acct_id,
                            show_wizard=show_wizard,
-                           endpoint=SERVER_CONFIG["endpoint"])
+                           endpoint=SERVER_CONFIG["endpoint"],
+                           authrocket_url=SERVER_CONFIG["authrocket_url"])
 
 
 def authrocket_callback(token):

@@ -57,9 +57,9 @@ if __name__ == '__main__':
     app = build_app()
 
     if SERVER_CONFIG["ssl_cert_path"] and SERVER_CONFIG["ssl_key_path"]:
-        ssl_context = [
+        ssl_context = (
             SERVER_CONFIG["ssl_cert_path"], SERVER_CONFIG["ssl_key_path"]
-        ]
+        )
     else:
         ssl_context = None
 

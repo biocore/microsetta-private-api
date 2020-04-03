@@ -4,5 +4,6 @@
   "debug": true,
   "ssl_cert_path": null,
   "ssl_key_path": null,
-  "CAfile": null
+  "CAfile": null,
+  "authrocket_url": "https://direct-juice-b878.e2.loginrocket.com"
 }
