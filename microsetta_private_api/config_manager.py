@@ -28,6 +28,10 @@ class DBConfig(object):
 
 
 AMGUT_CONFIG = DBConfig()
+with pkg_resources.open_text('microsetta_private_api', "config_manager.py") \
+        as just_testing:
+    print("Can find config_manager.py!")
+
 with pkg_resources.open_text('microsetta_private_api', "server_config.json") \
         as fp:
     SERVER_CONFIG = json.load(fp)
