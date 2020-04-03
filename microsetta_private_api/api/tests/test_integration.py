@@ -1205,42 +1205,87 @@ class IntegrationTests(TestCase):
                       "not found (en-GB)")
 
 
-def _create_mock_kit(transaction):
+def _create_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
+                     kit_id=KIT_ID, supplied_kit_id=SUPPLIED_KIT_ID):
+
+    if barcodes is None:
+        barcodes = [BARCODE]
+
+    if mock_sample_ids is None:
+        mock_sample_ids = [MOCK_SAMPLE_ID]
+
+    if len(barcodes) != len(mock_sample_ids):
+        raise ValueError("must have equal number of "
+                         "barcodes and mock sample ids")
+
     with transaction.cursor() as cur:
-        cur.execute("INSERT INTO barcode (barcode, status) "
-                    "VALUES(%s, %s)",
-                    (BARCODE,
-                     'MOCK SAMPLE FOR UNIT TEST'))
+        # create a record for the new kit in ag_kit table
         cur.execute("INSERT INTO ag_kit "
                     "(ag_kit_id, "
                     "supplied_kit_id, swabs_per_kit) "
                     "VALUES(%s, %s, %s)",
-                    (KIT_ID, SUPPLIED_KIT_ID, 1))
-        cur.execute("INSERT INTO ag_kit_barcodes "
-                    "(ag_kit_barcode_id, ag_kit_id, barcode) "
-                    "VALUES(%s, %s, %s)",
-                    (MOCK_SAMPLE_ID, KIT_ID, BARCODE))
-        # Add the mock barcode to American Gut Project
-        cur.execute("INSERT INTO project_barcode "
-                    "(project_id, barcode) "
-                    "VALUES(%s, %s)", (1, BARCODE))
+                    (kit_id, supplied_kit_id, len(barcodes)))
+
+        for curr_index in range(0, len(barcodes)):
+            barcode = barcodes[curr_index]
+            mock_sample_id = mock_sample_ids[curr_index]
+
+            # add a new barcode to barcode table
+            cur.execute("INSERT INTO barcode (barcode, status) "
+                        "VALUES(%s, %s)",
+                        (barcode,
+                         'MOCK SAMPLE FOR UNIT TEST'))
+
+            # Add the new barcode to American Gut Project
+            cur.execute("INSERT INTO project_barcode "
+                        "(project_id, barcode) "
+                        "VALUES(%s, %s)", (1, barcode))
+
+            # associate the new barcode to a new sample id and
+            # to the new kit in the ag_kit_barcodes table
+            cur.execute("INSERT INTO ag_kit_barcodes "
+                        "(ag_kit_barcode_id, ag_kit_id, barcode) "
+                        "VALUES(%s, %s, %s)",
+                        (mock_sample_id, kit_id, barcode))
 
 
-def _remove_mock_kit(transaction):
+def _remove_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
+                     kit_id=KIT_ID):
+
+    if barcodes is None:
+        barcodes = [BARCODE]
+
+    if mock_sample_ids is None:
+        mock_sample_ids = [MOCK_SAMPLE_ID]
+
+    if len(barcodes) != len(mock_sample_ids):
+        raise ValueError("must have equal number of "
+                         "barcodes and mock sample ids")
+
     with transaction.cursor() as cur:
-        cur.execute("DELETE FROM ag_kit_barcodes "
-                    "WHERE ag_kit_barcode_id=%s",
-                    (MOCK_SAMPLE_ID,))
+        for curr_index in range(0, len(barcodes)):
+            barcode = barcodes[curr_index]
+            mock_sample_id = mock_sample_ids[curr_index]
+
+            # delete the record for this sample/barcode from the
+            # ag_kit_barcodes table
+            cur.execute("DELETE FROM ag_kit_barcodes "
+                        "WHERE ag_kit_barcode_id=%s",
+                        (mock_sample_id,))
+
+            # delete the barcode from any projects
+            cur.execute("DELETE FROM project_barcode WHERE barcode = %s",
+                        (barcode,))
+
+            # Some tests may leak leftover surveys, wipe those out also
+            cur.execute("DELETE FROM source_barcodes_surveys "
+                        "WHERE barcode = %s",(barcode,))
+
+            # delete the barcode from the barcode table
+            cur.execute("DELETE FROM barcode WHERE barcode = %s",
+                        (barcode,))
+        # next barcode/sample to delete
+
+        # now delete the kit the barcode(s) were associated to
         cur.execute("DELETE FROM ag_kit WHERE ag_kit_id=%s",
-                    (KIT_ID,))
-
-        # Some tests may leak leftover surveys, wipe those out also
-        cur.execute("DELETE FROM source_barcodes_surveys WHERE barcode = %s",
-                    (BARCODE,))
-
-        # Remove the mock barcode from any projects
-        cur.execute("DELETE FROM project_barcode WHERE barcode = %s",
-                    (BARCODE,))
-
-        cur.execute("DELETE FROM barcode WHERE barcode = %s",
-                    (BARCODE,))
+                    (kit_id,))

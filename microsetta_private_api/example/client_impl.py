@@ -101,13 +101,6 @@ def determine_workflow_state():
     if 'token' not in session:
         return NEEDS_LOGIN, current_state
 
-    # # DAN NEEDS SURVEY STUFF WOOOOOOOOO
-    # current_state = {}
-    # current_state["account_id"] = "44cb8726-89ae-4f2c-8966-e766fcc5d9c5"
-    # current_state["human_source_id"] = "aaaaaaaa-bbbb-cccc-8966-e766fcc5d9c5"
-    # return NEEDS_PRIMARY_SURVEY, current_state
-    # # END STUPID.
-
     # Do they need to make an account? YES-> create_acct.html
     accts = ApiRequest.get("/accounts")
     if len(accts) == 0:
@@ -200,12 +193,15 @@ def get_workflow_create_human_source_wrapper():
 
 def get_workflow_create_human_source():
     next_state, current_state = determine_workflow_state()
-    acct_id = current_state["account_id"]
-    endpoint = SERVER_CONFIG["endpoint"]
-    post_url = endpoint + "/workflow_create_human_source"
-    json_of_html = ApiRequest.get("/accounts/{0}/consent".format(acct_id),
-                                  params={"consent_post_url": post_url})
-    return json_of_html["consent_html"]
+    if next_state == NEEDS_HUMAN_SOURCE:
+        acct_id = current_state["account_id"]
+        endpoint = SERVER_CONFIG["endpoint"]
+        post_url = endpoint + "/workflow_create_human_source"
+        json_of_html = ApiRequest.get("/accounts/{0}/consent".format(acct_id),
+                                      params={"consent_post_url": post_url})
+        return json_of_html["consent_html"]
+    else:
+        return redirect("/workflow")
 
 
 def post_workflow_create_human_source(body):
@@ -213,13 +209,14 @@ def post_workflow_create_human_source(body):
     if next_state == NEEDS_HUMAN_SOURCE:
         acct_id = current_state["account_id"]
         ApiRequest.post("/accounts/{0}/consent".format(acct_id), json=body)
+
     return redirect("/workflow")
 
 
 def get_workflow_claim_kit_samples():
     if 'kit_name' in session:
         mock_body = {'kit_name': session['kit_name']}
-        post_workflow_claim_kit_samples(mock_body)
+        return post_workflow_claim_kit_samples(mock_body)
     else:
         return render_template("kit_sample_association.jinja2")
 
@@ -249,31 +246,37 @@ def post_workflow_claim_kit_samples(body):
 
 def get_workflow_fill_primary_survey():
     next_state, current_state = determine_workflow_state()
-    acct_id = current_state["account_id"]
-    source_id = current_state["human_source_id"]
-    primary_survey = 1
-    survey_obj = ApiRequest.get('/accounts/%s/sources/%s/survey_templates/%s' %
-                                (acct_id, source_id, primary_survey))
-    return render_template("survey.jinja2",
-                           survey_schema=survey_obj['survey_template_text'])
+    if next_state == NEEDS_PRIMARY_SURVEY:
+        acct_id = current_state["account_id"]
+        source_id = current_state["human_source_id"]
+        primary_survey = 1
+        survey_obj = ApiRequest.get('/accounts/%s/sources/%s/'
+                                    'survey_templates/%s' %
+                                    (acct_id, source_id, primary_survey))
+        return render_template("survey.jinja2",
+                               survey_schema=survey_obj[
+                                   'survey_template_text'])
+    else:
+        return redirect("/workflow")
 
 
 def post_workflow_fill_primary_survey():
     next_state, current_state = determine_workflow_state()
-    acct_id = current_state["account_id"]
-    source_id = current_state["human_source_id"]
+    if next_state == NEEDS_PRIMARY_SURVEY:
+        acct_id = current_state["account_id"]
+        source_id = current_state["human_source_id"]
 
-    model = {}
-    for x in flask.request.form:
-        model[x] = flask.request.form[x]
+        model = {}
+        for x in flask.request.form:
+            model[x] = flask.request.form[x]
 
-    ApiRequest.post("/accounts/%s/sources/%s/surveys" %
-                    (acct_id, source_id),
-                    json={
-                          "survey_template_id": 1,
-                          "survey_text": model
-                        }
-                    )
+        ApiRequest.post("/accounts/%s/sources/%s/surveys" %
+                        (acct_id, source_id),
+                        json={
+                              "survey_template_id": 1,
+                              "survey_text": model
+                            }
+                        )
     return redirect("/workflow")
 
 
