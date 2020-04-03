@@ -345,6 +345,8 @@ class BearerAuth(AuthBase):
 class ApiRequest:
     API_URL = SERVER_CONFIG["endpoint"] + "/api"
     DEFAULT_PARAMS = {'language_tag': 'en-US'}
+    CAfile = SERVER_CONFIG["CAfile"]
+
 
     @classmethod
     def build_params(cls, params):
@@ -360,12 +362,14 @@ class ApiRequest:
     def get(cls, path, params=None):
         return requests.get(ApiRequest.API_URL + path,
                             auth=BearerAuth(session['token']),
+                            verify=ApiRequest.CAfile,
                             params=cls.build_params(params)).json()
 
     @classmethod
     def put(cls, path, params=None, json=None):
         return requests.put(ApiRequest.API_URL + path,
                             auth=BearerAuth(session['token']),
+                            verify=ApiRequest.CAfile,
                             params=cls.build_params(params),
                             json=json).json()
 
@@ -373,6 +377,7 @@ class ApiRequest:
     def post(cls, path, params=None, json=None):
         resp = requests.post(ApiRequest.API_URL + path,
                              auth=BearerAuth(session['token']),
+                             verify=ApiRequest.CAfile,
                              params=cls.build_params(params),
                              json=json)
         return resp
