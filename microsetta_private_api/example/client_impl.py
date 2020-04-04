@@ -138,6 +138,7 @@ def determine_workflow_state():
     for survey in surveys_output:
         if survey['survey_template_id'] == 1:
             has_primary = True
+            current_state["answered_primary_survey_id"] = survey["survey_id"]
     if not has_primary:
         return NEEDS_PRIMARY_SURVEY, current_state
 
@@ -161,6 +162,9 @@ def workflow():
     next_state, current_state = determine_workflow_state()
     print("Next State:", next_state)
     if next_state == NEEDS_REROUTE:
+        # where you get rerouted to depends on why you need
+        # rerouting: api authorization errors go back to home page,
+        # all other api errors go to error page
         return current_state["reroute"]
     elif next_state == NEEDS_LOGIN:
         return redirect("/home")
@@ -265,6 +269,7 @@ def post_workflow_claim_kit_samples(body):
     if next_state == NEEDS_SAMPLE:
         acct_id = current_state["account_id"]
         source_id = current_state["human_source_id"]
+        answered_survey_id = current_state["answered_primary_survey_id"]
 
         # get all the unassociated samples in the provided kit
         kit_name = body["kit_name"]
@@ -274,10 +279,21 @@ def post_workflow_claim_kit_samples(body):
             return sample_output
 
         # for each sample, associate it to the human source
+        # and ALSO to the (single) primary survey for this human source
         for curr_sample_obj in sample_output:
+            curr_sample_id = curr_sample_obj["sample_id"]
             do_return, sample_output = ApiRequest.post(
                 '/accounts/{0}/sources/{1}/samples'.format(acct_id, source_id),
-                json={"sample_id": curr_sample_obj["sample_id"]}
+                json={"sample_id": curr_sample_id}
+            )
+
+            if do_return:
+                return sample_output
+
+            do_return, sample_survey_output = ApiRequest.post(
+                '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
+                    acct_id, source_id, curr_sample_id
+                ), json={"survey_id": answered_survey_id}
             )
 
             if do_return:
