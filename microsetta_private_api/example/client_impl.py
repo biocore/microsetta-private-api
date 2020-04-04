@@ -442,7 +442,7 @@ class ApiRequest:
 
         if response.status_code == 401:
             # redirect to home page for login
-            output = redirect(WORKFLOW_URL)
+            output = redirect("/home")
         elif response.status_code >= 400:
             # redirect to general error page
             error_txt = quote(response.text)
