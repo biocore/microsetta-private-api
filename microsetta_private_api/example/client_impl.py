@@ -40,6 +40,7 @@ TOKEN_KEY_NAME = 'token'
 WORKFLOW_URL = '/workflow'
 HELP_EMAIL = "help@microsetta.edu"
 
+
 # Client might not technically care who the user is, but if they do, they
 # get the token, validate it, and pull email out of it.
 def parse_jwt(token):
@@ -196,7 +197,7 @@ def post_workflow_create_account(body):
         session['kit_name'] = kit_name
 
         api_json = {
-            # "first_name": body['first_name'],
+            "first_name": body['first_name'],
             "last_name": body['last_name'],
             "email": body['email'],
             "address": {
@@ -293,9 +294,9 @@ def get_workflow_fill_primary_survey():
     acct_id = current_state["account_id"]
     source_id = current_state["human_source_id"]
     primary_survey = 1
-    do_return, survey_output = ApiRequest.get('/accounts/%s/sources/%s/'
-                                'survey_templates/%s' %
-                                (acct_id, source_id, primary_survey))
+    do_return, survey_output = ApiRequest.get(
+        '/accounts/%s/sources/%s/survey_templates/%s' %
+        (acct_id, source_id, primary_survey))
     if do_return:
         return survey_output
 
@@ -315,13 +316,12 @@ def post_workflow_fill_primary_survey():
             model[x] = flask.request.form[x]
 
         do_return, surveys_output = ApiRequest.post(
-            "/accounts/%s/sources/%s/surveys" %
-                        (acct_id, source_id),
-                        json={
-                              "survey_template_id": 1,
-                              "survey_text": model
-                            }
-                        )
+            "/accounts/%s/sources/%s/surveys" % (acct_id, source_id),
+            json={
+                "survey_template_id": 1,
+                "survey_text": model
+            }
+        )
 
         if do_return:
             return surveys_output
@@ -450,7 +450,7 @@ class ApiRequest:
                 HELP_EMAIL, quote("minimal interface error"), error_txt)
 
             output = render_template('error.jinja2',
-                                   mailto_url=mailto_url)
+                                     mailto_url=mailto_url)
         else:
             do_return = False
             if response.text:
@@ -460,29 +460,32 @@ class ApiRequest:
 
     @classmethod
     def get(cls, path, params=None):
-        response = requests.get(ApiRequest.API_URL + path,
-                            auth=BearerAuth(session[TOKEN_KEY_NAME]),
-                            verify=ApiRequest.CAfile,
-                            params=cls.build_params(params))
+        response = requests.get(
+            ApiRequest.API_URL + path,
+            auth=BearerAuth(session[TOKEN_KEY_NAME]),
+            verify=ApiRequest.CAfile,
+            params=cls.build_params(params))
 
         return cls._check_response(response)
 
     @classmethod
     def put(cls, path, params=None, json=None):
-        response = requests.put(ApiRequest.API_URL + path,
-                            auth=BearerAuth(session[TOKEN_KEY_NAME]),
-                            verify=ApiRequest.CAfile,
-                            params=cls.build_params(params),
-                            json=json)
+        response = requests.put(
+            ApiRequest.API_URL + path,
+            auth=BearerAuth(session[TOKEN_KEY_NAME]),
+            verify=ApiRequest.CAfile,
+            params=cls.build_params(params),
+            json=json)
 
         return cls._check_response(response)
 
     @classmethod
     def post(cls, path, params=None, json=None):
-        response = requests.post(ApiRequest.API_URL + path,
-                             auth=BearerAuth(session[TOKEN_KEY_NAME]),
-                             verify=ApiRequest.CAfile,
-                             params=cls.build_params(params),
-                             json=json)
+        response = requests.post(
+            ApiRequest.API_URL + path,
+            auth=BearerAuth(session[TOKEN_KEY_NAME]),
+            verify=ApiRequest.CAfile,
+            params=cls.build_params(params),
+            json=json)
 
         return cls._check_response(response)
