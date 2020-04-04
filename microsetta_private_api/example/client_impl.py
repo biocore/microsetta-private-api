@@ -237,15 +237,15 @@ def get_workflow_create_human_source():
 
 def post_workflow_create_human_source(body):
     next_state, current_state = determine_workflow_state()
-    if next_state != NEEDS_HUMAN_SOURCE:
-        return redirect(WORKFLOW_URL)
+    if next_state == NEEDS_HUMAN_SOURCE:
+        acct_id = current_state["account_id"]
+        do_return, consent_output = ApiRequest.post(
+            "/accounts/{0}/consent".format(acct_id), json=body)
 
-    acct_id = current_state["account_id"]
-    do_return, consent_output = ApiRequest.post(
-        "/accounts/{0}/consent".format(acct_id), json=body)
+        if do_return:
+            return consent_output
 
-    if do_return:
-        return consent_output
+    return redirect(WORKFLOW_URL)
 
 
 def get_workflow_claim_kit_samples():
