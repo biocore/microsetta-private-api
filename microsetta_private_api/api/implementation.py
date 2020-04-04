@@ -41,23 +41,14 @@ from microsetta_private_api.util.util import fromisotime
 import uuid
 
 from datetime import date
+import importlib.resources as pkg_resources
 
 
 # Authrocket uses RS256 public keys, so you can validate anywhere and safely
-# store the key in code. Obviously using this mechanism, we'd have to push code
-# to reroll the keys, which is not ideal, but you can instead hold this in a
-# config somewhere and reload
-
-# Python is dumb, don't put spaces anywhere in this string.
-AUTHROCKET_PUB_KEY = """-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp68T9XnX7d53Zo8pt072
-y+W0sV51EDZi7f2zeBbw5qvht9coFX4LF/p9Rcac7TajVJj+YE64vHm+YAL3ToJq
-XOOF/6tmPYMbbg3DRdvUopH3URCR8o7cQXN//gDKruB9+xpB3v1Wq5SCX6t8SRFw
-ixw3mKgpPoh+Ou5OohxmtJ+D7lr5R2DDW8QWAWpBdGgttdnex1OqDIsprJihx/SW
-sHK4ql+H4MzX5PvY7S/XF2Ibl1xWsYLPvSzV/eJoG4hIwf7efUrXiVkwqFKNYzpL
-YzmOf3F/k7TdpWqzic9y0ejMKzYu0ozGlKytxp3PbpI7B18nklVkGF07g/jNPwHN
-7QIDAQAB
------END PUBLIC KEY-----"""
+# store the key.
+AUTHROCKET_PUB_KEY = pkg_resources.read_text(
+    'microsetta_private_api',
+    "authrocket.pubkey")
 
 
 def not_yet_implemented():
