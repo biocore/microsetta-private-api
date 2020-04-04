@@ -76,7 +76,7 @@ def register_account(body, token_info):
 
     with Transaction() as t:
         kit_repo = KitRepo(t)
-        kit = kit_repo.get_kit(body['kit_name'])
+        kit = kit_repo.get_kit_all_samples(body['kit_name'])
         if kit is None:
             return jsonify(error=404, text="Kit name not found"), 404
 
@@ -490,7 +490,7 @@ def read_kit(kit_name):
     # a particular token_info against.
     with Transaction() as t:
         kit_repo = KitRepo(t)
-        kit = kit_repo.get_kit(kit_name)
+        kit = kit_repo.get_kit_unused_samples(kit_name)
         if kit is None:
             return jsonify(code=404, message="No such kit"), 404
         return jsonify(kit.to_api()), 200

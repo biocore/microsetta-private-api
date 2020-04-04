@@ -9,7 +9,7 @@ from repo.kit_repo import KitRepo
 
 with Transaction() as t:
     kit_repo = KitRepo(t)
-    kit = kit_repo.get_kit("eba20873-b88d-33cc-e040-8a80115d392c")
+    kit = kit_repo.get_kit_all_samples("eba20873-b88d-33cc-e040-8a80115d392c")
     print(kit.id)
     for s in kit.samples:
         print(s.id)
