@@ -2,14 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <title>The Microsetta Initiative</title>
-    <script src="/static/vendor/js/jquery-1.11.1.min.js"></script>
-<script src="/static/vendor/js/jquery-ui-1.10.1.custom.min.js"></script>
-<!--<script src="/static/vendor/js/jquery.ui.timepicker.js"></script>-->
+    <title>Microsetta</title>
 {%block head%}
 {%endblock%}
+
+    <style type="text/css">
+        a {
+            color: #006A96;
+        }
+        img.resize {
+          max-width:75%;
+          max-height:75%;
+        }
+    </style>
 </head>
 <body>
+    <a href="http://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize">
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
+    <br />
     <br />
 
     <div class="content">
@@ -18,5 +32,15 @@
     </div>
 {%block footer%}
 {%endblock%}
+    <div>
+        <br />
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
+    </div>
 </body>
 </html>

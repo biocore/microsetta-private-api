@@ -2,11 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Create Account</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+    <title>Microsetta Account Creation</title>
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
+
+    <style type="text/css">
+        a {
+            color: #006A96;
+        }
+        img.resize {
+          max-width:75%;
+          max-height:75%;
+        }
+    </style>
 </head>
 <body>
+    <a href="http://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize">
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
+    <br />
+    <br />
+
     <form id="acct_form" name="acct_form" method="post">
         <input id="email" name="email" class="form-control" type="hidden" value="{{authorized_email}}"/>
         <div class="form-group">
@@ -18,7 +37,7 @@
             <input id="last_name" name="last_name" class="form-control" type="text" />
         </div>
         <div class="form-group">
-            <label for="street" name="street_label" >Street Address/Direccion</label>
+            <label for="street" name="street_label" >Street Address/Dirección</label>
             <input id="street" name="street" class="form-control" type="text" />
         </div>
         <div class="form-group">
@@ -82,7 +101,7 @@
             </select>
         </div>
         <div class="form-group">
-            <label for="post_code" name="post_code_label">Zip Code/Codigo Postal</label>
+            <label for="post_code" name="post_code_label">Zip Code/Código Postal</label>
             <input id="post_code" name="post_code" class="form-control" type="text" />
         </div>
         <div class="form-group">
@@ -92,5 +111,15 @@
         <input id="country_code" name="country_code" type="hidden" value="US"/>
         <input type="submit" class="btn btn-primary"/>
     </form>
+    <div>
+        <br />
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
+    </div>
 </body>
 </html>

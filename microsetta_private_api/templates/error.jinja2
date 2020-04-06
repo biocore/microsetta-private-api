@@ -2,11 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <title>Error Page</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>Microsetta Error Page</title>
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+
+    <style type="text/css">
+        a {
+            color: #006A96;
+        }
+        img.resize {
+          max-width:75%;
+          max-height:75%;
+        }
+    </style>
 </head>
 <body>
+    <a href="http://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize">
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
     <br />
+    <br />
+
     <div class="content">
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb">
@@ -19,6 +37,17 @@
                 Please take a moment to click <a href="{{ mailto_url }}">here</a> to email this error to the developers so we can get it fixed!
             </p>
         </div>
+    </div>
+
+    <div>
+        <br />
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
     </div>
 </body>
 </html>
