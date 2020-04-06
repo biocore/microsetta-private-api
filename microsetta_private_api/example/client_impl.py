@@ -38,7 +38,7 @@ PUB_KEY = pkg_resources.read_text(
 
 TOKEN_KEY_NAME = 'token'
 WORKFLOW_URL = '/workflow'
-HELP_EMAIL = "help@microsetta.edu"
+HELP_EMAIL = "microsetta@ucsd.edu"
 
 
 # Client might not technically care who the user is, but if they do, they
