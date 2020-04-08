@@ -1,24 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Survey</title>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.1/vue.js"></script>
-<script type="text/javascript" src="https://unpkg.com/vue@2.5.17/dist/vue.min.js"></script>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-<script type="text/javascript" src="https://unpkg.com/vue-form-generator/dist/vfg.js"></script>
-<link rel="stylesheet" type="text/css" href="https://unpkg.com/vue-form-generator/dist/vfg.css">
+    <title>Microsetta Participant Survey</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.1/vue.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vue@2.5.17/dist/vue.min.js"></script>
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <script type="text/javascript" src="https://unpkg.com/vue-form-generator/dist/vfg.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/vue-form-generator/dist/vfg.css">
+
+    <style type="text/css">
+        a {
+            color: #006A96;
+        }
+        img.resize {
+          max-width:75%;
+          max-height:75%;
+        }
+    </style>
 </head>
-
 <body>
-<div class="container" id="app">
+    <a href="http://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize">
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
+    <br />
+    <br />
 
-  <div class="panel panel-default">
-    <div class="panel-body">
-      <form method="post" id="survey_form">
-        <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
-      </form>
+    <div class="content">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
+          </ol>
+        </nav>
+        <div class="container" id="app">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <form method="post" id="survey_form">
+                        <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
 <!--  <div class="panel panel-default">-->
 <!--    <div class="panel-heading">Model</div>-->
@@ -33,24 +58,32 @@
 <!--      <pre v-if="model" v-html="prettyJSON(schema)"></pre>-->
 <!--    </div>-->
 <!--  </div>-->
-</div>
 
-<script type="text/javascript">
-  var survey_model = {}
-  var survey_schema={{survey_schema|tojson}}
-  last_group = survey_schema.groups[survey_schema.groups.length-1]
-  last_group.fields.push(
-  {
-    buttonText: "Submit Survey",
-    type: "submit",
-    validateBeforeSubmit: true,
-    onSubmit: function(){
-      document.getElementById("survey_form").submit();
-    }
-  });
-</script>
-<script type="text/javascript" src="/static/vue_survey_form.js"></script>
+    <script type="text/javascript">
+      var survey_model = {}
+      var survey_schema={{survey_schema|tojson}}
+      last_group = survey_schema.groups[survey_schema.groups.length-1]
+      last_group.fields.push(
+      {
+        buttonText: "Submit Survey",
+        type: "submit",
+        validateBeforeSubmit: true,
+        onSubmit: function(){
+          document.getElementById("survey_form").submit();
+        }
+      });
+    </script>
+    <script type="text/javascript" src="/static/vue_survey_form.js"></script>
 
-
+    <div>
+        <br />
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
+    </div>
 </body>
 </html>

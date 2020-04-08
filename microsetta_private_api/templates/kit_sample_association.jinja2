@@ -2,18 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Assign Kit Samples to Participant</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+    <title>Microsetta Kit Claim</title>
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
 
+    <style type="text/css">
+        a {
+            color: #006A96;
+        }
+        img.resize {
+          max-width:75%;
+          max-height:75%;
+        }
+    </style>
 </head>
 <body>
-    <form method="post" action="/workflow_claim_kit_samples">
-        <div class="form-group">
-            <label for="kit_name" name="kit_name_label">Kit Name/Nombre de Kit</label>
-            <input id="kit_name" name="kit_name" class="form-control" type="text" value="fa_lrfiq" />
+    <a href="http://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize">
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
+    <br />
+    <br />
+
+    <div class="content">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
+          </ol>
+        </nav>
+        <div class="container">
+            <form method="post" action="/workflow_claim_kit_samples">
+                <div class="form-group">
+                    <label for="kit_name" name="kit_name_label">Kit Name/Nombre de Kit</label>
+                    <input id="kit_name" name="kit_name" class="form-control" type="text" value="fa_lrfiq" />
+                </div>
+                <input type="submit" class="btn btn-primary"/>
+            </form>
         </div>
-        <input type="submit" class="btn btn-primary"/>
-    </form>
+    </div>
+
+    <div>
+        <br />
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
+    </div>
 </body>
 </html>
