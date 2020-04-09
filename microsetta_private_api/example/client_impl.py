@@ -499,7 +499,8 @@ class ApiRequest:
                 HELP_EMAIL, quote("minimal interface error"), error_txt)
 
             output = render_template('error.jinja2',
-                                     mailto_url=mailto_url)
+                                     mailto_url=mailto_url,
+                                     error_msg=response.text)
         else:
             do_return = False
             if response.text:
