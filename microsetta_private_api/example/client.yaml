@@ -233,6 +233,23 @@ paths:
               schema:
                 type: string
 
+  '/check_acct_inputs':
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_check_acct_inputs
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Result of check
+          content:
+            text/html:
+              schema:
+                type: string
+
 components:
   parameters:
     account_id: # Can be referenced as '#/components/parameters/account_id'
