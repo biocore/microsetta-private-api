@@ -12,10 +12,10 @@ def make(db, force):
     create_database(force)
 
     if db == 'production':
-        build(verbose=True)
+        # build(verbose=True)
         initialize(verbose=True)
-        print("Making settings table")
-        make_settings_table()
+        # print("Making settings table")
+        # make_settings_table()
     elif db == 'test':
         # Test database includes initialization and settings table already
         print("Populating the test database")

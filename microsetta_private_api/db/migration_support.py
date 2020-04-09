@@ -251,6 +251,8 @@ class MigrationSupport:
                 "FROM "
                 "ag_login_backup")
 
+        email_counter = {}
+
         rows = TRN.execute()[-1]
         for r in rows:
             # Split name into first name last name with simple heuristic
@@ -267,6 +269,16 @@ class MigrationSupport:
             # Look up country code
             cc = country_map[r['country']]
 
+            # Check for duplicate email addresses and munge the names
+            email = r['email']
+            if email in email_counter:
+                email_counter[email] += 1
+                email_pre = email.split("@")[0]
+                email = email_pre + "+" + str(email_counter[email]) \
+                    + "@" + email.split("@")[1]
+            else:
+                email_counter[email] = 1
+
             TRN.add("INSERT INTO account("
                     "id, email, account_type, auth_issuer, auth_sub, "
                     "first_name, last_name, "
@@ -278,8 +290,8 @@ class MigrationSupport:
                     "%s, %s, "
                     "%s, %s, %s, %s, %s, "
                     "%s, %s, "
-                    "%s, %s)",
-                    (r['ag_login_id'], r['email'], 'standard', None, None,
+                    "%s, %s) ",
+                    (r['ag_login_id'], email, 'standard', None, None,
                      first_name, last_name,
                      r['address'], r['city'], r['state'], r['zip'], cc,
                      r['latitude'], r['longitude'],
