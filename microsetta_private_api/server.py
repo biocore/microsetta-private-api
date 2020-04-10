@@ -32,7 +32,11 @@ def build_app():
     # ---
     # Example Client Settings
     app.add_api('example/client.yaml', validate_responses=True)
-    app.app.secret_key = secrets.token_urlsafe(16)
+    flask_secret = SERVER_CONFIG["FLASK_SECRET_KEY"]
+    if flask_secret is None:
+        print("WARNING: FLASK_SECRET_KEY must be set to run with gUnicorn")
+        flask_secret = secrets.token_urlsafe(16)
+    app.app.secret_key = flask_secret
     app.app.config['SESSION_TYPE'] = 'memcached'
     # ---
 
