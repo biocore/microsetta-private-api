@@ -12,6 +12,7 @@ and associated file
 https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
 """
 
+import json
 import flask
 from flask import render_template, session, redirect
 import jwt
@@ -39,6 +40,7 @@ PUB_KEY = pkg_resources.read_text(
 TOKEN_KEY_NAME = 'token'
 WORKFLOW_URL = '/workflow'
 HELP_EMAIL = "microsetta@ucsd.edu"
+KIT_NAME_KEY = "kit_name"
 
 
 # Client might not technically care who the user is, but if they do, they
@@ -85,7 +87,8 @@ def authrocket_callback(token):
 
 
 def logout():
-    del session[TOKEN_KEY_NAME]
+    if TOKEN_KEY_NAME in session:
+        del session[TOKEN_KEY_NAME]
     return redirect("/home")
 
 
@@ -197,8 +200,8 @@ def get_workflow_create_account():
 def post_workflow_create_account(body):
     next_state, current_state = determine_workflow_state()
     if next_state == NEEDS_ACCOUNT:
-        kit_name = body["kit_name"]
-        session['kit_name'] = kit_name
+        kit_name = body[KIT_NAME_KEY]
+        session[KIT_NAME_KEY] = kit_name
 
         api_json = {
             "first_name": body['first_name'],
@@ -211,7 +214,7 @@ def post_workflow_create_account(body):
                 "post_code": body['post_code'],
                 "country_code": body['country_code']
             },
-            "kit_name": kit_name
+            KIT_NAME_KEY: kit_name
         }
 
         do_return, accts_output = ApiRequest.post("/accounts", json=api_json)
@@ -257,8 +260,8 @@ def get_workflow_claim_kit_samples():
     if next_state != NEEDS_SAMPLE:
         return redirect(WORKFLOW_URL)
 
-    if 'kit_name' in session:
-        mock_body = {'kit_name': session['kit_name']}
+    if KIT_NAME_KEY in session:
+        mock_body = {KIT_NAME_KEY: session[KIT_NAME_KEY]}
         return post_workflow_claim_kit_samples(mock_body)
     else:
         return render_template("kit_sample_association.jinja2")
@@ -272,9 +275,9 @@ def post_workflow_claim_kit_samples(body):
         answered_survey_id = current_state["answered_primary_survey_id"]
 
         # get all the unassociated samples in the provided kit
-        kit_name = body["kit_name"]
+        kit_name = body[KIT_NAME_KEY]
         do_return, sample_output = ApiRequest.get(
-            '/kits', params={'kit_name': kit_name})
+            '/kits', params={KIT_NAME_KEY: kit_name})
         if do_return:
             return sample_output
 
@@ -429,6 +432,34 @@ def put_sample(account_id, source_id, sample_id):
                     (account_id, source_id))
 
 
+def post_check_acct_inputs(body):
+    unable_to_validate_msg = "Unable to validate the kit name; please " \
+                             "reload the page."
+    response_info = True
+    try:
+        kit_name = body[KIT_NAME_KEY]
+
+        # call api and find out if kit name has unclaimed samples.
+        # NOT doing this through ApiRequest.get bc in this case
+        # DON'T want the automated error-handling
+
+        response = requests.get(
+            ApiRequest.API_URL + '/kits',
+            auth=BearerAuth(session[TOKEN_KEY_NAME]),
+            verify=ApiRequest.CAfile,
+            params=ApiRequest.build_params({KIT_NAME_KEY: kit_name}))
+
+        if response.status_code == 404:
+            response_info = "The provided kit id is not valid or has already " \
+                            "been used; please re-check your entry."
+        elif response.status_code > 200:
+            response_info = unable_to_validate_msg
+    except:
+        response_info = unable_to_validate_msg
+    finally:
+        return json.dumps(response_info)
+
+
 class BearerAuth(AuthBase):
     def __init__(self, token):
         self.token = token
@@ -468,7 +499,8 @@ class ApiRequest:
                 HELP_EMAIL, quote("minimal interface error"), error_txt)
 
             output = render_template('error.jinja2',
-                                     mailto_url=mailto_url)
+                                     mailto_url=mailto_url,
+                                     error_msg=response.text)
         else:
             do_return = False
             if response.text:
