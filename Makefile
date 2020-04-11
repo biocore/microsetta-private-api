@@ -10,6 +10,13 @@ lint:
 
 test: all
 	py.test
+	
+	# ensure the package is installed and the app is buildable. this test
+	# is a passive verification that non-py essential files are part of the
+	# installed entity.
+	pushd /
+	python -c "from microsetta_private_api import server; server.build_app()"
+	popd
 
 test-cov: all
 	py.test --cov=microsetta_private_api
