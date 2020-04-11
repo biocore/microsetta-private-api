@@ -1,6 +1,5 @@
 from microsetta_private_api.LEGACY.env_management import (
-    create_database, build, initialize, make_settings_table, patch_db,
-    populate_test_db)
+    create_database, initialize, patch_db, populate_test_db)
 
 DB = 'test'
 FORCE = True

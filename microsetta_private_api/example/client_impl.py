@@ -450,11 +450,11 @@ def post_check_acct_inputs(body):
             params=ApiRequest.build_params({KIT_NAME_KEY: kit_name}))
 
         if response.status_code == 404:
-            response_info = "The provided kit id is not valid or has already " \
-                            "been used; please re-check your entry."
+            response_info = ("The provided kit id is not valid or has "
+                             "already been used; please re-check your entry.")
         elif response.status_code > 200:
             response_info = unable_to_validate_msg
-    except:
+    except:  # noqa
         response_info = unable_to_validate_msg
     finally:
         return json.dumps(response_info)
