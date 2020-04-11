@@ -24,8 +24,8 @@ setup(
                   [
                      'db/*.*',
                      'db/patches/*.sql',
-                     'microsetta_private_api/api/microsetta_private_api.yaml',
-                     'microsetta_private_api/example/client.yaml',
+                     'api/microsetta_private_api.yaml',
+                     'example/client.yaml',
                      'server_config.json',
                      'authrocket.pubkey'
                   ]},
