@@ -16,6 +16,14 @@ BEGIN
                     r.verification_code, 'Y');
     END LOOP;
     FOR r IN
+        -- there are 15-20 barcodes in the production database
+        -- present in both ag.ag_handout_barcodes and 
+        -- ag.ag_kit_barcodes. From investigation, it looks like
+        -- those may have stemmed from manual manipulation
+        -- as the kit IDs don't necessary reflect what's in
+        -- ag.ag_handout_kits. Since the barcodes already exist in
+        -- ag.ag_kit_barcodes, we're err'ing on the state in that 
+        -- table to be accurate.
         SELECT *
         FROM ag.ag_handout_barcodes ahb
         LEFT JOIN ag.ag_kit ak ON ahb.kit_id = ak.supplied_kit_id
