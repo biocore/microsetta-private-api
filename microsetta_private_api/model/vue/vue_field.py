@@ -53,8 +53,6 @@ class VueField:
 
     def set(self, **attributes):
         for key in attributes:
-            if not hasattr(self, key):
-                raise Exception("Unknown property: " + key)
             setattr(self, key, attributes[key])
         return self
 

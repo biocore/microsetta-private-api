@@ -259,6 +259,30 @@ def read_survey_template(account_id, source_id, survey_template_id,
         survey_template = survey_template_repo.get_survey_template(
             survey_template_id, language_tag)
         info.survey_template_text = vue_adapter.to_vue_schema(survey_template)
+
+        # TODO FIXME HACK: We need a better way to enforce validation on fields
+        #  that need it, can this be stored adjacent to the survey questions?
+        client_side_validation = {
+            "108": {
+                # Height
+                "inputType": "number",
+                "validator": "number",
+                "min": 0,
+                "max": None
+            },
+            "113": {
+                # Weight
+                "inputType": "number",
+                "validator": "number",
+                "min": 0,
+                "max": None
+            }
+        }
+        for group in info.survey_template_text.groups:
+            for field in group.fields:
+                if field.id in client_side_validation:
+                    field.set(**client_side_validation[field.id])
+
         return jsonify(info), 200
 
 
