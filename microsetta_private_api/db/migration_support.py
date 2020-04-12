@@ -229,6 +229,7 @@ class MigrationSupport:
         country_map['South Korea'] = 'KR'
         country_map['US'] = 'US'
         country_map['Czech Republic'] = 'CZ'
+        country_map['U.S. Virgin Islands'] = 'US'
 
         TRN.add("SELECT DISTINCT country FROM ag_login_backup")
         rows = TRN.execute()[-1]
