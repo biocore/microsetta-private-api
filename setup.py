@@ -29,6 +29,16 @@ setup(
                      'server_config.json',
                      'templates/*.*',
                      'static/*',
+                     'static/css/*',
+                     'static/img/*',
+                     'static/vendor/js/*',
+                     'static/vendor/bootstrap-4.4.1-dist/js/*',
+                     'static/vendor/bootstrap-4.4.1-dist/css/*',
+                     'static/vendor/bootstrap-datetimepicker-4.14.30/*',
+                     'static/vendor/vue-form-generator-2.3.4/*',
+                     'static/vendor/bootstrap-3.3.7-dist/js/*',
+                     'static/vendor/bootstrap-3.3.7-dist/css/*',
+                     'static/vendor/bootstrap-3.3.7-dist/fonts/*',
                      'authrocket.pubkey'
                   ]},
 )
