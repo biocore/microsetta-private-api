@@ -27,6 +27,8 @@ setup(
                      'api/microsetta_private_api.yaml',
                      'example/client.yaml',
                      'server_config.json',
+                     'templates/*.*',
+                     'static/*',
                      'authrocket.pubkey'
                   ]},
 )
