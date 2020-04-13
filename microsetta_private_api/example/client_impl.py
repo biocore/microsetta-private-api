@@ -385,10 +385,10 @@ def get_sample(account_id, source_id, sample_id):
     if do_return:
         return sample_output
 
-    sample_sites = ["Ear wax", "Forehead", "Fur", "Hair", "Left hand",
-                    "Left leg", "Mouth", "Nares", "Nasal mucus", "Right hand",
-                    "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus",
-                    "Blood (skin prick)"]
+    sample_sites = ["Blood (skin prick)", "Stool", "Mouth", "Nares",
+                    "Nasal mucus", "Right hand", "Left hand",
+                    "Forehead", "Torso", "Right leg",  "Left leg",
+                    "Vaginal mucus", "Tears",  "Ear wax", "Hair", "Fur"]
 
     factory = VueFactory()
 
