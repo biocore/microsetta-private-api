@@ -3,7 +3,7 @@ from flask import jsonify
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
-from werkzeug.exceptions import BadRequest, Unauthorized
+from werkzeug.exceptions import Unauthorized
 
 
 def scan_barcode(token_info, sample_barcode):
