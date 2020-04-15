@@ -22,5 +22,5 @@ def validate_admin_access(token_info):
         account_repo = AccountRepo(t)
         account = account_repo.find_linked_account(token_info['iss'],
                                                    token_info['sub'])
-        if account.account_type != 'admin':
+        if account is None or account.account_type != 'admin':
             raise Unauthorized()
