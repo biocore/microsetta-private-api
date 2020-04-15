@@ -813,6 +813,27 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+  # START ADMINISTRATOR PATHS
+  '/admin/samples/scan':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.scan_barcode
+      tags:
+        - Admin
+      summary: Retrieve diagnostic information about a sample by barcode
+      description: Retrieve diagnostic information about a sample by barcode
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+      responses:
+        '200':
+          description: Object containing linked account (if any), source (if any), and sample
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
 
 components:
@@ -891,6 +912,13 @@ components:
       description: Type of sample
       schema:
         $ref: '#/components/schemas/source_type'
+    sample_barcode:
+      name: sample_barcode
+      in: query
+      description: Scanned barcode of sample
+      schema:
+        $ref: '#/components/schemas/sample_barcode'
+      required: true
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
       description: Invalid or missing token.
@@ -911,7 +939,7 @@ components:
     account_type: # e.g., regular user or admin--room to grow
       type: string
       readOnly: true
-      enum: ["standard"]
+      enum: ["standard", "admin"]
       example: "standard"
     creation_time:
       type: string

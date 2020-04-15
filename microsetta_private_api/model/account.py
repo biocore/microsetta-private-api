@@ -8,6 +8,8 @@ class Account(ModelBase):
         result = Account(
             input_dict["id"],
             input_dict['email'],
+            # NOTICE: input_dict is passed by users,
+            # we obviously cannot let them declare themselves to be admins :D
             "standard",
             auth_iss,
             auth_sub,
