@@ -29,7 +29,6 @@ class AdminRepo(BaseRepo):
                 "ag_kit_barcodes.barcode = %s",
                 (sample_barcode,))
 
-            print(sample_barcode)
             row = cur.fetchone()
 
             if row is None:
