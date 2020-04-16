@@ -75,3 +75,11 @@ class AdminRepo(BaseRepo):
             }
 
             return diagnostic
+
+    def create_kits(self, number_of_kits, number_of_samples, kit_prefix,
+                    projects):
+        import uuid
+        return {'created': [{'kit_id': 'mock_%d' % i,
+                             'sample_barcodes': ['a', 'b', 'c'],
+                             'kit_uuid': str(uuid.uuid4()),
+                             } for i in range(number_of_kits)]}

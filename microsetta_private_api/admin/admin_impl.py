@@ -24,3 +24,22 @@ def validate_admin_access(token_info):
                                                    token_info['sub'])
         if account is None or account.account_type != 'admin':
             raise Unauthorized()
+
+
+def create_kits(body, token_info):
+    validate_admin_access(token_info)
+
+    number_of_kits = body['number_of_kits']
+    number_of_samples = body['number_of_samples']
+    kit_prefix = body.get('kit_prefix', None)
+    projects = body['projects']
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        kits = admin_repo.create_kits(number_of_kits, number_of_samples,
+                                      kit_prefix, projects)
+
+        if kits:
+            t.commit()
+
+    return jsonify(kits), 201

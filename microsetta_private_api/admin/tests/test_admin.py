@@ -121,3 +121,14 @@ class AdminTests(TestCase):
             self.assertIsNone(diag['source'])
             self.assertIsNone(diag['sample'])
             self.assertEqual(len(diag['barcode_info']), 0)
+
+    def test_create_kits(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            kits = admin_repo.create_kits(5, 4, '', ['foo', 'bar'])
+            self.assertEqual(['created', ], list(kits.keys()))
+            self.assertEqual(len(kits['created']), 5)
+            for obj in kits['created']:
+                self.assertEqual(len(obj['sample_barcodes']), 4)
+                self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
+                                 set(obj))
