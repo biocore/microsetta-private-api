@@ -5,6 +5,7 @@ from werkzeug.exceptions import Unauthorized
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.admin.admin_impl import validate_admin_access
 
@@ -92,3 +93,29 @@ class AdminTests(TestCase):
             self.fail("Should have thrown unauthorized")
         except Unauthorized:
             pass
+
+    def test_scan_barcode(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            diag = admin_repo.retrieve_diagnostics_by_barcode('000038448')
+            self.assertIsNotNone(diag['barcode'])
+            self.assertIsNone(diag['account'])
+            self.assertIsNone(diag['source'])
+            self.assertIsNotNone(diag['sample'])
+            self.assertGreater(len(diag['barcode_info']), 0)
+
+            diag = admin_repo.retrieve_diagnostics_by_barcode('000005175')
+            self.assertIsNotNone(diag['barcode'])
+            self.assertIsNone(diag['account'])
+            self.assertIsNone(diag['source'])
+            self.assertIsNone(diag['sample'])
+            self.assertGreater(len(diag['barcode_info']), 0)
+
+            # Uhh, should this return a 404 not found or just an empty
+            # diagnostic object...?
+            diag = admin_repo.retrieve_diagnostics_by_barcode('NotABarcode :D')
+            self.assertIsNotNone(diag['barcode'])
+            self.assertIsNone(diag['account'])
+            self.assertIsNone(diag['source'])
+            self.assertIsNone(diag['sample'])
+            self.assertEqual(len(diag['barcode_info']), 0)
