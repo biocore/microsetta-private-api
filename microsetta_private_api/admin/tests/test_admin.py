@@ -96,6 +96,8 @@ class AdminTests(TestCase):
 
     def test_search_barcode(self):
         with Transaction() as t:
+            # TODO FIXME HACK:  Need to build mock barcodes rather than using
+            #  these fixed ones
             admin_repo = AdminRepo(t)
             diag = admin_repo.retrieve_diagnostics_by_barcode('000038448')
             self.assertIsNotNone(diag['barcode'])
@@ -104,7 +106,7 @@ class AdminTests(TestCase):
             self.assertIsNotNone(diag['sample'])
             self.assertGreater(len(diag['barcode_info']), 0)
 
-            diag = admin_repo.retrieve_diagnostics_by_barcode('000005175')
+            diag = admin_repo.retrieve_diagnostics_by_barcode('000033903')
             self.assertIsNotNone(diag['barcode'])
             self.assertIsNone(diag['account'])
             self.assertIsNone(diag['source'])
