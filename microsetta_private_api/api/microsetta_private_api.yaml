@@ -1186,68 +1186,68 @@ components:
       type: string
       example: "0.1"
     survey_template_text:
-      # The contents of this string ARE structured, but their structure is not specified in THIS api.
+      # The contents of this object ARE structured, but their structure is not specified in THIS api.
       # Could be *either* vue-compatible json to be used to generate an HTML form OR
       # a customized link to direct to an external survey
       type: object
-      example: '{ |
-                  "groups": [ |
-                    { |
-                      "legend": "Personal Information", |
-                      "fields": [ |
-                        { |
-                          "type": "select", |
-                          "label": "Gender:", |
-                          "model": "107", |
-                          "id": "107", |
-                          "inputName": "107", |
-                          "featured": false, |
-                          "visible": true, |
-                          "disabled": false, |
-                          "required": true, |
-                          "multi": false, |
-                          "default": null, |
-                          "hint": null, |
-                          "help": null, |
-                          "validator": null, |
-                          "validateDebounceTime": null, |
-                          "styleClasses": null, |
-                          "buttons": null, |
-                          "attributes": null, |
+      example: {
+                  "groups": [
+                    {
+                      "legend": "Personal Information",
+                      "fields": [
+                        {
+                          "type": "select",
+                          "label": "Gender:",
+                          "model": "107",
+                          "id": "107",
+                          "inputName": "107",
+                          "featured": false,
+                          "visible": true,
+                          "disabled": false,
+                          "required": true,
+                          "multi": false,
+                          "default": null,
+                          "hint": null,
+                          "help": null,
+                          "validator": null,
+                          "validateDebounceTime": null,
+                          "styleClasses": null,
+                          "buttons": null,
+                          "attributes": null,
                           "values": [
-                            "Unspecified", |
-                            "Male", |
-                            "Female", |
-                            "Other" |
-                          ], |
-                          "selectOptions": {} |
-                        }, |
-                        { |
-                          "type": "input", |
-                          "label": "Height:", |
-                          "model": "108", |
-                          "id": "108", |
-                          "inputName": "108", |
-                          "featured": false, |
-                          "visible": true, |
-                          "disabled": false, |
-                          "required": true, |
-                          "multi": false, |
-                          "default": null, |
-                          "hint": null, |
-                          "help": null, |
-                          "validator": "string", |
-                          "validateDebounceTime": null, |
-                          "styleClasses": null, |
-                          "buttons": null, |
-                          "attributes": null, |
-                          "inputType": "text" |
-                        } |
-                      ] |
-                    } |
-                  ], |
-                  "fields": null |
-                }'
+                            "Unspecified",
+                            "Male",
+                            "Female",
+                            "Other"
+                          ],
+                          "selectOptions": {}
+                        },
+                        {
+                          "type": "input",
+                          "label": "Height:",
+                          "model": "108",
+                          "id": "108",
+                          "inputName": "108",
+                          "featured": false,
+                          "visible": true,
+                          "disabled": false,
+                          "required": true,
+                          "multi": false,
+                          "default": null,
+                          "hint": null,
+                          "help": null,
+                          "validator": "string",
+                          "validateDebounceTime": null,
+                          "styleClasses": null,
+                          "buttons": null,
+                          "attributes": null,
+                          "inputType": "text"
+                        }
+                      ]
+                    }
+                  ],
+                  "fields": null
+                }
     thin_survey_template_info:
       type: object
       properties:
@@ -1270,29 +1270,29 @@ components:
       type: string
       example: "69f697cb-8e52-4a4f-8db2-efffcfa186a5"
     survey_text:
-      # The contents of this string ARE structured, but their structure is not specified in THIS api.
+      # The contents of this object ARE structured, but their structure is not specified in THIS api.
       type: object
-      example: '{ |
-                    "1": "Omnivore", |
-                                          "2": "No", |
-                                          "3": "Never", |
-                                          "4": "Never", |
-                                          "5": "Daily", |
-                                          "6": "No", |
-                                          "107": "Female", |
-                                          "108": "60", |
-                                          "109": "inches", |
-                                          "110": "Canada", |
-                                          "111": "January", |
-                                          "112": "1969", |
-                                          "113": "120", |
-                                          "114": "pounds", |
-                                          "115": "44074", |
-                                          "148": "United States", |
-                                          "162": [ |
-                                            "Exclude refined sugars" |
-                                          ] |
-                }'
+      example: {
+                    "1": "Omnivore",
+                    "2": "No",
+                    "3": "Never",
+                    "4": "Never",
+                    "5": "Daily",
+                    "6": "No",
+                    "107": "Female",
+                    "108": "60",
+                    "109": "inches",
+                    "110": "Canada",
+                    "111": "January",
+                    "112": "1969",
+                    "113": "120",
+                    "114": "pounds",
+                    "115": "44074",
+                    "148": "United States",
+                    "162": [
+                      "Exclude refined sugars"
+                    ]
+                }
 
     # error section
     Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/

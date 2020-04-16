@@ -615,7 +615,7 @@ class IntegrationTests(TestCase):
         # TODO: Looks like the 201 for sources are specified to
         #  both return a Location header and the newly created object.  This
         #  seems inconsistent maybe?  Consistent with Account, inconsistent
-        #  with survey_answers and maybe source+sample assocations?  What's
+        #  with survey_answers and maybe source+sample associations?  What's
         #  right?
 
         kitty = {
