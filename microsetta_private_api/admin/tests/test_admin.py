@@ -94,7 +94,7 @@ class AdminTests(TestCase):
         except Unauthorized:
             pass
 
-    def test_scan_barcode(self):
+    def test_search_barcode(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             diag = admin_repo.retrieve_diagnostics_by_barcode('000038448')

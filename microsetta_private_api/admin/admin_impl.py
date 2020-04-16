@@ -6,7 +6,7 @@ from microsetta_private_api.repo.admin_repo import AdminRepo
 from werkzeug.exceptions import Unauthorized
 
 
-def scan_barcode(token_info, sample_barcode):
+def search_barcode(token_info, sample_barcode):
     validate_admin_access(token_info)
 
     with Transaction() as t:
