@@ -10,7 +10,7 @@
 -- With TMI kits, we are also now positioned to (for many kits) get fedex tracking 
 -- information, so lets us up for that...
 CREATE TABLE barcodes.kit (
-    kit_uuid uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    kit_uuid uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
     kit_id VARCHAR NOT NULL CONSTRAINT unq_kit_id UNIQUE,
     fedex_tracking VARCHAR NULL,
     address VARCHAR NULL
