@@ -49,10 +49,10 @@ import importlib.resources as pkg_resources
 AUTHROCKET_PUB_KEY = pkg_resources.read_text(
     'microsetta_private_api',
     "authrocket.pubkey")
+JWT_ISS_CLAIM_KEY = 'iss'
+JWT_SUB_CLAIM_KEY = 'sub'
 
-
-def not_yet_implemented():
-    return {'message': 'functionality not yet implemented'}
+ACCT_NOT_FOUND_MSG = "Account not found"
 
 
 def find_accounts_for_login(token_info):
@@ -61,8 +61,9 @@ def find_accounts_for_login(token_info):
     with Transaction() as t:
         acct_repo = AccountRepo(t)
         acct = acct_repo.find_linked_account(
-            token_info['iss'],
-            token_info['sub'])
+            token_info[JWT_ISS_CLAIM_KEY],
+            token_info[JWT_SUB_CLAIM_KEY])
+
         if acct is None:
             return jsonify([]), 200
         return jsonify([acct.to_api()]), 200
@@ -72,7 +73,8 @@ def register_account(body, token_info):
     # First register with AuthRocket, then come here to make the account
     new_acct_id = str(uuid.uuid4())
     body["id"] = new_acct_id
-    account_obj = Account.from_dict(body, token_info['iss'], token_info['sub'])
+    account_obj = Account.from_dict(body, token_info[JWT_ISS_CLAIM_KEY],
+                                    token_info[JWT_SUB_CLAIM_KEY])
 
     with Transaction() as t:
         kit_repo = KitRepo(t)
@@ -124,8 +126,10 @@ def update_account(account_id, body, token_info):
             body['address']['country_code']
         )
 
+        # 422 handling is done inside acct_repo
         acct_repo.update_account(acc)
         t.commit()
+
         return jsonify(acc.to_api()), 200
 
 

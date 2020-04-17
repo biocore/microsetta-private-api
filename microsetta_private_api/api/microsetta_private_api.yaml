@@ -11,21 +11,21 @@ paths:
       operationId: microsetta_private_api.api.implementation.find_accounts_for_login
       tags:
         - Account
-      summary: Identify linked account(s)
-      description: Retrieve ids of linked account(s)
+      summary: Retrieve an array of accounts accessible to the provided login
+      description: Retrieve an array of accounts accessible to the provided login
       parameters:
         - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
-          description: Array of linked account(s)
+          description: Array of accessible accounts
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/account'
-
-    # NB: Not including a get of all accounts: seems like seeing all accounts is an extension for the future (for admin?)
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
     post:
       operationId: microsetta_private_api.api.implementation.register_account
       tags:
@@ -813,6 +813,7 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+
   # START ADMINISTRATOR PATHS
   '/admin/search/sample/{sample_barcode}':
     get:
