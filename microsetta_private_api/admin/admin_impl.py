@@ -1,3 +1,4 @@
+import flask
 from flask import jsonify
 
 from microsetta_private_api.repo.account_repo import AccountRepo
@@ -15,6 +16,20 @@ def search_barcode(token_info, sample_barcode):
         if diag is None:
             return jsonify(code=404, message="Barcode not found"), 404
         return jsonify(diag), 200
+
+
+def scan_barcode(token_info, sample_barcode, body):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        admin_repo.scan_barcode(sample_barcode, body)
+        t.commit()
+
+    response = flask.Response()
+    response.status_code = 201
+    response.headers['Location'] = '/api/admin/search/samples/%s' % sample_barcode
+    return response
 
 
 def validate_admin_access(token_info):

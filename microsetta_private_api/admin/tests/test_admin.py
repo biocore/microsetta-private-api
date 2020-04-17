@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Unauthorized, NotFound
 
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.address import Address
@@ -121,3 +121,44 @@ class AdminTests(TestCase):
             self.assertIsNone(diag['source'])
             self.assertIsNone(diag['sample'])
             self.assertEqual(len(diag['barcode_info']), 0)
+
+    def test_scan_barcode(self):
+        with Transaction() as t:
+            # TODO FIXME HACK:  Need to build mock barcodes rather than using
+            #  these fixed ones
+
+            TEST_BARCODE = '000000001'
+            TEST_STATUS = "sample-has-inconsistencies"
+            TEST_NOTES = "THIS IS A UNIT TEST"
+            admin_repo = AdminRepo(t)
+
+            diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
+            prestatus = diag['barcode_info'][0]['status']
+
+            admin_repo.scan_barcode(
+                TEST_BARCODE,
+                {
+                    "sample_status": TEST_STATUS,
+                    "technician_notes": TEST_NOTES
+                }
+            )
+
+            diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
+            self.assertEqual(diag['barcode_info'][0]['technician_notes'],
+                             TEST_NOTES)
+            self.assertEqual(diag['barcode_info'][0]['sample_status'],
+                             TEST_STATUS)
+            self.assertEqual(diag['barcode_info'][0]['status'],
+                             prestatus)
+
+            try:
+                admin_repo.scan_barcode(
+                    "THIZIZNOTAREALBARCODEISWARE",
+                    {
+                        "sample_status": "Abc",
+                        "technician_notes": "123"
+                    }
+                )
+                self.fail("Shouldn't get here")
+            except NotFound:
+                pass

@@ -1,7 +1,11 @@
+from datetime import date
+
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
+from werkzeug.exceptions import NotFound
 
 
 class AdminRepo(BaseRepo):
@@ -75,3 +79,31 @@ class AdminRepo(BaseRepo):
             }
 
             return diagnostic
+
+    def scan_barcode(self, sample_barcode, scan_info):
+        update_args = (
+            scan_info['sample_status'],
+            scan_info['technician_notes'],
+            date.today(),  # TODO: Do we need date or datetime here?
+            sample_barcode
+        )
+
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "UPDATE barcodes.barcode "
+                "SET "
+                "sample_status = %s, "
+                "technician_notes = %s, "
+                "scan_date = %s "
+                "WHERE "
+                "barcode = %s",
+                update_args
+            )
+
+            if cur.rowcount == 0:
+                raise NotFound("No such barcode: %s" % sample_barcode)
+
+            if cur.rowcount > 1:
+                # Note: This "can't" happen.
+                raise RepoException("ERROR: Multiple barcode entries would be "
+                                    "updated by scan, failing out")
