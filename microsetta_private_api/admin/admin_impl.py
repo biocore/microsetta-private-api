@@ -28,7 +28,8 @@ def scan_barcode(token_info, sample_barcode, body):
 
     response = flask.Response()
     response.status_code = 201
-    response.headers['Location'] = '/api/admin/search/samples/%s' % sample_barcode
+    response.headers['Location'] = '/api/admin/search/samples/%s' % \
+                                   sample_barcode
     return response
 
 
