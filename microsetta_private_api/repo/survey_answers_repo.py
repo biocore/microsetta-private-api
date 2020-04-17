@@ -284,6 +284,15 @@ class SurveyAnswersRepo(BaseRepo):
                         "survey_id = %s",
                         (s.barcode, survey_id))
 
+    def build_metadata_map(self):
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT survey_question_id, question_shortname "
+                        "FROM "
+                        "survey_question")
+            rows = cur.fetchall()
+            metamap = {row[0]: row[1] for row in rows}
+        return metamap
+
     # True if this account owns this survey_answer_id, else False
     def _acct_owns_survey(self, acct_id, survey_id):
         with self._transaction.cursor() as cur:

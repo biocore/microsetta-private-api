@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Unauthorized, NotFound
 
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.address import Address
@@ -121,3 +121,39 @@ class AdminTests(TestCase):
             self.assertIsNone(diag['source'])
             self.assertIsNone(diag['sample'])
             self.assertEqual(len(diag['barcode_info']), 0)
+
+    def test_get_survey(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            BARCODE = '000004216'
+
+            try:
+                nometa = admin_repo.get_survey_metadata("NOTABARCODE")
+                self.fail("Should not find NOTABARCODE")
+            except NotFound:
+                pass
+
+            meta = admin_repo.get_survey_metadata(BARCODE,
+                                                  survey_template_id=1)
+
+            self.assertEqual(meta['sample_barcode'], BARCODE)
+            self.assertIn('host_subject_id', meta)
+            # And there should be one survey answered
+            self.assertEqual(len(meta['survey_answers']), 1)
+
+            all_meta = admin_repo.get_survey_metadata(BARCODE)
+
+            self.assertEqual(all_meta['sample_barcode'], BARCODE)
+            self.assertEqual(all_meta['host_subject_id'],
+                             all_meta['host_subject_id'])
+            # And there should be more than one survey answered
+            self.assertGreater(len(all_meta['survey_answers']), 1)
+
+            # TODO FIXME HACK:  Unclear that the order surveys are returned is
+            #  guaranteed, so this particular part of the test is fragile.
+            #  Feel free to blow it away if it starts failing due to reordering
+            #  of returned surveys
+            # And the first survey should match
+            self.assertDictEqual(meta['survey_answers'][0],
+                                 all_meta['survey_answers'][0])
