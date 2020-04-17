@@ -1,7 +1,6 @@
 import uuid
 import string
 import random
-from itertools import groupby
 
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
