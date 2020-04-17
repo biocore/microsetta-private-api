@@ -22,7 +22,7 @@ from microsetta_private_api import localization
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.model.sample import SampleInfo
 from microsetta_private_api.repo.transaction import Transaction
-from microsetta_private_api.repo.account_repo import AccountRepo, RepoException
+from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
@@ -632,7 +632,7 @@ def validate_access(token_info, account_id):
             # is_auth can return True, None, or False, and *both*
             # True and None are authorized values (legacy records,
             # long story). *ONLY* explicitly false values should error here.
-            if is_auth == False:
+            if is_auth is False:
                 return Unauthorized()
 
         return account

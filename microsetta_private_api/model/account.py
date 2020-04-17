@@ -94,5 +94,4 @@ class Account(ModelBase):
             raise ValueError("Account email does not match "
                              "authorization email")
 
-
         return False

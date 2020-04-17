@@ -86,9 +86,8 @@ class AccountRepo(BaseRepo):
 
     def _find_account_by_email(self, email):
         # select from account table anything that has this email.
-        # (should not be possible to get more than on record--column
-        # has unique constraint)
-        found_account = None
+        # TODO: Do we need to check for multiple results?
+
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
                         "account "
