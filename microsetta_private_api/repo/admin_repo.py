@@ -1,3 +1,5 @@
+from werkzeug.exceptions import NotFound
+
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
@@ -75,3 +77,97 @@ class AdminRepo(BaseRepo):
             }
 
             return diagnostic
+
+    def get_project_summary_statistics(self):
+        with self._transaction.dict_cursor() as cur:
+            # TODO:  I don't see a clean way to get the number of kits easily.
+            #  postpone showing number of kits for now?
+            cur.execute(
+                "SELECT "
+                "project_id, project, count(barcode) "
+                "FROM project LEFT JOIN "
+                "project_barcode "
+                "USING(project_id) "
+                "GROUP BY project_id "
+                "ORDER BY count DESC "
+            )
+            rows = cur.fetchall()
+
+            proj_stats = [
+                {
+                    'project_id': row['project_id'],
+                    'project_name': row['project'],
+                    'number_of_samples': row['count']
+                    # 'number_of_kits': ???  Profit.
+                }
+                for row in rows]
+
+            return proj_stats
+
+    def get_project_detailed_statistics(self, project_id):
+        with self._transaction.dict_cursor() as cur:
+            # TODO:  I don't see a clean way to get the number of kits easily.
+            #  postpone showing number of kits for now?
+            cur.execute(
+                "SELECT "
+                "project_id, project, count(barcode) "
+                "FROM project LEFT JOIN "
+                "project_barcode "
+                "USING(project_id) "
+                "WHERE project_id = %s "
+                "GROUP BY project_id ",
+                (project_id,)
+            )
+            row = cur.fetchone()
+
+            if row is None:
+                raise NotFound("No such project")
+
+            project_id = row['project_id']
+            project_name = row['project']
+            number_of_samples = row['count']
+            # number_of_kits = ???
+
+            cur.execute(
+                "SELECT "
+                "project_id, count(barcode) "
+                "FROM project_barcode "
+                "LEFT JOIN "
+                "barcode "
+                "USING(barcode) "
+                "WHERE "
+                "project_id = %s AND "
+                "scan_date is NOT NULL "
+                "GROUP BY project_id",
+                (project_id,)
+            )
+            row = cur.fetchone()
+            number_of_samples_scanned_in = row['count']
+
+            cur.execute(
+                "SELECT "
+                "project_id, project, sample_status, count(barcode) "
+                "FROM project "
+                "LEFT JOIN project_barcode "
+                "USING (project_id) "
+                "LEFT JOIN barcode "
+                "USING (barcode) "
+                "WHERE "
+                "project_id = 1 AND "
+                "sample_status IS NOT NULL "
+                "group by project_id, sample_status"
+            )
+            rows = cur.fetchall()
+            sample_status_counts = {
+                row['sample_status']: row['count'] for row in rows
+            }
+
+            detailed_stats = {
+                'project_id': project_id,
+                'project_name': project_name,
+                'number_of_samples': number_of_samples,
+                'number_of_samples_scanned_in': number_of_samples_scanned_in,
+                'sample_status_counts': sample_status_counts
+            }
+
+            return detailed_stats
