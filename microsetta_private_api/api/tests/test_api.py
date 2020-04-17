@@ -68,11 +68,13 @@ MOCK_HEADERS_2 = {"Authorization": "Bearer WoogaWooga"}
 def mock_verify(token):
     if token == "BoogaBooga":
         return {
+            'email': TEST_EMAIL,
             'iss': ACCT_MOCK_ISS,
             'sub': ACCT_MOCK_SUB
         }
     else:
         return {
+            'email': TEST_EMAIL_2,
             'iss': ACCT_MOCK_ISS_2,
             'sub': ACCT_MOCK_SUB_2
         }
@@ -460,10 +462,8 @@ class AccountTests(FlaskTests):
             (MISSING_ACCT_ID, self.default_lang_querystring),
             headers=self.dummy_auth)
 
-        # check response code, either is acceptable
-        # 401: Dunno if its missing, but you're not authorized to check
-        # 404: It's definitely missing
-        self.assertIn(response.status_code, [401, 404])
+        # check response code
+        self.assertEqual(response.status_code, 404)
     # endregion account view/get tests
 
     # region account update/put tests
@@ -535,10 +535,8 @@ class AccountTests(FlaskTests):
             content_type='application/json',
             data=input_json)
 
-        # check response code, either is acceptable
-        # 401: Dunno if its missing, but you're not authorized to check
-        # 404: It's definitely missing
-        self.assertIn(response.status_code, [401, 404])
+        # check response code
+        self.assertEqual(response.status_code, 404)
 
     def test_account_update_fail_422(self):
         """Return 422 if provided email is in use in db."""

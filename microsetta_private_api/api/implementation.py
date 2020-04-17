@@ -22,7 +22,7 @@ from microsetta_private_api import localization
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.model.sample import SampleInfo
 from microsetta_private_api.repo.transaction import Transaction
-from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.account_repo import AccountRepo, RepoException
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
@@ -94,27 +94,21 @@ def register_account(body, token_info):
 
 
 def read_account(account_id, token_info):
-    validate_access(token_info, account_id)
+    acc = validate_access(token_info, account_id)
 
-    with Transaction() as t:
-        acct_repo = AccountRepo(t)
-        acc = acct_repo.get_account(account_id)
-        if acc is None:
-            return jsonify(code=404, message="Account not found"), 404
-        return jsonify(acc.to_api()), 200
+    if acc is None:
+        return jsonify(code=404, message=ACCT_NOT_FOUND_MSG), 404
+
+    return jsonify(acc.to_api()), 200
 
 
 def update_account(account_id, body, token_info):
-    validate_access(token_info, account_id)
+    acc = validate_access(token_info, account_id)
+    if acc is None:
+        return jsonify(code=404, message=ACCT_NOT_FOUND_MSG), 404
 
     with Transaction() as t:
         acct_repo = AccountRepo(t)
-        acc = acct_repo.get_account(account_id)
-        if acc is None:
-            return jsonify(code=404, message="Account not found"), 404
-
-        # TODO: add 422 handling
-
         acc.first_name = body['first_name']
         acc.last_name = body['last_name']
         acc.email = body['email']
@@ -595,12 +589,27 @@ def verify_authrocket(token):
 
 
 def validate_access(token_info, account_id):
+    if JWT_ISS_CLAIM_KEY not in token_info or \
+            JWT_SUB_CLAIM_KEY not in token_info or \
+            'email' not in token_info:
+        # token is malformed--no soup for you
+        return Unauthorized()
+
+    # TODO: Put email verification check here
+
     with Transaction() as t:
         account_repo = AccountRepo(t)
         account = account_repo.get_account(account_id)
-        if account is None or \
-           'iss' not in token_info or \
-           'sub' not in token_info or \
-                account.auth_issuer != token_info['iss'] or \
-                account.auth_sub != token_info['sub']:
-            raise Unauthorized()
+
+        if account is not None:
+            is_auth = account.account_matches_auth(
+                token_info['email'], token_info[JWT_ISS_CLAIM_KEY],
+                token_info[JWT_SUB_CLAIM_KEY])
+            # Note: DO NOT pythonify this to `if not is_auth`!
+            # is_auth can return True, None, or False, and *both*
+            # True and None are authorized values (legacy records,
+            # long story). *ONLY* explicitly false values should error here.
+            if is_auth == False:
+                return Unauthorized()
+
+        return account
