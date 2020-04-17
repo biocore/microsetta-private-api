@@ -65,6 +65,29 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/accounts/legacies':
+    post:
+      operationId: microsetta_private_api.api.implementation.claim_legacy_acct
+      tags:
+        - Account
+      summary: Claim any matching legacy account for this user
+      description: Claim any matching legacy account for this user
+      parameters:
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Successfully claimed legacy account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
   '/accounts/{account_id}':
     get:
       operationId: microsetta_private_api.api.implementation.read_account

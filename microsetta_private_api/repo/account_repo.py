@@ -50,6 +50,58 @@ class AccountRepo(BaseRepo):
                 a.first_name, a.last_name) + \
                AccountRepo._addr_to_row(a.address)
 
+    def claim_legacy_account(self, email, auth_iss, auth_sub):
+        # Returns now-claimed legacy account if an unclaimed legacy account
+        # that matched the input email was found; otherwise returns None.
+        # (Note that None is returned in the case where there is a NON-legacy
+        # account with the input email--find such accounts with
+        # find_linked_account instead.) Throws a RepoException
+        # if logic indicates inconsistent auth info.
+
+        # TODO: do I need to validate any of these inputs?
+
+        found_account = self._find_account_by_email(email)
+        # if no account is found by email, just return none.
+        if found_account is None:
+            return None
+
+        is_auth = found_account.account_matches_auth(email, auth_iss, auth_sub)
+
+        if is_auth:
+            return None
+        elif is_auth is None:
+            # this is a legacy account from before we used an external
+            # authorization provider. claim it for this authorized user.
+            found_account.auth_issuer = auth_iss
+            found_account.auth_sub = auth_sub
+            self.update_account(found_account)
+            return found_account
+        else:
+            # any other situation is an error and shouldn't happen,
+            # e.g. one of auth_iss or auth_sub is null in db but the other
+            # isn't, or one or more of non-null auth_iss and auth_sub values
+            # in db do not match the analogous input auth_iss and auth_sub
+            # values for the provided email ... may be more edge cases as well
+            raise RepoException("Inconsistent data found for provided email.")
+
+    def _find_account_by_email(self, email):
+        # select from account table anything that has this email.
+        # (should not be possible to get more than on record--column
+        # has unique constraint)
+        found_account = None
+        with self._transaction.dict_cursor() as cur:
+            cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
+                        "account "
+                        "WHERE "
+                        "account.email = %s", (email,))
+            r = cur.fetchone()
+
+            # if no account with the email was found, return None
+            if r is None:
+                return None
+            else:
+                return AccountRepo._row_to_account(r)
+
     def find_linked_account(self, auth_iss, auth_sub):
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + AccountRepo.read_cols + " FROM "

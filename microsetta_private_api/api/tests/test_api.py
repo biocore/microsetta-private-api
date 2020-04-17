@@ -414,6 +414,74 @@ class AccountsTests(FlaskTests):
         self.assertEqual(422, response.status_code)
     # endregion accounts create/post tests
 
+    # region accounts/legacies post tests
+    def test_accounts_legacies_post_success(self):
+        """Successfully claim a legacy account for the current user"""
+
+        create_dummy_acct(create_dummy_1=True, iss=None, sub=None)
+
+        # execute accounts/legacies post (claim legacy account)
+        url = '/api/accounts/legacies?%s' % self.default_lang_querystring
+        response = self.client.post(url, headers=MOCK_HEADERS)
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        # check all elements of account object in body are correct
+        self.validate_dummy_acct_response_body(response_obj)
+
+        # try to reclaim the same account
+        response = self.client.post(url, headers=MOCK_HEADERS)
+
+        # check response is now a 404
+        self.assertEqual(404, response.status_code)
+
+    def test_accounts_legacies_post_fail_404_no_such_email(self):
+        """Return 404 if no account with provided email in token exists"""
+
+        # do NOT create the dummy account--and check for a legacy account
+        # containing that email (via the MOCK_HEADERS, which link to a fake
+        # token containing TEST_EMAIL as its email claim)
+
+        # execute accounts/legacies post (claim legacy account)
+        url = '/api/accounts/legacies?%s' % self.default_lang_querystring
+        response = self.client.post(url, headers=MOCK_HEADERS)
+
+        # check response code
+        self.assertEqual(404, response.status_code)
+
+    def test_accounts_legacies_post_fail_404_already_claimed(self):
+        """Return 404 if account with email already is claimed."""
+
+        create_dummy_acct(create_dummy_1=True)
+
+        # execute accounts/legacies post (claim legacy account)
+        url = '/api/accounts/legacies?%s' % self.default_lang_querystring
+        response = self.client.post(url, headers=MOCK_HEADERS)
+
+        # check response code
+        self.assertEqual(404, response.status_code)
+
+    def test_accounts_legacies_post_fail_422(self):
+        """Return 422 if info in db somehow prevents claiming legacy"""
+
+        # It is invalid to have one of the auth fields (e.g. sub)
+        # be null while the other is filled.
+        create_dummy_acct(create_dummy_1=True, iss=ACCT_MOCK_ISS,
+                          sub=None)
+
+        # execute accounts/legacies post (claim legacy account)
+        url = '/api/accounts/legacies?%s' % self.default_lang_querystring
+        response = self.client.post(url, headers=MOCK_HEADERS)
+
+        # check response code
+        self.assertEqual(422, response.status_code)
+
+    # endregion accounts/legacies post tests
+
 
 @pytest.mark.usefixtures("client")
 class AccountTests(FlaskTests):

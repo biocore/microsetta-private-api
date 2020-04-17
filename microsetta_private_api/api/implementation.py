@@ -69,6 +69,29 @@ def find_accounts_for_login(token_info):
         return jsonify([acct.to_api()]), 200
 
 
+def claim_legacy_acct(token_info):
+    # If there exists a legacy account for the email in the token, which the
+    # user represented by the token does not already own but can claim, this
+    # claims the legacy account for the user and returns a 200 code with json
+    # containing an object for the claimed account.  Otherwise, this returns a
+    # 404 code. This function can also trigger a 422 from the repo layer in the
+    # case of inconsistent account data.
+
+    email = token_info['email']
+    auth_iss = token_info[JWT_ISS_CLAIM_KEY]
+    auth_sub = token_info[JWT_SUB_CLAIM_KEY]
+
+    with Transaction() as t:
+        acct_repo = AccountRepo(t)
+        acct = acct_repo.claim_legacy_account(email, auth_iss, auth_sub)
+        t.commit()
+
+        if acct is None:
+            return jsonify(code=404, message=ACCT_NOT_FOUND_MSG), 404
+
+        return jsonify(acct.to_api()), 200
+
+
 def register_account(body, token_info):
     # First register with AuthRocket, then come here to make the account
     new_acct_id = str(uuid.uuid4())
