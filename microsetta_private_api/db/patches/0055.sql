@@ -5,6 +5,6 @@ CREATE TABLE barcodes.kit (
     address VARCHAR NULL
 );
 
---ALTER TABLE barcodes.barcode ADD COLUMN kit_id VARCHAR;
+ALTER TABLE barcodes.barcode ADD COLUMN kit_id VARCHAR;
 ALTER TABLE barcodes.barcode ADD CONSTRAINT fk_barcode_kit_id
     FOREIGN KEY (kit_id) REFERENCES barcodes.kit (kit_id);
