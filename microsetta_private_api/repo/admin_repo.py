@@ -90,10 +90,30 @@ class AdminRepo(BaseRepo):
         chars += string.digits
         rand_name = ''.join(random.choice(chars)
                             for i in range(name_length))
-        return prefix + rand_name
+        return prefix + '_' + rand_name
 
     def create_kits(self, number_of_kits, number_of_samples, kit_prefix,
                     projects):
+        """Create kits each with the same number of samples
+
+        Parameters
+        ----------
+        number_of_kits : int
+            Number of kits to create
+        number_of_samples : int
+            Number of samples that each kit will contain
+        kit_prefix : str or None
+            A prefix to put on to the kit IDs, this is optional.
+        projects : list of str
+            Project names the samples are to be associated with
+        """
+        TMI_PROJECTS = {'The Microsetta Initiative', 'American Gut Project',
+                        'British Gut Project'}
+        if len(TMI_PROJECTS & set(projects)) > 0:
+            is_tmi = True
+        else:
+            is_tmi = False
+
         with self._transaction.cursor() as cur:
             # get existing projects
             cur.execute("SELECT project, project_id "
@@ -163,23 +183,24 @@ class AdminRepo(BaseRepo):
                             "(barcode, project_id) "
                             "VALUES (%s, %s)", barcode_projects)
 
-            # create a record for the new kit in ag_kit table
-            ag_kit_insertions = [(str(uuid.uuid4()), name, number_of_samples)
-                                 for name in names]
-            cur.executemany("INSERT INTO ag.ag_kit "
-                            "(ag_kit_id, supplied_kit_id, swabs_per_kit) "
-                            "VALUES (%s, %s, %s)",
-                            ag_kit_insertions)
+            if is_tmi:
+                # create a record for the new kit in ag_kit table
+                ag_kit_inserts = [(str(uuid.uuid4()), name, number_of_samples)
+                                  for name in names]
+                cur.executemany("INSERT INTO ag.ag_kit "
+                                "(ag_kit_id, supplied_kit_id, swabs_per_kit) "
+                                "VALUES (%s, %s, %s)",
+                                ag_kit_inserts)
 
-            # associate the new barcode to a new sample id and
-            # to the new kit in the ag_kit_barcodes table
-            kit_id_to_ag_kit_id = {k: u for u, k, _ in ag_kit_insertions}
-            kit_barcodes_insert = [(kit_id_to_ag_kit_id[i], b)
-                                   for i, b in kit_barcodes]
-            cur.executemany("INSERT INTO ag_kit_barcodes "
-                            "(ag_kit_id, barcode) "
-                            "VALUES (%s, %s)",
-                            kit_barcodes_insert)
+                # associate the new barcode to a new sample id and
+                # to the new kit in the ag_kit_barcodes table
+                kit_id_to_ag_kit_id = {k: u for u, k, _ in ag_kit_inserts}
+                kit_barcodes_insert = [(kit_id_to_ag_kit_id[i], b)
+                                       for i, b in kit_barcodes]
+                cur.executemany("INSERT INTO ag_kit_barcodes "
+                                "(ag_kit_id, barcode) "
+                                "VALUES (%s, %s)",
+                                kit_barcodes_insert)
 
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT kit_id, "
@@ -191,5 +212,8 @@ class AdminRepo(BaseRepo):
                         "GROUP BY (kit_id, kit_uuid)", (tuple(names), ))
             created = [{'kit_id': k, 'kit_uuid': u, 'sample_barcodes': b}
                        for k, u, b in cur.fetchall()]
+
+        if len(names) != len(created):
+            raise KeyError("Not all created kits could be retrieved")
 
         return {'created': created}
