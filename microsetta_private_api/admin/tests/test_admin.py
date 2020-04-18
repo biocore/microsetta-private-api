@@ -151,7 +151,7 @@ class AdminTests(TestCase):
             self.assertEqual(diag['barcode_info'][0]['status'],
                              prestatus)
 
-            try:
+            with self.assertRaises(NotFound):
                 admin_repo.scan_barcode(
                     "THIZIZNOTAREALBARCODEISWARE",
                     {
@@ -160,5 +160,3 @@ class AdminTests(TestCase):
                     }
                 )
                 self.fail("Shouldn't get here")
-            except NotFound:
-                pass
