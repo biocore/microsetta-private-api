@@ -131,9 +131,6 @@ class AdminRepo(BaseRepo):
 
     def retrieve_diagnostics_by_email(self, email):
 
-        # TODO: I leaned toward making this a way to discover what account to
-        #  look into rather than giving information about all accounts with
-        #  similar emails.  Does this approach work?  -DH
         acct_repo = AccountRepo(self._transaction)
         ids = acct_repo.get_account_ids_by_email(email)
 

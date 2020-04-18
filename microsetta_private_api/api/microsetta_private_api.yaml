@@ -840,8 +840,8 @@ paths:
       operationId: microsetta_private_api.admin.admin_impl.search_kit_id
       tags:
         - Admin
-      summary: Retrieve diagnostic information about a sample by barcode
-      description: Retrieve diagnostic information about a sample by barcode
+      summary: Retrieve diagnostic information about a kit by kit_id
+      description: Retrieve diagnostic information about a kit by kit_id
       parameters:
         - in: path
           name: kit_id
