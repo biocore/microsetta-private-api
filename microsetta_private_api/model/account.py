@@ -48,7 +48,7 @@ class Account(ModelBase):
             "first_name": self.first_name,
             "last_name": self.last_name,
             "email": self.email,
-            "address": self.address,
+            "address": self.address.to_api(),
             "account_type": self.account_type,
             "creation_time": self.creation_time,
             "update_time": self.update_time
