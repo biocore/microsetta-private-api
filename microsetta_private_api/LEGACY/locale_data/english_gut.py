@@ -141,7 +141,7 @@ catches the poop as it comes out. Your mom or dad will send it to us in the bowl
 your mom or dad to prick your finger so that we can get a little bit of your blood.</p>
 
 <p>Sometimes kids don’t feel good while being in this study. You might feel a little bit sore where
-your skin is rubbed with the Q-tip and you will feel it when they prick your finger to get blood. 
+your skin is rubbed with the Q-tip and you will feel it when they prick your finger to get blood.
 Most people don’t mind these feelings.</p>
 
 <p>If you feel any of these things, or other things, be sure to tell your mom or dad.</p>

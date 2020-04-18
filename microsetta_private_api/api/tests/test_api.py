@@ -388,10 +388,12 @@ class AccountsTests(FlaskTests):
         # NB: I would rather do this with an email already in use in the
         # test db, but it appears the test db emails have been randomized
         # into strings that won't pass the api's email format validation :(
+
+        # create a dummy account with email 1
         create_dummy_acct(create_dummy_1=True)
 
         # Now try to create a new account that is different in all respects
-        # from the first dummy one EXCEPT that it has the same email
+        # from the dummy made with email 1 EXCEPT that it has the same email
         test_acct_info = copy.deepcopy(DUMMY_ACCT_INFO_2)
         test_acct_info["email"] = TEST_EMAIL
 
@@ -408,7 +410,7 @@ class AccountsTests(FlaskTests):
 
         # check response code
         self.assertEqual(422, response.status_code)
-        # endregion accounts create/post tests
+    # endregion accounts create/post tests
 
 
 @pytest.mark.usefixtures("client")
@@ -538,20 +540,23 @@ class AccountTests(FlaskTests):
         # 404: It's definitely missing
         self.assertIn(response.status_code, [401, 404])
 
-    def test_accounts_update_fail_422(self):
+    def test_account_update_fail_422(self):
         """Return 422 if provided email is in use in db."""
 
         # NB: I would rather do this with an email already in use in the
         # test db, but it appears the test db emails have been randomized
         # into strings that won't pass the api's email format validation :(
-        create_dummy_acct(create_dummy_1=False)
 
-        dummy_acct_id = create_dummy_acct(create_dummy_1=True,
-                                          iss=ACCT_MOCK_ISS_2,
-                                          sub=ACCT_MOCK_SUB_2)
-        # Now try to update the account with info that is the same in
-        # all respects from the dummy one EXCEPT that it has
-        # an email that is already in use by ANOTHER account
+        # create an account with email 1
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        # create an account with email 2
+        create_dummy_acct(create_dummy_1=False, iss=ACCT_MOCK_ISS_2,
+                          sub=ACCT_MOCK_SUB_2)
+
+        # Now try to update the account made with email 1 with info that is
+        # the same in all respects as those it was made with EXCEPT that it has
+        # an email that is now in use by the account with email 2:
         changed_dummy_acct = copy.deepcopy(DUMMY_ACCT_INFO)
         changed_dummy_acct["email"] = TEST_EMAIL_2
 
@@ -561,7 +566,7 @@ class AccountTests(FlaskTests):
         response = self.client.put(
             '/api/accounts/%s?%s' %
             (dummy_acct_id, self.default_lang_querystring),
-            headers=MOCK_HEADERS_2,
+            headers=MOCK_HEADERS,
             content_type='application/json',
             data=input_json)
 
