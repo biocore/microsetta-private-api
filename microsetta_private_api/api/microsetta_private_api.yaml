@@ -847,7 +847,7 @@ paths:
         - $ref: '#/components/parameters/survey_template_id'
       responses:
         '200':
-          description: Qiime compatible sample metadata
+          description: QIIME compatible sample metadata
           content:
             application/json:
               schema:
@@ -867,7 +867,7 @@ paths:
         - $ref: '#/components/parameters/sample_barcode'
       responses:
         '200':
-          description: Qiime compatible sample metadata
+          description: QIIIME compatible sample metadata
           content:
             application/json:
               schema:
