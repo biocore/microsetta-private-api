@@ -875,6 +875,10 @@ paths:
 
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
 
 components:
   parameters:

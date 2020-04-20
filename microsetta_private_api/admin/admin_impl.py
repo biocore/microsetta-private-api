@@ -36,10 +36,13 @@ def create_kits(body, token_info):
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-        kits = admin_repo.create_kits(number_of_kits, number_of_samples,
-                                      kit_prefix, projects)
 
-        if kits:
+        try:
+            kits = admin_repo.create_kits(number_of_kits, number_of_samples,
+                                          kit_prefix, projects)
+        except KeyError:
+            return jsonify(code=422, message="Unable to create kits"), 422
+        else:
             t.commit()
 
     return jsonify(kits), 201

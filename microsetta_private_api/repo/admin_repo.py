@@ -82,10 +82,10 @@ class AdminRepo(BaseRepo):
 
     def _generate_random_kit_name(self, name_length, prefix):
         if prefix is None:
-            prefix = 'tmi_'
+            prefix = 'tmi'
 
-        # O, o, S and l removed to improve readability
-        chars = 'abcdefghjkmnpqrstuvwxyz' + 'ABCDEFGHJKMNPQRTUVWXYZ'
+        # O, o, S, I and l removed to improve readability
+        chars = 'abcdefghijkmnpqrstuvwxyz' + 'ABCDEFGHJKMNPQRTUVWXYZ'
         chars += string.digits
         rand_name = ''.join(random.choice(chars)
                             for i in range(name_length))
