@@ -151,3 +151,11 @@ class AccountRepo(BaseRepo):
             cur.execute("DELETE FROM account WHERE account.email = %s",
                         (email,))
             return cur.rowcount == 1
+
+    def get_account_ids_by_email(self, email):
+        email = "%"+email+"%"
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT id FROM account WHERE email LIKE %s "
+                        "ORDER BY email",
+                        (email,))
+            return [x[0] for x in cur.fetchall()]
