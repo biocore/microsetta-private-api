@@ -921,6 +921,47 @@ paths:
             Location:
               schema:
                 type: string
+  '/admin/metadata/samples/{sample_barcode}/surveys/{survey_template_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_single_survey
+      tags:
+        - Admin
+      summary: Retrieve survey responses for a particular sample and survey
+      description: Retrieve survey responses for a particular sample and survey
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+        - $ref: '#/components/parameters/survey_template_id'
+      responses:
+        '200':
+          description: QIIME compatible sample metadata
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  '/admin/metadata/samples/{sample_barcode}/surveys/':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_multiple_survey
+      tags:
+        - Admin
+      summary: Retrieve all survey responses for a particular sample
+      description: Retrieve all survey responses for a particular sample
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+      responses:
+        '200':
+          description: QIIIME compatible sample metadata
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
 
 components:

@@ -184,3 +184,37 @@ class AdminTests(TestCase):
                     }
                 )
                 self.fail("Shouldn't get here")
+
+    def test_get_survey(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            BARCODE = '000004216'
+
+            with self.assertRaises(NotFound):
+                admin_repo.get_survey_metadata("NOTABARCODE")
+
+            meta = admin_repo.get_survey_metadata(BARCODE,
+                                                  survey_template_id=1)
+
+            self.assertEqual(meta['sample_barcode'], BARCODE)
+            self.assertIn('host_subject_id', meta)
+            # And there should be one survey answered
+            self.assertEqual(len(meta['survey_answers']), 1)
+
+            all_meta = admin_repo.get_survey_metadata(BARCODE)
+
+            self.assertEqual(all_meta['sample_barcode'], BARCODE)
+            self.assertEqual(all_meta['host_subject_id'],
+                             all_meta['host_subject_id'])
+            # And there should be more than one survey answered
+            self.assertGreater(len(all_meta['survey_answers']), 1)
+
+            # And the meta survey should exist somewhere in all_meta
+            found = False
+            for survey in all_meta['survey_answers']:
+                if "DIET_TYPE" in survey:
+                    found = True
+                    self.assertDictEqual(meta['survey_answers'][0],
+                                         survey)
+            self.assertTrue(found)

@@ -55,6 +55,29 @@ def scan_barcode(token_info, sample_barcode, body):
     return response
 
 
+def sample_pulldown_single_survey(token_info,
+                                  sample_barcode,
+                                  survey_template_id):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        sample_pulldown = admin_repo.get_survey_metadata(
+            sample_barcode,
+            survey_template_id=survey_template_id)
+    return jsonify(sample_pulldown), 200
+
+
+def sample_pulldown_multiple_survey(token_info,
+                                    sample_barcode):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        sample_pulldown = admin_repo.get_survey_metadata(sample_barcode)
+    return jsonify(sample_pulldown), 200
+
+
 def validate_admin_access(token_info):
     with Transaction() as t:
         account_repo = AccountRepo(t)
