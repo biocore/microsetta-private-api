@@ -128,11 +128,8 @@ class AdminTests(TestCase):
 
             BARCODE = '000004216'
 
-            try:
+            with self.assertRaises(NotFound):
                 admin_repo.get_survey_metadata("NOTABARCODE")
-                self.fail("Should not find NOTABARCODE")
-            except NotFound:
-                pass
 
             meta = admin_repo.get_survey_metadata(BARCODE,
                                                   survey_template_id=1)
