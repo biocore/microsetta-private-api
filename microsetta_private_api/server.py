@@ -56,10 +56,7 @@ def build_app():
     return app
 
 
-# If we're running in stand alone mode, run the application
-if __name__ == '__main__':
-    app = build_app()
-
+def run(app):
     if SERVER_CONFIG["ssl_cert_path"] and SERVER_CONFIG["ssl_key_path"]:
         ssl_context = (
             SERVER_CONFIG["ssl_cert_path"], SERVER_CONFIG["ssl_key_path"]
@@ -72,3 +69,9 @@ if __name__ == '__main__':
         debug=SERVER_CONFIG['debug'],
         ssl_context=ssl_context
     )
+
+
+# If we're running in stand alone mode, run the application
+if __name__ == '__main__':
+    app = build_app()
+    run(app)
