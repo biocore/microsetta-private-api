@@ -835,6 +835,57 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+  '/admin/search/kit/{kit_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.search_kit_id
+      tags:
+        - Admin
+      summary: Retrieve diagnostic information about a kit by kit_id
+      description: Retrieve diagnostic information about a kit by kit_id
+      parameters:
+        - in: path
+          name: kit_id
+          description: User-facing id of kit
+          schema:
+            $ref: '#/components/schemas/kit_name'
+          required: true
+      responses:
+        '200':
+          description: Object containing linked account (if any), source (if any), sample (if any) and information about the barcode
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  '/admin/search/account/{email}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.search_email
+      tags:
+        - Admin
+      summary: Retrieve diagnostic information about an account by email
+      description: Retrieve diagnostic information about an account by email
+      parameters:
+        - in: path
+          name: email
+          description: user email address
+          schema:
+            type: string
+            example: "test@test.com"
+          required: true
+      responses:
+        '200':
+          description: Object containing accounts with similar emails (if any)
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
 
 components:
