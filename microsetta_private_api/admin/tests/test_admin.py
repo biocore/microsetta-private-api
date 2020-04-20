@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Unauthorized, NotFound
 
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.address import Address
@@ -121,3 +121,100 @@ class AdminTests(TestCase):
             self.assertIsNone(diag['source'])
             self.assertIsNone(diag['sample'])
             self.assertEqual(len(diag['barcode_info']), 0)
+
+    def test_search_kit_id(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            diag = admin_repo.retrieve_diagnostics_by_kit_id('test')
+            self.assertIsNotNone(diag)
+            self.assertIsNotNone(diag['kit'])
+
+            diag = admin_repo.retrieve_diagnostics_by_kit_id('NotAKitId!!!!')
+            self.assertIsNone(diag)
+
+    def test_search_email(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            diag = admin_repo.retrieve_diagnostics_by_email(
+                'yqrc&3x9_9@h7yx5.com')
+            self.assertIsNotNone(diag)
+            self.assertEqual(len(diag['accounts']), 1)
+
+            diag = admin_repo.retrieve_diagnostics_by_email(
+                '.com'
+            )
+            self.assertIsNotNone(diag)
+            self.assertGreater(len(diag['accounts']), 1)
+
+    def test_scan_barcode(self):
+        with Transaction() as t:
+            # TODO FIXME HACK:  Need to build mock barcodes rather than using
+            #  these fixed ones
+
+            TEST_BARCODE = '000000001'
+            TEST_STATUS = "sample-has-inconsistencies"
+            TEST_NOTES = "THIS IS A UNIT TEST"
+            admin_repo = AdminRepo(t)
+
+            diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
+            prestatus = diag['barcode_info'][0]['status']
+
+            admin_repo.scan_barcode(
+                TEST_BARCODE,
+                {
+                    "sample_status": TEST_STATUS,
+                    "technician_notes": TEST_NOTES
+                }
+            )
+
+            diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
+            self.assertEqual(diag['barcode_info'][0]['technician_notes'],
+                             TEST_NOTES)
+            self.assertEqual(diag['barcode_info'][0]['sample_status'],
+                             TEST_STATUS)
+            self.assertEqual(diag['barcode_info'][0]['status'],
+                             prestatus)
+
+            with self.assertRaises(NotFound):
+                admin_repo.scan_barcode(
+                    "THIZIZNOTAREALBARCODEISWARE",
+                    {
+                        "sample_status": "Abc",
+                        "technician_notes": "123"
+                    }
+                )
+                self.fail("Shouldn't get here")
+
+    def test_get_survey(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            BARCODE = '000004216'
+
+            with self.assertRaises(NotFound):
+                admin_repo.get_survey_metadata("NOTABARCODE")
+
+            meta = admin_repo.get_survey_metadata(BARCODE,
+                                                  survey_template_id=1)
+
+            self.assertEqual(meta['sample_barcode'], BARCODE)
+            self.assertIn('host_subject_id', meta)
+            # And there should be one survey answered
+            self.assertEqual(len(meta['survey_answers']), 1)
+
+            all_meta = admin_repo.get_survey_metadata(BARCODE)
+
+            self.assertEqual(all_meta['sample_barcode'], BARCODE)
+            self.assertEqual(all_meta['host_subject_id'],
+                             all_meta['host_subject_id'])
+            # And there should be more than one survey answered
+            self.assertGreater(len(all_meta['survey_answers']), 1)
+
+            # And the meta survey should exist somewhere in all_meta
+            found = False
+            for survey in all_meta['survey_answers']:
+                if "DIET_TYPE" in survey:
+                    found = True
+                    self.assertDictEqual(meta['survey_answers'][0],
+                                         survey)
+            self.assertTrue(found)
