@@ -2,6 +2,7 @@ import psycopg2
 
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.account import Account
+from microsetta_private_api.model.address import Address
 from microsetta_private_api.exceptions import RepoException
 
 
@@ -22,13 +23,8 @@ class AccountRepo(BaseRepo):
 
     @staticmethod
     def _row_to_addr(r):
-        return {
-            "street": r["street"],
-            "city": r["city"],
-            "state": r["state"],
-            "post_code": r["post_code"],
-            "country_code": r["country_code"]
-        }
+        return Address(r["street"], r["city"], r["state"], r["post_code"],
+                       r["country_code"])
 
     @staticmethod
     def _addr_to_row(addr):
@@ -155,3 +151,11 @@ class AccountRepo(BaseRepo):
             cur.execute("DELETE FROM account WHERE account.email = %s",
                         (email,))
             return cur.rowcount == 1
+
+    def get_account_ids_by_email(self, email):
+        email = "%"+email+"%"
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT id FROM account WHERE email LIKE %s "
+                        "ORDER BY email",
+                        (email,))
+            return [x[0] for x in cur.fetchall()]

@@ -11,21 +11,21 @@ paths:
       operationId: microsetta_private_api.api.implementation.find_accounts_for_login
       tags:
         - Account
-      summary: Identify linked account(s)
-      description: Retrieve ids of linked account(s)
+      summary: Retrieve an array of accounts accessible to the provided login
+      description: Retrieve an array of accounts accessible to the provided login
       parameters:
         - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
-          description: Array of linked account(s)
+          description: Array of accessible accounts
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/account'
-
-    # NB: Not including a get of all accounts: seems like seeing all accounts is an extension for the future (for admin?)
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
     post:
       operationId: microsetta_private_api.api.implementation.register_account
       tags:
@@ -815,7 +815,7 @@ paths:
           $ref: '#/components/responses/422UnprocessableEntity'
 
   # START ADMINISTRATOR PATHS
-  '/admin/search/sample/{sample_barcode}':
+  '/admin/search/samples/{sample_barcode}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.search_barcode
       tags:
@@ -835,6 +835,92 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+  '/admin/search/kit/{kit_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.search_kit_id
+      tags:
+        - Admin
+      summary: Retrieve diagnostic information about a kit by kit_id
+      description: Retrieve diagnostic information about a kit by kit_id
+      parameters:
+        - in: path
+          name: kit_id
+          description: User-facing id of kit
+          schema:
+            $ref: '#/components/schemas/kit_name'
+          required: true
+      responses:
+        '200':
+          description: Object containing linked account (if any), source (if any), sample (if any) and information about the barcode
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  '/admin/search/account/{email}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.search_email
+      tags:
+        - Admin
+      summary: Retrieve diagnostic information about an account by email
+      description: Retrieve diagnostic information about an account by email
+      parameters:
+        - in: path
+          name: email
+          description: user email address
+          schema:
+            type: string
+            example: "test@test.com"
+          required: true
+      responses:
+        '200':
+          description: Object containing accounts with similar emails (if any)
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  '/admin/scan/{sample_barcode}':
+    post:
+      # Note: We might want to be able to differentiate system administrator operations
+      # from technician operations in the future by user accounts and the routes they post to
+      operationId: microsetta_private_api.admin.admin_impl.scan_barcode
+      tags:
+        - Admin
+      summary: Set sample processing information for a barcode
+      description: Set sample processing information for a barcode
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sample_status:
+                  type: string
+                  enum: ["not-received",
+                         "sample-is-valid",
+                         "no-associated-consent",
+                         "no-registered-account",
+                         "sample-has-inconsistencies"]
+                  example: "sample-has-inconsistencies"
+                technician_notes:
+                  type: string
+                  example: "Sample Processing Complete!"
+      responses:
+        '201':
+          description: Successfully registered new user account
+          headers:
+            Location:
+              schema:
+                type: string
 
   '/admin/create/kits':
     post:
