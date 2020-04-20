@@ -129,7 +129,7 @@ class AdminTests(TestCase):
             BARCODE = '000004216'
 
             try:
-                nometa = admin_repo.get_survey_metadata("NOTABARCODE")
+                admin_repo.get_survey_metadata("NOTABARCODE")
                 self.fail("Should not find NOTABARCODE")
             except NotFound:
                 pass
@@ -150,10 +150,11 @@ class AdminTests(TestCase):
             # And there should be more than one survey answered
             self.assertGreater(len(all_meta['survey_answers']), 1)
 
-            # TODO FIXME HACK:  Unclear that the order surveys are returned is
-            #  guaranteed, so this particular part of the test is fragile.
-            #  Feel free to blow it away if it starts failing due to reordering
-            #  of returned surveys
-            # And the first survey should match
-            self.assertDictEqual(meta['survey_answers'][0],
-                                 all_meta['survey_answers'][0])
+            # And the meta survey should exist somewhere in all_meta
+            found = False
+            for survey in all_meta['survey_answers']:
+                if "DIET_TYPE" in survey:
+                    found = True
+                    self.assertDictEqual(meta['survey_answers'][0],
+                                         survey)
+            self.assertTrue(found)

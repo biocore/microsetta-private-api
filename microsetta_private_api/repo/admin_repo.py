@@ -126,12 +126,13 @@ class AdminRepo(BaseRepo):
                     answers.append(answer_id)
 
             if len(answers) == 0:
-                raise NotFound("This barcode is not associated with any surveys "
-                               "matching this template id")
+                raise NotFound("This barcode is not associated with any "
+                               "surveys matching this template id")
             if len(answers) > 1:
                 #  I really hope this can't happen.  (x . x)
-                raise RepoException("This barcode is associated with more than one"
-                                    " survey matching this template id")
+                raise RepoException("This barcode is associated with more "
+                                    "than one survey matching this template"
+                                    " id")
             answer_ids = answers
 
         metadata_map = survey_answers_repo.build_metadata_map()
