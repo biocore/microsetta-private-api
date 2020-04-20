@@ -1,13 +1,10 @@
-<<<<<<< HEAD
 import uuid
 import string
 import random
 
-=======
 from datetime import date
 
 from microsetta_private_api.exceptions import RepoException
->>>>>>> 139f2db7a5b77fe309c77f740460f47605a8c3f0
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
