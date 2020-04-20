@@ -97,8 +97,9 @@ class AdminRepo(BaseRepo):
         account_id = ids['account_id']
         source_id = ids['source_id']
         sample_id = ids['sample_id']
-        source = None
 
+        account = None
+        source = None
         sample = None
         if sample_id is not None:
             sample_repo = SampleRepo(self._transaction)
@@ -106,6 +107,8 @@ class AdminRepo(BaseRepo):
 
         if source_id is not None and account_id is not None:
             source_repo = SourceRepo(self._transaction)
+            account_repo = AccountRepo(self._transaction)
+            account = account_repo.get_account(account_id)
             source = source_repo.get_source(account_id, source_id)
 
         if source is None:
@@ -162,6 +165,8 @@ class AdminRepo(BaseRepo):
         pulldown = {
             "sample_barcode": sample_barcode,
             "host_subject_id": host_subject_id,
+            "account": account,
+            "source": source,
             "sample": sample,
             "survey_answers": all_survey_answers
         }
