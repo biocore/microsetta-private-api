@@ -7,6 +7,26 @@ class KitRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
 
+    # Kit ID is the uuid primary key of ag_kit, as opposed to supplied_kit_id,
+    # the more easily typed string we put on pieces of paper inside the kit
+    def get_kit_all_samples_by_kit_id(self, kit_id):
+        sample_repo = SampleRepo(self._transaction)
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT "
+                        "ag_kit.ag_kit_id, "
+                        "ag_kit_barcodes.ag_kit_barcode_id "
+                        "FROM ag_kit LEFT JOIN ag_kit_barcodes ON "
+                        "ag_kit.ag_kit_id = ag_kit_barcodes.ag_kit_id "
+                        "WHERE "
+                        "ag_kit.ag_kit_id = %s",
+                        (kit_id,))
+            rows = cur.fetchall()
+            if len(rows) == 0:
+                return None
+            else:
+                samples = [sample_repo._get_sample_by_id(r[1]) for r in rows]
+                return Kit(rows[0][0], samples)
+
     def get_kit_all_samples(self, supplied_kit_id):
         sample_repo = SampleRepo(self._transaction)
 

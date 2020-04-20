@@ -122,6 +122,30 @@ class AdminTests(TestCase):
             self.assertIsNone(diag['sample'])
             self.assertEqual(len(diag['barcode_info']), 0)
 
+    def test_search_kit_id(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            diag = admin_repo.retrieve_diagnostics_by_kit_id('test')
+            self.assertIsNotNone(diag)
+            self.assertIsNotNone(diag['kit'])
+
+            diag = admin_repo.retrieve_diagnostics_by_kit_id('NotAKitId!!!!')
+            self.assertIsNone(diag)
+
+    def test_search_email(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            diag = admin_repo.retrieve_diagnostics_by_email(
+                'yqrc&3x9_9@h7yx5.com')
+            self.assertIsNotNone(diag)
+            self.assertEqual(len(diag['accounts']), 1)
+
+            diag = admin_repo.retrieve_diagnostics_by_email(
+                '.com'
+            )
+            self.assertIsNotNone(diag)
+            self.assertGreater(len(diag['accounts']), 1)
+
     def test_scan_barcode(self):
         with Transaction() as t:
             # TODO FIXME HACK:  Need to build mock barcodes rather than using
