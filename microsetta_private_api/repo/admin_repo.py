@@ -224,8 +224,6 @@ class AdminRepo(BaseRepo):
                                 kit_barcodes_insert)
 
         with self._transaction.dict_cursor() as cur:
-            # a postgres 9.3 compatible version of the commented out query
-            # below
             cur.execute("SELECT i.kit_id, o.kit_uuid, i.sample_barcodes "
                         "FROM (SELECT kit_id, "
                         "             array_agg(barcode) as sample_barcodes "
@@ -235,13 +233,6 @@ class AdminRepo(BaseRepo):
                         "      GROUP BY kit_id) i "
                         "JOIN barcodes.kit o USING (kit_id)", (tuple(names), ))
 
-            # cur.execute("SELECT kit_id, "
-            #             "       kit_uuid, "
-            #             "       array_agg(barcode) as sample_barcodes "
-            #             "FROM barcodes.kit "
-            #             "LEFT JOIN barcodes.barcode USING (kit_id)"
-            #             "WHERE kit_id IN %s "
-            #             "GROUP BY (kit_id, kit_uuid)", (tuple(names), ))
             created = [{'kit_id': k, 'kit_uuid': u, 'sample_barcodes': b}
                        for k, u, b in cur.fetchall()]
 
