@@ -29,11 +29,11 @@ from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 
-from microsetta_private_api.model.account import Account
+from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.source import Source, info_from_api
 from microsetta_private_api.model.source import human_info_from_api
 
-from werkzeug.exceptions import BadRequest, Unauthorized
+from werkzeug.exceptions import BadRequest, Unauthorized, NotFound
 
 from microsetta_private_api.util import vue_adapter
 from microsetta_private_api.util.util import fromisotime
@@ -69,6 +69,29 @@ def find_accounts_for_login(token_info):
         return jsonify([acct.to_api()]), 200
 
 
+def claim_legacy_acct(token_info):
+    # If there exists a legacy account for the email in the token, which the
+    # user represented by the token does not already own but can claim, this
+    # claims the legacy account for the user and returns a 200 code with json
+    # containing an object for the claimed account.  Otherwise, this returns a
+    # 404 code. This function can also trigger a 422 from the repo layer in the
+    # case of inconsistent account data.
+
+    email = token_info['email']
+    auth_iss = token_info[JWT_ISS_CLAIM_KEY]
+    auth_sub = token_info[JWT_SUB_CLAIM_KEY]
+
+    with Transaction() as t:
+        acct_repo = AccountRepo(t)
+        acct = acct_repo.claim_legacy_account(email, auth_iss, auth_sub)
+        t.commit()
+
+        if acct is None:
+            return jsonify(code=404, message=ACCT_NOT_FOUND_MSG), 404
+
+        return jsonify(acct.to_api()), 200
+
+
 def register_account(body, token_info):
     # First register with AuthRocket, then come here to make the account
     new_acct_id = str(uuid.uuid4())
@@ -94,27 +117,15 @@ def register_account(body, token_info):
 
 
 def read_account(account_id, token_info):
-    validate_access(token_info, account_id)
-
-    with Transaction() as t:
-        acct_repo = AccountRepo(t)
-        acc = acct_repo.get_account(account_id)
-        if acc is None:
-            return jsonify(code=404, message="Account not found"), 404
-        return jsonify(acc.to_api()), 200
+    acc = validate_access(token_info, account_id)
+    return jsonify(acc.to_api()), 200
 
 
 def update_account(account_id, body, token_info):
-    validate_access(token_info, account_id)
+    acc = validate_access(token_info, account_id)
 
     with Transaction() as t:
         acct_repo = AccountRepo(t)
-        acc = acct_repo.get_account(account_id)
-        if acc is None:
-            return jsonify(code=404, message="Account not found"), 404
-
-        # TODO: add 422 handling
-
         acc.first_name = body['first_name']
         acc.last_name = body['last_name']
         acc.email = body['email']
@@ -595,12 +606,25 @@ def verify_authrocket(token):
 
 
 def validate_access(token_info, account_id):
+    if JWT_ISS_CLAIM_KEY not in token_info or \
+            JWT_SUB_CLAIM_KEY not in token_info or \
+            'email' not in token_info:
+        # token is malformed--no soup for you
+        return Unauthorized()
+
+    # TODO: Put email verification check here
+
     with Transaction() as t:
         account_repo = AccountRepo(t)
         account = account_repo.get_account(account_id)
-        if account is None or \
-           'iss' not in token_info or \
-           'sub' not in token_info or \
-                account.auth_issuer != token_info['iss'] or \
-                account.auth_sub != token_info['sub']:
-            raise Unauthorized()
+
+        if account is None:
+            raise NotFound(ACCT_NOT_FOUND_MSG)
+        else:
+            auth_match = account.account_matches_auth(
+                token_info['email'], token_info[JWT_ISS_CLAIM_KEY],
+                token_info[JWT_SUB_CLAIM_KEY])
+            if auth_match == AuthorizationMatch.NO_MATCH:
+                raise Unauthorized()
+
+        return account
