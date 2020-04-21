@@ -122,6 +122,52 @@ class AdminTests(TestCase):
             self.assertIsNone(diag['sample'])
             self.assertEqual(len(diag['barcode_info']), 0)
 
+    def test_create_kits(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            with self.assertRaisesRegex(KeyError, "does not exist"):
+                admin_repo.create_kits(5, 3, '', ['foo', 'bar'])
+
+            non_tmi = admin_repo.create_kits(5, 3, '',
+                                             ['Project - /J/xL_|Eãt'])
+            self.assertEqual(['created', ], list(non_tmi.keys()))
+            self.assertEqual(len(non_tmi['created']), 5)
+            for obj in non_tmi['created']:
+                self.assertEqual(len(obj['sample_barcodes']), 3)
+                self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
+                                 set(obj))
+
+            # should not be present in the ag tables
+            non_tmi_kits = [k['kit_id'] for k in non_tmi['created']]
+            with t.cursor() as cur:
+                cur.execute("SELECT supplied_kit_id "
+                            "FROM ag.ag_kit "
+                            "WHERE supplied_kit_id IN %s",
+                            (tuple(non_tmi_kits), ))
+                observed = cur.fetchall()
+                self.assertEqual(len(observed), 0)
+
+            tmi = admin_repo.create_kits(4, 2, 'foo',
+                                         ['American Gut Project'])
+            self.assertEqual(['created', ], list(tmi.keys()))
+            self.assertEqual(len(tmi['created']), 4)
+            for obj in tmi['created']:
+                self.assertEqual(len(obj['sample_barcodes']), 2)
+                self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
+                                 set(obj))
+                self.assertTrue(obj['kit_id'].startswith('foo_'))
+
+            # should be present in the ag tables
+            tmi_kits = [k['kit_id'] for k in tmi['created']]
+            with t.cursor() as cur:
+                cur.execute("SELECT supplied_kit_id "
+                            "FROM ag.ag_kit "
+                            "WHERE supplied_kit_id IN %s",
+                            (tuple(tmi_kits), ))
+                observed = cur.fetchall()
+                self.assertEqual(len(observed), 4)
+
     def test_search_kit_id(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)

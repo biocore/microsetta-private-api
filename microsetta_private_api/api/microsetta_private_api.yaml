@@ -963,6 +963,49 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/admin/create/kits':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.create_kits
+      tags:
+        - Admin
+      summary: Create kit identifiers and associated sample barcodes
+      description: Create kit identifiers and associated sample barcodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+                type: "object"
+                properties:
+                  number_of_kits:
+                    type: integer
+                  number_of_samples:
+                    type: integer
+                  kit_id_prefix:
+                    type: string
+                  projects:
+                    type: array
+                    items:
+                      type: string
+
+                required:
+                  - number_of_kits
+                  - number_of_samples
+                  - projects
+
+      responses:
+        '201':
+          description: Kit identifiers and associated samples were successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
 
 components:
   parameters:
@@ -1117,6 +1160,7 @@ components:
         - last_name
         - email
         - address
+
     address:   # taken from https://opensource.zalando.com/restful-api-guidelines/#address-fields
       description:
         an address of a location/destination

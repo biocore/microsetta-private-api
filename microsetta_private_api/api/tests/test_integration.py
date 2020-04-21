@@ -1220,6 +1220,12 @@ def _create_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
 
     with transaction.cursor() as cur:
         # create a record for the new kit in ag_kit table
+        cur.execute("INSERT INTO barcodes.kit "
+                    "(kit_id)"
+                    "VALUES(%s)",
+                    (supplied_kit_id, ))
+
+        # create a record for the new kit in ag_kit table
         cur.execute("INSERT INTO ag_kit "
                     "(ag_kit_id, "
                     "supplied_kit_id, swabs_per_kit) "
@@ -1286,6 +1292,15 @@ def _remove_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
                         (barcode,))
         # next barcode/sample to delete
 
+        cur.execute("SELECT supplied_kit_id "
+                    "FROM ag_kit "
+                    "WHERE ag_kit_id=%s",
+                    (kit_id, ))
+        supplied_kit_id = cur.fetchone()
+
         # now delete the kit the barcode(s) were associated to
         cur.execute("DELETE FROM ag_kit WHERE ag_kit_id=%s",
                     (kit_id,))
+        if supplied_kit_id is not None:
+            cur.execute("DELETE FROM barcodes.kit WHERE kit_id=%s",
+                        (supplied_kit_id,))
