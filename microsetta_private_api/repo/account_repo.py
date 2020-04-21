@@ -1,7 +1,7 @@
 import psycopg2
 
 from microsetta_private_api.repo.base_repo import BaseRepo
-from microsetta_private_api.model.account import Account
+from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.exceptions import RepoException
 
@@ -58,41 +58,43 @@ class AccountRepo(BaseRepo):
         # find_linked_account instead.) Throws a RepoException
         # if logic indicates inconsistent auth info.
 
-        # TODO: do I need to validate any of these inputs?
-
         found_account = self._find_account_by_email(email)
         # if no account is found by email, just return none.
         if found_account is None:
             return None
 
-        is_auth = found_account.account_matches_auth(email, auth_iss, auth_sub)
+        auth = found_account.account_matches_auth(email, auth_iss, auth_sub)
 
-        if is_auth:
+        if auth == AuthorizationMatch.FULL_MATCH:
             return None
-        elif is_auth is None:
+        elif auth == AuthorizationMatch.LEGACY_MATCH:
             # this is a legacy account from before we used an external
             # authorization provider. claim it for this authorized user.
             found_account.auth_issuer = auth_iss
             found_account.auth_sub = auth_sub
             self.update_account(found_account)
             return found_account
-        else:
+        elif auth == AuthorizationMatch.NO_MATCH:
             # any other situation is an error and shouldn't happen,
             # e.g. one of auth_iss or auth_sub is null in db but the other
             # isn't, or one or more of non-null auth_iss and auth_sub values
             # in db do not match the analogous input auth_iss and auth_sub
             # values for the provided email ... may be more edge cases as well
             raise RepoException("Inconsistent data found for provided email.")
+        else:
+            raise ValueError("Unknown authorization match value")
 
     def _find_account_by_email(self, email):
         # select from account table anything that has this email.
-        # TODO: Do we need to check for multiple results?
 
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
                         "account "
                         "WHERE "
                         "account.email = %s", (email,))
+
+            # Do not need to check for multiple results because index on
+            # field in db table guarantees uniqueness.
             r = cur.fetchone()
 
             # if no account with the email was found, return None

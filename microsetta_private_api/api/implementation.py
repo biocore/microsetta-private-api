@@ -29,11 +29,11 @@ from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 
-from microsetta_private_api.model.account import Account
+from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.source import Source, info_from_api
 from microsetta_private_api.model.source import human_info_from_api
 
-from werkzeug.exceptions import BadRequest, Unauthorized
+from werkzeug.exceptions import BadRequest, Unauthorized, NotFound
 
 from microsetta_private_api.util import vue_adapter
 from microsetta_private_api.util.util import fromisotime
@@ -118,17 +118,11 @@ def register_account(body, token_info):
 
 def read_account(account_id, token_info):
     acc = validate_access(token_info, account_id)
-
-    if acc is None:
-        return jsonify(code=404, message=ACCT_NOT_FOUND_MSG), 404
-
     return jsonify(acc.to_api()), 200
 
 
 def update_account(account_id, body, token_info):
     acc = validate_access(token_info, account_id)
-    if acc is None:
-        return jsonify(code=404, message=ACCT_NOT_FOUND_MSG), 404
 
     with Transaction() as t:
         acct_repo = AccountRepo(t)
@@ -624,15 +618,13 @@ def validate_access(token_info, account_id):
         account_repo = AccountRepo(t)
         account = account_repo.get_account(account_id)
 
-        if account is not None:
-            is_auth = account.account_matches_auth(
+        if account is None:
+            raise NotFound(ACCT_NOT_FOUND_MSG)
+        else:
+            auth_match = account.account_matches_auth(
                 token_info['email'], token_info[JWT_ISS_CLAIM_KEY],
                 token_info[JWT_SUB_CLAIM_KEY])
-            # Note: DO NOT pythonify this to `if not is_auth`!
-            # is_auth can return True, None, or False, and *both*
-            # True and None are authorized values (legacy records,
-            # long story). *ONLY* explicitly false values should error here.
-            if is_auth is False:
-                return Unauthorized()
+            if auth_match == AuthorizationMatch.NO_MATCH:
+                raise Unauthorized()
 
         return account

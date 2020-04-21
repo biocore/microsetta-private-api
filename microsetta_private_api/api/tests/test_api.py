@@ -63,6 +63,7 @@ ACCT_MOCK_ISS_2 = "NewPhone"
 ACCT_MOCK_SUB_2 = "WhoDis"
 MOCK_HEADERS = {"Authorization": "Bearer BoogaBooga"}
 MOCK_HEADERS_2 = {"Authorization": "Bearer WoogaWooga"}
+MOCK_HEADERS_IMPOSTOR = {"Authorization": "Bearer FoogaFooga"}
 
 
 def mock_verify(token):
@@ -72,11 +73,17 @@ def mock_verify(token):
             'iss': ACCT_MOCK_ISS,
             'sub': ACCT_MOCK_SUB
         }
-    else:
+    elif token == "WoogaWooga":
         return {
             'email': TEST_EMAIL_2,
             'iss': ACCT_MOCK_ISS_2,
             'sub': ACCT_MOCK_SUB_2
+        }
+    else:
+        return {
+            'email': 'impostor@test.com',
+            'iss': 'impostor',
+            'sub': 'animpostor'
         }
 
 
@@ -521,6 +528,19 @@ class AccountTests(FlaskTests):
         self.run_query_and_content_required_field_test(
             input_url, "get",
             self.default_querystring_dict)
+
+    def test_account_view_fail_401(self):
+        """Return 401 if user does not have access to provided account."""
+
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=MOCK_HEADERS_IMPOSTOR)
+
+        # check response code
+        self.assertEqual(response.status_code, 401)
 
     def test_account_view_fail_404(self):
         """Return 404 if provided account id is not found in db."""
