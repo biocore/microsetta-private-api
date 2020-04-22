@@ -19,22 +19,33 @@ CREATE TABLE barcodes.kit (
 
 -- Now lets make sure the barcodes are associated to the kits
 ALTER TABLE barcodes.barcode ADD COLUMN kit_id VARCHAR;
-ALTER TABLE barcodes.barcode ADD CONSTRAINT fk_barcode_kit_id
-    FOREIGN KEY (kit_id) REFERENCES barcodes.kit (kit_id);
 
 -- Let's make sure all existing kits are reflected in this 
 -- table
+INSERT INTO barcodes.kit (kit_id) 
+    SELECT supplied_kit_id 
+    FROM ag.ag_kit;
+
+-- and we need to also set the kit_id reference in the barcodes.barcode
+-- table
 DO $do$
 DECLARE
-    k varchar;
+    rec RECORD;
 BEGIN
-    FOR k IN
-        SELECT supplied_kit_id FROM ag.ag_kit
+    FOR rec IN
+        SELECT supplied_kit_id, barcode
+            FROM ag.ag_kit
+            JOIN ag.ag_kit_barcodes USING(ag_kit_id)
     LOOP
-        INSERT INTO barcodes.kit (kit_id) VALUES (k);
+        UPDATE barcodes.barcode
+            SET kit_id = rec.supplied_kit_id
+            WHERE barcode=rec.barcode;
     END LOOP;
 END $do$;
+
 
 -- And finally, let's establish FK relationships
 ALTER TABLE ag.ag_kit ADD CONSTRAINT fk_barcode_schema_kit_id
     FOREIGN KEY (supplied_kit_id) REFERENCES barcodes.kit (kit_id);
+ALTER TABLE barcodes.barcode ADD CONSTRAINT fk_barcode_kit_id
+    FOREIGN KEY (kit_id) REFERENCES barcodes.kit (kit_id);
