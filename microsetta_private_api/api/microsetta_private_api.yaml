@@ -147,6 +147,34 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/accounts/{account_id}/email_match':
+    get:
+      operationId: microsetta_private_api.api.implementation.check_email_match
+      tags:
+        - Account
+      summary: Check if email on microsetta account matches email on authentication account
+      description: Check if email on microsetta account matches email on authentication account
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Successfully returned email match status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email_match:
+                    type: boolean
+                    example: true
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/accounts/{account_id}/consent':
     get:
       operationId: microsetta_private_api.api.implementation.render_consent_doc

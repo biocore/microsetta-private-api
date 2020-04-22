@@ -6,7 +6,8 @@ from microsetta_private_api.model.address import Address
 class AuthorizationMatch(Enum):
     FULL_MATCH = 0
     LEGACY_MATCH = 1
-    NO_MATCH = 2
+    AUTH_ONLY_MATCH = 2
+    NO_MATCH = 3
 
 
 class Account(ModelBase):
@@ -62,19 +63,20 @@ class Account(ModelBase):
         }
 
     def account_matches_auth(self, email, auth_issuer, auth_sub):
-        # Return values/exceptions:
+        # Return values:
         # AuthorizationMatch.FULL_MATCH: email, auth_issuer, and auth_sub on
         # account all match inputs
         # AuthorizationMatch.LEGACY_MATCH: email in account and input match,
         # but BOTH auth_sub and auth_iss in account are None
-        # ValueError: auth_issuer, and auth_sub on account are both non-null
-        # and both match those in input, but email in account mismatches input
+        # AuthorizationMatch.AUTH_ONLY_MATCH: auth_issuer and auth_sub on
+        # account are both non-null and both match those in input, but email in
+        # account mismatches input
         # AuthorizationMatch.NO_MATCH: Any other situation, such as none of
         # email, auth_issuer, and auth_sub on account match input; or email in
         # account and input match, but auth_sub and auth_iss on account are
         # both non-null and one or both of them mismatches input; or any weird
-        # inconsistent case such as one but not both of auth_isser and auth_sub
-        # on account being null.
+        # inconsistent case such as one but not both of auth_issuer and
+        # auth_sub on account being null.
 
         # check if emails match
         email_matches = self.email == email
@@ -99,7 +101,6 @@ class Account(ModelBase):
             # maybe this account has no email associated with it in our db,
             # or maybe the user changed their email with the auth provider
             # but DIDN'T change it with us.
-            raise ValueError("Account email does not match "
-                             "authorization email")
+            return AuthorizationMatch.AUTH_ONLY_MATCH
 
         return AuthorizationMatch.NO_MATCH

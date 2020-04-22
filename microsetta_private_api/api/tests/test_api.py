@@ -62,7 +62,12 @@ ACCT_MOCK_SUB = "NotARealSub"
 ACCT_MOCK_ISS_2 = "NewPhone"
 ACCT_MOCK_SUB_2 = "WhoDis"
 MOCK_HEADERS = {"Authorization": "Bearer mockone"}
-MOCK_HEADERS_IMPOSTOR = {"Authorization": "Bearer mockimpostor"}
+FAKE_TOKEN_IMPOSTOR = "mockimpostor"
+FAKE_TOKEN_EMAIL_MISMATCH = "mockemailmismatch"
+
+
+def make_headers(fake_token):
+    return {"Authorization": "Bearer %s" % fake_token}
 
 
 def mock_verify(token):
@@ -72,7 +77,13 @@ def mock_verify(token):
             'iss': ACCT_MOCK_ISS,
             'sub': ACCT_MOCK_SUB
         }
-    elif token == "mockimpostor":
+    elif token == FAKE_TOKEN_EMAIL_MISMATCH:
+        return {
+            'email': TEST_EMAIL_2,
+            'iss': ACCT_MOCK_ISS,
+            'sub': ACCT_MOCK_SUB
+        }
+    elif token == FAKE_TOKEN_IMPOSTOR:
         return {
             'email': 'impostor@test.com',
             'iss': 'impostor',
@@ -532,7 +543,7 @@ class AccountTests(FlaskTests):
         response = self.client.get(
             '/api/accounts/%s?%s' %
             (dummy_acct_id, self.default_lang_querystring),
-            headers=MOCK_HEADERS_IMPOSTOR)
+            headers=make_headers(FAKE_TOKEN_IMPOSTOR))
 
         # check response code
         self.assertEqual(response.status_code, 401)
@@ -653,3 +664,66 @@ class AccountTests(FlaskTests):
 
         # check response code
         self.assertEqual(422, response.status_code)
+    # endregion account update/put tests
+
+    # region account/email_match tests
+    def test_email_match_success_true(self):
+        """Returns true if account email matches auth email"""
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/email_match?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        # check email_match is true
+        self.assertEqual(response_obj["email_match"], True)
+
+    def test_email_match_success_false(self):
+        """Returns false if account email matches auth email"""
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/email_match?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_EMAIL_MISMATCH))
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        # check email_match is true
+        self.assertEqual(response_obj["email_match"], False)
+
+    def test_email_match_fail_401(self):
+        """Return 401 if user does not have access to provided account."""
+
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/email_match?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_IMPOSTOR))
+
+        # check response code
+        self.assertEqual(response.status_code, 401)
+
+    def test_email_match_fail_404(self):
+        """Return 404 if provided account id is not found in db."""
+
+        response = self.client.get(
+            '/api/accounts/%s/email_match?%s' %
+            (MISSING_ACCT_ID, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(response.status_code, 404)
+    # endregion account/email_match tests
