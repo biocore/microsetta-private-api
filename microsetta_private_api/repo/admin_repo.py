@@ -89,6 +89,29 @@ class AdminRepo(BaseRepo):
             # How to unwrap a psycopg2 DictRow.  I feel dirty.
             barcode_info = [{k: v for k, v in x.items()}
                             for x in barcode_info]  # Get Inceptioned!!
+
+            # Collapse info from joined project_barcode and project tables
+            # into array within barcode_info
+            if barcode_info:
+                first = barcode_info[0]
+                first['projects'] = [
+                    {
+                        'project_id': r['project_id'],
+                        'project': r['project']
+                    }
+                    for r in barcode_info]
+                del first['project_id']
+                del first['project']
+                barcode_info = first
+            else:
+                barcode_info = None
+
+            if account is None and \
+                    source is None and \
+                    sample is None and \
+                    barcode_info is None:
+                return None
+
             diagnostic = {
                 "barcode": sample_barcode,
                 "account": account,

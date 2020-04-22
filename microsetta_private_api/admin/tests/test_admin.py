@@ -104,23 +104,19 @@ class AdminTests(TestCase):
             self.assertIsNone(diag['account'])
             self.assertIsNone(diag['source'])
             self.assertIsNotNone(diag['sample'])
-            self.assertGreater(len(diag['barcode_info']), 0)
+            self.assertGreater(len(diag['barcode_info']['projects']), 0)
 
             diag = admin_repo.retrieve_diagnostics_by_barcode('000033903')
             self.assertIsNotNone(diag['barcode'])
             self.assertIsNone(diag['account'])
             self.assertIsNone(diag['source'])
             self.assertIsNone(diag['sample'])
-            self.assertGreater(len(diag['barcode_info']), 0)
+            self.assertGreater(len(diag['barcode_info']['projects']), 0)
 
             # Uhh, should this return a 404 not found or just an empty
             # diagnostic object...?
             diag = admin_repo.retrieve_diagnostics_by_barcode('NotABarcode :D')
-            self.assertIsNotNone(diag['barcode'])
-            self.assertIsNone(diag['account'])
-            self.assertIsNone(diag['source'])
-            self.assertIsNone(diag['sample'])
-            self.assertEqual(len(diag['barcode_info']), 0)
+            self.assertIsNone(diag)
 
     def test_create_kits(self):
         with Transaction() as t:
@@ -203,7 +199,7 @@ class AdminTests(TestCase):
             admin_repo = AdminRepo(t)
 
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            prestatus = diag['barcode_info'][0]['status']
+            prestatus = diag['barcode_info']['status']
 
             admin_repo.scan_barcode(
                 TEST_BARCODE,
@@ -214,11 +210,11 @@ class AdminTests(TestCase):
             )
 
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            self.assertEqual(diag['barcode_info'][0]['technician_notes'],
+            self.assertEqual(diag['barcode_info']['technician_notes'],
                              TEST_NOTES)
-            self.assertEqual(diag['barcode_info'][0]['sample_status'],
+            self.assertEqual(diag['barcode_info']['sample_status'],
                              TEST_STATUS)
-            self.assertEqual(diag['barcode_info'][0]['status'],
+            self.assertEqual(diag['barcode_info']['status'],
                              prestatus)
 
             with self.assertRaises(NotFound):
