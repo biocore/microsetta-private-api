@@ -17,6 +17,7 @@ setup(
     packages=find_packages(),
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
+    py_modules=['mpa-cli'],
     url="https://github.com/biocore/microsetta-private-api",
     description="A RESTful API to support The Microsetta Initiative",
     license='BSD-3-Clause',
@@ -41,4 +42,8 @@ setup(
                      'static/vendor/bootstrap-3.3.7-dist/fonts/*',
                      'authrocket.pubkey'
                   ]},
+    entry_points='''
+        [console_scripts]
+        mpa-cli=mpa_cli:cli
+    '''
 )
