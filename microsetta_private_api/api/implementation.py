@@ -618,8 +618,23 @@ def verify_authrocket(token):
     except InvalidTokenError as e:
         raise(Unauthorized(INVALID_TOKEN_MSG, e))
 
+    if JWT_ISS_CLAIM_KEY not in token_info or \
+            JWT_SUB_CLAIM_KEY not in token_info or \
+            JWT_EMAIL_CLAIM_KEY not in token_info:
+        # token is malformed--no soup for you
+        raise Unauthorized(INVALID_TOKEN_MSG)
 
-def validate_access(token_info, account_id):
+    # if the user's email is not yet verified, they are forbidden to
+    # access their account even regardless of whether they have
+    # authenticated with authrocket
+    if email_verification_key not in token_info or \
+            token_info[email_verification_key] is not True:
+        raise Forbidden("Email is not verified")
+
+    return token_info
+
+
+def _validate_account_access(token_info, account_id):
     with Transaction() as t:
         account_repo = AccountRepo(t)
         account = account_repo.get_account(account_id)
