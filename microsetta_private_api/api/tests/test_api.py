@@ -61,30 +61,25 @@ ACCT_MOCK_ISS = "MrUnitTest.go"
 ACCT_MOCK_SUB = "NotARealSub"
 ACCT_MOCK_ISS_2 = "NewPhone"
 ACCT_MOCK_SUB_2 = "WhoDis"
-MOCK_HEADERS = {"Authorization": "Bearer BoogaBooga"}
-MOCK_HEADERS_2 = {"Authorization": "Bearer WoogaWooga"}
-MOCK_HEADERS_IMPOSTOR = {"Authorization": "Bearer FoogaFooga"}
+MOCK_HEADERS = {"Authorization": "Bearer mockone"}
+MOCK_HEADERS_IMPOSTOR = {"Authorization": "Bearer mockimpostor"}
 
 
 def mock_verify(token):
-    if token == "BoogaBooga":
+    if token == "mockone":
         return {
             'email': TEST_EMAIL,
             'iss': ACCT_MOCK_ISS,
             'sub': ACCT_MOCK_SUB
         }
-    elif token == "WoogaWooga":
-        return {
-            'email': TEST_EMAIL_2,
-            'iss': ACCT_MOCK_ISS_2,
-            'sub': ACCT_MOCK_SUB_2
-        }
-    else:
+    elif token == "mockimpostor":
         return {
             'email': 'impostor@test.com',
             'iss': 'impostor',
             'sub': 'animpostor'
         }
+    else:
+        raise ValueError("Unrecognized mock token")
 
 
 CREATION_TIME_KEY = "creation_time"

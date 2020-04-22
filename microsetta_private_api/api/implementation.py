@@ -33,7 +33,7 @@ from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.source import Source, info_from_api
 from microsetta_private_api.model.source import human_info_from_api
 
-from werkzeug.exceptions import BadRequest, Unauthorized, NotFound
+from werkzeug.exceptions import BadRequest, Unauthorized, Forbidden, NotFound
 
 from microsetta_private_api.util import vue_adapter
 from microsetta_private_api.util.util import fromisotime
@@ -53,6 +53,7 @@ JWT_ISS_CLAIM_KEY = 'iss'
 JWT_SUB_CLAIM_KEY = 'sub'
 
 ACCT_NOT_FOUND_MSG = "Account not found"
+INVALID_TOKEN_MSG = "Invalid token"
 
 
 def find_accounts_for_login(token_info):
@@ -525,8 +526,8 @@ def dissociate_answered_survey(account_id, source_id, sample_id, survey_id,
 
 def read_kit(kit_name):
     # NOTE:  Nothing in this route requires a particular user to be logged in,
-    # so long as the user has -an- account.  Thus there is nothing to validate
-    # a particular token_info against.
+    # so long as the user has -an- account.
+
     with Transaction() as t:
         kit_repo = KitRepo(t)
         kit = kit_repo.get_kit_unused_samples(kit_name)
@@ -591,6 +592,8 @@ def create_human_source_from_consent(account_id, body, token_info):
 
 
 def verify_authrocket(token):
+    email_verification_key = 'email_verification'
+
     try:
         token_info = jwt.decode(token,
                                 AUTHROCKET_PUB_KEY,
@@ -598,22 +601,25 @@ def verify_authrocket(token):
                                 verify=True,
                                 issuer="https://authrocket.com")
 
-        # TODO: Ensure that decode checks every field that we care about
+        if JWT_ISS_CLAIM_KEY not in token_info or \
+                JWT_SUB_CLAIM_KEY not in token_info or \
+                'email' not in token_info:
+            # token is malformed--no soup for you
+            raise Unauthorized(INVALID_TOKEN_MSG)
+
+        # if the user's email is not yet verified, they are forbidden to
+        # access their account even regardless of whether they have
+        # authenticated with authrocket
+        if email_verification_key not in token_info or \
+                token_info[email_verification_key] is not True:
+            raise Forbidden("Email is not verified")
 
         return token_info
     except InvalidTokenError as e:
-        raise(Unauthorized("Invalid Token", e))
+        raise(Unauthorized(INVALID_TOKEN_MSG, e))
 
 
 def validate_access(token_info, account_id):
-    if JWT_ISS_CLAIM_KEY not in token_info or \
-            JWT_SUB_CLAIM_KEY not in token_info or \
-            'email' not in token_info:
-        # token is malformed--no soup for you
-        return Unauthorized()
-
-    # TODO: Put email verification check here
-
     with Transaction() as t:
         account_repo = AccountRepo(t)
         account = account_repo.get_account(account_id)

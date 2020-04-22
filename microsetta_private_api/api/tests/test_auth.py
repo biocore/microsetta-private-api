@@ -1,10 +1,10 @@
 import json
 from unittest import TestCase
+from unittest.mock import patch
 
 import pytest
 
 import microsetta_private_api.server
-
 
 from microsetta_private_api.api.tests.utils import check_response
 
@@ -59,6 +59,31 @@ MODIFIED_TOKEN = "Bearer eyJraWQiOiJqa3lfMHZxMGF0RUNuSGp2YW"
 "igEcJXwA0XrtANYJh4WgoYUY0L9_y2SBsnA-nsjxU"
 "0_Avk5Z2RYsu-g"
 
+FAKE_TOKEN_NO_ISS = "noiss"
+FAKE_TOKEN_NO_SUB = "nosub"
+FAKE_TOKEN_NO_EMAIL = "noemail"
+FAKE_TOKEN_NO_EMAIL_VERIFY = "noemailver"
+
+
+def decode_fake_token(fake_token, pubkey, algorithms, verify, issuer):
+    result = {
+        'email': 'a@test.com',
+        'email_verification': True,
+        'iss': 'anissuer',
+        'sub': 'asub'
+    }
+    if fake_token == FAKE_TOKEN_NO_ISS:
+        result.pop('iss')
+    elif fake_token == FAKE_TOKEN_NO_SUB:
+        result.pop('sub')
+    elif fake_token == FAKE_TOKEN_NO_EMAIL:
+        result.pop('email')
+    elif fake_token == FAKE_TOKEN_NO_EMAIL_VERIFY:
+        result.pop('email_verification')
+    else:
+        raise ValueError("Unrecognized fake token")
+
+    return result
 
 # This leaves authentication enabled, which will make everything we do fail :D
 @pytest.fixture(scope="class")
@@ -90,37 +115,51 @@ class AuthTests(TestCase):
         # a 'with' call?
         self.client.__exit__(None, None, None)
 
-    def test_cant_do_anything(self):
-        # Fails without headers
+    def test_fail_401_no_headers(self):
+        # Return 401 if no headers provided
         resp = self.client.get('/api/accounts/%s/sources?language_tag=en-US' %
                                ACCT_ID)
+
         check_response(resp, 401)
         self.assertEqual(
             json.loads(resp.data)['detail'],
             "No authorization token provided"
         )
 
-        # Fails with invalid token - can't parse the jwt
+    def test_fail_401_unparseable_token(self):
+        # Return 401 if can't parse the jwt
         resp = self.client.get('/api/accounts/%s/sources?language_tag=en-US' %
                                ACCT_ID, headers={
                                    "Authorization": "Bearer boogaboogaboo"
                                })
+
         check_response(resp, 401)
         self.assertEqual(
             json.loads(resp.data)['detail'],
-            "Invalid Token"
+            "Invalid token"
         )
 
-        # Fails with expired token
+    def test_fail_401_sig_check_failure(self):
+        # Return 401 if doesn't pass jwt signature check
+        resp = self.client.get('/api/accounts/%s/sources?language_tag=en-US' %
+                               ACCT_ID, headers={
+                                   "Authorization": MODIFIED_TOKEN
+                               })
+        check_response(resp, 401)
+        self.assertEqual(json.loads(resp.data)['detail'], "Invalid token")
+
+    def test_fail_401_expired_token(self):
+        # Return 401 if expired token
         resp = self.client.get('/api/accounts/%s/sources?language_tag=en-US' %
                                ACCT_ID, headers={
                                    "Authorization": REPLAY_TOKEN
                                })
+
         check_response(resp, 401)
-        # TODO: Can replace with Invalid Token after 6 hours when token expires
+        # TODO: Can replace with Invalid token after 6 hours when token expires
         self.assertIn(json.loads(resp.data)['detail'], [
                 # If the token has expired
-                "Invalid Token",
+                "Invalid token",
                 # Or if the token has not expired, but since it doesn't match
                 # any account:
                 "The server could not verify that you are authorized to access"
@@ -130,10 +169,31 @@ class AuthTests(TestCase):
             ]
         )
 
-        # Fails with invalid token - doesn't pass jwt signature check
-        resp = self.client.get('/api/accounts/%s/sources?language_tag=en-US' %
-                               ACCT_ID, headers={
-                                   "Authorization": MODIFIED_TOKEN
-                               })
-        check_response(resp, 401)
-        self.assertEqual(json.loads(resp.data)['detail'], "Invalid Token")
+    def _help_test_mock_decode_token(self, fake_token, expected_code,
+                                     expected_error_detail):
+        with patch("jwt.decode") as mock_d:
+            mock_d.side_effect = decode_fake_token
+
+            resp = self.client.get(
+                '/api/accounts/%s/sources?language_tag=en-US' % ACCT_ID,
+                headers={"Authorization": "Bearer %s" % fake_token})
+
+            check_response(resp, expected_code)
+            self.assertEqual(json.loads(resp.data)['detail'],
+                             expected_error_detail)
+
+    def test_fail_401_iss_not_in_token(self):
+        self._help_test_mock_decode_token(FAKE_TOKEN_NO_ISS, 401,
+                                          "Invalid token")
+
+    def test_fail_401_sub_not_in_token(self):
+        self._help_test_mock_decode_token(FAKE_TOKEN_NO_SUB, 401,
+                                          "Invalid token")
+
+    def test_fail_401_email_not_in_token(self):
+        self._help_test_mock_decode_token(FAKE_TOKEN_NO_EMAIL, 401,
+                                          "Invalid token")
+
+    def test_fail_403_email_not_verified(self):
+        self._help_test_mock_decode_token(FAKE_TOKEN_NO_EMAIL_VERIFY, 403,
+                                          "Email is not verified")
