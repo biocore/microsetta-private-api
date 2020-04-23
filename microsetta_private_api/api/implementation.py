@@ -89,9 +89,9 @@ def claim_legacy_acct(token_info):
         t.commit()
 
         if acct is None:
-            return jsonify(code=404, message=ACCT_NOT_FOUND_MSG), 404
+            return jsonify([]), 200
 
-        return jsonify(acct.to_api()), 200
+        return jsonify([acct.to_api()]), 200
 
 
 def register_account(body, token_info):
@@ -610,7 +610,7 @@ def create_human_source_from_consent(account_id, body, token_info):
 
 
 def verify_authrocket(token):
-    email_verification_key = 'email_verification'
+    email_verification_key = 'email_verified'
 
     try:
         token_info = jwt.decode(token,

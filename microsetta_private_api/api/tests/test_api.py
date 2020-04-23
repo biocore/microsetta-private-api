@@ -435,25 +435,30 @@ class AccountsTests(FlaskTests):
 
         # execute accounts/legacies post (claim legacy account)
         url = '/api/accounts/legacies?%s' % self.default_lang_querystring
-        response = self.client.post(url, headers=MOCK_HEADERS)
+        response_1 = self.client.post(url, headers=MOCK_HEADERS)
 
         # check response code
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(200, response_1.status_code)
 
         # load the response body
-        response_obj = json.loads(response.data)
+        response_obj_1 = json.loads(response_1.data)
+        self.assertEqual(1, len(response_obj_1))
 
         # check all elements of account object in body are correct
-        self.validate_dummy_acct_response_body(response_obj)
+        self.validate_dummy_acct_response_body(response_obj_1[0])
 
         # try to reclaim the same account
-        response = self.client.post(url, headers=MOCK_HEADERS)
+        response_2 = self.client.post(url, headers=MOCK_HEADERS)
 
-        # check response is now a 404
-        self.assertEqual(404, response.status_code)
+        # check response is now a 200 but with an empty list
+        self.assertEqual(200, response_2.status_code)
 
-    def test_accounts_legacies_post_fail_404_no_such_email(self):
-        """Return 404 if no account with provided email in token exists"""
+        # load the response body
+        response_obj_2 = json.loads(response_2.data)
+        self.assertEqual(0, len(response_obj_2))
+
+    def test_accounts_legacies_post_success_empty_no_email(self):
+        """Return empty list if no account with given email in token exists"""
 
         # do NOT create the dummy account--and check for a legacy account
         # containing that email (via the MOCK_HEADERS, which link to a fake
@@ -464,10 +469,14 @@ class AccountsTests(FlaskTests):
         response = self.client.post(url, headers=MOCK_HEADERS)
 
         # check response code
-        self.assertEqual(404, response.status_code)
+        self.assertEqual(200, response.status_code)
 
-    def test_accounts_legacies_post_fail_404_already_claimed(self):
-        """Return 404 if account with email already is claimed."""
+        # load the response body
+        response_obj = json.loads(response.data)
+        self.assertEqual(0, len(response_obj))
+
+    def test_accounts_legacies_post_success_empty_already_claimed(self):
+        """Return empty list if account with email already is claimed."""
 
         create_dummy_acct(create_dummy_1=True)
 
@@ -475,8 +484,9 @@ class AccountsTests(FlaskTests):
         url = '/api/accounts/legacies?%s' % self.default_lang_querystring
         response = self.client.post(url, headers=MOCK_HEADERS)
 
-        # check response code
-        self.assertEqual(404, response.status_code)
+        # load the response body
+        response_obj = json.loads(response.data)
+        self.assertEqual(0, len(response_obj))
 
     def test_accounts_legacies_post_fail_422(self):
         """Return 422 if info in db somehow prevents claiming legacy"""
