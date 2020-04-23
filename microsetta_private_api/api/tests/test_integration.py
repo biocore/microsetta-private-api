@@ -49,14 +49,14 @@ def mock_verify_func(token):
     if token == "boogabooga":
         return {
             "email": "foo@baz.com",
-            'email_verification': True,
+            'email_verified': True,
             "iss": "https://MOCKUNITTEST.com",
             "sub": "1234ThisIsNotARealSub",
         }
     elif token == "woogawooga":
         return {
             "email": FAKE_EMAIL,
-            'email_verification': True,
+            'email_verified': True,
             "iss": "https://MOCKUNITTEST.com",
             "sub": "ThisIsAlsoNotARealSub",
         }

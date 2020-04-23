@@ -610,7 +610,7 @@ def create_human_source_from_consent(account_id, body, token_info):
 
 
 def verify_authrocket(token):
-    email_verification_key = 'email_verification'
+    email_verification_key = 'email_verified'
 
     try:
         token_info = jwt.decode(token,

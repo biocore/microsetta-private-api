@@ -68,7 +68,7 @@ FAKE_TOKEN_NO_EMAIL_VERIFY = "noemailver"
 def decode_fake_token(fake_token, pubkey, algorithms, verify, issuer):
     result = {
         'email': 'a@test.com',
-        'email_verification': True,
+        'email_verified': True,
         'iss': 'anissuer',
         'sub': 'asub'
     }
@@ -79,7 +79,7 @@ def decode_fake_token(fake_token, pubkey, algorithms, verify, issuer):
     elif fake_token == FAKE_TOKEN_NO_EMAIL:
         result.pop('email')
     elif fake_token == FAKE_TOKEN_NO_EMAIL_VERIFY:
-        result.pop('email_verification')
+        result.pop('email_verified')
     else:
         raise ValueError("Unrecognized fake token")
 
