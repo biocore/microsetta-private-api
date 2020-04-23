@@ -74,23 +74,23 @@ paths:
       operationId: microsetta_private_api.api.implementation.claim_legacy_acct
       tags:
         - Account
-      summary: Claim any matching legacy account for this user
-      description: Claim any matching legacy account for this user
+      summary: Claim any legacy accounts for this user's email and return an array of them
+      description: Claim any legacy accounts for this user's email and return an array of them
       parameters:
         - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
-          description: Successfully claimed legacy account
+          description: Successfully claimed legacy account(s)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/account'
+                type: array
+                items:
+                  $ref: '#/components/schemas/account'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':
           $ref: '#/components/responses/403Forbidden'
-        '404':
-          $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
