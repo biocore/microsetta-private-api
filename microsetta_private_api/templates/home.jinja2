@@ -25,13 +25,8 @@
 
         {% if user %}
         <a href="{{authrocket_url}}/logout?redirect_uri={{endpoint}}/logout">Log Out</a>
-
-        {% if show_wizard %}
-        <div class="alert alert-primary" role="alert">
-          Need help getting started?  <a href="/workflow" class="alert-link">Click here to set up your account</a>
-        </div>
-        {% endif %}
         <div class="container">
+            {% if email_verified %}
             <div class="list-group">
                 {% if acct_id %}
                 <a href="/workflow" class="list-group-item list-group-item-action">{{user}}'s account</a>
@@ -41,8 +36,23 @@
                 </a>
                 {% endif %}
             </div>
+            {% else %}
+            <p>
+                It appears that your email has not yet been verified.  Please check your email account (and spam folder)
+                for a verification email and follow its instructions.
+            </p>
+            <p>
+                If you cannot locate the original verification email, have it resent by
+                clicking <a href = "{{ authrocket_url }}/profile">here</a> to view your AuthRocket profile and then
+                clicking the "resend verification email" link.
+            </p>
+            <p>
+                <button class = "btn btn-primary" onclick="window.location.replace('{{authrocket_url}}/login?redirect_uri={{endpoint}}/authrocket_callback');">
+                    Refresh
+                </button>
+            </p>
+            {% endif %}
         </div>
-
         {% else %}
         You are not logged in <br/>
         <a href="{{authrocket_url}}/login?redirect_uri={{endpoint}}/authrocket_callback">Log In</a> or

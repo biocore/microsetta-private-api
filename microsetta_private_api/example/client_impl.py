@@ -65,7 +65,8 @@ ALL_DONE = "AllDone"
 # get the token, validate it, and pull email out of it.
 def parse_jwt(token):
     decoded = jwt.decode(token, PUB_KEY, algorithms=['RS256'], verify=True)
-    return decoded["name"]
+    email_verified = decoded.get('email_verified') is True
+    return decoded["email"], email_verified
 
 
 def rootpath():
@@ -74,6 +75,7 @@ def rootpath():
 
 def home():
     user = None
+    email_verified = False
     acct_id = None
     show_wizard = False
 
@@ -82,17 +84,23 @@ def home():
             # If user leaves the page open, the token can expire before the
             # session, so if our token goes back we need to force them to login
             # again.
-            user = parse_jwt(session[TOKEN_KEY_NAME])
+            user, email_verified = parse_jwt(session[TOKEN_KEY_NAME])
         except jwt.exceptions.ExpiredSignatureError:
             return redirect('/logout')
-        workflow_needs, workflow_state = determine_workflow_state()
-        acct_id = workflow_state.get("account_id", None)
-        show_wizard = False  # workflow_needs != ALL_DONE
+
+        if email_verified:
+            workflow_needs, workflow_state = determine_workflow_state()
+            if workflow_needs == NEEDS_REROUTE:
+                return workflow_state["reroute"]
+
+            acct_id = workflow_state.get("account_id", None)
+            show_wizard = False  # workflow_needs != ALL_DONE
 
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
     return render_template('home.jinja2',
                            user=user,
+                           email_verified=email_verified,
                            acct_id=acct_id,
                            show_wizard=show_wizard,
                            endpoint=SERVER_CONFIG["endpoint"],
@@ -120,11 +128,20 @@ def determine_workflow_state():
 
     # Do they need to make an account? YES-> create_acct.html
     needs_reroute, accts_output = ApiRequest.get("/accounts")
+    # if there's an error, reroute to error page
     if needs_reroute:
         current_state["reroute"] = accts_output
         return NEEDS_REROUTE, current_state
+
     if len(accts_output) == 0:
-        return NEEDS_ACCOUNT, current_state
+        # NB: Overwriting outputs from get call above
+        needs_reroute, accts_output = ApiRequest.post("/accounts/legacies")
+        if needs_reroute:
+            current_state["reroute"] = accts_output
+            return NEEDS_REROUTE, current_state
+        # if no legacy account found, need new account
+        if len(accts_output) == 0:
+            return NEEDS_ACCOUNT, current_state
 
     acct_id = accts_output[0]["account_id"]
     current_state['account_id'] = acct_id
@@ -219,7 +236,7 @@ def get_workflow_create_account():
     if next_state != NEEDS_ACCOUNT:
         return redirect(WORKFLOW_URL)
 
-    email = parse_jwt(session[TOKEN_KEY_NAME])
+    email, _ = parse_jwt(session[TOKEN_KEY_NAME])
     return render_template('create_acct.jinja2',
                            authorized_email=email)
 
@@ -543,14 +560,14 @@ class ApiRequest:
 
     @classmethod
     def _check_response(cls, response):
-        do_return = True
+        error_code = response.status_code
         output = None
 
-        if response.status_code == 401:
-            # redirect to home page for login
+        if response.status_code == 401 or response.status_code == 403:
+            # output is redirect to home page for login or email verification
             output = redirect("/home")
         elif response.status_code >= 400:
-            # redirect to general error page
+            # output is general error page
             error_txt = quote(response.text)
             mailto_url = "mailto:{0}?subject={1}&body={2}".format(
                 HELP_EMAIL, quote("minimal interface error"), error_txt)
@@ -559,11 +576,11 @@ class ApiRequest:
                                      mailto_url=mailto_url,
                                      error_msg=response.text)
         else:
-            do_return = False
+            error_code = 0  # there is a response code but no *error* code
             if response.text:
                 output = response.json()
 
-        return do_return, output
+        return error_code, output
 
     @classmethod
     def get(cls, path, params=None):
