@@ -41,6 +41,24 @@ TOKEN_KEY_NAME = 'token'
 WORKFLOW_URL = '/workflow'
 HELP_EMAIL = "microsetta@ucsd.edu"
 KIT_NAME_KEY = "kit_name"
+EMAIL_CHECK_KEY = "email_checked"
+
+ACCT_FNAME_KEY = "first_name"
+ACCT_LNAME_KEY = "last_name"
+ACCT_EMAIL_KEY = "email"
+ACCT_ADDR_KEY = "address"
+ACCT_WRITEABLE_KEYS = [ACCT_FNAME_KEY, ACCT_LNAME_KEY, ACCT_EMAIL_KEY,
+                       ACCT_ADDR_KEY]
+
+# States
+NEEDS_REROUTE = "NeedsReroute"
+NEEDS_LOGIN = "NeedsLogin"
+NEEDS_ACCOUNT = "NeedsAccount"
+NEEDS_EMAIL_CHECK = "NeedsEmailCheck"
+NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
+NEEDS_SAMPLE = "NeedsSample"
+NEEDS_PRIMARY_SURVEY = "NeedsPrimarySurvey"
+ALL_DONE = "AllDone"
 
 
 # Client might not technically care who the user is, but if they do, they
@@ -88,18 +106,11 @@ def authrocket_callback(token):
 
 def logout():
     if TOKEN_KEY_NAME in session:
-        del session[TOKEN_KEY_NAME]
+        # delete these keys if they are here, otherwise ignore
+        session.pop(TOKEN_KEY_NAME, None)
+        session.pop(KIT_NAME_KEY, None)
+        session.pop(EMAIL_CHECK_KEY, None)
     return redirect("/home")
-
-
-# States
-NEEDS_REROUTE = "NeedsReroute"
-NEEDS_LOGIN = "NeedsLogin"
-NEEDS_ACCOUNT = "NeedsAccount"
-NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
-NEEDS_SAMPLE = "NeedsSample"
-NEEDS_PRIMARY_SURVEY = "NeedsPrimarySurvey"
-ALL_DONE = "AllDone"
 
 
 def determine_workflow_state():
@@ -117,6 +128,20 @@ def determine_workflow_state():
 
     acct_id = accts_output[0]["account_id"]
     current_state['account_id'] = acct_id
+
+    # If we haven't yet checked for email mismatches and gotten user decision:
+    if not session.get(EMAIL_CHECK_KEY):
+        # Does email in our accounts table match email in authrocket?
+        needs_reroute, email_match = ApiRequest.get(
+            "/accounts/%s/email_match" % acct_id)
+        if needs_reroute:
+            current_state["reroute"] = email_match
+            return NEEDS_REROUTE, current_state
+        # if they don't match AND the user hasn't already refused update
+        if not email_match["email_match"]:
+            return NEEDS_EMAIL_CHECK, current_state
+
+        session[EMAIL_CHECK_KEY] = True
 
     # Do they have a human source? NO-> consent.html
     needs_reroute, sources_output = ApiRequest.get(
@@ -173,6 +198,8 @@ def workflow():
         return redirect("/home")
     elif next_state == NEEDS_ACCOUNT:
         return redirect("/workflow_create_account")
+    elif next_state == NEEDS_EMAIL_CHECK:
+        return redirect("/workflow_update_email")
     elif next_state == NEEDS_HUMAN_SOURCE:
         return redirect("/workflow_create_human_source")
     elif next_state == NEEDS_PRIMARY_SURVEY:
@@ -204,10 +231,10 @@ def post_workflow_create_account(body):
         session[KIT_NAME_KEY] = kit_name
 
         api_json = {
-            "first_name": body['first_name'],
-            "last_name": body['last_name'],
-            "email": body['email'],
-            "address": {
+            ACCT_FNAME_KEY: body['first_name'],
+            ACCT_LNAME_KEY: body['last_name'],
+            ACCT_EMAIL_KEY: body['email'],
+            ACCT_ADDR_KEY: {
                 "street": body['street'],
                 "city": body['city'],
                 "state": body['state'],
@@ -221,6 +248,45 @@ def post_workflow_create_account(body):
         if do_return:
             return accts_output
 
+    return redirect(WORKFLOW_URL)
+
+
+def get_workflow_update_email():
+    next_state, current_state = determine_workflow_state()
+    if next_state != NEEDS_EMAIL_CHECK:
+        return redirect(WORKFLOW_URL)
+
+    return render_template("update_email.jinja2")
+
+
+def post_workflow_update_email(body):
+    next_state, current_state = determine_workflow_state()
+    if next_state != NEEDS_EMAIL_CHECK:
+        return redirect(WORKFLOW_URL)
+
+    # if the customer wants to update their email:
+    update_email = int(body["do_update"])  # 0 or 1
+    if update_email:
+        # get the existing account object
+        acct_id = current_state["account_id"]
+        do_return, acct_output = ApiRequest.get('/accounts/%s' % acct_id)
+        if do_return:
+            return acct_output
+
+        # change the email to the one in the authrocket account
+        authrocket_email, _ = parse_jwt(session[TOKEN_KEY_NAME])
+        acct_output[ACCT_EMAIL_KEY] = authrocket_email
+        # retain only writeable fields; KeyError if any of them missing
+        mod_acct = {k: acct_output[k] for k in ACCT_WRITEABLE_KEYS}
+
+        # write back the updated account info
+        do_return, put_output = ApiRequest.put(
+            '/accounts/%s' % acct_id, json=mod_acct)
+        if do_return:
+            return put_output
+
+    # even if they decided NOT to update, don't ask again this session
+    session[EMAIL_CHECK_KEY] = True
     return redirect(WORKFLOW_URL)
 
 
@@ -346,16 +412,6 @@ def post_workflow_fill_primary_survey():
             return surveys_output
 
     return redirect(WORKFLOW_URL)
-
-
-# def view_account(account_id):
-#     if TOKEN_KEY_NAME not in session:
-#         return redirect(WORKFLOW_URL)
-#
-#     sources = ApiRequest.get('/accounts/%s/sources' % account_id)
-#     return render_template('account.jinja2',
-#                            acct_id=account_id,
-#                            sources=sources)
 
 
 def get_source(account_id, source_id):
