@@ -65,7 +65,7 @@ ALL_DONE = "AllDone"
 # get the token, validate it, and pull email out of it.
 def parse_jwt(token):
     decoded = jwt.decode(token, PUB_KEY, algorithms=['RS256'], verify=True)
-    email_verified = decoded.get('email_verified') is True
+    email_verified = decoded.get('email_verified', False)
     return decoded["email"], email_verified
 
 
@@ -94,7 +94,7 @@ def home():
                 return workflow_state["reroute"]
 
             acct_id = workflow_state.get("account_id", None)
-            show_wizard = False  # workflow_needs != ALL_DONE
+            show_wizard = False
 
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
@@ -147,7 +147,7 @@ def determine_workflow_state():
     current_state['account_id'] = acct_id
 
     # If we haven't yet checked for email mismatches and gotten user decision:
-    if not session.get(EMAIL_CHECK_KEY):
+    if not session.get(EMAIL_CHECK_KEY, False):
         # Does email in our accounts table match email in authrocket?
         needs_reroute, email_match = ApiRequest.get(
             "/accounts/%s/email_match" % acct_id)
@@ -282,7 +282,7 @@ def post_workflow_update_email(body):
         return redirect(WORKFLOW_URL)
 
     # if the customer wants to update their email:
-    update_email = int(body["do_update"])  # 0 or 1
+    update_email = body["do_update"] == "Yes"
     if update_email:
         # get the existing account object
         acct_id = current_state["account_id"]

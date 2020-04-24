@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script>
         function cancelEmailUpdate(){
-            $('#do_update').val("0");
+            $('#do_update').val("No");
         }
     </script>
 </head>
@@ -35,7 +35,7 @@
             <br />
             <br />
             <form method="post" name="kit_claim_form" action="/workflow_update_email">
-                <input type="hidden" id="do_update" name = "do_update" value="1" />
+                <input type="hidden" id="do_update" name = "do_update" value="Yes" />
                 <button type="submit" class="btn btn-light" onclick="cancelEmailUpdate();">
                     No, skip and continue
                 </button>
