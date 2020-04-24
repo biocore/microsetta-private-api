@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Microsetta Participant Survey</title>
+    <script type="text/javascript" src="/static/vendor/js/vue-2.5.17.min.js"></script>
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <script type="text/javascript" src="/static/vendor/vue-form-generator-2.3.4/vfg.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/vendor/vue-form-generator-2.3.4/vfg.css">
+
+    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
+</head>
+<body>
+    <a href="http://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize">
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
+    <br />
+    <br />
+
+    <div class="content">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
+          </ol>
+        </nav>
+        <div class="container" id="app">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <form method="post" id="survey_form">
+                        <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!--  <div class="panel panel-default">-->
+<!--    <div class="panel-heading">Model</div>-->
+<!--    <div class="panel-body">-->
+<!--      <pre v-if="model" v-html="prettyJSON(model)"></pre>-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  <div class="panel panel-default">-->
+<!--    <div class="panel-heading">Schema</div>-->
+<!--    <div class="panel-body">-->
+<!--      <pre v-if="model" v-html="prettyJSON(schema)"></pre>-->
+<!--    </div>-->
+<!--  </div>-->
+
+    <script type="text/javascript">
+      var survey_model = {}
+      var survey_schema={{survey_schema|tojson}}
+      last_group = survey_schema.groups[survey_schema.groups.length-1]
+      last_group.fields.push(
+      {
+        buttonText: "Submit Survey",
+        type: "submit",
+        validateBeforeSubmit: true,
+        onSubmit: function(){
+          document.getElementById("survey_form").submit();
+        }
+      });
+    </script>
+    <script type="text/javascript" src="/static/vue_survey_form.js"></script>
+
+    <div>
+        <br />
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
+    </div>
+</body>
+</html>

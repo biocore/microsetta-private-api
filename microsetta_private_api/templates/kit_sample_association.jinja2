@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Microsetta Kit Claim</title>
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
+    <script src="/static/vendor/js/jquery.validate.min.js"></script>
+    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
+
+    <script>
+        // Wait for the DOM to be ready
+        $(function() {
+            // Initialize form validation on the registration form.
+            // It has the name attribute "registration"
+            $("form[name='kit_claim_form']").validate({
+                // Specify validation rules
+                rules: {
+                    // The key name on the left side is the name attribute
+                    // of an input field. Validation rules are defined
+                    // on the right side
+                    kit_name: {
+                        required: true,
+                        remote: {
+                            url: "/check_acct_inputs",
+                            type: "post"
+                        }
+                    },
+                    // Make sure the form is submitted to the destination defined
+                    // in the "action" attribute of the form when valid
+                    submitHandler: function (form) {
+                        form.submit();
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <a href="http://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize">
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
+    <br />
+    <br />
+
+    <div class="content">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
+          </ol>
+        </nav>
+        <div class="container">
+            <form method="post" name="kit_claim_form" action="/workflow_claim_kit_samples">
+                <div class="form-group">
+                    <label for="kit_name" name="kit_name_label">Please enter your kit ID/Por favor, introduzca su ID del kit:
+
+</label>
+                    <input id="kit_name" name="kit_name" class="form-control" type="text"/>
+                 </div>
+                <input type="submit" class="btn btn-primary"/>
+            </form>
+        </div>
+    </div>
+
+    <div>
+        <br />
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
+    </div>
+</body>
+</html>

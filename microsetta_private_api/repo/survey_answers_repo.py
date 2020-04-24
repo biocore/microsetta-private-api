@@ -99,16 +99,14 @@ class SurveyAnswersRepo(BaseRepo):
                                              survey_id):
             return None
 
-        tag_to_col = {
-            localization.EN_US: "american",
-            localization.EN_GB: "british"
-        }
+        localization_info = localization.LANG_SUPPORT[language_tag]
+        lang_name = localization_info[localization.LANG_NAME_KEY]
 
         with self._transaction.cursor() as cur:
             # Grab selection and multi selection responses
             cur.execute("SELECT "
                         "survey_answers.survey_question_id, "
-                        + tag_to_col[language_tag] + ", "
+                        + lang_name + ", "
                         "survey_response_type "
                         "FROM "
                         "survey_answers "
@@ -286,6 +284,15 @@ class SurveyAnswersRepo(BaseRepo):
                         "survey_id = %s",
                         (s.barcode, survey_id))
 
+    def build_metadata_map(self):
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT survey_question_id, question_shortname "
+                        "FROM "
+                        "survey_question")
+            rows = cur.fetchall()
+            metamap = {row[0]: row[1] for row in rows}
+        return metamap
+
     # True if this account owns this survey_answer_id, else False
     def _acct_owns_survey(self, acct_id, survey_id):
         with self._transaction.cursor() as cur:
@@ -317,17 +324,17 @@ class SurveyAnswersRepo(BaseRepo):
         #  There is no guarantee that a word translates the same way
         #  independent of any other context.  We will eventually move to a
         #  better framework for localization than what currently exists!
-        tag_to_col = {
-            localization.EN_US: "american",
-            localization.EN_GB: "british"
-        }
+
+        localization_info = localization.LANG_SUPPORT[language_tag]
+        lang_name = localization_info[localization.LANG_NAME_KEY]
+
         with self._transaction.cursor() as cur:
             # Normalize localized answer
             cur.execute("SELECT american "
                         "FROM "
                         "survey_response "
                         "WHERE "
-                        + tag_to_col[language_tag] + "=%s",
+                        + lang_name + "=%s",
                         (answer,))
             row = cur.fetchone()
             if row is None:

@@ -1,0 +1,16 @@
+html * {
+    font-family: "Muli Regular", Arial, Helvetica, sans-serif;
+}
+a {
+    color: #006A96;
+}
+img.resize {
+  max-width:75%;
+  max-height:75%;
+}
+body {
+    margin: 2%;
+}
+label.error {
+    color: #FC8900;
+}

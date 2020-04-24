@@ -1,6 +1,5 @@
 from microsetta_private_api.LEGACY.env_management import (
-    create_database, build, initialize, make_settings_table, patch_db,
-    populate_test_db)
+    create_database, initialize, patch_db, populate_test_db)
 
 DB = 'test'
 FORCE = True
@@ -12,10 +11,10 @@ def make(db, force):
     create_database(force)
 
     if db == 'production':
-        build(verbose=True)
+        # build(verbose=True)
         initialize(verbose=True)
-        print("Making settings table")
-        make_settings_table()
+        # print("Making settings table")
+        # make_settings_table()
     elif db == 'test':
         # Test database includes initialization and settings table already
         print("Populating the test database")

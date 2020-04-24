@@ -1,0 +1,311 @@
+# Note that in reality essentially all of these functions would require oath security, but it makes them hard to test
+# through the swagger web ui (as you have to send the authorization header, I don't yet know how to do from there...?)
+# so only /account get has oath implemented.
+openapi: 3.0.0
+info:
+  description: Minimal Client Example
+  version: "0.3.0-oas3"
+  title: Minimal Client Example (OAS 3.0)
+servers:
+  - url: '/'
+paths:
+  '/':
+    get:
+      operationId: microsetta_private_api.example.client_impl.rootpath
+      responses:
+        '302':
+          description: Redirect to home page
+  '/home':
+    get:
+      operationId: microsetta_private_api.example.client_impl.home
+      responses:
+        '200':
+          description: Home Page
+          content:
+            text/html:
+              schema:
+                type: string
+  '/authrocket_callback':
+    get:
+      operationId: microsetta_private_api.example.client_impl.authrocket_callback
+      parameters:
+        - in: query
+          name: token
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Returning home
+  '/logout':
+    get:
+      operationId: microsetta_private_api.example.client_impl.logout
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Returning home
+
+  '/workflow':
+    get:
+      operationId: microsetta_private_api.example.client_impl.workflow
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
+
+  '/workflow_create_account':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_workflow_create_account
+      responses:
+        '200':
+          description: Form to create an account
+          content:
+            text/html:
+              schema:
+                type: string
+
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_workflow_create_account
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
+  '/workflow_create_human_source':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_workflow_create_human_source
+      responses:
+        '200':
+          description: Form to create a human source
+          content:
+            text/html:
+              schema:
+                type: string
+
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_workflow_create_human_source
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
+  '/workflow_take_primary_survey':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_workflow_fill_primary_survey
+      responses:
+        '200':
+          description: Primary Survey
+          content:
+            text/html:
+              schema:
+                type: string
+
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_workflow_fill_primary_survey
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
+  '/workflow_claim_kit_samples':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_workflow_claim_kit_samples
+      responses:
+        '200':
+          description: Form to claim unassigned samples from a kit name to a human participant
+          content:
+            text/html:
+              schema:
+                type: string
+
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_workflow_claim_kit_samples
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
+  '/accounts/{account_id}/sources/{source_id}':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_source
+      tags:
+        - Samples
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+      responses:
+        '200':
+          description: Display of source
+          content:
+            text/html:
+              schema:
+                type: string
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_sample
+      tags:
+        - Samples
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Display of sample info
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      operationId: microsetta_private_api.example.client_impl.put_sample
+      tags:
+        - Samples
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Display of sample info
+          content:
+            text/html:
+              schema:
+                type: string
+
+  '/check_acct_inputs':
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_check_acct_inputs
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Result of check
+          content:
+            text/html:
+              schema:
+                type: string
+
+components:
+  parameters:
+    account_id: # Can be referenced as '#/components/parameters/account_id'
+      name: account_id
+      in: path
+      description: Unique id specifying a user account
+      schema:
+        $ref: '#/components/schemas/account_id'
+      required: true
+    kit_id:
+      name: kit_id
+      in: path
+      description: Unique internal id specifying a kit
+      schema:
+        type: string
+        example: "c442f31d-fa17-4fd1-85e2-1f251d13ec26"
+      required: true
+    sample_id:
+      name: sample_id
+      in: path
+      description: Unique id specifying a sample associated with a source
+      schema:
+        $ref: '#/components/schemas/sample_id'
+      required: true
+#    survey_id:
+#      name: survey_id
+#      in: path
+#      description: Unique internal id specifying a particular answered survey
+#      schema:
+#        $ref: '#/components/schemas/survey_id'
+#      required: true
+#    survey_template_id:
+#      name: survey_template_id
+#      in: path
+#      description: Unique internal id specifying a particular survey template
+#      schema:
+#        $ref: '#/components/schemas/survey_template_id'
+#      required: true
+    source_id:
+      name: source_id
+      in: path
+      description: Unique id specifying a source
+      schema:
+        $ref: '#/components/schemas/source_id'
+      required: true
+  schemas:
+    # account section
+    account_id:
+      type: string
+      readOnly: true
+      example: "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
+    source_id:
+      type: string
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
+      example: "b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0"
+    sample_id:
+      type: string
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
+      example: "dae21127-27bb-4f52-9fd3-a2aa5eb5b86f"

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Microsetta Account</title>
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
+</head>
+<body>
+    <a href="http://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize">
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
+    <br />
+    <br />
+
+    <div class="content">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item active" aria-current="page">Home</li>
+          </ol>
+        </nav>
+
+        {% if user %}
+        <a href="{{authrocket_url}}/logout?redirect_uri={{endpoint}}/logout">Log Out</a>
+
+        {% if show_wizard %}
+        <div class="alert alert-primary" role="alert">
+          Need help getting started?  <a href="/workflow" class="alert-link">Click here to set up your account</a>
+        </div>
+        {% endif %}
+        <div class="container">
+            <div class="list-group">
+                {% if acct_id %}
+                <a href="/workflow" class="list-group-item list-group-item-action">{{user}}'s account</a>
+                {% else %}
+                <a href="/workflow" class="list-group-item list-group-item-action">
+                    Create New Account...
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% else %}
+        You are not logged in <br/>
+        <a href="{{authrocket_url}}/login?redirect_uri={{endpoint}}/authrocket_callback">Log In</a> or
+        <a href="{{authrocket_url}}/signup?redirect_uri={{endpoint}}/authrocket_callback">Sign Up</a>
+        {% endif %}
+    </div>
+    <div>
+        <br />
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
+    </div>
+</body>
+</html>

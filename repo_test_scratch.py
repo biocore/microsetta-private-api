@@ -45,14 +45,16 @@ with Transaction() as t:
 with Transaction() as t:
     acct_repo = AccountRepo(t)
     kit_repo = KitRepo(t)
-    kit = kit_repo.get_kit("eba20873-b88d-33cc-e040-8a80115d392c", "#6á$E")
+    kit = kit_repo.get_kit_all_samples("eba20873-b88d-33cc-e040-8a80115d392c",
+                                       "#6á$E")
     print("Kit: ")
     print(json.dumps(kit, default=json_converter, indent=2))
 
     acc = Account(ACCT_ID,
                   "foo@baz.com",
                   "standard",
-                  "GLOBUS",
+                  "https://RepoTestScratch.dancode",
+                  "THISSUBISNOTREAL",
                   "Dan",
                   "H",
                   {
