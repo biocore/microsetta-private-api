@@ -132,14 +132,14 @@ class AdminTests(TestCase):
                             "FROM barcodes.project "
                             "WHERE project = 'doesnotexist'")
                 obs = cur.fetchall()
-                self.assertEqual(obs, [('doesnotexist', 'Yes'), ])
+                self.assertEqual(obs, [('doesnotexist', True), ])
 
                 admin_repo.create_project('doesnotexist2', False)
                 cur.execute("SELECT project, is_microsetta "
                             "FROM barcodes.project "
                             "WHERE project = 'doesnotexist2'")
                 obs = cur.fetchall()
-                self.assertEqual(obs, [('doesnotexist2', 'No'), ])
+                self.assertEqual(obs, [('doesnotexist2', False), ])
 
     def test_create_kits(self):
         with Transaction() as t:
