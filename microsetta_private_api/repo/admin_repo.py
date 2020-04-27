@@ -318,14 +318,28 @@ class AdminRepo(BaseRepo):
         return diagnostic
 
     def scan_barcode(self, sample_barcode, scan_info):
-        update_args = (
-            scan_info['sample_status'],
-            scan_info['technician_notes'],
-            date.today(),  # TODO: Do we need date or datetime here?
-            sample_barcode
-        )
-
         with self._transaction.cursor() as cur:
+
+            cur.execute(
+                "SELECT scan_date FROM barcodes.barcode WHERE barcode=%s",
+                (sample_barcode,)
+            )
+            row = cur.fetchone()
+            if row is None:
+                raise NotFound("No such barcode: %s" % sample_barcode)
+
+            existing_scan_date = row[0]
+            new_scan_date = existing_scan_date
+            if scan_info['sample_status'] == 'sample-is-valid':
+                new_scan_date = date.today()
+
+            update_args = (
+                scan_info['sample_status'],
+                scan_info['technician_notes'],
+                new_scan_date,
+                sample_barcode
+            )
+
             cur.execute(
                 "UPDATE barcodes.barcode "
                 "SET "
