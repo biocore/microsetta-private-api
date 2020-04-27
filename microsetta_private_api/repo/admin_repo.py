@@ -478,7 +478,8 @@ class AdminRepo(BaseRepo):
                 "LEFT JOIN "
                 "barcode "
                 "USING(barcode) "
-                "WHERE project_id=%s",
+                "WHERE project_id=%s "
+                "GROUP BY project_id",
                 (project_id,)
             )
             row = cur.fetchone()
@@ -528,6 +529,7 @@ class AdminRepo(BaseRepo):
             detailed_stats = {
                 'project_id': project_id,
                 'project_name': project_name,
+                'number_of_kits': number_of_kits,
                 'number_of_samples': number_of_samples,
                 'number_of_samples_scanned_in': number_of_samples_scanned_in,
                 'sample_status_counts': sample_status_counts
