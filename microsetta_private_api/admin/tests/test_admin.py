@@ -260,3 +260,25 @@ class AdminTests(TestCase):
                     self.assertDictEqual(meta['survey_answers'][0],
                                          survey)
             self.assertTrue(found)
+
+    def test_summary_statistics(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            summary = admin_repo.get_project_summary_statistics()
+            self.assertGreater(len(summary), 1)
+            for stats in summary:
+                self.assertIn('project_id', stats)
+                self.assertIn('project_name', stats)
+                self.assertIn('number_of_samples', stats)
+
+    def test_detailed_project_statistics(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            agp_summary = admin_repo.get_project_detailed_statistics(1)
+            self.assertIn('project_id', agp_summary)
+            self.assertIn('project_name', agp_summary)
+            self.assertIn('number_of_samples', agp_summary)
+            self.assertIn('number_of_samples_scanned_in', agp_summary)
+            self.assertIn('sample_status_counts', agp_summary)

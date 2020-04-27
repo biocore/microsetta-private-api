@@ -1107,9 +1107,40 @@ paths:
 
         '401':
           $ref: '#/components/responses/401Unauthorized'
-        
+
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+  '/admin/statistics/projects':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.project_statistics_summary
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: Object describing project statistics for all projects
+          content:
+            application/json:
+              schema:
+                type: array
+  '/admin/statistics/project/{project_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.project_statistics_detailed
+      tags:
+        - Admin
+      parameters:
+        - in: path
+          name: project_id
+          description: Project ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Object describing specific project statistics in more detail
+          content:
+            application/json:
+              schema:
+                type: object
 
 
 components:

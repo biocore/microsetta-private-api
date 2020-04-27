@@ -78,6 +78,24 @@ def sample_pulldown_multiple_survey(token_info,
     return jsonify(sample_pulldown), 200
 
 
+def project_statistics_summary(token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        summary = admin_repo.get_project_summary_statistics()
+        return jsonify(summary), 200
+
+
+def project_statistics_detailed(token_info, project_id):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        summary = admin_repo.get_project_detailed_statistics(project_id)
+        return jsonify(summary), 200
+
+
 def validate_admin_access(token_info):
     with Transaction() as t:
         account_repo = AccountRepo(t)

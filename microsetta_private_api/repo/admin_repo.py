@@ -5,11 +5,13 @@ import random
 from datetime import date
 
 from microsetta_private_api.exceptions import RepoException
+
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
+
 from werkzeug.exceptions import NotFound
 from hashlib import sha512
 
@@ -443,3 +445,106 @@ class AdminRepo(BaseRepo):
         }
 
         return pulldown
+
+    def get_project_summary_statistics(self):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT "
+                "project_id, project, "
+                "count(barcode) as barcode_count, "
+                "count(distinct kit_id) as kit_count "
+                "FROM project "
+                "LEFT JOIN "
+                "project_barcode "
+                "USING(project_id) "
+                "LEFT JOIN "
+                "barcode "
+                "USING(barcode) "
+                "GROUP BY project_id "
+                "ORDER BY barcode_count DESC"
+            )
+            rows = cur.fetchall()
+
+            proj_stats = [
+                {
+                    'project_id': row['project_id'],
+                    'project_name': row['project'],
+                    'number_of_samples': row['barcode_count'],
+                    'number_of_kits': row['kit_count']
+                }
+                for row in rows]
+
+            return proj_stats
+
+    def get_project_detailed_statistics(self, project_id):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT "
+                "project_id, project, "
+                "count(barcode) as barcode_count, "
+                "count(distinct kit_id) as kit_count "
+                "FROM project "
+                "LEFT JOIN "
+                "project_barcode "
+                "USING(project_id) "
+                "LEFT JOIN "
+                "barcode "
+                "USING(barcode) "
+                "WHERE project_id=%s "
+                "GROUP BY project_id",
+                (project_id,)
+            )
+            row = cur.fetchone()
+
+            if row is None:
+                raise NotFound("No such project")
+
+            project_id = row['project_id']
+            project_name = row['project']
+            number_of_samples = row['barcode_count']
+            number_of_kits = row['kit_count']
+
+            cur.execute(
+                "SELECT "
+                "project_id, count(barcode) "
+                "FROM project_barcode "
+                "LEFT JOIN "
+                "barcode "
+                "USING(barcode) "
+                "WHERE "
+                "project_id = %s AND "
+                "scan_date is NOT NULL "
+                "GROUP BY project_id",
+                (project_id,)
+            )
+            row = cur.fetchone()
+            number_of_samples_scanned_in = row['count']
+
+            cur.execute(
+                "SELECT "
+                "project_id, project, sample_status, count(barcode) "
+                "FROM project "
+                "LEFT JOIN project_barcode "
+                "USING (project_id) "
+                "LEFT JOIN barcode "
+                "USING (barcode) "
+                "WHERE "
+                "project_id = 1 AND "
+                "sample_status IS NOT NULL "
+                "group by project_id, sample_status"
+            )
+            rows = cur.fetchall()
+            sample_status_counts = {
+                row['sample_status']: row['count'] for row in rows
+            }
+
+            detailed_stats = {
+                'project_id': project_id,
+                'project_name': project_name,
+                'number_of_kits': number_of_kits,
+                'number_of_samples': number_of_samples,
+                'number_of_samples_scanned_in': number_of_samples_scanned_in,
+                'sample_status_counts': sample_status_counts
+            }
+
+            return detailed_stats
