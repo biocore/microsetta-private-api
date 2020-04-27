@@ -110,7 +110,7 @@ def create_kits(body, token_info):
 
     number_of_kits = body['number_of_kits']
     number_of_samples = body['number_of_samples']
-    kit_prefix = body.get('kit_prefix', None)
+    kit_prefix = body.get('kit_id_prefix', None)
     projects = body['projects']
 
     with Transaction() as t:
