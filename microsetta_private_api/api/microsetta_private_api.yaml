@@ -26,6 +26,8 @@ paths:
                   $ref: '#/components/schemas/account'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
     post:
       operationId: microsetta_private_api.api.implementation.register_account
       tags:
@@ -60,8 +62,35 @@ paths:
                 $ref: '#/components/schemas/account'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
+  '/accounts/legacies':
+    post:
+      operationId: microsetta_private_api.api.implementation.claim_legacy_acct
+      tags:
+        - Account
+      summary: Claim any legacy accounts for this user's email and return an array of them
+      description: Claim any legacy accounts for this user's email and return an array of them
+      parameters:
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Successfully claimed legacy account(s)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/account'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
@@ -84,6 +113,8 @@ paths:
                 $ref: '#/components/schemas/account'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     put:
@@ -109,10 +140,40 @@ paths:
                 $ref: '#/components/schemas/account'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+
+  '/accounts/{account_id}/email_match':
+    get:
+      operationId: microsetta_private_api.api.implementation.check_email_match
+      tags:
+        - Account
+      summary: Check if email on microsetta account matches email on authentication account
+      description: Check if email on microsetta account matches email on authentication account
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Successfully returned email match status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email_match:
+                    type: boolean
+                    example: true
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   '/accounts/{account_id}/consent':
     get:
@@ -138,6 +199,8 @@ paths:
                     example: "<html><body>Consent form here</body></html>"
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
     post:
       operationId: microsetta_private_api.api.implementation.create_human_source_from_consent
       tags:
@@ -191,6 +254,8 @@ paths:
                   $ref: '#/components/examples/human_child_source_w_id'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -238,6 +303,8 @@ paths:
                       obtainer_name: "Hades Doe"
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
@@ -285,6 +352,8 @@ paths:
                   $ref: '#/components/examples/nonhuman_source_w_id'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -319,6 +388,8 @@ paths:
                   $ref: '#/components/examples/nonhuman_source_w_id'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     put:
@@ -363,6 +434,8 @@ paths:
                   $ref: '#/components/examples/nonhuman_source_w_id'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -382,6 +455,8 @@ paths:
           description: Successfully deleted source
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -410,6 +485,8 @@ paths:
                   $ref: '#/components/schemas/thin_survey_template_info'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     # NB: No delete, put, or post for survey templates--can maybe expand to that for admin user in future
@@ -443,6 +520,8 @@ paths:
 
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     # NB: No delete, put, or post for a particular survey template--can maybe expand to that for admin user in future
@@ -478,6 +557,8 @@ paths:
                         - survey_id
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
@@ -509,6 +590,8 @@ paths:
                 type: string
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
@@ -543,6 +626,8 @@ paths:
                       - survey_text
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     # NB: NO "put"--you shouldn't update an answered survey, but instead should take a new one
@@ -570,6 +655,8 @@ paths:
                   $ref: '#/components/schemas/sample'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
@@ -606,6 +693,8 @@ paths:
                 type: string
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -634,6 +723,8 @@ paths:
                 $ref: '#/components/schemas/sample'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     put:
@@ -661,6 +752,8 @@ paths:
                 $ref: '#/components/schemas/sample'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -682,6 +775,8 @@ paths:
           description: Sample was dissociated from source
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -731,6 +826,8 @@ paths:
                   survey_template_type: local
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
@@ -761,6 +858,8 @@ paths:
                 type: string
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -785,6 +884,8 @@ paths:
           description: Answered survey was dissociated from sample
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
 
@@ -809,6 +910,8 @@ paths:
                   $ref: '#/components/schemas/sample'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -921,6 +1024,92 @@ paths:
             Location:
               schema:
                 type: string
+  '/admin/metadata/samples/{sample_barcode}/surveys/{survey_template_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_single_survey
+      tags:
+        - Admin
+      summary: Retrieve survey responses for a particular sample and survey
+      description: Retrieve survey responses for a particular sample and survey
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+        - $ref: '#/components/parameters/survey_template_id'
+      responses:
+        '200':
+          description: QIIME compatible sample metadata
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  '/admin/metadata/samples/{sample_barcode}/surveys/':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_multiple_survey
+      tags:
+        - Admin
+      summary: Retrieve all survey responses for a particular sample
+      description: Retrieve all survey responses for a particular sample
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+      responses:
+        '200':
+          description: QIIIME compatible sample metadata
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/admin/create/kits':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.create_kits
+      tags:
+        - Admin
+      summary: Create kit identifiers and associated sample barcodes
+      description: Create kit identifiers and associated sample barcodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+                type: "object"
+                properties:
+                  number_of_kits:
+                    type: integer
+                  number_of_samples:
+                    type: integer
+                  kit_id_prefix:
+                    type: string
+                  projects:
+                    type: array
+                    items:
+                      type: string
+
+                required:
+                  - number_of_kits
+                  - number_of_samples
+                  - projects
+
+      responses:
+        '201':
+          description: Kit identifiers and associated samples were successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
   '/admin/statistics/projects':
     get:
       operationId: microsetta_private_api.admin.admin_impl.project_statistics_summary
@@ -1041,6 +1230,8 @@ components:
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
       description: Invalid or missing token.
+    403Forbidden:   # Can be referenced as '#/components/responses/403Forbidden'
+      description: Authorization refused.
     404NotFound:       # Can be referenced as '#/components/responses/404NotFound'
       description: The specified resource was not found.
     422UnprocessableEntity:
@@ -1107,6 +1298,7 @@ components:
         - last_name
         - email
         - address
+
     address:   # taken from https://opensource.zalando.com/restful-api-guidelines/#address-fields
       description:
         an address of a location/destination

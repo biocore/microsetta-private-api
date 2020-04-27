@@ -104,23 +104,65 @@ class AdminTests(TestCase):
             self.assertIsNone(diag['account'])
             self.assertIsNone(diag['source'])
             self.assertIsNotNone(diag['sample'])
-            self.assertGreater(len(diag['barcode_info']), 0)
+            self.assertGreater(len(diag['barcode_info']['projects']), 0)
 
             diag = admin_repo.retrieve_diagnostics_by_barcode('000033903')
             self.assertIsNotNone(diag['barcode'])
             self.assertIsNone(diag['account'])
             self.assertIsNone(diag['source'])
             self.assertIsNone(diag['sample'])
-            self.assertGreater(len(diag['barcode_info']), 0)
+            self.assertGreater(len(diag['barcode_info']['projects']), 0)
 
             # Uhh, should this return a 404 not found or just an empty
             # diagnostic object...?
             diag = admin_repo.retrieve_diagnostics_by_barcode('NotABarcode :D')
-            self.assertIsNotNone(diag['barcode'])
-            self.assertIsNone(diag['account'])
-            self.assertIsNone(diag['source'])
-            self.assertIsNone(diag['sample'])
-            self.assertEqual(len(diag['barcode_info']), 0)
+            self.assertIsNone(diag)
+
+    def test_create_kits(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            with self.assertRaisesRegex(KeyError, "does not exist"):
+                admin_repo.create_kits(5, 3, '', ['foo', 'bar'])
+
+            non_tmi = admin_repo.create_kits(5, 3, '',
+                                             ['Project - /J/xL_|Eãt'])
+            self.assertEqual(['created', ], list(non_tmi.keys()))
+            self.assertEqual(len(non_tmi['created']), 5)
+            for obj in non_tmi['created']:
+                self.assertEqual(len(obj['sample_barcodes']), 3)
+                self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
+                                 set(obj))
+
+            # should not be present in the ag tables
+            non_tmi_kits = [k['kit_id'] for k in non_tmi['created']]
+            with t.cursor() as cur:
+                cur.execute("SELECT supplied_kit_id "
+                            "FROM ag.ag_kit "
+                            "WHERE supplied_kit_id IN %s",
+                            (tuple(non_tmi_kits), ))
+                observed = cur.fetchall()
+                self.assertEqual(len(observed), 0)
+
+            tmi = admin_repo.create_kits(4, 2, 'foo',
+                                         ['American Gut Project'])
+            self.assertEqual(['created', ], list(tmi.keys()))
+            self.assertEqual(len(tmi['created']), 4)
+            for obj in tmi['created']:
+                self.assertEqual(len(obj['sample_barcodes']), 2)
+                self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
+                                 set(obj))
+                self.assertTrue(obj['kit_id'].startswith('foo_'))
+
+            # should be present in the ag tables
+            tmi_kits = [k['kit_id'] for k in tmi['created']]
+            with t.cursor() as cur:
+                cur.execute("SELECT supplied_kit_id "
+                            "FROM ag.ag_kit "
+                            "WHERE supplied_kit_id IN %s",
+                            (tuple(tmi_kits), ))
+                observed = cur.fetchall()
+                self.assertEqual(len(observed), 4)
 
     def test_search_kit_id(self):
         with Transaction() as t:
@@ -157,7 +199,7 @@ class AdminTests(TestCase):
             admin_repo = AdminRepo(t)
 
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            prestatus = diag['barcode_info'][0]['status']
+            prestatus = diag['barcode_info']['status']
 
             admin_repo.scan_barcode(
                 TEST_BARCODE,
@@ -168,11 +210,11 @@ class AdminTests(TestCase):
             )
 
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            self.assertEqual(diag['barcode_info'][0]['technician_notes'],
+            self.assertEqual(diag['barcode_info']['technician_notes'],
                              TEST_NOTES)
-            self.assertEqual(diag['barcode_info'][0]['sample_status'],
+            self.assertEqual(diag['barcode_info']['sample_status'],
                              TEST_STATUS)
-            self.assertEqual(diag['barcode_info'][0]['status'],
+            self.assertEqual(diag['barcode_info']['status'],
                              prestatus)
 
             with self.assertRaises(NotFound):
@@ -184,6 +226,40 @@ class AdminTests(TestCase):
                     }
                 )
                 self.fail("Shouldn't get here")
+
+    def test_get_survey(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            BARCODE = '000004216'
+
+            with self.assertRaises(NotFound):
+                admin_repo.get_survey_metadata("NOTABARCODE")
+
+            meta = admin_repo.get_survey_metadata(BARCODE,
+                                                  survey_template_id=1)
+
+            self.assertEqual(meta['sample_barcode'], BARCODE)
+            self.assertIn('host_subject_id', meta)
+            # And there should be one survey answered
+            self.assertEqual(len(meta['survey_answers']), 1)
+
+            all_meta = admin_repo.get_survey_metadata(BARCODE)
+
+            self.assertEqual(all_meta['sample_barcode'], BARCODE)
+            self.assertEqual(all_meta['host_subject_id'],
+                             all_meta['host_subject_id'])
+            # And there should be more than one survey answered
+            self.assertGreater(len(all_meta['survey_answers']), 1)
+
+            # And the meta survey should exist somewhere in all_meta
+            found = False
+            for survey in all_meta['survey_answers']:
+                if "DIET_TYPE" in survey:
+                    found = True
+                    self.assertDictEqual(meta['survey_answers'][0],
+                                         survey)
+            self.assertTrue(found)
 
     def test_summary_statistics(self):
         with Transaction() as t:

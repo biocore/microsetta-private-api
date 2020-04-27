@@ -36,6 +36,10 @@ KIT_ID = '77777777-8888-9999-aaaa-bbbbcccccccc'
 MOCK_SAMPLE_ID = '99999999-aaaa-aaaa-aaaa-bbbbcccccccc'
 BARCODE = '777777777'
 
+# Had to change from janedoe@example.com after I ran api/ui to create
+# a janedoe@example.com address in my test db.
+FAKE_EMAIL = "zbkhasdahl4wlnas@asdjgakljesgnoqe.com"
+
 MOCK_HEADERS = {"Authorization": "Bearer boogabooga"}
 MOCK_HEADERS_2 = {"Authorization": "Bearer woogawooga"}
 DUMMY_CONSENT_POST_URL = "http://test.com"
@@ -44,11 +48,15 @@ DUMMY_CONSENT_POST_URL = "http://test.com"
 def mock_verify_func(token):
     if token == "boogabooga":
         return {
+            "email": "foo@baz.com",
+            'email_verified': True,
             "iss": "https://MOCKUNITTEST.com",
             "sub": "1234ThisIsNotARealSub",
         }
     elif token == "woogawooga":
         return {
+            "email": FAKE_EMAIL,
+            'email_verified': True,
             "iss": "https://MOCKUNITTEST.com",
             "sub": "ThisIsAlsoNotARealSub",
         }
@@ -66,9 +74,7 @@ def client(request):
         with patch("microsetta_private_api.api.implementation."
                    "verify_authrocket") as mock_verify:
             mock_verify.side_effect = mock_verify_func
-            with patch("microsetta_private_api.api.implementation."
-                       "validate_access"):
-                yield client
+            yield client
 
 
 def fuzz(val):
@@ -402,9 +408,6 @@ class IntegrationTests(TestCase):
             t.commit()
 
     def test_create_new_account(self):
-        # Had to change from janedoe@example.com after I ran api/ui to create
-        # a janedoe@example.com address in my test db.
-        FAKE_EMAIL = "zbkhasdahl4wlnas@asdjgakljesgnoqe.com"
         # Clean up before the test in case we already have a janedoe
         with Transaction() as t:
             AccountRepo(t).delete_account_by_email(FAKE_EMAIL)
@@ -504,8 +507,15 @@ class IntegrationTests(TestCase):
         self.assertDictEqual(acc, regular_data, "Check Initial Account Match")
 
         regular_data.pop("account_id")
-        fuzzy_data = fuzz(regular_data)
 
+        # Don't fuzz the email--changing the email in the accounts table
+        # without changing the email in the authorization causes
+        # authorization errors (as it should)
+        the_email = regular_data["email"]
+        fuzzy_data = fuzz(regular_data)
+        fuzzy_data['email'] = the_email
+
+        # submit an invalid account type
         fuzzy_data['account_type'] = "Voldemort"
         print("---\nYou should see a validation error in unittest:")
         response = self.client.put(
@@ -1220,6 +1230,12 @@ def _create_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
 
     with transaction.cursor() as cur:
         # create a record for the new kit in ag_kit table
+        cur.execute("INSERT INTO barcodes.kit "
+                    "(kit_id)"
+                    "VALUES(%s)",
+                    (supplied_kit_id, ))
+
+        # create a record for the new kit in ag_kit table
         cur.execute("INSERT INTO ag_kit "
                     "(ag_kit_id, "
                     "supplied_kit_id, swabs_per_kit) "
@@ -1286,6 +1302,15 @@ def _remove_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
                         (barcode,))
         # next barcode/sample to delete
 
+        cur.execute("SELECT supplied_kit_id "
+                    "FROM ag_kit "
+                    "WHERE ag_kit_id=%s",
+                    (kit_id, ))
+        supplied_kit_id = cur.fetchone()
+
         # now delete the kit the barcode(s) were associated to
         cur.execute("DELETE FROM ag_kit WHERE ag_kit_id=%s",
                     (kit_id,))
+        if supplied_kit_id is not None:
+            cur.execute("DELETE FROM barcodes.kit WHERE kit_id=%s",
+                        (supplied_kit_id,))
