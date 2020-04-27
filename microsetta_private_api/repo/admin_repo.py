@@ -464,8 +464,6 @@ class AdminRepo(BaseRepo):
 
     def get_project_detailed_statistics(self, project_id):
         with self._transaction.dict_cursor() as cur:
-            # TODO:  I don't see a clean way to get the number of kits easily.
-            #  postpone showing number of kits for now?
             cur.execute(
                 "SELECT "
                 "project_id, project, "
