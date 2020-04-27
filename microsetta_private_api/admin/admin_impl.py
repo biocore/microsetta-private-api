@@ -94,17 +94,12 @@ def create_project(body, token_info):
     is_microsetta = body['is_microsetta']
 
     if len(project_name) == 0:
-        return jsonify(code=422, message="No project name provided"), 422
+        return jsonify(code=400, message="No project name provided"), 400
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-
-        try:
-            admin_repo.create_project(project_name, is_microsetta)
-        except:  # noqa
-            return jsonify(code=422, message="Could not create project"), 422
-        else:
-            t.commit()
+        admin_repo.create_project(project_name, is_microsetta)
+        t.commit()
 
     return {}, 201
 
