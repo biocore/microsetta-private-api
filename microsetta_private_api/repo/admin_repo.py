@@ -170,7 +170,8 @@ class AdminRepo(BaseRepo):
             Project names the samples are to be associated with
         """
         TMI_PROJECTS = {'The Microsetta Initiative', 'American Gut Project',
-                        'British Gut Project'}
+                        'British Gut Project', 'TMI - Daklapack W1',
+                        'TMI - Daklapack W2'}
         if len(TMI_PROJECTS & set(projects)) > 0:
             is_tmi = True
         else:
