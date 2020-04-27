@@ -136,9 +136,9 @@ class AdminRepo(BaseRepo):
             If the project is part of The Microsetta Initiative
         """
         if is_microsetta:
-            tmi = 'Yes'
+            tmi = 'yes'
         else:
-            tmi = 'No'
+            tmi = 'no'
 
         with self._transaction.cursor() as cur:
             cur.execute("SELECT MAX(project_id) + 1 "
