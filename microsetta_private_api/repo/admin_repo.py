@@ -186,7 +186,7 @@ class AdminRepo(BaseRepo):
             for name in projects:
                 if name not in known_projects:
                     raise KeyError("%s does not exist" % name)
-                if known_projects[name][1] == 'Yes':
+                if known_projects[name][1]:
                     is_tmi = True
 
             # get existing kits to test for conflicts
