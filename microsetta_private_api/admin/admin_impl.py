@@ -87,6 +87,26 @@ def validate_admin_access(token_info):
             raise Unauthorized()
 
 
+def create_project(body, token_info):
+    validate_admin_access(token_info)
+
+    project_name = body['project_name']
+    if len(project_name) == 0:
+        return jsonify(code=422, message="No project name provided"), 422
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+
+        try:
+            admin_repo.create_project(project_name)
+        except:  # noqa
+            return jsonify(code=422, message="Could not create project"), 422
+        else:
+            t.commit()
+
+    return {}, 201
+
+
 def create_kits(body, token_info):
     validate_admin_access(token_info)
 

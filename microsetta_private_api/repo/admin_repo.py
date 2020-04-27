@@ -125,6 +125,24 @@ class AdminRepo(BaseRepo):
 
             return diagnostic
 
+    def create_project(self, project_name):
+        """Create a project entry in the database
+
+        Parameters
+        ----------
+        project_name : str
+            The name of the project to create
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT MAX(project_id) + 1 "
+                        "FROM barcodes.project")
+            id_ = cur.fetchone()[0]
+
+            cur.execute("INSERT INTO barcodes.project "
+                        "(project_id, project) "
+                        "VALUES (%s, %s)", [id_, project_name])
+        return True
+
     def _generate_random_kit_name(self, name_length, prefix):
         if prefix is None:
             prefix = 'tmi'
