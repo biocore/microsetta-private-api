@@ -1083,9 +1083,13 @@ paths:
               properties:
                 project_name:
                   type: string
+                is_microsetta:
+                  type: boolean
 
               required:
                 - project_name
+                - is_microsetta
+
       responses:
         '201':
           description: Project successfully created

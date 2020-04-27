@@ -125,22 +125,29 @@ class AdminRepo(BaseRepo):
 
             return diagnostic
 
-    def create_project(self, project_name):
+    def create_project(self, project_name, is_microsetta):
         """Create a project entry in the database
 
         Parameters
         ----------
         project_name : str
             The name of the project to create
+        is_microsetta : bool
+            If the project is part of The Microsetta Initiative
         """
+        if is_microsetta:
+            tmi = 'Yes'
+        else:
+            tmi = 'No'
+
         with self._transaction.cursor() as cur:
             cur.execute("SELECT MAX(project_id) + 1 "
                         "FROM barcodes.project")
             id_ = cur.fetchone()[0]
 
             cur.execute("INSERT INTO barcodes.project "
-                        "(project_id, project) "
-                        "VALUES (%s, %s)", [id_, project_name])
+                        "(project_id, project, is_microsetta) "
+                        "VALUES (%s, %s, %s)", [id_, project_name, tmi])
         return True
 
     def _generate_random_kit_name(self, name_length, prefix):
@@ -169,22 +176,18 @@ class AdminRepo(BaseRepo):
         projects : list of str
             Project names the samples are to be associated with
         """
-        TMI_PROJECTS = {'The Microsetta Initiative', 'American Gut Project',
-                        'British Gut Project', 'TMI - Daklapack W1',
-                        'TMI - Daklapack W2'}
-        if len(TMI_PROJECTS & set(projects)) > 0:
-            is_tmi = True
-        else:
-            is_tmi = False
-
         with self._transaction.cursor() as cur:
             # get existing projects
-            cur.execute("SELECT project, project_id "
+            cur.execute("SELECT project, project_id, is_microsetta "
                         "FROM barcodes.project")
-            known_projects = {prj.lower(): id_ for prj, id_ in cur.fetchall()}
+            known_projects = {prj: (id_, tmi)
+                              for prj, id_, tmi in cur.fetchall()}
+            is_tmi = False
             for name in projects:
-                if name.lower() not in known_projects:
+                if name not in known_projects:
                     raise KeyError("%s does not exist" % name)
+                if known_projects[name][1] == 'Yes':
+                    is_tmi = True
 
             # get existing kits to test for conflicts
             cur.execute("""SELECT kit_id FROM barcodes.kit""")
@@ -226,7 +229,7 @@ class AdminRepo(BaseRepo):
             barcode_projects = []
             for barcode in new_barcodes:
                 for project in projects:
-                    prj_id = known_projects[project.lower()]
+                    prj_id = known_projects[project][0]
                     barcode_projects.append((barcode, prj_id))
 
             # create shipping IDs

@@ -127,11 +127,19 @@ class AdminTests(TestCase):
                             "WHERE project = 'doesnotexist'")
                 self.assertEqual(len(cur.fetchall()), 0)
 
-                admin_repo.create_project('doesnotexist')
-                cur.execute("SELECT project "
+                admin_repo.create_project('doesnotexist', True)
+                cur.execute("SELECT project, is_microsetta "
                             "FROM barcodes.project "
                             "WHERE project = 'doesnotexist'")
-                self.assertEqual(len(cur.fetchall()), 1)
+                obs = cur.fetchall()
+                self.assertEqual(obs, [('doesnotexist', 'Yes'), ])
+
+                admin_repo.create_project('doesnotexist2', False)
+                cur.execute("SELECT project, is_microsetta "
+                            "FROM barcodes.project "
+                            "WHERE project = 'doesnotexist2'")
+                obs = cur.fetchall()
+                self.assertEqual(obs, [('doesnotexist2', 'No'), ])
 
     def test_create_kits(self):
         with Transaction() as t:

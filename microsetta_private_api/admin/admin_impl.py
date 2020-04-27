@@ -91,6 +91,8 @@ def create_project(body, token_info):
     validate_admin_access(token_info)
 
     project_name = body['project_name']
+    is_microsetta = body['is_microsetta']
+
     if len(project_name) == 0:
         return jsonify(code=422, message="No project name provided"), 422
 
@@ -98,7 +100,7 @@ def create_project(body, token_info):
         admin_repo = AdminRepo(t)
 
         try:
-            admin_repo.create_project(project_name)
+            admin_repo.create_project(project_name, is_microsetta)
         except:  # noqa
             return jsonify(code=422, message="Could not create project"), 422
         else:
