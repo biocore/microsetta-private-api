@@ -25,11 +25,6 @@ class DBConfig(object):
         self.sitebase = "PROJECT_SITEBASE"
         self.locale = "american_gut"
 
-        self.vioscreen_regcode = "regcode"
-        self.vioscreen_cryptokey = "1234567891011121"
-
-
-
 
 AMGUT_CONFIG = DBConfig()
 with pkg_resources.open_text('microsetta_private_api', "server_config.json") \

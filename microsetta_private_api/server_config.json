@@ -6,5 +6,7 @@
   "ssl_key_path": null,
   "CAfile": null,
   "authrocket_url": "https://jubilant-smoke-a54b.e2.loginrocket.com",
-  "FLASK_SECRET_KEY": null
+  "FLASK_SECRET_KEY": null,
+  "vioscreen_regcode": "regcode",
+  "self.vioscreen_cryptokey": "1234567891011121"
 }
