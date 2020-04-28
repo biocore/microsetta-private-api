@@ -1260,10 +1260,22 @@ components:
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
       description: Invalid or missing token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     403Forbidden:   # Can be referenced as '#/components/responses/403Forbidden'
       description: Authorization refused.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     404NotFound:       # Can be referenced as '#/components/responses/404NotFound'
       description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     422UnprocessableEntity:
       description: The instructions provided cannot be processed.
       content:
@@ -1639,7 +1651,7 @@ components:
       type: object
       properties:
         code:
-          type: string
+          type: integer
         message:
           type: string
       required:
