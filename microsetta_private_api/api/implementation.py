@@ -75,9 +75,9 @@ def claim_legacy_acct(token_info):
     # If there exists a legacy account for the email in the token, which the
     # user represented by the token does not already own but can claim, this
     # claims the legacy account for the user and returns a 200 code with json
-    # containing an object for the claimed account.  Otherwise, this returns a
-    # 404 code. This function can also trigger a 422 from the repo layer in the
-    # case of inconsistent account data.
+    # list containing the object for the claimed account.  Otherwise, this
+    # returns an empty json list. This function can also trigger a 422 from the
+    # repo layer in the case of inconsistent account data.
 
     email = token_info[JWT_EMAIL_CLAIM_KEY]
     auth_iss = token_info[JWT_ISS_CLAIM_KEY]
@@ -105,7 +105,7 @@ def register_account(body, token_info):
         kit_repo = KitRepo(t)
         kit = kit_repo.get_kit_all_samples(body['kit_name'])
         if kit is None:
-            return jsonify(error=404, text="Kit name not found"), 404
+            return jsonify(code=404, message="Kit name not found"), 404
 
         acct_repo = AccountRepo(t)
         acct_repo.create_account(account_obj)
