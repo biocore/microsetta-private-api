@@ -18,26 +18,24 @@ def wrap_survey_url(survey_id, language_tag):
         raise BadRequest("Unknown Locale: " + language_tag)
 
     """Return a formatted text block and URL for the external survey"""
-    # TODO: Putting this text around the url is super weird, is this part up
-    #  to departure to implement correctly and all we need is the url?
     tl = text_locale['human_survey_completed.html']
     embedded_text = tl['SURVEY_VIOSCREEN']
-    # TODO: If we have problems getting the ciphertext to be accepted by
-    #  vioscreen, it could be due to switching to use of werkzeugs url_encode
-    #  rather than tornado's url_escape.  But that has to wait until I can
-    #  test with the actual key and registration code.
     url = gen_survey_url(survey_id, language_tag)
     return embedded_text % url
 
 
 def gen_survey_url(survey_id, language_tag):
     regcode = SERVER_CONFIG["vioscreen_regcode"]
+    # TODO: If we have problems getting the ciphertext to be accepted by
+    #  vioscreen, it could be due to switching to use of werkzeugs url_encode
+    #  rather than tornado's url_escape.  But that has to wait until I can
+    #  test with the actual key and registration code.
     url = SERVER_CONFIG["vioscreen_endpoint"] + "/remotelogin.aspx?%s" % \
           url_encode(
               {
-                  "Key": encrypt_key(survey_id, language_tag),
-                  "RegCode": regcode
-              }
+                  b"Key": encrypt_key(survey_id, language_tag),
+                  b"RegCode": regcode.encode()
+              }, charset='utf-16'
           )
     return url
 
