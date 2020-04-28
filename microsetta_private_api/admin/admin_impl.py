@@ -105,6 +105,23 @@ def validate_admin_access(token_info):
             raise Unauthorized()
 
 
+def create_project(body, token_info):
+    validate_admin_access(token_info)
+
+    project_name = body['project_name']
+    is_microsetta = body['is_microsetta']
+
+    if len(project_name) == 0:
+        return jsonify(code=400, message="No project name provided"), 400
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        admin_repo.create_project(project_name, is_microsetta)
+        t.commit()
+
+    return {}, 201
+
+
 def create_kits(body, token_info):
     validate_admin_access(token_info)
 

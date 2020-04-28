@@ -118,6 +118,29 @@ class AdminTests(TestCase):
             diag = admin_repo.retrieve_diagnostics_by_barcode('NotABarcode :D')
             self.assertIsNone(diag)
 
+    def test_create_project(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            with t.cursor() as cur:
+                cur.execute("SELECT project "
+                            "FROM barcodes.project "
+                            "WHERE project = 'doesnotexist'")
+                self.assertEqual(len(cur.fetchall()), 0)
+
+                admin_repo.create_project('doesnotexist', True)
+                cur.execute("SELECT project, is_microsetta "
+                            "FROM barcodes.project "
+                            "WHERE project = 'doesnotexist'")
+                obs = cur.fetchall()
+                self.assertEqual(obs, [('doesnotexist', True), ])
+
+                admin_repo.create_project('doesnotexist2', False)
+                cur.execute("SELECT project, is_microsetta "
+                            "FROM barcodes.project "
+                            "WHERE project = 'doesnotexist2'")
+                obs = cur.fetchall()
+                self.assertEqual(obs, [('doesnotexist2', False), ])
+
     def test_create_kits(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
