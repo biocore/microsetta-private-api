@@ -29,7 +29,9 @@ PLANTY_ID = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
 
 
 stuff = microsetta_private_api.util.vioscreen.gen_survey_url(6, 'en_us')
+stuff2 = microsetta_private_api.util.vioscreen.wrap_survey_url(6, 'en_us')
 print(stuff)
+print(stuff2)
 exit(-1)
 
 with Transaction() as t:

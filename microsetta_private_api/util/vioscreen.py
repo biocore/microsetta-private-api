@@ -4,11 +4,11 @@ from base64 import b64decode, b64encode
 from werkzeug.exceptions import BadRequest
 from werkzeug.urls import url_encode
 
-from microsetta_private_api.config_manager import AMGUT_CONFIG
+from microsetta_private_api.config_manager import AMGUT_CONFIG, SERVER_CONFIG
 from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 
 
-def gen_survey_url(survey_id, language_tag):
+def wrap_survey_url(survey_id, language_tag):
     # TODO: Is this the right way to do localization here?
     if language_tag == "en_us":
         text_locale = american_gut.text_locale
@@ -22,23 +22,28 @@ def gen_survey_url(survey_id, language_tag):
     #  to departure to implement correctly and all we need is the url?
     tl = text_locale['human_survey_completed.html']
     embedded_text = tl['SURVEY_VIOSCREEN']
-    regcode = AMGUT_CONFIG.vioscreen_regcode
     # TODO: If we have problems getting the ciphertext to be accepted by
     #  vioscreen, it could be due to switching to use of werkzeugs url_encode
     #  rather than tornado's url_escape.  But that has to wait until I can
     #  test with the actual key and registration code.
-    url = "https://vioscreen.com/remotelogin.aspx?%s" % \
+    url = gen_survey_url(survey_id, language_tag)
+    return embedded_text % url
+
+
+def gen_survey_url(survey_id, language_tag):
+    regcode = SERVER_CONFIG["vioscreen_regcode"]
+    url = SERVER_CONFIG["vioscreen_endpoint"] + "/remotelogin.aspx?%s" % \
           url_encode(
               {
                   "Key": encrypt_key(survey_id, language_tag),
                   "RegCode": regcode
               }
           )
-    return embedded_text % url
+    return url
 
 
 def pkcs7_pad_message(in_message):
-    # http://stackoverflow.com/questions/14179784/python-encrypting-with-pycrypto-aes
+    # http://stackoverflow.com/questions/14179784/python-encrypting-with-pycrypto-aes  # noqa
     length = 16 - (len(in_message) % 16)
     return in_message + chr(length) * length
 
@@ -62,7 +67,7 @@ def encrypt_key(survey_id, language_tag):
     gender_id = 2
     dob = '01011800'
 
-    regcode = AMGUT_CONFIG.vioscreen_regcode
+    regcode = SERVER_CONFIG["vioscreen_regcode"]
 
     # TODO: Specifying a callback url that goes back to our api server is, once
     #  again, super weird.  How is this supposed to work with callbacks?
@@ -85,7 +90,7 @@ def encrypt_key(survey_id, language_tag):
     pkcs7_query = pkcs7_pad_message(assess_query)
 
     # Generate AES encrypted information string
-    key = AMGUT_CONFIG.vioscreen_cryptokey
+    key = SERVER_CONFIG["vioscreen_cryptokey"]
     iv = Random.new().read(16)
     cipher = AES.new(key, AES.MODE_CBC, iv)
 
