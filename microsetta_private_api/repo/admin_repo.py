@@ -412,7 +412,7 @@ class AdminRepo(BaseRepo):
         # TODO: This is my best understanding of how the data must be
         #  transformed to get the host_subject_id, needs verification that it
         #  generates the expected values for preexisting samples.
-        prehash = account_id + source.source_data.name.lower()
+        prehash = account_id + source.name.lower()
         host_subject_id = sha512(prehash.encode()).hexdigest()
 
         survey_answers_repo = SurveyAnswersRepo(self._transaction)
