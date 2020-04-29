@@ -36,6 +36,7 @@ from werkzeug.exceptions import BadRequest, Unauthorized, Forbidden, NotFound
 
 from microsetta_private_api.util import vue_adapter
 from microsetta_private_api.util.util import fromisotime
+from microsetta_private_api.exceptions import RepoException
 
 import uuid
 
@@ -191,6 +192,12 @@ def create_source(account_id, body, token_info):
             source_info = HumanInfo.from_dict(body,
                                               consent_date=date.today(),
                                               date_revoked=None)
+            # the "legacy" value of the age_range enum is not valid to use when
+            # creating a new source, so do not allow that.
+            # NB: Not necessary to do this check when updating a source as
+            # only source name and description (not age_range) may be updated.
+            if source_info.age_range == "legacy":
+                raise RepoException("Age range may not be set to legacy.")
         else:
             source_info = NonHumanInfo.from_dict(body)
 
