@@ -118,6 +118,29 @@ class AdminTests(TestCase):
             diag = admin_repo.retrieve_diagnostics_by_barcode('NotABarcode :D')
             self.assertIsNone(diag)
 
+    def test_create_project(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            with t.cursor() as cur:
+                cur.execute("SELECT project "
+                            "FROM barcodes.project "
+                            "WHERE project = 'doesnotexist'")
+                self.assertEqual(len(cur.fetchall()), 0)
+
+                admin_repo.create_project('doesnotexist', True)
+                cur.execute("SELECT project, is_microsetta "
+                            "FROM barcodes.project "
+                            "WHERE project = 'doesnotexist'")
+                obs = cur.fetchall()
+                self.assertEqual(obs, [('doesnotexist', True), ])
+
+                admin_repo.create_project('doesnotexist2', False)
+                cur.execute("SELECT project, is_microsetta "
+                            "FROM barcodes.project "
+                            "WHERE project = 'doesnotexist2'")
+                obs = cur.fetchall()
+                self.assertEqual(obs, [('doesnotexist2', False), ])
+
     def test_create_kits(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
@@ -260,3 +283,25 @@ class AdminTests(TestCase):
                     self.assertDictEqual(meta['survey_answers'][0],
                                          survey)
             self.assertTrue(found)
+
+    def test_summary_statistics(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            summary = admin_repo.get_project_summary_statistics()
+            self.assertGreater(len(summary), 1)
+            for stats in summary:
+                self.assertIn('project_id', stats)
+                self.assertIn('project_name', stats)
+                self.assertIn('number_of_samples', stats)
+
+    def test_detailed_project_statistics(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            agp_summary = admin_repo.get_project_detailed_statistics(1)
+            self.assertIn('project_id', agp_summary)
+            self.assertIn('project_name', agp_summary)
+            self.assertIn('number_of_samples', agp_summary)
+            self.assertIn('number_of_samples_scanned_in', agp_summary)
+            self.assertIn('sample_status_counts', agp_summary)

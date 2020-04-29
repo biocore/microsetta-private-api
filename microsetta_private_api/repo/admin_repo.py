@@ -5,11 +5,13 @@ import random
 from datetime import date
 
 from microsetta_private_api.exceptions import RepoException
+
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
+
 from werkzeug.exceptions import NotFound
 from hashlib import sha512
 
@@ -125,6 +127,31 @@ class AdminRepo(BaseRepo):
 
             return diagnostic
 
+    def create_project(self, project_name, is_microsetta):
+        """Create a project entry in the database
+
+        Parameters
+        ----------
+        project_name : str
+            The name of the project to create
+        is_microsetta : bool
+            If the project is part of The Microsetta Initiative
+        """
+        if is_microsetta:
+            tmi = 'yes'
+        else:
+            tmi = 'no'
+
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT MAX(project_id) + 1 "
+                        "FROM barcodes.project")
+            id_ = cur.fetchone()[0]
+
+            cur.execute("INSERT INTO barcodes.project "
+                        "(project_id, project, is_microsetta) "
+                        "VALUES (%s, %s, %s)", [id_, project_name, tmi])
+        return True
+
     def _generate_random_kit_name(self, name_length, prefix):
         if prefix is None:
             prefix = 'tmi'
@@ -151,21 +178,18 @@ class AdminRepo(BaseRepo):
         projects : list of str
             Project names the samples are to be associated with
         """
-        TMI_PROJECTS = {'The Microsetta Initiative', 'American Gut Project',
-                        'British Gut Project'}
-        if len(TMI_PROJECTS & set(projects)) > 0:
-            is_tmi = True
-        else:
-            is_tmi = False
-
         with self._transaction.cursor() as cur:
             # get existing projects
-            cur.execute("SELECT project, project_id "
+            cur.execute("SELECT project, project_id, is_microsetta "
                         "FROM barcodes.project")
-            known_projects = {prj.lower(): id_ for prj, id_ in cur.fetchall()}
+            known_projects = {prj: (id_, tmi)
+                              for prj, id_, tmi in cur.fetchall()}
+            is_tmi = False
             for name in projects:
-                if name.lower() not in known_projects:
+                if name not in known_projects:
                     raise KeyError("%s does not exist" % name)
+                if known_projects[name][1]:
+                    is_tmi = True
 
             # get existing kits to test for conflicts
             cur.execute("""SELECT kit_id FROM barcodes.kit""")
@@ -207,7 +231,7 @@ class AdminRepo(BaseRepo):
             barcode_projects = []
             for barcode in new_barcodes:
                 for project in projects:
-                    prj_id = known_projects[project.lower()]
+                    prj_id = known_projects[project][0]
                     barcode_projects.append((barcode, prj_id))
 
             # create shipping IDs
@@ -318,14 +342,28 @@ class AdminRepo(BaseRepo):
         return diagnostic
 
     def scan_barcode(self, sample_barcode, scan_info):
-        update_args = (
-            scan_info['sample_status'],
-            scan_info['technician_notes'],
-            date.today(),  # TODO: Do we need date or datetime here?
-            sample_barcode
-        )
-
         with self._transaction.cursor() as cur:
+
+            cur.execute(
+                "SELECT scan_date FROM barcodes.barcode WHERE barcode=%s",
+                (sample_barcode,)
+            )
+            row = cur.fetchone()
+            if row is None:
+                raise NotFound("No such barcode: %s" % sample_barcode)
+
+            existing_scan_date = row[0]
+            new_scan_date = existing_scan_date
+            if scan_info['sample_status'] == 'sample-is-valid':
+                new_scan_date = date.today()
+
+            update_args = (
+                scan_info['sample_status'],
+                scan_info['technician_notes'],
+                new_scan_date,
+                sample_barcode
+            )
+
             cur.execute(
                 "UPDATE barcodes.barcode "
                 "SET "
@@ -374,7 +412,7 @@ class AdminRepo(BaseRepo):
         # TODO: This is my best understanding of how the data must be
         #  transformed to get the host_subject_id, needs verification that it
         #  generates the expected values for preexisting samples.
-        prehash = account_id + source.source_data.name.lower()
+        prehash = account_id + source.name.lower()
         host_subject_id = sha512(prehash.encode()).hexdigest()
 
         survey_answers_repo = SurveyAnswersRepo(self._transaction)
@@ -429,3 +467,106 @@ class AdminRepo(BaseRepo):
         }
 
         return pulldown
+
+    def get_project_summary_statistics(self):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT "
+                "project_id, project, "
+                "count(barcode) as barcode_count, "
+                "count(distinct kit_id) as kit_count "
+                "FROM project "
+                "LEFT JOIN "
+                "project_barcode "
+                "USING(project_id) "
+                "LEFT JOIN "
+                "barcode "
+                "USING(barcode) "
+                "GROUP BY project_id "
+                "ORDER BY barcode_count DESC"
+            )
+            rows = cur.fetchall()
+
+            proj_stats = [
+                {
+                    'project_id': row['project_id'],
+                    'project_name': row['project'],
+                    'number_of_samples': row['barcode_count'],
+                    'number_of_kits': row['kit_count']
+                }
+                for row in rows]
+
+            return proj_stats
+
+    def get_project_detailed_statistics(self, project_id):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT "
+                "project_id, project, "
+                "count(barcode) as barcode_count, "
+                "count(distinct kit_id) as kit_count "
+                "FROM project "
+                "LEFT JOIN "
+                "project_barcode "
+                "USING(project_id) "
+                "LEFT JOIN "
+                "barcode "
+                "USING(barcode) "
+                "WHERE project_id=%s "
+                "GROUP BY project_id",
+                (project_id,)
+            )
+            row = cur.fetchone()
+
+            if row is None:
+                raise NotFound("No such project")
+
+            project_id = row['project_id']
+            project_name = row['project']
+            number_of_samples = row['barcode_count']
+            number_of_kits = row['kit_count']
+
+            cur.execute(
+                "SELECT "
+                "project_id, count(barcode) "
+                "FROM project_barcode "
+                "LEFT JOIN "
+                "barcode "
+                "USING(barcode) "
+                "WHERE "
+                "project_id = %s AND "
+                "scan_date is NOT NULL "
+                "GROUP BY project_id",
+                (project_id,)
+            )
+            row = cur.fetchone()
+            number_of_samples_scanned_in = row['count']
+
+            cur.execute(
+                "SELECT "
+                "project_id, project, sample_status, count(barcode) "
+                "FROM project "
+                "LEFT JOIN project_barcode "
+                "USING (project_id) "
+                "LEFT JOIN barcode "
+                "USING (barcode) "
+                "WHERE "
+                "project_id = 1 AND "
+                "sample_status IS NOT NULL "
+                "group by project_id, sample_status"
+            )
+            rows = cur.fetchall()
+            sample_status_counts = {
+                row['sample_status']: row['count'] for row in rows
+            }
+
+            detailed_stats = {
+                'project_id': project_id,
+                'project_name': project_name,
+                'number_of_kits': number_of_kits,
+                'number_of_samples': number_of_samples,
+                'number_of_samples_scanned_in': number_of_samples_scanned_in,
+                'sample_status_counts': sample_status_counts
+            }
+
+            return detailed_stats

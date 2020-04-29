@@ -41,13 +41,32 @@ TOKEN_KEY_NAME = 'token'
 WORKFLOW_URL = '/workflow'
 HELP_EMAIL = "microsetta@ucsd.edu"
 KIT_NAME_KEY = "kit_name"
+EMAIL_CHECK_KEY = "email_checked"
+
+ACCT_FNAME_KEY = "first_name"
+ACCT_LNAME_KEY = "last_name"
+ACCT_EMAIL_KEY = "email"
+ACCT_ADDR_KEY = "address"
+ACCT_WRITEABLE_KEYS = [ACCT_FNAME_KEY, ACCT_LNAME_KEY, ACCT_EMAIL_KEY,
+                       ACCT_ADDR_KEY]
+
+# States
+NEEDS_REROUTE = "NeedsReroute"
+NEEDS_LOGIN = "NeedsLogin"
+NEEDS_ACCOUNT = "NeedsAccount"
+NEEDS_EMAIL_CHECK = "NeedsEmailCheck"
+NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
+NEEDS_SAMPLE = "NeedsSample"
+NEEDS_PRIMARY_SURVEY = "NeedsPrimarySurvey"
+ALL_DONE = "AllDone"
 
 
 # Client might not technically care who the user is, but if they do, they
 # get the token, validate it, and pull email out of it.
 def parse_jwt(token):
     decoded = jwt.decode(token, PUB_KEY, algorithms=['RS256'], verify=True)
-    return decoded["name"]
+    email_verified = decoded.get('email_verified', False)
+    return decoded["email"], email_verified
 
 
 def rootpath():
@@ -56,6 +75,7 @@ def rootpath():
 
 def home():
     user = None
+    email_verified = False
     acct_id = None
     show_wizard = False
 
@@ -64,17 +84,23 @@ def home():
             # If user leaves the page open, the token can expire before the
             # session, so if our token goes back we need to force them to login
             # again.
-            user = parse_jwt(session[TOKEN_KEY_NAME])
+            user, email_verified = parse_jwt(session[TOKEN_KEY_NAME])
         except jwt.exceptions.ExpiredSignatureError:
             return redirect('/logout')
-        workflow_needs, workflow_state = determine_workflow_state()
-        acct_id = workflow_state.get("account_id", None)
-        show_wizard = False  # workflow_needs != ALL_DONE
+
+        if email_verified:
+            workflow_needs, workflow_state = determine_workflow_state()
+            if workflow_needs == NEEDS_REROUTE:
+                return workflow_state["reroute"]
+
+            acct_id = workflow_state.get("account_id", None)
+            show_wizard = False
 
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
     return render_template('home.jinja2',
                            user=user,
+                           email_verified=email_verified,
                            acct_id=acct_id,
                            show_wizard=show_wizard,
                            endpoint=SERVER_CONFIG["endpoint"],
@@ -88,18 +114,11 @@ def authrocket_callback(token):
 
 def logout():
     if TOKEN_KEY_NAME in session:
-        del session[TOKEN_KEY_NAME]
+        # delete these keys if they are here, otherwise ignore
+        session.pop(TOKEN_KEY_NAME, None)
+        session.pop(KIT_NAME_KEY, None)
+        session.pop(EMAIL_CHECK_KEY, None)
     return redirect("/home")
-
-
-# States
-NEEDS_REROUTE = "NeedsReroute"
-NEEDS_LOGIN = "NeedsLogin"
-NEEDS_ACCOUNT = "NeedsAccount"
-NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
-NEEDS_SAMPLE = "NeedsSample"
-NEEDS_PRIMARY_SURVEY = "NeedsPrimarySurvey"
-ALL_DONE = "AllDone"
 
 
 def determine_workflow_state():
@@ -109,14 +128,37 @@ def determine_workflow_state():
 
     # Do they need to make an account? YES-> create_acct.html
     needs_reroute, accts_output = ApiRequest.get("/accounts")
+    # if there's an error, reroute to error page
     if needs_reroute:
         current_state["reroute"] = accts_output
         return NEEDS_REROUTE, current_state
+
     if len(accts_output) == 0:
-        return NEEDS_ACCOUNT, current_state
+        # NB: Overwriting outputs from get call above
+        needs_reroute, accts_output = ApiRequest.post("/accounts/legacies")
+        if needs_reroute:
+            current_state["reroute"] = accts_output
+            return NEEDS_REROUTE, current_state
+        # if no legacy account found, need new account
+        if len(accts_output) == 0:
+            return NEEDS_ACCOUNT, current_state
 
     acct_id = accts_output[0]["account_id"]
     current_state['account_id'] = acct_id
+
+    # If we haven't yet checked for email mismatches and gotten user decision:
+    if not session.get(EMAIL_CHECK_KEY, False):
+        # Does email in our accounts table match email in authrocket?
+        needs_reroute, email_match = ApiRequest.get(
+            "/accounts/%s/email_match" % acct_id)
+        if needs_reroute:
+            current_state["reroute"] = email_match
+            return NEEDS_REROUTE, current_state
+        # if they don't match AND the user hasn't already refused update
+        if not email_match["email_match"]:
+            return NEEDS_EMAIL_CHECK, current_state
+
+        session[EMAIL_CHECK_KEY] = True
 
     # Do they have a human source? NO-> consent.html
     needs_reroute, sources_output = ApiRequest.get(
@@ -173,6 +215,8 @@ def workflow():
         return redirect("/home")
     elif next_state == NEEDS_ACCOUNT:
         return redirect("/workflow_create_account")
+    elif next_state == NEEDS_EMAIL_CHECK:
+        return redirect("/workflow_update_email")
     elif next_state == NEEDS_HUMAN_SOURCE:
         return redirect("/workflow_create_human_source")
     elif next_state == NEEDS_PRIMARY_SURVEY:
@@ -192,7 +236,7 @@ def get_workflow_create_account():
     if next_state != NEEDS_ACCOUNT:
         return redirect(WORKFLOW_URL)
 
-    email = parse_jwt(session[TOKEN_KEY_NAME])
+    email, _ = parse_jwt(session[TOKEN_KEY_NAME])
     return render_template('create_acct.jinja2',
                            authorized_email=email)
 
@@ -204,10 +248,10 @@ def post_workflow_create_account(body):
         session[KIT_NAME_KEY] = kit_name
 
         api_json = {
-            "first_name": body['first_name'],
-            "last_name": body['last_name'],
-            "email": body['email'],
-            "address": {
+            ACCT_FNAME_KEY: body['first_name'],
+            ACCT_LNAME_KEY: body['last_name'],
+            ACCT_EMAIL_KEY: body['email'],
+            ACCT_ADDR_KEY: {
                 "street": body['street'],
                 "city": body['city'],
                 "state": body['state'],
@@ -221,6 +265,45 @@ def post_workflow_create_account(body):
         if do_return:
             return accts_output
 
+    return redirect(WORKFLOW_URL)
+
+
+def get_workflow_update_email():
+    next_state, current_state = determine_workflow_state()
+    if next_state != NEEDS_EMAIL_CHECK:
+        return redirect(WORKFLOW_URL)
+
+    return render_template("update_email.jinja2")
+
+
+def post_workflow_update_email(body):
+    next_state, current_state = determine_workflow_state()
+    if next_state != NEEDS_EMAIL_CHECK:
+        return redirect(WORKFLOW_URL)
+
+    # if the customer wants to update their email:
+    update_email = body["do_update"] == "Yes"
+    if update_email:
+        # get the existing account object
+        acct_id = current_state["account_id"]
+        do_return, acct_output = ApiRequest.get('/accounts/%s' % acct_id)
+        if do_return:
+            return acct_output
+
+        # change the email to the one in the authrocket account
+        authrocket_email, _ = parse_jwt(session[TOKEN_KEY_NAME])
+        acct_output[ACCT_EMAIL_KEY] = authrocket_email
+        # retain only writeable fields; KeyError if any of them missing
+        mod_acct = {k: acct_output[k] for k in ACCT_WRITEABLE_KEYS}
+
+        # write back the updated account info
+        do_return, put_output = ApiRequest.put(
+            '/accounts/%s' % acct_id, json=mod_acct)
+        if do_return:
+            return put_output
+
+    # even if they decided NOT to update, don't ask again this session
+    session[EMAIL_CHECK_KEY] = True
     return redirect(WORKFLOW_URL)
 
 
@@ -488,14 +571,14 @@ class ApiRequest:
 
     @classmethod
     def _check_response(cls, response):
-        do_return = True
+        error_code = response.status_code
         output = None
 
-        if response.status_code == 401:
-            # redirect to home page for login
+        if response.status_code == 401 or response.status_code == 403:
+            # output is redirect to home page for login or email verification
             output = redirect("/home")
         elif response.status_code >= 400:
-            # redirect to general error page
+            # output is general error page
             error_txt = quote(response.text)
             mailto_url = "mailto:{0}?subject={1}&body={2}".format(
                 HELP_EMAIL, quote("minimal interface error"), error_txt)
@@ -504,11 +587,11 @@ class ApiRequest:
                                      mailto_url=mailto_url,
                                      error_msg=response.text)
         else:
-            do_return = False
+            error_code = 0  # there is a response code but no *error* code
             if response.text:
                 output = response.json()
 
-        return do_return, output
+        return error_code, output
 
     @classmethod
     def get(cls, path, params=None):

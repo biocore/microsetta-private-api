@@ -78,6 +78,24 @@ def sample_pulldown_multiple_survey(token_info,
     return jsonify(sample_pulldown), 200
 
 
+def project_statistics_summary(token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        summary = admin_repo.get_project_summary_statistics()
+        return jsonify(summary), 200
+
+
+def project_statistics_detailed(token_info, project_id):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        summary = admin_repo.get_project_detailed_statistics(project_id)
+        return jsonify(summary), 200
+
+
 def validate_admin_access(token_info):
     with Transaction() as t:
         account_repo = AccountRepo(t)
@@ -87,12 +105,29 @@ def validate_admin_access(token_info):
             raise Unauthorized()
 
 
+def create_project(body, token_info):
+    validate_admin_access(token_info)
+
+    project_name = body['project_name']
+    is_microsetta = body['is_microsetta']
+
+    if len(project_name) == 0:
+        return jsonify(code=400, message="No project name provided"), 400
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        admin_repo.create_project(project_name, is_microsetta)
+        t.commit()
+
+    return {}, 201
+
+
 def create_kits(body, token_info):
     validate_admin_access(token_info)
 
     number_of_kits = body['number_of_kits']
     number_of_samples = body['number_of_samples']
-    kit_prefix = body.get('kit_prefix', None)
+    kit_prefix = body.get('kit_id_prefix', None)
     projects = body['projects']
 
     with Transaction() as t:

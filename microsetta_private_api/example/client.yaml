@@ -98,6 +98,36 @@ paths:
         '302':
           description: Redirecting to necessary action
 
+  '/workflow_update_email':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_workflow_update_email
+      responses:
+        '200':
+          description: Page asking user if they want to update their email
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_workflow_update_email
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
   '/workflow_create_human_source':
     get:
       operationId: microsetta_private_api.example.client_impl.get_workflow_create_human_source

@@ -1069,6 +1069,36 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/admin/create/project':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.create_project
+      tags:
+        - Admin
+      summary: Create a project which kits can be associated too
+      description: Create a project which kits can be associated too
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                project_name:
+                  type: string
+                is_microsetta:
+                  type: boolean
+
+              required:
+                - project_name
+                - is_microsetta
+
+      responses:
+        '201':
+          description: Project successfully created
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
   '/admin/create/kits':
     post:
       operationId: microsetta_private_api.admin.admin_impl.create_kits
@@ -1108,9 +1138,40 @@ paths:
 
         '401':
           $ref: '#/components/responses/401Unauthorized'
-        
+
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+  '/admin/statistics/projects':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.project_statistics_summary
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: Object describing project statistics for all projects
+          content:
+            application/json:
+              schema:
+                type: array
+  '/admin/statistics/project/{project_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.project_statistics_detailed
+      tags:
+        - Admin
+      parameters:
+        - in: path
+          name: project_id
+          description: Project ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Object describing specific project statistics in more detail
+          content:
+            application/json:
+              schema:
+                type: object
 
 
 components:
@@ -1207,10 +1268,22 @@ components:
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
       description: Invalid or missing token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     403Forbidden:   # Can be referenced as '#/components/responses/403Forbidden'
       description: Authorization refused.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     404NotFound:       # Can be referenced as '#/components/responses/404NotFound'
       description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     422UnprocessableEntity:
       description: The instructions provided cannot be processed.
       content:
@@ -1586,7 +1659,7 @@ components:
       type: object
       properties:
         code:
-          type: string
+          type: integer
         message:
           type: string
       required:
