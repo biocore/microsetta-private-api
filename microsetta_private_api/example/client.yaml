@@ -179,6 +179,21 @@ paths:
         '302':
           description: Redirecting to necessary action
 
+  '/accounts/{account_id}':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_account
+      tags:
+        - Accounts
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '200':
+          description: Display of account
+          content:
+            text/html:
+              schema:
+                type: string
+
   '/accounts/{account_id}/sources/{source_id}':
     get:
       operationId: microsetta_private_api.example.client_impl.get_source

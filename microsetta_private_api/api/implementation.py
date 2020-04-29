@@ -282,7 +282,7 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
 
 
 def read_survey_template(account_id, source_id, survey_template_id,
-                         language_tag, token_info, survey_redirect_url):
+                         language_tag, token_info, survey_redirect_url=None):
     _validate_account_access(token_info, account_id)
 
     # TODO: can we get rid of source_id?  I don't have anything useful to do

@@ -348,14 +348,15 @@ def post_workflow_fill_primary_survey():
     return redirect(WORKFLOW_URL)
 
 
-# def view_account(account_id):
-#     if TOKEN_KEY_NAME not in session:
-#         return redirect(WORKFLOW_URL)
-#
-#     sources = ApiRequest.get('/accounts/%s/sources' % account_id)
-#     return render_template('account.jinja2',
-#                            acct_id=account_id,
-#                            sources=sources)
+def get_account(account_id):
+    if TOKEN_KEY_NAME not in session:
+        return redirect(WORKFLOW_URL)
+
+    sources = ApiRequest.get('/accounts/%s/sources' % account_id)
+    print(sources)
+    return render_template('account.jinja2',
+                           acct_id=account_id,
+                           sources=sources)
 
 
 def get_source(account_id, source_id):
