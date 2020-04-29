@@ -30,8 +30,7 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 
 from microsetta_private_api.model.account import Account, AuthorizationMatch
-from microsetta_private_api.model.source import Source, info_from_api
-from microsetta_private_api.model.source import human_info_from_api
+from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 
 from werkzeug.exceptions import BadRequest, Unauthorized, Forbidden, NotFound
 
@@ -54,6 +53,7 @@ JWT_SUB_CLAIM_KEY = 'sub'
 JWT_EMAIL_CLAIM_KEY = 'email'
 
 ACCT_NOT_FOUND_MSG = "Account not found"
+SRC_NOT_FOUND_MSG = "Source not found"
 INVALID_TOKEN_MSG = "Invalid token"
 
 
@@ -180,23 +180,25 @@ def create_source(account_id, body, token_info):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source_id = str(uuid.uuid4())
+        name = body["source_name"]
+        source_type = body['source_type']
 
-        if body['source_type'] == Source.SOURCE_TYPE_HUMAN:
+        if source_type == Source.SOURCE_TYPE_HUMAN:
             # TODO: Unfortunately, humans require a lot of special handling,
             #  and we started mixing Source calls used for transforming to/
             #  from the database with source calls to/from the api.
             #  Would be nice to split this out better.
-            new_source = Source(source_id,
-                                account_id,
-                                Source.SOURCE_TYPE_HUMAN,
-                                human_info_from_api(
-                                    body,
-                                    consent_date=date.today(),
-                                    date_revoked=None)
-                                )
+            source_info = HumanInfo.from_dict(body,
+                                              consent_date=date.today(),
+                                              date_revoked=None)
         else:
-            new_source = Source.build_source(source_id, account_id, body)
+            source_info = NonHumanInfo.from_dict(body)
 
+        new_source = Source(source_id,
+                            account_id,
+                            source_type,
+                            name,
+                            source_info)
         source_repo.create_source(new_source)
 
         # Must pull from db to get creation_time, update_time
@@ -217,7 +219,7 @@ def read_source(account_id, source_id, token_info):
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
         if source is None:
-            return jsonify(code=404, message="Source not found"), 404
+            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
         return jsonify(source.to_api()), 200
 
 
@@ -227,14 +229,22 @@ def update_source(account_id, source_id, body, token_info):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
+        if source is None:
+            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
 
-        source.source_data = info_from_api(body)
+        source.name = body["source_name"]
+        # every type of source has a name but not every type has a description
+        if getattr(source.source_data, "description", False):
+            source.source_data.description = body.get(
+                "source_description", None)
         source_repo.update_source_data_api_fields(source)
+
         # I wonder if there's some way to get the creation_time/update_time
         # during the insert/update...
         source = source_repo.get_source(account_id, source_id)
         t.commit()
-        # TODO: 404 and 422?
+
+        # TODO: 422? Not sure this can actually happen anymore ...
         return jsonify(source.to_api()), 200
 
 
@@ -244,7 +254,7 @@ def delete_source(account_id, source_id, token_info):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         if not source_repo.delete_source(account_id, source_id):
-            return jsonify(code=404, message="No source found"), 404
+            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
         # TODO: 422?
         t.commit()
         return '', 204
