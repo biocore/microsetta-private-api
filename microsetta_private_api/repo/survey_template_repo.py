@@ -15,6 +15,7 @@ import copy
 
 class SurveyTemplateRepo(BaseRepo):
 
+    VIOSCREEN_ID = 10001
     SURVEY_INFO = {
         1: SurveyTemplateLinkInfo(
             1,
@@ -45,6 +46,12 @@ class SurveyTemplateRepo(BaseRepo):
             "Personal Microbiome Information",
             "1.0",
             "local"
+        ),
+        VIOSCREEN_ID: SurveyTemplateLinkInfo(
+            VIOSCREEN_ID,
+            "Vioscreen Food Frequency Questionnaire",
+            "1.0",
+            "remote"
         )
     }
 

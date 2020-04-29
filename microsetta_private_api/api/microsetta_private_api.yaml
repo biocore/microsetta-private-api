@@ -503,6 +503,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/survey_template_id'
         - $ref: '#/components/parameters/language_tag'
+        - $ref: '#/components/parameters/survey_redirect_url'
       responses:
         '200':
           description: Successfully returned a specific survey template
@@ -1189,7 +1190,14 @@ components:
       description: Client url to which the customized consent form should be posted.
       schema:
         type: string
-        example: "http://www.microsetta.org/workflow_create_human_source"
+        example: "https://www.microsetta.org/workflow_create_human_source"
+    survey_redirect_url:
+      name: survey_redirect_url
+      in: query
+      description: Url that some external surveys will redirect browser to after survey completion
+      schema:
+        type: string
+        example: "https://www.microsetta.org/workflow_create_human_source"
     source_type:
       name: source_type
       in: query

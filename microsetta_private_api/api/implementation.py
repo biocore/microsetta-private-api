@@ -272,7 +272,8 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [1, 3, 4, 5]]), 200
+                           for x in [1, 3, 4, 5,
+                                     SurveyTemplateRepo.VIOSCREEN_ID]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200
@@ -281,7 +282,7 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
 
 
 def read_survey_template(account_id, source_id, survey_template_id,
-                         language_tag, token_info):
+                         language_tag, token_info, survey_redirect_url):
     _validate_account_access(token_info, account_id)
 
     # TODO: can we get rid of source_id?  I don't have anything useful to do
@@ -292,6 +293,15 @@ def read_survey_template(account_id, source_id, survey_template_id,
         survey_template_repo = SurveyTemplateRepo(t)
         info = survey_template_repo.get_survey_template_link_info(
             survey_template_id)
+
+        # For external surveys, we generate links pointing out
+        if survey_template_id == SurveyTemplateRepo.VIOSCREEN_ID:
+            info.survey_template_text = vioscreen.gen_survey_url(
+                survey_template_id, language_tag, survey_redirect_url
+            )
+            return jsonify(info), 200
+
+        # For local surveys, we generate the json representing the survey
         survey_template = survey_template_repo.get_survey_template(
             survey_template_id, language_tag)
         info.survey_template_text = vue_adapter.to_vue_schema(survey_template)
@@ -365,8 +375,7 @@ def submit_answered_survey(account_id, source_id, language_tag, body,
                            token_info):
     _validate_account_access(token_info, account_id)
 
-    # TODO:  What template id number is assigned for vioscreen?
-    if body["survey_template_id"] < 0 or body["survey_template_id"] > 5:
+    if body['survey_template_id'] == SurveyTemplateRepo.VIOSCREEN_ID:
         return _submit_vioscreen_status(body["survey_text"])
 
     # TODO: Is this supposed to return new survey id?
