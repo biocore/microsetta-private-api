@@ -540,7 +540,7 @@ def finish_vioscreen(account_id, source_id, key):
         "/accounts/%s/sources/%s/surveys" % (account_id, source_id),
         json={
             "survey_template_id": VIOSCREEN_ID,
-            "survey_text": key
+            "survey_text": {"key": key}
         }
     )
 
