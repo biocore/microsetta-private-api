@@ -306,9 +306,13 @@ def read_survey_template(account_id, source_id, survey_template_id,
 
         # For external surveys, we generate links pointing out
         if survey_template_id == SurveyTemplateRepo.VIOSCREEN_ID:
-            info.survey_template_text = vioscreen.gen_survey_url(
+            url = vioscreen.gen_survey_url(
                 survey_template_id, language_tag, survey_redirect_url
             )
+            # TODO FIXME HACK: This field's contents are not specified!
+            info.survey_template_text = {
+                "url": url
+            }
             return jsonify(info), 200
 
         # For local surveys, we generate the json representing the survey
@@ -680,9 +684,9 @@ def _validate_account_access(token_info, account_id):
         return account
 
 
-def _submit_vioscreen_status(key):
+def _submit_vioscreen_status(info_str):
     # get information out of encrypted vioscreen url
-    info = vioscreen.decode_key('key')
+    info = vioscreen.decode_key(info_str)
     vio_info = {}
     for keyval in info.split("&"):
         key, val = keyval.split("=")

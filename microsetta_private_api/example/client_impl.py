@@ -60,6 +60,10 @@ NEEDS_SAMPLE = "NeedsSample"
 NEEDS_PRIMARY_SURVEY = "NeedsPrimarySurvey"
 ALL_DONE = "AllDone"
 
+# TODO FIXME HACK:  This is bullcrap.  VIOSCREEN_ID is just hardcoded.
+#  API must specify per-sample survey templates in some way.
+VIOSCREEN_ID = 10001
+
 
 # Client might not technically care who the user is, but if they do, they
 # get the token, validate it, and pull email out of it.
@@ -435,8 +439,9 @@ def get_account(account_id):
     if TOKEN_KEY_NAME not in session:
         return redirect(WORKFLOW_URL)
 
-    sources = ApiRequest.get('/accounts/%s/sources' % account_id)
-    print(sources)
+    do_return, sources = ApiRequest.get('/accounts/%s/sources' % account_id)
+    if do_return:
+        return sources
     return render_template('account.jinja2',
                            acct_id=account_id,
                            sources=sources)
@@ -447,15 +452,121 @@ def get_source(account_id, source_id):
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
 
+    # Retrieve all samples from the source
     do_return, samples_output = ApiRequest.get(
         '/accounts/%s/sources/%s/samples' % (account_id, source_id))
     if do_return:
         return samples_output
 
+    # Retrieve all surveys available to the source
+    do_return, surveys_output = ApiRequest.get(
+        '/accounts/%s/sources/%s/survey_templates' % (account_id, source_id))
+    if do_return:
+        return surveys_output
+
+    # Filter surveys to per sample and per source surveys
+    per_sample = []
+    per_source = []
+    for survey in surveys_output:
+        if survey['survey_template_id'] == VIOSCREEN_ID:
+            per_sample.append(survey)
+        else:
+            per_source.append(survey)
+
+    # Identify answered surveys for the source
+    do_return, survey_answers = ApiRequest.get(
+        '/accounts/%s/sources/%s/surveys' % (account_id, source_id))
+    if do_return:
+        return survey_answers
+
+    # TODO: Would be nice to know when the user took the survey instead of a
+    #  boolean
+    for answer in survey_answers:
+        template_id = answer['survey_template_id']
+        for template in per_source:
+            if template['survey_template_id'] == template_id:
+                template['answered'] = True
+
+    # Identify answered surveys for the samples
+    for sample in samples_output:
+        sample['ffq'] = False
+        sample_id = sample['sample_id']
+        # TODO:  This is a really awkward and slow way to get this information
+        do_return, per_sample_answers = ApiRequest.get(
+            '/accounts/%s/sources/%s/samples/%s/surveys' %
+            (account_id, source_id, sample_id))
+
+        if do_return:
+            return per_sample_answers
+
+        for answer in per_sample_answers:
+            if answer['survey_template_id'] == VIOSCREEN_ID:
+                sample['ffq'] = True
+
     return render_template('source.jinja2',
                            acct_id=account_id,
                            source_id=source_id,
-                           samples=samples_output)
+                           samples=samples_output,
+                           surveys=per_source)
+
+
+def show_survey(account_id, source_id, survey_template_id):
+    params = {}
+    if survey_template_id == VIOSCREEN_ID:
+        params['survey_redirect_url'] = SERVER_CONFIG["endpoint"] + \
+                                        '/accounts/%s/sources/%s/vspassthru' \
+                                        % (account_id, source_id)
+
+    do_return, survey_output = ApiRequest.get(
+        '/accounts/%s/sources/%s/survey_templates/%s' %
+        (account_id, source_id, survey_template_id), params=params)
+    if do_return:
+        return survey_output
+
+    # Handle remote surveys
+    if survey_output['survey_template_type'] == 'remote':
+        return redirect(survey_output['survey_template_text']['url'])
+
+    # Handle local surveys
+    return render_template("survey.jinja2",
+                           survey_schema=survey_output[
+                               'survey_template_text'])
+
+
+def finish_vioscreen(account_id, source_id, key):
+    # TODO FIXME HACK:  This is insanity.  I need to see the vioscreen docs
+    #  to interface with our API...
+    do_return, surveys_output = ApiRequest.post(
+        "/accounts/%s/sources/%s/surveys" % (account_id, source_id),
+        json={
+            "survey_template_id": VIOSCREEN_ID,
+            "survey_text": key
+        }
+    )
+
+    if do_return:
+        return surveys_output
+
+    return redirect("/accounts/%s/sources/%s" % (account_id, source_id))
+
+
+def finish_survey(account_id, source_id, survey_template_id):
+    model = {}
+    for x in flask.request.form:
+        model[x] = flask.request.form[x]
+
+    do_return, surveys_output = ApiRequest.post(
+        "/accounts/%s/sources/%s/surveys" % (account_id, source_id),
+        json={
+            "survey_template_id": survey_template_id,
+            "survey_text": model
+        }
+    )
+
+    if do_return:
+        return surveys_output
+
+    return redirect("/accounts/%s/sources/%s" % (account_id, source_id))
 
 
 def get_sample(account_id, source_id, sample_id):

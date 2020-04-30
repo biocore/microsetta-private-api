@@ -10,9 +10,9 @@ from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 
 def wrap_survey_url(survey_id, language_tag, survey_redirect_url):
     # TODO: Is this the right way to do localization here?
-    if language_tag == "en_us":
+    if language_tag == "en-US":
         text_locale = american_gut.text_locale
-    elif language_tag == "en_gb":
+    elif language_tag == "en-GB":
         text_locale = british_gut.text_locale
     else:
         raise BadRequest("Unknown Locale: " + language_tag)
@@ -35,7 +35,7 @@ def gen_survey_url(survey_id, language_tag, survey_redirect_url):
     #  rather than tornado's url_escape.  But that has to wait until I can
     #  test with the actual key and registration code.
     url = SERVER_CONFIG["vioscreen_endpoint"] + "/remotelogin.aspx?%s" % \
-          url_encode(
+        url_encode(
               {
                   b"Key": encrypt_key(survey_id,
                                       language_tag,
@@ -57,14 +57,6 @@ def pkcs7_unpad_message(in_message, ):
 
 
 def encrypt_key(survey_id, language_tag, survey_redirect_url):
-    # TODO: Is this the right way to do localization here?
-    if language_tag == "en_us":
-        media_locale = american_gut.media_locale
-    elif language_tag == "en_gb":
-        media_locale = british_gut.media_locale
-    else:
-        raise BadRequest("Unknown Locale: " + language_tag)
-
     """Encode minimal required vioscreen information to AES key"""
     firstname = "NOT"
     lastname = "IDENTIFIED"
