@@ -390,7 +390,7 @@ def submit_answered_survey(account_id, source_id, language_tag, body,
     _validate_account_access(token_info, account_id)
 
     if body['survey_template_id'] == SurveyTemplateRepo.VIOSCREEN_ID:
-        return _submit_vioscreen_status(body["survey_text"])
+        return _submit_vioscreen_status(body["survey_text"]["key"])
 
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
