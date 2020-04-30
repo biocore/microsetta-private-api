@@ -98,6 +98,36 @@ paths:
         '302':
           description: Redirecting to necessary action
 
+  '/workflow_update_email':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_workflow_update_email
+      responses:
+        '200':
+          description: Page asking user if they want to update their email
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_workflow_update_email
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
   '/workflow_create_human_source':
     get:
       operationId: microsetta_private_api.example.client_impl.get_workflow_create_human_source
@@ -179,6 +209,21 @@ paths:
         '302':
           description: Redirecting to necessary action
 
+  '/accounts/{account_id}':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_account
+      tags:
+        - Accounts
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '200':
+          description: Display of account
+          content:
+            text/html:
+              schema:
+                type: string
+
   '/accounts/{account_id}/sources/{source_id}':
     get:
       operationId: microsetta_private_api.example.client_impl.get_source
@@ -194,6 +239,63 @@ paths:
             text/html:
               schema:
                 type: string
+
+  '/accounts/{account_id}/sources/{source_id}/survey_templates/{survey_template_id}':
+    get:
+      operationId: microsetta_private_api.example.client_impl.show_survey
+      tags:
+        - Surveys
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/survey_template_id'
+      responses:
+        '200':
+          description: Take survey
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      operationId: microsetta_private_api.example.client_impl.finish_survey
+      tags:
+        - Surveys
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/survey_template_id'
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
+# TODO:  I'm not actually sure if vioscreen does a GET or a POST when its done.
+  '/accounts/{account_id}/sources/{source_id}/vspassthru':
+    get:
+      operationId: microsetta_private_api.example.client_impl.finish_vioscreen
+      tags:
+        - Surveys
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - in: query
+          name: key
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}':
     get:
@@ -281,13 +383,13 @@ components:
 #      schema:
 #        $ref: '#/components/schemas/survey_id'
 #      required: true
-#    survey_template_id:
-#      name: survey_template_id
-#      in: path
-#      description: Unique internal id specifying a particular survey template
-#      schema:
-#        $ref: '#/components/schemas/survey_template_id'
-#      required: true
+    survey_template_id:
+      name: survey_template_id
+      in: path
+      description: Unique internal id specifying a particular survey template
+      schema:
+        $ref: '#/components/schemas/survey_template_id'
+      required: true
     source_id:
       name: source_id
       in: path
@@ -309,3 +411,6 @@ components:
       type: string
       readOnly: true # sent in GET, not in POST/PUT/PATCH
       example: "dae21127-27bb-4f52-9fd3-a2aa5eb5b86f"
+    survey_template_id:
+      type: integer
+      example: 3

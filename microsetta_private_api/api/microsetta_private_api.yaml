@@ -503,6 +503,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/survey_template_id'
         - $ref: '#/components/parameters/language_tag'
+        - $ref: '#/components/parameters/survey_redirect_url'
       responses:
         '200':
           description: Successfully returned a specific survey template
@@ -1137,9 +1138,40 @@ paths:
 
         '401':
           $ref: '#/components/responses/401Unauthorized'
-        
+
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+  '/admin/statistics/projects':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.project_statistics_summary
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: Object describing project statistics for all projects
+          content:
+            application/json:
+              schema:
+                type: array
+  '/admin/statistics/project/{project_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.project_statistics_detailed
+      tags:
+        - Admin
+      parameters:
+        - in: path
+          name: project_id
+          description: Project ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Object describing specific project statistics in more detail
+          content:
+            application/json:
+              schema:
+                type: object
 
 
 components:
@@ -1219,7 +1251,14 @@ components:
       description: Client url to which the customized consent form should be posted.
       schema:
         type: string
-        example: "http://www.microsetta.org/workflow_create_human_source"
+        example: "https://www.microsetta.org/workflow_create_human_source"
+    survey_redirect_url:
+      name: survey_redirect_url
+      in: query
+      description: Url that some external surveys will redirect browser to after survey completion
+      schema:
+        type: string
+        example: "https://www.microsetta.org/workflow_create_human_source"
     source_type:
       name: source_type
       in: query
@@ -1229,10 +1268,22 @@ components:
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
       description: Invalid or missing token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     403Forbidden:   # Can be referenced as '#/components/responses/403Forbidden'
       description: Authorization refused.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     404NotFound:       # Can be referenced as '#/components/responses/404NotFound'
       description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     422UnprocessableEntity:
       description: The instructions provided cannot be processed.
       content:
@@ -1608,7 +1659,7 @@ components:
       type: object
       properties:
         code:
-          type: string
+          type: integer
         message:
           type: string
       required:

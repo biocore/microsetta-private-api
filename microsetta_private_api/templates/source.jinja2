@@ -4,13 +4,12 @@
     <meta charset="utf-8"/>
     <title>Microsetta Account Samples</title>
     <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
-
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
 </head>
 <body>
-    <a href="http://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
-        &nbsp;&nbsp;
-        <img src="/static/img/logo-co.png" class="resize">
+    <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize"/>
         <br />
         <br />
         Return to microsetta.ucsd.edu
@@ -28,17 +27,45 @@
             Samples:
             <div class="list-group">
                 {% for sample in samples %}
-                <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}" class="list-group-item list-group-item-action {{loop.cycle('odd', 'even') }}">
-                <div class="container">
+                <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                   <div class="row">
                     <div class="col-sm">
-                      {{sample.sample_barcode |e}}
+                      <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
                     </div>
                     <div class="col-sm">
                       {{sample.sample_datetime |e}}
                     </div>
                     <div class="col-sm">
                       {{sample.sample_site |e}}
+                    </div>
+                    <div class="col-sm">
+                      {% if sample.ffq %}
+                        <a href="/accounts/{{acct_id}}/sources/{{source_id}}/survey_templates/10001">Food Frequency Questionnaire</a><span class="fa fa-check"/>
+                      {% else %}
+                        <a href="/accounts/{{acct_id}}/sources/{{source_id}}/survey_templates/10001">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="container">
+            Available Surveys:
+            <div class="list-group">
+                {% for survey in surveys %}
+                <a href="/accounts/{{acct_id}}/sources/{{source_id}}/survey_templates/{{survey.survey_template_id}}" class="list-group-item list-group-item-action {{loop.cycle('odd', 'even') }}">
+                <div class="container">
+                  <div class="row">
+                    <div class="col-sm">
+                      {{survey.survey_template_title |e}}
+                    </div>
+                    <div class="col-sm">
+                        {% if survey.answered %}
+                        <span class="fa fa-check"/>
+                        {% else %}
+                        <span class="fa fa-unchecked"/>
+                        {% endif %}
                     </div>
                   </div>
                 </div>

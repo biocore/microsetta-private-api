@@ -14,7 +14,7 @@ from microsetta_private_api.model.account import Account
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.model.source import \
-    Source, HumanInfo, AnimalInfo, EnvironmentInfo
+    Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.util.util import json_converter, fromisotime
 import datetime
@@ -166,22 +166,28 @@ class IntegrationTests(TestCase):
                           ))
             acct_repo.create_account(acc)
 
-            source_repo.create_source(Source.create_human(
+            source_repo.create_source(Source(
                 HUMAN_ID,
                 ACCT_ID,
-                HumanInfo("Bo", "bo@bo.com", False, None, None,
+                Source.SOURCE_TYPE_HUMAN,
+                "Bo",
+                HumanInfo("bo@bo.com", False, None, None,
                           False, datetime.datetime.utcnow(), None,
                           "Mr. Obtainer",
                           "18-plus")
             ))
-            source_repo.create_source(Source.create_animal(
+            source_repo.create_source(Source(
                 DOGGY_ID,
                 ACCT_ID,
-                AnimalInfo("Doggy", "Doggy The Dog")))
-            source_repo.create_source(Source.create_environment(
+                Source.SOURCE_TYPE_ANIMAL,
+                "Doggy",
+                NonHumanInfo("Doggy The Dog")))
+            source_repo.create_source(Source(
                 PLANTY_ID,
                 ACCT_ID,
-                EnvironmentInfo("Planty", "The green one")))
+                Source.SOURCE_TYPE_ENVIRONMENT,
+                "Planty",
+                NonHumanInfo("The green one")))
 
             _create_mock_kit(t)
 

@@ -31,8 +31,7 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 
 from microsetta_private_api.model.account import Account, AuthorizationMatch
-from microsetta_private_api.model.source import Source, info_from_api
-from microsetta_private_api.model.source import human_info_from_api
+from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 
 from werkzeug.exceptions import BadRequest, Unauthorized, Forbidden, NotFound
 
@@ -56,6 +55,7 @@ JWT_SUB_CLAIM_KEY = 'sub'
 JWT_EMAIL_CLAIM_KEY = 'email'
 
 ACCT_NOT_FOUND_MSG = "Account not found"
+SRC_NOT_FOUND_MSG = "Source not found"
 INVALID_TOKEN_MSG = "Invalid token"
 
 
@@ -77,9 +77,9 @@ def claim_legacy_acct(token_info):
     # If there exists a legacy account for the email in the token, which the
     # user represented by the token does not already own but can claim, this
     # claims the legacy account for the user and returns a 200 code with json
-    # containing an object for the claimed account.  Otherwise, this returns a
-    # 404 code. This function can also trigger a 422 from the repo layer in the
-    # case of inconsistent account data.
+    # list containing the object for the claimed account.  Otherwise, this
+    # returns an empty json list. This function can also trigger a 422 from the
+    # repo layer in the case of inconsistent account data.
 
     email = token_info[JWT_EMAIL_CLAIM_KEY]
     auth_iss = token_info[JWT_ISS_CLAIM_KEY]
@@ -107,7 +107,7 @@ def register_account(body, token_info):
         kit_repo = KitRepo(t)
         kit = kit_repo.get_kit_all_samples(body['kit_name'])
         if kit is None:
-            return jsonify(error=404, text="Kit name not found"), 404
+            return jsonify(code=404, message="Kit name not found"), 404
 
         acct_repo = AccountRepo(t)
         acct_repo.create_account(account_obj)
@@ -182,23 +182,25 @@ def create_source(account_id, body, token_info):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source_id = str(uuid.uuid4())
+        name = body["source_name"]
+        source_type = body['source_type']
 
-        if body['source_type'] == Source.SOURCE_TYPE_HUMAN:
+        if source_type == Source.SOURCE_TYPE_HUMAN:
             # TODO: Unfortunately, humans require a lot of special handling,
             #  and we started mixing Source calls used for transforming to/
             #  from the database with source calls to/from the api.
             #  Would be nice to split this out better.
-            new_source = Source(source_id,
-                                account_id,
-                                Source.SOURCE_TYPE_HUMAN,
-                                human_info_from_api(
-                                    body,
-                                    consent_date=date.today(),
-                                    date_revoked=None)
-                                )
+            source_info = HumanInfo.from_dict(body,
+                                              consent_date=date.today(),
+                                              date_revoked=None)
         else:
-            new_source = Source.build_source(source_id, account_id, body)
+            source_info = NonHumanInfo.from_dict(body)
 
+        new_source = Source(source_id,
+                            account_id,
+                            source_type,
+                            name,
+                            source_info)
         source_repo.create_source(new_source)
 
         # Must pull from db to get creation_time, update_time
@@ -219,7 +221,7 @@ def read_source(account_id, source_id, token_info):
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
         if source is None:
-            return jsonify(code=404, message="Source not found"), 404
+            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
         return jsonify(source.to_api()), 200
 
 
@@ -229,14 +231,22 @@ def update_source(account_id, source_id, body, token_info):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
+        if source is None:
+            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
 
-        source.source_data = info_from_api(body)
+        source.name = body["source_name"]
+        # every type of source has a name but not every type has a description
+        if getattr(source.source_data, "description", False):
+            source.source_data.description = body.get(
+                "source_description", None)
         source_repo.update_source_data_api_fields(source)
+
         # I wonder if there's some way to get the creation_time/update_time
         # during the insert/update...
         source = source_repo.get_source(account_id, source_id)
         t.commit()
-        # TODO: 404 and 422?
+
+        # TODO: 422? Not sure this can actually happen anymore ...
         return jsonify(source.to_api()), 200
 
 
@@ -246,7 +256,7 @@ def delete_source(account_id, source_id, token_info):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         if not source_repo.delete_source(account_id, source_id):
-            return jsonify(code=404, message="No source found"), 404
+            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
         # TODO: 422?
         t.commit()
         return '', 204
@@ -272,7 +282,8 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [1, 3, 4, 5]]), 200
+                           for x in [1, 3, 4, 5,
+                                     SurveyTemplateRepo.VIOSCREEN_ID]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200
@@ -281,7 +292,7 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
 
 
 def read_survey_template(account_id, source_id, survey_template_id,
-                         language_tag, token_info):
+                         language_tag, token_info, survey_redirect_url=None):
     _validate_account_access(token_info, account_id)
 
     # TODO: can we get rid of source_id?  I don't have anything useful to do
@@ -292,6 +303,19 @@ def read_survey_template(account_id, source_id, survey_template_id,
         survey_template_repo = SurveyTemplateRepo(t)
         info = survey_template_repo.get_survey_template_link_info(
             survey_template_id)
+
+        # For external surveys, we generate links pointing out
+        if survey_template_id == SurveyTemplateRepo.VIOSCREEN_ID:
+            url = vioscreen.gen_survey_url(
+                survey_template_id, language_tag, survey_redirect_url
+            )
+            # TODO FIXME HACK: This field's contents are not specified!
+            info.survey_template_text = {
+                "url": url
+            }
+            return jsonify(info), 200
+
+        # For local surveys, we generate the json representing the survey
         survey_template = survey_template_repo.get_survey_template(
             survey_template_id, language_tag)
         info.survey_template_text = vue_adapter.to_vue_schema(survey_template)
@@ -365,8 +389,7 @@ def submit_answered_survey(account_id, source_id, language_tag, body,
                            token_info):
     _validate_account_access(token_info, account_id)
 
-    # TODO:  What template id number is assigned for vioscreen?
-    if body["survey_template_id"] < 0 or body["survey_template_id"] > 5:
+    if body['survey_template_id'] == SurveyTemplateRepo.VIOSCREEN_ID:
         return _submit_vioscreen_status(body["survey_text"])
 
     # TODO: Is this supposed to return new survey id?
@@ -661,9 +684,9 @@ def _validate_account_access(token_info, account_id):
         return account
 
 
-def _submit_vioscreen_status(key):
+def _submit_vioscreen_status(info_str):
     # get information out of encrypted vioscreen url
-    info = vioscreen.decode_key('key')
+    info = vioscreen.decode_key(info_str)
     vio_info = {}
     for keyval in info.split("&"):
         key, val = keyval.split("=")

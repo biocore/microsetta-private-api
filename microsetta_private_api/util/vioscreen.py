@@ -8,11 +8,11 @@ from microsetta_private_api.config_manager import AMGUT_CONFIG, SERVER_CONFIG
 from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 
 
-def wrap_survey_url(survey_id, language_tag):
+def wrap_survey_url(survey_id, language_tag, survey_redirect_url):
     # TODO: Is this the right way to do localization here?
-    if language_tag == "en_us":
+    if language_tag == "en-US":
         text_locale = american_gut.text_locale
-    elif language_tag == "en_gb":
+    elif language_tag == "en-GB":
         text_locale = british_gut.text_locale
     else:
         raise BadRequest("Unknown Locale: " + language_tag)
@@ -24,16 +24,22 @@ def wrap_survey_url(survey_id, language_tag):
     return embedded_text % url
 
 
-def gen_survey_url(survey_id, language_tag):
+def gen_survey_url(survey_id, language_tag, survey_redirect_url):
+    if not survey_redirect_url:
+        raise BadRequest("Food Frequency Questionnaire Requires "
+                         "survey_redirect_url")
+
     regcode = SERVER_CONFIG["vioscreen_regcode"]
     # TODO: If we have problems getting the ciphertext to be accepted by
     #  vioscreen, it could be due to switching to use of werkzeugs url_encode
     #  rather than tornado's url_escape.  But that has to wait until I can
     #  test with the actual key and registration code.
     url = SERVER_CONFIG["vioscreen_endpoint"] + "/remotelogin.aspx?%s" % \
-          url_encode(
+        url_encode(
               {
-                  b"Key": encrypt_key(survey_id, language_tag),
+                  b"Key": encrypt_key(survey_id,
+                                      language_tag,
+                                      survey_redirect_url),
                   b"RegCode": regcode.encode()
               }, charset='utf-16'
           )
@@ -50,15 +56,7 @@ def pkcs7_unpad_message(in_message, ):
     return in_message[:-ord(in_message[-1])]
 
 
-def encrypt_key(survey_id, language_tag):
-    # TODO: Is this the right way to do localization here?
-    if language_tag == "en_us":
-        media_locale = american_gut.media_locale
-    elif language_tag == "en_gb":
-        media_locale = british_gut.media_locale
-    else:
-        raise BadRequest("Unknown Locale: " + language_tag)
-
+def encrypt_key(survey_id, language_tag, survey_redirect_url):
     """Encode minimal required vioscreen information to AES key"""
     firstname = "NOT"
     lastname = "IDENTIFIED"
@@ -67,14 +65,7 @@ def encrypt_key(survey_id, language_tag):
 
     regcode = SERVER_CONFIG["vioscreen_regcode"]
 
-    # TODO: Specifying a callback url that goes back to our api server is, once
-    #  again, super weird.  How is this supposed to work with callbacks?
-
-    # TODO: What is supposed to go here for return url!?
-    #  Theoretically it should be some departure website callback, which means
-    #  they need to specify that to our api?  (AND register it with vioscreen?)
-    returnurl = "http://microbio.me%s%s" % (media_locale["SITEBASE"],
-                                            "/authed/vspassthrough/")
+    returnurl = survey_redirect_url
     assess_query = ("FirstName=%s&LastName=%s"
                     "&RegCode=%s"
                     "&Username=%s"
