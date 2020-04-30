@@ -21,6 +21,9 @@ import uuid
 #  we disambiguate all these functions to decide whether it includes that
 #  table, build out a SurveyAnswersRepo, or modify the schema so its not so
 #  insane???
+from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
+
+
 class SurveyAnswersRepo(BaseRepo):
 
     def find_survey_template_id(self, survey_answers_id):
@@ -42,8 +45,13 @@ class SurveyAnswersRepo(BaseRepo):
             rows += cur.fetchall()
 
             if len(rows) == 0:
-                raise RepoException("No answers in survey: %s" +
-                                    survey_answers_id)
+                vioscreen_repo = VioscreenRepo(self._transaction)
+                status = vioscreen_repo.get_vioscreen_status(survey_answers_id)
+                if status is not None:
+                    return SurveyTemplateRepo.VIOSCREEN_ID
+                else:
+                    raise RepoException("No answers in survey: %s" +
+                                        survey_answers_id)
 
             arbitrary_question_id = rows[0][1]
             cur.execute("SELECT surveys.survey_id FROM "

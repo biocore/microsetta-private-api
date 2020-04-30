@@ -306,8 +306,9 @@ def read_survey_template(account_id, source_id, survey_template_id,
 
         # For external surveys, we generate links pointing out
         if survey_template_id == SurveyTemplateRepo.VIOSCREEN_ID:
+
             url = vioscreen.gen_survey_url(
-                survey_template_id, language_tag, survey_redirect_url
+                language_tag, survey_redirect_url
             )
             # TODO FIXME HACK: This field's contents are not specified!
             info.survey_template_text = {
@@ -390,7 +391,8 @@ def submit_answered_survey(account_id, source_id, language_tag, body,
     _validate_account_access(token_info, account_id)
 
     if body['survey_template_id'] == SurveyTemplateRepo.VIOSCREEN_ID:
-        return _submit_vioscreen_status(body["survey_text"]["key"])
+        return _submit_vioscreen_status(account_id, source_id,
+                                        body["survey_text"]["key"])
 
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
@@ -684,9 +686,9 @@ def _validate_account_access(token_info, account_id):
         return account
 
 
-def _submit_vioscreen_status(info_str):
+def _submit_vioscreen_status(account_id, source_id, info_str):
     # get information out of encrypted vioscreen url
-    info = vioscreen.decode_key(info_str)
+    info = vioscreen.decode_key(info_str).decode("utf-8")
     vio_info = {}
     for keyval in info.split("&"):
         key, val = keyval.split("=")
@@ -696,9 +698,20 @@ def _submit_vioscreen_status(info_str):
         vio_repo = VioscreenRepo(t)
 
         # Add the status to the survey
-        vio_repo.update_vioscreen_status(vio_info["username"],
+        vio_repo.upsert_vioscreen_status(account_id, source_id,
+                                         vio_info["username"],
                                          int(vio_info["status"]))
         t.commit()
 
-    # TODO: Any reason to respond with anything?
-    return '', 204
+    response = flask.Response()
+    response.status_code = 201
+    # TODO FIXME HACK:  This location can't actually return any info about ffq!
+    #  But I need SOME response that contains the survey_id or client can't
+    #  associate the survey with a sample.
+    response.headers['Location'] = '/api/accounts/%s' \
+                                   '/sources/%s' \
+                                   '/surveys/%s' % \
+                                   (account_id,
+                                    source_id,
+                                    vio_info["username"])
+    return response

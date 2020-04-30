@@ -1,14 +1,16 @@
+import secrets
+
 from Crypto.Cipher import AES
 from Crypto import Random
 from base64 import b64decode, b64encode
 from werkzeug.exceptions import BadRequest
 from werkzeug.urls import url_encode
 
-from microsetta_private_api.config_manager import AMGUT_CONFIG, SERVER_CONFIG
+from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 
 
-def wrap_survey_url(survey_id, language_tag, survey_redirect_url):
+def wrap_survey_url(language_tag, survey_redirect_url):
     # TODO: Is this the right way to do localization here?
     if language_tag == "en-US":
         text_locale = american_gut.text_locale
@@ -20,11 +22,11 @@ def wrap_survey_url(survey_id, language_tag, survey_redirect_url):
     """Return a formatted text block and URL for the external survey"""
     tl = text_locale['human_survey_completed.html']
     embedded_text = tl['SURVEY_VIOSCREEN']
-    url = gen_survey_url(survey_id, language_tag)
+    url = gen_survey_url(language_tag, survey_redirect_url)
     return embedded_text % url
 
 
-def gen_survey_url(survey_id, language_tag, survey_redirect_url):
+def gen_survey_url(language_tag, survey_redirect_url):
     if not survey_redirect_url:
         raise BadRequest("Food Frequency Questionnaire Requires "
                          "survey_redirect_url")
@@ -37,7 +39,7 @@ def gen_survey_url(survey_id, language_tag, survey_redirect_url):
     url = SERVER_CONFIG["vioscreen_endpoint"] + "/remotelogin.aspx?%s" % \
         url_encode(
               {
-                  b"Key": encrypt_key(survey_id,
+                  b"Key": encrypt_key(secrets.token_hex(8),
                                       language_tag,
                                       survey_redirect_url),
                   b"RegCode": regcode.encode()
@@ -52,8 +54,13 @@ def pkcs7_pad_message(in_message):
     return in_message + chr(length) * length
 
 
-def pkcs7_unpad_message(in_message, ):
-    return in_message[:-ord(in_message[-1])]
+def pkcs7_unpad_message(in_message):
+    padding = in_message[-1]
+    if padding > 16:
+        # Not padded.
+        return in_message
+    in_message = in_message[:-padding]
+    return in_message
 
 
 def encrypt_key(survey_id, language_tag, survey_redirect_url):
@@ -89,7 +96,7 @@ def encrypt_key(survey_id, language_tag, survey_redirect_url):
 
 def decode_key(encoded):
     """decode AES and remove IV and PKCS#7 padding"""
-    key = AMGUT_CONFIG.vioscreen_cryptokey
+    key = SERVER_CONFIG['vioscreen_cryptokey']
     iv = Random.new().read(16)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     return pkcs7_unpad_message(cipher.decrypt(b64decode(encoded))[16:])

@@ -242,7 +242,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/survey_templates/{survey_template_id}':
     get:
-      operationId: microsetta_private_api.example.client_impl.show_survey
+      operationId: microsetta_private_api.example.client_impl.show_source_survey
       tags:
         - Surveys
       parameters:
@@ -274,8 +274,25 @@ paths:
         '302':
           description: Redirecting to necessary action
 
-# TODO:  I'm not actually sure if vioscreen does a GET or a POST when its done.
-  '/accounts/{account_id}/sources/{source_id}/vspassthru':
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/survey_templates/{survey_template_id}':
+    get:
+      operationId: microsetta_private_api.example.client_impl.show_sample_survey
+      tags:
+        - Surveys
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/survey_template_id'
+      responses:
+        '200':
+          description: Take survey and immediately associate with a sample
+          content:
+            text/html:
+              schema:
+                type: string
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vspassthru':
     get:
       operationId: microsetta_private_api.example.client_impl.finish_vioscreen
       tags:
@@ -283,6 +300,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
         - in: query
           name: key
           schema:
