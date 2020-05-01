@@ -56,6 +56,7 @@ NEEDS_LOGIN = "NeedsLogin"
 NEEDS_ACCOUNT = "NeedsAccount"
 NEEDS_EMAIL_CHECK = "NeedsEmailCheck"
 NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
+TOO_MANY_HUMAN_SOURCES = "TooManyHumanSources"
 NEEDS_SAMPLE = "NeedsSample"
 NEEDS_PRIMARY_SURVEY = "NeedsPrimarySurvey"
 ALL_DONE = "AllDone"
@@ -77,7 +78,7 @@ def home():
     user = None
     email_verified = False
     acct_id = None
-    show_wizard = False
+    has_multiple_hs_sources = False
 
     if TOKEN_KEY_NAME in session:
         try:
@@ -94,7 +95,7 @@ def home():
                 return workflow_state["reroute"]
 
             acct_id = workflow_state.get("account_id", None)
-            show_wizard = False
+            has_multiple_hs_sources = workflow_needs == TOO_MANY_HUMAN_SOURCES
 
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
@@ -102,7 +103,7 @@ def home():
                            user=user,
                            email_verified=email_verified,
                            acct_id=acct_id,
-                           show_wizard=show_wizard,
+                           has_multiple_hs_sources=has_multiple_hs_sources,
                            endpoint=SERVER_CONFIG["endpoint"],
                            authrocket_url=SERVER_CONFIG["authrocket_url"])
 
@@ -168,6 +169,9 @@ def determine_workflow_state():
         return NEEDS_REROUTE, current_state
     if len(sources_output) == 0:
         return NEEDS_HUMAN_SOURCE, current_state
+    elif len(sources_output) > 1:
+        # we do not currently support displaying multiple human sources
+        return TOO_MANY_HUMAN_SOURCES, current_state
 
     source_id = sources_output[0]["source_id"]
     current_state['human_source_id'] = source_id
