@@ -63,9 +63,6 @@ DUMMY_ACCT_INFO_2 = {
 }
 
 SOURCE_ID_1 = "9fba75a5-6fbf-42be-9624-731b6a9a161a"
-# DUMMY_HUMAN_INFO = HumanInfo("bo@bo.com", False, None, None,
-#                              False, datetime.datetime.utcnow(), None,
-#                              "Mr. Obtainer", "18-plus")
 
 DUMMY_HUMAN_SOURCE = {
                 'source_name': 'Bo',
