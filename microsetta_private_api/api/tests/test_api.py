@@ -86,7 +86,7 @@ ACCT_MOCK_SUB = "NotARealSub"
 ACCT_MOCK_ISS_2 = "NewPhone"
 ACCT_MOCK_SUB_2 = "WhoDis"
 
-SOURCE_ID_KEY ='source_id'
+SOURCE_ID_KEY = 'source_id'
 
 MOCK_HEADERS = {"Authorization": "Bearer mockone"}
 FAKE_TOKEN_IMPOSTOR = "mockimpostor"
@@ -252,8 +252,8 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
 
 
 def _create_dummy_source_from_t(t, name, source_type, content_dict,
-                                   create_dummy_1=True,
-                                   iss=ACCT_MOCK_ISS, sub=ACCT_MOCK_SUB):
+                                create_dummy_1=True,
+                                iss=ACCT_MOCK_ISS, sub=ACCT_MOCK_SUB):
 
     dummy_source_id = SOURCE_ID_1
     dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub)
@@ -809,8 +809,9 @@ class SourceTests(ApiTests):
     # region source view/get tests
     def test_source_view_success(self):
         """Successfully view existing human source"""
-        dummy_acct_id, dummy_source_id = create_dummy_source("Bo",
-            Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE, create_dummy_1=True)
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
 
         response = self.client.get(
             '/api/accounts/%s/sources?%s' %
