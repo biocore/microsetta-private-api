@@ -45,6 +45,12 @@ class SurveyTemplateRepo(BaseRepo):
             "Personal Microbiome Information",
             "1.0",
             "local"
+        ),
+        6: SurveyTemplateLinkInfo(
+            6,
+            "COVID19 Questionnaire",
+            "1.0",
+            "local"
         )
     }
 
