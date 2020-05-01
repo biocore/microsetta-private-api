@@ -5,13 +5,16 @@ import werkzeug
 import json
 import copy
 import collections
+import datetime
 from urllib.parse import urlencode
 from unittest import TestCase
 import microsetta_private_api.server
 from microsetta_private_api import localization
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.model.account import Account
+from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 
 
 # region helper methods
@@ -20,13 +23,18 @@ CONTENT_KEY = "content"
 
 TEST_EMAIL = "test_email@example.com"
 TEST_EMAIL_2 = "second_test_email@example.com"
+
+ACCT_ID_1 = "7a98df6a-e4db-40f4-91ec-627ac315d881"
+ACCT_ID_2 = "9457c58f-7464-46c9-b6e0-116273cf8f28"
+MISSING_ACCT_ID = "a6cbd48e-f8da-4c0e-bdd6-3ffbbb5958ba"
+
 KIT_NAME_KEY = "kit_name"
 # these kits exists in the test db (NOT created by unit test code)
 EXISTING_KIT_NAME = "jb_qhxqe"
 EXISTING_KIT_NAME_2 = "fa_lrfiq"
 # this kit does not exist in the test db
 MISSING_KIT_NAME = "jb_qhxTe"
-MISSING_ACCT_ID = "a6cbd48e-f8da-4c0e-bdd6-3ffbbb5958ba"
+
 DUMMY_ACCT_INFO = {
     "address": {
         "city": "Springfield",
@@ -54,13 +62,29 @@ DUMMY_ACCT_INFO_2 = {
     KIT_NAME_KEY: EXISTING_KIT_NAME_2
 }
 
+SOURCE_ID_1 = "9fba75a5-6fbf-42be-9624-731b6a9a161a"
+
+DUMMY_HUMAN_SOURCE = {
+                'source_name': 'Bo',
+                'source_type': 'human',
+                'consent': {
+                    'participant_email': 'bo@bo.com',
+                    'age_range': "18-plus"
+                },
+            }
+DUMMY_CONSENT_DATE = datetime.datetime.strptime('Jun 1 2005', '%b %d %Y')
+
 ACCT_ID_KEY = "account_id"
 ACCT_TYPE_KEY = "account_type"
 ACCT_TYPE_VAL = "standard"
+
 ACCT_MOCK_ISS = "MrUnitTest.go"
 ACCT_MOCK_SUB = "NotARealSub"
 ACCT_MOCK_ISS_2 = "NewPhone"
 ACCT_MOCK_SUB_2 = "WhoDis"
+
+SOURCE_ID_KEY = 'source_id'
+
 MOCK_HEADERS = {"Authorization": "Bearer mockone"}
 FAKE_TOKEN_IMPOSTOR = "mockimpostor"
 FAKE_TOKEN_EMAIL_MISMATCH = "mockemailmismatch"
@@ -167,31 +191,81 @@ def extract_last_id_from_location_header(response):
 
 def delete_dummy_accts():
     with Transaction() as t:
-        AccountRepo(t).delete_account_by_email(TEST_EMAIL)
-        AccountRepo(t).delete_account_by_email(TEST_EMAIL_2)
+        source_repo = SourceRepo(t)
+        sources = source_repo.get_sources_in_account(ACCT_ID_1)
+        for curr_source in sources:
+            source_repo.delete_source(ACCT_ID_1, curr_source.id)
+
+        acct_repo = AccountRepo(t)
+        acct_repo.delete_account(ACCT_ID_1)
+        acct_repo.delete_account(ACCT_ID_2)
+        # Belt and suspenders: these test emails are used by some tests outside
+        # of this module as well, so can't be sure they are paired with the
+        # above dummy account ids
+        acct_repo.delete_account_by_email(TEST_EMAIL)
+        acct_repo.delete_account_by_email(TEST_EMAIL_2)
         t.commit()
 
 
 def create_dummy_acct(create_dummy_1=True,
                       iss=ACCT_MOCK_ISS,
                       sub=ACCT_MOCK_SUB):
+    with Transaction() as t:
+        dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub)
+        t.commit()
+
+    return dummy_acct_id
+
+
+def create_dummy_source(name, source_type, content_dict, create_dummy_1=True,
+                        iss=ACCT_MOCK_ISS,
+                        sub=ACCT_MOCK_SUB):
+    with Transaction() as t:
+        dummy_acct_id, dummy_source_id = _create_dummy_source_from_t(
+            t, name, source_type, content_dict, create_dummy_1, iss, sub)
+        t.commit()
+
+    return dummy_acct_id, dummy_source_id
+
+
+def _create_dummy_acct_from_t(t, create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS,
+                              sub=ACCT_MOCK_SUB):
     if create_dummy_1:
-        dummy_acct_id = "7a98df6a-e4db-40f4-91ec-627ac315d881"
+        dummy_acct_id = ACCT_ID_1
         dict_to_copy = DUMMY_ACCT_INFO
     else:
-        dummy_acct_id = "9457c58f-7464-46c9-b6e0-116273cf8f28"
+        dummy_acct_id = ACCT_ID_2
         dict_to_copy = DUMMY_ACCT_INFO_2
 
     input_obj = copy.deepcopy(dict_to_copy)
     input_obj["id"] = dummy_acct_id
-    with Transaction() as t:
-        acct_repo = AccountRepo(t)
-        acct_repo.create_account(Account.from_dict(input_obj,
-                                                   iss,
-                                                   sub))
-        t.commit()
+    acct_repo = AccountRepo(t)
+    acct_repo.create_account(Account.from_dict(input_obj,
+                                               iss,
+                                               sub))
 
     return dummy_acct_id
+
+
+def _create_dummy_source_from_t(t, name, source_type, content_dict,
+                                create_dummy_1=True,
+                                iss=ACCT_MOCK_ISS, sub=ACCT_MOCK_SUB):
+
+    dummy_source_id = SOURCE_ID_1
+    dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub)
+    source_repo = SourceRepo(t)
+    if source_type == Source.SOURCE_TYPE_HUMAN:
+        dummy_info_obj = HumanInfo.from_dict(content_dict, DUMMY_CONSENT_DATE,
+                                             None)
+    else:
+        dummy_info_obj = NonHumanInfo.from_dict(content_dict)
+
+    source_repo.create_source(Source(dummy_source_id, dummy_acct_id,
+                                     source_type, name,
+                                     dummy_info_obj))
+
+    return dummy_acct_id, dummy_source_id
 # endregion help methods
 
 
@@ -210,7 +284,7 @@ def client(request):
 
 
 @pytest.mark.usefixtures("client")
-class FlaskTests(TestCase):
+class ApiTests(TestCase):
     default_querystring_dict = {
         localization.LANG_TAG_KEY: localization.EN_US
     }
@@ -227,12 +301,14 @@ class FlaskTests(TestCase):
         # is there some better pattern I can use to split up what should be
         # a 'with' call?
         self.client.__enter__()
+        delete_dummy_accts()
 
     def tearDown(self):
         # This isn't perfect, due to possibility of exceptions being thrown
         # is there some better pattern I can use to split up what should be
         # a 'with' call?
         self.client.__exit__(None, None, None)
+        delete_dummy_accts()
 
     def run_query_and_content_required_field_test(self, url, action,
                                                   valid_query_dict,
@@ -327,16 +403,8 @@ class FlaskTests(TestCase):
 
 
 @pytest.mark.usefixtures("client")
-class AccountsTests(FlaskTests):
-    accounts_url = '/api/accounts?%s' % FlaskTests.default_lang_querystring
-
-    def setUp(self):
-        super().setUp()
-        delete_dummy_accts()
-
-    def tearDown(self):
-        super().tearDown()
-        delete_dummy_accts()
+class AccountsTests(ApiTests):
+    accounts_url = '/api/accounts?%s' % ApiTests.default_lang_querystring
 
     # region accounts create/post tests
     def test_accounts_create_success(self):
@@ -507,14 +575,7 @@ class AccountsTests(FlaskTests):
 
 
 @pytest.mark.usefixtures("client")
-class AccountTests(FlaskTests):
-    def setUp(self):
-        super().setUp()
-        delete_dummy_accts()
-
-    def tearDown(self):
-        super().tearDown()
-        delete_dummy_accts()
+class AccountTests(ApiTests):
 
     # region account view/get tests
     def test_account_view_success(self):
@@ -737,3 +798,148 @@ class AccountTests(FlaskTests):
         # check response code
         self.assertEqual(response.status_code, 404)
     # endregion account/email_match tests
+
+
+@pytest.mark.usefixtures("client")
+class SourceTests(ApiTests):
+
+    # region source view/get tests
+    def test_source_view_success(self):
+        """Successfully view existing human source"""
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/sources?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+        self.assertEqual(1, len(response_obj))
+
+        # check all elements of object in body are correct
+        expected_val = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        expected_val[SOURCE_ID_KEY] = SOURCE_ID_1
+        self.assertEqual([expected_val], response_obj)
+
+    def test_source_view_success_legacy(self):
+        """Successfully view existing human source with legacy age_range"""
+        dummy_legacy_source = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        # this would not be allowed through the api, but we can force it here
+        dummy_legacy_source["consent"]["age_range"] = "legacy"
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, dummy_legacy_source,
+            create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/sources?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+        self.assertEqual(1, len(response_obj))
+
+        # check all elements of object in body are correct
+        expected_val = copy.deepcopy(dummy_legacy_source)
+        expected_val[SOURCE_ID_KEY] = SOURCE_ID_1
+        self.assertEqual([expected_val], response_obj)
+    # endregion
+
+    # region source create/post
+    def test_source_create_success(self):
+        """Successfully create a new human source"""
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.post(
+            '/api/accounts/%s/sources?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(DUMMY_HUMAN_SOURCE),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(201, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        # get the id provided in the body
+        real_src_id_from_body = response_obj.get(SOURCE_ID_KEY)
+
+        # check location header was provided, with new source id
+        real_src_id_from_loc = extract_last_id_from_location_header(response)
+        self.assertIsNotNone(real_src_id_from_loc)
+
+        # check id provided in body matches that in location header
+        self.assertTrue(real_src_id_from_loc, real_src_id_from_body)
+
+        # check all elements of object in body are correct
+        expected_val = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        expected_val[SOURCE_ID_KEY] = real_src_id_from_body
+        self.assertEqual(expected_val, response_obj)
+
+    def test_source_create_fail_422(self):
+        """Return 422 if try to create a source with age_range 'legacy'"""
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        bad_dummy_src_info = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        bad_dummy_src_info['consent']['age_range'] = 'legacy'
+
+        response = self.client.post(
+            '/api/accounts/%s/sources?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(bad_dummy_src_info),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(422, response.status_code)
+    # endregion source create/post
+
+    # region source update/put
+    def test_source_update_success(self):
+        """Successfully update an existing source"""
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        new_name = "Not Bo after all"
+        dummy_src_info = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        dummy_src_info['source_name'] = new_name
+        # value not allowed, but it will be ignored anyway
+        dummy_src_info['consent']['age_range'] = 'legacy'
+
+        response = self.client.put(
+            '/api/accounts/%s/sources/%s?%s' %
+            (dummy_acct_id, dummy_source_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(dummy_src_info),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        # get the id provided in the body
+        real_src_id_from_body = response_obj.get(SOURCE_ID_KEY)
+
+        # check all elements of object in body are correct
+        expected_val = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        expected_val['source_name'] = new_name
+        expected_val[SOURCE_ID_KEY] = real_src_id_from_body
+        self.assertEqual(expected_val, response_obj)
+    # endregion source update/put
