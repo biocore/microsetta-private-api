@@ -407,6 +407,25 @@ def get_workflow_fill_primary_survey():
                                'survey_template_text'])
 
 
+def finish_survey(account_id, source_id, survey_template_id):
+    model = {}
+    for x in flask.request.form:
+        model[x] = flask.request.form[x]
+
+    do_return, surveys_output = ApiRequest.post(
+        "/accounts/%s/sources/%s/surveys" % (account_id, source_id),
+        json={
+            "survey_template_id": survey_template_id,
+            "survey_text": model
+        }
+    )
+
+    if do_return:
+        return surveys_output
+
+    return redirect("/accounts/%s/sources/%s" % (account_id, source_id))
+
+
 def post_workflow_fill_primary_survey():
     next_state, current_state = determine_workflow_state()
     if next_state == NEEDS_PRIMARY_SURVEY:
@@ -441,10 +460,53 @@ def get_source(account_id, source_id):
     if do_return:
         return samples_output
 
+    # Retrieve all surveys available to the source
+    do_return, surveys_output = ApiRequest.get(
+        '/accounts/%s/sources/%s/survey_templates' % (account_id, source_id))
+    if do_return:
+        return surveys_output
+
+    # Filter surveys to per sample and per source surveys
+    per_source = []
+    restrict_to = ['Primary', 'COVID19 Questionnaire']
+    for survey in surveys_output:
+        if survey['survey_template_title'] in restrict_to:
+            per_source.append(survey)
+
+    # Identify answered surveys for the source
+    do_return, survey_answers = ApiRequest.get(
+        '/accounts/%s/sources/%s/surveys' % (account_id, source_id))
+    if do_return:
+        return survey_answers
+
+    # TODO: Would be nice to know when the user took the survey instead of a
+    #  boolean
+    for answer in survey_answers:
+        template_id = answer['survey_template_id']
+        for template in per_source:
+            if template['survey_template_id'] == template_id:
+                template['answered'] = True
+
     return render_template('source.jinja2',
                            acct_id=account_id,
                            source_id=source_id,
-                           samples=samples_output)
+                           samples=samples_output,
+                           surveys=per_source)
+
+
+def show_source_survey(account_id, source_id, survey_template_id):
+    params = {}
+
+    do_return, survey_output = ApiRequest.get(
+        '/accounts/%s/sources/%s/survey_templates/%s' %
+        (account_id, source_id, survey_template_id), params=params)
+    if do_return:
+        return survey_output
+
+    # Handle local surveys
+    return render_template("survey.jinja2",
+                           survey_schema=survey_output[
+                               'survey_template_text'])
 
 
 def get_sample(account_id, source_id, sample_id):
