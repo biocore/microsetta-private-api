@@ -59,6 +59,7 @@ NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
 TOO_MANY_HUMAN_SOURCES = "TooManyHumanSources"
 NEEDS_SAMPLE = "NeedsSample"
 NEEDS_PRIMARY_SURVEY = "NeedsPrimarySurvey"
+NEEDS_COVID_SURVEY = "NeedsCOVIDSurvey"
 ALL_DONE = "AllDone"
 
 
@@ -191,7 +192,13 @@ def determine_workflow_state():
     if not has_primary:
         return NEEDS_PRIMARY_SURVEY, current_state
 
-    # ???COVID Survey??? -> covid_survey.html
+    has_covid = False
+    for survey in surveys_output:
+        if survey['survey_template_id'] == 6:
+            has_covid = True
+            current_state["answered_covid_survey_id"] = survey["survey_id"]
+    if not has_covid:
+        return NEEDS_COVID_SURVEY, current_state
 
     # Does the human source have any samples? NO-> kit_sample_association.html
     needs_reroute, samples_output = ApiRequest.get(
@@ -225,6 +232,8 @@ def workflow():
         return redirect("/workflow_create_human_source")
     elif next_state == NEEDS_PRIMARY_SURVEY:
         return redirect("/workflow_take_primary_survey")
+    elif next_state == NEEDS_COVID_SURVEY:
+        return redirect("/workflow_take_covid_survey")
     elif next_state == NEEDS_SAMPLE:
         return redirect("/workflow_claim_kit_samples")
     elif next_state == ALL_DONE:
@@ -360,6 +369,7 @@ def post_workflow_claim_kit_samples(body):
         acct_id = current_state["account_id"]
         source_id = current_state["human_source_id"]
         answered_survey_id = current_state["answered_primary_survey_id"]
+        answered_covid_survey_id = current_state["answered_covid_survey_id"]
 
         # get all the unassociated samples in the provided kit
         kit_name = body[KIT_NAME_KEY]
@@ -389,20 +399,28 @@ def post_workflow_claim_kit_samples(body):
             if do_return:
                 return sample_output
 
+            do_return, sample_survey_output = ApiRequest.post(
+                '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
+                    acct_id, source_id, curr_sample_id
+                ), json={"survey_id": answered_covid_survey_id}
+            )
+
+            if do_return:
+                return sample_output
+
     return redirect(WORKFLOW_URL)
 
 
-def get_workflow_fill_primary_survey():
+def _get_workflow_fill_survey(state_name, survey_template_id):
     next_state, current_state = determine_workflow_state()
-    if next_state != NEEDS_PRIMARY_SURVEY:
+    if next_state != state_name:
         return redirect(WORKFLOW_URL)
 
     acct_id = current_state["account_id"]
     source_id = current_state["human_source_id"]
-    primary_survey = 1
     do_return, survey_output = ApiRequest.get(
         '/accounts/%s/sources/%s/survey_templates/%s' %
-        (acct_id, source_id, primary_survey))
+        (acct_id, source_id, survey_template_id))
     if do_return:
         return survey_output
 
@@ -411,7 +429,19 @@ def get_workflow_fill_primary_survey():
                                'survey_template_text'])
 
 
+def get_workflow_fill_primary_survey():
+    return _get_workflow_fill_survey(NEEDS_PRIMARY_SURVEY, 1)
+
+
+def get_workflow_fill_covid_survey():
+    return _get_workflow_fill_survey(NEEDS_COVID_SURVEY, 6)
+
+
 def finish_survey(account_id, source_id, survey_template_id):
+    next_state, current_state = determine_workflow_state()
+    if next_state != ALL_DONE:
+        return redirect(WORKFLOW_URL)
+
     model = {}
     for x in flask.request.form:
         model[x] = flask.request.form[x]
@@ -430,9 +460,9 @@ def finish_survey(account_id, source_id, survey_template_id):
     return redirect("/accounts/%s/sources/%s" % (account_id, source_id))
 
 
-def post_workflow_fill_primary_survey():
+def _post_workflow_fill_survey(state_name, survey_template_id):
     next_state, current_state = determine_workflow_state()
-    if next_state == NEEDS_PRIMARY_SURVEY:
+    if next_state == state_name:
         acct_id = current_state["account_id"]
         source_id = current_state["human_source_id"]
 
@@ -443,7 +473,7 @@ def post_workflow_fill_primary_survey():
         do_return, surveys_output = ApiRequest.post(
             "/accounts/%s/sources/%s/surveys" % (acct_id, source_id),
             json={
-                "survey_template_id": 1,
+                "survey_template_id": survey_template_id,
                 "survey_text": model
             }
         )
@@ -452,6 +482,14 @@ def post_workflow_fill_primary_survey():
             return surveys_output
 
     return redirect(WORKFLOW_URL)
+
+
+def post_workflow_fill_primary_survey():
+    return _post_workflow_fill_survey(NEEDS_PRIMARY_SURVEY, 1)
+
+
+def post_workflow_fill_covid_survey():
+    return _post_workflow_fill_survey(NEEDS_COVID_SURVEY, 6)
 
 
 def get_source(account_id, source_id):
@@ -470,7 +508,8 @@ def get_source(account_id, source_id):
     if do_return:
         return surveys_output
 
-    # Filter surveys to per sample and per source surveys
+    # Limit to only the primary and COVID19 survey as that is the primary
+    # data focus for TMI right now.
     per_source = []
     restrict_to = ['Primary', 'COVID19 Questionnaire']
     for survey in surveys_output:

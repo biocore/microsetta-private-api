@@ -1,4 +1,4 @@
-INSERT INTO ag.survey_group (group_order, american, british) VALUES (-6, 'COVID', 'COVID');
+INSERT INTO ag.survey_group (group_order, american, british) VALUES (-6, 'COVID19 Questionnaire', 'COVID19 Questionnaire');
 INSERT INTO ag.surveys (survey_id, survey_group) VALUES (6, -6);
 
 INSERT INTO ag.survey_question (survey_question_id, american, british,  question_shortname, retired) VALUES (209, 'What is your occupation?', 'What is your occupation?', 'COVID_OCCUPATION', 'f');
