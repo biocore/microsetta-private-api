@@ -437,29 +437,6 @@ def get_workflow_fill_covid_survey():
     return _get_workflow_fill_survey(NEEDS_COVID_SURVEY, 6)
 
 
-def finish_survey(account_id, source_id, survey_template_id):
-    next_state, current_state = determine_workflow_state()
-    if next_state != ALL_DONE:
-        return redirect(WORKFLOW_URL)
-
-    model = {}
-    for x in flask.request.form:
-        model[x] = flask.request.form[x]
-
-    do_return, surveys_output = ApiRequest.post(
-        "/accounts/%s/sources/%s/surveys" % (account_id, source_id),
-        json={
-            "survey_template_id": survey_template_id,
-            "survey_text": model
-        }
-    )
-
-    if do_return:
-        return surveys_output
-
-    return redirect("/accounts/%s/sources/%s" % (account_id, source_id))
-
-
 def _post_workflow_fill_survey(state_name, survey_template_id):
     next_state, current_state = determine_workflow_state()
     if next_state == state_name:
@@ -535,21 +512,6 @@ def get_source(account_id, source_id):
                            source_id=source_id,
                            samples=samples_output,
                            surveys=per_source)
-
-
-def show_source_survey(account_id, source_id, survey_template_id):
-    params = {}
-
-    do_return, survey_output = ApiRequest.get(
-        '/accounts/%s/sources/%s/survey_templates/%s' %
-        (account_id, source_id, survey_template_id), params=params)
-    if do_return:
-        return survey_output
-
-    # Handle local surveys
-    return render_template("survey.jinja2",
-                           survey_schema=survey_output[
-                               'survey_template_text'])
 
 
 def get_sample(account_id, source_id, sample_id):
