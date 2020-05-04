@@ -157,9 +157,11 @@ paths:
         '302':
           description: Redirecting to necessary action
 
-  '/workflow_take_primary_survey':
+  '/workflow_take_survey':
     get:
-      operationId: microsetta_private_api.example.client_impl.get_workflow_fill_primary_survey
+      operationId: microsetta_private_api.example.client_impl.get_workflow_fill_survey
+      parameters:
+        - $ref: '#/components/parameters/survey_template_id'
       responses:
         '200':
           description: Primary Survey
@@ -169,7 +171,14 @@ paths:
                 type: string
 
     post:
-      operationId: microsetta_private_api.example.client_impl.post_workflow_fill_primary_survey
+      operationId: microsetta_private_api.example.client_impl.post_workflow_fill_survey
+      parameters:
+        - $ref: '#/components/parameters/survey_template_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
       responses:
         '200':
           description: Error report
@@ -208,6 +217,20 @@ paths:
                 type: string
         '302':
           description: Redirecting to necessary action
+
+  '/error':
+    get:
+      operationId: microsetta_private_api.example.client_impl.generate_error_page
+      description: Neatly display error messages sent from the front-end (only)
+      parameters:
+        - $ref: '#/components/parameters/error_msg'
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
 
   '/accounts/{account_id}/sources/{source_id}':
     get:
@@ -311,13 +334,13 @@ components:
 #      schema:
 #        $ref: '#/components/schemas/survey_id'
 #      required: true
-#    survey_template_id:
-#      name: survey_template_id
-#      in: path
-#      description: Unique internal id specifying a particular survey template
-#      schema:
-#        $ref: '#/components/schemas/survey_template_id'
-#      required: true
+    survey_template_id:
+      name: survey_template_id
+      in: query
+      description: Unique internal id specifying a particular survey template
+      schema:
+        $ref: '#/components/schemas/survey_template_id'
+      required: true
     source_id:
       name: source_id
       in: path
@@ -325,6 +348,12 @@ components:
       schema:
         $ref: '#/components/schemas/source_id'
       required: true
+    error_msg:
+      name: error_msg
+      in: query
+      description: Error message provided by front-end
+      schema:
+        $ref: '#/components/schemas/error_msg'
   schemas:
     # account section
     account_id:
@@ -339,3 +368,9 @@ components:
       type: string
       readOnly: true # sent in GET, not in POST/PUT/PATCH
       example: "dae21127-27bb-4f52-9fd3-a2aa5eb5b86f"
+    survey_template_id:
+      type: integer
+      example: 3
+    error_msg:
+      type: string
+      example: "%7B%0A%20%20%22detail%22%3A%20%22The%20browser%20(or%20proxy)%20sent%20a%20request%20that%20this%20server%20could%20not%20understand.%22%2C%0A%20%20%22status%22%3A%20400%2C%0A%20%20%22title%22%3A%20%22Bad%20Request%22%2C%0A%20%20%22type%22%3A%20%22about%3Ablank%22%0A%7D%0A"

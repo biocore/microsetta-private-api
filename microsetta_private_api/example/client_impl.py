@@ -50,6 +50,8 @@ ACCT_ADDR_KEY = "address"
 ACCT_WRITEABLE_KEYS = [ACCT_FNAME_KEY, ACCT_LNAME_KEY, ACCT_EMAIL_KEY,
                        ACCT_ADDR_KEY]
 
+_NEEDS_SURVEY_PREFIX = "NeedsSurvey"
+
 # States
 NEEDS_REROUTE = "NeedsReroute"
 NEEDS_LOGIN = "NeedsLogin"
@@ -58,7 +60,7 @@ NEEDS_EMAIL_CHECK = "NeedsEmailCheck"
 NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
 TOO_MANY_HUMAN_SOURCES = "TooManyHumanSources"
 NEEDS_SAMPLE = "NeedsSample"
-NEEDS_PRIMARY_SURVEY = "NeedsPrimarySurvey"
+NEEDS_PRIMARY_SURVEY = _NEEDS_SURVEY_PREFIX + "1"
 ALL_DONE = "AllDone"
 
 
@@ -224,7 +226,8 @@ def workflow():
     elif next_state == NEEDS_HUMAN_SOURCE:
         return redirect("/workflow_create_human_source")
     elif next_state == NEEDS_PRIMARY_SURVEY:
-        return redirect("/workflow_take_primary_survey")
+        return redirect("/workflow_take_survey?survey_template_id=" +
+                        NEEDS_PRIMARY_SURVEY.replace(_NEEDS_SURVEY_PREFIX, ""))
     elif next_state == NEEDS_SAMPLE:
         return redirect("/workflow_claim_kit_samples")
     elif next_state == ALL_DONE:
@@ -392,40 +395,37 @@ def post_workflow_claim_kit_samples(body):
     return redirect(WORKFLOW_URL)
 
 
-def get_workflow_fill_primary_survey():
+def get_workflow_fill_survey(survey_template_id):
     next_state, current_state = determine_workflow_state()
-    if next_state != NEEDS_PRIMARY_SURVEY:
+    if next_state != _NEEDS_SURVEY_PREFIX + str(survey_template_id):
         return redirect(WORKFLOW_URL)
 
     acct_id = current_state["account_id"]
     source_id = current_state["human_source_id"]
-    primary_survey = 1
     do_return, survey_output = ApiRequest.get(
         '/accounts/%s/sources/%s/survey_templates/%s' %
-        (acct_id, source_id, primary_survey))
+        (acct_id, source_id, survey_template_id))
     if do_return:
         return survey_output
 
     return render_template("survey.jinja2",
+                           endpoint=SERVER_CONFIG["endpoint"],
+                           survey_template_id=survey_template_id,
                            survey_schema=survey_output[
                                'survey_template_text'])
 
 
-def post_workflow_fill_primary_survey():
+def post_workflow_fill_survey(survey_template_id, body):
     next_state, current_state = determine_workflow_state()
-    if next_state == NEEDS_PRIMARY_SURVEY:
+    if next_state == _NEEDS_SURVEY_PREFIX + str(survey_template_id):
         acct_id = current_state["account_id"]
         source_id = current_state["human_source_id"]
-
-        model = {}
-        for x in flask.request.form:
-            model[x] = flask.request.form[x]
 
         do_return, surveys_output = ApiRequest.post(
             "/accounts/%s/sources/%s/surveys" % (acct_id, source_id),
             json={
-                "survey_template_id": 1,
-                "survey_text": model
+                "survey_template_id": survey_template_id,
+                "survey_text": body
             }
         )
 
@@ -538,6 +538,19 @@ def post_check_acct_inputs(body):
         return json.dumps(response_info)
 
 
+def generate_error_page(error_msg):
+    # output is general error page
+    error_txt = quote(error_msg)
+    mailto_url = "mailto:{0}?subject={1}&body={2}".format(
+        HELP_EMAIL, quote("minimal interface error"), error_txt)
+
+    output = render_template('error.jinja2',
+                             mailto_url=mailto_url,
+                             error_msg=error_msg)
+
+    return output
+
+
 class BearerAuth(AuthBase):
     def __init__(self, token):
         self.token = token
@@ -572,13 +585,7 @@ class ApiRequest:
             output = redirect("/home")
         elif response.status_code >= 400:
             # output is general error page
-            error_txt = quote(response.text)
-            mailto_url = "mailto:{0}?subject={1}&body={2}".format(
-                HELP_EMAIL, quote("minimal interface error"), error_txt)
-
-            output = render_template('error.jinja2',
-                                     mailto_url=mailto_url,
-                                     error_msg=response.text)
+            output = generate_error_page(response.text)
         else:
             error_code = 0  # there is a response code but no *error* code
             if response.text:
