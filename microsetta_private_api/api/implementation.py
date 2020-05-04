@@ -11,8 +11,6 @@ https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
 and associated file
 https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
 """
-from urllib import parse
-
 import flask
 from flask import jsonify, render_template
 import jwt
@@ -704,7 +702,10 @@ def _validate_account_access(token_info, account_id):
 def _submit_vioscreen_status(account_id, source_id, info_str):
     # get information out of encrypted vioscreen url
     info = vioscreen.decode_key(info_str).decode("utf-8")
-    vio_info = parse.parse_qs(info)
+    vio_info = {}
+    for keyval in info.split("&"):
+        key, val = keyval.split("=")
+        vio_info[key] = val
 
     with Transaction() as t:
         vio_repo = VioscreenRepo(t)
