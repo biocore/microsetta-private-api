@@ -508,7 +508,8 @@ def get_source(account_id, source_id):
                            acct_id=account_id,
                            source_id=source_id,
                            samples=samples_output,
-                           surveys=per_source)
+                           surveys=per_source,
+                           vioscreen_id=VIOSCREEN_ID)
 
 
 def show_source_survey(account_id, source_id, survey_template_id):
