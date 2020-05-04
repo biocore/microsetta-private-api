@@ -287,7 +287,7 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [1, 3, 4, 5]]), 200
+                           for x in [1, 3, 4, 5, 6]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200
@@ -307,6 +307,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
         survey_template_repo = SurveyTemplateRepo(t)
         info = survey_template_repo.get_survey_template_link_info(
             survey_template_id)
+
         survey_template = survey_template_repo.get_survey_template(
             survey_template_id, language_tag)
         info.survey_template_text = vue_adapter.to_vue_schema(survey_template)

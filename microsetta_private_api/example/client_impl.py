@@ -61,6 +61,7 @@ NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
 TOO_MANY_HUMAN_SOURCES = "TooManyHumanSources"
 NEEDS_SAMPLE = "NeedsSample"
 NEEDS_PRIMARY_SURVEY = _NEEDS_SURVEY_PREFIX + "1"
+NEEDS_COVID_SURVEY = _NEEDS_SURVEY_PREFIX + "6"
 ALL_DONE = "AllDone"
 
 
@@ -186,14 +187,20 @@ def determine_workflow_state():
         return NEEDS_REROUTE, current_state
 
     has_primary = False
+    has_covid = False
     for survey in surveys_output:
         if survey['survey_template_id'] == 1:
             has_primary = True
             current_state["answered_primary_survey_id"] = survey["survey_id"]
+        elif survey['survey_template_id'] == 6:
+            has_covid = True
+            current_state["answered_covid_survey_id"] = survey["survey_id"]
+
     if not has_primary:
         return NEEDS_PRIMARY_SURVEY, current_state
 
-    # ???COVID Survey??? -> covid_survey.html
+    if not has_covid:
+        return NEEDS_COVID_SURVEY, current_state
 
     # Does the human source have any samples? NO-> kit_sample_association.html
     needs_reroute, samples_output = ApiRequest.get(
@@ -228,6 +235,9 @@ def workflow():
     elif next_state == NEEDS_PRIMARY_SURVEY:
         return redirect("/workflow_take_survey?survey_template_id=" +
                         NEEDS_PRIMARY_SURVEY.replace(_NEEDS_SURVEY_PREFIX, ""))
+    elif next_state == NEEDS_COVID_SURVEY:
+        return redirect("/workflow_take_survey?survey_template_id=" +
+                        NEEDS_COVID_SURVEY.replace(_NEEDS_SURVEY_PREFIX, ""))
     elif next_state == NEEDS_SAMPLE:
         return redirect("/workflow_claim_kit_samples")
     elif next_state == ALL_DONE:
@@ -363,6 +373,7 @@ def post_workflow_claim_kit_samples(body):
         acct_id = current_state["account_id"]
         source_id = current_state["human_source_id"]
         answered_survey_id = current_state["answered_primary_survey_id"]
+        answered_covid_survey_id = current_state["answered_covid_survey_id"]
 
         # get all the unassociated samples in the provided kit
         kit_name = body[KIT_NAME_KEY]
@@ -372,7 +383,8 @@ def post_workflow_claim_kit_samples(body):
             return sample_output
 
         # for each sample, associate it to the human source
-        # and ALSO to the (single) primary survey for this human source
+        # and ALSO to the (single) primary and COVID survey for this human
+        # source
         for curr_sample_obj in sample_output:
             curr_sample_id = curr_sample_obj["sample_id"]
             do_return, sample_output = ApiRequest.post(
@@ -387,6 +399,15 @@ def post_workflow_claim_kit_samples(body):
                 '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
                     acct_id, source_id, curr_sample_id
                 ), json={"survey_id": answered_survey_id}
+            )
+
+            if do_return:
+                return sample_output
+
+            do_return, sample_survey_output = ApiRequest.post(
+                '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
+                    acct_id, source_id, curr_sample_id
+                ), json={"survey_id": answered_covid_survey_id}
             )
 
             if do_return:
@@ -445,10 +466,39 @@ def get_source(account_id, source_id):
     if do_return:
         return samples_output
 
+    # Retrieve all surveys available to the source
+    do_return, surveys_output = ApiRequest.get(
+        '/accounts/%s/sources/%s/survey_templates' % (account_id, source_id))
+    if do_return:
+        return surveys_output
+
+    # Limit to only the primary and COVID19 survey as that is the primary
+    # data focus for TMI right now.
+    per_source = []
+    restrict_to = [1, 6]
+    for survey in surveys_output:
+        if survey['survey_template_id'] in restrict_to:
+            per_source.append(survey)
+
+    # Identify answered surveys for the source
+    do_return, survey_answers = ApiRequest.get(
+        '/accounts/%s/sources/%s/surveys' % (account_id, source_id))
+    if do_return:
+        return survey_answers
+
+    # TODO: Would be nice to know when the user took the survey instead of a
+    #  boolean
+    for answer in survey_answers:
+        template_id = answer['survey_template_id']
+        for template in per_source:
+            if template['survey_template_id'] == template_id:
+                template['answered'] = True
+
     return render_template('source.jinja2',
                            acct_id=account_id,
                            source_id=source_id,
-                           samples=samples_output)
+                           samples=samples_output,
+                           surveys=per_source)
 
 
 def get_sample(account_id, source_id, sample_id):

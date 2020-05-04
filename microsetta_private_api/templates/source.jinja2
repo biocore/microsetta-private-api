@@ -4,13 +4,13 @@
     <meta charset="utf-8"/>
     <title>Microsetta Account Samples</title>
     <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
-
+    <link rel="stylesheet" href="/static/vendor/font-awesome-4.7.0-dist/css/font-awesome.min.css"/>
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
 </head>
 <body>
     <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
         &nbsp;&nbsp;
-        <img src="/static/img/logo-co.png" class="resize">
+        <img src="/static/img/logo-co.png" class="resize"/>
         <br />
         <br />
         Return to microsetta.ucsd.edu
@@ -39,6 +39,29 @@
                     </div>
                     <div class="col-sm">
                       {{sample.sample_site |e}}
+                    </div>
+                  </div>
+                </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="container">
+            Available Surveys:
+            <div class="list-group">
+                {% for survey in surveys %}
+                <a class="list-group-item list-group-item-action {{loop.cycle('odd', 'even') }}">
+                <div class="container">
+                  <div class="row">
+                    <div class="col-sm">
+                      {{survey.survey_template_title |e}}
+                    </div>
+                    <div class="col-sm">
+                        {% if survey.answered %}
+                        <span class="fa fa-check"/>
+                        {% else %}
+                        <span class="fa fa-unchecked"/>
+                        {% endif %}
                     </div>
                   </div>
                 </div>
