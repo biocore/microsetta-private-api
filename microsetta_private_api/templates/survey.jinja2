@@ -2,12 +2,44 @@
 <html>
 <head>
     <title>Microsetta Participant Survey</title>
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
     <script type="text/javascript" src="/static/vendor/js/vue-2.5.17.min.js"></script>
     <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
     <script type="text/javascript" src="/static/vendor/vue-form-generator-2.3.4/vfg.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/vendor/vue-form-generator-2.3.4/vfg.css">
 
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
+    <script>
+        var result_txt = "";
+
+        function postSurvey() {
+            $.ajax({
+                type: "POST",
+                url: "{{ endpoint }}/workflow_take_survey?survey_template_id={{ survey_template_id }}",
+                data: JSON.stringify(survey_model),
+                success: function (data, textStatus, jqXHR) {
+                    result_txt = data;
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    result_txt = jqXHR.responseText;
+                },
+                complete: function (data, textStatus, output_obj) {
+                    if (result_txt !== ""){
+                        document.open();
+                        document.write(result_txt);
+                        document.close();
+                    } else {
+                        alert(textStatus);
+                    }
+                },
+                dataType: "html",
+                contentType: "application/json"
+            });
+
+            // always return false, preventing a traditional post of the form
+            return false;
+        }
+    </script>
 </head>
 <body>
     <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
@@ -28,7 +60,7 @@
         <div class="container" id="app">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <form method="post" id="survey_form">
+                    <form id="survey_form" onsubmit="return postAccount(this);">
                         <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
                     </form>
                 </div>
@@ -60,7 +92,7 @@
         type: "submit",
         validateBeforeSubmit: true,
         onSubmit: function(){
-          document.getElementById("survey_form").submit();
+            return postSurvey();
         }
       });
     </script>
