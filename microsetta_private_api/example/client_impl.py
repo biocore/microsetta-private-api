@@ -187,18 +187,18 @@ def determine_workflow_state():
         return NEEDS_REROUTE, current_state
 
     has_primary = False
+    has_covid = False
     for survey in surveys_output:
         if survey['survey_template_id'] == 1:
             has_primary = True
             current_state["answered_primary_survey_id"] = survey["survey_id"]
+        elif survey['survey_template_id'] == 6:
+            has_covid = True
+            current_state["answered_covid_survey_id"] = survey["survey_id"]
+
     if not has_primary:
         return NEEDS_PRIMARY_SURVEY, current_state
 
-    has_covid = False
-    for survey in surveys_output:
-        if survey['survey_template_id'] == 6:
-            has_covid = True
-            current_state["answered_covid_survey_id"] = survey["survey_id"]
     if not has_covid:
         return NEEDS_COVID_SURVEY, current_state
 
@@ -383,7 +383,8 @@ def post_workflow_claim_kit_samples(body):
             return sample_output
 
         # for each sample, associate it to the human source
-        # and ALSO to the (single) primary survey for this human source
+        # and ALSO to the (single) primary and COVID survey for this human
+        # source
         for curr_sample_obj in sample_output:
             curr_sample_id = curr_sample_obj["sample_id"]
             do_return, sample_output = ApiRequest.post(
@@ -474,9 +475,9 @@ def get_source(account_id, source_id):
     # Limit to only the primary and COVID19 survey as that is the primary
     # data focus for TMI right now.
     per_source = []
-    restrict_to = ['Primary', 'COVID19 Questionnaire']
+    restrict_to = [1, 6]
     for survey in surveys_output:
-        if survey['survey_template_title'] in restrict_to:
+        if survey['survey_template_id'] in restrict_to:
             per_source.append(survey)
 
     # Identify answered surveys for the source

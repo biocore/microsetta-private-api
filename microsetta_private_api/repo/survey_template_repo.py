@@ -48,7 +48,7 @@ class SurveyTemplateRepo(BaseRepo):
         ),
         6: SurveyTemplateLinkInfo(
             6,
-            "COVID19 Questionnaire",
+            "COVID-19 Questionnaire",
             "1.0",
             "local"
         )
