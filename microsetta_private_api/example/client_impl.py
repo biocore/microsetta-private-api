@@ -60,8 +60,9 @@ NEEDS_SAMPLE = "NeedsSample"
 NEEDS_PRIMARY_SURVEY = "NeedsPrimarySurvey"
 ALL_DONE = "AllDone"
 
-# TODO FIXME HACK:  This is bullcrap.  VIOSCREEN_ID is just hardcoded.
-#  API must specify per-sample survey templates in some way.
+# TODO FIXME HACK:  VIOSCREEN_ID is just hardcoded.  Api does not specify what
+#  special handling is required.  API must specify per-sample survey templates
+#  in some way, as well as any special handling for external surveys.
 VIOSCREEN_ID = 10001
 
 
