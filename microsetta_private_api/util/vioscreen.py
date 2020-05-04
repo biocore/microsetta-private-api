@@ -7,23 +7,6 @@ from werkzeug.exceptions import BadRequest
 from werkzeug.urls import url_encode
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
-from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
-
-
-def wrap_survey_url(language_tag, survey_redirect_url):
-    # TODO: Is this the right way to do localization here?
-    if language_tag == "en-US":
-        text_locale = american_gut.text_locale
-    elif language_tag == "en-GB":
-        text_locale = british_gut.text_locale
-    else:
-        raise BadRequest("Unknown Locale: " + language_tag)
-
-    """Return a formatted text block and URL for the external survey"""
-    tl = text_locale['human_survey_completed.html']
-    embedded_text = tl['SURVEY_VIOSCREEN']
-    url = gen_survey_url(language_tag, survey_redirect_url)
-    return embedded_text % url
 
 
 def gen_survey_url(language_tag, survey_redirect_url):
