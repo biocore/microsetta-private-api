@@ -15,10 +15,6 @@ def gen_survey_url(language_tag, survey_redirect_url):
                          "survey_redirect_url")
 
     regcode = SERVER_CONFIG["vioscreen_regcode"]
-    # TODO: If we have problems getting the ciphertext to be accepted by
-    #  vioscreen, it could be due to switching to use of werkzeugs url_encode
-    #  rather than tornado's url_escape.  But that has to wait until I can
-    #  test with the actual key and registration code.
     url = SERVER_CONFIG["vioscreen_endpoint"] + "/remotelogin.aspx?%s" % \
         url_encode(
               {
