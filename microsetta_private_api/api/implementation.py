@@ -367,6 +367,8 @@ def read_answered_surveys(account_id, source_id, language_tag, token_info):
         api_objs = []
         for ans in answered_surveys:
             template_id = survey_answers_repo.find_survey_template_id(ans)
+            if template_id is None:
+                continue
             o = survey_template_repo.get_survey_template_link_info(template_id)
             api_objs.append(o.to_api(ans))
         return jsonify(api_objs), 200
@@ -387,6 +389,9 @@ def read_answered_survey(account_id, source_id, survey_id, language_tag,
             return jsonify(code=404, message="No survey answers found"), 404
 
         template_id = survey_answers_repo.find_survey_template_id(survey_id)
+        if template_id is None:
+            return jsonify(code=422, message="No answers in survey"), 422
+
         template_repo = SurveyTemplateRepo(t)
         link_info = template_repo.get_survey_template_link_info(template_id)
         link_info.survey_id = survey_id
@@ -540,6 +545,8 @@ def read_answered_survey_associations(account_id, source_id, sample_id,
         resp_obj = []
         for answered_survey in answered_surveys:
             template_id = answers_repo.find_survey_template_id(answered_survey)
+            if template_id is None:
+                continue
             info = template_repo.get_survey_template_link_info(template_id)
             resp_obj.append(info.to_api(answered_survey))
 

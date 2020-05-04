@@ -50,8 +50,12 @@ class SurveyAnswersRepo(BaseRepo):
                 if status is not None:
                     return SurveyTemplateRepo.VIOSCREEN_ID
                 else:
-                    raise RepoException("No answers in survey: %s" +
-                                        survey_answers_id)
+                    return None
+                    # TODO: Maybe this should throw an exception, but doing so
+                    #  locks the end user out of the minimal implementation
+                    #  if they submit an empty survey response.
+                    # raise RepoException("No answers in survey: %s" %
+                    #                     survey_answers_id)
 
             arbitrary_question_id = rows[0][1]
             cur.execute("SELECT surveys.survey_id FROM "
