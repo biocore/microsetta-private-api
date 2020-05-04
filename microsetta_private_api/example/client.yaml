@@ -218,6 +218,20 @@ paths:
         '302':
           description: Redirecting to necessary action
 
+  '/error':
+    get:
+      operationId: microsetta_private_api.example.client_impl.generate_error_page
+      description: Neatly display error messages sent from the front-end (only)
+      parameters:
+        - $ref: '#/components/parameters/error_msg'
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+
   '/accounts/{account_id}/sources/{source_id}':
     get:
       operationId: microsetta_private_api.example.client_impl.get_source
@@ -334,6 +348,12 @@ components:
       schema:
         $ref: '#/components/schemas/source_id'
       required: true
+    error_msg:
+      name: error_msg
+      in: query
+      description: Error message provided by front-end
+      schema:
+        $ref: '#/components/schemas/error_msg'
   schemas:
     # account section
     account_id:
@@ -351,3 +371,6 @@ components:
     survey_template_id:
       type: integer
       example: 3
+    error_msg:
+      type: string
+      example: "%7B%0A%20%20%22detail%22%3A%20%22The%20browser%20(or%20proxy)%20sent%20a%20request%20that%20this%20server%20could%20not%20understand.%22%2C%0A%20%20%22status%22%3A%20400%2C%0A%20%20%22title%22%3A%20%22Bad%20Request%22%2C%0A%20%20%22type%22%3A%20%22about%3Ablank%22%0A%7D%0A"

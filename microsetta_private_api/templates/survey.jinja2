@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script>
         var result_txt = "";
+        var error_txt = "";
 
         function postSurvey() {
             $.ajax({
@@ -21,15 +22,26 @@
                     result_txt = data;
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    result_txt = jqXHR.responseText;
+                    error_txt = jqXHR.responseText;
                 },
                 complete: function (data, textStatus, output_obj) {
+                    // Replace the html on this page with the html successfully received from the ajax call.
+                    // Note that the html we successfully received MAY be an html page reporting an error
+                    // captured in the back end :)
                     if (result_txt !== ""){
                         document.open();
                         document.write(result_txt);
                         document.close();
                     } else {
-                        alert(textStatus);
+                        // I can't imagine how we could get here, but just in case, at least the
+                        // user sees *something* ...
+                        if (error_txt === ""){
+                            error_txt = textStatus;
+                        }
+                        let queryParam = encodeURIComponent(error_txt);
+                        // Get customized error page that will show whatever error message we captured
+                        // here in the front end
+                        window.location.replace("{{ endpoint }}/error?error_msg=" + queryParam);
                     }
                 },
                 dataType: "html",
@@ -60,7 +72,7 @@
         <div class="container" id="app">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <form id="survey_form" onsubmit="return postAccount(this);">
+                    <form id="survey_form">
                         <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
                     </form>
                 </div>

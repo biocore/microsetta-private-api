@@ -538,6 +538,19 @@ def post_check_acct_inputs(body):
         return json.dumps(response_info)
 
 
+def generate_error_page(error_msg):
+    # output is general error page
+    error_txt = quote(error_msg)
+    mailto_url = "mailto:{0}?subject={1}&body={2}".format(
+        HELP_EMAIL, quote("minimal interface error"), error_txt)
+
+    output = render_template('error.jinja2',
+                             mailto_url=mailto_url,
+                             error_msg=error_msg)
+
+    return output
+
+
 class BearerAuth(AuthBase):
     def __init__(self, token):
         self.token = token
@@ -572,13 +585,7 @@ class ApiRequest:
             output = redirect("/home")
         elif response.status_code >= 400:
             # output is general error page
-            error_txt = quote(response.text)
-            mailto_url = "mailto:{0}?subject={1}&body={2}".format(
-                HELP_EMAIL, quote("minimal interface error"), error_txt)
-
-            output = render_template('error.jinja2',
-                                     mailto_url=mailto_url,
-                                     error_msg=response.text)
+            output = generate_error_page(response.text)
         else:
             error_code = 0  # there is a response code but no *error* code
             if response.text:
