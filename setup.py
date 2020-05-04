@@ -40,6 +40,11 @@ setup(
                      'static/vendor/bootstrap-3.3.7-dist/js/*',
                      'static/vendor/bootstrap-3.3.7-dist/css/*',
                      'static/vendor/bootstrap-3.3.7-dist/fonts/*',
+                     'static/vendor/bootstrap-3.3.7-dist/fonts/*',
+                     'static/vendor/font-awesome-4.7.0/css/*',
+                     'static/vendor/font-awesome-4.7.0/less/*',
+                     'static/vendor/font-awesome-4.7.0/fonts/*',
+                     'static/vendor/font-awesome-4.7.0/scss/*',
                      'authrocket.pubkey'
                   ]},
     entry_points='''
