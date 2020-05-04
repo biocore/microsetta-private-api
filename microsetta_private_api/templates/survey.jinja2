@@ -2,16 +2,60 @@
 <html>
 <head>
     <title>Microsetta Participant Survey</title>
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
     <script type="text/javascript" src="/static/vendor/js/vue-2.5.17.min.js"></script>
     <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
     <script type="text/javascript" src="/static/vendor/vue-form-generator-2.3.4/vfg.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/vendor/vue-form-generator-2.3.4/vfg.css">
 
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
+    <script>
+        var result_txt = "";
+        var error_txt = "";
+
+        function postSurvey() {
+            $.ajax({
+                type: "POST",
+                url: "{{ endpoint }}/workflow_take_survey?survey_template_id={{ survey_template_id }}",
+                data: JSON.stringify(survey_model),
+                success: function (data, textStatus, jqXHR) {
+                    result_txt = data;
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    error_txt = jqXHR.responseText;
+                },
+                complete: function (data, textStatus, output_obj) {
+                    // Replace the html on this page with the html successfully received from the ajax call.
+                    // Note that the html we successfully received MAY be an html page reporting an error
+                    // captured in the back end :)
+                    if (result_txt !== ""){
+                        document.open();
+                        document.write(result_txt);
+                        document.close();
+                    } else {
+                        // I can't imagine how we could get here, but just in case, at least the
+                        // user sees *something* ...
+                        if (error_txt === ""){
+                            error_txt = textStatus;
+                        }
+                        let queryParam = encodeURIComponent(error_txt);
+                        // Get customized error page that will show whatever error message we captured
+                        // here in the front end
+                        window.location.replace("{{ endpoint }}/error?error_msg=" + queryParam);
+                    }
+                },
+                dataType: "html",
+                contentType: "application/json"
+            });
+
+            // always return false, preventing a traditional post of the form
+            return false;
+        }
+    </script>
 </head>
 <body>
     <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
-        <img src="/static/img/logo-co.png" class="resize">
+        <img src="/static/img/logo-co.png" class="resize"/>
         <br />
         <br />
         Return to microsetta.ucsd.edu
@@ -28,7 +72,7 @@
         <div class="container" id="app">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <form method="post" id="survey_form">
+                    <form id="survey_form">
                         <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
                     </form>
                 </div>
@@ -60,7 +104,7 @@
         type: "submit",
         validateBeforeSubmit: true,
         onSubmit: function(){
-          document.getElementById("survey_form").submit();
+            return postSurvey();
         }
       });
     </script>

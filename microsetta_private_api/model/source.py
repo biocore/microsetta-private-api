@@ -37,18 +37,17 @@ class HumanInfo:
         self.age_range = age_range
 
     def to_api(self):
-        consent = None
-        if self.consent_date is not None:
-            consent = {"participant_email": self.email,
-                       "age_range": self.age_range}
-            if self.is_juvenile:
-                consent.update({
-                    "participant_email": self.email,
-                    "parent_1_name": self.parent1_name,
-                    "parent_2_name": self.parent2_name,
-                    "deceased_parent": self.deceased_parent,
-                    "obtainer_name": self.assent_obtainer
-                })
+        consent = {"participant_email": self.email,
+                   "age_range": self.age_range}
+
+        if self.is_juvenile:
+            consent.update({
+                "participant_email": self.email,
+                "parent_1_name": self.parent1_name,
+                "parent_2_name": self.parent2_name,
+                "deceased_parent": self.deceased_parent,
+                "obtainer_name": self.assent_obtainer
+            })
 
         result = {"consent": consent}
         return result

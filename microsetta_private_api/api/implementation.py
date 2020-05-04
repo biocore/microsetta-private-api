@@ -38,6 +38,7 @@ from werkzeug.exceptions import BadRequest, Unauthorized, Forbidden, NotFound
 
 from microsetta_private_api.util import vue_adapter
 from microsetta_private_api.util.util import fromisotime
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.util import vioscreen
 
 import uuid
@@ -194,6 +195,12 @@ def create_source(account_id, body, token_info):
             source_info = HumanInfo.from_dict(body,
                                               consent_date=date.today(),
                                               date_revoked=None)
+            # the "legacy" value of the age_range enum is not valid to use when
+            # creating a new source, so do not allow that.
+            # NB: Not necessary to do this check when updating a source as
+            # only source name and description (not age_range) may be updated.
+            if source_info.age_range == "legacy":
+                raise RepoException("Age range may not be set to legacy.")
         else:
             source_info = NonHumanInfo.from_dict(body)
 
@@ -283,7 +290,7 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [1, 3, 4, 5,
+                           for x in [1, 3, 4, 5, 6,
                                      SurveyTemplateRepo.VIOSCREEN_ID]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)

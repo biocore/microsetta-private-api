@@ -47,6 +47,12 @@ class SurveyTemplateRepo(BaseRepo):
             "1.0",
             "local"
         ),
+        6: SurveyTemplateLinkInfo(
+            6,
+            "COVID-19 Questionnaire",
+            "1.0",
+            "local"
+        ),
         VIOSCREEN_ID: SurveyTemplateLinkInfo(
             VIOSCREEN_ID,
             "Vioscreen Food Frequency Questionnaire",
@@ -69,7 +75,6 @@ class SurveyTemplateRepo(BaseRepo):
         return copy.deepcopy(SurveyTemplateRepo.SURVEY_INFO[survey_id])
 
     def get_survey_template(self, survey_id, language_tag):
-
         tag_to_col = {
             localization.EN_US: "survey_question.american",
             localization.EN_GB: "survey_question.british"
@@ -123,7 +128,6 @@ class SurveyTemplateRepo(BaseRepo):
                 localized_text = r[2]
                 short_name = r[3]
                 response_type = r[4]
-
                 if group_id != cur_group_id:
                     if cur_group_id is not None:
                         group_localized_text = self._get_group_localized_text(
