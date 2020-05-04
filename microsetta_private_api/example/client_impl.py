@@ -410,7 +410,7 @@ def post_workflow_claim_kit_samples(body):
             if do_return:
                 return sample_output
 
-            do_return, sample_survey_output = ApiRequest.post(
+            do_return, sample_survey_output, _ = ApiRequest.post(
                 '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
                     acct_id, source_id, curr_sample_id
                 ), json={"survey_id": answered_covid_survey_id}
