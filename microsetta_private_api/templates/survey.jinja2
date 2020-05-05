@@ -54,13 +54,13 @@
 
         function set_triggers(model, field)
         {
-            if ('triggered_by' in field && field.triggered_by != null && field.triggered_by.length > 0)
+            if ('triggered_by' in field && field.triggered_by !== null && field.triggered_by.length > 0)
             {
                 field.visible = function()
                 {
                   visible = false
                   for (var entry of field.triggered_by)
-                      visible |= (model[entry['q_id']] == entry['response'])
+                      visible |= (model[entry['q_id']] === entry['response'])
                   return visible
                 }
             }
@@ -112,7 +112,7 @@
       var survey_model = {}
       var survey_schema={{survey_schema|tojson}}
 
-      if (survey_schema.fields != null)
+      if (survey_schema.fields !== null)
         for (var field of survey_schema.fields)
         {
           set_triggers(survey_model, field)
