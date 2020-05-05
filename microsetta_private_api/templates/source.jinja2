@@ -25,6 +25,9 @@
         </nav>
         <div class="container">
             Samples:
+            {% if samples|length > 1 %}
+            <p><i>If collecting all samples on the same day, please only complete a single Food Frequency Questionnaire.</i></p>
+            {% endif %}
             <div class="list-group">
                 {% for sample in samples %}
                 <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
