@@ -3,7 +3,6 @@ import werkzeug
 from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api import localization
-from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
@@ -21,6 +20,9 @@ import uuid
 #  we disambiguate all these functions to decide whether it includes that
 #  table, build out a SurveyAnswersRepo, or modify the schema so its not so
 #  insane???
+from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
+
+
 class SurveyAnswersRepo(BaseRepo):
 
     def find_survey_template_id(self, survey_answers_id):
@@ -42,8 +44,17 @@ class SurveyAnswersRepo(BaseRepo):
             rows += cur.fetchall()
 
             if len(rows) == 0:
-                raise RepoException("No answers in survey: %s" +
-                                    survey_answers_id)
+                vioscreen_repo = VioscreenRepo(self._transaction)
+                status = vioscreen_repo.get_vioscreen_status(survey_answers_id)
+                if status is not None:
+                    return SurveyTemplateRepo.VIOSCREEN_ID
+                else:
+                    return None
+                    # TODO: Maybe this should throw an exception, but doing so
+                    #  locks the end user out of the minimal implementation
+                    #  if they submit an empty survey response.
+                    # raise RepoException("No answers in survey: %s" %
+                    #                     survey_answers_id)
 
             arbitrary_question_id = rows[0][1]
             cur.execute("SELECT surveys.survey_id FROM "

@@ -342,7 +342,7 @@ class IntegrationTests(TestCase):
         env_surveys = json.loads(resp.data)
 
         self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
-                             [1, 3, 4, 5, 6])
+                             [1, 3, 4, 5, 6, 10001])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
                              [2])
         self.assertListEqual([x["survey_template_id"] for x in env_surveys],

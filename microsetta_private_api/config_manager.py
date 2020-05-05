@@ -30,3 +30,5 @@ AMGUT_CONFIG = DBConfig()
 with pkg_resources.open_text('microsetta_private_api', "server_config.json") \
         as fp:
     SERVER_CONFIG = json.load(fp)
+    SERVER_CONFIG['vioscreen_cryptokey'] = \
+        SERVER_CONFIG['vioscreen_cryptokey'].encode('ascii')

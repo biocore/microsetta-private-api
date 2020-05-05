@@ -232,6 +232,21 @@ paths:
               schema:
                 type: string
 
+  '/accounts/{account_id}':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_account
+      tags:
+        - Accounts
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '200':
+          description: Display of account
+          content:
+            text/html:
+              schema:
+                type: string
+
   '/accounts/{account_id}/sources/{source_id}':
     get:
       operationId: microsetta_private_api.example.client_impl.get_source
@@ -247,6 +262,81 @@ paths:
             text/html:
               schema:
                 type: string
+
+  '/accounts/{account_id}/sources/{source_id}/survey_templates/{survey_template_id}':
+    get:
+      operationId: microsetta_private_api.example.client_impl.show_source_survey
+      tags:
+        - Surveys
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/survey_template_id_path'
+      responses:
+        '200':
+          description: Take survey
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      operationId: microsetta_private_api.example.client_impl.finish_survey
+      tags:
+        - Surveys
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/survey_template_id_path'
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/survey_templates/{survey_template_id}':
+    get:
+      operationId: microsetta_private_api.example.client_impl.show_sample_survey
+      tags:
+        - Surveys
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/survey_template_id_path'
+      responses:
+        '200':
+          description: Take survey and immediately associate with a sample
+          content:
+            text/html:
+              schema:
+                type: string
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vspassthru':
+    get:
+      operationId: microsetta_private_api.example.client_impl.finish_vioscreen
+      tags:
+        - Surveys
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+        - in: query
+          name: key
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}':
     get:
@@ -337,6 +427,13 @@ components:
     survey_template_id:
       name: survey_template_id
       in: query
+      description: Unique internal id specifying a particular survey template
+      schema:
+        $ref: '#/components/schemas/survey_template_id'
+      required: true
+    survey_template_id_path:
+      name: survey_template_id
+      in: path
       description: Unique internal id specifying a particular survey template
       schema:
         $ref: '#/components/schemas/survey_template_id'
