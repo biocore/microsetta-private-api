@@ -50,18 +50,23 @@ ACCT_ADDR_KEY = "address"
 ACCT_WRITEABLE_KEYS = [ACCT_FNAME_KEY, ACCT_LNAME_KEY, ACCT_EMAIL_KEY,
                        ACCT_ADDR_KEY]
 
+_NEEDS_SURVEY_PREFIX = "NeedsSurvey"
+
 # States
 NEEDS_REROUTE = "NeedsReroute"
 NEEDS_LOGIN = "NeedsLogin"
 NEEDS_ACCOUNT = "NeedsAccount"
 NEEDS_EMAIL_CHECK = "NeedsEmailCheck"
 NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
+TOO_MANY_HUMAN_SOURCES = "TooManyHumanSources"
 NEEDS_SAMPLE = "NeedsSample"
-NEEDS_PRIMARY_SURVEY = "NeedsPrimarySurvey"
+NEEDS_PRIMARY_SURVEY = _NEEDS_SURVEY_PREFIX + "1"
+NEEDS_COVID_SURVEY = _NEEDS_SURVEY_PREFIX + "6"
 ALL_DONE = "AllDone"
 
-# TODO FIXME HACK:  This is bullcrap.  VIOSCREEN_ID is just hardcoded.
-#  API must specify per-sample survey templates in some way.
+# TODO FIXME HACK:  VIOSCREEN_ID is just hardcoded.  Api does not specify what
+#  special handling is required.  API must specify per-sample survey templates
+#  in some way, as well as any special handling for external surveys.
 VIOSCREEN_ID = 10001
 
 
@@ -81,7 +86,7 @@ def home():
     user = None
     email_verified = False
     acct_id = None
-    show_wizard = False
+    has_multiple_hs_sources = False
 
     if TOKEN_KEY_NAME in session:
         try:
@@ -98,7 +103,7 @@ def home():
                 return workflow_state["reroute"]
 
             acct_id = workflow_state.get("account_id", None)
-            show_wizard = False
+            has_multiple_hs_sources = workflow_needs == TOO_MANY_HUMAN_SOURCES
 
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
@@ -106,7 +111,7 @@ def home():
                            user=user,
                            email_verified=email_verified,
                            acct_id=acct_id,
-                           show_wizard=show_wizard,
+                           has_multiple_hs_sources=has_multiple_hs_sources,
                            endpoint=SERVER_CONFIG["endpoint"],
                            authrocket_url=SERVER_CONFIG["authrocket_url"])
 
@@ -131,7 +136,7 @@ def determine_workflow_state():
         return NEEDS_LOGIN, current_state
 
     # Do they need to make an account? YES-> create_acct.html
-    needs_reroute, accts_output = ApiRequest.get("/accounts")
+    needs_reroute, accts_output, _ = ApiRequest.get("/accounts")
     # if there's an error, reroute to error page
     if needs_reroute:
         current_state["reroute"] = accts_output
@@ -139,7 +144,7 @@ def determine_workflow_state():
 
     if len(accts_output) == 0:
         # NB: Overwriting outputs from get call above
-        needs_reroute, accts_output = ApiRequest.post("/accounts/legacies")
+        needs_reroute, accts_output, _ = ApiRequest.post("/accounts/legacies")
         if needs_reroute:
             current_state["reroute"] = accts_output
             return NEEDS_REROUTE, current_state
@@ -153,7 +158,7 @@ def determine_workflow_state():
     # If we haven't yet checked for email mismatches and gotten user decision:
     if not session.get(EMAIL_CHECK_KEY, False):
         # Does email in our accounts table match email in authrocket?
-        needs_reroute, email_match = ApiRequest.get(
+        needs_reroute, email_match, _ = ApiRequest.get(
             "/accounts/%s/email_match" % acct_id)
         if needs_reroute:
             current_state["reroute"] = email_match
@@ -165,36 +170,45 @@ def determine_workflow_state():
         session[EMAIL_CHECK_KEY] = True
 
     # Do they have a human source? NO-> consent.html
-    needs_reroute, sources_output = ApiRequest.get(
+    needs_reroute, sources_output, _ = ApiRequest.get(
         "/accounts/%s/sources" % (acct_id,), params={"source_type": "human"})
     if needs_reroute:
         current_state["reroute"] = sources_output
         return NEEDS_REROUTE, current_state
     if len(sources_output) == 0:
         return NEEDS_HUMAN_SOURCE, current_state
+    elif len(sources_output) > 1:
+        # we do not currently support displaying multiple human sources
+        return TOO_MANY_HUMAN_SOURCES, current_state
 
     source_id = sources_output[0]["source_id"]
     current_state['human_source_id'] = source_id
 
     # Have you taken the primary survey? NO-> main_survey.html
-    needs_reroute, surveys_output = ApiRequest.get(
+    needs_reroute, surveys_output, _ = ApiRequest.get(
         "/accounts/{0}/sources/{1}/surveys".format(acct_id, source_id))
     if needs_reroute:
         current_state["reroute"] = surveys_output
         return NEEDS_REROUTE, current_state
 
     has_primary = False
+    has_covid = False
     for survey in surveys_output:
         if survey['survey_template_id'] == 1:
             has_primary = True
             current_state["answered_primary_survey_id"] = survey["survey_id"]
+        elif survey['survey_template_id'] == 6:
+            has_covid = True
+            current_state["answered_covid_survey_id"] = survey["survey_id"]
+
     if not has_primary:
         return NEEDS_PRIMARY_SURVEY, current_state
 
-    # ???COVID Survey??? -> covid_survey.html
+    if not has_covid:
+        return NEEDS_COVID_SURVEY, current_state
 
     # Does the human source have any samples? NO-> kit_sample_association.html
-    needs_reroute, samples_output = ApiRequest.get(
+    needs_reroute, samples_output, _ = ApiRequest.get(
         "/accounts/{0}/sources/{1}/samples".format(acct_id, source_id))
     if needs_reroute:
         current_state["reroute"] = surveys_output
@@ -224,7 +238,11 @@ def workflow():
     elif next_state == NEEDS_HUMAN_SOURCE:
         return redirect("/workflow_create_human_source")
     elif next_state == NEEDS_PRIMARY_SURVEY:
-        return redirect("/workflow_take_primary_survey")
+        return redirect("/workflow_take_survey?survey_template_id=" +
+                        NEEDS_PRIMARY_SURVEY.replace(_NEEDS_SURVEY_PREFIX, ""))
+    elif next_state == NEEDS_COVID_SURVEY:
+        return redirect("/workflow_take_survey?survey_template_id=" +
+                        NEEDS_COVID_SURVEY.replace(_NEEDS_SURVEY_PREFIX, ""))
     elif next_state == NEEDS_SAMPLE:
         return redirect("/workflow_claim_kit_samples")
     elif next_state == ALL_DONE:
@@ -265,7 +283,8 @@ def post_workflow_create_account(body):
             KIT_NAME_KEY: kit_name
         }
 
-        do_return, accts_output = ApiRequest.post("/accounts", json=api_json)
+        do_return, accts_output, _ = \
+            ApiRequest.post("/accounts", json=api_json)
         if do_return:
             return accts_output
 
@@ -290,7 +309,7 @@ def post_workflow_update_email(body):
     if update_email:
         # get the existing account object
         acct_id = current_state["account_id"]
-        do_return, acct_output = ApiRequest.get('/accounts/%s' % acct_id)
+        do_return, acct_output, _ = ApiRequest.get('/accounts/%s' % acct_id)
         if do_return:
             return acct_output
 
@@ -301,7 +320,7 @@ def post_workflow_update_email(body):
         mod_acct = {k: acct_output[k] for k in ACCT_WRITEABLE_KEYS}
 
         # write back the updated account info
-        do_return, put_output = ApiRequest.put(
+        do_return, put_output, _ = ApiRequest.put(
             '/accounts/%s' % acct_id, json=mod_acct)
         if do_return:
             return put_output
@@ -319,7 +338,7 @@ def get_workflow_create_human_source():
     acct_id = current_state["account_id"]
     endpoint = SERVER_CONFIG["endpoint"]
     post_url = endpoint + "/workflow_create_human_source"
-    do_return, consent_output = ApiRequest.get(
+    do_return, consent_output, _ = ApiRequest.get(
         "/accounts/{0}/consent".format(acct_id),
         params={"consent_post_url": post_url})
 
@@ -333,7 +352,7 @@ def post_workflow_create_human_source(body):
     next_state, current_state = determine_workflow_state()
     if next_state == NEEDS_HUMAN_SOURCE:
         acct_id = current_state["account_id"]
-        do_return, consent_output = ApiRequest.post(
+        do_return, consent_output, _ = ApiRequest.post(
             "/accounts/{0}/consent".format(acct_id), json=body)
 
         if do_return:
@@ -360,19 +379,21 @@ def post_workflow_claim_kit_samples(body):
         acct_id = current_state["account_id"]
         source_id = current_state["human_source_id"]
         answered_survey_id = current_state["answered_primary_survey_id"]
+        answered_covid_survey_id = current_state["answered_covid_survey_id"]
 
         # get all the unassociated samples in the provided kit
         kit_name = body[KIT_NAME_KEY]
-        do_return, sample_output = ApiRequest.get(
+        do_return, sample_output, _ = ApiRequest.get(
             '/kits', params={KIT_NAME_KEY: kit_name})
         if do_return:
             return sample_output
 
         # for each sample, associate it to the human source
-        # and ALSO to the (single) primary survey for this human source
+        # and ALSO to the (single) primary and COVID survey for this human
+        # source
         for curr_sample_obj in sample_output:
             curr_sample_id = curr_sample_obj["sample_id"]
-            do_return, sample_output = ApiRequest.post(
+            do_return, sample_output, _ = ApiRequest.post(
                 '/accounts/{0}/sources/{1}/samples'.format(acct_id, source_id),
                 json={"sample_id": curr_sample_id}
             )
@@ -380,7 +401,7 @@ def post_workflow_claim_kit_samples(body):
             if do_return:
                 return sample_output
 
-            do_return, sample_survey_output = ApiRequest.post(
+            do_return, sample_survey_output, _ = ApiRequest.post(
                 '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
                     acct_id, source_id, curr_sample_id
                 ), json={"survey_id": answered_survey_id}
@@ -389,43 +410,49 @@ def post_workflow_claim_kit_samples(body):
             if do_return:
                 return sample_output
 
+            do_return, sample_survey_output, _ = ApiRequest.post(
+                '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
+                    acct_id, source_id, curr_sample_id
+                ), json={"survey_id": answered_covid_survey_id}
+            )
+
+            if do_return:
+                return sample_output
+
     return redirect(WORKFLOW_URL)
 
 
-def get_workflow_fill_primary_survey():
+def get_workflow_fill_survey(survey_template_id):
     next_state, current_state = determine_workflow_state()
-    if next_state != NEEDS_PRIMARY_SURVEY:
+    if next_state != _NEEDS_SURVEY_PREFIX + str(survey_template_id):
         return redirect(WORKFLOW_URL)
 
     acct_id = current_state["account_id"]
     source_id = current_state["human_source_id"]
-    primary_survey = 1
-    do_return, survey_output = ApiRequest.get(
+    do_return, survey_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/survey_templates/%s' %
-        (acct_id, source_id, primary_survey))
+        (acct_id, source_id, survey_template_id))
     if do_return:
         return survey_output
 
     return render_template("survey.jinja2",
+                           endpoint=SERVER_CONFIG["endpoint"],
+                           survey_template_id=survey_template_id,
                            survey_schema=survey_output[
                                'survey_template_text'])
 
 
-def post_workflow_fill_primary_survey():
+def post_workflow_fill_survey(survey_template_id, body):
     next_state, current_state = determine_workflow_state()
-    if next_state == NEEDS_PRIMARY_SURVEY:
+    if next_state == _NEEDS_SURVEY_PREFIX + str(survey_template_id):
         acct_id = current_state["account_id"]
         source_id = current_state["human_source_id"]
 
-        model = {}
-        for x in flask.request.form:
-            model[x] = flask.request.form[x]
-
-        do_return, surveys_output = ApiRequest.post(
+        do_return, surveys_output, _ = ApiRequest.post(
             "/accounts/%s/sources/%s/surveys" % (acct_id, source_id),
             json={
-                "survey_template_id": 1,
-                "survey_text": model
+                "survey_template_id": survey_template_id,
+                "survey_text": body
             }
         )
 
@@ -439,7 +466,7 @@ def get_account(account_id):
     if TOKEN_KEY_NAME not in session:
         return redirect(WORKFLOW_URL)
 
-    do_return, sources = ApiRequest.get('/accounts/%s/sources' % account_id)
+    do_return, sources, _ = ApiRequest.get('/accounts/%s/sources' % account_id)
     if do_return:
         return sources
     return render_template('account.jinja2',
@@ -453,28 +480,30 @@ def get_source(account_id, source_id):
         return redirect(WORKFLOW_URL)
 
     # Retrieve all samples from the source
-    do_return, samples_output = ApiRequest.get(
+    do_return, samples_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/samples' % (account_id, source_id))
     if do_return:
         return samples_output
 
     # Retrieve all surveys available to the source
-    do_return, surveys_output = ApiRequest.get(
+    do_return, surveys_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/survey_templates' % (account_id, source_id))
     if do_return:
         return surveys_output
 
-    # Filter surveys to per sample and per source surveys
+    # Limit to only the primary and COVID19 survey as that is the primary
+    # data focus for TMI right now.
     per_sample = []
     per_source = []
+    restrict_to = [1, 6]
     for survey in surveys_output:
+        if survey['survey_template_id'] in restrict_to:
+            per_source.append(survey)
         if survey['survey_template_id'] == VIOSCREEN_ID:
             per_sample.append(survey)
-        else:
-            per_source.append(survey)
 
     # Identify answered surveys for the source
-    do_return, survey_answers = ApiRequest.get(
+    do_return, survey_answers, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/surveys' % (account_id, source_id))
     if do_return:
         return survey_answers
@@ -492,7 +521,7 @@ def get_source(account_id, source_id):
         sample['ffq'] = False
         sample_id = sample['sample_id']
         # TODO:  This is a really awkward and slow way to get this information
-        do_return, per_sample_answers = ApiRequest.get(
+        do_return, per_sample_answers, _ = ApiRequest.get(
             '/accounts/%s/sources/%s/samples/%s/surveys' %
             (account_id, source_id, sample_id))
 
@@ -507,17 +536,23 @@ def get_source(account_id, source_id):
                            acct_id=account_id,
                            source_id=source_id,
                            samples=samples_output,
-                           surveys=per_source)
+                           surveys=per_source,
+                           vioscreen_id=VIOSCREEN_ID)
 
 
-def show_survey(account_id, source_id, survey_template_id):
+def show_source_survey(account_id, source_id, survey_template_id):
+    return show_sample_survey(account_id, source_id, None, survey_template_id)
+
+
+def show_sample_survey(account_id, source_id, sample_id, survey_template_id):
     params = {}
     if survey_template_id == VIOSCREEN_ID:
-        params['survey_redirect_url'] = SERVER_CONFIG["endpoint"] + \
-                                        '/accounts/%s/sources/%s/vspassthru' \
-                                        % (account_id, source_id)
+        params['survey_redirect_url'] = \
+            SERVER_CONFIG["endpoint"] + \
+            '/accounts/%s/sources/%s/samples/%s/vspassthru' \
+            % (account_id, source_id, sample_id)
 
-    do_return, survey_output = ApiRequest.get(
+    do_return, survey_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/survey_templates/%s' %
         (account_id, source_id, survey_template_id), params=params)
     if do_return:
@@ -533,10 +568,10 @@ def show_survey(account_id, source_id, survey_template_id):
                                'survey_template_text'])
 
 
-def finish_vioscreen(account_id, source_id, key):
+def finish_vioscreen(account_id, source_id, sample_id, key):
     # TODO FIXME HACK:  This is insanity.  I need to see the vioscreen docs
     #  to interface with our API...
-    do_return, surveys_output = ApiRequest.post(
+    do_return, surveys_output, surveys_headers = ApiRequest.post(
         "/accounts/%s/sources/%s/surveys" % (account_id, source_id),
         json={
             "survey_template_id": VIOSCREEN_ID,
@@ -547,6 +582,18 @@ def finish_vioscreen(account_id, source_id, key):
     if do_return:
         return surveys_output
 
+    answered_survey_id = surveys_headers['Location']
+    answered_survey_id = answered_survey_id.split('/')[-1]
+
+    do_return, sample_survey_output, _ = ApiRequest.post(
+        '/accounts/%s/sources/%s/samples/%s/surveys' %
+        (account_id, source_id, sample_id),
+        json={"survey_id": answered_survey_id}
+    )
+
+    if do_return:
+        return sample_survey_output
+
     return redirect("/accounts/%s/sources/%s" % (account_id, source_id))
 
 
@@ -555,7 +602,7 @@ def finish_survey(account_id, source_id, survey_template_id):
     for x in flask.request.form:
         model[x] = flask.request.form[x]
 
-    do_return, surveys_output = ApiRequest.post(
+    do_return, surveys_output, _ = ApiRequest.post(
         "/accounts/%s/sources/%s/surveys" % (account_id, source_id),
         json={
             "survey_template_id": survey_template_id,
@@ -574,7 +621,7 @@ def get_sample(account_id, source_id, sample_id):
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
 
-    do_return, sample_output = ApiRequest.get(
+    do_return, sample_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/samples/%s' %
         (account_id, source_id, sample_id))
     if do_return:
@@ -616,7 +663,7 @@ def put_sample(account_id, source_id, sample_id):
     for x in flask.request.form:
         model[x] = flask.request.form[x]
 
-    do_return, sample_output = ApiRequest.put(
+    do_return, sample_output, _ = ApiRequest.put(
         '/accounts/%s/sources/%s/samples/%s' %
         (account_id, source_id, sample_id),
         json=model)
@@ -656,6 +703,19 @@ def post_check_acct_inputs(body):
         return json.dumps(response_info)
 
 
+def generate_error_page(error_msg):
+    # output is general error page
+    error_txt = quote(error_msg)
+    mailto_url = "mailto:{0}?subject={1}&body={2}".format(
+        HELP_EMAIL, quote("minimal interface error"), error_txt)
+
+    output = render_template('error.jinja2',
+                             mailto_url=mailto_url,
+                             error_msg=error_msg)
+
+    return output
+
+
 class BearerAuth(AuthBase):
     def __init__(self, token):
         self.token = token
@@ -684,25 +744,21 @@ class ApiRequest:
     def _check_response(cls, response):
         error_code = response.status_code
         output = None
+        headers = None
 
         if response.status_code == 401 or response.status_code == 403:
             # output is redirect to home page for login or email verification
             output = redirect("/home")
         elif response.status_code >= 400:
             # output is general error page
-            error_txt = quote(response.text)
-            mailto_url = "mailto:{0}?subject={1}&body={2}".format(
-                HELP_EMAIL, quote("minimal interface error"), error_txt)
-
-            output = render_template('error.jinja2',
-                                     mailto_url=mailto_url,
-                                     error_msg=response.text)
+            output = generate_error_page(response.text)
         else:
             error_code = 0  # there is a response code but no *error* code
+            headers = response.headers
             if response.text:
                 output = response.json()
 
-        return error_code, output
+        return error_code, output, headers
 
     @classmethod
     def get(cls, path, params=None):
@@ -733,5 +789,4 @@ class ApiRequest:
             verify=ApiRequest.CAfile,
             params=cls.build_params(params),
             json=json)
-
         return cls._check_response(response)

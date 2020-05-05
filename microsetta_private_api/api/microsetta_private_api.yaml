@@ -1468,7 +1468,7 @@ components:
       example: "mdoe@example.com"
     age_range:
       type: string
-      enum: ["0-6", "7-12", "13-17", "18-plus"]
+      enum: ["0-6", "7-12", "13-17", "18-plus", "legacy"]
     parent_1_name:
       type: string
       example: "Madre Doe"

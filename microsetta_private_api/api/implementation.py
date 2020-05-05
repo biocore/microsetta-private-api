@@ -11,7 +11,6 @@ https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
 and associated file
 https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
 """
-
 import flask
 from flask import jsonify, render_template
 import jwt
@@ -37,6 +36,7 @@ from werkzeug.exceptions import BadRequest, Unauthorized, Forbidden, NotFound
 
 from microsetta_private_api.util import vue_adapter
 from microsetta_private_api.util.util import fromisotime
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.util import vioscreen
 
 import uuid
@@ -193,6 +193,12 @@ def create_source(account_id, body, token_info):
             source_info = HumanInfo.from_dict(body,
                                               consent_date=date.today(),
                                               date_revoked=None)
+            # the "legacy" value of the age_range enum is not valid to use when
+            # creating a new source, so do not allow that.
+            # NB: Not necessary to do this check when updating a source as
+            # only source name and description (not age_range) may be updated.
+            if source_info.age_range == "legacy":
+                raise RepoException("Age range may not be set to legacy.")
         else:
             source_info = NonHumanInfo.from_dict(body)
 
@@ -282,7 +288,7 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [1, 3, 4, 5,
+                           for x in [1, 3, 4, 5, 6,
                                      SurveyTemplateRepo.VIOSCREEN_ID]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
@@ -306,8 +312,9 @@ def read_survey_template(account_id, source_id, survey_template_id,
 
         # For external surveys, we generate links pointing out
         if survey_template_id == SurveyTemplateRepo.VIOSCREEN_ID:
+
             url = vioscreen.gen_survey_url(
-                survey_template_id, language_tag, survey_redirect_url
+                language_tag, survey_redirect_url
             )
             # TODO FIXME HACK: This field's contents are not specified!
             info.survey_template_text = {
@@ -358,6 +365,8 @@ def read_answered_surveys(account_id, source_id, language_tag, token_info):
         api_objs = []
         for ans in answered_surveys:
             template_id = survey_answers_repo.find_survey_template_id(ans)
+            if template_id is None:
+                continue
             o = survey_template_repo.get_survey_template_link_info(template_id)
             api_objs.append(o.to_api(ans))
         return jsonify(api_objs), 200
@@ -378,6 +387,9 @@ def read_answered_survey(account_id, source_id, survey_id, language_tag,
             return jsonify(code=404, message="No survey answers found"), 404
 
         template_id = survey_answers_repo.find_survey_template_id(survey_id)
+        if template_id is None:
+            return jsonify(code=422, message="No answers in survey"), 422
+
         template_repo = SurveyTemplateRepo(t)
         link_info = template_repo.get_survey_template_link_info(template_id)
         link_info.survey_id = survey_id
@@ -390,7 +402,8 @@ def submit_answered_survey(account_id, source_id, language_tag, body,
     _validate_account_access(token_info, account_id)
 
     if body['survey_template_id'] == SurveyTemplateRepo.VIOSCREEN_ID:
-        return _submit_vioscreen_status(body["survey_text"]["key"])
+        return _submit_vioscreen_status(account_id, source_id,
+                                        body["survey_text"]["key"])
 
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
@@ -530,6 +543,8 @@ def read_answered_survey_associations(account_id, source_id, sample_id,
         resp_obj = []
         for answered_survey in answered_surveys:
             template_id = answers_repo.find_survey_template_id(answered_survey)
+            if template_id is None:
+                continue
             info = template_repo.get_survey_template_link_info(template_id)
             resp_obj.append(info.to_api(answered_survey))
 
@@ -684,9 +699,9 @@ def _validate_account_access(token_info, account_id):
         return account
 
 
-def _submit_vioscreen_status(info_str):
+def _submit_vioscreen_status(account_id, source_id, info_str):
     # get information out of encrypted vioscreen url
-    info = vioscreen.decode_key(info_str)
+    info = vioscreen.decode_key(info_str).decode("utf-8")
     vio_info = {}
     for keyval in info.split("&"):
         key, val = keyval.split("=")
@@ -696,9 +711,20 @@ def _submit_vioscreen_status(info_str):
         vio_repo = VioscreenRepo(t)
 
         # Add the status to the survey
-        vio_repo.update_vioscreen_status(vio_info["username"],
+        vio_repo.upsert_vioscreen_status(account_id, source_id,
+                                         vio_info["username"],
                                          int(vio_info["status"]))
         t.commit()
 
-    # TODO: Any reason to respond with anything?
-    return '', 204
+    response = flask.Response()
+    response.status_code = 201
+    # TODO FIXME HACK:  This location can't actually return any info about ffq!
+    #  But I need SOME response that contains the survey_id or client can't
+    #  associate the survey with a sample.
+    response.headers['Location'] = '/api/accounts/%s' \
+                                   '/sources/%s' \
+                                   '/surveys/%s' % \
+                                   (account_id,
+                                    source_id,
+                                    vio_info["username"])
+    return response
