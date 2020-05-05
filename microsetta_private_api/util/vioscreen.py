@@ -30,7 +30,7 @@ def gen_survey_url(language_tag, survey_redirect_url):
 def pkcs7_pad_message(in_message):
     # http://stackoverflow.com/questions/14179784/python-encrypting-with-pycrypto-aes  # noqa
     length = 16 - (len(in_message) % 16)
-    return in_message + chr(length) * length
+    return (in_message + chr(length) * length).encode('ascii')
 
 
 def pkcs7_unpad_message(in_message):
