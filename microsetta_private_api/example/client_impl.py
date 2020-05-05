@@ -596,7 +596,9 @@ def generate_error_page(error_msg):
 
     output = render_template('error.jinja2',
                              mailto_url=mailto_url,
-                             error_msg=error_msg)
+                             error_msg=error_msg,
+                             endpoint=SERVER_CONFIG["endpoint"],
+                             authrocket_url=SERVER_CONFIG["authrocket_url"])
 
     return output
 
