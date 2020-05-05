@@ -40,7 +40,7 @@
                     </div>
                     <div class="col-sm">
                       {% if sample.ffq %}
-                        <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-check"/>
+                        Food Frequency Questionnaire<span class="fa fa-check"/>
                       {% else %}
                         <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
                       {% endif %}
@@ -54,8 +54,7 @@
             Available Surveys:
             <div class="list-group">
                 {% for survey in surveys %}
-                <a href="/accounts/{{acct_id}}/sources/{{source_id}}/survey_templates/{{survey.survey_template_id}}" class="list-group-item list-group-item-action {{loop.cycle('odd', 'even') }}">
-                <div class="container">
+                <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                   <div class="row">
                     <div class="col-sm">
                       {{survey.survey_template_title |e}}
