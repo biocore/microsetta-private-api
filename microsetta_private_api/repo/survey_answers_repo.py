@@ -3,6 +3,7 @@ import werkzeug
 from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api import localization
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
