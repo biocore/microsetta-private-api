@@ -131,7 +131,9 @@ Gut project</b></p>
 <p>Dr. Rob Knight and his research team are doing a research study to find out more about the
 trillions of tiny living things likes bacteria that live in you or on you. You are being asked if you
 want to be in this study because you are different (in a good way) from everybody else and they
-are different from each other.</p>
+are different from each other. We may be able to tell if you have been infected with something
+(like the virus that causes COVID-19) but we can’t tell you that because we are not allowed to do
+that.</p>
 
 <p>If you decide you want to be in this research study, this is what will happen to you:
 We will ask you or your mom or dad to sample some place on your body (like skin or mouth) or
@@ -181,25 +183,26 @@ to what they are studying e.g. certain diseases where gut abnormalities are comm
 are experimental?</b></i></br>
 After you have consented to taking part in the study, you will fill in a questionnaire on line that
 asks questions about your body, age, weight, height, what you eat, if you have taken antibiotics,
-if you have certain diseases and if you take supplements like vitamins. Then you can sample
+if you have certain diseases and if you take supplements like vitamins. We would also like to know
+how the COVID-19 pandemic is affecting how you sleep and how you feel. Then you can sample
 yourself with the swab provided in the kit from the American Gut Project. Instructions are
 included in the envelope so you know what to do. The most common sample is of your poop
 (stool) where you apply a small smear to the tips of a swab from used toilet tissue or to a card
 (called an FOBT card). You may also sample any area of skin, your tongue or mouth, your
 nostrils, ear wax, or vagina. You may also be asked to poop into a plastic container that you
-place under the toilet seat to catch the poop. We may also ask your mom or dad to take a small
-sample of blood by pricking your finger and then collecting the blood on 2 small swabs. None of
-these samples or investigations will allow us to make a diagnosis of disease and we are not
+place under the toilet seat to catch the poop. We may also ask someone (like your mom or dad) to
+take a small sample of blood by pricking your finger and then collecting the blood on 2 small swabs.
+None of these samples or investigations will allow us to make a diagnosis of disease and we are not
 looking at anything in your own DNA that can also be found in your poop or skin or saliva.
 </p>
 
 <p><b><i>How much time will each study procedure take, what is your total time commitment, and how
 long will the study last?</b></i></br>
-To complete the online questionnaire should take 30 minutes or less. Each sample you send can
+To complete the online questionnaire should take 30-45 minutes or less. Each sample you send can
 be obtained in 5 minutes or less. We expect the study to continue for 5 years but your results
 will be available to you before the end of the study (usually within 2 months of us receiving the
 sample). You can elect to sample yourself more than once. If your personal details change (e.g.
-address, or your heath status) we request that you voluntarily re-enter your responses to the
+address, or your heath status) we request that you re-enter your responses to the
 questionnaire or re-enter your contact information so we can follow up with you.
 </p>
 
@@ -312,7 +315,7 @@ where gut abnormalities are common.
 You are being asked if you want to be in this study because you signed up for microbial analysis
 on the American gut website. When you signed up we sent you a sample kit with instructions on
 how to login to the website so that you can consent to the study formally.
-We will analyze all samples where this consent form and the questionnaire are completed. The
+We will analyze all samples where this consent form and the questionnaire/s are completed. The
 samples in the project (including yours) will be analyzed and published in scientific articles
 defining the range of diversity in the human microbiome. You will get a link to view, download
 and print high-resolution figures suitable for framing of your results, and access to a more
@@ -326,9 +329,18 @@ resolution.
 </p>
 
 <p>We will ask you to complete an online questionnaire about you your lifestyle and what you eat.
-We estimate that this should take no more than 30 minutes. You will then sample a part of your
-body (of interest to you) with a sterile Q-tip like swab by rubbing the surface of your skin,
-rubbing the surface of your tongue or sampling your stool in one of 3 ways:
+We estimate that this should take no more than 30-45 minutes. There are also other questionnaires
+that you can choose to complete if they apply to you.This includes a COVID-19 questionnaire
+that asks about your possible exposure to COVID-19 and how it is affecting you personally,
+an Autism-Spectrum Disorder questionnaire, a migraine survey, surfer microbiome survey and
+fermented foods survey. These should be completed if they apply to you and you want to provide
+additional information about yourself that may assist our research.
+</p>
+
+<p>
+You will then sample a part of your body (of interest to you) with a sterile Q-tip like swab by
+rubbing the surface of your skin, rubbing the surface of your tongue or sampling your stool in
+one of 3 ways:
 </p>
 <ol>
 <li>By inserting the tips of the swab into used toilet tissue and returning the sample in the
@@ -369,14 +381,15 @@ receive an email informing you of the availability of results.
 
 <p>We are also asking you to consent to having your sample and the non-human DNA from it (e.g.
 bacterial DNA) used in future studies. We would also like you to consent to be re-contacted by
-email to request further information as a follow-up to questions you have responded to in the
+the PI of the study Dr. Rob Knight or members of the research personnel at the email address you
+provided to request further information as a follow-up to questions you have responded to in the
 questionnaire.</p>
 
 <p><b><u>Please Note:</b></u> The sequencing is <b>not for diagnostic purposes and does not target human DNA.</b></p>
 
 <p><b><i>How much time will each study procedure take, what is your total time commitment, and how
 long will the study last?</b></i></br>
-To complete the online questionnaire should take 30 minutes or less. Each sample you send can
+To complete the online questionnaire should take 30 - 45 minutes or less. Each sample you send can
 be obtained in 5 minutes or less. We expect the study to continue for many years but your results
 will be available to you before the end of the study (usually within 2 months of us receiving the
 sample). You can elect to sample yourself more than once. If your personal details change (e.g.
@@ -425,7 +438,8 @@ diagnosis and we are not testing for infectious disease.</b> The report you rece
 identification of rare micro-organisms that are in your sample and in a small percentage of other
 participants. This is provided to you for interest only. <b>The techniques we use do not identify
 bacteria at a level of identification that can be used to diagnose disease or infer disease
-causation.</b>
+causation. We may be able to detect RNA or DNA from viruses (including SARS-CoV-2 that causes
+COVID-19) but this cannot be used as a substitute for a clinical laboratory test.</b>
 </p>
 
 <p><b><i>Can you choose to not participate or withdraw from the study without penalty or loss of
@@ -525,28 +539,47 @@ of sample in other scientific studies e.g. certain diseases where gut abnormalit
 
 <p><b><i>What will happen to your child in this study and which procedures are standard of care and
 which are experimental?</b></i></br>
-You are being asked if you want your child to be in this study because you
-signed up for microbial analysis on the American gut website. When you signed
-up we sent you a sample kit with instructions on how to login to the website so
-that you can consent to the study formally.  We will analyze all samples where
-this consent form and the questionnaire are completed. The samples in the
-project (including your child’s) will be analyzed and published in scientific
-articles defining the range of diversity in the human microbiome. You will get
-a link to view, download and print high-resolution figures suitable for framing
-of your results and access to a more detailed report of the micro-organisms
-that were identified in your sample. We also want you to understand that the
-methods we use for identifying micro-organisms in your child’s sample <b>cannot
-be used to diagnose disease</b>. The results are not medically actionable. The
-report includes notation of rare types of micro-organisms for your interest
-only. The techniques we use to identify the organisms cannot be used for
-species level resolution. We would like you to understand from the consent what
-we will do with your child’s sample and what you will get in return. We will
-ask you to complete an online questionnaire about your child’s lifestyle and
-what he/she eats. We estimate that this should take no more than 30 minutes.
-You will then sample a part of your child’s body (of interest to you) with a
-sterile Q-tip like swab by rubbing the surface of you’re the skin, rubbing the
-surface of the tongue or sampling their stool in one of 3 ways:</p>
+You are being asked if you want your child to be in this study because you signed up for microbial
+analysis on the American gut website. When you signed up we sent you a sample kit with instructions
+on how to login to the website so that you can consent to the study formally. The sampling kit
+contains polyester-tipped sterile swabs or cotton-tipped swabs with a sterile buffer
+(phosphate-buffered saline) that will facilitate sampling. The collection device may also include 95%
+ethanol to preserve the sample and make it non-infectious. There are also instructions for returning
+the sample to us safely.
+</p>
 
+<p>
+We will analyze all samples where this consent form and the questionnaire are completed.  The samples
+in the project (including your child’s) will be analyzed and published in scientific articles defining
+the range of diversity in the human microbiome.  You will get a link to view, download and print
+high-resolution figures suitable for framing of your results and access to a more detailed report of
+the micro-organisms that were identified in your sample. We also want you to understand that the
+methods we use for identifying micro-organisms in your child’s sample <b>cannot be used to diagnose
+disease</b>.  The results are not medically actionable. The report includes notation of rare types of
+micro-organisms for  your interest only. The techniques we use to identify the organisms cannot be
+used for species level resolution.
+</p>
+
+<p>
+We would like you to understand from the consent what we will do with your child’s sample and what
+you will get in return.
+</p>
+
+<p>
+We will ask you to complete an online questionnaire about your child’s lifestyle and what he/she eats.
+We estimate that this should take no more than 30-45 minutes. There are also other questionnaires that
+you can choose to complete if they apply to your child.  This includes a COVID-19 questionnaire that
+asks about possible exposure to COVID-19 and how it is affecting your child, an Autism-Spectrum
+Disorder questionnaire, a migraine survey, surfer microbiome survey and fermented foods survey.
+These should be completed if they apply to your child and you want to provide additional information
+that may assist our research.
+</p>
+
+<p>
+You will then sample a part of your child’s body (of interest to you or the researcher) with a sterile
+Q-tip like swab by rubbing the surface of you’re the skin, rubbing the surface of the tongue or
+sampling their stool in one of 3 ways:
+</p>
 <ol>
 <li>By inserting the tips of the swab into used toilet tissue and returning the sample in the
 provided plastic sleeve;</li>
@@ -580,13 +613,16 @@ months).</p>
 receive an email informing you of the availability of results.</p>
 
 <p>We are also asking you to consent to having your child’s sample or the non-human DNA from it
-(e.g. bacterial DNA) used in future studies.</p>
+(e.g. bacterial DNA) used in future studies. We would also like you to consent to be re-contacted
+by the PI of the study Dr. Rob Knight or members of the research personnel at the email address
+you provided to request further information as a follow-up to questions you have responded to
+in the questionnaire. </p>
 
 <b><u>Please Note:</b></u> The sequencing is <b>not for diagnostic purposes and does not target human DNA</b>.
 
 <p><b><i>How much time will each study procedure take, what is your child’s total time commitment,
 and how long will the study last?</b></i></br>
-To complete the online questionnaire should take 30 minutes or less. Each sample you send can
+To complete the online questionnaire should take 30-45 minutes or less. Each sample you send can
 be obtained in 5 minutes or less. We expect the study to continue for many years but the results
 will be available to you before the end of the study (usually within 2 months of us receiving the
 sample). You can choose to sample your child more than once. If your child’s personal details
@@ -631,7 +667,8 @@ clinical diagnosis and we are not testing for infectious disease</b>. The report
 include identification of rare micro-organisms that are in your sample and in a small percentage
 of other participants. This is provided to you for interest only. <b>The techniques we use do not
 identify bacteria at a level of identification that can be used to diagnose disease or infer
-disease causation.</b></p>
+disease causation. We may be able to detect RNA or DNA from viruses (including SARS-CoV-2 that
+causes COVID-19) but this cannot be used as a substitute for a clinical laboratory test.</b></p>
 
 <p><b><i>Can you choose to not to have your child participate or withdraw from the study without
 penalty or loss of benefits?</b></i></br>
