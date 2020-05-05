@@ -249,7 +249,7 @@ class SurveyAnswersRepo(BaseRepo):
             # survey template includes NO text or string questions AND the
             # user doesn't answer any of the questions it does include. Not
             # worth making the code robust to this case, as this whole "include
-            # one empty answer is a temporary hack", but at least ensure we
+            # one empty answer" is a temporary hack, but at least ensure we
             # know this problem occurred if it ever does
             raise RepoException("No answers provided for survey template %s "
                                 "and not able to add an empty string default" %
