@@ -564,6 +564,7 @@ def show_sample_survey(account_id, source_id, sample_id, survey_template_id):
 
     # Handle local surveys
     return render_template("survey.jinja2",
+                           survey_template_id=survey_template_id,
                            survey_schema=survey_output[
                                'survey_template_text'])
 
