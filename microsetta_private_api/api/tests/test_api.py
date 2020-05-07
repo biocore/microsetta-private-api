@@ -13,6 +13,7 @@ from microsetta_private_api import localization
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 
@@ -192,8 +193,15 @@ def extract_last_id_from_location_header(response):
 def delete_dummy_accts():
     with Transaction() as t:
         source_repo = SourceRepo(t)
+        survey_answers_repo = SurveyAnswersRepo(t)
         sources = source_repo.get_sources_in_account(ACCT_ID_1)
         for curr_source in sources:
+            answers = survey_answers_repo.list_answered_surveys(
+                ACCT_ID_1, curr_source.id)
+            for survey_id in answers:
+                survey_answers_repo.delete_answered_survey(
+                    ACCT_ID_1, survey_id)
+
             source_repo.delete_source(ACCT_ID_1, curr_source.id)
 
         acct_repo = AccountRepo(t)
@@ -943,3 +951,144 @@ class SourceTests(ApiTests):
         expected_val[SOURCE_ID_KEY] = real_src_id_from_body
         self.assertEqual(expected_val, response_obj)
     # endregion source update/put
+
+
+@pytest.mark.usefixtures("client")
+class SurveyTests(ApiTests):
+
+    # region source create/post
+    def test_survey_create_success(self):
+        """Successfully create a new answered survey"""
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        survey_template_id = 1  # primary survey
+        # This is a model of a partially-filled survey that includes
+        # a single-select field, a multi-select field with multiple
+        # entries selected, an input field required to be an integer,
+        # an input field required to be single-line string, and a text field
+        # including a line break
+        input_model = {'6': 'Yes',
+                       '30': ['Red wine', 'Spirits/hard alcohol'],
+                       '104': 'candy corn\ngreen m&ms',
+                       '107': 'Female',
+                       '108': 68,
+                       '109': 'inches',
+                       '115': 'K7G-2G8'}
+
+        post_resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?%s'
+            % (dummy_acct_id, dummy_source_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': survey_template_id,
+                    'survey_text': input_model
+                }),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(201, post_resp.status_code)
+
+        # check location header was provided, with new survey id
+        real_id_from_loc = extract_last_id_from_location_header(post_resp)
+        self.assertIsNotNone(real_id_from_loc)
+
+        # load that new survey and ensure it matches the expected contents
+        get_resp = self.client.get(
+            '%s?%s' %
+            (post_resp.headers.get("Location"), self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, get_resp.status_code)
+
+        # load the response body
+        get_resp_obj = json.loads(get_resp.data)
+
+        # check all elements of object in body are correct
+        expected_model = copy.deepcopy(input_model)
+        # TODO: determine whether the current behavior that returns
+        #  fields input as numbers as strings is actually correct or not
+        expected_model['108'] = "68"
+        expected_output = {
+            "survey_template_id": survey_template_id,
+            "survey_template_title": "Primary",
+            "survey_template_version": "1.0",
+            "survey_template_type": "local",
+            "survey_id": real_id_from_loc,
+            "survey_text": expected_model
+        }
+        self.assertEqual(expected_output, get_resp_obj)
+
+    def test_survey_create_success_empty(self):
+        """Successfully create a new answered survey without any answers"""
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        survey_template_id = 1  # primary survey
+
+        post_resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?%s'
+            % (dummy_acct_id, dummy_source_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': survey_template_id,
+                    'survey_text': {}
+                }),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(201, post_resp.status_code)
+
+        # check location header was provided, with new survey id
+        real_id_from_loc = extract_last_id_from_location_header(post_resp)
+        self.assertIsNotNone(real_id_from_loc)
+
+        # load that new survey and ensure it matches the expected contents
+        get_resp = self.client.get(
+            '%s?%s' %
+            (post_resp.headers.get("Location"), self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, get_resp.status_code)
+
+        # load the response body
+        get_resp_obj = json.loads(get_resp.data)
+
+        # check all elements of object in body are correct
+        expected_model = {'108': ""}
+        expected_output = {
+            "survey_template_id": survey_template_id,
+            "survey_template_title": "Primary",
+            "survey_template_version": "1.0",
+            "survey_template_type": "local",
+            "survey_id": real_id_from_loc,
+            "survey_text": expected_model
+        }
+        self.assertEqual(expected_output, get_resp_obj)
+
+    # def test_source_create_fail_422(self):
+    #     """Return 422 if try to create a source with age_range 'legacy'"""
+    #     dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+    #
+    #     bad_dummy_src_info = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+    #     bad_dummy_src_info['consent']['age_range'] = 'legacy'
+    #
+    #     response = self.client.post(
+    #         '/api/accounts/%s/sources?%s' %
+    #         (dummy_acct_id, self.default_lang_querystring),
+    #         content_type='application/json',
+    #         data=json.dumps(bad_dummy_src_info),
+    #         headers=self.dummy_auth
+    #     )
+    #
+    #     # check response code
+    #     self.assertEqual(422, response.status_code)
+    # endregion source create/post
