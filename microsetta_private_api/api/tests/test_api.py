@@ -1073,22 +1073,3 @@ class SurveyTests(ApiTests):
             "survey_text": expected_model
         }
         self.assertEqual(expected_output, get_resp_obj)
-
-    # def test_source_create_fail_422(self):
-    #     """Return 422 if try to create a source with age_range 'legacy'"""
-    #     dummy_acct_id = create_dummy_acct(create_dummy_1=True)
-    #
-    #     bad_dummy_src_info = copy.deepcopy(DUMMY_HUMAN_SOURCE)
-    #     bad_dummy_src_info['consent']['age_range'] = 'legacy'
-    #
-    #     response = self.client.post(
-    #         '/api/accounts/%s/sources?%s' %
-    #         (dummy_acct_id, self.default_lang_querystring),
-    #         content_type='application/json',
-    #         data=json.dumps(bad_dummy_src_info),
-    #         headers=self.dummy_auth
-    #     )
-    #
-    #     # check response code
-    #     self.assertEqual(422, response.status_code)
-    # endregion source create/post
