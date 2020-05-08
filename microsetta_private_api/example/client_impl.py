@@ -729,7 +729,6 @@ def render_faq():
     return output
 
 
-
 class BearerAuth(AuthBase):
     def __init__(self, token):
         self.token = token
