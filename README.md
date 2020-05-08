@@ -6,7 +6,7 @@ A private microservice to support The Microsetta Initiative
 ## Installation
 Create a new `conda` environment containing `flask` and other necessary packages:
 
-`conda create -n microsetta-private-api flask psycopg2 natsort`
+`conda create -n microsetta-private-api flask psycopg2 natsort pycryptodome`
 
 Once the conda environment is created, activate it:
 

@@ -39,7 +39,8 @@ class SampleRepo(BaseRepo):
                 "ON ag_kit_barcodes.source_id = source.id "
                 "WHERE "
                 "source.account_id = %s AND "
-                "source.id = %s",
+                "source.id = %s "
+                "ORDER BY barcode.barcode asc",
                 (account_id, source_id)
             )
 

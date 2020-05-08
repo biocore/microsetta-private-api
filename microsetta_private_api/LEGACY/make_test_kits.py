@@ -10,12 +10,6 @@ from microsetta_private_api.api.tests.test_integration import \
 def make_test_kits(output_filename=None, num_kits=100,
                    samples_lower_limit=1, samples_upper_limit=5):
 
-    # Ugh, imports are here inside this function because transaction
-    # (and thus test_integration, which depends on transaction)
-    # requires that an ag_test db *already* exist. Thus we can't
-    # import it without an error until after the rest of the code
-    # (outside this function) actually creates that database ...
-
     if output_filename is None:
         output_filename = "test_kit_ids_" + datetime.datetime.now().strftime(
             "%Y%m%d%H%M%S") + ".csv"

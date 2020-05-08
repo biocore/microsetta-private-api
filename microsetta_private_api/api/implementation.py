@@ -601,11 +601,6 @@ def read_kit(kit_name):
 def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
     _validate_account_access(token_info, account_id)
 
-    # return render_template("new_participant.jinja2",
-    #                        message=MockJinja("message"),
-    #                        media_locale=MockJinja("media_locale"),
-    #                        tl=MockJinja("tl"))
-
     # NB: Do NOT need to explicitly pass account_id into template for
     # integration into form submission URL because form submit URL builds on
     # the base of the URL that called it (which includes account_id)
