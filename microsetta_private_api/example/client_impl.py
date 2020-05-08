@@ -719,6 +719,17 @@ def generate_error_page(error_msg):
     return output
 
 
+def render_faq():
+    output = render_template('faq.jinja2',
+                             page_title="Frequently Asked Questions",
+                             show_breadcrumbs=True,
+                             show_logout=False,
+                             authrocket_url=SERVER_CONFIG["authrocket_url"],
+                             endpoint=SERVER_CONFIG["endpoint"])
+    return output
+
+
+
 class BearerAuth(AuthBase):
     def __init__(self, token):
         self.token = token
