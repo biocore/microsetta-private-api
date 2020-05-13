@@ -7,4 +7,5 @@ WHERE barcode IN (SELECT barcode
                   WHERE status = 'Received' 
                     AND scan_date IS NOT NULL 
                     AND site_sampled IS NOT NULL
+                    AND site_sampled != ''
                  );
