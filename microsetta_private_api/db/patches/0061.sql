@@ -128,7 +128,7 @@ SELECT replace_response(235, 'Much', 'Quite interfering');
 SELECT replace_response(235, 'Very Much Interfering', 'Very interfering');
 
 -- now lets get rid of our helper function
-DROP FUNCTION replace_response;
+DROP FUNCTION replace_response(qid INTEGER, old_resp VARCHAR, new_resp VARCHAR);
 
 -- finally, create two new primary questions and one covid question
 INSERT INTO ag.survey_question (survey_question_id, american, british,  question_shortname, retired) 
