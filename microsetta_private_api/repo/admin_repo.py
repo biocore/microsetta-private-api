@@ -419,14 +419,18 @@ class AdminRepo(BaseRepo):
         answer_ids = survey_answers_repo.list_answered_surveys_by_sample(
             account_id, source_id, sample_id)
 
+        answer_to_template_map = {}
+        for answer_id in answer_ids:
+            template_id = survey_answers_repo.find_survey_template_id(
+                answer_id)
+            answer_to_template_map[answer_id] = template_id
+
         # if a survey template is specified, filter the returned surveys
         if survey_template_id is not None:
             # TODO: This schema is so awkward for this type of query...
             answers = []
             for answer_id in answer_ids:
-                template_id = survey_answers_repo.find_survey_template_id(
-                    answer_id)
-                if template_id == survey_template_id:
+                if answer_to_template_map == survey_template_id:
                     answers.append(answer_id)
 
             if len(answers) == 0:
@@ -453,9 +457,13 @@ class AdminRepo(BaseRepo):
             survey_answers = {}
             for k in answer_model:
                 new_k = metadata_map[int(k)]
-                survey_answers[new_k] = answer_model[k]
+                survey_answers[k] = [new_k, answer_model[k]]
 
-            all_survey_answers.append(survey_answers)
+            all_survey_answers.append(
+                {
+                    "template": answer_to_template_map[answer_id],
+                    "response": survey_answers
+                })
 
         pulldown = {
             "sample_barcode": sample_barcode,

@@ -681,16 +681,29 @@ def verify_authrocket(token):
 def _validate_account_access(token_info, account_id):
     with Transaction() as t:
         account_repo = AccountRepo(t)
-        account = account_repo.get_account(account_id)
+        token_associated_account = account_repo.find_linked_account(
+            token_info['iss'],
+            token_info['sub'])
 
+        account = account_repo.get_account(account_id)
         if account is None:
             raise NotFound(ACCT_NOT_FOUND_MSG)
         else:
+            # Whether or not the token_info is associated with an admin acct
+            token_authenticates_admin = \
+                token_associated_account is not None and \
+                token_associated_account.account_type == 'admin'
+
+            # Enum of how closely token info matches requested account_id
             auth_match = account.account_matches_auth(
                 token_info[JWT_EMAIL_CLAIM_KEY],
                 token_info[JWT_ISS_CLAIM_KEY],
                 token_info[JWT_SUB_CLAIM_KEY])
-            if auth_match == AuthorizationMatch.NO_MATCH:
+
+            # If token doesn't match requested account id, and doesn't grant
+            # admin access to the system, deny.
+            if auth_match == AuthorizationMatch.NO_MATCH and \
+                    not token_authenticates_admin:
                 raise Unauthorized()
 
         return account
