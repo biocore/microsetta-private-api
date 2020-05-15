@@ -1,7 +1,7 @@
-function verify_kit_claim() {
-    // Initialize form validation on the registration form.
-    // It has the name attribute "registration"
-    $("form[name='kit_claim_form']").validate({
+function verify_kit_claim(form_name) {
+    // Initialize form validation
+    let form_selector = "form[name='" + form_name + "']";
+    $(form_selector).validate({
         // Specify validation rules
         rules: {
             // The key name on the left side is the name attribute
