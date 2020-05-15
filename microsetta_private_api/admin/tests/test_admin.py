@@ -278,7 +278,8 @@ class AdminTests(TestCase):
             # And the meta survey should exist somewhere in all_meta
             found = False
             for survey in all_meta['survey_answers']:
-                if "DIET_TYPE" in survey:
+                if "1" in survey["response"] and \
+                        survey["response"]["1"][0] == 'DIET_TYPE':
                     found = True
                     self.assertDictEqual(meta['survey_answers'][0],
                                          survey)
