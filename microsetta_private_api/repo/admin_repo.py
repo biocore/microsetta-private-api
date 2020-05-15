@@ -430,7 +430,7 @@ class AdminRepo(BaseRepo):
             # TODO: This schema is so awkward for this type of query...
             answers = []
             for answer_id in answer_ids:
-                if answer_to_template_map == survey_template_id:
+                if answer_to_template_map[answer_id] == survey_template_id:
                     answers.append(answer_id)
 
             if len(answers) == 0:
