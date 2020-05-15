@@ -4,36 +4,13 @@
     <meta charset="UTF-8">
     <title>Microsetta Kit Claim</title>
     <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
     <script src="/static/vendor/js/jquery.validate.min.js"></script>
-    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
-
+    <script src="/static/kit_check.js"></script> 
     <script>
         // Wait for the DOM to be ready
-        $(function() {
-            // Initialize form validation on the registration form.
-            // It has the name attribute "registration"
-            $("form[name='kit_claim_form']").validate({
-                // Specify validation rules
-                rules: {
-                    // The key name on the left side is the name attribute
-                    // of an input field. Validation rules are defined
-                    // on the right side
-                    kit_name: {
-                        required: true,
-                        remote: {
-                            url: "/check_acct_inputs",
-                            type: "post"
-                        }
-                    },
-                    // Make sure the form is submitted to the destination defined
-                    // in the "action" attribute of the form when valid
-                    submitHandler: function (form) {
-                        form.submit();
-                    }
-                }
-            });
-        });
+        $(document).ready(verify_kit_claim);
     </script>
 </head>
 <body>
