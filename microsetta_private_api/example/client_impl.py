@@ -373,9 +373,9 @@ def get_workflow_claim_kit_samples():
         return render_template("kit_sample_association.jinja2")
 
 
-def post_workflow_claim_kit_samples(body):
+def claim_kit_samples(expected_state, body):
     next_state, current_state = determine_workflow_state()
-    if next_state == NEEDS_SAMPLE:
+    if next_state == expected_state:
         acct_id = current_state["account_id"]
         source_id = current_state["human_source_id"]
         answered_survey_id = current_state["answered_primary_survey_id"]
@@ -420,6 +420,14 @@ def post_workflow_claim_kit_samples(body):
                 return sample_output
 
     return redirect(WORKFLOW_URL)
+
+
+def claim_additional_kit(body):
+    return claim_kit_samples(ALL_DONE, body)
+
+
+def post_workflow_claim_kit_samples(body):
+    return claim_kit_samples(NEEDS_SAMPLE, body)
 
 
 def get_workflow_fill_survey(survey_template_id):

@@ -189,6 +189,25 @@ paths:
         '302':
           description: Redirecting to necessary action
 
+  '/claim_additional_kit':
+    post:
+      operationId: microsetta_private_api.example.client_impl.claim_additional_kit
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
   '/workflow_claim_kit_samples':
     get:
       operationId: microsetta_private_api.example.client_impl.get_workflow_claim_kit_samples
