@@ -1010,6 +1010,11 @@ class SurveyTests(ApiTests):
 
         # check all elements of object in body are correct
         expected_model = copy.deepcopy(input_model)
+
+        # the output order from the multiple choice question (30) from the
+        # database is not stable
+        observed_model = get_resp_obj.pop('survey_text')
+
         # TODO: determine whether the current behavior that returns
         #  fields input as numbers as strings is actually correct or not
         expected_model['108'] = "68"
@@ -1019,9 +1024,20 @@ class SurveyTests(ApiTests):
             "survey_template_version": "1.0",
             "survey_template_type": "local",
             "survey_id": real_id_from_loc,
-            "survey_text": expected_model
         }
         self.assertEqual(expected_output, get_resp_obj)
+
+        # check dict keys
+        self.assertEqual(set(observed_model), set(expected_model))
+        for k in observed_model:
+            obs = observed_model[k]
+            exp = expected_model[k]
+
+            if isinstance(obs, list):
+                obs = sorted(obs)
+                exp = sorted(exp)
+
+            self.assertEqual(obs, exp)
 
     def test_survey_create_success_empty(self):
         """Successfully create a new answered survey without any answers"""
