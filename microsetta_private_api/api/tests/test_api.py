@@ -1025,9 +1025,6 @@ class SurveyTests(ApiTests):
             "survey_template_type": "local",
             "survey_id": real_id_from_loc,
         }
-        print(json.dumps(expected_output, indent=2))
-        print("*****************")
-        print(json.dumps(get_resp_obj, indent=2))
         self.assertEqual(expected_output, get_resp_obj)
 
         # check dict keys
