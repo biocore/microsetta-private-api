@@ -1,0 +1,20 @@
+{% extends "sitebase.jinja2" %}
+{% set page_title = "Sources" %}
+{% set show_breadcrumbs = True %}
+{% block head %}
+{% endblock %}
+{% block content %}
+        <div class="container">
+            {%  if sources|length > 0 %}
+            Sources:
+            <div class="list-group">
+                {% for source in sources %}
+                <a href="/accounts/{{acct_id}}/sources/{{ source.source_id }}"
+                   class="list-group-item list-group-item-action {{loop.cycle('odd', 'even') }}">
+                    {{ source.source_name }}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+{% endblock %}
