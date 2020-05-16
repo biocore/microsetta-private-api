@@ -630,16 +630,38 @@ def get_sample(account_id, source_id, sample_id):
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
 
+    do_return, source_output, _ = ApiRequest.get(
+        '/accounts/%s/sources/%s' %
+        (account_id, source_id)
+    )
+    if do_return:
+        return source_output
+
     do_return, sample_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/samples/%s' %
         (account_id, source_id, sample_id))
     if do_return:
         return sample_output
 
+    # Human settings
     sample_sites = ["Blood (skin prick)", "Stool", "Mouth", "Nares",
                     "Nasal mucus", "Right hand", "Left hand",
                     "Forehead", "Torso", "Right leg",  "Left leg",
                     "Vaginal mucus", "Tears",  "Ear wax", "Hair", "Fur"]
+    site_hint = None
+    site_req = True
+
+    is_environmental = source_output['source_type'] == 'environmental'
+
+    if is_environmental:
+        # Environment settings
+        sample_sites = [None]
+        site_hint = "As we cannot enumerate all possible sampling sites for " \
+               "environmental sources, we recommend describing the site " \
+               "the sample was taken from in as much detail as " \
+               "possible below"
+        site_req = False
+
 
     factory = VueFactory()
 
@@ -650,8 +672,10 @@ def get_sample(account_id, source_id, sample_id):
                    .set(required=True,
                         validator="string"))\
         .add_field(VueSelectField("sample_site", "Site", sample_sites)
-                   .set(required=True,
-                        validator="string")) \
+                   .set(required=site_req,
+                        validator="string",
+                        disabled=is_environmental,
+                        hint=site_hint)) \
         .add_field(VueTextAreaField("sample_notes", "Notes")) \
         .end_group()\
         .build()
