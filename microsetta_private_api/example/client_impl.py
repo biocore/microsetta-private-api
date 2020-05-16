@@ -657,11 +657,10 @@ def get_sample(account_id, source_id, sample_id):
         # Environment settings
         sample_sites = [None]
         site_hint = "As we cannot enumerate all possible sampling sites for " \
-               "environmental sources, we recommend describing the site " \
-               "the sample was taken from in as much detail as " \
-               "possible below"
+            "environmental sources, we recommend describing the site " \
+            "the sample was taken from in as much detail as " \
+            "possible below"
         site_req = False
-
 
     factory = VueFactory()
 
