@@ -22,5 +22,5 @@ function verify_kit_claim(form_name, submitHandler) {
         }
         $(form_selector).validate(validateOptions);
     };
-};
+}
 

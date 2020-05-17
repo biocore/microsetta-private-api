@@ -608,8 +608,6 @@ def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
     localization_info = localization.LANG_SUPPORT[language_tag]
     consent_html = render_template(
         "new_participant.jinja2",
-        page_title="Consent",
-        show_breadcrumbs=True,
         tl=localization_info[localization.NEW_PARTICIPANT_KEY],
         lang_tag=language_tag,
         post_url=consent_post_url
@@ -681,16 +679,29 @@ def verify_authrocket(token):
 def _validate_account_access(token_info, account_id):
     with Transaction() as t:
         account_repo = AccountRepo(t)
-        account = account_repo.get_account(account_id)
+        token_associated_account = account_repo.find_linked_account(
+            token_info['iss'],
+            token_info['sub'])
 
+        account = account_repo.get_account(account_id)
         if account is None:
             raise NotFound(ACCT_NOT_FOUND_MSG)
         else:
+            # Whether or not the token_info is associated with an admin acct
+            token_authenticates_admin = \
+                token_associated_account is not None and \
+                token_associated_account.account_type == 'admin'
+
+            # Enum of how closely token info matches requested account_id
             auth_match = account.account_matches_auth(
                 token_info[JWT_EMAIL_CLAIM_KEY],
                 token_info[JWT_ISS_CLAIM_KEY],
                 token_info[JWT_SUB_CLAIM_KEY])
-            if auth_match == AuthorizationMatch.NO_MATCH:
+
+            # If token doesn't match requested account id, and doesn't grant
+            # admin access to the system, deny.
+            if auth_match == AuthorizationMatch.NO_MATCH and \
+                    not token_authenticates_admin:
                 raise Unauthorized()
 
         return account
