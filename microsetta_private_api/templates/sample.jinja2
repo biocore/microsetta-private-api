@@ -31,6 +31,7 @@
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/home">Home</a></li>
+            <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Sources</a></li>
             <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}/sources/{{source_id}}">Samples</a></li>
           </ol>
         </nav>
@@ -48,9 +49,9 @@
     </div>
 
     <script type="text/javascript">
-      var survey_model={{sample|tojson}}
-      var survey_schema={{schema|tojson}}
-      last_group = survey_schema.groups[survey_schema.groups.length-1]
+      var survey_model={{sample|tojson}};
+      var survey_schema={{schema|tojson}};
+      last_group = survey_schema.groups[survey_schema.groups.length-1];
       last_group.fields.push(
       {
         buttonText: "Update",

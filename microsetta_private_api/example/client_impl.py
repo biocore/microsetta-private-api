@@ -207,17 +207,6 @@ def determine_workflow_state():
     if not has_covid:
         return NEEDS_COVID_SURVEY, current_state
 
-    # Does the human source have any samples? NO-> kit_sample_association.html
-    needs_reroute, samples_output, _ = ApiRequest.get(
-        "/accounts/{0}/sources/{1}/samples".format(acct_id, source_id))
-    if needs_reroute:
-        current_state["reroute"] = surveys_output
-        return NEEDS_REROUTE, current_state
-    if len(samples_output) == 0:
-        return NEEDS_SAMPLE, current_state
-
-    current_state['sample_objs'] = samples_output
-
     return ALL_DONE, current_state
 
 
@@ -243,14 +232,11 @@ def workflow():
     elif next_state == NEEDS_COVID_SURVEY:
         return redirect("/workflow_take_survey?survey_template_id=" +
                         NEEDS_COVID_SURVEY.replace(_NEEDS_SURVEY_PREFIX, ""))
-    elif next_state == NEEDS_SAMPLE:
-        return redirect("/workflow_claim_kit_samples")
     elif next_state == ALL_DONE:
-        # redirect to the page showing all the samples for this source
-        samples_url = "/accounts/{account_id}/sources/{source_id}".format(
-            account_id=current_state["account_id"],
-            source_id=current_state["human_source_id"])
-        return redirect(samples_url)
+        # redirect to the account page (showing all the sources)
+        acct_url = "/accounts/{account_id}".format(
+            account_id=current_state["account_id"])
+        return redirect(acct_url)
 
 
 def get_workflow_create_account():
@@ -471,12 +457,14 @@ def post_workflow_fill_survey(survey_template_id, body):
 
 
 def get_account(account_id):
-    if TOKEN_KEY_NAME not in session:
+    next_state, current_state = determine_workflow_state()
+    if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
 
     do_return, sources, _ = ApiRequest.get('/accounts/%s/sources' % account_id)
     if do_return:
         return sources
+
     return render_template('account.jinja2',
                            acct_id=account_id,
                            sources=sources)
@@ -729,9 +717,6 @@ def generate_error_page(error_msg):
 
 def render_faq():
     output = render_template('faq.jinja2',
-                             page_title="Frequently Asked Questions",
-                             show_breadcrumbs=True,
-                             show_logout=False,
                              authrocket_url=SERVER_CONFIG["authrocket_url"],
                              endpoint=SERVER_CONFIG["endpoint"])
     return output

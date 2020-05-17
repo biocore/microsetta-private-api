@@ -23,5 +23,5 @@ function verify_kit_claim(form_name) {
             }
         });
     };
-};
+}
 
