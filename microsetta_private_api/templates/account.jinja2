@@ -2,19 +2,63 @@
 {% set page_title = "Sources" %}
 {% set show_breadcrumbs = True %}
 {% block head %}
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
+    <script src="/static/vendor/js/jquery.validate.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize form validation
+            $("form[name='new_source_form']").validate({
+                // Specify validation rules
+                rules: {
+                    // The key name on the left side is the name attribute
+                    // of an input field. Validation rules are defined
+                    // on the right side
+
+                    // TODO: Nothing here keeps someone from e.g. naming all their sources "Bob", etc
+                    source_name: "required",
+                    source_type: "required"
+                }
+            });
+        });
+    </script>
 {% endblock %}
 {% block content %}
         <div class="container">
             {%  if sources|length > 0 %}
-            Sources:
+            Choose a source:
             <div class="list-group">
                 {% for source in sources %}
-                <a href="/accounts/{{acct_id}}/sources/{{ source.source_id }}"
-                   class="list-group-item list-group-item-action {{loop.cycle('odd', 'even') }}">
-                    {{ source.source_name }}
-                </a>
+                <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
+                  <div class="row">
+                    <div class="col-sm">
+                      <a href="/accounts/{{acct_id}}/sources/{{ source.source_id|e }}">
+                          {{ source.source_name|e}}
+                      </a>
+                    </div>
+                    <div class="col-sm">
+                      {{source.source_type|e}}
+                    </div>
+                  </div>
+                </div>
                 {% endfor %}
             </div>
+            <p>
+                or
+            </p>
             {% endif %}
+        </div>
+        <div class="container">
+            Create a new environmental source:
+            <form method="post" name="new_source_form" action="/accounts/{{acct_id}}/sources/">
+                <div class="form-group">
+                    <label for="source_name" name="source_name_label">Name</label>
+                    <input id="source_name" name="source_name" class="form-control" type="text"/>
+                    <input id="source_type" name="source_type" type="hidden" value="environmental" />
+                    <br />
+                    <label for="source_description" name="source_description_label">Description</label>
+                    <input id="source_description" name="source_description" class="form-control" type="text"/>
+                 </div>
+                <input type="submit" class="btn btn-primary" value="Create Source"/>
+            </form>
         </div>
 {% endblock %}
