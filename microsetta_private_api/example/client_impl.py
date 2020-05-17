@@ -347,6 +347,21 @@ def post_workflow_create_human_source(body):
     return redirect(WORKFLOW_URL)
 
 
+def post_source(account_id, body):
+    next_state, current_state = determine_workflow_state()
+    if next_state != ALL_DONE:
+        return redirect(WORKFLOW_URL)
+
+    acct_id = current_state["account_id"]
+    do_return, sources_output, _ = ApiRequest.post(
+        "/accounts/{0}/sources".format(acct_id), json=body)
+
+    if do_return:
+        return sources_output
+
+    return redirect('/accounts/%s' % acct_id)
+
+
 def get_workflow_claim_kit_samples():
     next_state, current_state = determine_workflow_state()
     if next_state != NEEDS_SAMPLE:
