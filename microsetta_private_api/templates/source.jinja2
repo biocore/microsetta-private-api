@@ -3,15 +3,50 @@
 <head>
     <meta charset="utf-8"/>
     <title>Microsetta Account Samples</title>
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
+    <script src="/static/vendor/js/jquery.validate.min.js"></script>
+    <script src="/static/vendor/bootstrap-4.4.1-dist/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/static/vendor/font-awesome-4.7.0/css/font-awesome.min.css"/>
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
-    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
-    <script src="/static/vendor/js/jquery.validate.min.js"></script>
-    <script src="/static/kit_check.js"></script> 
+    <script src="http://malsup.github.com/jquery.form.js"></script>
+    <script src="/static/kit_check.js"></script>
     <script>
+        kitSubmit = function(form, evt){
+            $(form).ajaxSubmit({
+                success: function (samples, textStatus, jqXHR) {
+                    $('#samples').empty();
+                    for (var i = 0; i < samples.length; i++)
+                    {
+                        var bc = samples[i].sample_barcode;
+                        var sample_id = samples[i].sample_id;
+                        var item = $('<div class="container list-group-item">' +
+                                     '<div class="row">' +
+                                     '<div class="col-sm">' +
+                                     '<label for="' + bc + '">' + bc + '</label>' +
+                                     '</div>' +
+                                     '<div class="col-sm">' +
+                                     '<input type="checkbox" name="sample_id" id="' + bc + '" value="' + sample_id + '"/>' +
+                                     '</div>' +
+                                     '</div>');
+                        $('#samples').append(item);
+                    }
+                    var div = $('#choose_sample_div')
+                    div.collapse('show')
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR.error);
+                },
+            });
+        }
+
         // Wait for the DOM to be ready
-        $(document).ready(verify_kit_claim('kit_claim_form'));
+
+        $(document).ready(function(){
+            $('#list_kit_form').ajaxForm()
+            setup_kit_claim = verify_kit_claim('list_kit_form', kitSubmit);
+            setup_kit_claim()
+        });
     </script>
 </head>
 <body>
@@ -61,13 +96,25 @@
             </div>
         </div>
         <div class="container">
-            <form method="post" name="kit_claim_form" action="/claim_additional_kit">
+            <form method="get" name="list_kit_form" action="/list_kit_samples">
                 <div class="form-group">
                     <label for="kit_name" name="kit_name_label">Have another kit with more samples? Please enter the kit ID here:</label>
                     <input id="kit_name" name="kit_name" class="form-control" type="text"/>
                  </div>
-                <input type="submit" class="btn btn-primary" value="Add samples"/>
+                <input type="submit" class="btn btn-primary" value="List Samples"/>
             </form>
+            <div class="panel-collapse collapse" id="choose_sample_div">
+                <div class="card card-body">
+                    Select all samples that should be associated with this source
+                    <form method="post" name="pick_samples_form" action="/accounts/{{acct_id}}/sources/{{source_id}}/claim_samples">
+                        <div class="form-group">
+                            <div id="samples" class="list-group">
+                            </div>
+                            <input type="submit" class="btn btn-primary" value="Claim Selected Samples"/>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
         <div class="container">
             <p>Surveys taken:</p>

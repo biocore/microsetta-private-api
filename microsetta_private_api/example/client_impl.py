@@ -684,32 +684,67 @@ def put_sample(account_id, source_id, sample_id):
                     (account_id, source_id))
 
 
-def post_check_acct_inputs(body):
+def _get_kit(kit_name):
     unable_to_validate_msg = "Unable to validate the kit name; please " \
                              "reload the page."
-    response_info = True
+    error_msg = None
     try:
-        kit_name = body[KIT_NAME_KEY]
-
         # call api and find out if kit name has unclaimed samples.
         # NOT doing this through ApiRequest.get bc in this case
         # DON'T want the automated error-handling
 
         response = requests.get(
-            ApiRequest.API_URL + '/kits',
+            ApiRequest.API_URL + '/kits/',  # appending slash saves a 308 redir
             auth=BearerAuth(session[TOKEN_KEY_NAME]),
             verify=ApiRequest.CAfile,
             params=ApiRequest.build_params({KIT_NAME_KEY: kit_name}))
 
         if response.status_code == 404:
-            response_info = ("The provided kit id is not valid or has "
-                             "already been used; please re-check your entry.")
+            error_msg = ("The provided kit id is not valid or has "
+                         "already been used; please re-check your entry.")
         elif response.status_code > 200:
-            response_info = unable_to_validate_msg
+            error_msg = unable_to_validate_msg
     except:  # noqa
-        response_info = unable_to_validate_msg
-    finally:
-        return json.dumps(response_info)
+        error_msg = unable_to_validate_msg
+
+    if error_msg is not None:
+        return None, error_msg, response.status_code
+    return response.json(), None, response.status_code
+
+
+def post_check_acct_inputs(body):
+    kit, error, code = _get_kit(body[KIT_NAME_KEY])
+    if error is None:
+        return json.dumps(True)
+    else:
+        return json.dumps(error)
+
+
+def get_list_kit_samples(kit_name):
+    kit, error, code = _get_kit(kit_name)
+    if error is None:
+        return flask.jsonify(kit), code
+    else:
+        return flask.jsonify({"error": error}), code
+
+
+def claim_samples(account_id, source_id, body):
+    # TODO:  they could theoretically successfully claim some samples and
+    #  fail out when trying to claim others.  And I have no transaction support
+    #  here.  Boo...
+
+    # TODO:  How do I know what surveys to associate if any???
+    for sample_id in body['sample_id']:
+        do_return, sample_output, _ = ApiRequest.post(
+            '/accounts/{0}/sources/{1}/samples'.format(account_id, source_id),
+            json={"sample_id": sample_id}
+        )
+
+        if do_return:
+            # TODO: Couldn't claim this one.  Fail out immediately?
+            return sample_output
+
+    return redirect("/accounts/%s/sources/%s" % (account_id, source_id))
 
 
 def generate_error_page(error_msg):
