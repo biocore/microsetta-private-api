@@ -12,7 +12,6 @@ and associated file
 https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
 """
 
-import json
 import flask
 from flask import render_template, session, redirect
 import jwt
@@ -718,9 +717,9 @@ def _get_kit(kit_name):
 def post_check_acct_inputs(body):
     kit, error, code = _get_kit(body[KIT_NAME_KEY])
     if error is None:
-        return json.dumps(True)
+        return flask.jsonify(True)
     else:
-        return json.dumps(error)
+        return flask.jsonify(error)
 
 
 def get_list_kit_samples(kit_name):
