@@ -373,13 +373,47 @@ def get_workflow_claim_kit_samples():
         return render_template("kit_sample_association.jinja2")
 
 
+def _claim_kit_samples_helper(acct_id,
+                              source_id,
+                              sample_ids_to_claim,
+                              all_answered_survey_ids):
+
+    # TODO:  Any of these requests may fail independently, but we don't have
+    #  a good policy to deal with partial failures.  Currently, we abort early
+    #  but that will result in some set of associations being already made,
+    #  one association failing, and the remaining associations not attempted.
+
+    for curr_sample_id in sample_ids_to_claim:
+        # Claim sample
+        do_return, sample_output, _ = ApiRequest.post(
+            '/accounts/{0}/sources/{1}/samples'.format(acct_id, source_id),
+            json={"sample_id": curr_sample_id}
+        )
+
+        if do_return:
+            return sample_output
+
+        # Associate all surveys of the source with this sample.
+        for survey_id in all_answered_survey_ids:
+            do_return, sample_survey_output, _ = ApiRequest.post(
+                '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
+                    acct_id, source_id, curr_sample_id
+                ), json={"survey_id": survey_id}
+            )
+
+            if do_return:
+                return sample_output
+
+    return None
+
+
 def claim_kit_samples(expected_state, body):
     next_state, current_state = determine_workflow_state()
     if next_state == expected_state:
         acct_id = current_state["account_id"]
         source_id = current_state["human_source_id"]
-        answered_survey_id = current_state["answered_primary_survey_id"]
-        answered_covid_survey_id = current_state["answered_covid_survey_id"]
+        primary_survey_id = current_state["answered_primary_survey_id"]
+        covid_survey_id = current_state["answered_covid_survey_id"]
 
         # get all the unassociated samples in the provided kit
         kit_name = body[KIT_NAME_KEY]
@@ -391,33 +425,15 @@ def claim_kit_samples(expected_state, body):
         # for each sample, associate it to the human source
         # and ALSO to the (single) primary and COVID survey for this human
         # source
-        for curr_sample_obj in sample_output:
-            curr_sample_id = curr_sample_obj["sample_id"]
-            do_return, sample_output, _ = ApiRequest.post(
-                '/accounts/{0}/sources/{1}/samples'.format(acct_id, source_id),
-                json={"sample_id": curr_sample_id}
-            )
+        error = _claim_kit_samples_helper(
+                                  acct_id,
+                                  source_id,
+                                  [x["sample_id"] for x in sample_output],
+                                  [primary_survey_id, covid_survey_id]
+                                  )
 
-            if do_return:
-                return sample_output
-
-            do_return, sample_survey_output, _ = ApiRequest.post(
-                '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
-                    acct_id, source_id, curr_sample_id
-                ), json={"survey_id": answered_survey_id}
-            )
-
-            if do_return:
-                return sample_output
-
-            do_return, sample_survey_output, _ = ApiRequest.post(
-                '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
-                    acct_id, source_id, curr_sample_id
-                ), json={"survey_id": answered_covid_survey_id}
-            )
-
-            if do_return:
-                return sample_output
+        if error:
+            return error
 
     return redirect(WORKFLOW_URL)
 
@@ -735,16 +751,29 @@ def claim_samples(account_id, source_id, body):
     #  fail out when trying to claim others.  And I have no transaction support
     #  here.  Boo...
 
-    # TODO:  How do I know what surveys to associate if any???
-    for sample_id in body['sample_id']:
-        do_return, sample_output, _ = ApiRequest.post(
-            '/accounts/{0}/sources/{1}/samples'.format(account_id, source_id),
-            json={"sample_id": sample_id}
-        )
+    do_return, survey_output, _ = ApiRequest.get(
+        '/accounts/{0}/sources/{1}/surveys'.format(account_id, source_id)
+    )
 
-        if do_return:
-            # TODO: Couldn't claim this one.  Fail out immediately?
-            return sample_output
+    if do_return:
+        return survey_output
+
+    sample_ids_to_claim = body['sample_id']
+
+    # Grab all primary and covid surveys from the source and associate with
+    # newly claimed samples
+    survey_ids_to_associate_with_samples = [
+        x['survey_id'] for x in survey_output
+        if x['survey_template_id'] in [1, 6]
+    ]
+
+    error = _claim_kit_samples_helper(
+                              account_id,
+                              source_id,
+                              sample_ids_to_claim,
+                              survey_ids_to_associate_with_samples)
+    if error:
+        return error
 
     return redirect("/accounts/%s/sources/%s" % (account_id, source_id))
 
