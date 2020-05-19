@@ -31,19 +31,19 @@
                                      '</div>');
                         $('#samples').append(item);
                     }
-                    var div = $('#choose_sample_div')
+                    var div = $('#choose_sample_div');
                     div.collapse('show')
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     console.log(jqXHR.error);
                 },
             });
-        }
+        };
 
         // Wait for the DOM to be ready
 
         $(document).ready(function(){
-            $('#list_kit_form').ajaxForm()
+            $('#list_kit_form').ajaxForm();
             setup_kit_claim = verify_kit_claim('list_kit_form', kitSubmit);
             setup_kit_claim()
         });
@@ -98,6 +98,7 @@
                 {% endif %}
             </div>
         </div>
+        <p></p>
         <div class="container">
             <form method="get" name="list_kit_form" action="/list_kit_samples">
                 <div class="form-group">
@@ -106,6 +107,7 @@
                  </div>
                 <input type="submit" class="btn btn-primary" value="List Samples"/>
             </form>
+            <p></p>
             <div class="panel-collapse collapse" id="choose_sample_div">
                 <div class="card card-body">
                     Select all samples that should be associated with this source
@@ -113,6 +115,7 @@
                         <div class="form-group">
                             <div id="samples" class="list-group">
                             </div>
+                            <p></p>
                             <input type="submit" class="btn btn-primary" value="Claim Selected Samples"/>
                         </div>
                     </form>
@@ -125,20 +128,21 @@
                 <p>Surveys taken:</p>
                 <div class="list-group">
                     {% for survey in surveys %}
-                    <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
-                      <div class="row">
-                        <div class="col-sm">
-                          {{survey.survey_template_title |e}}
+                    <a>
+                        <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
+                          <div class="row">
+                            <div class="col-sm">
+                              {{survey.survey_template_title |e}}
+                            </div>
+                            <div class="col-sm">
+                                {% if survey.answered %}
+                                <span class="fa fa-check"/>
+                                {% else %}
+                                <span class="fa fa-unchecked"/>
+                                {% endif %}
+                            </div>
+                          </div>
                         </div>
-                        <div class="col-sm">
-                            {% if survey.answered %}
-                            <span class="fa fa-check"/>
-                            {% else %}
-                            <span class="fa fa-unchecked"/>
-                            {% endif %}
-                        </div>
-                      </div>
-                    </div>
                     </a>
                     {% endfor %}
                 {% endif %}

@@ -61,7 +61,6 @@ NEEDS_ACCOUNT = "NeedsAccount"
 NEEDS_EMAIL_CHECK = "NeedsEmailCheck"
 NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
 TOO_MANY_HUMAN_SOURCES = "TooManyHumanSources"
-NEEDS_SAMPLE = "NeedsSample"
 NEEDS_PRIMARY_SURVEY = _NEEDS_SURVEY_PREFIX + "1"
 NEEDS_COVID_SURVEY = _NEEDS_SURVEY_PREFIX + "6"
 ALL_DONE = "AllDone"
@@ -364,22 +363,10 @@ def post_source(account_id, body):
     return redirect('/accounts/%s' % acct_id)
 
 
-def get_workflow_claim_kit_samples():
-    next_state, current_state = determine_workflow_state()
-    if next_state != NEEDS_SAMPLE:
-        return redirect(WORKFLOW_URL)
-
-    if KIT_NAME_KEY in session:
-        mock_body = {KIT_NAME_KEY: session[KIT_NAME_KEY]}
-        return post_workflow_claim_kit_samples(mock_body)
-    else:
-        return render_template("kit_sample_association.jinja2")
-
-
 def _claim_kit_samples_helper(acct_id,
                               source_id,
                               sample_ids_to_claim,
-                              all_answered_survey_ids):
+                              answered_survey_ids_to_associate):
 
     # TODO:  Any of these requests may fail independently, but we don't have
     #  a good policy to deal with partial failures.  Currently, we abort early
@@ -396,8 +383,8 @@ def _claim_kit_samples_helper(acct_id,
         if do_return:
             return sample_output
 
-        # Associate all surveys of the source with this sample.
-        for survey_id in all_answered_survey_ids:
+        # Associate the input answered surveys with this sample.
+        for survey_id in answered_survey_ids_to_associate:
             do_return, sample_survey_output, _ = ApiRequest.post(
                 '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
                     acct_id, source_id, curr_sample_id
@@ -439,14 +426,6 @@ def claim_kit_samples(expected_state, body):
             return error
 
     return redirect(WORKFLOW_URL)
-
-
-def claim_additional_kit(body):
-    return claim_kit_samples(ALL_DONE, body)
-
-
-def post_workflow_claim_kit_samples(body):
-    return claim_kit_samples(NEEDS_SAMPLE, body)
 
 
 def get_workflow_fill_survey(survey_template_id):
@@ -759,7 +738,7 @@ def _get_kit(kit_name):
 
 
 def post_check_acct_inputs(body):
-    kit, error, code = _get_kit(body[KIT_NAME_KEY])
+    kit, error, _ = _get_kit(body[KIT_NAME_KEY])
     if error is None:
         return flask.jsonify(True)
     else:
