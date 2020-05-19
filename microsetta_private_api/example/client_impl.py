@@ -493,6 +493,14 @@ def get_source(account_id, source_id):
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
 
+    # Retrieve the source
+    do_return, source_output, _ = ApiRequest.get(
+        '/accounts/%s/sources/%s' %
+        (account_id, source_id)
+    )
+    if do_return:
+        return source_output
+
     # Retrieve all samples from the source
     do_return, samples_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/samples' % (account_id, source_id))
@@ -549,6 +557,7 @@ def get_source(account_id, source_id):
     return render_template('source.jinja2',
                            acct_id=account_id,
                            source_id=source_id,
+                           source_type=source_output['source_type'],
                            samples=samples_output,
                            surveys=per_source,
                            vioscreen_id=VIOSCREEN_ID)
