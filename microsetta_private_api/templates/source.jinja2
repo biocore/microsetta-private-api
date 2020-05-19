@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/static/vendor/font-awesome-4.7.0/css/font-awesome.min.css"/>
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
-    <script src="http://malsup.github.com/jquery.form.js"></script>
+    <script src="/static/vendor/js/jquery.form-4.2.2/jquery.form.min.js"></script>
     <script src="/static/kit_check.js"></script>
     <script>
         kitSubmit = function(form, evt){
@@ -43,7 +43,6 @@
         // Wait for the DOM to be ready
 
         $(document).ready(function(){
-            $('#list_kit_form').ajaxForm();
             setup_kit_claim = verify_kit_claim('list_kit_form', kitSubmit);
             setup_kit_claim()
         });
