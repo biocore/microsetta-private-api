@@ -189,54 +189,6 @@ paths:
         '302':
           description: Redirecting to necessary action
 
-  '/claim_additional_kit':
-    post:
-      operationId: microsetta_private_api.example.client_impl.claim_additional_kit
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              additionalProperties: true
-      responses:
-        '200':
-          description: Error report
-          content:
-            text/html:
-              schema:
-                type: string
-        '302':
-          description: Redirecting to necessary action
-
-  '/workflow_claim_kit_samples':
-    get:
-      operationId: microsetta_private_api.example.client_impl.get_workflow_claim_kit_samples
-      responses:
-        '200':
-          description: Form to claim unassigned samples from a kit name to a human participant
-          content:
-            text/html:
-              schema:
-                type: string
-
-    post:
-      operationId: microsetta_private_api.example.client_impl.post_workflow_claim_kit_samples
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              additionalProperties: true
-      responses:
-        '200':
-          description: Error report
-          content:
-            text/html:
-              schema:
-                type: string
-        '302':
-          description: Redirecting to necessary action
-
   '/error':
     get:
       operationId: microsetta_private_api.example.client_impl.generate_error_page
@@ -298,6 +250,38 @@ paths:
       responses:
         '200':
           description: Display of source
+          content:
+            text/html:
+              schema:
+                type: string
+
+  '/accounts/{account_id}/sources/{source_id}/claim_samples':
+    post:
+      operationId: microsetta_private_api.example.client_impl.claim_samples
+      tags:
+        - Samples
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                sample_id:
+                  type: array
+                  items:
+                    type: string
+            encoding:
+              sample_id:
+                style: form
+                explode: true
+      responses:
+        '302':
+          description: Return to view source page
+        '200':
+          description: Error report
           content:
             text/html:
               schema:
@@ -433,6 +417,19 @@ paths:
               schema:
                 type: string
 
+  '/list_kit_samples':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_list_kit_samples
+      parameters:
+        - $ref: '#/components/parameters/kit_name'
+      responses:
+        '200':
+          description: Result of check
+          content:
+            application/json:
+              schema:
+                type: array
+
   '/view_faq':
     get:
       operationId: microsetta_private_api.example.client_impl.render_faq
@@ -459,6 +456,13 @@ components:
       schema:
         type: string
         example: "c442f31d-fa17-4fd1-85e2-1f251d13ec26"
+      required: true
+    kit_name:
+      name: kit_name
+      in: query
+      description: User-facing id of kit
+      schema:
+        $ref: '#/components/schemas/kit_name'
       required: true
     sample_id:
       name: sample_id
@@ -521,3 +525,7 @@ components:
     error_msg:
       type: string
       example: "%7B%0A%20%20%22detail%22%3A%20%22The%20browser%20(or%20proxy)%20sent%20a%20request%20that%20this%20server%20could%20not%20understand.%22%2C%0A%20%20%22status%22%3A%20400%2C%0A%20%20%22title%22%3A%20%22Bad%20Request%22%2C%0A%20%20%22type%22%3A%20%22about%3Ablank%22%0A%7D%0A"
+    kit_name:
+      type: string
+      example: "aaaaa"
+
