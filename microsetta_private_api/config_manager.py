@@ -6,6 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import json
+# NOTE: importlib replaces setuptools' pkg_resources as of Python 3.7
+# See: https://stackoverflow.com/questions/6028000/how-to-read-a-static-file-from-inside-a-python-package # noqa
+import importlib.resources as pkg_resources
+
 
 class DBConfig(object):
     def __init__(self):
@@ -22,3 +27,8 @@ class DBConfig(object):
 
 
 AMGUT_CONFIG = DBConfig()
+with pkg_resources.open_text('microsetta_private_api', "server_config.json") \
+        as fp:
+    SERVER_CONFIG = json.load(fp)
+    SERVER_CONFIG['vioscreen_cryptokey'] = \
+        SERVER_CONFIG['vioscreen_cryptokey'].encode('ascii')

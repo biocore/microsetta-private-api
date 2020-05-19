@@ -1,15 +1,63 @@
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
-from microsetta_private_api.model.source import (Source, DECODER_HOOKS)
+from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 
 from werkzeug.exceptions import NotFound
+
+
+def _source_to_row(s):
+    d = s.source_data
+    row = (s.id,
+           s.account_id,
+           s.source_type,
+           s.name,
+           getattr(d, 'email', None),
+           getattr(d, 'is_juvenile', None),
+           getattr(d, 'parent1_name', None),
+           getattr(d, 'parent2_name', None),
+           getattr(d, 'deceased_parent', None),
+           getattr(d, 'consent_date', None),
+           getattr(d, 'date_revoked', None),
+           getattr(d, 'assent_obtainer', None),
+           getattr(d, 'age_range', None),
+           getattr(d, 'description', None))
+    return row
+
+
+def _row_to_human_info(r):
+    return HumanInfo(
+        r['participant_email'],
+        r['is_juvenile'],
+        r['parent_1_name'],
+        r['parent_2_name'],
+        r['deceased_parent'],
+        r['date_signed'],
+        r['date_revoked'],
+        r['assent_obtainer'],
+        r['age_range'])
+
+
+def _row_to_nonhuman_info(r):
+    return NonHumanInfo(r["description"])
+
+
+row_to_obj_funcs_by_type = {
+    Source.SOURCE_TYPE_HUMAN: _row_to_human_info,
+    Source.SOURCE_TYPE_ANIMAL: _row_to_nonhuman_info,
+    Source.SOURCE_TYPE_ENVIRONMENT: _row_to_nonhuman_info
+}
+
+
+def _row_to_source(r):
+    row_to_obj = row_to_obj_funcs_by_type[
+        r['source_type']]
+    return Source(r[0], r[1], r[2], r[3], row_to_obj(r))
 
 
 # Note: By convention, this references sources by both account_id AND source_id
 # This should make it more difficult to accidentally muck up sources when the
 # user doesn't have the right permissions
 class SourceRepo(BaseRepo):
-
     def __init__(self, transaction):
         super().__init__(transaction)
 
@@ -25,43 +73,6 @@ class SourceRepo(BaseRepo):
                  "is_juvenile, parent_1_name, parent_2_name, " \
                  "deceased_parent, date_signed, date_revoked, " \
                  "assent_obtainer, age_range, description"
-
-    @staticmethod
-    def _row_to_source(r):
-        hook = DECODER_HOOKS[r['source_type']]
-        source_data = {
-            'source_name': r['source_name'],
-            'email': r['participant_email'],
-            'is_juvenile': r['is_juvenile'],
-            'parent1_name': r['parent_1_name'],
-            'parent2_name': r['parent_2_name'],
-            'deceased_parent': r['deceased_parent'],
-            'consent_date': r['date_signed'],
-            'date_revoked': r['date_revoked'],
-            'assent_obtainer': r['assent_obtainer'],
-            'age_range': r['age_range'],
-            'source_description': r['description']
-        }
-        return Source(r[0], r[1], r[2], hook(source_data))
-
-    @staticmethod
-    def _source_to_row(s):
-        d = s.source_data
-        row = (s.id,
-               s.account_id,
-               s.source_type,
-               getattr(d, 'name', None),
-               getattr(d, 'email', None),
-               getattr(d, 'is_juvenile', None),
-               getattr(d, 'parent1_name', None),
-               getattr(d, 'parent2_name', None),
-               getattr(d, 'deceased_parent', None),
-               getattr(d, 'consent_date', None),
-               getattr(d, 'date_revoked', None),
-               getattr(d, 'assent_obtainer', None),
-               getattr(d, 'age_range', None),
-               getattr(d, 'description', None))
-        return row
 
     def get_sources_in_account(self, account_id, source_type=None):
         with self._transaction.dict_cursor() as cur:
@@ -82,7 +93,7 @@ class SourceRepo(BaseRepo):
                             (account_id, source_type))
 
             rows = cur.fetchall()
-            return [SourceRepo._row_to_source(x) for x in rows]
+            return [_row_to_source(x) for x in rows]
 
     def get_source(self, account_id, source_id):
         with self._transaction.dict_cursor() as cur:
@@ -96,7 +107,7 @@ class SourceRepo(BaseRepo):
             r = cur.fetchone()
             if r is None:
                 return None
-            return SourceRepo._row_to_source(r)
+            return _row_to_source(r)
 
     def update_source_data_api_fields(self, source):
         # Business Policy: For now I will let them edit only name and
@@ -114,7 +125,7 @@ class SourceRepo(BaseRepo):
                         "source.id = %s AND "
                         "source.account_id = %s",
                         (
-                            getattr(source.source_data, 'name', None),
+                            getattr(source, 'name', None),
                             getattr(source.source_data, 'description', None),
                             source.id,
                             source.account_id
@@ -135,7 +146,7 @@ class SourceRepo(BaseRepo):
                         "%s, %s, %s, "
                         "%s, %s, %s, "
                         "%s, %s, %s)",
-                        SourceRepo._source_to_row(source))
+                        _source_to_row(source))
             return cur.rowcount == 1
 
     def delete_source(self, account_id, source_id):

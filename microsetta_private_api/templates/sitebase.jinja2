@@ -2,21 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <title>{{ media_locale['PROJECT_TITLE'] |e}}</title>
-    <script src="/static/vendor/js/jquery-1.11.1.min.js"></script>
-<script src="/static/vendor/js/jquery-ui-1.10.1.custom.min.js"></script>
-<!--<script src="/static/vendor/js/jquery.ui.timepicker.js"></script>-->
+    <title>Microsetta {{page_title}}</title>
+
 {%block head%}
 {%endblock%}
+
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
 </head>
 <body>
+    <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize"/>
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
+    <br />
     <br />
 
     <div class="content">
+
+    {% if show_breadcrumbs %}
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
+          </ol>
+        </nav>
+    {% endif %}
+
+    {% if show_logout %}
+        <div>
+            <a href="{{authrocket_url}}/logout?redirect_uri={{endpoint}}/logout">Log Out</a>
+        </div>
+    {% endif %}
+        <div class="container">
 {%block content%}
 {%endblock%}
+        </div>
     </div>
 {%block footer%}
 {%endblock%}
+    <div>
+        <br />
+        <p>
+            Questions?  Check our <a href="/view_faq">FAQ</a>!
+        </p>
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
+    </div>
 </body>
 </html>

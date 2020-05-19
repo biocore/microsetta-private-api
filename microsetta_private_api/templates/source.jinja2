@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Microsetta Account Samples</title>
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
+    <script src="/static/vendor/js/jquery.validate.min.js"></script>
+    <script src="/static/vendor/bootstrap-4.4.1-dist/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/vendor/font-awesome-4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
+    <script src="/static/vendor/js/jquery.form-4.2.2/jquery.form.min.js"></script>
+    <script src="/static/kit_check.js"></script>
+    <script>
+        kitSubmit = function(form, evt){
+            var error_txt = "";
+            var successful = false;
+            $(form).ajaxSubmit({
+                success: function (samples, textStatus, jqXHR) {
+                    $('#samples').empty();
+                    for (var i = 0; i < samples.length; i++)
+                    {
+                        var bc = samples[i].sample_barcode;
+                        var sample_id = samples[i].sample_id;
+                        var item = $('<div class="container list-group-item">' +
+                                     '<div class="row">' +
+                                     '<div class="col-sm">' +
+                                     '<label for="' + bc + '">' + bc + '</label>' +
+                                     '</div>' +
+                                     '<div class="col-sm">' +
+                                     '<input type="checkbox" name="sample_id" id="' + bc + '" value="' + sample_id + '"/>' +
+                                     '</div>' +
+                                     '</div>');
+                        $('#samples').append(item);
+                    }
+                    var div = $('#choose_sample_div');
+                    div.collapse('show');
+                    successful = true;
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    error_txt = jqXHR.responseText;
+                },
+                complete: function (data, textStatus, outputObj) {
+                    if (successful)
+                        return;
+                    if (error_txt === "")
+                        error_txt = textStatus;
+                    // Get customized error page that will show whatever error message we captured
+                    // here in the front end
+                    let queryParam = encodeURIComponent(error_txt);
+                    window.location.replace("{{ endpoint }}/error?error_msg=" + queryParam);
+                }
+            });
+        };
+
+        // Wait for the DOM to be ready
+
+        $(document).ready(function(){
+            setup_kit_claim = verify_kit_claim('list_kit_form', kitSubmit);
+            setup_kit_claim()
+        });
+    </script>
+</head>
+<body>
+    <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize"/>
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
+    <br />
+    <br />
+
+    <div class="content">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
+            <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Sources</a></li>
+          </ol>
+        </nav>
+        <div class="container">
+            {% if samples|length > 0 %}
+                Samples:
+                {% if samples|length > 1 and is_human %}
+                <p><i>If collecting all samples on the same day, please only complete a single Food Frequency Questionnaire.</i></p>
+                {% endif %}
+                <div class="list-group">
+                    {% for sample in samples %}
+                    <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
+                      <div class="row">
+                        <div class="col-sm">
+                          <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
+                        </div>
+                        <div class="col-sm">
+                          {{sample.sample_datetime |e}}
+                        </div>
+                        <div class="col-sm">
+                          {{sample.sample_site |e}}
+                        </div>
+                        <div class="col-sm">
+                          {% if is_human and sample.ffq %}
+                            Food Frequency Questionnaire<span class="fa fa-check"/>
+                          {% elif is_human %}
+                            <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        <p></p>
+        <div class="container">
+            <form method="get" name="list_kit_form" action="/list_kit_samples">
+                <div class="form-group">
+                    <label for="kit_name" name="kit_name_label">To add samples, please enter a kit ID here:</label>
+                    <input id="kit_name" name="kit_name" class="form-control" type="text"/>
+                 </div>
+                <input type="submit" class="btn btn-primary" value="List Samples"/>
+            </form>
+            <p></p>
+            <div class="panel-collapse collapse" id="choose_sample_div">
+                <div class="card card-body">
+                    Select all samples that should be associated with this source
+                    <form method="post" name="pick_samples_form" action="/accounts/{{acct_id}}/sources/{{source_id}}/claim_samples">
+                        <div class="form-group">
+                            <div id="samples" class="list-group">
+                            </div>
+                            <p></p>
+                            <input type="submit" class="btn btn-primary" value="Claim Selected Samples"/>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <p></p>
+        <div class="container">
+            {% if surveys|length > 0 %}
+                <p>Surveys taken:</p>
+                <div class="list-group">
+                    {% for survey in surveys %}
+                    <a>
+                        <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
+                          <div class="row">
+                            <div class="col-sm">
+                              {{survey.survey_template_title |e}}
+                            </div>
+                            <div class="col-sm">
+                                {% if survey.answered %}
+                                <span class="fa fa-check"/>
+                                {% else %}
+                                <span class="fa fa-unchecked"/>
+                                {% endif %}
+                            </div>
+                          </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <br />
+        <p>
+            Questions?  Check our <a href="/view_faq">FAQ</a>!
+        </p>
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
+    </div>
+</body>
+</html>

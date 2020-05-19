@@ -21,6 +21,9 @@ import uuid
 #  we disambiguate all these functions to decide whether it includes that
 #  table, build out a SurveyAnswersRepo, or modify the schema so its not so
 #  insane???
+from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
+
+
 class SurveyAnswersRepo(BaseRepo):
 
     def find_survey_template_id(self, survey_answers_id):
@@ -42,8 +45,17 @@ class SurveyAnswersRepo(BaseRepo):
             rows += cur.fetchall()
 
             if len(rows) == 0:
-                raise RepoException("No answers in survey: %s" +
-                                    survey_answers_id)
+                vioscreen_repo = VioscreenRepo(self._transaction)
+                status = vioscreen_repo.get_vioscreen_status(survey_answers_id)
+                if status is not None:
+                    return SurveyTemplateRepo.VIOSCREEN_ID
+                else:
+                    return None
+                    # TODO: Maybe this should throw an exception, but doing so
+                    #  locks the end user out of the minimal implementation
+                    #  if they submit an empty survey response.
+                    # raise RepoException("No answers in survey: %s" %
+                    #                     survey_answers_id)
 
             arbitrary_question_id = rows[0][1]
             cur.execute("SELECT surveys.survey_id FROM "
@@ -99,16 +111,14 @@ class SurveyAnswersRepo(BaseRepo):
                                              survey_id):
             return None
 
-        tag_to_col = {
-            localization.EN_US: "american",
-            localization.EN_GB: "british"
-        }
+        localization_info = localization.LANG_SUPPORT[language_tag]
+        lang_name = localization_info[localization.LANG_NAME_KEY]
 
         with self._transaction.cursor() as cur:
             # Grab selection and multi selection responses
             cur.execute("SELECT "
                         "survey_answers.survey_question_id, "
-                        + tag_to_col[language_tag] + ", "
+                        + lang_name + ", "
                         "survey_response_type "
                         "FROM "
                         "survey_answers "
@@ -180,13 +190,25 @@ class SurveyAnswersRepo(BaseRepo):
             for survey_template_group in survey_template.groups:
                 for survey_question in survey_template_group.questions:
                     survey_question_id = survey_question.id
+                    q_type = survey_question.response_type
+
+                    # TODO FIXME HACK: Modify DB to make this unnecessary!
+                    # We MUST record at least ONE answer for each survey
+                    # (even if the user answered nothing)
+                    #  or we can't properly track the survey template id later.
+                    # Therefore, if the user answered NOTHING, store an empty
+                    # string for the first string or text question in the
+                    # survey, just so something is recorded.
+                    if len(survey_model) == 0 and \
+                            (q_type == "STRING" or q_type == "TEXT"):
+                        survey_model[str(survey_question_id)] = ""
+
                     if str(survey_question_id) not in survey_model:
                         # TODO: Is this supposed to leave the question blank
                         #  or write Unspecified?
                         continue
                     answer = survey_model[str(survey_question_id)]
 
-                    q_type = survey_question.response_type
                     if q_type == "SINGLE":
                         # Normalize localized answer
                         normalized_answer = self._unlocalize(answer,
@@ -232,6 +254,19 @@ class SurveyAnswersRepo(BaseRepo):
                                     (survey_answers_id,
                                      survey_question_id,
                                      answer))
+
+        if len(survey_model) == 0:
+            # we should not have gotten to the end without recording at least
+            # ONE answer (even an empty one) ... but it could happen if this
+            # survey template includes NO text or string questions AND the
+            # user doesn't answer any of the questions it does include. Not
+            # worth making the code robust to this case, as this whole "include
+            # one empty answer" is a temporary hack, but at least ensure we
+            # know this problem occurred if it ever does
+            raise RepoException("No answers provided for survey template %s "
+                                "and not able to add an empty string default" %
+                                survey_template_id)
+
         return survey_answers_id
 
     def delete_answered_survey(self, acct_id, survey_id):
@@ -286,6 +321,15 @@ class SurveyAnswersRepo(BaseRepo):
                         "survey_id = %s",
                         (s.barcode, survey_id))
 
+    def build_metadata_map(self):
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT survey_question_id, question_shortname "
+                        "FROM "
+                        "survey_question")
+            rows = cur.fetchall()
+            metamap = {row[0]: row[1] for row in rows}
+        return metamap
+
     # True if this account owns this survey_answer_id, else False
     def _acct_owns_survey(self, acct_id, survey_id):
         with self._transaction.cursor() as cur:
@@ -317,17 +361,17 @@ class SurveyAnswersRepo(BaseRepo):
         #  There is no guarantee that a word translates the same way
         #  independent of any other context.  We will eventually move to a
         #  better framework for localization than what currently exists!
-        tag_to_col = {
-            localization.EN_US: "american",
-            localization.EN_GB: "british"
-        }
+
+        localization_info = localization.LANG_SUPPORT[language_tag]
+        lang_name = localization_info[localization.LANG_NAME_KEY]
+
         with self._transaction.cursor() as cur:
             # Normalize localized answer
             cur.execute("SELECT american "
                         "FROM "
                         "survey_response "
                         "WHERE "
-                        + tag_to_col[language_tag] + "=%s",
+                        + lang_name + "=%s",
                         (answer,))
             row = cur.fetchone()
             if row is None:

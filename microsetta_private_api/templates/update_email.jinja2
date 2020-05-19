@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Microsetta Email Update</title>
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
+    <script src="/static/vendor/js/jquery.validate.min.js"></script>
+    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
+    <script>
+        function cancelEmailUpdate(){
+            $('#do_update').val("No");
+        }
+    </script>
+</head>
+<body>
+    <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize"/>
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
+    <br />
+    <br />
+
+    <div class="content">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
+          </ol>
+        </nav>
+        <div class="container">
+            It appears that the email we have for your account is not the same as the email
+            you logged in with.  Would you like us to update your email in our records?
+            <br />
+            <br />
+            <form method="post" name="update_email_form" action="/workflow_update_email">
+                <input type="hidden" id="do_update" name = "do_update" value="Yes" />
+                <button type="submit" class="btn btn-light" onclick="cancelEmailUpdate();">
+                    No, skip and continue
+                </button>
+                <button type = "submit" class="btn btn-primary">
+                    Yes, update and continue
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div>
+        <br />
+        <p>
+            Questions?  Check our <a href="/view_faq">FAQ</a>!
+        </p>
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
+    </div>
+</body>
+</html>

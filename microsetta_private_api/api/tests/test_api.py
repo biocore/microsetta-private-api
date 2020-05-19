@@ -5,12 +5,17 @@ import werkzeug
 import json
 import copy
 import collections
+import datetime
 from urllib.parse import urlencode
 from unittest import TestCase
 import microsetta_private_api.server
+from microsetta_private_api import localization
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.model.account import Account
+from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 
 
 # region helper methods
@@ -19,13 +24,18 @@ CONTENT_KEY = "content"
 
 TEST_EMAIL = "test_email@example.com"
 TEST_EMAIL_2 = "second_test_email@example.com"
+
+ACCT_ID_1 = "7a98df6a-e4db-40f4-91ec-627ac315d881"
+ACCT_ID_2 = "9457c58f-7464-46c9-b6e0-116273cf8f28"
+MISSING_ACCT_ID = "a6cbd48e-f8da-4c0e-bdd6-3ffbbb5958ba"
+
 KIT_NAME_KEY = "kit_name"
 # these kits exists in the test db (NOT created by unit test code)
 EXISTING_KIT_NAME = "jb_qhxqe"
 EXISTING_KIT_NAME_2 = "fa_lrfiq"
 # this kit does not exist in the test db
 MISSING_KIT_NAME = "jb_qhxTe"
-MISSING_ACCT_ID = "a6cbd48e-f8da-4c0e-bdd6-3ffbbb5958ba"
+
 DUMMY_ACCT_INFO = {
     "address": {
         "city": "Springfield",
@@ -53,28 +63,59 @@ DUMMY_ACCT_INFO_2 = {
     KIT_NAME_KEY: EXISTING_KIT_NAME_2
 }
 
+SOURCE_ID_1 = "9fba75a5-6fbf-42be-9624-731b6a9a161a"
+
+DUMMY_HUMAN_SOURCE = {
+                'source_name': 'Bo',
+                'source_type': 'human',
+                'consent': {
+                    'participant_email': 'bo@bo.com',
+                    'age_range': "18-plus"
+                },
+            }
+DUMMY_CONSENT_DATE = datetime.datetime.strptime('Jun 1 2005', '%b %d %Y')
+
 ACCT_ID_KEY = "account_id"
 ACCT_TYPE_KEY = "account_type"
 ACCT_TYPE_VAL = "standard"
+
 ACCT_MOCK_ISS = "MrUnitTest.go"
 ACCT_MOCK_SUB = "NotARealSub"
 ACCT_MOCK_ISS_2 = "NewPhone"
 ACCT_MOCK_SUB_2 = "WhoDis"
-MOCK_HEADERS = {"Authorization": "Bearer BoogaBooga"}
-MOCK_HEADERS_2 = {"Authorization": "Bearer WoogaWooga"}
+
+SOURCE_ID_KEY = 'source_id'
+
+MOCK_HEADERS = {"Authorization": "Bearer mockone"}
+FAKE_TOKEN_IMPOSTOR = "mockimpostor"
+FAKE_TOKEN_EMAIL_MISMATCH = "mockemailmismatch"
+
+
+def make_headers(fake_token):
+    return {"Authorization": "Bearer %s" % fake_token}
 
 
 def mock_verify(token):
-    if token == "BoogaBooga":
+    if token == "mockone":
         return {
+            'email': TEST_EMAIL,
             'iss': ACCT_MOCK_ISS,
             'sub': ACCT_MOCK_SUB
         }
-    else:
+    elif token == FAKE_TOKEN_EMAIL_MISMATCH:
         return {
-            'iss': ACCT_MOCK_ISS_2,
-            'sub': ACCT_MOCK_SUB_2
+            'email': TEST_EMAIL_2,
+            'iss': ACCT_MOCK_ISS,
+            'sub': ACCT_MOCK_SUB
         }
+    elif token == FAKE_TOKEN_IMPOSTOR:
+        return {
+            'email': 'impostor@test.com',
+            'iss': 'impostor',
+            'sub': 'animpostor'
+        }
+    else:
+        raise ValueError("Unrecognized mock token")
 
 
 CREATION_TIME_KEY = "creation_time"
@@ -151,31 +192,88 @@ def extract_last_id_from_location_header(response):
 
 def delete_dummy_accts():
     with Transaction() as t:
-        AccountRepo(t).delete_account_by_email(TEST_EMAIL)
-        AccountRepo(t).delete_account_by_email(TEST_EMAIL_2)
+        source_repo = SourceRepo(t)
+        survey_answers_repo = SurveyAnswersRepo(t)
+        sources = source_repo.get_sources_in_account(ACCT_ID_1)
+        for curr_source in sources:
+            answers = survey_answers_repo.list_answered_surveys(
+                ACCT_ID_1, curr_source.id)
+            for survey_id in answers:
+                survey_answers_repo.delete_answered_survey(
+                    ACCT_ID_1, survey_id)
+
+            source_repo.delete_source(ACCT_ID_1, curr_source.id)
+
+        acct_repo = AccountRepo(t)
+        acct_repo.delete_account(ACCT_ID_1)
+        acct_repo.delete_account(ACCT_ID_2)
+        # Belt and suspenders: these test emails are used by some tests outside
+        # of this module as well, so can't be sure they are paired with the
+        # above dummy account ids
+        acct_repo.delete_account_by_email(TEST_EMAIL)
+        acct_repo.delete_account_by_email(TEST_EMAIL_2)
         t.commit()
 
 
 def create_dummy_acct(create_dummy_1=True,
                       iss=ACCT_MOCK_ISS,
                       sub=ACCT_MOCK_SUB):
+    with Transaction() as t:
+        dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub)
+        t.commit()
+
+    return dummy_acct_id
+
+
+def create_dummy_source(name, source_type, content_dict, create_dummy_1=True,
+                        iss=ACCT_MOCK_ISS,
+                        sub=ACCT_MOCK_SUB):
+    with Transaction() as t:
+        dummy_acct_id, dummy_source_id = _create_dummy_source_from_t(
+            t, name, source_type, content_dict, create_dummy_1, iss, sub)
+        t.commit()
+
+    return dummy_acct_id, dummy_source_id
+
+
+def _create_dummy_acct_from_t(t, create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS,
+                              sub=ACCT_MOCK_SUB):
     if create_dummy_1:
-        dummy_acct_id = "7a98df6a-e4db-40f4-91ec-627ac315d881"
+        dummy_acct_id = ACCT_ID_1
         dict_to_copy = DUMMY_ACCT_INFO
     else:
-        dummy_acct_id = "9457c58f-7464-46c9-b6e0-116273cf8f28"
+        dummy_acct_id = ACCT_ID_2
         dict_to_copy = DUMMY_ACCT_INFO_2
 
     input_obj = copy.deepcopy(dict_to_copy)
     input_obj["id"] = dummy_acct_id
-    with Transaction() as t:
-        acct_repo = AccountRepo(t)
-        acct_repo.create_account(Account.from_dict(input_obj,
-                                                   iss,
-                                                   sub))
-        t.commit()
+    acct_repo = AccountRepo(t)
+    acct_repo.create_account(Account.from_dict(input_obj,
+                                               iss,
+                                               sub))
 
     return dummy_acct_id
+
+
+def _create_dummy_source_from_t(t, name, source_type, content_dict,
+                                create_dummy_1=True,
+                                iss=ACCT_MOCK_ISS, sub=ACCT_MOCK_SUB):
+
+    dummy_source_id = SOURCE_ID_1
+    dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub)
+    source_repo = SourceRepo(t)
+    if source_type == Source.SOURCE_TYPE_HUMAN:
+        dummy_info_obj = HumanInfo.from_dict(content_dict, DUMMY_CONSENT_DATE,
+                                             None)
+    else:
+        dummy_info_obj = NonHumanInfo.from_dict(content_dict)
+
+    source_repo.create_source(Source(dummy_source_id, dummy_acct_id,
+                                     source_type, name,
+                                     dummy_info_obj))
+
+    return dummy_acct_id, dummy_source_id
 # endregion help methods
 
 
@@ -194,14 +292,15 @@ def client(request):
 
 
 @pytest.mark.usefixtures("client")
-class FlaskTests(TestCase):
-    lang_query_dict = {
-        "language_tag": "en_US"
+class ApiTests(TestCase):
+    default_querystring_dict = {
+        localization.LANG_TAG_KEY: localization.EN_US
     }
 
     dummy_auth = MOCK_HEADERS
 
-    default_lang_tag = lang_query_dict["language_tag"]
+    default_lang_querystring = "{0}={1}".format(localization.LANG_TAG_KEY,
+                                                localization.EN_US)
 
     def setUp(self):
         app = microsetta_private_api.server.build_app()
@@ -210,12 +309,14 @@ class FlaskTests(TestCase):
         # is there some better pattern I can use to split up what should be
         # a 'with' call?
         self.client.__enter__()
+        delete_dummy_accts()
 
     def tearDown(self):
         # This isn't perfect, due to possibility of exceptions being thrown
         # is there some better pattern I can use to split up what should be
         # a 'with' call?
         self.client.__exit__(None, None, None)
+        delete_dummy_accts()
 
     def run_query_and_content_required_field_test(self, url, action,
                                                   valid_query_dict,
@@ -310,14 +411,8 @@ class FlaskTests(TestCase):
 
 
 @pytest.mark.usefixtures("client")
-class AccountsTests(FlaskTests):
-    def setUp(self):
-        super().setUp()
-        delete_dummy_accts()
-
-    def tearDown(self):
-        super().tearDown()
-        delete_dummy_accts()
+class AccountsTests(ApiTests):
+    accounts_url = '/api/accounts?%s' % ApiTests.default_lang_querystring
 
     # region accounts create/post tests
     def test_accounts_create_success(self):
@@ -328,7 +423,7 @@ class AccountsTests(FlaskTests):
 
         # execute accounts post (create)
         response = self.client.post(
-            '/api/accounts?language_tag=%s' % self.default_lang_tag,
+            self.accounts_url,
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
@@ -354,9 +449,10 @@ class AccountsTests(FlaskTests):
     def test_accounts_create_fail_400_without_required_fields(self):
         """Return 400 validation fail if don't provide a required field """
 
-        self.run_query_and_content_required_field_test("/api/accounts", "post",
-                                                       self.lang_query_dict,
-                                                       DUMMY_ACCT_INFO)
+        self.run_query_and_content_required_field_test(
+            "/api/accounts", "post",
+            self.default_querystring_dict,
+            DUMMY_ACCT_INFO)
 
     def test_accounts_create_fail_404(self):
         """Return 404 if provided kit name is not found in db."""
@@ -368,7 +464,7 @@ class AccountsTests(FlaskTests):
 
         # execute accounts post (create)
         response = self.client.post(
-            '/api/accounts?language_tag=%s' % self.default_lang_tag,
+            self.accounts_url,
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
@@ -383,10 +479,12 @@ class AccountsTests(FlaskTests):
         # NB: I would rather do this with an email already in use in the
         # test db, but it appears the test db emails have been randomized
         # into strings that won't pass the api's email format validation :(
+
+        # create a dummy account with email 1
         create_dummy_acct(create_dummy_1=True)
 
         # Now try to create a new account that is different in all respects
-        # from the first dummy one EXCEPT that it has the same email
+        # from the dummy made with email 1 EXCEPT that it has the same email
         test_acct_info = copy.deepcopy(DUMMY_ACCT_INFO_2)
         test_acct_info["email"] = TEST_EMAIL
 
@@ -395,7 +493,7 @@ class AccountsTests(FlaskTests):
 
         # execute accounts post (create)
         response = self.client.post(
-            '/api/accounts?language_tag=%s' % self.default_lang_tag,
+            self.accounts_url,
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
@@ -403,18 +501,89 @@ class AccountsTests(FlaskTests):
 
         # check response code
         self.assertEqual(422, response.status_code)
-        # endregion accounts create/post tests
+    # endregion accounts create/post tests
+
+    # region accounts/legacies post tests
+    def test_accounts_legacies_post_success(self):
+        """Successfully claim a legacy account for the current user"""
+
+        create_dummy_acct(create_dummy_1=True, iss=None, sub=None)
+
+        # execute accounts/legacies post (claim legacy account)
+        url = '/api/accounts/legacies?%s' % self.default_lang_querystring
+        response_1 = self.client.post(url, headers=MOCK_HEADERS)
+
+        # check response code
+        self.assertEqual(200, response_1.status_code)
+
+        # load the response body
+        response_obj_1 = json.loads(response_1.data)
+        self.assertEqual(1, len(response_obj_1))
+
+        # check all elements of account object in body are correct
+        self.validate_dummy_acct_response_body(response_obj_1[0])
+
+        # try to reclaim the same account
+        response_2 = self.client.post(url, headers=MOCK_HEADERS)
+
+        # check response is now a 200 but with an empty list
+        self.assertEqual(200, response_2.status_code)
+
+        # load the response body
+        response_obj_2 = json.loads(response_2.data)
+        self.assertEqual(0, len(response_obj_2))
+
+    def test_accounts_legacies_post_success_empty_no_email(self):
+        """Return empty list if no account with given email in token exists"""
+
+        # do NOT create the dummy account--and check for a legacy account
+        # containing that email (via the MOCK_HEADERS, which link to a fake
+        # token containing TEST_EMAIL as its email claim)
+
+        # execute accounts/legacies post (claim legacy account)
+        url = '/api/accounts/legacies?%s' % self.default_lang_querystring
+        response = self.client.post(url, headers=MOCK_HEADERS)
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+        self.assertEqual(0, len(response_obj))
+
+    def test_accounts_legacies_post_success_empty_already_claimed(self):
+        """Return empty list if account with email already is claimed."""
+
+        create_dummy_acct(create_dummy_1=True)
+
+        # execute accounts/legacies post (claim legacy account)
+        url = '/api/accounts/legacies?%s' % self.default_lang_querystring
+        response = self.client.post(url, headers=MOCK_HEADERS)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+        self.assertEqual(0, len(response_obj))
+
+    def test_accounts_legacies_post_fail_422(self):
+        """Return 422 if info in db somehow prevents claiming legacy"""
+
+        # It is invalid to have one of the auth fields (e.g. sub)
+        # be null while the other is filled.
+        create_dummy_acct(create_dummy_1=True, iss=ACCT_MOCK_ISS,
+                          sub=None)
+
+        # execute accounts/legacies post (claim legacy account)
+        url = '/api/accounts/legacies?%s' % self.default_lang_querystring
+        response = self.client.post(url, headers=MOCK_HEADERS)
+
+        # check response code
+        self.assertEqual(422, response.status_code)
+
+    # endregion accounts/legacies post tests
 
 
 @pytest.mark.usefixtures("client")
-class AccountTests(FlaskTests):
-    def setUp(self):
-        super().setUp()
-        delete_dummy_accts()
-
-    def tearDown(self):
-        super().tearDown()
-        delete_dummy_accts()
+class AccountTests(ApiTests):
 
     # region account view/get tests
     def test_account_view_success(self):
@@ -422,8 +591,8 @@ class AccountTests(FlaskTests):
         dummy_acct_id = create_dummy_acct(create_dummy_1=True)
 
         response = self.client.get(
-            '/api/accounts/%s?language_tag=%s' %
-            (dummy_acct_id, self.default_lang_tag),
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
             headers=self.dummy_auth)
 
         # check response code
@@ -441,21 +610,33 @@ class AccountTests(FlaskTests):
         dummy_acct_id = create_dummy_acct()
 
         input_url = "/api/accounts/{0}".format(dummy_acct_id)
-        self.run_query_and_content_required_field_test(input_url, "get",
-                                                       self.lang_query_dict)
+        self.run_query_and_content_required_field_test(
+            input_url, "get",
+            self.default_querystring_dict)
+
+    def test_account_view_fail_401(self):
+        """Return 401 if user does not have access to provided account."""
+
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_IMPOSTOR))
+
+        # check response code
+        self.assertEqual(response.status_code, 401)
 
     def test_account_view_fail_404(self):
         """Return 404 if provided account id is not found in db."""
 
         response = self.client.get(
-            '/api/accounts/%s?language_tag=%s' %
-            (MISSING_ACCT_ID, self.default_lang_tag),
+            '/api/accounts/%s?%s' %
+            (MISSING_ACCT_ID, self.default_lang_querystring),
             headers=self.dummy_auth)
 
-        # check response code, either is acceptable
-        # 401: Dunno if its missing, but you're not authorized to check
-        # 404: It's definitely missing
-        self.assertIn(response.status_code, [401, 404])
+        # check response code
+        self.assertEqual(response.status_code, 404)
     # endregion account view/get tests
 
     # region account update/put tests
@@ -484,8 +665,8 @@ class AccountTests(FlaskTests):
         input_json = json.dumps(changed_acct_dict)
 
         response = self.client.put(
-            '/api/accounts/%s?language_tag=%s' %
-            (dummy_acct_id, self.default_lang_tag),
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
             headers=self.dummy_auth,
             content_type='application/json',
             data=input_json)
@@ -507,9 +688,10 @@ class AccountTests(FlaskTests):
         changed_acct_dict = self.make_updated_acct_dict()
 
         input_url = "/api/accounts/{0}".format(dummy_acct_id)
-        self.run_query_and_content_required_field_test(input_url, "put",
-                                                       self.lang_query_dict,
-                                                       changed_acct_dict)
+        self.run_query_and_content_required_field_test(
+            input_url, "put",
+            self.default_querystring_dict,
+            changed_acct_dict)
 
     def test_account_update_fail_404(self):
         """Return 404 if provided account id is not found in db."""
@@ -520,31 +702,32 @@ class AccountTests(FlaskTests):
         input_json = json.dumps(changed_acct_dict)
 
         response = self.client.put(
-            '/api/accounts/%s?language_tag=%s' %
-            (MISSING_ACCT_ID, self.default_lang_tag),
+            '/api/accounts/%s?%s' %
+            (MISSING_ACCT_ID, self.default_lang_querystring),
             headers=self.dummy_auth,
             content_type='application/json',
             data=input_json)
 
-        # check response code, either is acceptable
-        # 401: Dunno if its missing, but you're not authorized to check
-        # 404: It's definitely missing
-        self.assertIn(response.status_code, [401, 404])
+        # check response code
+        self.assertEqual(response.status_code, 404)
 
-    def test_accounts_update_fail_422(self):
+    def test_account_update_fail_422(self):
         """Return 422 if provided email is in use in db."""
 
         # NB: I would rather do this with an email already in use in the
         # test db, but it appears the test db emails have been randomized
         # into strings that won't pass the api's email format validation :(
-        create_dummy_acct(create_dummy_1=False)
 
-        dummy_acct_id = create_dummy_acct(create_dummy_1=True,
-                                          iss=ACCT_MOCK_ISS_2,
-                                          sub=ACCT_MOCK_SUB_2)
-        # Now try to update the account with info that is the same in
-        # all respects from the dummy one EXCEPT that it has
-        # an email that is already in use by ANOTHER account
+        # create an account with email 1
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        # create an account with email 2
+        create_dummy_acct(create_dummy_1=False, iss=ACCT_MOCK_ISS_2,
+                          sub=ACCT_MOCK_SUB_2)
+
+        # Now try to update the account made with email 1 with info that is
+        # the same in all respects as those it was made with EXCEPT that it has
+        # an email that is now in use by the account with email 2:
         changed_dummy_acct = copy.deepcopy(DUMMY_ACCT_INFO)
         changed_dummy_acct["email"] = TEST_EMAIL_2
 
@@ -552,11 +735,357 @@ class AccountTests(FlaskTests):
         input_json = json.dumps(changed_dummy_acct)
 
         response = self.client.put(
-            '/api/accounts/%s?language_tag=%s' %
-            (dummy_acct_id, self.default_lang_tag),
-            headers=MOCK_HEADERS_2,
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=MOCK_HEADERS,
             content_type='application/json',
             data=input_json)
 
         # check response code
         self.assertEqual(422, response.status_code)
+    # endregion account update/put tests
+
+    # region account/email_match tests
+    def test_email_match_success_true(self):
+        """Returns true if account email matches auth email"""
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/email_match?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        # check email_match is true
+        self.assertEqual(response_obj["email_match"], True)
+
+    def test_email_match_success_false(self):
+        """Returns false if account email matches auth email"""
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/email_match?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_EMAIL_MISMATCH))
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        # check email_match is true
+        self.assertEqual(response_obj["email_match"], False)
+
+    def test_email_match_fail_401(self):
+        """Return 401 if user does not have access to provided account."""
+
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/email_match?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_IMPOSTOR))
+
+        # check response code
+        self.assertEqual(response.status_code, 401)
+
+    def test_email_match_fail_404(self):
+        """Return 404 if provided account id is not found in db."""
+
+        response = self.client.get(
+            '/api/accounts/%s/email_match?%s' %
+            (MISSING_ACCT_ID, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(response.status_code, 404)
+    # endregion account/email_match tests
+
+
+@pytest.mark.usefixtures("client")
+class SourceTests(ApiTests):
+
+    # region source view/get tests
+    def test_source_view_success(self):
+        """Successfully view existing human source"""
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/sources?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+        self.assertEqual(1, len(response_obj))
+
+        # check all elements of object in body are correct
+        expected_val = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        expected_val[SOURCE_ID_KEY] = SOURCE_ID_1
+        self.assertEqual([expected_val], response_obj)
+
+    def test_source_view_success_legacy(self):
+        """Successfully view existing human source with legacy age_range"""
+        dummy_legacy_source = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        # this would not be allowed through the api, but we can force it here
+        dummy_legacy_source["consent"]["age_range"] = "legacy"
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, dummy_legacy_source,
+            create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/sources?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+        self.assertEqual(1, len(response_obj))
+
+        # check all elements of object in body are correct
+        expected_val = copy.deepcopy(dummy_legacy_source)
+        expected_val[SOURCE_ID_KEY] = SOURCE_ID_1
+        self.assertEqual([expected_val], response_obj)
+    # endregion
+
+    # region source create/post
+    def test_source_create_success(self):
+        """Successfully create a new human source"""
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.post(
+            '/api/accounts/%s/sources?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(DUMMY_HUMAN_SOURCE),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(201, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        # get the id provided in the body
+        real_src_id_from_body = response_obj.get(SOURCE_ID_KEY)
+
+        # check location header was provided, with new source id
+        real_src_id_from_loc = extract_last_id_from_location_header(response)
+        self.assertIsNotNone(real_src_id_from_loc)
+
+        # check id provided in body matches that in location header
+        self.assertTrue(real_src_id_from_loc, real_src_id_from_body)
+
+        # check all elements of object in body are correct
+        expected_val = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        expected_val[SOURCE_ID_KEY] = real_src_id_from_body
+        self.assertEqual(expected_val, response_obj)
+
+    def test_source_create_fail_422(self):
+        """Return 422 if try to create a source with age_range 'legacy'"""
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        bad_dummy_src_info = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        bad_dummy_src_info['consent']['age_range'] = 'legacy'
+
+        response = self.client.post(
+            '/api/accounts/%s/sources?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(bad_dummy_src_info),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(422, response.status_code)
+    # endregion source create/post
+
+    # region source update/put
+    def test_source_update_success(self):
+        """Successfully update an existing source"""
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        new_name = "Not Bo after all"
+        dummy_src_info = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        dummy_src_info['source_name'] = new_name
+        # value not allowed, but it will be ignored anyway
+        dummy_src_info['consent']['age_range'] = 'legacy'
+
+        response = self.client.put(
+            '/api/accounts/%s/sources/%s?%s' %
+            (dummy_acct_id, dummy_source_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(dummy_src_info),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        # get the id provided in the body
+        real_src_id_from_body = response_obj.get(SOURCE_ID_KEY)
+
+        # check all elements of object in body are correct
+        expected_val = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        expected_val['source_name'] = new_name
+        expected_val[SOURCE_ID_KEY] = real_src_id_from_body
+        self.assertEqual(expected_val, response_obj)
+    # endregion source update/put
+
+
+@pytest.mark.usefixtures("client")
+class SurveyTests(ApiTests):
+
+    # region source create/post
+    def test_survey_create_success(self):
+        """Successfully create a new answered survey"""
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        survey_template_id = 1  # primary survey
+        # This is a model of a partially-filled survey that includes
+        # a single-select field, a multi-select field with multiple
+        # entries selected, an input field required to be an integer,
+        # an input field required to be single-line string, and a text field
+        # including a line break
+        input_model = {'6': 'Yes',
+                       '30': ['Red wine', 'Spirits/hard alcohol'],
+                       '104': 'candy corn\ngreen m&ms',
+                       '107': 'Female',
+                       '108': 68,
+                       '109': 'inches',
+                       '115': 'K7G-2G8'}
+
+        post_resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?%s'
+            % (dummy_acct_id, dummy_source_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': survey_template_id,
+                    'survey_text': input_model
+                }),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(201, post_resp.status_code)
+
+        # check location header was provided, with new survey id
+        real_id_from_loc = extract_last_id_from_location_header(post_resp)
+        self.assertIsNotNone(real_id_from_loc)
+
+        # load that new survey and ensure it matches the expected contents
+        get_resp = self.client.get(
+            '%s?%s' %
+            (post_resp.headers.get("Location"), self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, get_resp.status_code)
+
+        # load the response body
+        get_resp_obj = json.loads(get_resp.data)
+
+        # check all elements of object in body are correct
+        expected_model = copy.deepcopy(input_model)
+
+        # the output order from the multiple choice question (30) from the
+        # database is not stable
+        observed_model = get_resp_obj.pop('survey_text')
+
+        # TODO: determine whether the current behavior that returns
+        #  fields input as numbers as strings is actually correct or not
+        expected_model['108'] = "68"
+        expected_output = {
+            "survey_template_id": survey_template_id,
+            "survey_template_title": "Primary",
+            "survey_template_version": "1.0",
+            "survey_template_type": "local",
+            "survey_id": real_id_from_loc,
+        }
+        self.assertEqual(expected_output, get_resp_obj)
+
+        # check dict keys
+        self.assertEqual(set(observed_model), set(expected_model))
+        for k in observed_model:
+            obs = observed_model[k]
+            exp = expected_model[k]
+
+            if isinstance(obs, list):
+                obs = sorted(obs)
+                exp = sorted(exp)
+
+            self.assertEqual(obs, exp)
+
+    def test_survey_create_success_empty(self):
+        """Successfully create a new answered survey without any answers"""
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        survey_template_id = 1  # primary survey
+
+        post_resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?%s'
+            % (dummy_acct_id, dummy_source_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': survey_template_id,
+                    'survey_text': {}
+                }),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(201, post_resp.status_code)
+
+        # check location header was provided, with new survey id
+        real_id_from_loc = extract_last_id_from_location_header(post_resp)
+        self.assertIsNotNone(real_id_from_loc)
+
+        # load that new survey and ensure it matches the expected contents
+        get_resp = self.client.get(
+            '%s?%s' %
+            (post_resp.headers.get("Location"), self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, get_resp.status_code)
+
+        # load the response body
+        get_resp_obj = json.loads(get_resp.data)
+
+        # check all elements of object in body are correct
+        expected_model = {'108': ""}
+        expected_output = {
+            "survey_template_id": survey_template_id,
+            "survey_template_title": "Primary",
+            "survey_template_version": "1.0",
+            "survey_template_type": "local",
+            "survey_id": real_id_from_loc,
+            "survey_text": expected_model
+        }
+        self.assertEqual(expected_output, get_resp_obj)

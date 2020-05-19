@@ -1,0 +1,13 @@
+{
+  "endpoint": "http://localhost:8082",
+  "port": 8082,
+  "debug": true,
+  "ssl_cert_path": null,
+  "ssl_key_path": null,
+  "CAfile": null,
+  "authrocket_url": "https://jubilant-smoke-a54b.e2.loginrocket.com",
+  "FLASK_SECRET_KEY": null,
+  "vioscreen_endpoint": "https://demo.vioscreen.com",
+  "vioscreen_regcode": "regcode",
+  "vioscreen_cryptokey": "1234567891011121"
+}

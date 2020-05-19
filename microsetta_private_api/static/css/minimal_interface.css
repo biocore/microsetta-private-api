@@ -1,0 +1,57 @@
+html * {
+    font-family: "Muli", Arial, Helvetica, sans-serif;
+}
+a {
+    color: #006A96;
+}
+img.resize {
+  max-width:75%;
+  max-height:75%;
+}
+body {
+    margin: 2%;
+}
+
+p {
+  line-height: 2;
+}
+
+label.error {
+    color: #FC8900;
+}
+
+
+.active, .breadcrumb-item.active {
+  background-color: inherit;
+}
+
+/* Style the buttons that are used to open and close the accordion panel */
+.accordion
+{
+    background-color: #eee;
+    color: #000;
+    cursor: pointer;
+    padding: 18px;
+    margin-bottom: 14px;
+    width: 100%;
+    text-align: left;
+    border: none;
+    outline: none;
+    transition: 0.4s;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.active, .accordion:hover {
+    background-color: #747678;
+    color: #fff;
+}
+
+/* Style the accordion panel. Note: hidden by default */
+.accordion-panel {
+    padding-bottom: 0%;
+    padding-left: 1%;
+    background-color: white;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+}

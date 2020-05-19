@@ -17,8 +17,38 @@ setup(
     packages=find_packages(),
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
+    py_modules=['mpa-cli'],
     url="https://github.com/biocore/microsetta-private-api",
     description="A RESTful API to support The Microsetta Initiative",
     license='BSD-3-Clause',
-    package_data={'microsetta_private_api': ['db/*.*', 'db/patches/*.sql']},
+    package_data={'microsetta_private_api':
+                  [
+                     'db/*.*',
+                     'db/patches/*.sql',
+                     'api/microsetta_private_api.yaml',
+                     'example/client.yaml',
+                     'server_config.json',
+                     'templates/*.*',
+                     'static/*',
+                     'static/css/*',
+                     'static/img/*',
+                     'static/vendor/js/*',
+                     'static/vendor/bootstrap-4.4.1-dist/js/*',
+                     'static/vendor/bootstrap-4.4.1-dist/css/*',
+                     'static/vendor/bootstrap-datetimepicker-4.14.30/*',
+                     'static/vendor/vue-form-generator-2.3.4/*',
+                     'static/vendor/bootstrap-3.3.7-dist/js/*',
+                     'static/vendor/bootstrap-3.3.7-dist/css/*',
+                     'static/vendor/bootstrap-3.3.7-dist/fonts/*',
+                     'static/vendor/bootstrap-3.3.7-dist/fonts/*',
+                     'static/vendor/font-awesome-4.7.0/css/*',
+                     'static/vendor/font-awesome-4.7.0/less/*',
+                     'static/vendor/font-awesome-4.7.0/fonts/*',
+                     'static/vendor/font-awesome-4.7.0/scss/*',
+                     'authrocket.pubkey'
+                  ]},
+    entry_points='''
+        [console_scripts]
+        mpa-cli=mpa_cli:cli
+    '''
 )

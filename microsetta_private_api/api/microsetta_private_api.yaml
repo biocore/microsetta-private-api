@@ -4,10 +4,30 @@ info:
   version: "0.3.0-oas3"
   title: Private Microsetta RESTful API (OAS 3.0)
 servers:
-  - url: 'http://localhost:8082/api'
+  - url: '/api'
 paths:
   '/accounts':
-    # NB: Not including a get: seems like seeing all accounts is an extension for the future (for admin?)
+    get:
+      operationId: microsetta_private_api.api.implementation.find_accounts_for_login
+      tags:
+        - Account
+      summary: Retrieve an array of accounts accessible to the provided login
+      description: Retrieve an array of accounts accessible to the provided login
+      parameters:
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Array of accessible accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/account'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
     post:
       operationId: microsetta_private_api.api.implementation.register_account
       tags:
@@ -42,8 +62,35 @@ paths:
                 $ref: '#/components/schemas/account'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
+  '/accounts/legacies':
+    post:
+      operationId: microsetta_private_api.api.implementation.claim_legacy_acct
+      tags:
+        - Account
+      summary: Claim any legacy accounts for this user's email and return an array of them
+      description: Claim any legacy accounts for this user's email and return an array of them
+      parameters:
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Successfully claimed legacy account(s)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/account'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
@@ -66,6 +113,8 @@ paths:
                 $ref: '#/components/schemas/account'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     put:
@@ -91,10 +140,40 @@ paths:
                 $ref: '#/components/schemas/account'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+
+  '/accounts/{account_id}/email_match':
+    get:
+      operationId: microsetta_private_api.api.implementation.check_email_match
+      tags:
+        - Account
+      summary: Check if email on microsetta account matches email on authentication account
+      description: Check if email on microsetta account matches email on authentication account
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Successfully returned email match status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email_match:
+                    type: boolean
+                    example: true
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   '/accounts/{account_id}/consent':
     get:
@@ -106,15 +185,22 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/language_tag'
+        - $ref: '#/components/parameters/consent_post_url'
       responses:
         '200':
           description: Consent form
           content:
-            text/html:
+            application/json:
               schema:
-                type: string
+                type: object
+                properties:
+                  consent_html:
+                    type: string
+                    example: "<html><body>Consent form here</body></html>"
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
     post:
       operationId: microsetta_private_api.api.implementation.create_human_source_from_consent
       tags:
@@ -126,7 +212,7 @@ paths:
         - $ref: '#/components/parameters/language_tag'
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:  # each is a form field name
@@ -141,8 +227,9 @@ paths:
                 parent_2_name:
                   $ref: '#/components/schemas/parent_2_name'
                 deceased_parent:
-                  type: boolean
-                  example: true
+                  type: string
+                  enum: ['true', 'false']
+                  example: 'true'
                 obtainer_name:
                   $ref: '#/components/schemas/obtainer_name'
               required:
@@ -167,6 +254,8 @@ paths:
                   $ref: '#/components/examples/human_child_source_w_id'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -214,6 +303,8 @@ paths:
                       obtainer_name: "Hades Doe"
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
@@ -261,6 +352,8 @@ paths:
                   $ref: '#/components/examples/nonhuman_source_w_id'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -295,6 +388,8 @@ paths:
                   $ref: '#/components/examples/nonhuman_source_w_id'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     put:
@@ -339,6 +434,8 @@ paths:
                   $ref: '#/components/examples/nonhuman_source_w_id'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -358,6 +455,8 @@ paths:
           description: Successfully deleted source
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -386,6 +485,8 @@ paths:
                   $ref: '#/components/schemas/thin_survey_template_info'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     # NB: No delete, put, or post for survey templates--can maybe expand to that for admin user in future
@@ -402,6 +503,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/survey_template_id'
         - $ref: '#/components/parameters/language_tag'
+        - $ref: '#/components/parameters/survey_redirect_url'
       responses:
         '200':
           description: Successfully returned a specific survey template
@@ -419,6 +521,8 @@ paths:
 
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     # NB: No delete, put, or post for a particular survey template--can maybe expand to that for admin user in future
@@ -454,6 +558,8 @@ paths:
                         - survey_id
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
@@ -485,6 +591,8 @@ paths:
                 type: string
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
@@ -519,6 +627,8 @@ paths:
                       - survey_text
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     # NB: NO "put"--you shouldn't update an answered survey, but instead should take a new one
@@ -546,6 +656,8 @@ paths:
                   $ref: '#/components/schemas/sample'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
@@ -582,6 +694,8 @@ paths:
                 type: string
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -610,6 +724,8 @@ paths:
                 $ref: '#/components/schemas/sample'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     put:
@@ -637,6 +753,8 @@ paths:
                 $ref: '#/components/schemas/sample'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -658,6 +776,8 @@ paths:
           description: Sample was dissociated from source
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -707,6 +827,8 @@ paths:
                   survey_template_type: local
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
@@ -737,6 +859,8 @@ paths:
                 type: string
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
@@ -761,6 +885,8 @@ paths:
           description: Answered survey was dissociated from sample
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
 
@@ -785,10 +911,267 @@ paths:
                   $ref: '#/components/schemas/sample'
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+
+  # START ADMINISTRATOR PATHS
+  '/admin/search/samples/{sample_barcode}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.search_barcode
+      tags:
+        - Admin
+      summary: Retrieve diagnostic information about a sample by barcode
+      description: Retrieve diagnostic information about a sample by barcode
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+      responses:
+        '200':
+          description: Object containing linked account (if any), source (if any), sample (if any) and information about the barcode
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  '/admin/search/kit/{kit_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.search_kit_id
+      tags:
+        - Admin
+      summary: Retrieve diagnostic information about a kit by kit_id
+      description: Retrieve diagnostic information about a kit by kit_id
+      parameters:
+        - in: path
+          name: kit_id
+          description: User-facing id of kit
+          schema:
+            $ref: '#/components/schemas/kit_name'
+          required: true
+      responses:
+        '200':
+          description: Object containing linked account (if any), source (if any), sample (if any) and information about the barcode
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  '/admin/search/account/{email}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.search_email
+      tags:
+        - Admin
+      summary: Retrieve diagnostic information about an account by email
+      description: Retrieve diagnostic information about an account by email
+      parameters:
+        - in: path
+          name: email
+          description: user email address
+          schema:
+            type: string
+            example: "test@test.com"
+          required: true
+      responses:
+        '200':
+          description: Object containing accounts with similar emails (if any)
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  '/admin/scan/{sample_barcode}':
+    post:
+      # Note: We might want to be able to differentiate system administrator operations
+      # from technician operations in the future by user accounts and the routes they post to
+      operationId: microsetta_private_api.admin.admin_impl.scan_barcode
+      tags:
+        - Admin
+      summary: Set sample processing information for a barcode
+      description: Set sample processing information for a barcode
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sample_status:
+                  type: string
+                  enum: ["not-received",
+                         "sample-is-valid",
+                         "no-associated-consent",
+                         "no-registered-account",
+                         "sample-has-inconsistencies"]
+                  example: "sample-has-inconsistencies"
+                technician_notes:
+                  type: string
+                  example: "Sample Processing Complete!"
+      responses:
+        '201':
+          description: Successfully registered new user account
+          headers:
+            Location:
+              schema:
+                type: string
+  '/admin/metadata/samples/{sample_barcode}/surveys/{survey_template_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_single_survey
+      tags:
+        - Admin
+      summary: Retrieve survey responses for a particular sample and survey
+      description: Retrieve survey responses for a particular sample and survey
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+        - $ref: '#/components/parameters/survey_template_id'
+      responses:
+        '200':
+          description: QIIME compatible sample metadata
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  '/admin/metadata/samples/{sample_barcode}/surveys/':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_multiple_survey
+      tags:
+        - Admin
+      summary: Retrieve all survey responses for a particular sample
+      description: Retrieve all survey responses for a particular sample
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+      responses:
+        '200':
+          description: QIIIME compatible sample metadata
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/admin/create/project':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.create_project
+      tags:
+        - Admin
+      summary: Create a project which kits can be associated too
+      description: Create a project which kits can be associated too
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                project_name:
+                  type: string
+                is_microsetta:
+                  type: boolean
+
+              required:
+                - project_name
+                - is_microsetta
+
+      responses:
+        '201':
+          description: Project successfully created
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
+  '/admin/create/kits':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.create_kits
+      tags:
+        - Admin
+      summary: Create kit identifiers and associated sample barcodes
+      description: Create kit identifiers and associated sample barcodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+                type: "object"
+                properties:
+                  number_of_kits:
+                    type: integer
+                  number_of_samples:
+                    type: integer
+                  kit_id_prefix:
+                    type: string
+                  projects:
+                    type: array
+                    items:
+                      type: string
+
+                required:
+                  - number_of_kits
+                  - number_of_samples
+                  - projects
+
+      responses:
+        '201':
+          description: Kit identifiers and associated samples were successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+  '/admin/statistics/projects':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.project_statistics_summary
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: Object describing project statistics for all projects
+          content:
+            application/json:
+              schema:
+                type: array
+  '/admin/statistics/project/{project_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.project_statistics_detailed
+      tags:
+        - Admin
+      parameters:
+        - in: path
+          name: project_id
+          description: Project ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Object describing specific project statistics in more detail
+          content:
+            application/json:
+              schema:
+                type: object
 
 
 components:
@@ -837,6 +1220,14 @@ components:
       schema:
         $ref: '#/components/schemas/source_id'
       required: true
+    sample_barcode:
+      name: sample_barcode
+      in: path
+      description: barcode of sample
+      schema:
+        $ref: '#/components/schemas/sample_barcode'
+      required: true
+
 
     # query parameters
     kit_name:
@@ -854,6 +1245,20 @@ components:
       schema:
         $ref: '#/components/schemas/language_tag'
       required: true
+    consent_post_url:
+      name: consent_post_url
+      in: query
+      description: Client url to which the customized consent form should be posted.
+      schema:
+        type: string
+        example: "https://www.microsetta.org/workflow_create_human_source"
+    survey_redirect_url:
+      name: survey_redirect_url
+      in: query
+      description: Url that some external surveys will redirect browser to after survey completion
+      schema:
+        type: string
+        example: "https://www.microsetta.org/workflow_create_human_source"
     source_type:
       name: source_type
       in: query
@@ -863,8 +1268,22 @@ components:
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
       description: Invalid or missing token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    403Forbidden:   # Can be referenced as '#/components/responses/403Forbidden'
+      description: Authorization refused.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     404NotFound:       # Can be referenced as '#/components/responses/404NotFound'
       description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     422UnprocessableEntity:
       description: The instructions provided cannot be processed.
       content:
@@ -880,7 +1299,7 @@ components:
     account_type: # e.g., regular user or admin--room to grow
       type: string
       readOnly: true
-      enum: ["standard"]
+      enum: ["standard", "admin"]
       example: "standard"
     creation_time:
       type: string
@@ -929,6 +1348,7 @@ components:
         - last_name
         - email
         - address
+
     address:   # taken from https://opensource.zalando.com/restful-api-guidelines/#address-fields
       description:
         an address of a location/destination
@@ -993,7 +1413,7 @@ components:
       nullable: true
       example: "Oops, I dropped it"
     sample_site:
-      enum: ["Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
+      enum: ["Blood (skin prick)", "Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
              "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", null]
       example: "Stool"
     sample_locked:
@@ -1048,7 +1468,7 @@ components:
       example: "mdoe@example.com"
     age_range:
       type: string
-      enum: ["0-6", "7-12", "13-17", "18-plus"]
+      enum: ["0-6", "7-12", "13-17", "18-plus", "legacy"]
     parent_1_name:
       type: string
       example: "Madre Doe"
@@ -1126,68 +1546,68 @@ components:
       type: string
       example: "0.1"
     survey_template_text:
-      # The contents of this string ARE structured, but their structure is not specified in THIS api.
+      # The contents of this object ARE structured, but their structure is not specified in THIS api.
       # Could be *either* vue-compatible json to be used to generate an HTML form OR
       # a customized link to direct to an external survey
       type: object
-      example: '{ |
-                  "groups": [ |
-                    { |
-                      "legend": "Personal Information", |
-                      "fields": [ |
-                        { |
-                          "type": "select", |
-                          "label": "Gender:", |
-                          "model": "107", |
-                          "id": "107", |
-                          "inputName": "107", |
-                          "featured": false, |
-                          "visible": true, |
-                          "disabled": false, |
-                          "required": true, |
-                          "multi": false, |
-                          "default": null, |
-                          "hint": null, |
-                          "help": null, |
-                          "validator": null, |
-                          "validateDebounceTime": null, |
-                          "styleClasses": null, |
-                          "buttons": null, |
-                          "attributes": null, |
+      example: {
+                  "groups": [
+                    {
+                      "legend": "Personal Information",
+                      "fields": [
+                        {
+                          "type": "select",
+                          "label": "Gender:",
+                          "model": "107",
+                          "id": "107",
+                          "inputName": "107",
+                          "featured": false,
+                          "visible": true,
+                          "disabled": false,
+                          "required": true,
+                          "multi": false,
+                          "default": null,
+                          "hint": null,
+                          "help": null,
+                          "validator": null,
+                          "validateDebounceTime": null,
+                          "styleClasses": null,
+                          "buttons": null,
+                          "attributes": null,
                           "values": [
-                            "Unspecified", |
-                            "Male", |
-                            "Female", |
-                            "Other" |
-                          ], |
-                          "selectOptions": {} |
-                        }, |
-                        { |
-                          "type": "input", |
-                          "label": "Height:", |
-                          "model": "108", |
-                          "id": "108", |
-                          "inputName": "108", |
-                          "featured": false, |
-                          "visible": true, |
-                          "disabled": false, |
-                          "required": true, |
-                          "multi": false, |
-                          "default": null, |
-                          "hint": null, |
-                          "help": null, |
-                          "validator": "string", |
-                          "validateDebounceTime": null, |
-                          "styleClasses": null, |
-                          "buttons": null, |
-                          "attributes": null, |
-                          "inputType": "text" |
-                        } |
-                      ] |
-                    } |
-                  ], |
-                  "fields": null |
-                }'
+                            "Unspecified",
+                            "Male",
+                            "Female",
+                            "Other"
+                          ],
+                          "selectOptions": {}
+                        },
+                        {
+                          "type": "input",
+                          "label": "Height:",
+                          "model": "108",
+                          "id": "108",
+                          "inputName": "108",
+                          "featured": false,
+                          "visible": true,
+                          "disabled": false,
+                          "required": true,
+                          "multi": false,
+                          "default": null,
+                          "hint": null,
+                          "help": null,
+                          "validator": "string",
+                          "validateDebounceTime": null,
+                          "styleClasses": null,
+                          "buttons": null,
+                          "attributes": null,
+                          "inputType": "text"
+                        }
+                      ]
+                    }
+                  ],
+                  "fields": null
+                }
     thin_survey_template_info:
       type: object
       properties:
@@ -1210,36 +1630,36 @@ components:
       type: string
       example: "69f697cb-8e52-4a4f-8db2-efffcfa186a5"
     survey_text:
-      # The contents of this string ARE structured, but their structure is not specified in THIS api.
+      # The contents of this object ARE structured, but their structure is not specified in THIS api.
       type: object
-      example: '{ |
-                    "1": "Omnivore", |
-                                          "2": "No", |
-                                          "3": "Never", |
-                                          "4": "Never", |
-                                          "5": "Daily", |
-                                          "6": "No", |
-                                          "107": "Female", |
-                                          "108": "60", |
-                                          "109": "inches", |
-                                          "110": "Canada", |
-                                          "111": "January", |
-                                          "112": "1969", |
-                                          "113": "120", |
-                                          "114": "pounds", |
-                                          "115": "44074", |
-                                          "148": "United States", |
-                                          "162": [ |
-                                            "Exclude refined sugars" |
-                                          ] |
-                }'
+      example: {
+                    "1": "Omnivore",
+                    "2": "No",
+                    "3": "Never",
+                    "4": "Never",
+                    "5": "Daily",
+                    "6": "No",
+                    "107": "Female",
+                    "108": "60",
+                    "109": "inches",
+                    "110": "Canada",
+                    "111": "January",
+                    "112": "1969",
+                    "113": "120",
+                    "114": "pounds",
+                    "115": "44074",
+                    "148": "United States",
+                    "162": [
+                      "Exclude refined sugars"
+                    ]
+                }
 
     # error section
     Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/
       type: object
       properties:
         code:
-          type: string
+          type: integer
         message:
           type: string
       required:

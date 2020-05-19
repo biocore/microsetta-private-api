@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Microsetta Participant Survey</title>
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript" src="/static/vendor/js/vue-2.5.17.min.js"></script>
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <script type="text/javascript" src="/static/vendor/vue-form-generator-2.3.4/vfg.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/vendor/vue-form-generator-2.3.4/vfg.css">
+
+    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
+    <script>
+        var result_txt = "";
+        var error_txt = "";
+
+        function postSurvey() {
+            $.ajax({
+                type: "POST",
+                url: "{{ endpoint }}/workflow_take_survey?survey_template_id={{ survey_template_id }}",
+                data: JSON.stringify(survey_model),
+                success: function (data, textStatus, jqXHR) {
+                    result_txt = data;
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    error_txt = jqXHR.responseText;
+                },
+                complete: function (data, textStatus, output_obj) {
+                    // Replace the html on this page with the html successfully received from the ajax call.
+                    // Note that the html we successfully received MAY be an html page reporting an error
+                    // captured in the back end :)
+                    if (result_txt !== ""){
+                        document.open();
+                        document.write(result_txt);
+                        document.close();
+                    } else {
+                        // I can't imagine how we could get here, but just in case, at least the
+                        // user sees *something* ...
+                        if (error_txt === ""){
+                            error_txt = textStatus;
+                        }
+                        let queryParam = encodeURIComponent(error_txt);
+                        // Get customized error page that will show whatever error message we captured
+                        // here in the front end
+                        window.location.replace("{{ endpoint }}/error?error_msg=" + queryParam);
+                    }
+                },
+                dataType: "html",
+                contentType: "application/json"
+            });
+
+            // always return false, preventing a traditional post of the form
+            return false;
+        }
+
+        function set_triggers(model, field)
+        {
+            if ('triggered_by' in field && field.triggered_by !== null && field.triggered_by.length > 0)
+            {
+                field.visible = function()
+                {
+                  visible = false
+                  for (var entry of field.triggered_by)
+                      visible |= (model[entry['q_id']] === entry['response'])
+                  return visible
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
+        <img src="/static/img/logo-co.png" class="resize"/>
+        <br />
+        <br />
+        Return to microsetta.ucsd.edu
+    </a>
+    <br />
+    <br />
+
+    <div class="content">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
+          </ol>
+        </nav>
+        <div class="container" id="app">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <form id="survey_form">
+                        <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!--  <div class="panel panel-default">-->
+<!--    <div class="panel-heading">Model</div>-->
+<!--    <div class="panel-body">-->
+<!--      <pre v-if="model" v-html="prettyJSON(model)"></pre>-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  <div class="panel panel-default">-->
+<!--    <div class="panel-heading">Schema</div>-->
+<!--    <div class="panel-body">-->
+<!--      <pre v-if="model" v-html="prettyJSON(schema)"></pre>-->
+<!--    </div>-->
+<!--  </div>-->
+
+    <script type="text/javascript">
+      var survey_model = {}
+      var survey_schema={{survey_schema|tojson}}
+
+      if (survey_schema.fields !== null)
+        for (var field of survey_schema.fields)
+        {
+          set_triggers(survey_model, field)
+        }
+        for (var group of survey_schema.groups)
+          for (var field of group.fields)
+          {
+            set_triggers(survey_model, field)
+          }
+
+      last_group = survey_schema.groups[survey_schema.groups.length-1]
+      last_group.fields.push(
+      {
+        buttonText: "Submit Survey",
+        type: "submit",
+        validateBeforeSubmit: true,
+        onSubmit: function(){
+            return postSurvey();
+        }
+      });
+    </script>
+    <script type="text/javascript" src="/static/vue_survey_form.js"></script>
+
+    <div>
+        <br />
+        <p>
+            Questions?  Check our <a href="/view_faq">FAQ</a>!
+        </p>
+        <p>
+            We are in the process of revising the site and
+            apologize for any inconvenience.
+            Please contact
+            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
+            for help.
+        </p>
+    </div>
+</body>
+</html>

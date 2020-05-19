@@ -1,0 +1,202 @@
+{% extends "sitebase.jinja2" %}
+{% set page_title = "Frequently Asked Questions" %}
+{% set show_breadcrumbs = True %}
+{% block head %}
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var acc = document.getElementsByClassName("accordion");
+            var i;
+
+            for (i = 0; i < acc.length; i++) {
+                acc[i].addEventListener("click", function () {
+                    /* Toggle between adding and removing the "active" class,
+              to highlight the button that controls the panel */
+                    this.classList.toggle("active");
+
+                    /* Show/closes  the active panel */
+                    var panel = this.nextElementSibling;
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + "px";
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}
+{% block content %}
+<h2>FAQ</h2>
+<div class="list-group">
+    <p>
+        Thank you in advance for your patience and support during this period. If you have any further inquiries after
+        reviewing the questions below, please contact us at
+        <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>.
+        <br>
+        <br>
+        <b>Last Updated:</b> May 5th, 2020
+    </p>
+    <div id="what-is-tmi" class="faq" style="margin-top: 2%;">
+        <button class="accordion">
+            <p></p>
+            <h5>What is The Microsetta Initiative?  Where is the American/British Gut Project</h5>
+            <p></p>
+        </button>
+        <div class="accordion-panel" style="">
+            <p></p>
+            <p style="">
+                The Microsetta Initiative (TMI) is an extension of the American Gut and British Gut Projects with the
+                specific aims of being globally inclusive and accommodating a broader range of host-associated sample
+                types. The American Gut and British Gut Project both still operate through The Microsetta Initiative as
+                regional projects, making TMI the central hub for providing kits to participants and hosting the
+                participant website.
+            </p>
+            <hr>
+        </div>
+    </div>
+    <div id="how-do-i-sign-up" class="faq" style="margin-top: 2%;">
+        <button class="accordion">
+            <p></p>
+            <h5>How do I sign up using the new website?</h5>
+            <p></p>
+        </button>
+        <div class="accordion-panel" style="">
+            <p></p>
+            <p style="">
+                <u>If you previously had a participant account through the American/British Gut (microbio.me):</u>
+                <br>
+                <a href="https://microsetta-api.ucsd.edu/signup?redirect_uri=https://microsetta-rest.ucsd.edu/authrocket_callback"
+                   target="_blank">
+                    Sign Up
+                </a> to create a login using the email address you previously used when registering with either project.
+                In order to proceed, you will need to re-confirm your email address.
+                <br>
+                <br>
+                If your existing account associated with your email address had a single human source, you will be able
+                to log in and proceed in the process. If your existing account has multiple human sources (e.g.,
+                multiple family members), you will be presented with a page indicating that we do not yet support this
+                account type.
+                <br>
+                <br>
+                We are working hard to migrate all American and British Gut kits to be compatible with the recent
+                infrastructure changes necessary for our COVID-19 response.  We apologize for this temporary
+                inconvenience.
+                <br>
+                <br>
+                <u>If you have an American Gut kit, live in the U.S., and have not registered the kit yet:</u>
+                <br>
+                <a href="https://microsetta-api.ucsd.edu/signup?redirect_uri=https://microsetta-rest.ucsd.edu/authrocket_callback"
+                   target="_blank">
+                    Sign Up
+                </a> to create a login using your email and a password of your choice.
+                <br>
+                <br>
+                After, you will be prompted to click on the “Create New Account” button to fill out your personal
+                information and kit ID.  Please use the kit ID provided on your kit credentials sheet found in your kit.
+                <br>
+                <br>
+                <u>If you have a British Gut kit and have not registered the kit yet:</u>
+                <br>
+                <a href="https://microsetta-api.ucsd.edu/signup?redirect_uri=https://microsetta-rest.ucsd.edu/authrocket_callback"
+                   target="_blank">
+                    Sign Up
+                </a> to create a login using your email and a password of your choice.
+                <br>
+                <br>
+                Unfortunately, at this time, our website does not support non-U.S. addresses.  We apologize for the
+                inconvenience and request that you check back at a later time.
+                <br>
+                <br>
+                <u>If you have a Microsetta kit:</u>
+                <br>
+                <a href="https://microsetta-api.ucsd.edu/signup?redirect_uri=https://microsetta-rest.ucsd.edu/authrocket_callback"
+                   target="_blank">
+                    Sign Up
+                </a> to create a login using your email and a password of your choice.
+                <br>
+                <br>
+                After, you will be prompted to click on the “Create New Account” button to fill out your personal
+                information and kit ID.  Please use the kit ID provided on your registration card found in your kit.
+            </p>
+            <hr>
+        </div>
+    </div>
+    <div id="where-are-my-results" class="faq" style="margin-top: 2%;">
+        <button class="accordion">
+            <p></p>
+            <h5>Where are my sample results?</h5>
+            <p></p>
+        </button>
+        <div class="accordion-panel" style="">
+            <p></p>
+            <p style="">
+                <u>If you have previously received results from American Gut/British Gut:</u>
+                <br>
+                We will work on making your results accessible through our participant website once we have migrated all
+                American/British Gut accounts to be compatible with the new database.
+                <br>
+                <br>
+                If there is an urgent need for your results, please email
+                <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>,
+                providing your kit ID or barcode number.
+                <br>
+                <br>
+                <u>If you are currently waiting on results for a sample you sent back to American/British Gut:</u>
+                <br>
+                Please contact <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>,
+                providing your kit ID and/or barcode number so we may assist you further.
+            </p>
+            <hr>
+        </div>
+    </div>
+    <div id="can-i-send-my-sample-back" class="faq" style="margin-top: 2%;">
+        <button class="accordion">
+            <p></p>
+            <h5>Can I send my sample back?</h5>
+            <p></p>
+        </button>
+        <div class="accordion-panel" style="">
+            <p></p>
+            <p style="">If you are able to login and assign your sample(s), then yes. If your account is not presently
+                migrated, then please wait to send samples in. The sample assignment process is essential in order for
+                us to verify we have ethical consent to handle the sample.
+                <br>
+                <br>
+                If you have already taken a sample, please send it back as soon as possible, ideally within 48 hours,
+                using the materials provided in the kit. Our American and British Gut laboratories are still operating
+                and can store it to preserve your sample quality.
+            </p>
+            <hr>
+        </div>
+    </div>
+    <div id="did-my-sample-make-it-back" class="faq" style="margin-top: 2%;">
+        <button class="accordion">
+            <p></p>
+            <h5>
+                Did my sample make it back to your lab? (ex. I had sent it back mid-April, but I have received no
+                information about it)
+            </h5>
+            <p></p>
+        </button>
+        <div class="accordion-panel" style="">
+            <p></p>
+            <p style="">
+                In response to COVID-19, USPS deliveries have been reduced to our laboratory that runs from
+                UC San Diego. We are working closely with UC San Diego Shipping and Logistics to ensure samples are
+                delivered with minimal delay. All British Gut samples will be held at their site until they have
+                resumed normal operations, and they are able to bulk ship samples back to us. Due to these delays,
+                there may also be a longer waiting period for notifications regarding when your sample has been
+                received by our lab.  Any samples we receive are placed in temperature-controlled freezers to ensure
+                sample quality is maintained.
+                <br>
+                <br>
+                If your sample has been sent via FedEx (new Microsetta kits), transit times from impacted areas might be
+                increased, but sample quality won’t be affected.
+            </p>
+            <p></p>
+            <hr>
+        </div>
+    </div>
+</div>
+{% endblock %}

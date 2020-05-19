@@ -11,7 +11,6 @@ https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
 and associated file
 https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
 """
-
 import flask
 from flask import jsonify, render_template
 import jwt
@@ -28,54 +27,87 @@ from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
+from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 
-from microsetta_private_api.model.account import Account
-from microsetta_private_api.model.source import Source, info_from_api
-from microsetta_private_api.model.source import human_info_from_api
-from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
+from microsetta_private_api.model.account import Account, AuthorizationMatch
+from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 
-from werkzeug.exceptions import BadRequest, Unauthorized
+from werkzeug.exceptions import BadRequest, Unauthorized, Forbidden, NotFound
 
 from microsetta_private_api.util import vue_adapter
 from microsetta_private_api.util.util import fromisotime
+from microsetta_private_api.exceptions import RepoException
+from microsetta_private_api.util import vioscreen
 
 import uuid
 
 from datetime import date
+import importlib.resources as pkg_resources
 
 
 # Authrocket uses RS256 public keys, so you can validate anywhere and safely
-# store the key in code. Obviously using this mechanism, we'd have to push code
-# to reroll the keys, which is not ideal, but you can instead hold this in a
-# config somewhere and reload
+# store the key.
+AUTHROCKET_PUB_KEY = pkg_resources.read_text(
+    'microsetta_private_api',
+    "authrocket.pubkey")
+JWT_ISS_CLAIM_KEY = 'iss'
+JWT_SUB_CLAIM_KEY = 'sub'
+JWT_EMAIL_CLAIM_KEY = 'email'
 
-# Python is dumb, don't put spaces anywhere in this string.
-AUTHROCKET_PUB_KEY = """-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp68T9XnX7d53Zo8pt072
-y+W0sV51EDZi7f2zeBbw5qvht9coFX4LF/p9Rcac7TajVJj+YE64vHm+YAL3ToJq
-XOOF/6tmPYMbbg3DRdvUopH3URCR8o7cQXN//gDKruB9+xpB3v1Wq5SCX6t8SRFw
-ixw3mKgpPoh+Ou5OohxmtJ+D7lr5R2DDW8QWAWpBdGgttdnex1OqDIsprJihx/SW
-sHK4ql+H4MzX5PvY7S/XF2Ibl1xWsYLPvSzV/eJoG4hIwf7efUrXiVkwqFKNYzpL
-YzmOf3F/k7TdpWqzic9y0ejMKzYu0ozGlKytxp3PbpI7B18nklVkGF07g/jNPwHN
-7QIDAQAB
------END PUBLIC KEY-----"""
+ACCT_NOT_FOUND_MSG = "Account not found"
+SRC_NOT_FOUND_MSG = "Source not found"
+INVALID_TOKEN_MSG = "Invalid token"
 
 
-def not_yet_implemented():
-    return {'message': 'functionality not yet implemented'}
+def find_accounts_for_login(token_info):
+    # Note: Returns an array of accounts accessible by token_info because
+    # we'll use that functionality when we add in administrator accounts.
+    with Transaction() as t:
+        acct_repo = AccountRepo(t)
+        acct = acct_repo.find_linked_account(
+            token_info[JWT_ISS_CLAIM_KEY],
+            token_info[JWT_SUB_CLAIM_KEY])
+
+        if acct is None:
+            return jsonify([]), 200
+        return jsonify([acct.to_api()]), 200
+
+
+def claim_legacy_acct(token_info):
+    # If there exists a legacy account for the email in the token, which the
+    # user represented by the token does not already own but can claim, this
+    # claims the legacy account for the user and returns a 200 code with json
+    # list containing the object for the claimed account.  Otherwise, this
+    # returns an empty json list. This function can also trigger a 422 from the
+    # repo layer in the case of inconsistent account data.
+
+    email = token_info[JWT_EMAIL_CLAIM_KEY]
+    auth_iss = token_info[JWT_ISS_CLAIM_KEY]
+    auth_sub = token_info[JWT_SUB_CLAIM_KEY]
+
+    with Transaction() as t:
+        acct_repo = AccountRepo(t)
+        acct = acct_repo.claim_legacy_account(email, auth_iss, auth_sub)
+        t.commit()
+
+        if acct is None:
+            return jsonify([]), 200
+
+        return jsonify([acct.to_api()]), 200
 
 
 def register_account(body, token_info):
     # First register with AuthRocket, then come here to make the account
     new_acct_id = str(uuid.uuid4())
     body["id"] = new_acct_id
-    account_obj = Account.from_dict(body, token_info['iss'], token_info['sub'])
+    account_obj = Account.from_dict(body, token_info[JWT_ISS_CLAIM_KEY],
+                                    token_info[JWT_SUB_CLAIM_KEY])
 
     with Transaction() as t:
         kit_repo = KitRepo(t)
-        kit = kit_repo.get_kit(body['kit_name'])
+        kit = kit_repo.get_kit_all_samples(body['kit_name'])
         if kit is None:
-            return jsonify(error=404, text="Kit name not found"), 404
+            return jsonify(code=404, message="Kit name not found"), 404
 
         acct_repo = AccountRepo(t)
         acct_repo.create_account(account_obj)
@@ -89,27 +121,32 @@ def register_account(body, token_info):
 
 
 def read_account(account_id, token_info):
-    validate_access(token_info, account_id)
+    acc = _validate_account_access(token_info, account_id)
+    return jsonify(acc.to_api()), 200
 
-    with Transaction() as t:
-        acct_repo = AccountRepo(t)
-        acc = acct_repo.get_account(account_id)
-        if acc is None:
-            return jsonify(code=404, message="Account not found"), 404
-        return jsonify(acc.to_api()), 200
+
+def check_email_match(account_id, token_info):
+    acc = _validate_account_access(token_info, account_id)
+
+    match_status = acc.account_matches_auth(
+        token_info[JWT_EMAIL_CLAIM_KEY], token_info[JWT_ISS_CLAIM_KEY],
+        token_info[JWT_SUB_CLAIM_KEY])
+
+    if match_status == AuthorizationMatch.AUTH_ONLY_MATCH:
+        result = {'email_match': False}
+    elif match_status == AuthorizationMatch.FULL_MATCH:
+        result = {'email_match': True}
+    else:
+        raise ValueError("Unexpected authorization match value")
+
+    return jsonify(result), 200
 
 
 def update_account(account_id, body, token_info):
-    validate_access(token_info, account_id)
+    acc = _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         acct_repo = AccountRepo(t)
-        acc = acct_repo.get_account(account_id)
-        if acc is None:
-            return jsonify(code=404, message="Account not found"), 404
-
-        # TODO: add 422 handling
-
         acc.first_name = body['first_name']
         acc.last_name = body['last_name']
         acc.email = body['email']
@@ -121,13 +158,15 @@ def update_account(account_id, body, token_info):
             body['address']['country_code']
         )
 
+        # 422 handling is done inside acct_repo
         acct_repo.update_account(acc)
         t.commit()
+
         return jsonify(acc.to_api()), 200
 
 
 def read_sources(account_id, token_info, source_type=None):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         source_repo = SourceRepo(t)
@@ -138,28 +177,36 @@ def read_sources(account_id, token_info, source_type=None):
 
 
 def create_source(account_id, body, token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source_id = str(uuid.uuid4())
+        name = body["source_name"]
+        source_type = body['source_type']
 
-        if body['source_type'] == Source.SOURCE_TYPE_HUMAN:
+        if source_type == Source.SOURCE_TYPE_HUMAN:
             # TODO: Unfortunately, humans require a lot of special handling,
             #  and we started mixing Source calls used for transforming to/
             #  from the database with source calls to/from the api.
             #  Would be nice to split this out better.
-            new_source = Source(source_id,
-                                account_id,
-                                Source.SOURCE_TYPE_HUMAN,
-                                human_info_from_api(
-                                    body,
-                                    consent_date=date.today(),
-                                    date_revoked=None)
-                                )
+            source_info = HumanInfo.from_dict(body,
+                                              consent_date=date.today(),
+                                              date_revoked=None)
+            # the "legacy" value of the age_range enum is not valid to use when
+            # creating a new source, so do not allow that.
+            # NB: Not necessary to do this check when updating a source as
+            # only source name and description (not age_range) may be updated.
+            if source_info.age_range == "legacy":
+                raise RepoException("Age range may not be set to legacy.")
         else:
-            new_source = Source.build_source(source_id, account_id, body)
+            source_info = NonHumanInfo.from_dict(body)
 
+        new_source = Source(source_id,
+                            account_id,
+                            source_type,
+                            name,
+                            source_info)
         source_repo.create_source(new_source)
 
         # Must pull from db to get creation_time, update_time
@@ -174,47 +221,55 @@ def create_source(account_id, body, token_info):
 
 
 def read_source(account_id, source_id, token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
         if source is None:
-            return jsonify(code=404, message="Source not found"), 404
+            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
         return jsonify(source.to_api()), 200
 
 
 def update_source(account_id, source_id, body, token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
+        if source is None:
+            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
 
-        source.source_data = info_from_api(body)
+        source.name = body["source_name"]
+        # every type of source has a name but not every type has a description
+        if getattr(source.source_data, "description", False):
+            source.source_data.description = body.get(
+                "source_description", None)
         source_repo.update_source_data_api_fields(source)
+
         # I wonder if there's some way to get the creation_time/update_time
         # during the insert/update...
         source = source_repo.get_source(account_id, source_id)
         t.commit()
-        # TODO: 404 and 422?
+
+        # TODO: 422? Not sure this can actually happen anymore ...
         return jsonify(source.to_api()), 200
 
 
 def delete_source(account_id, source_id, token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         source_repo = SourceRepo(t)
         if not source_repo.delete_source(account_id, source_id):
-            return jsonify(code=404, message="No source found"), 404
+            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
         # TODO: 422?
         t.commit()
         return '', 204
 
 
 def read_survey_templates(account_id, source_id, language_tag, token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     # TODO: I don't think surveys have names... only survey groups have names.
     #  So what can I pass down to the user that will make any sense here?
@@ -233,7 +288,8 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [1, 3, 4, 5]]), 200
+                           for x in [1, 3, 4, 5, 6,
+                                     SurveyTemplateRepo.VIOSCREEN_ID]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200
@@ -242,8 +298,8 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
 
 
 def read_survey_template(account_id, source_id, survey_template_id,
-                         language_tag, token_info):
-    validate_access(token_info, account_id)
+                         language_tag, token_info, survey_redirect_url=None):
+    _validate_account_access(token_info, account_id)
 
     # TODO: can we get rid of source_id?  I don't have anything useful to do
     #  with it...  I guess I could check if the source is a dog before giving
@@ -253,26 +309,72 @@ def read_survey_template(account_id, source_id, survey_template_id,
         survey_template_repo = SurveyTemplateRepo(t)
         info = survey_template_repo.get_survey_template_link_info(
             survey_template_id)
+
+        # For external surveys, we generate links pointing out
+        if survey_template_id == SurveyTemplateRepo.VIOSCREEN_ID:
+
+            url = vioscreen.gen_survey_url(
+                language_tag, survey_redirect_url
+            )
+            # TODO FIXME HACK: This field's contents are not specified!
+            info.survey_template_text = {
+                "url": url
+            }
+            return jsonify(info), 200
+
+        # For local surveys, we generate the json representing the survey
         survey_template = survey_template_repo.get_survey_template(
             survey_template_id, language_tag)
         info.survey_template_text = vue_adapter.to_vue_schema(survey_template)
+
+        # TODO FIXME HACK: We need a better way to enforce validation on fields
+        #  that need it, can this be stored adjacent to the survey questions?
+        client_side_validation = {
+            "108": {
+                # Height
+                "inputType": "number",
+                "validator": "number",
+                "min": 0,
+                "max": None
+            },
+            "113": {
+                # Weight
+                "inputType": "number",
+                "validator": "number",
+                "min": 0,
+                "max": None
+            }
+        }
+        for group in info.survey_template_text.groups:
+            for field in group.fields:
+                if field.id in client_side_validation:
+                    field.set(**client_side_validation[field.id])
+
         return jsonify(info), 200
 
 
 def read_answered_surveys(account_id, source_id, language_tag, token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
-        return jsonify(
-            survey_answers_repo.list_answered_surveys(
+        survey_template_repo = SurveyTemplateRepo(t)
+        answered_surveys = survey_answers_repo.list_answered_surveys(
                 account_id,
-                source_id)), 200
+                source_id)
+        api_objs = []
+        for ans in answered_surveys:
+            template_id = survey_answers_repo.find_survey_template_id(ans)
+            if template_id is None:
+                continue
+            o = survey_template_repo.get_survey_template_link_info(template_id)
+            api_objs.append(o.to_api(ans))
+        return jsonify(api_objs), 200
 
 
 def read_answered_survey(account_id, source_id, survey_id, language_tag,
                          token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
@@ -285,6 +387,9 @@ def read_answered_survey(account_id, source_id, survey_id, language_tag,
             return jsonify(code=404, message="No survey answers found"), 404
 
         template_id = survey_answers_repo.find_survey_template_id(survey_id)
+        if template_id is None:
+            return jsonify(code=422, message="No answers in survey"), 422
+
         template_repo = SurveyTemplateRepo(t)
         link_info = template_repo.get_survey_template_link_info(template_id)
         link_info.survey_id = survey_id
@@ -294,7 +399,11 @@ def read_answered_survey(account_id, source_id, survey_id, language_tag,
 
 def submit_answered_survey(account_id, source_id, language_tag, body,
                            token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
+
+    if body['survey_template_id'] == SurveyTemplateRepo.VIOSCREEN_ID:
+        return _submit_vioscreen_status(account_id, source_id,
+                                        body["survey_text"]["key"])
 
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
@@ -321,7 +430,7 @@ def submit_answered_survey(account_id, source_id, language_tag, body,
 
 
 def read_sample_associations(account_id, source_id, token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         sample_repo = SampleRepo(t)
@@ -332,7 +441,7 @@ def read_sample_associations(account_id, source_id, token_info):
 
 
 def associate_sample(account_id, source_id, body, token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         sample_repo = SampleRepo(t)
@@ -348,7 +457,7 @@ def associate_sample(account_id, source_id, body, token_info):
 
 
 def read_sample_association(account_id, source_id, sample_id, token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         sample_repo = SampleRepo(t)
@@ -361,7 +470,7 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
 
 def update_sample_association(account_id, source_id, sample_id, body,
                               token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     # TODO: API layer doesn't understand that BadRequest can be thrown,
     #  but that looks to be the right result if sample_site bad.
@@ -410,7 +519,7 @@ def update_sample_association(account_id, source_id, sample_id, body,
 
 
 def dissociate_sample(account_id, source_id, sample_id, token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         sample_repo = SampleRepo(t)
@@ -421,7 +530,7 @@ def dissociate_sample(account_id, source_id, sample_id, token_info):
 
 def read_answered_survey_associations(account_id, source_id, sample_id,
                                       token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         answers_repo = SurveyAnswersRepo(t)
@@ -434,6 +543,8 @@ def read_answered_survey_associations(account_id, source_id, sample_id,
         resp_obj = []
         for answered_survey in answered_surveys:
             template_id = answers_repo.find_survey_template_id(answered_survey)
+            if template_id is None:
+                continue
             info = template_repo.get_survey_template_link_info(template_id)
             resp_obj.append(info.to_api(answered_survey))
 
@@ -443,7 +554,7 @@ def read_answered_survey_associations(account_id, source_id, sample_id,
 
 def associate_answered_survey(account_id, source_id, sample_id, body,
                               token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         answers_repo = SurveyAnswersRepo(t)
@@ -465,7 +576,7 @@ def associate_answered_survey(account_id, source_id, sample_id, body,
 
 def dissociate_answered_survey(account_id, source_id, sample_id, survey_id,
                                token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         answers_repo = SurveyAnswersRepo(t)
@@ -477,49 +588,35 @@ def dissociate_answered_survey(account_id, source_id, sample_id, survey_id,
 
 def read_kit(kit_name):
     # NOTE:  Nothing in this route requires a particular user to be logged in,
-    # so long as the user has -an- account.  Thus there is nothing to validate
-    # a particular token_info against.
+    # so long as the user has -an- account.
+
     with Transaction() as t:
         kit_repo = KitRepo(t)
-        kit = kit_repo.get_kit(kit_name)
+        kit = kit_repo.get_kit_unused_samples(kit_name)
         if kit is None:
             return jsonify(code=404, message="No such kit"), 404
         return jsonify(kit.to_api()), 200
 
 
-def render_consent_doc(account_id, language_tag, token_info):
-    validate_access(token_info, account_id)
-
-    # return render_template("new_participant.jinja2",
-    #                        message=MockJinja("message"),
-    #                        media_locale=MockJinja("media_locale"),
-    #                        tl=MockJinja("tl"))
+def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
+    _validate_account_access(token_info, account_id)
 
     # NB: Do NOT need to explicitly pass account_id into template for
     # integration into form submission URL because form submit URL builds on
     # the base of the URL that called it (which includes account_id)
 
-    # TODO !!CRITICAL!! Is this the right way to choose which consent docs to
-    #  send based on language_tag?  Or should it always send american_gut but
-    #  a different language field somewhere else?
-    media_locales = {
-        localization.EN_US: american_gut.media_locale,
-        localization.EN_GB: british_gut.media_locale
-    }
-    tls = {
-        localization.EN_US: american_gut._NEW_PARTICIPANT,
-        localization.EN_GB: british_gut._NEW_PARTICIPANT
-    }
-
-    return render_template("new_participant.jinja2",
-                           message=None,
-                           media_locale=media_locales[language_tag],
-                           tl=tls[language_tag],
-                           lang_tag=language_tag)
+    localization_info = localization.LANG_SUPPORT[language_tag]
+    consent_html = render_template(
+        "new_participant.jinja2",
+        tl=localization_info[localization.NEW_PARTICIPANT_KEY],
+        lang_tag=language_tag,
+        post_url=consent_post_url
+    )
+    return jsonify({"consent_html": consent_html}), 200
 
 
 def create_human_source_from_consent(account_id, body, token_info):
-    validate_access(token_info, account_id)
+    _validate_account_access(token_info, account_id)
 
     # Must convert consent form body into object processable by create_source.
 
@@ -534,13 +631,16 @@ def create_human_source_from_consent(account_id, body, token_info):
         }
     }
 
-    child_keys = {'parent_1_name', 'parent_2_name', 'deceased_parent',
+    deceased_parent_key = 'deceased_parent'
+    child_keys = {'parent_1_name', 'parent_2_name', deceased_parent_key,
                   'obtainer_name'}
 
     intersection = child_keys.intersection(body)
     if intersection:
         source['consent']['child_info'] = {}
         for key in intersection:
+            if key == deceased_parent_key:
+                body[deceased_parent_key] = body[deceased_parent_key] == 'true'
             source['consent']['child_info'][key] = body[key]
 
     # NB: Don't expect to handle errors 404, 422 in this function; expect to
@@ -549,27 +649,90 @@ def create_human_source_from_consent(account_id, body, token_info):
 
 
 def verify_authrocket(token):
+    email_verification_key = 'email_verified'
+
     try:
         token_info = jwt.decode(token,
                                 AUTHROCKET_PUB_KEY,
-                                algorithm="RS256",
+                                algorithms=["RS256"],
                                 verify=True,
                                 issuer="https://authrocket.com")
-
-        # TODO: Ensure that decode checks every field that we care about
-
-        return token_info
     except InvalidTokenError as e:
-        raise(Unauthorized("Invalid Token", e))
+        raise(Unauthorized(INVALID_TOKEN_MSG, e))
+
+    if JWT_ISS_CLAIM_KEY not in token_info or \
+            JWT_SUB_CLAIM_KEY not in token_info or \
+            JWT_EMAIL_CLAIM_KEY not in token_info:
+        # token is malformed--no soup for you
+        raise Unauthorized(INVALID_TOKEN_MSG)
+
+    # if the user's email is not yet verified, they are forbidden to
+    # access their account even regardless of whether they have
+    # authenticated with authrocket
+    if email_verification_key not in token_info or \
+            token_info[email_verification_key] is not True:
+        raise Forbidden("Email is not verified")
+
+    return token_info
 
 
-def validate_access(token_info, account_id):
+def _validate_account_access(token_info, account_id):
     with Transaction() as t:
         account_repo = AccountRepo(t)
+        token_associated_account = account_repo.find_linked_account(
+            token_info['iss'],
+            token_info['sub'])
+
         account = account_repo.get_account(account_id)
-        if account is None or \
-           'iss' not in token_info or \
-           'sub' not in token_info or \
-                account.auth_issuer != token_info['iss'] or \
-                account.auth_sub != token_info['sub']:
-            raise Unauthorized()
+        if account is None:
+            raise NotFound(ACCT_NOT_FOUND_MSG)
+        else:
+            # Whether or not the token_info is associated with an admin acct
+            token_authenticates_admin = \
+                token_associated_account is not None and \
+                token_associated_account.account_type == 'admin'
+
+            # Enum of how closely token info matches requested account_id
+            auth_match = account.account_matches_auth(
+                token_info[JWT_EMAIL_CLAIM_KEY],
+                token_info[JWT_ISS_CLAIM_KEY],
+                token_info[JWT_SUB_CLAIM_KEY])
+
+            # If token doesn't match requested account id, and doesn't grant
+            # admin access to the system, deny.
+            if auth_match == AuthorizationMatch.NO_MATCH and \
+                    not token_authenticates_admin:
+                raise Unauthorized()
+
+        return account
+
+
+def _submit_vioscreen_status(account_id, source_id, info_str):
+    # get information out of encrypted vioscreen url
+    info = vioscreen.decode_key(info_str).decode("utf-8")
+    vio_info = {}
+    for keyval in info.split("&"):
+        key, val = keyval.split("=")
+        vio_info[key] = val
+
+    with Transaction() as t:
+        vio_repo = VioscreenRepo(t)
+
+        # Add the status to the survey
+        vio_repo.upsert_vioscreen_status(account_id, source_id,
+                                         vio_info["username"],
+                                         int(vio_info["status"]))
+        t.commit()
+
+    response = flask.Response()
+    response.status_code = 201
+    # TODO FIXME HACK:  This location can't actually return any info about ffq!
+    #  But I need SOME response that contains the survey_id or client can't
+    #  associate the survey with a sample.
+    response.headers['Location'] = '/api/accounts/%s' \
+                                   '/sources/%s' \
+                                   '/surveys/%s' % \
+                                   (account_id,
+                                    source_id,
+                                    vio_info["username"])
+    return response

@@ -1,7 +1,8 @@
 import psycopg2
 
 from microsetta_private_api.repo.base_repo import BaseRepo
-from microsetta_private_api.model.account import Account
+from microsetta_private_api.model.account import Account, AuthorizationMatch
+from microsetta_private_api.model.address import Address
 from microsetta_private_api.exceptions import RepoException
 
 
@@ -22,13 +23,8 @@ class AccountRepo(BaseRepo):
 
     @staticmethod
     def _row_to_addr(r):
-        return {
-            "street": r["street"],
-            "city": r["city"],
-            "state": r["state"],
-            "post_code": r["post_code"],
-            "country_code": r["country_code"]
-        }
+        return Address(r["street"], r["city"], r["state"], r["post_code"],
+                       r["country_code"])
 
     @staticmethod
     def _addr_to_row(addr):
@@ -53,6 +49,72 @@ class AccountRepo(BaseRepo):
                 a.account_type, a.auth_issuer, a.auth_sub,
                 a.first_name, a.last_name) + \
                AccountRepo._addr_to_row(a.address)
+
+    def claim_legacy_account(self, email, auth_iss, auth_sub):
+        # Returns now-claimed legacy account if an unclaimed legacy account
+        # that matched the input email was found; otherwise returns None.
+        # (Note that None is returned in the case where there is a NON-legacy
+        # account with the input email--find such accounts with
+        # find_linked_account instead.) Throws a RepoException
+        # if logic indicates inconsistent auth info.
+
+        found_account = self._find_account_by_email(email)
+        # if no account is found by email, just return none.
+        if found_account is None:
+            return None
+
+        auth = found_account.account_matches_auth(email, auth_iss, auth_sub)
+
+        if auth == AuthorizationMatch.FULL_MATCH:
+            return None
+        elif auth == AuthorizationMatch.LEGACY_MATCH:
+            # this is a legacy account from before we used an external
+            # authorization provider. claim it for this authorized user.
+            found_account.auth_issuer = auth_iss
+            found_account.auth_sub = auth_sub
+            self.update_account(found_account)
+            return found_account
+        elif auth == AuthorizationMatch.NO_MATCH:
+            # any other situation is an error and shouldn't happen,
+            # e.g. one of auth_iss or auth_sub is null in db but the other
+            # isn't, or one or more of non-null auth_iss and auth_sub values
+            # in db do not match the analogous input auth_iss and auth_sub
+            # values for the provided email ... may be more edge cases as well
+            raise RepoException("Inconsistent data found for provided email.")
+        else:
+            raise ValueError("Unknown authorization match value")
+
+    def _find_account_by_email(self, email):
+        # select from account table anything that has this email.
+
+        with self._transaction.dict_cursor() as cur:
+            cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
+                        "account "
+                        "WHERE "
+                        "account.email = %s", (email,))
+
+            # Do not need to check for multiple results because index on
+            # field in db table guarantees uniqueness.
+            r = cur.fetchone()
+
+            # if no account with the email was found, return None
+            if r is None:
+                return None
+            else:
+                return AccountRepo._row_to_account(r)
+
+    def find_linked_account(self, auth_iss, auth_sub):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
+                        "account "
+                        "WHERE "
+                        "account.auth_issuer = %s AND "
+                        "account.auth_sub = %s", (auth_iss, auth_sub))
+            r = cur.fetchone()
+            if r is None:
+                return None
+            else:
+                return AccountRepo._row_to_account(r)
 
     def get_account(self, account_id):
         with self._transaction.dict_cursor() as cur:
@@ -142,3 +204,11 @@ class AccountRepo(BaseRepo):
             cur.execute("DELETE FROM account WHERE account.email = %s",
                         (email,))
             return cur.rowcount == 1
+
+    def get_account_ids_by_email(self, email):
+        email = "%"+email+"%"
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT id FROM account WHERE email LIKE %s "
+                        "ORDER BY email",
+                        (email,))
+            return [x[0] for x in cur.fetchall()]
