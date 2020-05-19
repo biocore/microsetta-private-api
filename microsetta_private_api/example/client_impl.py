@@ -25,7 +25,10 @@ from urllib.parse import quote
 # config somewhere and reload
 
 # Python is dumb, don't put spaces anywhere in this string.
+from werkzeug.exceptions import BadRequest
+
 from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.model.source import Source
 from microsetta_private_api.model.vue.vue_factory import VueFactory
 from microsetta_private_api.model.vue.vue_field import VueInputField, \
     VueTextAreaField, VueSelectField, VueDateTimePickerField
@@ -648,17 +651,40 @@ def get_sample(account_id, source_id, sample_id):
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
 
+    do_return, source_output, _ = ApiRequest.get(
+        '/accounts/%s/sources/%s' %
+        (account_id, source_id)
+    )
+    if do_return:
+        return source_output
+
     do_return, sample_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/samples/%s' %
         (account_id, source_id, sample_id))
     if do_return:
         return sample_output
 
-    sample_sites = ["Blood (skin prick)", "Stool", "Mouth", "Nares",
-                    "Nasal mucus", "Right hand", "Left hand",
-                    "Forehead", "Torso", "Right leg",  "Left leg",
-                    "Vaginal mucus", "Tears",  "Ear wax", "Hair", "Fur"]
+    source_type = source_output['source_type']
+    is_environmental = source_type == Source.SOURCE_TYPE_ENVIRONMENTAL
+    is_human = source_type == Source.SOURCE_TYPE_HUMAN
 
+    if is_human:
+        # Human Settings
+        sample_sites = ["Blood (skin prick)", "Stool", "Mouth", "Nares",
+                        "Nasal mucus", "Right hand", "Left hand",
+                        "Forehead", "Torso", "Right leg", "Left leg",
+                        "Vaginal mucus", "Tears", "Ear wax", "Hair", "Fur"]
+        site_hint = None
+    elif is_environmental:
+        # Environment settings
+        sample_sites = [None]
+        site_hint = "As we cannot enumerate all possible sampling sites for " \
+            "environmental sources, we recommend describing the site " \
+            "the sample was taken from in as much detail as " \
+            "possible below"
+    else:
+        raise BadRequest("Sources of type %s are not supported at this time"
+                         % source_output['source_type'])
     factory = VueFactory()
 
     schema = factory.start_group("Edit Sample Information")\
@@ -668,8 +694,10 @@ def get_sample(account_id, source_id, sample_id):
                    .set(required=True,
                         validator="string"))\
         .add_field(VueSelectField("sample_site", "Site", sample_sites)
-                   .set(required=True,
-                        validator="string")) \
+                   .set(required=not is_environmental,
+                        validator="string",
+                        disabled=is_environmental,
+                        hint=site_hint)) \
         .add_field(VueTextAreaField("sample_notes", "Notes")) \
         .end_group()\
         .build()
