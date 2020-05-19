@@ -644,7 +644,7 @@ def get_sample(account_id, source_id, sample_id):
         return sample_output
 
     source_type = source_output['source_type']
-    is_environmental = source_type == Source.SOURCE_TYPE_ENVIRONMENTAL
+    is_environmental = source_type == Source.SOURCE_TYPE_ENVIRONMENT
     is_human = source_type == Source.SOURCE_TYPE_HUMAN
 
     if is_human:
