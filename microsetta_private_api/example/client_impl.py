@@ -758,6 +758,10 @@ def claim_samples(account_id, source_id, body):
     #  fail out when trying to claim others.  And I have no transaction support
     #  here.  Boo...
 
+    if "sample_id" not in body:
+        # User claimed no samples...?
+        return redirect("/accounts/%s/sources/%s" % (account_id, source_id))
+
     do_return, survey_output, _ = ApiRequest.get(
         '/accounts/{0}/sources/{1}/surveys'.format(account_id, source_id)
     )
