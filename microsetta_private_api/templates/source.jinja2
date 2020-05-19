@@ -13,6 +13,8 @@
     <script src="/static/kit_check.js"></script>
     <script>
         kitSubmit = function(form, evt){
+            var error_txt = "";
+            var successful = false;
             $(form).ajaxSubmit({
                 success: function (samples, textStatus, jqXHR) {
                     $('#samples').empty();
@@ -32,11 +34,22 @@
                         $('#samples').append(item);
                     }
                     var div = $('#choose_sample_div');
-                    div.collapse('show')
+                    div.collapse('show');
+                    successful = true;
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    console.log(jqXHR.error);
+                    error_txt = jqXHR.responseText;
                 },
+                complete: function (data, textStatus, outputObj) {
+                    if (successful)
+                        return;
+                    if (error_txt === "")
+                        error_txt = textStatus
+                    // Get customized error page that will show whatever error message we captured
+                    // here in the front end
+                    let queryParam = encodeURIComponent(error_txt);
+                    window.location.replace("{{ endpoint }}/error?error_msg=" + queryParam);
+                }
             });
         };
 
