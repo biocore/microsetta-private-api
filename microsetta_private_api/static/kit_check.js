@@ -1,8 +1,8 @@
-function verify_kit_claim(form_name) {
+function verify_kit_claim(form_name, submitHandler) {
     // Initialize form validation
     let form_selector = "form[name='" + form_name + "']";
     return function() {
-        $(form_selector).validate({
+        validateOptions = {
             // Specify validation rules
             rules: {
                 // The key name on the left side is the name attribute
@@ -14,14 +14,13 @@ function verify_kit_claim(form_name) {
                         url: "/check_acct_inputs",
                         type: "post"
                     }
-                },
-                // Make sure the form is submitted to the destination defined
-                // in the "action" attribute of the form when valid
-                submitHandler: function (form) {
-                    form.submit();
                 }
             }
-        });
+        }
+        if (submitHandler != null){
+            validateOptions["submitHandler"] = submitHandler;
+        }
+        $(form_selector).validate(validateOptions);
     };
 }
 

@@ -12,7 +12,6 @@ and associated file
 https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
 """
 
-import json
 import flask
 from flask import render_template, session, redirect
 import jwt
@@ -62,7 +61,6 @@ NEEDS_ACCOUNT = "NeedsAccount"
 NEEDS_EMAIL_CHECK = "NeedsEmailCheck"
 NEEDS_HUMAN_SOURCE = "NeedsHumanSource"
 TOO_MANY_HUMAN_SOURCES = "TooManyHumanSources"
-NEEDS_SAMPLE = "NeedsSample"
 NEEDS_PRIMARY_SURVEY = _NEEDS_SURVEY_PREFIX + "1"
 NEEDS_COVID_SURVEY = _NEEDS_SURVEY_PREFIX + "6"
 ALL_DONE = "AllDone"
@@ -365,16 +363,38 @@ def post_source(account_id, body):
     return redirect('/accounts/%s' % acct_id)
 
 
-def get_workflow_claim_kit_samples():
-    next_state, current_state = determine_workflow_state()
-    if next_state != NEEDS_SAMPLE:
-        return redirect(WORKFLOW_URL)
+def _claim_kit_samples_helper(acct_id,
+                              source_id,
+                              sample_ids_to_claim,
+                              answered_survey_ids_to_associate):
 
-    if KIT_NAME_KEY in session:
-        mock_body = {KIT_NAME_KEY: session[KIT_NAME_KEY]}
-        return post_workflow_claim_kit_samples(mock_body)
-    else:
-        return render_template("kit_sample_association.jinja2")
+    # TODO:  Any of these requests may fail independently, but we don't have
+    #  a good policy to deal with partial failures.  Currently, we abort early
+    #  but that will result in some set of associations being already made,
+    #  one association failing, and the remaining associations not attempted.
+
+    for curr_sample_id in sample_ids_to_claim:
+        # Claim sample
+        do_return, sample_output, _ = ApiRequest.post(
+            '/accounts/{0}/sources/{1}/samples'.format(acct_id, source_id),
+            json={"sample_id": curr_sample_id}
+        )
+
+        if do_return:
+            return sample_output
+
+        # Associate the input answered surveys with this sample.
+        for survey_id in answered_survey_ids_to_associate:
+            do_return, sample_survey_output, _ = ApiRequest.post(
+                '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
+                    acct_id, source_id, curr_sample_id
+                ), json={"survey_id": survey_id}
+            )
+
+            if do_return:
+                return sample_output
+
+    return None
 
 
 def claim_kit_samples(expected_state, body):
@@ -382,8 +402,8 @@ def claim_kit_samples(expected_state, body):
     if next_state == expected_state:
         acct_id = current_state["account_id"]
         source_id = current_state["human_source_id"]
-        answered_survey_id = current_state["answered_primary_survey_id"]
-        answered_covid_survey_id = current_state["answered_covid_survey_id"]
+        primary_survey_id = current_state["answered_primary_survey_id"]
+        covid_survey_id = current_state["answered_covid_survey_id"]
 
         # get all the unassociated samples in the provided kit
         kit_name = body[KIT_NAME_KEY]
@@ -395,43 +415,17 @@ def claim_kit_samples(expected_state, body):
         # for each sample, associate it to the human source
         # and ALSO to the (single) primary and COVID survey for this human
         # source
-        for curr_sample_obj in sample_output:
-            curr_sample_id = curr_sample_obj["sample_id"]
-            do_return, sample_output, _ = ApiRequest.post(
-                '/accounts/{0}/sources/{1}/samples'.format(acct_id, source_id),
-                json={"sample_id": curr_sample_id}
-            )
+        error = _claim_kit_samples_helper(
+                                  acct_id,
+                                  source_id,
+                                  [x["sample_id"] for x in sample_output],
+                                  [primary_survey_id, covid_survey_id]
+                                  )
 
-            if do_return:
-                return sample_output
-
-            do_return, sample_survey_output, _ = ApiRequest.post(
-                '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
-                    acct_id, source_id, curr_sample_id
-                ), json={"survey_id": answered_survey_id}
-            )
-
-            if do_return:
-                return sample_output
-
-            do_return, sample_survey_output, _ = ApiRequest.post(
-                '/accounts/{0}/sources/{1}/samples/{2}/surveys'.format(
-                    acct_id, source_id, curr_sample_id
-                ), json={"survey_id": answered_covid_survey_id}
-            )
-
-            if do_return:
-                return sample_output
+        if error:
+            return error
 
     return redirect(WORKFLOW_URL)
-
-
-def claim_additional_kit(body):
-    return claim_kit_samples(ALL_DONE, body)
-
-
-def post_workflow_claim_kit_samples(body):
-    return claim_kit_samples(NEEDS_SAMPLE, body)
 
 
 def get_workflow_fill_survey(survey_template_id):
@@ -659,7 +653,7 @@ def get_sample(account_id, source_id, sample_id):
         return sample_output
 
     source_type = source_output['source_type']
-    is_environmental = source_type == Source.SOURCE_TYPE_ENVIRONMENTAL
+    is_environmental = source_type == Source.SOURCE_TYPE_ENVIRONMENT
     is_human = source_type == Source.SOURCE_TYPE_HUMAN
 
     if is_human:
@@ -724,32 +718,84 @@ def put_sample(account_id, source_id, sample_id):
                     (account_id, source_id))
 
 
-def post_check_acct_inputs(body):
+def _get_kit(kit_name):
     unable_to_validate_msg = "Unable to validate the kit name; please " \
                              "reload the page."
-    response_info = True
+    error_msg = None
     try:
-        kit_name = body[KIT_NAME_KEY]
-
         # call api and find out if kit name has unclaimed samples.
         # NOT doing this through ApiRequest.get bc in this case
         # DON'T want the automated error-handling
 
         response = requests.get(
-            ApiRequest.API_URL + '/kits',
+            ApiRequest.API_URL + '/kits/',  # appending slash saves a 308 redir
             auth=BearerAuth(session[TOKEN_KEY_NAME]),
             verify=ApiRequest.CAfile,
             params=ApiRequest.build_params({KIT_NAME_KEY: kit_name}))
 
         if response.status_code == 404:
-            response_info = ("The provided kit id is not valid or has "
-                             "already been used; please re-check your entry.")
+            error_msg = ("The provided kit id is not valid or has "
+                         "already been used; please re-check your entry.")
         elif response.status_code > 200:
-            response_info = unable_to_validate_msg
+            error_msg = unable_to_validate_msg
     except:  # noqa
-        response_info = unable_to_validate_msg
-    finally:
-        return json.dumps(response_info)
+        error_msg = unable_to_validate_msg
+
+    if error_msg is not None:
+        return None, error_msg, response.status_code
+    return response.json(), None, response.status_code
+
+
+def post_check_acct_inputs(body):
+    kit, error, _ = _get_kit(body[KIT_NAME_KEY])
+    if error is None:
+        return flask.jsonify(True)
+    else:
+        return flask.jsonify(error)
+
+
+def get_list_kit_samples(kit_name):
+    kit, error, code = _get_kit(kit_name)
+    if error is None:
+        return flask.jsonify(kit), code
+    else:
+        return flask.jsonify({"error": error}), code
+
+
+def claim_samples(account_id, source_id, body):
+    # TODO:  they could theoretically successfully claim some samples and
+    #  fail out when trying to claim others.  And I have no transaction support
+    #  here.  Boo...
+
+    if "sample_id" not in body:
+        # User claimed no samples...?
+        return redirect("/accounts/%s/sources/%s" % (account_id, source_id))
+
+    do_return, survey_output, _ = ApiRequest.get(
+        '/accounts/{0}/sources/{1}/surveys'.format(account_id, source_id)
+    )
+
+    if do_return:
+        return survey_output
+
+    sample_ids_to_claim = body['sample_id']
+
+    # Grab all primary and covid surveys from the source and associate with
+    # newly claimed samples
+    survey_ids_to_associate_with_samples = [
+        x['survey_id'] for x in survey_output
+        if x['survey_template_id'] in [1, 6]
+    ]
+
+    error = _claim_kit_samples_helper(
+                              account_id,
+                              source_id,
+                              sample_ids_to_claim,
+                              survey_ids_to_associate_with_samples)
+    if error:
+        return error
+
+    return redirect("/accounts/%s/sources/%s" % (account_id, source_id))
 
 
 def generate_error_page(error_msg):
