@@ -73,7 +73,7 @@
 
     {% if needs_assignment %}
     <div class="alert alert-warning" role="alert">
-        IMPORTANT: samples must be assigned in order for the lab to process them.
+        It looks like some samples do not have collection information recorded.
     </div>
     {% endif %}
     <div class="content">
@@ -86,14 +86,14 @@
         </nav>
         <div class="container">
             {% if samples|length > 0 %}
-                Samples (click an identifier to assign):
+                Samples (click on an identifier to provide collection information):
                 {% if samples|length > 1 and is_human %}
                 <p><i>If collecting all samples on the same day, please only complete a single Food Frequency Questionnaire.</i></p>
                 {% endif %}
                 <div class="list-group">
                     <div class="row">
                         <div class="col-sm">
-                            <i>Identifier</i>
+                            <i>Barcode</i>
                         </div>
                         <div class="col-sm">
                             <i>Collection date</i>
@@ -103,7 +103,7 @@
                             <i>Sample type</i>
                         </div>
                         <div class="col-sm">
-                            <i>Sample specific survey</i>
+                            <i>Sample-specific survey</i>
                         </div>
                         {% endif %}
                     </div>
