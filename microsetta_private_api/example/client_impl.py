@@ -548,13 +548,18 @@ def get_source(account_id, source_id):
             if answer['survey_template_id'] == VIOSCREEN_ID:
                 sample['ffq'] = True
 
+    needs_assignment = any([sample['sample_datetime'] is None
+                            for sample in samples_output])
+
     is_human = source_output['source_type'] == Source.SOURCE_TYPE_HUMAN
     return render_template('source.jinja2',
                            acct_id=account_id,
                            source_id=source_id,
                            is_human=is_human,
+                           needs_assignment=needs_assignment,
                            samples=samples_output,
                            surveys=per_source,
+                           source_name=source_output['source_name'],
                            vioscreen_id=VIOSCREEN_ID)
 
 

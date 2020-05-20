@@ -25,8 +25,16 @@
 {% block content %}
         <div class="container">
             {%  if sources|length > 0 %}
-            Choose a source:
+            Choose a source by clicking on a name:
             <div class="list-group">
+                <div class="row">
+                    <div class="col-sm">
+                        <i>Name</i>
+                    </div>
+                    <div class="col-sm">
+                        <i>Source type</i>
+                    </div>
+                </div>
                 {% for source in sources %}
                 <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                   <div class="row">
@@ -42,20 +50,18 @@
                 </div>
                 {% endfor %}
             </div>
-            <p>
-                or
-            </p>
+            <br/><br/>
             {% endif %}
         </div>
         <div class="container">
-            Create a new environmental source:
+            Optionally, create a new environmental source:
             <form method="post" name="new_source_form" action="/accounts/{{acct_id}}/sources/">
                 <div class="form-group">
-                    <label for="source_name" name="source_name_label">Name</label>
+                    <label for="source_name" name="source_name_label">Environment name (e.g., microwave):</label>
                     <input id="source_name" name="source_name" class="form-control" type="text"/>
                     <input id="source_type" name="source_type" type="hidden" value="environmental" />
                     <br />
-                    <label for="source_description" name="source_description_label">Description</label>
+                    <label for="source_description" name="source_description_label">Environment description (optional):</label>
                     <input id="source_description" name="source_description" class="form-control" type="text"/>
                  </div>
                 <input type="submit" class="btn btn-primary" value="Create Source"/>
