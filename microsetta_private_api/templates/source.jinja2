@@ -71,20 +71,42 @@
     <br />
     <br />
 
+    {% if needs_assignment %}
+    <div class="alert alert-warning" role="alert">
+        IMPORTANT: samples must be assigned in order for the lab to process them.
+    </div>
+    {% endif %}
     <div class="content">
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/home">Home</a></li>
             <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Sources</a></li>
+            <li class="breadcrumb-item"><a>{{source_name}}</a></li>
           </ol>
         </nav>
         <div class="container">
             {% if samples|length > 0 %}
-                Samples:
+                Samples (click an identifier to assign):
                 {% if samples|length > 1 and is_human %}
                 <p><i>If collecting all samples on the same day, please only complete a single Food Frequency Questionnaire.</i></p>
                 {% endif %}
                 <div class="list-group">
+                    <div class="row">
+                        <div class="col-sm">
+                            <i>Identifier</i>
+                        </div>
+                        <div class="col-sm">
+                            <i>Collection date</i>
+                        </div>
+                        {% if is_human %}
+                        <div class="col-sm">
+                            <i>Sample type</i>
+                        </div>
+                        <div class="col-sm">
+                            <i>Sample specific survey</i>
+                        </div>
+                        {% endif %}
+                    </div>
                     {% for sample in samples %}
                     <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                       <div class="row">
@@ -94,16 +116,18 @@
                         <div class="col-sm">
                           {{sample.sample_datetime |e}}
                         </div>
+                        {% if is_human %}
                         <div class="col-sm">
                           {{sample.sample_site |e}}
                         </div>
+                        {% endif %}
+                        {% if is_human and sample.ffq %}
                         <div class="col-sm">
-                          {% if is_human and sample.ffq %}
                             Food Frequency Questionnaire<span class="fa fa-check"/>
-                          {% elif is_human %}
+                        {% elif is_human %}
                             <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
-                          {% endif %}
                         </div>
+                        {% endif %}
                       </div>
                     </div>
                     {% endfor %}
