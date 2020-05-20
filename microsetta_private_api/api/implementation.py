@@ -506,12 +506,17 @@ def update_sample_association(account_id, source_id, sample_id, body,
             sample_datetime = fromisotime(sample_datetime)
         except ValueError:
             raise BadRequest("Invalid sample_datetime")
+
+        # sample_site will not be present if its environmental. this will
+        # default to None if the key is not present
+        sample_site = body.get('sample_site')
         sample_info = SampleInfo(
             sample_id,
             sample_datetime,
-            body["sample_site"],
+            sample_site,
             body["sample_notes"]
         )
+
         sample_repo.update_info(account_id, source_id, sample_info)
         final_sample = sample_repo.get_sample(account_id, source_id, sample_id)
         t.commit()

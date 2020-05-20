@@ -864,12 +864,33 @@ class IntegrationTests(TestCase):
             self.assertTrue(found, "Couldn't find survey for database cleanup")
             t.commit()
 
-    def test_edit_sample_info(self):
+    def test_edit_sample_info_human(self):
+        self._test_edit_sample_info(Source.SOURCE_TYPE_HUMAN)
+
+    def test_edit_sample_info_environmental(self):
+        self._test_edit_sample_info(Source.SOURCE_TYPE_ENVIRONMENT)
+
+    def test_edit_sample_info_animal(self):
+        self._test_edit_sample_info(Source.SOURCE_TYPE_ANIMAL)
+
+    def _test_edit_sample_info(self, source_type):
         """
         This test will claim a sample, write some data, edit that data
         Dissociate that sample, grab it with a different source, edit some data
         Mark the sample as received and check that editing is locked
         """
+        if source_type == Source.SOURCE_TYPE_ENVIRONMENT:
+            store_sample_site = False
+            source_id = PLANTY_ID
+        elif source_type == Source.SOURCE_TYPE_HUMAN:
+            store_sample_site = True
+            source_id = HUMAN_ID
+        elif source_type == Source.SOURCE_TYPE_ANIMAL:
+            store_sample_site = True
+            source_id = DOGGY_ID
+        else:
+            raise ValueError("Should not be possible to get here")
+
         # Claim a sample
         response = self.client.get(
             '/api/kits/?language_tag=en-US&kit_name=%s' % SUPPLIED_KIT_ID,
@@ -882,7 +903,7 @@ class IntegrationTests(TestCase):
 
         response = self.client.post(
             '/api/accounts/%s/sources/%s/samples?language_tag=en-US' %
-            (ACCT_ID, HUMAN_ID),
+            (ACCT_ID, source_id),
             content_type='application/json',
             data=json.dumps(
                 {
@@ -894,7 +915,7 @@ class IntegrationTests(TestCase):
 
         response = self.client.get(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
-            (ACCT_ID, HUMAN_ID, sample_id),
+            (ACCT_ID, source_id, sample_id),
             headers=MOCK_HEADERS
         )
         sample_info = json.loads(response.data)
@@ -903,7 +924,8 @@ class IntegrationTests(TestCase):
         fuzzy_info = fuzz(sample_info)
 
         # Ensure that we have required fields
-        fuzzy_info['sample_site'] = "Tears"
+        if store_sample_site:
+            fuzzy_info['sample_site'] = "Tears"
         fuzzy_info['sample_datetime'] = datetime.datetime.utcnow()
 
         # Many fields are not writable, each should individually cause failure.
@@ -920,7 +942,7 @@ class IntegrationTests(TestCase):
             fuzzy_info[readonly_field] = "Voldemort"
             response = self.client.put(
                 '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
-                (ACCT_ID, HUMAN_ID, sample_id),
+                (ACCT_ID, source_id, sample_id),
                 content_type='application/json',
                 data=json.dumps(fuzzy_info, default=json_converter),
                 headers=MOCK_HEADERS
@@ -932,7 +954,7 @@ class IntegrationTests(TestCase):
         # But after removing all these fields, we should be able to edit.
         response = self.client.put(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
-            (ACCT_ID, HUMAN_ID, sample_id),
+            (ACCT_ID, source_id, sample_id),
             content_type='application/json',
             data=json.dumps(fuzzy_info, default=json_converter),
             headers=MOCK_HEADERS
@@ -941,12 +963,13 @@ class IntegrationTests(TestCase):
 
         # Now we can try writing and checking that our updates went through
         fuzzy_info['sample_notes'] = "Oboe Is For Bobo"
-        fuzzy_info['sample_site'] = "Forehead"
+        if store_sample_site:
+            fuzzy_info['sample_site'] = "Forehead"
         fuzzy_info['sample_datetime'] = datetime.datetime.now()
 
         response = self.client.put(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
-            (ACCT_ID, HUMAN_ID, sample_id),
+            (ACCT_ID, source_id, sample_id),
             content_type='application/json',
             data=json.dumps(fuzzy_info, default=json_converter),
             headers=MOCK_HEADERS
@@ -957,7 +980,7 @@ class IntegrationTests(TestCase):
         invalid_date_fuzzy_info['sample_datetime'] = "1-800-BAD-DATE"
         response = self.client.put(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
-            (ACCT_ID, HUMAN_ID, sample_id),
+            (ACCT_ID, source_id, sample_id),
             content_type='application/json',
             data=json.dumps(invalid_date_fuzzy_info, default=json_converter),
             headers=MOCK_HEADERS
@@ -966,7 +989,7 @@ class IntegrationTests(TestCase):
 
         response = self.client.get(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
-            (ACCT_ID, HUMAN_ID, sample_id),
+            (ACCT_ID, source_id, sample_id),
             headers=MOCK_HEADERS
         )
         check_response(response, 200)
@@ -975,17 +998,18 @@ class IntegrationTests(TestCase):
         self.assertEqual(fuzzy_info['sample_notes'],
                          new_info['sample_notes'],
                          "sample_notes not written")
-        self.assertEqual(fuzzy_info['sample_site'],
-                         new_info['sample_site'],
-                         "sample_site not written")
+        if store_sample_site:
+            self.assertEqual(fuzzy_info['sample_site'],
+                             new_info['sample_site'],
+                             "sample_site not written")
         self.assertEqual(fuzzy_info['sample_datetime'],
                          fromisotime(new_info['sample_datetime']),
                          "sample_datetime not written")
 
-        # Now dissociate the sample from HUMAN_ID
+        # Now dissociate the sample from source_id
         response = self.client.delete(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
-            (ACCT_ID, HUMAN_ID, sample_id),
+            (ACCT_ID, source_id, sample_id),
             headers=MOCK_HEADERS
         )
         check_response(response, 204)
@@ -1022,21 +1046,21 @@ class IntegrationTests(TestCase):
                           "retain any data from the old association")
 
         # And planty should be able to edit info without setting sample_site
+        data = {"sample_datetime": datetime.datetime.utcnow(),
+                "sample_notes": "Nature Nature Nature"}
+        if store_sample_site:
+            data['sample_site'] = None
+
         response = self.client.put(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
             (ACCT_ID, PLANTY_ID, sample_id),
             content_type='application/json',
-            data=json.dumps(
-                {
-                    "sample_site": None,
-                    "sample_datetime": datetime.datetime.utcnow(),
-                    "sample_notes": "Nature Nature Nature"
-                }, default=json_converter),
+            data=json.dumps(data, default=json_converter),
             headers=MOCK_HEADERS
         )
         check_response(response)
 
-        # Finally, we lock the sample to prevent further edits
+        # Verify we can lock the sample to prevent further edits
         with Transaction() as t:
             with t.cursor() as cur:
                 cur.execute("UPDATE barcode "
@@ -1046,19 +1070,29 @@ class IntegrationTests(TestCase):
                             (datetime.datetime.now(), BARCODE))
             t.commit()
 
+        data = {"sample_datetime": datetime.datetime.utcnow(),
+                "sample_notes": "Mother Nature Mother Nature"}
+        if store_sample_site:
+            data['sample_site'] = None
+
         response = self.client.put(
             '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
             (ACCT_ID, PLANTY_ID, sample_id),
             content_type='application/json',
-            data=json.dumps(
-                {
-                    "sample_site": None,
-                    "sample_datetime": datetime.datetime.utcnow(),
-                    "sample_notes": "Mother Nature Mother Nature"
-                }, default=json_converter),
+            data=json.dumps(data, default=json_converter),
             headers=MOCK_HEADERS
         )
         check_response(response, 422)
+
+        # Finally, unlock the sample to clean up
+        with Transaction() as t:
+            with t.cursor() as cur:
+                cur.execute("UPDATE barcode "
+                            "SET scan_date = %s "
+                            "WHERE "
+                            "barcode = %s",
+                            (None, BARCODE))
+            t.commit()
 
     def test_survey_localization(self):
         # Retrieve Survey Template!
