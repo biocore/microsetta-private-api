@@ -1313,9 +1313,11 @@ components:
     first_name:        # Can be referenced as '#/components/schemas/first_name'
       type: string
       example: "Jane"
+      nullable: true
     last_name:
       type: string
       example: "Doe"
+      nullable: true
     language_tag:
       type: string
       example: "en-US"
@@ -1359,29 +1361,33 @@ components:
             the full street address including house number and street name
           type: string
           example: 123 Main St. E., apt. 2
+          nullable: true
         city:
           description: |
             name of the city / locality
           type: string
           example: Springfield
+          nullable: true
         state:
           description: |
             state, province, or district; |
-            set to empty string if not applicable |
             for country's address format (e.g. New Zealand)
           type: string
           example: "ON"
+          nullable: true
         post_code:
           description: |
             zip code or postal code
           type: string
           example: "K0H 9Z0"
+          nullable: true
         country_code:
           description: |
             the country code according to
             [iso-3166-1-alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
           type: string
           example: "CA" # NB: this is the country of *canada*, not the state of california
+          nullable: true
       required:
         - street
         - city
