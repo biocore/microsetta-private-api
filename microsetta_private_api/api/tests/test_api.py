@@ -27,6 +27,7 @@ TEST_EMAIL_2 = "second_test_email@example.com"
 
 ACCT_ID_1 = "7a98df6a-e4db-40f4-91ec-627ac315d881"
 ACCT_ID_2 = "9457c58f-7464-46c9-b6e0-116273cf8f28"
+ACCT_ID_3 = "e1a5c784-6022-474a-afeb-b0637d9afbad"
 MISSING_ACCT_ID = "a6cbd48e-f8da-4c0e-bdd6-3ffbbb5958ba"
 
 KIT_NAME_KEY = "kit_name"
@@ -36,7 +37,7 @@ EXISTING_KIT_NAME_2 = "fa_lrfiq"
 # this kit does not exist in the test db
 MISSING_KIT_NAME = "jb_qhxTe"
 
-DUMMY_ACCT_INFO = {
+DUMMY_ACCT_INFO_1 = {
     "address": {
         "city": "Springfield",
         "country_code": "US",
@@ -60,6 +61,21 @@ DUMMY_ACCT_INFO_2 = {
     "email": TEST_EMAIL_2,
     "first_name": "Obie",
     "last_name": "Dobie",
+    KIT_NAME_KEY: EXISTING_KIT_NAME_2
+}
+
+# Acct with all values allowed to be null set to null
+DUMMY_ACCT_INFO_3 = {
+    "address": {
+        "city": None,
+        "country_code": None,
+        "post_code": None,
+        "state": None,
+        "street": None
+    },
+    "email": TEST_EMAIL_2,
+    "first_name": None,
+    "last_name": None,
     KIT_NAME_KEY: EXISTING_KIT_NAME_2
 }
 
@@ -215,36 +231,33 @@ def delete_dummy_accts():
         t.commit()
 
 
-def create_dummy_acct(create_dummy_1=True,
+def create_dummy_acct(dummy_number=1,
                       iss=ACCT_MOCK_ISS,
                       sub=ACCT_MOCK_SUB):
     with Transaction() as t:
-        dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub)
+        dummy_acct_id = _create_dummy_acct_from_t(t, dummy_number, iss, sub)
         t.commit()
 
     return dummy_acct_id
 
 
-def create_dummy_source(name, source_type, content_dict, create_dummy_1=True,
+def create_dummy_source(name, source_type, content_dict, dummy_number=1,
                         iss=ACCT_MOCK_ISS,
                         sub=ACCT_MOCK_SUB):
     with Transaction() as t:
         dummy_acct_id, dummy_source_id = _create_dummy_source_from_t(
-            t, name, source_type, content_dict, create_dummy_1, iss, sub)
+            t, name, source_type, content_dict, dummy_number, iss, sub)
         t.commit()
 
     return dummy_acct_id, dummy_source_id
 
 
-def _create_dummy_acct_from_t(t, create_dummy_1=True,
+def _create_dummy_acct_from_t(t, dummy_number=1,
                               iss=ACCT_MOCK_ISS,
                               sub=ACCT_MOCK_SUB):
-    if create_dummy_1:
-        dummy_acct_id = ACCT_ID_1
-        dict_to_copy = DUMMY_ACCT_INFO
-    else:
-        dummy_acct_id = ACCT_ID_2
-        dict_to_copy = DUMMY_ACCT_INFO_2
+
+    dummy_acct_id = globals()["ACCT_ID_%s" % dummy_number]
+    dict_to_copy = globals()["DUMMY_ACCT_INFO_%s" % dummy_number]
 
     input_obj = copy.deepcopy(dict_to_copy)
     input_obj["id"] = dummy_acct_id
@@ -257,11 +270,11 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
 
 
 def _create_dummy_source_from_t(t, name, source_type, content_dict,
-                                create_dummy_1=True,
+                                dummy_number=1,
                                 iss=ACCT_MOCK_ISS, sub=ACCT_MOCK_SUB):
 
     dummy_source_id = SOURCE_ID_1
-    dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub)
+    dummy_acct_id = _create_dummy_acct_from_t(t, dummy_number, iss, sub)
     source_repo = SourceRepo(t)
     if source_type == Source.SOURCE_TYPE_HUMAN:
         dummy_info_obj = HumanInfo.from_dict(content_dict, DUMMY_CONSENT_DATE,
@@ -376,7 +389,7 @@ class ApiTests(TestCase):
     def validate_dummy_acct_response_body(self, response_obj,
                                           dummy_acct_dict=None):
         if dummy_acct_dict is None:
-            dummy_acct_dict = DUMMY_ACCT_INFO
+            dummy_acct_dict = DUMMY_ACCT_INFO_1
 
         # check expected additional fields/values appear in response body:
         # Note that "d.get()" returns none if key not found, doesn't throw err
@@ -419,7 +432,7 @@ class AccountsTests(ApiTests):
         """Successfully create a new account"""
 
         # create post input json
-        input_json = json.dumps(DUMMY_ACCT_INFO)
+        input_json = json.dumps(DUMMY_ACCT_INFO_1)
 
         # execute accounts post (create)
         response = self.client.post(
@@ -452,13 +465,13 @@ class AccountsTests(ApiTests):
         self.run_query_and_content_required_field_test(
             "/api/accounts", "post",
             self.default_querystring_dict,
-            DUMMY_ACCT_INFO)
+            DUMMY_ACCT_INFO_1)
 
     def test_accounts_create_fail_404(self):
         """Return 404 if provided kit name is not found in db."""
 
         # create post input json
-        input_obj = copy.deepcopy(DUMMY_ACCT_INFO)
+        input_obj = copy.deepcopy(DUMMY_ACCT_INFO_1)
         input_obj[KIT_NAME_KEY] = MISSING_KIT_NAME
         input_json = json.dumps(input_obj)
 
@@ -481,7 +494,7 @@ class AccountsTests(ApiTests):
         # into strings that won't pass the api's email format validation :(
 
         # create a dummy account with email 1
-        create_dummy_acct(create_dummy_1=True)
+        create_dummy_acct(dummy_number=1)
 
         # Now try to create a new account that is different in all respects
         # from the dummy made with email 1 EXCEPT that it has the same email
@@ -507,7 +520,7 @@ class AccountsTests(ApiTests):
     def test_accounts_legacies_post_success(self):
         """Successfully claim a legacy account for the current user"""
 
-        create_dummy_acct(create_dummy_1=True, iss=None, sub=None)
+        create_dummy_acct(dummy_number=1, iss=None, sub=None)
 
         # execute accounts/legacies post (claim legacy account)
         url = '/api/accounts/legacies?%s' % self.default_lang_querystring
@@ -554,7 +567,7 @@ class AccountsTests(ApiTests):
     def test_accounts_legacies_post_success_empty_already_claimed(self):
         """Return empty list if account with email already is claimed."""
 
-        create_dummy_acct(create_dummy_1=True)
+        create_dummy_acct(dummy_number=1)
 
         # execute accounts/legacies post (claim legacy account)
         url = '/api/accounts/legacies?%s' % self.default_lang_querystring
@@ -569,7 +582,7 @@ class AccountsTests(ApiTests):
 
         # It is invalid to have one of the auth fields (e.g. sub)
         # be null while the other is filled.
-        create_dummy_acct(create_dummy_1=True, iss=ACCT_MOCK_ISS,
+        create_dummy_acct(dummy_number=1, iss=ACCT_MOCK_ISS,
                           sub=None)
 
         # execute accounts/legacies post (claim legacy account)
@@ -588,7 +601,7 @@ class AccountTests(ApiTests):
     # region account view/get tests
     def test_account_view_success(self):
         """Successfully view existing account"""
-        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+        dummy_acct_id = create_dummy_acct(dummy_number=1)
 
         response = self.client.get(
             '/api/accounts/%s?%s' %
@@ -604,6 +617,25 @@ class AccountTests(ApiTests):
         # check all elements of account object in body are correct
         self.validate_dummy_acct_response_body(response_obj)
 
+    def test_account_view_success_w_null_fields(self):
+        """Successfully view existing account with null last_name"""
+        dummy_acct_id = create_dummy_acct(dummy_number=3)
+
+        response = self.client.get(
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        # check all elements of account object in body are correct
+        self.validate_dummy_acct_response_body(
+            response_obj, dummy_acct_dict=DUMMY_ACCT_INFO_3)
+
     def test_account_view_fail_400_without_required_fields(self):
         """Return 400 validation fail if don't provide a required field """
 
@@ -617,7 +649,7 @@ class AccountTests(ApiTests):
     def test_account_view_fail_401(self):
         """Return 401 if user does not have access to provided account."""
 
-        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+        dummy_acct_id = create_dummy_acct(dummy_number=1)
 
         response = self.client.get(
             '/api/accounts/%s?%s' %
@@ -642,7 +674,7 @@ class AccountTests(ApiTests):
     # region account update/put tests
     @staticmethod
     def make_updated_acct_dict():
-        result = copy.deepcopy(DUMMY_ACCT_INFO)
+        result = copy.deepcopy(DUMMY_ACCT_INFO_1)
         result.pop(KIT_NAME_KEY)
 
         result["address"] = {
@@ -719,16 +751,16 @@ class AccountTests(ApiTests):
         # into strings that won't pass the api's email format validation :(
 
         # create an account with email 1
-        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+        dummy_acct_id = create_dummy_acct(dummy_number=1)
 
         # create an account with email 2
-        create_dummy_acct(create_dummy_1=False, iss=ACCT_MOCK_ISS_2,
+        create_dummy_acct(dummy_number=2, iss=ACCT_MOCK_ISS_2,
                           sub=ACCT_MOCK_SUB_2)
 
         # Now try to update the account made with email 1 with info that is
         # the same in all respects as those it was made with EXCEPT that it has
         # an email that is now in use by the account with email 2:
-        changed_dummy_acct = copy.deepcopy(DUMMY_ACCT_INFO)
+        changed_dummy_acct = copy.deepcopy(DUMMY_ACCT_INFO_1)
         changed_dummy_acct["email"] = TEST_EMAIL_2
 
         # create post input json
@@ -748,7 +780,7 @@ class AccountTests(ApiTests):
     # region account/email_match tests
     def test_email_match_success_true(self):
         """Returns true if account email matches auth email"""
-        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+        dummy_acct_id = create_dummy_acct(dummy_number=1)
 
         response = self.client.get(
             '/api/accounts/%s/email_match?%s' %
@@ -766,7 +798,7 @@ class AccountTests(ApiTests):
 
     def test_email_match_success_false(self):
         """Returns false if account email matches auth email"""
-        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+        dummy_acct_id = create_dummy_acct(dummy_number=1)
 
         response = self.client.get(
             '/api/accounts/%s/email_match?%s' %
@@ -785,7 +817,7 @@ class AccountTests(ApiTests):
     def test_email_match_fail_401(self):
         """Return 401 if user does not have access to provided account."""
 
-        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+        dummy_acct_id = create_dummy_acct(dummy_number=1)
 
         response = self.client.get(
             '/api/accounts/%s/email_match?%s' %
@@ -816,7 +848,7 @@ class SourceTests(ApiTests):
         """Successfully view existing human source"""
         dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
-            create_dummy_1=True)
+            dummy_number=1)
 
         response = self.client.get(
             '/api/accounts/%s/sources?%s' %
@@ -842,7 +874,7 @@ class SourceTests(ApiTests):
         dummy_legacy_source["consent"]["age_range"] = "legacy"
         dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, dummy_legacy_source,
-            create_dummy_1=True)
+            dummy_number=1)
 
         response = self.client.get(
             '/api/accounts/%s/sources?%s' %
@@ -865,7 +897,7 @@ class SourceTests(ApiTests):
     # region source create/post
     def test_source_create_success(self):
         """Successfully create a new human source"""
-        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+        dummy_acct_id = create_dummy_acct(dummy_number=1)
 
         response = self.client.post(
             '/api/accounts/%s/sources?%s' %
@@ -898,7 +930,7 @@ class SourceTests(ApiTests):
 
     def test_source_create_fail_422(self):
         """Return 422 if try to create a source with age_range 'legacy'"""
-        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+        dummy_acct_id = create_dummy_acct(dummy_number=1)
 
         bad_dummy_src_info = copy.deepcopy(DUMMY_HUMAN_SOURCE)
         bad_dummy_src_info['consent']['age_range'] = 'legacy'
@@ -920,7 +952,7 @@ class SourceTests(ApiTests):
         """Successfully update an existing source"""
         dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
-            create_dummy_1=True)
+            dummy_number=1)
 
         new_name = "Not Bo after all"
         dummy_src_info = copy.deepcopy(DUMMY_HUMAN_SOURCE)
@@ -961,7 +993,7 @@ class SurveyTests(ApiTests):
         """Successfully create a new answered survey"""
         dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
-            create_dummy_1=True)
+            dummy_number=1)
 
         survey_template_id = 1  # primary survey
         # This is a model of a partially-filled survey that includes
@@ -1043,7 +1075,7 @@ class SurveyTests(ApiTests):
         """Successfully create a new answered survey without any answers"""
         dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
-            create_dummy_1=True)
+            dummy_number=1)
 
         survey_template_id = 1  # primary survey
 
