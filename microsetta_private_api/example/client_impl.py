@@ -1,17 +1,3 @@
-"""
-Functions to implement OpenAPI 3.0 interface to access private PHI.
-
-Underlies the resource server in the oauth2 workflow. "Resource Server: The
-server hosting user-owned resources that are protected by OAuth2. The resource
-server validates the access-token and serves the protected resources."
---https://dzone.com/articles/oauth-20-beginners-guide
-
-Loosely based off examples in
-https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
-and associated file
-https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
-"""
-
 import flask
 from flask import render_template, session, redirect
 import jwt
