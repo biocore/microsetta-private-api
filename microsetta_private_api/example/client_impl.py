@@ -239,9 +239,8 @@ def _route_to_closest_sink(prereqs_step, current_state):
 
 
 def _update_state_and_route_to_sink(account_id=None, source_id=None):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id,
-                                                          source_id)
-    return _route_to_closest_sink(prereqs_step, current_state)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
+    return _route_to_closest_sink(prereqs_step, curr_state)
 
 
 def _get_kit(kit_name):
@@ -281,13 +280,12 @@ def _check_survey_allowed(account_id, source_id, survey_template_id,
                           addtl_allowed_steps=None):
     addtl_allowed_steps = [] if addtl_allowed_steps is None \
         else addtl_allowed_steps
-    prereqs_step, current_state = _check_relevant_prereqs(account_id,
-                                                          source_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
     if prereqs_step not in addtl_allowed_steps:
-        needed_template_id = current_state.get("needed_survey_template_id", "")
+        needed_template_id = curr_state.get("needed_survey_template_id", "")
         request_is_needed_template = needed_template_id == survey_template_id
         if not (prereqs_step == NEEDS_SURVEY and request_is_needed_template):
-            return _route_to_closest_sink(prereqs_step, current_state)
+            return _route_to_closest_sink(prereqs_step, curr_state)
 
     return None
 
@@ -344,9 +342,9 @@ def get_home():
             return redirect('/logout')
 
         if email_verified:
-            home_step, current_state = _check_home_prereqs()
+            home_step, curr_state = _check_home_prereqs()
             if home_step == NEEDS_REROUTE:
-                return current_state[REROUTE_KEY]
+                return curr_state[REROUTE_KEY]
 
             has_error, accts_output, _ = ApiRequest.get("/accounts")
             # if there's an error, reroute to error page
@@ -382,9 +380,9 @@ def get_logout():
 
 
 def get_create_account():
-    prereqs_step, current_state = _check_relevant_prereqs()
+    prereqs_step, curr_state = _check_relevant_prereqs()
     if prereqs_step != NEEDS_ACCOUNT:
-        return _route_to_closest_sink(prereqs_step, current_state)
+        return _route_to_closest_sink(prereqs_step, curr_state)
 
     email, _ = _parse_jwt(session[TOKEN_KEY_NAME])
     return render_template('create_acct.jinja2',
@@ -392,7 +390,7 @@ def get_create_account():
 
 
 def post_create_account(body):
-    prereqs_step, current_state = _check_relevant_prereqs()
+    prereqs_step, curr_state = _check_relevant_prereqs()
     if prereqs_step == NEEDS_ACCOUNT:
         kit_name = body[KIT_NAME_KEY]
         session[KIT_NAME_KEY] = kit_name
@@ -421,15 +419,15 @@ def post_create_account(body):
 
 
 def get_update_email(account_id):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
     if prereqs_step != NEEDS_EMAIL_CHECK:
-        return _route_to_closest_sink(prereqs_step, current_state)
+        return _route_to_closest_sink(prereqs_step, curr_state)
 
     return render_template("update_email.jinja2", account_id=account_id)
 
 
 def post_update_email(account_id, body):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
     if prereqs_step == NEEDS_EMAIL_CHECK:
         # if the customer wants to update their email:
         update_email = body["do_update"] == "Yes"
@@ -459,9 +457,9 @@ def post_update_email(account_id, body):
 
 
 def get_account(account_id):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
     if prereqs_step != ACCT_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, current_state)
+        return _route_to_closest_sink(prereqs_step, curr_state)
 
     has_error, sources, _ = ApiRequest.get('/accounts/%s/sources' % account_id)
     if has_error:
@@ -473,9 +471,9 @@ def get_account(account_id):
 
 
 def get_create_human_source(account_id):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
     if prereqs_step != ACCT_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, current_state)
+        return _route_to_closest_sink(prereqs_step, curr_state)
 
     endpoint = SERVER_CONFIG["endpoint"]
     relative_post_url = _make_acct_path(account_id,
@@ -495,7 +493,7 @@ def get_create_human_source(account_id):
 
 
 def post_create_human_source(account_id, body):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
     if prereqs_step == ACCT_PREREQS_MET:
         has_error, consent_output, _ = ApiRequest.post(
             "/accounts/{0}/consent".format(account_id), json=body)
@@ -507,16 +505,16 @@ def post_create_human_source(account_id, body):
 
 
 def get_create_nonhuman_source(account_id):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
     if prereqs_step != ACCT_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, current_state)
+        return _route_to_closest_sink(prereqs_step, curr_state)
 
     return render_template('create_nonhuman_source.jinja2',
                            account_id=account_id)
 
 
 def post_create_nonhuman_source(account_id, body):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
     if prereqs_step == ACCT_PREREQS_MET:
         has_error, sources_output, _ = ApiRequest.post(
             "/accounts/{0}/sources".format(account_id), json=body)
@@ -597,7 +595,8 @@ def get_fill_vioscreen_remote_sample_survey(account_id, source_id, sample_id,
 # per-sample survey we have is the remote food frequency questionnaire
 # administered through vioscreen, and saving that requires its own special
 # handling (this function).
-def get_to_save_vioscreen_remote_sample_survey(account_id, source_id, sample_id, key):
+def get_to_save_vioscreen_remote_sample_survey(account_id, source_id,
+                                               sample_id, key):
     reroute = _check_survey_allowed(account_id, source_id, VIOSCREEN_ID,
                                     [SOURCE_PREREQS_MET])
     if reroute is not None:
@@ -627,9 +626,10 @@ def get_to_save_vioscreen_remote_sample_survey(account_id, source_id, sample_id,
 
 
 def get_source(account_id, source_id):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id, source_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id,
+                                                          source_id)
     if prereqs_step != SOURCE_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, current_state)
+        return _route_to_closest_sink(prereqs_step, curr_state)
 
     # Retrieve the source
     has_error, source_output, _ = ApiRequest.get(
@@ -705,9 +705,9 @@ def get_source(account_id, source_id):
 
 
 def get_update_sample(account_id, source_id, sample_id):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id, source_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
     if prereqs_step != SOURCE_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, current_state)
+        return _route_to_closest_sink(prereqs_step, curr_state)
 
     has_error, source_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s' %
@@ -770,10 +770,10 @@ def get_update_sample(account_id, source_id, sample_id):
 
 # TODO: guess we should also rewrite as ajax post for sample vue form?
 def put_update_sample(account_id, source_id, sample_id):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id, source_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
     # TODO: here we might want a "sample prereqs met"?
     if prereqs_step != SOURCE_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, current_state)
+        return _route_to_closest_sink(prereqs_step, curr_state)
 
     model = {}
     for x in flask.request.form:
@@ -807,12 +807,12 @@ def get_ajax_list_kit_samples(kit_name):
 #  will NOT be associated with these samples.  This might be the right behavior
 #  but we should probably make an explicit policy decision about that :)
 def post_claim_samples(account_id, source_id, body):
-    prereqs_step, current_state = _check_relevant_prereqs(account_id, source_id)
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
     if prereqs_step == SOURCE_PREREQS_MET:
         sample_ids_to_claim = body.get('sample_id', None)
         if sample_ids_to_claim is None:
             # User claimed no samples ... shrug
-            return _route_to_closest_sink(prereqs_step, current_state)
+            return _route_to_closest_sink(prereqs_step, curr_state)
 
         has_error, survey_output, _ = ApiRequest.get(
             '/accounts/{0}/sources/{1}/surveys'.format(account_id, source_id))
