@@ -85,6 +85,7 @@ def decode_fake_token(fake_token, pubkey, algorithms, verify, issuer):
 
     return result
 
+
 # This leaves authentication enabled, which will make everything we do fail :D
 @pytest.fixture(scope="class")
 def client(request):
