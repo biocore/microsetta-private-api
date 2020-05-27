@@ -11,13 +11,14 @@ servers:
 paths:
   '/':
     get:
-      operationId: microsetta_private_api.example.client_impl.rootpath
+      operationId: microsetta_private_api.example.client_impl.get_rootpath
       responses:
         '302':
           description: Redirect to home page
+
   '/home':
     get:
-      operationId: microsetta_private_api.example.client_impl.home
+      operationId: microsetta_private_api.example.client_impl.get_home
       responses:
         '200':
           description: Home Page
@@ -25,9 +26,10 @@ paths:
             text/html:
               schema:
                 type: string
+
   '/authrocket_callback':
     get:
-      operationId: microsetta_private_api.example.client_impl.authrocket_callback
+      operationId: microsetta_private_api.example.client_impl.get_authrocket_callback
       parameters:
         - in: query
           name: token
@@ -42,9 +44,10 @@ paths:
                 type: string
         '302':
           description: Returning home
+
   '/logout':
     get:
-      operationId: microsetta_private_api.example.client_impl.logout
+      operationId: microsetta_private_api.example.client_impl.get_logout
       responses:
         '200':
           description: Error report
@@ -55,23 +58,9 @@ paths:
         '302':
           description: Returning home
 
-  '/workflow':
+  '/create_account':
     get:
-      operationId: microsetta_private_api.example.client_impl.workflow
-      responses:
-        '200':
-          description: Error report
-          content:
-            text/html:
-              schema:
-                type: string
-        '302':
-          description: Redirecting to necessary action
-
-
-  '/workflow_create_account':
-    get:
-      operationId: microsetta_private_api.example.client_impl.get_workflow_create_account
+      operationId: microsetta_private_api.example.client_impl.get_create_account
       responses:
         '200':
           description: Form to create an account
@@ -79,106 +68,14 @@ paths:
             text/html:
               schema:
                 type: string
-
     post:
-      operationId: microsetta_private_api.example.client_impl.post_workflow_create_account
+      operationId: microsetta_private_api.example.client_impl.post_create_account
       requestBody:
         content:
           application/x-www-form-urlencoded:
             schema:
               type: object
               additionalProperties: true
-      responses:
-        '200':
-          description: Error report
-          content:
-            text/html:
-              schema:
-                type: string
-        '302':
-          description: Redirecting to necessary action
-
-  '/workflow_update_email':
-    get:
-      operationId: microsetta_private_api.example.client_impl.get_workflow_update_email
-      responses:
-        '200':
-          description: Page asking user if they want to update their email
-          content:
-            text/html:
-              schema:
-                type: string
-        '302':
-          description: Redirecting to necessary action
-    post:
-      operationId: microsetta_private_api.example.client_impl.post_workflow_update_email
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              additionalProperties: true
-      responses:
-        '200':
-          description: Error report
-          content:
-            text/html:
-              schema:
-                type: string
-        '302':
-          description: Redirecting to necessary action
-
-  '/workflow_create_human_source':
-    get:
-      operationId: microsetta_private_api.example.client_impl.get_workflow_create_human_source
-      responses:
-        '200':
-          description: Form to create a human source
-          content:
-            text/html:
-              schema:
-                type: string
-
-    post:
-      operationId: microsetta_private_api.example.client_impl.post_workflow_create_human_source
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              additionalProperties: true
-      responses:
-        '200':
-          description: Error report
-          content:
-            text/html:
-              schema:
-                type: string
-        '302':
-          description: Redirecting to necessary action
-
-  '/workflow_take_survey':
-    get:
-      operationId: microsetta_private_api.example.client_impl.get_workflow_fill_survey
-      parameters:
-        - $ref: '#/components/parameters/survey_template_id'
-      responses:
-        '200':
-          description: Primary Survey
-          content:
-            text/html:
-              schema:
-                type: string
-
-    post:
-      operationId: microsetta_private_api.example.client_impl.post_workflow_fill_survey
-      parameters:
-        - $ref: '#/components/parameters/survey_template_id'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
       responses:
         '200':
           description: Error report
@@ -191,7 +88,7 @@ paths:
 
   '/error':
     get:
-      operationId: microsetta_private_api.example.client_impl.generate_error_page
+      operationId: microsetta_private_api.example.client_impl.get_show_error_page
       description: Neatly display error messages sent from the front-end (only)
       parameters:
         - $ref: '#/components/parameters/error_msg'
@@ -207,7 +104,7 @@ paths:
     get:
       operationId: microsetta_private_api.example.client_impl.get_account
       tags:
-        - Accounts
+        - Account
       parameters:
         - $ref: '#/components/parameters/account_id'
       responses:
@@ -218,9 +115,96 @@ paths:
               schema:
                 type: string
 
-  '/accounts/{account_id}/sources/':
+  '/accounts/{account_id}/update_email':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_update_email
+      tags:
+        - Account
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '200':
+          description: Page asking user if they want to update their email
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
     post:
-      operationId: microsetta_private_api.example.client_impl.post_source
+      operationId: microsetta_private_api.example.client_impl.post_update_email
+      tags:
+        - Account
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
+  '/accounts/{account_id}/create_human_source':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_create_human_source
+      tags:
+        - Account
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '200':
+          description: Form to create a human source
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_create_human_source
+      tags:
+        - Account
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
+  '/accounts/{account_id}/create_nonhuman_source/':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_create_nonhuman_source
+      tags:
+        - Account
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '200':
+          description: Form to create a non-human source
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_create_nonhuman_source
       tags:
         - Sources
       parameters:
@@ -243,7 +227,7 @@ paths:
     get:
       operationId: microsetta_private_api.example.client_impl.get_source
       tags:
-        - Samples
+        - Source
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
@@ -255,9 +239,48 @@ paths:
               schema:
                 type: string
 
+  '/accounts/{account_id}/sources/{source_id}/take_survey':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_fill_local_source_survey
+      tags:
+        - Source
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/survey_template_id'
+      responses:
+        '200':
+          description: Primary Survey
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_ajax_fill_local_source_survey
+      tags:
+        - Source
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/survey_template_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
   '/accounts/{account_id}/sources/{source_id}/claim_samples':
     post:
-      operationId: microsetta_private_api.example.client_impl.claim_samples
+      operationId: microsetta_private_api.example.client_impl.post_claim_samples
       tags:
         - Samples
       parameters:
@@ -287,53 +310,19 @@ paths:
               schema:
                 type: string
 
-  '/accounts/{account_id}/sources/{source_id}/survey_templates/{survey_template_id}':
-    get:
-      operationId: microsetta_private_api.example.client_impl.show_source_survey
-      tags:
-        - Surveys
-      parameters:
-        - $ref: '#/components/parameters/account_id'
-        - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/survey_template_id_path'
-      responses:
-        '200':
-          description: Take survey
-          content:
-            text/html:
-              schema:
-                type: string
-    post:
-      operationId: microsetta_private_api.example.client_impl.finish_survey
-      tags:
-        - Surveys
-      parameters:
-        - $ref: '#/components/parameters/account_id'
-        - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/survey_template_id_path'
-      responses:
-        '200':
-          description: Error report
-          content:
-            text/html:
-              schema:
-                type: string
-        '302':
-          description: Redirecting to necessary action
-
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/survey_templates/{survey_template_id}':
     get:
-      operationId: microsetta_private_api.example.client_impl.show_sample_survey
+      operationId: microsetta_private_api.example.client_impl.get_fill_vioscreen_remote_sample_survey
       tags:
-        - Surveys
+        - Survey
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/sample_id'
-        - $ref: '#/components/parameters/survey_template_id_path'
+        - $ref: '#/components/parameters/survey_template_id_in_path'
       responses:
         '200':
-          description: Take survey and immediately associate with a sample
+          description: Take the vioscreen remote survey
           content:
             text/html:
               schema:
@@ -341,9 +330,9 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vspassthru':
     get:
-      operationId: microsetta_private_api.example.client_impl.finish_vioscreen
+      operationId: microsetta_private_api.example.client_impl.get_to_save_vioscreen_remote_sample_survey
       tags:
-        - Surveys
+        - Survey
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
@@ -364,9 +353,9 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}':
     get:
-      operationId: microsetta_private_api.example.client_impl.get_sample
+      operationId: microsetta_private_api.example.client_impl.get_update_sample
       tags:
-        - Samples
+        - Sample
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
@@ -379,9 +368,9 @@ paths:
               schema:
                 type: string
     post:
-      operationId: microsetta_private_api.example.client_impl.put_sample
+      operationId: microsetta_private_api.example.client_impl.put_update_sample
       tags:
-        - Samples
+        - Sample
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
@@ -400,9 +389,11 @@ paths:
               schema:
                 type: string
 
-  '/check_acct_inputs':
-    post:
-      operationId: microsetta_private_api.example.client_impl.post_check_acct_inputs
+  '/check_kit_valid':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_ajax_check_kit_valid
+      parameters:
+        - $ref: '#/components/parameters/kit_name'
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -419,7 +410,7 @@ paths:
 
   '/list_kit_samples':
     get:
-      operationId: microsetta_private_api.example.client_impl.get_list_kit_samples
+      operationId: microsetta_private_api.example.client_impl.get_ajax_list_kit_samples
       parameters:
         - $ref: '#/components/parameters/kit_name'
       responses:
@@ -432,7 +423,7 @@ paths:
 
   '/view_faq':
     get:
-      operationId: microsetta_private_api.example.client_impl.render_faq
+      operationId: microsetta_private_api.example.client_impl.get_show_faq
       responses:
         '200':
           description: Display of FAQ page
@@ -485,7 +476,7 @@ components:
       schema:
         $ref: '#/components/schemas/survey_template_id'
       required: true
-    survey_template_id_path:
+    survey_template_id_in_path:
       name: survey_template_id
       in: path
       description: Unique internal id specifying a particular survey template

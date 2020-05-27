@@ -10,19 +10,43 @@
     <link rel="stylesheet" href="/static/vendor/font-awesome-4.7.0/css/font-awesome.min.css"/>
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script src="/static/vendor/js/jquery.form-4.2.2/jquery.form.min.js"></script>
-    <script src="/static/kit_check.js"></script>
     <script>
-        kitSubmit = function(form, evt){
-            var error_txt = "";
-            var successful = false;
+        function make_kit_validation_setup_func(form_name, submitHandler) {
+            // Initialize form validation
+            let form_selector = "form[name='" + form_name + "']";
+            return function() {
+                let validateOptions = {
+                    // Specify validation rules
+                    rules: {
+                        // The key name on the left side is the name attribute
+                        // of an input field. Validation rules are defined
+                        // on the right side
+                        kit_name: {
+                            required: true,
+                            remote: {
+                                url: "/check_kit_valid",
+                            }
+                        }
+                    }
+                };
+                if (submitHandler != null){
+                    validateOptions["submitHandler"] = submitHandler;
+                }
+                $(form_selector).validate(validateOptions);
+            };
+        }
+
+        let kitSubmitHandler = function(form, evt){
+            let samples_selector = '#samples';
+            let error_txt = "";
+            let successful = false;
             $(form).ajaxSubmit({
                 success: function (samples, textStatus, jqXHR) {
-                    $('#samples').empty();
-                    for (var i = 0; i < samples.length; i++)
-                    {
-                        var bc = samples[i].sample_barcode;
-                        var sample_id = samples[i].sample_id;
-                        var item = $('<div class="container list-group-item">' +
+                    $(samples_selector).empty();
+                    for (let i = 0; i < samples.length; i++) {
+                        let bc = samples[i].sample_barcode;
+                        let sample_id = samples[i].sample_id;
+                        let item = $('<div class="container list-group-item">' +
                                      '<div class="row">' +
                                      '<div class="col-sm">' +
                                      '<label for="' + bc + '">' + bc + '</label>' +
@@ -31,9 +55,9 @@
                                      '<input type="checkbox" name="sample_id" id="' + bc + '" value="' + sample_id + '"/>' +
                                      '</div>' +
                                      '</div>');
-                        $('#samples').append(item);
+                        $(samples_selector).append(item);
                     }
-                    var div = $('#choose_sample_div');
+                    let div = $('#choose_sample_div');
                     div.collapse('show');
                     successful = true;
                 },
@@ -54,10 +78,9 @@
         };
 
         // Wait for the DOM to be ready
-
         $(document).ready(function(){
-            setup_kit_claim = verify_kit_claim('list_kit_form', kitSubmit);
-            setup_kit_claim()
+            let kit_validation_setup_func = make_kit_validation_setup_func('list_kit_form', kitSubmitHandler);
+            kit_validation_setup_func()
         });
     </script>
 </head>
@@ -71,19 +94,19 @@
     <br />
     <br />
 
-    {% if needs_assignment %}
-    <div class="alert alert-warning" role="alert">
-        It looks like some samples do not have collection information recorded.
-    </div>
-    {% endif %}
     <div class="content">
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/home">Home</a></li>
-            <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Sources</a></li>
-            <li class="breadcrumb-item"><a>{{source_name}}</a></li>
+            <li class="breadcrumb-item"><a href="/accounts/{{account_id}}">Sources</a></li>
+            <li class="breadcrumb-item">{{source_name}}</li>
           </ol>
         </nav>
+        {% if needs_assignment %}
+        <div class="alert alert-warning" role="alert">
+            It looks like some samples do not have collection information recorded.
+        </div>
+        {% endif %}
         <div class="container">
             {% if samples|length > 0 %}
                 Samples (click on a barcode to provide collection information):
@@ -111,7 +134,7 @@
                 <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                     <div class="row">
                         <div class="col-sm">
-                            <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
+                            <a href="/accounts/{{account_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
                         </div>
                         <div class="col-sm">
                             {{sample.sample_datetime |e}}
@@ -124,7 +147,7 @@
                         {% if sample.ffq %}
                             Food Frequency Questionnaire<span class="fa fa-check"/>
                         {% else %}
-                            <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
+                            <a href="/accounts/{{account_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
                         {% endif %}  <!-- end of if sample.ffq -->
                         </div>
                     {% endif %}  <!-- end of if is_human -->
@@ -147,7 +170,7 @@
             <div class="panel-collapse collapse" id="choose_sample_div">
                 <div class="card card-body">
                     Select all samples that should be associated with this source
-                    <form method="post" name="pick_samples_form" action="/accounts/{{acct_id}}/sources/{{source_id}}/claim_samples">
+                    <form method="post" name="pick_samples_form" action="/accounts/{{account_id}}/sources/{{source_id}}/claim_samples">
                         <div class="form-group">
                             <div id="samples" class="list-group">
                             </div>
@@ -164,7 +187,7 @@
                 <p>Surveys taken:</p>
                 <div class="list-group">
                     {% for survey in surveys %}
-                    <a>
+                    <a> <!--TODO: Err, should this link go somewhere? -->
                         <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                           <div class="row">
                             <div class="col-sm">

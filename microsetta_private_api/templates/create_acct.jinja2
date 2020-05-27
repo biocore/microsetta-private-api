@@ -29,14 +29,8 @@
                     kit_name: {
                         required: true,
                         remote: {
-                            url: "/check_acct_inputs",
-                            type: "post"
+                            url: "/check_kit_valid",
                         }
-                    },
-                    // Make sure the form is submitted to the destination defined
-                    // in the "action" attribute of the form when valid
-                    submitHandler: function (form) {
-                        form.submit();
                     }
                 }
             });

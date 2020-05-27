@@ -39,7 +39,7 @@
                 <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                   <div class="row">
                     <div class="col-sm">
-                      <a href="/accounts/{{acct_id}}/sources/{{ source.source_id|e }}">
+                      <a href="/accounts/{{account_id}}/sources/{{ source.source_id|e }}">
                           {{ source.source_name|e}}
                       </a>
                     </div>
@@ -50,21 +50,16 @@
                 </div>
                 {% endfor %}
             </div>
-            <br/><br/>
+            <br/>
+            <em>Or, optionally,</em>
             {% endif %}
         </div>
         <div class="container">
-            Optionally, create a new environmental source:
-            <form method="post" name="new_source_form" action="/accounts/{{acct_id}}/sources/">
-                <div class="form-group">
-                    <label for="source_name" name="source_name_label">Environment name (e.g., microwave):</label>
-                    <input id="source_name" name="source_name" class="form-control" type="text"/>
-                    <input id="source_type" name="source_type" type="hidden" value="environmental" />
-                    <br />
-                    <label for="source_description" name="source_description_label">Environment description (optional):</label>
-                    <input id="source_description" name="source_description" class="form-control" type="text"/>
-                 </div>
-                <input type="submit" class="btn btn-primary" value="Create Source"/>
-            </form>
+            Add a new source to this account:
+            <br />
+            <a href = "/accounts/{{ account_id }}/create_human_source">
+                <button class="btn btn-primary"> New Human Source</button></a>
+            <a href = "/accounts/{{ account_id }}/create_nonhuman_source">
+                <button class="btn btn-primary"> New Environmental Source</button></a>
         </div>
 {% endblock %}
