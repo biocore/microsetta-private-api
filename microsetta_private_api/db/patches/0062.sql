@@ -24,21 +24,28 @@
 UPDATE ag.account
     SET first_name=''
     WHERE first_name is null;
+ALTER TABLE ag.account ALTER COLUMN first_name SET NOT NULL;
 UPDATE ag.account
     SET last_name=''
     WHERE last_name is null;
+ALTER TABLE ag.account ALTER COLUMN last_name SET NOT NULL;
 UPDATE ag.account
     SET street=''
     WHERE street is null;
+ALTER TABLE ag.account ALTER COLUMN street SET NOT NULL;
 UPDATE ag.account
     SET city=''
     WHERE city is null;
+ALTER TABLE ag.account ALTER COLUMN city SET NOT NULL;
 UPDATE ag.account
     SET state=''
     WHERE state is null;
+ALTER TABLE ag.account ALTER COLUMN state SET NOT NULL;
 UPDATE ag.account
     SET post_code=''
     WHERE post_code is null;
+ALTER TABLE ag.account ALTER COLUMN post_code SET NOT NULL;
 UPDATE ag.account
     SET country_code=''
     WHERE country_code is null;
+ALTER TABLE ag.account ALTER COLUMN country_code SET NOT NULL;
