@@ -11,7 +11,7 @@
 -- last_name, Yes
 -- street, Yes
 -- city, Yes
--- state, Yes
+-- state, No
 -- post_code, Yes
 -- country_code, Yes
 -- latitude, No
@@ -37,10 +37,6 @@ UPDATE ag.account
     SET city=''
     WHERE city is null;
 ALTER TABLE ag.account ALTER COLUMN city SET NOT NULL;
-UPDATE ag.account
-    SET state=''
-    WHERE state is null;
-ALTER TABLE ag.account ALTER COLUMN state SET NOT NULL;
 UPDATE ag.account
     SET post_code=''
     WHERE post_code is null;
