@@ -482,6 +482,51 @@ def get_account(account_id):
                            sources=sources)
 
 
+def get_account_info(account_id):
+    next_state, current_state = determine_workflow_state()
+    if next_state != ALL_DONE:
+        return redirect(WORKFLOW_URL)
+
+    do_return, account, _ = ApiRequest.get('/accounts/%s' % account_id)
+    if do_return:
+        return account
+    print("ACCOUNT")
+    print(account)
+
+    return render_template('update_account.jinja2',
+                           account=account)
+
+
+def post_account_info(account_id):
+    next_state, current_state = determine_workflow_state()
+    if next_state != ALL_DONE:
+        return redirect(WORKFLOW_URL)
+
+    acct = {
+        'email': flask.request.form['email'],
+        'first_name': flask.request.form['first_name'],
+        'last_name': flask.request.form['last_name'],
+        'address': {
+            'street': flask.request.form['street'],
+            'city': flask.request.form['city'],
+            'state': flask.request.form['state'],
+            'post_code': flask.request.form['post_code'],
+            'country_code': flask.request.form['country_code']
+        }
+    }
+
+    do_return, sample_output, _ = ApiRequest.put(
+        '/accounts/%s' %
+        (account_id,),
+        json=acct)
+
+    if do_return:
+        return sample_output
+
+    return redirect('/accounts/%s/info' %
+                    (account_id))
+
+
 def get_source(account_id, source_id):
     next_state, current_state = determine_workflow_state()
     if next_state != ALL_DONE:

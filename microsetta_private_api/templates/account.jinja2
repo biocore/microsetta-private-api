@@ -24,6 +24,11 @@
 {% endblock %}
 {% block content %}
         <div class="container">
+          <a href="/accounts/{{acct_id}}/info">
+              Update Account Information
+          </a>
+        </div>
+        <div class="container">
             {%  if sources|length > 0 %}
             Choose a source by clicking on a name:
             <div class="list-group">
