@@ -826,6 +826,13 @@ def render_faq():
     return output
 
 
+def render_signup_intermediate():
+    output = render_template('signup_intermediate.jinja2',
+                             authrocket_url=SERVER_CONFIG["authrocket_url"],
+                             endpoint=SERVER_CONFIG["endpoint"])
+    return output
+
+
 class BearerAuth(AuthBase):
     def __init__(self, token):
         self.token = token
