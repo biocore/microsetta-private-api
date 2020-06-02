@@ -65,9 +65,9 @@
             {% endif %}
         </div>
         {% else %}
-        You are not logged in <br/>
+        You are not logged in. Please click to either: <br/>
         <a href="{{authrocket_url}}/login?redirect_uri={{endpoint}}/authrocket_callback">Log In</a> or
-        <a href="{{authrocket_url}}/signup?redirect_uri={{endpoint}}/authrocket_callback">Sign Up</a>
+        <a href="/signup_intermediate">Sign Up</a>
         {% endif %}
     </div>
     <div>
