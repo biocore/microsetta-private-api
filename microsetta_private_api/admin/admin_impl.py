@@ -1,7 +1,6 @@
 import flask
-from flask import jsonify, render_template
+from flask import jsonify
 
-from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
