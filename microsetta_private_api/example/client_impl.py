@@ -495,8 +495,6 @@ def get_account_info(account_id):
     do_return, account, _ = ApiRequest.get('/accounts/%s' % account_id)
     if do_return:
         return account
-    print("ACCOUNT")
-    print(account)
 
     return render_template('update_account.jinja2',
                            account=account)
