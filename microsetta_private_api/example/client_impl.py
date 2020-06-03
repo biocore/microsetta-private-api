@@ -903,6 +903,13 @@ def render_faq():
     return output
 
 
+def render_signup_intermediate():
+    output = render_template('signup_intermediate.jinja2',
+                             authrocket_url=SERVER_CONFIG["authrocket_url"],
+                             endpoint=SERVER_CONFIG["endpoint"])
+    return output
+
+
 # Administrator Mode Functionality
 def interactive_account_search(email_query):
     do_return, email_diagnostics, _ = ApiRequest.get(
