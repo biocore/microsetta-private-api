@@ -1,5 +1,5 @@
 {% extends "sitebase.jinja2" %}
-{% set page_title = "Sources" %}
+{% set page_title = "Account" %}
 {% set show_breadcrumbs = True %}
 {% block head %}
     <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
@@ -22,12 +22,23 @@
         });
     </script>
 {% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item active" aria-current="page">Account</li>
+{% endblock %}
 {% block content %}
+    <div class="container">
+        <h4>Account Information</h4>
         <div class="container">
-          <a href="/accounts/{{acct_id}}/info">
-              Update Account Information
-          </a>
+            <div class="card" style="width: 18rem;">
+              <div class="card-body">
+                <h5 class="card-title">{{account.first_name |e}} {{account.last_name |e}}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{account.email |e}}</h6>
+                <a href="/accounts/{{acct_id}}/info" class="card-link">View Account Information</a>
+              </div>
+            </div>
         </div>
+        <hr style="border-top: dotted 1px;" />
+        <h4>Sources</h4>
         <div class="container">
             {%  if sources|length > 0 %}
             Choose a source by clicking on a name:
@@ -72,4 +83,5 @@
                 <input type="submit" class="btn btn-primary" value="Create Source"/>
             </form>
         </div>
+    </div>
 {% endblock %}

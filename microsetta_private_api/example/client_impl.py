@@ -473,12 +473,17 @@ def get_account(account_id):
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
 
+    do_return, account, _ = ApiRequest.get('/accounts/%s' % account_id)
+    if do_return:
+        return account
+
     do_return, sources, _ = ApiRequest.get('/accounts/%s/sources' % account_id)
     if do_return:
         return sources
 
     return render_template('account.jinja2',
                            acct_id=account_id,
+                           account=account,
                            sources=sources)
 
 
@@ -523,8 +528,8 @@ def post_account_info(account_id):
     if do_return:
         return sample_output
 
-    return redirect('/accounts/%s/info' %
-                    (account_id))
+    # Do we want this to return to the account info page or the account page?
+    return redirect('/accounts/%s' % (account_id,))
 
 
 def get_source(account_id, source_id):
