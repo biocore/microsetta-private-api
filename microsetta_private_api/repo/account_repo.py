@@ -14,12 +14,13 @@ class AccountRepo(BaseRepo):
                 "account_type, auth_issuer, auth_sub, " \
                 "first_name, last_name, " \
                 "street, city, state, post_code, country_code, " \
-                "creation_time, update_time, created_with_kit_id"
+                "created_with_kit_id, creation_time, update_time"
 
     write_cols = "id, email, " \
                  "account_type, auth_issuer, auth_sub, " \
-                 "first_name, last_name, created_with_kit_id, " \
-                 "street, city, state, post_code, country_code"
+                 "first_name, last_name, " \
+                 "street, city, state, post_code, country_code, " \
+                 "created_with_kit_id"
 
     @staticmethod
     def _row_to_addr(r):
@@ -48,8 +49,9 @@ class AccountRepo(BaseRepo):
     def _account_to_row(a):
         return (a.id, a.email,
                 a.account_type, a.auth_issuer, a.auth_sub,
-                a.first_name, a.last_name, a.created_with_kit_id) + \
-                AccountRepo._addr_to_row(a.address)
+                a.first_name, a.last_name) + \
+                AccountRepo._addr_to_row(a.address) + \
+                (a.created_with_kit_id, )
 
     def claim_legacy_account(self, email, auth_iss, auth_sub):
         # Returns now-claimed legacy account if an unclaimed legacy account
@@ -146,12 +148,12 @@ class AccountRepo(BaseRepo):
                             "auth_sub = %s, "
                             "first_name = %s, "
                             "last_name = %s, "
-                            "created_with_kit_id = %s, "
                             "street = %s, "
                             "city = %s, "
                             "state = %s, "
                             "post_code = %s, "
-                            "country_code = %s "
+                            "country_code = %s, "
+                            "created_with_kit_id = %s "
                             "WHERE "
                             "account.id = %s",
                             final_row
