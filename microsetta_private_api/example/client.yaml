@@ -477,6 +477,25 @@ paths:
             text/html:
               schema:
                 type: string
+
+  '/admin/account_search':
+    get:
+      operationId: microsetta_private_api.example.client_impl.interactive_account_search
+      tags:
+        - Admin
+      parameters:
+        - in: query
+          name: email_query
+          description: Email to search for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of identified accounts
+          content:
+            text/html:
+              schema:
+                type: string
 components:
   parameters:
     account_id: # Can be referenced as '#/components/parameters/account_id'

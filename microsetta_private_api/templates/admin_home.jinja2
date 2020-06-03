@@ -1,0 +1,38 @@
+{% extends "sitebase.jinja2" %}
+{% set page_title = "ADMINISTRATOR MODE" %}
+{% set show_breadcrumbs = False %}
+{% set show_logout = True %}
+{% block content %}
+<h4>Search Results</h4>
+<div class="container">
+    {% if accounts|length > 0 %}
+    <div class="list-group">
+        <div class="row">
+            <div class="col-sm">
+                <i>Email</i>
+            </div>
+            <div class="col-sm">
+                <i>Account ID</i>
+            </div>
+        </div>
+        {% for account in accounts %}
+        <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
+          <div class="row">
+            <div class="col-sm">
+              <a href="/accounts/{{account.account_id |e}}">
+                  {{ account.email |e}}
+              </a>
+            </div>
+            <div class="col-sm">
+              {{ account.account_id|e }}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+    </div>
+    <br/><br/>
+    {% else %}
+    No accounts found
+    {% endif %}
+</div>
+{% endblock %}

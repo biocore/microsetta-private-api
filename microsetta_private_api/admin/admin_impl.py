@@ -1,6 +1,7 @@
 import flask
-from flask import jsonify
+from flask import jsonify, render_template
 
+from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -96,13 +97,17 @@ def project_statistics_detailed(token_info, project_id):
         return jsonify(summary), 200
 
 
-def validate_admin_access(token_info):
+def token_grants_admin_access(token_info):
     with Transaction() as t:
         account_repo = AccountRepo(t)
         account = account_repo.find_linked_account(token_info['iss'],
                                                    token_info['sub'])
-        if account is None or account.account_type != 'admin':
-            raise Unauthorized()
+        return account is not None and account.account_type == 'admin'
+
+
+def validate_admin_access(token_info):
+    if not token_grants_admin_access(token_info):
+        raise Unauthorized()
 
 
 def create_project(body, token_info):
