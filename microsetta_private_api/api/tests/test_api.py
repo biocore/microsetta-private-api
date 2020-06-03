@@ -366,7 +366,6 @@ class ApiTests(TestCase):
                 else:
                     raise ValueError(format("unexpect request action: ",
                                             action))
-
                 self.assertEqual(400, response.status_code)
                 resp_obj = json.loads(response.data)
                 self.assertTrue(curr_expected_msg in resp_obj['detail'])
@@ -395,12 +394,6 @@ class ApiTests(TestCase):
         # check all input fields/values appear in response body EXCEPT kit_name
         # plus additional fields
         expected_dict = copy.deepcopy(dummy_acct_dict)
-        try:
-            expected_dict.pop(KIT_NAME_KEY)
-        except KeyError:
-            # is ok if input did not have a kit name, as this is
-            # provided on account create but not account update
-            pass
         expected_dict[ACCT_ID_KEY] = real_acct_id_from_body
         expected_dict[ACCT_TYPE_KEY] = ACCT_TYPE_VAL
         expected_dict[CREATION_TIME_KEY] = real_creation_time
@@ -641,9 +634,11 @@ class AccountTests(ApiTests):
 
     # region account update/put tests
     @staticmethod
-    def make_updated_acct_dict():
+    def make_updated_acct_dict(keep_kit_name=False):
         result = copy.deepcopy(DUMMY_ACCT_INFO)
-        result.pop(KIT_NAME_KEY)
+
+        if not keep_kit_name:
+            result.pop(KIT_NAME_KEY)
 
         result["address"] = {
             "city": "Oakland",
@@ -659,7 +654,7 @@ class AccountTests(ApiTests):
         """Successfully update existing account"""
         dummy_acct_id = create_dummy_acct()
 
-        changed_acct_dict = self.make_updated_acct_dict()
+        changed_acct_dict = self.make_updated_acct_dict(keep_kit_name=True)
 
         # create post input json
         input_json = json.dumps(changed_acct_dict)

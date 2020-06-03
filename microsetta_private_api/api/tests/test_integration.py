@@ -163,7 +163,8 @@ class IntegrationTests(TestCase):
                               "CA",
                               12345,
                               "US"
-                          ))
+                          ),
+                          "fakekit")
             acct_repo.create_account(acc)
 
             source_repo.create_source(Source(
@@ -504,7 +505,8 @@ class IntegrationTests(TestCase):
                 },
                 "email": "foo@baz.com",
                 "first_name": "Dan",
-                "last_name": "H"
+                "last_name": "H",
+                "kit_name": "fakekit"
             }
 
         # Hard to guess these two, so let's pop em out
@@ -514,12 +516,14 @@ class IntegrationTests(TestCase):
 
         regular_data.pop("account_id")
 
-        # Don't fuzz the email--changing the email in the accounts table
-        # without changing the email in the authorization causes
+        # Don't fuzz the email or kit_name -- changing the email in the
+        # accounts table without changing the email in the authorization causes
         # authorization errors (as it should)
         the_email = regular_data["email"]
+        kit_name = regular_data['kit_name']
         fuzzy_data = fuzz(regular_data)
         fuzzy_data['email'] = the_email
+        fuzzy_data['kit_name'] = kit_name
 
         # submit an invalid account type
         fuzzy_data['account_type'] = "Voldemort"
@@ -563,6 +567,7 @@ class IntegrationTests(TestCase):
         check_response(response)
 
         acc = json.loads(response.data)
+
         acc.pop('creation_time')
         acc.pop('update_time')
         regular_data['account_type'] = 'standard'
