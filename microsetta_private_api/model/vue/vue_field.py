@@ -51,7 +51,7 @@ class VueField:
         self.buttons = buttons
         # Additional attributes to add to the field
         self.attributes = attributes
-        # the question shortname if appicable
+        # the question shortname if applicable
         self.shortname = shortname
 
     def set(self, **attributes):
