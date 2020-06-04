@@ -107,7 +107,7 @@ class VueTextAreaField(VueField):
             style_classes=None,
             buttons=None,
             attributes=None,
-            shortname = question_shortname
+            shortname=question_shortname
         )
         self.autocomplete = None
         self.max = None
