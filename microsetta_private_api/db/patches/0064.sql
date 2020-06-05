@@ -19,7 +19,7 @@ BEGIN
     UPDATE ag.group_questions SET display_index=q108 WHERE survey_question_id=109;
     UPDATE ag.group_questions SET display_index=q109 WHERE survey_question_id=108;
 
-    -- set 108 to a temp value, put index from 114 as 113, put index from 113 as 114
+    -- set 113 to a temp value, put index from 114 as 113, put index from 113 as 114
     UPDATE ag.group_questions SET display_index=123456 WHERE survey_question_id=113;
     UPDATE ag.group_questions SET display_index=q113 WHERE survey_question_id=114;
     UPDATE ag.group_questions SET display_index=q114 WHERE survey_question_id=113;
