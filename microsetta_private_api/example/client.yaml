@@ -218,7 +218,7 @@ paths:
               schema:
                 type: string
 
-  '/accounts/{account_id}/info':
+  '/accounts/{account_id}/details':
     get:
       operationId: microsetta_private_api.example.client_impl.get_account_info
       tags:

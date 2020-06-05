@@ -246,8 +246,23 @@ def get_workflow_create_account():
         return redirect(WORKFLOW_URL)
 
     email, _ = parse_jwt(session[TOKEN_KEY_NAME])
-    return render_template('create_acct.jinja2',
-                           authorized_email=email)
+    default_account_values = {
+            'email': email,
+            'first_name': '',
+            'last_name': '',
+            'address': {
+                'street': '',
+                'city': '',
+                'state': 'CA',
+                'post_code': '',
+                'country_code': 'US'
+            }
+        }
+
+    return render_template('account_details.jinja2',
+                           CREATE_ACCT=True,
+                           authorized_email=email,
+                           account=default_account_values)
 
 
 def post_workflow_create_account(body):
@@ -481,8 +496,7 @@ def get_account(account_id):
     if do_return:
         return sources
 
-    return render_template('account.jinja2',
-                           acct_id=account_id,
+    return render_template('account_overview.jinja2',
                            account=account,
                            sources=sources)
 
@@ -496,7 +510,8 @@ def get_account_info(account_id):
     if do_return:
         return account
 
-    return render_template('update_account.jinja2',
+    return render_template('account_details.jinja2',
+                           CREATE_ACCT=False,
                            account=account)
 
 
