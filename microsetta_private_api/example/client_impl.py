@@ -321,7 +321,7 @@ def post_workflow_update_email(body):
         # retain only writeable fields; KeyError if any of them missing
         mod_acct = {k: acct_output[k] for k in ACCT_WRITEABLE_KEYS}
 
-        # write back the updated account info
+        # write back the updated account details
         do_return, put_output, _ = ApiRequest.put(
             '/accounts/%s' % acct_id, json=mod_acct)
         if do_return:
@@ -501,7 +501,7 @@ def get_account(account_id):
                            sources=sources)
 
 
-def get_account_info(account_id):
+def get_account_details(account_id):
     next_state, current_state = determine_workflow_state()
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
@@ -515,21 +515,21 @@ def get_account_info(account_id):
                            account=account)
 
 
-def post_account_info(account_id):
+def post_account_details(account_id, body):
     next_state, current_state = determine_workflow_state()
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
 
     acct = {
-        'email': flask.request.form['email'],
-        'first_name': flask.request.form['first_name'],
-        'last_name': flask.request.form['last_name'],
-        'address': {
-            'street': flask.request.form['street'],
-            'city': flask.request.form['city'],
-            'state': flask.request.form['state'],
-            'post_code': flask.request.form['post_code'],
-            'country_code': flask.request.form['country_code']
+        ACCT_FNAME_KEY: body['first_name'],
+        ACCT_LNAME_KEY: body['last_name'],
+        ACCT_EMAIL_KEY: body['email'],
+        ACCT_ADDR_KEY: {
+            "street": body['street'],
+            "city": body['city'],
+            "state": body['state'],
+            "post_code": body['post_code'],
+            "country_code": body['country_code']
         }
     }
 
@@ -541,7 +541,8 @@ def post_account_info(account_id):
     if do_return:
         return sample_output
 
-    # Do we want this to return to the account info page or the account page?
+    # Do we want this to return to the account details page or the
+    # account overview page?
     return redirect('/accounts/%s' % (account_id,))
 
 
