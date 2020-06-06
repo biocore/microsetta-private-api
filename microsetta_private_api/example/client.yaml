@@ -477,6 +477,16 @@ paths:
             text/html:
               schema:
                 type: string
+  '/signup_intermediate':
+    get:
+      operationId: microsetta_private_api.example.client_impl.render_signup_intermediate
+      responses:
+        '200':
+          description: Page with additional information prior to pass off to AuthRocket
+          content:
+            text/html:
+              schema:
+                type: string
 components:
   parameters:
     account_id: # Can be referenced as '#/components/parameters/account_id'

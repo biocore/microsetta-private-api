@@ -41,8 +41,9 @@
         <h4>Sources</h4>
         <div class="container">
             {%  if sources|length > 0 %}
-            Choose a source by clicking on a name:
+            Choose a source to assign samples to by clicking on a name, listed in blue below:
             <div class="list-group">
+                <br>
                 <div class="row">
                     <div class="col-sm">
                         <i>Name</i>
@@ -66,11 +67,17 @@
                 </div>
                 {% endfor %}
             </div>
+            <br>
+            <i><u>How do I choose a Sample Source?</u></i>
+The Microsetta Initiative is researching both host-associated and environmental microbiomes, which means looking at microbes found on and in your body as well as those found in the world around you. At the moment, we have two categories of sample sources to choose from: Human and Environmental.
             <br/><br/>
             {% endif %}
         </div>
         <div class="container">
-            Optionally, create a new environmental source:
+            <br/>
+            Some projects and participants that use The Microsetta Initiative are interested in environmental samples (e.g., soil, household surfaces, etc). If you are interested in collecting an environmental sample, or if you are taking part in a project that has an environmental component, please use the fields below to create an environmental source:
+            <br/>
+            <br/>
             <form method="post" name="new_source_form" action="/accounts/{{account.account_id}}/sources/">
                 <div class="form-group">
                     <label for="source_name" name="source_name_label">Environment name (e.g., microwave):</label>

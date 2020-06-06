@@ -70,6 +70,7 @@ def find_accounts_for_login(token_info):
 
         if acct is None:
             return jsonify([]), 200
+
         return jsonify([acct.to_api()]), 200
 
 
@@ -687,7 +688,6 @@ def _validate_account_access(token_info, account_id):
         token_associated_account = account_repo.find_linked_account(
             token_info['iss'],
             token_info['sub'])
-
         account = account_repo.get_account(account_id)
         if account is None:
             raise NotFound(ACCT_NOT_FOUND_MSG)

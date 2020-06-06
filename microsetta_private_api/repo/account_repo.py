@@ -14,12 +14,13 @@ class AccountRepo(BaseRepo):
                 "account_type, auth_issuer, auth_sub, " \
                 "first_name, last_name, " \
                 "street, city, state, post_code, country_code, " \
-                "creation_time, update_time"
+                "created_with_kit_id, creation_time, update_time"
 
     write_cols = "id, email, " \
                  "account_type, auth_issuer, auth_sub, " \
                  "first_name, last_name, " \
-                 "street, city, state, post_code, country_code"
+                 "street, city, state, post_code, country_code, " \
+                 "created_with_kit_id"
 
     @staticmethod
     def _row_to_addr(r):
@@ -41,6 +42,7 @@ class AccountRepo(BaseRepo):
             r['account_type'], r['auth_issuer'], r['auth_sub'],
             r['first_name'], r['last_name'],
             AccountRepo._row_to_addr(r),
+            r['created_with_kit_id'],
             r['creation_time'], r['update_time'])
 
     @staticmethod
@@ -48,7 +50,8 @@ class AccountRepo(BaseRepo):
         return (a.id, a.email,
                 a.account_type, a.auth_issuer, a.auth_sub,
                 a.first_name, a.last_name) + \
-               AccountRepo._addr_to_row(a.address)
+                AccountRepo._addr_to_row(a.address) + \
+                (a.created_with_kit_id, )
 
     def claim_legacy_account(self, email, auth_iss, auth_sub):
         # Returns now-claimed legacy account if an unclaimed legacy account
@@ -136,7 +139,6 @@ class AccountRepo(BaseRepo):
             row_id = row[0:1]
             row_email_to_cc = row[1:]
             final_row = row_email_to_cc + row_id
-
             try:
                 cur.execute("UPDATE account "
                             "SET "
@@ -150,7 +152,8 @@ class AccountRepo(BaseRepo):
                             "city = %s, "
                             "state = %s, "
                             "post_code = %s, "
-                            "country_code = %s "
+                            "country_code = %s, "
+                            "created_with_kit_id = %s "
                             "WHERE "
                             "account.id = %s",
                             final_row
@@ -177,7 +180,7 @@ class AccountRepo(BaseRepo):
                             "%s, %s, "
                             "%s, %s, %s, "
                             "%s, %s, "
-                            "%s, %s, %s, %s, %s)",
+                            "%s, %s, %s, %s, %s, %s)",
                             AccountRepo._account_to_row(account))
                 return cur.rowcount == 1
         except psycopg2.errors.UniqueViolation as e:

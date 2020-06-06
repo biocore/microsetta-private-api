@@ -28,15 +28,16 @@ class Account(ModelBase):
                 input_dict['address']['city'],
                 input_dict['address']['state'],
                 input_dict['address']['post_code'],
-                input_dict['address']['country_code'],
-            )
+                input_dict['address']['country_code']
+            ),
+            input_dict['kit_name']
         )
         return result
 
     def __init__(self, account_id, email,
                  account_type, auth_issuer, auth_sub,
                  first_name, last_name,
-                 address,
+                 address, created_with_kit_id,
                  creation_time=None, update_time=None):
         self.id = account_id
         self.email = email
@@ -46,6 +47,7 @@ class Account(ModelBase):
         self.first_name = first_name
         self.last_name = last_name
         self.address = address
+        self.created_with_kit_id = created_with_kit_id
         self.creation_time = creation_time
         self.update_time = update_time
 
@@ -59,7 +61,8 @@ class Account(ModelBase):
             "address": self.address.to_api(),
             "account_type": self.account_type,
             "creation_time": self.creation_time,
-            "update_time": self.update_time
+            "update_time": self.update_time,
+            "kit_name": self.created_with_kit_id
         }
 
     def account_matches_auth(self, email, auth_issuer, auth_sub):

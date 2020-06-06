@@ -9,7 +9,8 @@ class VueField:
     # There are also additional properties dependent on the type
     def __init__(self, type_, label, model, id_, input_name, featured, visible,
                  disabled, required, multi, default, hint, help_, validator,
-                 validate_debounce_time, style_classes, buttons, attributes):
+                 validate_debounce_time, style_classes, buttons, attributes,
+                 shortname):
         # Type of Vue field displayed to user
         self.type = type_
         # Label of the field
@@ -50,6 +51,8 @@ class VueField:
         self.buttons = buttons
         # Additional attributes to add to the field
         self.attributes = attributes
+        # the question shortname if applicable
+        self.shortname = shortname
 
     def set(self, **attributes):
         for key in attributes:
@@ -58,7 +61,7 @@ class VueField:
 
 
 class VueInputField(VueField):
-    def __init__(self, question_id, question_text):
+    def __init__(self, question_id, question_text, question_shortname=None):
         super().__init__(
             type_="input",
             label=question_text,
@@ -77,13 +80,14 @@ class VueInputField(VueField):
             validate_debounce_time=None,
             style_classes=None,
             buttons=None,
-            attributes=None
+            attributes=None,
+            shortname=question_shortname
         )
         self.inputType = "text"
 
 
 class VueTextAreaField(VueField):
-    def __init__(self, question_id, question_text):
+    def __init__(self, question_id, question_text, question_shortname=None):
         super().__init__(
             type_="textArea",
             label=question_text,
@@ -102,7 +106,8 @@ class VueTextAreaField(VueField):
             validate_debounce_time=None,
             style_classes=None,
             buttons=None,
-            attributes=None
+            attributes=None,
+            shortname=question_shortname
         )
         self.autocomplete = None
         self.max = None
@@ -113,7 +118,8 @@ class VueTextAreaField(VueField):
 
 
 class VueSelectField(VueField):
-    def __init__(self, question_id, question_text, valid_responses):
+    def __init__(self, question_id, question_text, valid_responses,
+                 question_shortname=None):
         super().__init__(
             type_="select",
             label=question_text,
@@ -132,7 +138,8 @@ class VueSelectField(VueField):
             validate_debounce_time=None,
             style_classes=None,
             buttons=None,
-            attributes=None
+            attributes=None,
+            shortname=question_shortname
         )
         self.values = valid_responses
         self.selectOptions = {
@@ -142,7 +149,8 @@ class VueSelectField(VueField):
 
 
 class VueChecklistField(VueField):
-    def __init__(self, question_id, question_text, valid_responses):
+    def __init__(self, question_id, question_text, valid_responses,
+                 question_shortname=None):
         super().__init__(
             type_="checklist",
             label=question_text,
@@ -161,7 +169,8 @@ class VueChecklistField(VueField):
             validate_debounce_time=None,
             style_classes=None,
             buttons=None,
-            attributes=None
+            attributes=None,
+            shortname=question_shortname
         )
         self.listBox = False
         self.values = valid_responses
@@ -169,7 +178,7 @@ class VueChecklistField(VueField):
 
 
 class VueDateTimePickerField(VueField):
-    def __init__(self, question_id, question_text):
+    def __init__(self, question_id, question_text, question_shortname=None):
         super().__init__(
             type_="dateTimePicker",
             label=question_text,
@@ -188,7 +197,8 @@ class VueDateTimePickerField(VueField):
             validate_debounce_time=None,
             style_classes=None,
             buttons=None,
-            attributes=None
+            attributes=None,
+            shortname=question_shortname
         )
         self.dateTimePickerOptions = {
             "format": "YYYY-MM-DD HH:mm:ss"
