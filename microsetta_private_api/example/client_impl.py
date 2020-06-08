@@ -52,6 +52,12 @@ ACCT_ADDR_KEY = "address"
 ACCT_WRITEABLE_KEYS = [ACCT_FNAME_KEY, ACCT_LNAME_KEY, ACCT_EMAIL_KEY,
                        ACCT_ADDR_KEY]
 
+ACCT_ADDR_STREET_KEY = "street"
+ACCT_ADDR_CITY_KEY = "city"
+ACCT_ADDR_STATE_KEY = "state"
+ACCT_ADDR_POST_CODE_KEY = "post_code"
+ACCT_ADDR_COUNTRY_CODE_KEY = "country_code"
+
 _NEEDS_SURVEY_PREFIX = "NeedsSurvey"
 
 # States
@@ -246,16 +252,18 @@ def get_workflow_create_account():
         return redirect(WORKFLOW_URL)
 
     email, _ = parse_jwt(session[TOKEN_KEY_NAME])
+    # TODO:  Need to support other countries
+    #  and not default to US and California
     default_account_values = {
-            'email': email,
-            'first_name': '',
-            'last_name': '',
-            'address': {
-                'street': '',
-                'city': '',
-                'state': 'CA',
-                'post_code': '',
-                'country_code': 'US'
+            ACCT_EMAIL_KEY: email,
+            ACCT_FNAME_KEY: '',
+            ACCT_LNAME_KEY: '',
+            ACCT_ADDR_KEY: {
+                ACCT_ADDR_STREET_KEY: '',
+                ACCT_ADDR_CITY_KEY: '',
+                ACCT_ADDR_STATE_KEY: 'CA',
+                ACCT_ADDR_POST_CODE_KEY: '',
+                ACCT_ADDR_COUNTRY_CODE_KEY: 'US'
             }
         }
 
@@ -276,11 +284,11 @@ def post_workflow_create_account(body):
             ACCT_LNAME_KEY: body['last_name'],
             ACCT_EMAIL_KEY: body['email'],
             ACCT_ADDR_KEY: {
-                "street": body['street'],
-                "city": body['city'],
-                "state": body['state'],
-                "post_code": body['post_code'],
-                "country_code": body['country_code']
+                ACCT_ADDR_STREET_KEY: body['street'],
+                ACCT_ADDR_CITY_KEY: body['city'],
+                ACCT_ADDR_STATE_KEY: body['state'],
+                ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+                ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
             },
             KIT_NAME_KEY: kit_name
         }
@@ -525,11 +533,11 @@ def post_account_details(account_id, body):
         ACCT_LNAME_KEY: body['last_name'],
         ACCT_EMAIL_KEY: body['email'],
         ACCT_ADDR_KEY: {
-            "street": body['street'],
-            "city": body['city'],
-            "state": body['state'],
-            "post_code": body['post_code'],
-            "country_code": body['country_code']
+            ACCT_ADDR_STREET_KEY: body['street'],
+            ACCT_ADDR_CITY_KEY: body['city'],
+            ACCT_ADDR_STATE_KEY: body['state'],
+            ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+            ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
         }
     }
 
