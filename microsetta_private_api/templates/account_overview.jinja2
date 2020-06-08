@@ -1,5 +1,5 @@
 {% extends "sitebase.jinja2" %}
-{% set page_title = "Sources" %}
+{% set page_title = "Account" %}
 {% set show_breadcrumbs = True %}
 {% block head %}
     <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
@@ -22,7 +22,23 @@
         });
     </script>
 {% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item active" aria-current="page">Account</li>
+{% endblock %}
 {% block content %}
+    <div class="container">
+        <h4>Account Details</h4>
+        <div class="container">
+            <div class="card" style="width: 18rem;">
+              <div class="card-body">
+                <h5 class="card-title">{{account.first_name |e}} {{account.last_name |e}}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{account.email |e}}</h6>
+                <a href="/accounts/{{account.account_id}}/details" class="card-link">View Account Details</a>
+              </div>
+            </div>
+        </div>
+        <hr style="border-top: dotted 1px;" />
+        <h4>Sources</h4>
         <div class="container">
             {%  if sources|length > 0 %}
             Choose a source to assign samples to by clicking on a name, listed in blue below:
@@ -40,7 +56,7 @@
                 <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                   <div class="row">
                     <div class="col-sm">
-                      <a href="/accounts/{{acct_id}}/sources/{{ source.source_id|e }}">
+                      <a href="/accounts/{{account.account_id}}/sources/{{ source.source_id|e }}">
                           {{ source.source_name|e}}
                       </a>
                     </div>
@@ -62,7 +78,7 @@ The Microsetta Initiative is researching both host-associated and environmental 
             Some projects and participants that use The Microsetta Initiative are interested in environmental samples (e.g., soil, household surfaces, etc). If you are interested in collecting an environmental sample, or if you are taking part in a project that has an environmental component, please use the fields below to create an environmental source:
             <br/>
             <br/>
-            <form method="post" name="new_source_form" action="/accounts/{{acct_id}}/sources/">
+            <form method="post" name="new_source_form" action="/accounts/{{account.account_id}}/sources/">
                 <div class="form-group">
                     <label for="source_name" name="source_name_label">Environment name (e.g., microwave):</label>
                     <input id="source_name" name="source_name" class="form-control" type="text"/>
@@ -74,4 +90,5 @@ The Microsetta Initiative is researching both host-associated and environmental 
                 <input type="submit" class="btn btn-primary" value="Create Source"/>
             </form>
         </div>
+    </div>
 {% endblock %}
