@@ -549,8 +549,6 @@ def post_account_details(account_id, body):
     if do_return:
         return sample_output
 
-    # Do we want this to return to the account details page or the
-    # account overview page?
     return redirect('/accounts/%s' % (account_id,))
 
 
