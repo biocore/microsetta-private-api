@@ -123,11 +123,7 @@ def authrocket_callback(token):
 
 
 def logout():
-    if TOKEN_KEY_NAME in session:
-        # delete these keys if they are here, otherwise ignore
-        session.pop(TOKEN_KEY_NAME, None)
-        session.pop(KIT_NAME_KEY, None)
-        session.pop(EMAIL_CHECK_KEY, None)
+    session.clear()
     return redirect("/home")
 
 
