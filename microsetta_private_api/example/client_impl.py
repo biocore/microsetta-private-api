@@ -911,7 +911,7 @@ def render_signup_intermediate():
 
 
 # Administrator Mode Functionality
-def interactive_account_search(email_query):
+def get_interactive_account_search(email_query):
     do_return, email_diagnostics, _ = ApiRequest.get(
         '/admin/search/account/%s' % (email_query,))
     if do_return:
