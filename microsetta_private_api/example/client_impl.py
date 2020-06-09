@@ -14,10 +14,6 @@ https://github.com/realpython/materials/blob/master/flask-connexion-rest/version
 
 import flask
 from flask import render_template, session, redirect
-# TODO FIXME HACK:  It is convenient to expose some admin functionality,
-#  but requires knowing whether or not the current user is an admin, which is
-#  not currently part of our api.  This import couples client and admin modules
-from microsetta_private_api.admin.admin_impl import token_grants_admin_access
 import jwt
 import requests
 from requests.auth import AuthBase
@@ -139,8 +135,11 @@ def home():
 
 def authrocket_callback(token):
     session[TOKEN_KEY_NAME] = token
-    decoded = jwt.decode(token, PUB_KEY, algorithms=['RS256'], verify=True)
-    session[ADMIN_MODE_KEY] = token_grants_admin_access(decoded)
+    do_return, accts_output, _ = ApiRequest.get('/accounts')
+    if do_return:
+        return accts_output
+
+    session[ADMIN_MODE_KEY] = accts_output[0]['account_type'] == 'admin'
     return redirect("/home")
 
 
