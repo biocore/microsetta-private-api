@@ -351,6 +351,9 @@ class AdminRepo(BaseRepo):
         acct_repo = AccountRepo(self._transaction)
         ids = acct_repo.get_account_ids_by_email(email)
 
+        if len(ids) == 0:
+            return None
+
         accts = [acct_repo.get_account(acct_id) for acct_id in ids]
         diagnostic = {
             "accounts": accts
