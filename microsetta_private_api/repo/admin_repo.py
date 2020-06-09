@@ -319,7 +319,24 @@ class AdminRepo(BaseRepo):
             # account info associated with it
             pre_microsetta_acct = acct_repo.get_account(row['account_id'])
 
+        # obtain information on any accounts created using the kit ID
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT id as account_id "
+                "FROM "
+                "account "
+                "WHERE "
+                "created_with_kit_id = %s",
+                (supplied_kit_id, ))
+            rows = cur.fetchall()
+
+        accounts_created = None
+        if len(rows) > 0:
+            accounts_created = [acct_repo.get_account(row['account_id'])
+                                for row in rows]
+
         diagnostic = {
+            'accounts_created': accounts_created,
             'kit_id': kit.id,
             'supplied_kit_id': supplied_kit_id,
             'kit': kit,
