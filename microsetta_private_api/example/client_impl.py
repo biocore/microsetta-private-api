@@ -612,6 +612,15 @@ def get_source(account_id, source_id):
             if answer['survey_template_id'] == VIOSCREEN_ID:
                 sample['ffq'] = True
 
+    # prettify datetime
+    needs_assignment = False
+    for sample in samples_output:
+        if sample['sample_datetime'] is None:
+            needs_assignment = True
+        else:
+            dt = datetime.fromisoformat(sample['sample_datetime'])
+            sample['sample_datetime'] = dt.strftime("%b-%d-%Y %-I:%M %p")
+
     needs_assignment = any([sample['sample_datetime'] is None
                             for sample in samples_output])
 
@@ -747,7 +756,7 @@ def get_sample(account_id, source_id, sample_id):
     if sample_output['sample_datetime'] is not None:
         dt = datetime.fromisoformat(sample_output['sample_datetime'])
         sample_output['date'] = dt.strftime("%m/%d/%Y")
-        sample_output['time'] = dt.strftime("%I:%M %p")
+        sample_output['time'] = dt.strftime("%-I:%M %p")
     else:
         sample_output['date'] = ""
         sample_output['time'] = ""
