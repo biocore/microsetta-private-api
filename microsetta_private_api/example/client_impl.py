@@ -57,6 +57,12 @@ ACCT_ADDR_KEY = "address"
 ACCT_WRITEABLE_KEYS = [ACCT_FNAME_KEY, ACCT_LNAME_KEY, ACCT_EMAIL_KEY,
                        ACCT_ADDR_KEY]
 
+ACCT_ADDR_STREET_KEY = "street"
+ACCT_ADDR_CITY_KEY = "city"
+ACCT_ADDR_STATE_KEY = "state"
+ACCT_ADDR_POST_CODE_KEY = "post_code"
+ACCT_ADDR_COUNTRY_CODE_KEY = "country_code"
+
 _NEEDS_SURVEY_PREFIX = "NeedsSurvey"
 
 # States
@@ -139,12 +145,7 @@ def authrocket_callback(token):
 
 
 def logout():
-    if TOKEN_KEY_NAME in session:
-        # delete these keys if they are here, otherwise ignore
-        session.pop(TOKEN_KEY_NAME, None)
-        session.pop(ADMIN_MODE_KEY, None)
-        session.pop(KIT_NAME_KEY, None)
-        session.pop(EMAIL_CHECK_KEY, None)
+    session.clear()
     return redirect("/home")
 
 
@@ -263,9 +264,26 @@ def get_workflow_create_account():
         return redirect(WORKFLOW_URL)
 
     email, _ = parse_jwt(session[TOKEN_KEY_NAME])
-    return render_template('create_acct.jinja2',
+    # TODO:  Need to support other countries
+    #  and not default to US and California
+    default_account_values = {
+            ACCT_EMAIL_KEY: email,
+            ACCT_FNAME_KEY: '',
+            ACCT_LNAME_KEY: '',
+            ACCT_ADDR_KEY: {
+                ACCT_ADDR_STREET_KEY: '',
+                ACCT_ADDR_CITY_KEY: '',
+                ACCT_ADDR_STATE_KEY: 'CA',
+                ACCT_ADDR_POST_CODE_KEY: '',
+                ACCT_ADDR_COUNTRY_CODE_KEY: 'US'
+            }
+        }
+
+    return render_template('account_details.jinja2',
+                           CREATE_ACCT=True,
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           authorized_email=email)
+                           authorized_email=email,
+                           account=default_account_values)
 
 
 def post_workflow_create_account(body):
@@ -279,11 +297,11 @@ def post_workflow_create_account(body):
             ACCT_LNAME_KEY: body['last_name'],
             ACCT_EMAIL_KEY: body['email'],
             ACCT_ADDR_KEY: {
-                "street": body['street'],
-                "city": body['city'],
-                "state": body['state'],
-                "post_code": body['post_code'],
-                "country_code": body['country_code']
+                ACCT_ADDR_STREET_KEY: body['street'],
+                ACCT_ADDR_CITY_KEY: body['city'],
+                ACCT_ADDR_STATE_KEY: body['state'],
+                ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+                ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
             },
             KIT_NAME_KEY: kit_name
         }
@@ -325,7 +343,7 @@ def post_workflow_update_email(body):
         # retain only writeable fields; KeyError if any of them missing
         mod_acct = {k: acct_output[k] for k in ACCT_WRITEABLE_KEYS}
 
-        # write back the updated account info
+        # write back the updated account details
         do_return, put_output, _ = ApiRequest.put(
             '/accounts/%s' % acct_id, json=mod_acct)
         if do_return:
@@ -501,14 +519,14 @@ def get_account(account_id):
     if do_return:
         return sources
 
-    return render_template('account.jinja2',
+    return render_template('account_overview.jinja2',
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
                            acct_id=account_id,
                            account=account,
                            sources=sources)
 
 
-def get_account_info(account_id):
+def get_account_details(account_id):
     next_state, current_state = determine_workflow_state()
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
@@ -516,29 +534,28 @@ def get_account_info(account_id):
     do_return, account, _ = ApiRequest.get('/accounts/%s' % account_id)
     if do_return:
         return account
-    print("ACCOUNT")
-    print(account)
 
-    return render_template('update_account.jinja2',
+    return render_template('account_details.jinja2',
+                           CREATE_ACCT=False,
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
                            account=account)
 
 
-def post_account_info(account_id):
+def post_account_details(account_id, body):
     next_state, current_state = determine_workflow_state()
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
 
     acct = {
-        'email': flask.request.form['email'],
-        'first_name': flask.request.form['first_name'],
-        'last_name': flask.request.form['last_name'],
-        'address': {
-            'street': flask.request.form['street'],
-            'city': flask.request.form['city'],
-            'state': flask.request.form['state'],
-            'post_code': flask.request.form['post_code'],
-            'country_code': flask.request.form['country_code']
+        ACCT_FNAME_KEY: body['first_name'],
+        ACCT_LNAME_KEY: body['last_name'],
+        ACCT_EMAIL_KEY: body['email'],
+        ACCT_ADDR_KEY: {
+            ACCT_ADDR_STREET_KEY: body['street'],
+            ACCT_ADDR_CITY_KEY: body['city'],
+            ACCT_ADDR_STATE_KEY: body['state'],
+            ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+            ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
         }
     }
 
@@ -550,7 +567,6 @@ def post_account_info(account_id):
     if do_return:
         return sample_output
 
-    # Do we want this to return to the account info page or the account page?
     return redirect('/accounts/%s' % (account_id,))
 
 

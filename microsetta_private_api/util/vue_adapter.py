@@ -11,15 +11,21 @@ def to_vue_field(question, triggered_by=None):
     if question.response_type == "SINGLE":
         vue_field = VueSelectField(question.id,
                                    question.localized_text,
-                                   question.valid_responses)
+                                   question.valid_responses,
+                                   question.short_name)
     elif question.response_type == "MULTIPLE":
         vue_field = VueChecklistField(question.id,
                                       question.localized_text,
-                                      question.valid_responses)
+                                      question.valid_responses,
+                                      question.short_name)
     elif question.response_type == "STRING":
-        vue_field = VueInputField(question.id, question.localized_text)
+        vue_field = VueInputField(question.id,
+                                  question.localized_text,
+                                  question.short_name)
     elif question.response_type == "TEXT":
-        vue_field = VueTextAreaField(question.id, question.localized_text)
+        vue_field = VueTextAreaField(question.id,
+                                     question.localized_text,
+                                     question.short_name)
     else:
         raise ValueError("Unknown question response_type %s" %
                          question.response_type)
