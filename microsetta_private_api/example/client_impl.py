@@ -30,9 +30,6 @@ from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.source import Source
-from microsetta_private_api.model.vue.vue_factory import VueFactory
-from microsetta_private_api.model.vue.vue_field import VueInputField, \
-    VueTextAreaField, VueSelectField, VueDateTimePickerField
 import importlib.resources as pkg_resources
 
 
