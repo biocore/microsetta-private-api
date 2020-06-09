@@ -16,7 +16,10 @@
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script>
     $( function() {
-      $( "#sample_date" ).datepicker();
+      $( "#sample_date" ).datepicker({
+          onClose: function() {
+            $(this).valid();
+            }});
 
       $( "#sample_time" ).timepicker({
           timeFormat: 'h:mm p',
@@ -29,12 +32,16 @@
           startTime: '8',
           dynamic: false,
           dropdown: true,
-          scrollbar: true} );
+          scrollbar: true,
+          change: function() {
+            $(this).valid();
+            }
+      });
             
       $("form[name='sample_form']").validate({
                 // don't automatically move into the Date field
                 // as that triggers the pop up and it's annoying
-                focusInvalid: false, 
+                focusInvalid: false,
                 // Specify validation rules
                 rules: {
                     // The key name on the left side is the name attribute
@@ -52,6 +59,13 @@
                     }
                 }
             });
+
+        {% if not is_environmental %}
+        // https://github.com/jquery-validation/jquery-validation/issues/1872#issuecomment-257874743
+        $('#sample_site').on('change', function(){
+            $("form[name='sample_form']").validate().element('select');
+        });
+        {% endif %}
     });
     </script>
 </head>
@@ -77,29 +91,31 @@
           <form method="post" id="sample_form" name="sample_form">
               <div class="form-group row">
                 <label for="sample" name="sample_label" class="col-sm-2 col-form-label">Barcode</label>
-                <div class="col-sm-3">
+                <div class="col-sm-4">
                     <input id="view_sample" name="view_sample" class="form-control" type="text" value="{{ sample.sample_barcode |e }}" disabled="disabled" readonly/>
                 </div>
               </div>
+
               <div class="form-group row">
                 <label for="sample_date" name="sample_date_label" class="col-sm-2 col-form-label">Date</label>
-                <div class="col-sm-3">
+                <div class="col-sm-4">
                     <input id="sample_date" name="sample_date" class="form-control" type="text" value="{{ sample.date | e }}" autocomplete="off" required\>
                 </div>
+                <label for="sample_date" generated="true" class="error"></label>
               </div>
-
 
               <div class="form-group row">
                 <label for="sample_time" name="sample_time_label" class="col-sm-2 col-form-label">Time</label>
-                <div class="col-sm-3">
+                <div class="col-sm-4">
                   <input id="sample_time" name="sample_time" class="form-control" type="text" value="{{ sample.time | e}}" autocomplete="off" required\>
                 </div>
+                <label for="sample_time" generated="true" class="error"></label>
               </div>
           
               {% if not is_environmental %}
               <div class="form-group row">
                 <label for="sample_site" name="sample_site_label" class="col-sm-2 col-form-label">Site sampled</label>
-                <div class="col-sm-3">
+                <div class="col-sm-4">
                   <select id="sample_site" name="sample_site" class="form-control" required>
                     {% if not sample.sample_site %}
                     <option disabled selected value> -- Select a sample type -- </option>
@@ -109,6 +125,7 @@
                     {% endfor %}
                   </select>
                 </div>
+                <label for="sample_site" generated="true" class="error"></label>
               </div>
               {% endif %}
 
