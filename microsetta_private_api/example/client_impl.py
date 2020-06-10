@@ -124,7 +124,7 @@ def _check_acct_prereqs(account_id, current_state=None):
     if not session.get(EMAIL_CHECK_KEY, False):
         # Does email in our accounts table match email in authrocket?
         needs_reroute, email_match, _ = ApiRequest.get(
-            _make_acct_path(account_id, suffix="email_match"))
+            '/accounts/{0}/email_match'.format(account_id))
         if needs_reroute:
             current_state[REROUTE_KEY] = email_match
             return NEEDS_REROUTE, current_state
@@ -230,15 +230,11 @@ def _route_to_closest_sink(prereqs_step, current_state):
         # redirect to the source details page (showing all samples)
         return redirect(_make_source_path(acct_id, source_id))
     else:
-        # TODO: theoretically could route this to the front end /error ..
-        # but kind of a waste?  Do we need to reroute all these to front end?
-        # Guess doing so means we can't accidentally change front end behavior
-        # but not back-end behavior here ...
         return get_show_error_page(
             "Unknown prereq_step: '{0}'".format(prereqs_step))
 
 
-def _update_state_and_route_to_sink(account_id=None, source_id=None):
+def _refresh_state_and_route_to_sink(account_id=None, source_id=None):
     prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
     return _route_to_closest_sink(prereqs_step, curr_state)
 
@@ -276,13 +272,25 @@ def _get_kit(kit_name):
     return response.json(), None, response_status_code
 
 
-def _check_survey_allowed(account_id, source_id, survey_template_id,
-                          addtl_allowed_steps=None):
-    addtl_allowed_steps = [] if addtl_allowed_steps is None \
-        else addtl_allowed_steps
+def _get_invalid_survey_state_reroute(account_id, source_id,
+                                      survey_template_id,
+                                      addtl_allowed_steps=None):
+    """ Get reroute if user isn't allowed to take this survey in current state.
+
+    Check if the user is in one of the externally-specified allowed states or,
+    if not, if they are the NEEDS_SURVEY state AND the survey they need is
+    the one whose survey_template_id is passed in.  If either of these
+    conditions is met, the user is allowed to take this survey now, so they
+    don't need to be rerouted, so this method returns None.  However, if
+    neither of these criteria is met, determine where the user should be
+    rerouted to and return that info.
+
+    """
+    if addtl_allowed_steps is None:
+        addtl_allowed_steps = []
     prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
     if prereqs_step not in addtl_allowed_steps:
-        needed_template_id = curr_state.get("needed_survey_template_id", "")
+        needed_template_id = curr_state.get("needed_survey_template_id")
         request_is_needed_template = needed_template_id == survey_template_id
         if not (prereqs_step == NEEDS_SURVEY and request_is_needed_template):
             return _route_to_closest_sink(prereqs_step, curr_state)
@@ -415,7 +423,7 @@ def post_create_account(body):
             return accts_output
 
     new_acct_id = accts_output["account_id"]
-    return _update_state_and_route_to_sink(new_acct_id)
+    return _refresh_state_and_route_to_sink(new_acct_id)
 
 
 def get_update_email(account_id):
@@ -453,7 +461,7 @@ def post_update_email(account_id, body):
         # even if they decided NOT to update, don't ask again this session
         session[EMAIL_CHECK_KEY] = True
 
-    return _update_state_and_route_to_sink(account_id)
+    return _refresh_state_and_route_to_sink(account_id)
 
 
 def get_account(account_id):
@@ -493,6 +501,7 @@ def get_create_human_source(account_id):
 
 
 def post_create_human_source(account_id, body):
+    new_source_id = None
     prereqs_step, curr_state = _check_relevant_prereqs(account_id)
     if prereqs_step == ACCT_PREREQS_MET:
         has_error, consent_output, _ = ApiRequest.post(
@@ -500,8 +509,8 @@ def post_create_human_source(account_id, body):
         if has_error:
             return consent_output
 
-    new_source_id = consent_output["source_id"]
-    return _update_state_and_route_to_sink(account_id, new_source_id)
+        new_source_id = consent_output["source_id"]
+    return _refresh_state_and_route_to_sink(account_id, new_source_id)
 
 
 def get_create_nonhuman_source(account_id):
@@ -521,13 +530,14 @@ def post_create_nonhuman_source(account_id, body):
         if has_error:
             return sources_output
 
-    return _update_state_and_route_to_sink(account_id)
+    return _refresh_state_and_route_to_sink(account_id)
 
 
 def get_fill_local_source_survey(account_id, source_id, survey_template_id):
     # if we are filling out a source-level survey, it must come before the
     # source prerequisites are met; if a sample-level one, it can come after
-    reroute = _check_survey_allowed(account_id, source_id, survey_template_id)
+    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
+                                                survey_template_id)
     if reroute is not None:
         return reroute
 
@@ -548,7 +558,8 @@ def get_fill_local_source_survey(account_id, source_id, survey_template_id):
 
 def post_ajax_fill_local_source_survey(account_id, source_id,
                                        survey_template_id, body):
-    reroute = _check_survey_allowed(account_id, source_id, survey_template_id)
+    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
+                                                survey_template_id)
     if reroute is not None:
         return reroute
 
@@ -561,7 +572,7 @@ def post_ajax_fill_local_source_survey(account_id, source_id,
     if has_error:
         return surveys_output
 
-    return _update_state_and_route_to_sink(account_id, source_id)
+    return _refresh_state_and_route_to_sink(account_id, source_id)
 
 
 def get_fill_vioscreen_remote_sample_survey(account_id, source_id, sample_id,
@@ -572,8 +583,9 @@ def get_fill_vioscreen_remote_sample_survey(account_id, source_id, sample_id,
 
     # if we are filling out a source-level survey, it must come before the
     # source prerequisites are met, but a sample-level one can come after
-    reroute = _check_survey_allowed(account_id, source_id, VIOSCREEN_ID,
-                                    [SOURCE_PREREQS_MET])
+    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
+                                                VIOSCREEN_ID,
+                                                [SOURCE_PREREQS_MET])
     if reroute is not None:
         return reroute
 
@@ -597,8 +609,9 @@ def get_fill_vioscreen_remote_sample_survey(account_id, source_id, sample_id,
 # handling (this function).
 def get_to_save_vioscreen_remote_sample_survey(account_id, source_id,
                                                sample_id, key):
-    reroute = _check_survey_allowed(account_id, source_id, VIOSCREEN_ID,
-                                    [SOURCE_PREREQS_MET])
+    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
+                                                VIOSCREEN_ID,
+                                                [SOURCE_PREREQS_MET])
     if reroute is not None:
         return reroute
 
@@ -622,7 +635,7 @@ def get_to_save_vioscreen_remote_sample_survey(account_id, source_id,
     if sample_survey_output is not None:
         return sample_survey_output
 
-    return _update_state_and_route_to_sink(account_id, source_id)
+    return _refresh_state_and_route_to_sink(account_id, source_id)
 
 
 def get_source(account_id, source_id):
@@ -771,7 +784,8 @@ def get_update_sample(account_id, source_id, sample_id):
 # TODO: guess we should also rewrite as ajax post for sample vue form?
 def put_update_sample(account_id, source_id, sample_id):
     prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
-    # TODO: here we might want a "sample prereqs met"?
+    # Checking for only SOURCE_PREREQS_MET here because there are currently no
+    # sample-specific prerequisites
     if prereqs_step != SOURCE_PREREQS_MET:
         return _route_to_closest_sink(prereqs_step, curr_state)
 
@@ -787,7 +801,7 @@ def put_update_sample(account_id, source_id, sample_id):
     if has_error:
         return sample_output
 
-    return _update_state_and_route_to_sink(account_id, source_id)
+    return _refresh_state_and_route_to_sink(account_id, source_id)
 
 
 def get_ajax_check_kit_valid(kit_name):
@@ -802,14 +816,13 @@ def get_ajax_list_kit_samples(kit_name):
     return flask.jsonify(result), code
 
 
-# TODO: Note that associating surveys with samples when samples are claimed
-#  means that any surveys added to this source AFTER these samples are claimed
-#  will NOT be associated with these samples.  This might be the right behavior
-#  but we should probably make an explicit policy decision about that :)
+# NB: associating surveys with samples when samples are claimed means that any
+# surveys added to this source AFTER these samples are claimed will NOT be
+# associated with these samples.  This behavior is by design.
 def post_claim_samples(account_id, source_id, body):
     prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
     if prereqs_step == SOURCE_PREREQS_MET:
-        sample_ids_to_claim = body.get('sample_id', None)
+        sample_ids_to_claim = body.get('sample_id')
         if sample_ids_to_claim is None:
             # User claimed no samples ... shrug
             return _route_to_closest_sink(prereqs_step, curr_state)
@@ -847,7 +860,7 @@ def post_claim_samples(account_id, source_id, body):
                 if sample_survey_output is not None:
                     return sample_survey_output
 
-    return _update_state_and_route_to_sink(account_id, source_id)
+    return _refresh_state_and_route_to_sink(account_id, source_id)
 
 
 class BearerAuth(AuthBase):
