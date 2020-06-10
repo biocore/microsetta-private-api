@@ -211,7 +211,8 @@ class AccountRepo(BaseRepo):
     def get_account_ids_by_email(self, email):
         email = "%"+email+"%"
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT id FROM account WHERE email LIKE %s "
+            # ILIKE is case insensitive LIKE
+            cur.execute("SELECT id FROM account WHERE email ILIKE %s "
                         "ORDER BY email",
                         (email,))
             return [x[0] for x in cur.fetchall()]
