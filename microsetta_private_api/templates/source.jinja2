@@ -60,117 +60,110 @@
     <li class="breadcrumb-item active" aria-current="page">{{source_name}}</li>
 {% endblock %}
 {% block content %}
-
     {% if needs_assignment %}
     <div class="alert alert-warning" role="alert">
         It looks like some samples do not have collection information recorded.
     </div>
     {% endif %}
-    <div class="content">
-        <div class="container">
-            {% if samples|length > 0 %}
-                Samples (click on a barcode to provide collection information):
-            <div class="list-group">
-                <div class="row">
-                    <div class="col-sm">
-                        <i>Barcode</i>
-                    </div>
-                    <div class="col-sm">
-                        <i>Collection date</i>
-                    </div>
-                    {% if is_human %}
-                    <div class="col-sm">
-                        <i>Sample type</i>
-                    </div>
-                    <div class="col-sm">
-                        <i>Sample-specific survey</i>
-                    </div>
-                    {% endif %}
+    {% if samples|length > 0 %}
+    Samples (click on a barcode to provide collection information):
+    <div class="list-group">
+        <div class="row">
+            <div class="col-sm">
+                <i>Barcode</i>
+            </div>
+            <div class="col-sm">
+                <i>Collection date</i>
+            </div>
+            {% if is_human %}
+            <div class="col-sm">
+                <i>Sample type</i>
+            </div>
+            <div class="col-sm">
+                <i>Sample-specific survey</i>
+            </div>
+            {% endif %}
+        </div>
+        {% for sample in samples %}
+        <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
+            <div class="row">
+                <div class="col-sm">
+                    <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
                 </div>
-                {% for sample in samples %}
-                <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
-                    <div class="row">
-                        <div class="col-sm">
-                            <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
-                        </div>
-                        <div class="col-sm">
-                            {{sample.sample_datetime |e}}
-                        </div>
-                        {% if is_human %}
-                        <div class="col-sm">
-                            {{sample.sample_site |e}}
-                        </div>
-                        <div class="col-sm">
+                <div class="col-sm">
+                    {{sample.sample_datetime |e}}
+                </div>
+                {% if is_human %}
+                    <div class="col-sm">
+                        {{sample.sample_site |e}}
+                    </div>
+                    <div class="col-sm">
                         {% if sample.ffq %}
                             Food Frequency Questionnaire<span class="fa fa-check"/>
                         {% else %}
                             <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
                         {% endif %}  <!-- end of if sample.ffq -->
-                        </div>
-                    {% endif %}  <!-- end of if is_human -->
                     </div>
-                </div>
-                {% endfor %}  <!-- end of for sample in samples -->
+                {% endif %}  <!-- end of if is_human -->
             </div>
-            {% endif %}  <!-- end of if samples|length > 0 -->
-            {% if samples|length > 1 and is_human %}
-                <br>
-                <u><i>Do I need to take more than one Food Frequency Questionnaire (FFQ)</u></i>?
-    If you are taking all of your samples at the same time, you will only need to complete one. If you are collecting samples over time (e.g., once per week), then please consider taking an FFQ per time point. The FFQs provide valuable dietary research data for the project, so researchers can better understand the relationship between the food you eat and your microbes.
-            {% endif %}  <!-- end of if samples|length > 1 and is_human -->
         </div>
-        <br/>
-        <br/>
-        <br/>
-        <div class="container">
-            <form method="get" name="list_kit_form" action="/list_kit_samples">
+        {% endfor %}  <!-- end of for sample in samples -->
+    </div>
+    {% endif %}  <!-- end of if samples|length > 0 -->
+    {% if samples|length > 1 and is_human %}
+        <br>
+        <u><i>Do I need to take more than one Food Frequency Questionnaire (FFQ)</u></i>?
+If you are taking all of your samples at the same time, you will only need to complete one. If you are collecting samples over time (e.g., once per week), then please consider taking an FFQ per time point. The FFQs provide valuable dietary research data for the project, so researchers can better understand the relationship between the food you eat and your microbes.
+    {% endif %}  <!-- end of if samples|length > 1 and is_human -->
+
+    {% if samples|length > 0 %}
+    <hr style="border-top: dotted 1px"/>
+    {% endif %}
+    <form method="get" name="list_kit_form" action="/list_kit_samples">
+        <div class="form-group">
+            <label for="kit_name" name="kit_name_label">To add samples, please enter a kit ID here:</label>
+            <input id="kit_name" name="kit_name" class="form-control" type="text"/>
+         </div>
+        <input type="submit" class="btn btn-primary" value="List Samples"/>
+    </form>
+    <p></p>
+    <div class="panel-collapse collapse" id="choose_sample_div">
+        <div class="card card-body">
+            Select all samples that should be associated with this source
+            <form method="post" name="pick_samples_form" action="/accounts/{{acct_id}}/sources/{{source_id}}/claim_samples">
                 <div class="form-group">
-                    <label for="kit_name" name="kit_name_label">To add samples, please enter a kit ID here:</label>
-                    <input id="kit_name" name="kit_name" class="form-control" type="text"/>
-                 </div>
-                <input type="submit" class="btn btn-primary" value="List Samples"/>
-            </form>
-            <p></p>
-            <div class="panel-collapse collapse" id="choose_sample_div">
-                <div class="card card-body">
-                    Select all samples that should be associated with this source
-                    <form method="post" name="pick_samples_form" action="/accounts/{{acct_id}}/sources/{{source_id}}/claim_samples">
-                        <div class="form-group">
-                            <div id="samples" class="list-group">
-                            </div>
-                            <p></p>
-                            <input type="submit" class="btn btn-primary" value="Claim Selected Samples"/>
-                        </div>
-                    </form>
+                    <div id="samples" class="list-group">
+                    </div>
+                    <p></p>
+                    <input type="submit" class="btn btn-primary" value="Claim Selected Samples"/>
                 </div>
-            </div>
+            </form>
         </div>
-        <p></p>
-        <div class="container">
-            {% if surveys|length > 0 %}
-                <p>Surveys taken:</p>
-                <div class="list-group">
-                    {% for survey in surveys %}
-                    <a>
-                        <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
-                          <div class="row">
-                            <div class="col-sm">
-                              {{survey.survey_template_title |e}}
-                            </div>
-                            <div class="col-sm">
-                                {% if survey.answered %}
-                                <span class="fa fa-check"/>
-                                {% else %}
-                                <span class="fa fa-unchecked"/>
-                                {% endif %}
-                            </div>
-                          </div>
-                        </div>
-                    </a>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        </div>
+    </div>
+    <p></p>
+    <hr style="border-top: dotted 1px"/>
+    {% if surveys|length > 0 %}
+        <p>Surveys taken:</p>
+        <div class="list-group">
+            {% for survey in surveys %}
+            <a>
+                <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
+                  <div class="row">
+                    <div class="col-sm">
+                      {{survey.survey_template_title |e}}
+                    </div>
+                    <div class="col-sm">
+                        {% if survey.answered %}
+                        <span class="fa fa-check"/>
+                        {% else %}
+                        <span class="fa fa-unchecked"/>
+                        {% endif %}
+                    </div>
+                  </div>
+                </div>
+            </a>
+            {% endfor %}
+        {% endif %}
     </div>
 
 {% endblock %}
