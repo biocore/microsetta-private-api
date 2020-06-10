@@ -53,9 +53,17 @@
             });
         };
 
+
         // Wait for the DOM to be ready
 
         $(document).ready(function(){
+            <!--https://stackoverflow.com/questions/12010275/strip-white-spaces-on-input-->
+            $('#kit_name').bind('input', function(){
+                $(this).val(function(_, v){
+                    return v.replace(/\s+/g, '');
+                });
+            });
+
             setup_kit_claim = verify_kit_claim('list_kit_form', kitSubmit);
             setup_kit_claim()
         });
