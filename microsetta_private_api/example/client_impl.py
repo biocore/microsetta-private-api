@@ -139,7 +139,12 @@ def authrocket_callback(token):
     if do_return:
         return accts_output
 
-    session[ADMIN_MODE_KEY] = accts_output[0]['account_type'] == 'admin'
+    # new authrocket logins do not have an account yet
+    if len(accts_output) > 0:
+        session[ADMIN_MODE_KEY] = accts_output[0]['account_type'] == 'admin'
+    else:
+        session[ADMIN_MODE_KEY] = False
+
     return redirect("/home")
 
 
