@@ -33,6 +33,7 @@ setup(
                      'static/css/*',
                      'static/img/*',
                      'static/vendor/js/*',
+                     'static/vendor/js/jquery.form-4.2.2/*',
                      'static/vendor/bootstrap-4.4.1-dist/js/*',
                      'static/vendor/bootstrap-4.4.1-dist/css/*',
                      'static/vendor/bootstrap-datetimepicker-4.14.30/*',

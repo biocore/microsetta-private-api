@@ -38,6 +38,7 @@ PUB_KEY = pkg_resources.read_text(
     "authrocket.pubkey")
 
 TOKEN_KEY_NAME = 'token'
+ADMIN_MODE_KEY = 'admin_mode'
 WORKFLOW_URL = '/workflow'
 HELP_EMAIL = "microsetta@ucsd.edu"
 KIT_NAME_KEY = "kit_name"
@@ -110,9 +111,18 @@ def home():
             acct_id = workflow_state.get("account_id", None)
             has_multiple_hs_sources = workflow_needs == TOO_MANY_HUMAN_SOURCES
 
+    # Switch out home page in administrator mode
+    if session.get(ADMIN_MODE_KEY, False):
+        return render_template('admin_home.jinja2',
+                               admin_mode=session.get(ADMIN_MODE_KEY, False),
+                               accounts=[],
+                               endpoint=SERVER_CONFIG["endpoint"],
+                               authrocket_url=SERVER_CONFIG["authrocket_url"])
+
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
     return render_template('home.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            user=user,
                            email_verified=email_verified,
                            acct_id=acct_id,
@@ -123,6 +133,16 @@ def home():
 
 def authrocket_callback(token):
     session[TOKEN_KEY_NAME] = token
+    do_return, accts_output, _ = ApiRequest.get('/accounts')
+    if do_return:
+        return accts_output
+
+    # new authrocket logins do not have an account yet
+    if len(accts_output) > 0:
+        session[ADMIN_MODE_KEY] = accts_output[0]['account_type'] == 'admin'
+    else:
+        session[ADMIN_MODE_KEY] = False
+
     return redirect("/home")
 
 
@@ -263,6 +283,7 @@ def get_workflow_create_account():
 
     return render_template('account_details.jinja2',
                            CREATE_ACCT=True,
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            authorized_email=email,
                            account=default_account_values)
 
@@ -300,7 +321,8 @@ def get_workflow_update_email():
     if next_state != NEEDS_EMAIL_CHECK:
         return redirect(WORKFLOW_URL)
 
-    return render_template("update_email.jinja2")
+    return render_template("update_email.jinja2",
+                           admin_mode=session.get(ADMIN_MODE_KEY, False))
 
 
 def post_workflow_update_email(body):
@@ -459,6 +481,7 @@ def get_workflow_fill_survey(survey_template_id):
         return survey_output
 
     return render_template("survey.jinja2",
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            endpoint=SERVER_CONFIG["endpoint"],
                            survey_template_id=survey_template_id,
                            survey_schema=survey_output[
@@ -499,6 +522,8 @@ def get_account(account_id):
         return sources
 
     return render_template('account_overview.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           acct_id=account_id,
                            account=account,
                            sources=sources)
 
@@ -514,6 +539,7 @@ def get_account_details(account_id):
 
     return render_template('account_details.jinja2',
                            CREATE_ACCT=False,
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            account=account)
 
 
@@ -626,6 +652,7 @@ def get_source(account_id, source_id):
 
     is_human = source_output['source_type'] == Source.SOURCE_TYPE_HUMAN
     return render_template('source.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            acct_id=account_id,
                            source_id=source_id,
                            is_human=is_human,
@@ -660,6 +687,7 @@ def show_sample_survey(account_id, source_id, sample_id, survey_template_id):
 
     # Handle local surveys
     return render_template("survey.jinja2",
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            survey_template_id=survey_template_id,
                            survey_schema=survey_output[
                                'survey_template_text'])
@@ -762,6 +790,7 @@ def get_sample(account_id, source_id, sample_id):
         sample_output['time'] = ""
 
     return render_template('sample.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            acct_id=account_id,
                            source_id=source_id,
                            sample=sample_output,
@@ -884,6 +913,7 @@ def generate_error_page(error_msg):
         HELP_EMAIL, quote("minimal interface error"), error_txt)
 
     output = render_template('error.jinja2',
+                             admin_mode=session.get(ADMIN_MODE_KEY, False),
                              mailto_url=mailto_url,
                              error_msg=error_msg,
                              endpoint=SERVER_CONFIG["endpoint"],
@@ -894,6 +924,7 @@ def generate_error_page(error_msg):
 
 def render_faq():
     output = render_template('faq.jinja2',
+                             admin_mode=session.get(ADMIN_MODE_KEY, False),
                              authrocket_url=SERVER_CONFIG["authrocket_url"],
                              endpoint=SERVER_CONFIG["endpoint"])
     return output
@@ -904,6 +935,22 @@ def render_signup_intermediate():
                              authrocket_url=SERVER_CONFIG["authrocket_url"],
                              endpoint=SERVER_CONFIG["endpoint"])
     return output
+
+
+# Administrator Mode Functionality
+def get_interactive_account_search(email_query):
+    do_return, email_diagnostics, _ = ApiRequest.get(
+        '/admin/search/account/%s' % (email_query,))
+    if do_return:
+        return email_diagnostics
+
+    accounts = [{"email": acct['email'], "account_id": acct['id']}
+                for acct in email_diagnostics['accounts']]
+    return render_template('admin_home.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           accounts=accounts,
+                           endpoint=SERVER_CONFIG["endpoint"],
+                           authrocket_url=SERVER_CONFIG["authrocket_url"])
 
 
 class BearerAuth(AuthBase):

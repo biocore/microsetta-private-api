@@ -1,14 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <title>Microsetta Account Samples</title>
-    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
-    <script src="/static/vendor/js/jquery.validate.min.js"></script>
-    <script src="/static/vendor/bootstrap-4.4.1-dist/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+{% extends "sitebase.jinja2" %}
+{% set page_title = "Account Samples" %}
+{% set show_breadcrumbs = True %}
+{% block head %}
     <link rel="stylesheet" href="/static/vendor/font-awesome-4.7.0/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script src="/static/vendor/js/jquery.form-4.2.2/jquery.form.min.js"></script>
     <script src="/static/kit_check.js"></script>
     <script>
@@ -60,16 +54,12 @@
             setup_kit_claim()
         });
     </script>
-</head>
-<body>
-    <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
-        <img src="/static/img/logo-co.png" class="resize"/>
-        <br />
-        <br />
-        Return to microsetta.ucsd.edu
-    </a>
-    <br />
-    <br />
+{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Account</a></li>
+    <li class="breadcrumb-item"><a>{{source_name}}</a></li>
+{% endblock %}
+{% block content %}
 
     {% if needs_assignment %}
     <div class="alert alert-warning" role="alert">
@@ -77,13 +67,6 @@
     </div>
     {% endif %}
     <div class="content">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/home">Home</a></li>
-            <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Sources</a></li>
-            <li class="breadcrumb-item"><a>{{source_name}}</a></li>
-          </ol>
-        </nav>
         <div class="container">
             {% if samples|length > 0 %}
                 Samples (click on a barcode to provide collection information):
@@ -190,18 +173,4 @@
         </div>
     </div>
 
-    <div>
-        <br />
-        <p>
-            Questions?  Check our <a href="/view_faq" target="_blank">FAQ</a>!
-        </p>
-        <p>
-            We are in the process of revising the site and
-            apologize for any inconvenience.
-            Please contact
-            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
-            for help.
-        </p>
-    </div>
-</body>
-</html>
+{% endblock %}

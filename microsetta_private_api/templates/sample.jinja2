@@ -1,18 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <title>Microsetta Sample Information</title>
-    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+{% extends "sitebase.jinja2" %}
+{% set page_title = "Sample Information" %}
+{% set show_breadcrumbs = True %}
+{% block head %}
     <link rel="stylesheet" href="/static/vendor/jquery-ui-1.12.1/jquery-ui.min.css"/>
     <link rel="stylesheet" href="/static/vendor/css/jquery.timepicker.min.css"/>
-    <link rel="stylesheet" href="/static/css/minimal_interface.css"/>
 
-    <script type="text/javascript" src="/static/vendor/js/jquery-3.4.1.min.js"></script>
     <script type="text/javascript" src="/static/vendor/jquery-ui-1.12.1/jquery-ui.min.js"></script>
     <script type="text/javascript" src="/static/vendor/js/jquery.timepicker.min.js"></script>
-    <script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
-
+    
     <script>
     $( function() {
       $( "#sample_date" ).datepicker({
@@ -67,91 +62,65 @@
         {% endif %}
     });
     </script>
-</head>
-<body>
-    <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
-        <img src="/static/img/logo-co.png" class="resize"/>
-        <br />
-        <br />
-        Return to microsetta.ucsd.edu
-    </a>
-    <br />
-    <br />
+{% endblock %}
 
-    <div class="content">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/home">Home</a></li>
-            <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Sources</a></li>
-            <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}/sources/{{source_id}}">Samples</a></li>
-          </ol>
-        </nav>
-        <div class="container">
-          <form method="post" id="sample_form" name="sample_form">
-              <div class="form-group row">
-                <label for="sample" name="sample_label" class="col-sm-2 col-form-label">Barcode</label>
-                <div class="col-sm-4">
-                    <input id="view_sample" name="view_sample" class="form-control" type="text" value="{{ sample.sample_barcode |e }}" disabled="disabled" readonly/>
-                </div>
-              </div>
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Account</a></li>
+    <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}/sources/{{source_id}}">Source</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Sample Information</li>
+{% endblock %}
 
-              <div class="form-group row">
-                <label for="sample_date" name="sample_date_label" class="col-sm-2 col-form-label">Date</label>
-                <div class="col-sm-4">
-                    <input id="sample_date" name="sample_date" class="form-control" type="text" value="{{ sample.date | e }}" autocomplete="off" required\>
-                </div>
-                <label for="sample_date" generated="true" class="error"></label>
-              </div>
+{% block content %}
+    <div class="container">
+      <form method="post" id="sample_form" name="sample_form">
+          <div class="form-group row">
+            <label for="sample" name="sample_label" class="col-sm-2 col-form-label">Barcode</label>
+            <div class="col-sm-4">
+                <input id="view_sample" name="view_sample" class="form-control" type="text" value="{{ sample.sample_barcode |e }}" disabled="disabled" readonly/>
+            </div>
+          </div>
 
-              <div class="form-group row">
-                <label for="sample_time" name="sample_time_label" class="col-sm-2 col-form-label">Time</label>
-                <div class="col-sm-4">
-                  <input id="sample_time" name="sample_time" class="form-control" type="text" value="{{ sample.time | e}}" autocomplete="off" required\>
-                </div>
-                <label for="sample_time" generated="true" class="error"></label>
-              </div>
-          
-              {% if not is_environmental %}
-              <div class="form-group row">
-                <label for="sample_site" name="sample_site_label" class="col-sm-2 col-form-label">Site sampled</label>
-                <div class="col-sm-4">
-                  <select id="sample_site" name="sample_site" class="form-control" required>
-                    {% if not sample.sample_site %}
-                    <option disabled selected value> -- Select a sample type -- </option>
-                    {% endif %}
-                    {% for site in sample_sites %}
-                    <option value="{{site}}" {% if sample.sample_site == site %}selected {% endif %}>{{site}}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <label for="sample_site" generated="true" class="error"></label>
-              </div>
-              {% endif %}
+          <div class="form-group row">
+            <label for="sample_date" name="sample_date_label" class="col-sm-2 col-form-label">Date</label>
+            <div class="col-sm-4">
+                <input id="sample_date" name="sample_date" class="form-control" type="text" value="{{ sample.date | e }}" autocomplete="off" required\>
+            </div>
+            <label for="sample_date" generated="true" class="error"></label>
+          </div>
 
-              <div class="form-group">
-                <label for="sample_notes" name="sample_notes_label">Notes</label>
-                <div class="col-sm-10">
-                    <input id="sample_notes" name="sample_notes" class="form-control" value="{{ sample_notes |e}}" autocomplete="off" type="text" />
-                </div>
-              </div>
+          <div class="form-group row">
+            <label for="sample_time" name="sample_time_label" class="col-sm-2 col-form-label">Time</label>
+            <div class="col-sm-4">
+              <input id="sample_time" name="sample_time" class="form-control" type="text" value="{{ sample.time | e}}" autocomplete="off" required\>
+            </div>
+            <label for="sample_time" generated="true" class="error"></label>
+          </div>
+      
+          {% if not is_environmental %}
+          <div class="form-group row">
+            <label for="sample_site" name="sample_site_label" class="col-sm-2 col-form-label">Site sampled</label>
+            <div class="col-sm-4">
+              <select id="sample_site" name="sample_site" class="form-control" required>
+                {% if not sample.sample_site %}
+                <option disabled selected value> -- Select a sample type -- </option>
+                {% endif %}
+                {% for site in sample_sites %}
+                <option value="{{site}}" {% if sample.sample_site == site %}selected {% endif %}>{{site}}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <label for="sample_site" generated="true" class="error"></label>
+          </div>
+          {% endif %}
 
-             <button type="submit" class="btn btn-primary">Update</button>
-          </form>
-        </div>
+          <div class="form-group">
+            <label for="sample_notes" name="sample_notes_label">Notes</label>
+            <div class="col-sm-10">
+                <input id="sample_notes" name="sample_notes" class="form-control" value="{{ sample_notes |e}}" autocomplete="off" type="text" />
+            </div>
+          </div>
+
+         <button type="submit" class="btn btn-primary">Update</button>
+      </form>
     </div>
-
-    <div>
-        <br />
-        <p>
-            Questions?  Check our <a href="/view_faq" target="_blank">FAQ</a>!
-        </p>
-        <p>
-            We are in the process of revising the site and
-            apologize for any inconvenience.
-            Please contact
-            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
-            for help.
-        </p>
-    </div>
-</body>
-</html>
+{% endblock %}
