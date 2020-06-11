@@ -579,6 +579,19 @@ def get_source(account_id, source_id):
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
 
+    # Retrieve the account to determine which kit it was created with
+    do_return, account_output, _ = ApiRequest.get(
+        '/accounts/%s' % account_id)
+    if do_return:
+        return account_output
+
+    # Check if there are any unclaimed samples in the kit
+    original_kit, _, kit_status = _get_kit(account_output['kit_name'])
+    if kit_status == 404:
+        claim_kit_name_hint = None
+    else:
+        claim_kit_name_hint = account_output['kit_name']
+
     # Retrieve the source
     do_return, source_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s' %
@@ -653,7 +666,8 @@ def get_source(account_id, source_id):
                            samples=samples_output,
                            surveys=per_source,
                            source_name=source_output['source_name'],
-                           vioscreen_id=VIOSCREEN_ID)
+                           vioscreen_id=VIOSCREEN_ID,
+                           claim_kit_name_hint=claim_kit_name_hint)
 
 
 def show_source_survey(account_id, source_id, survey_template_id):
