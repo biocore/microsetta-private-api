@@ -6,5 +6,5 @@ function preclude_whitespace(selector)
         $(this).val(function(_, v){
             return v.replace(/\s+/g, '');
         });
-});
+    });
 }
