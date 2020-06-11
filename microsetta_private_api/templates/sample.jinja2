@@ -23,16 +23,14 @@
     <li class="breadcrumb-item active" aria-current="page">Sample Information</li>
 {% endblock %}
 {% block content %}
-    <div class="container">
-        <div id="app">
-          <div class="panel panel-default">
-            <div class="panel-body">
-              <form method="post" id="sample_form">
-                <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
-              </form>
-            </div>
-          </div>
+    <div id="app">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <form method="post" id="sample_form">
+            <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+          </form>
         </div>
+      </div>
     </div>
 
     <!-- These should really be in the head, but don't easily work there.
