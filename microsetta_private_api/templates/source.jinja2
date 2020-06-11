@@ -1,14 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <title>Microsetta Account Samples</title>
-    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
-    <script src="/static/vendor/js/jquery.validate.min.js"></script>
-    <script src="/static/vendor/bootstrap-4.4.1-dist/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+{% extends "sitebase.jinja2" %}
+{% set page_title = "Account Samples" %}
+{% set show_breadcrumbs = True %}
+{% block head %}
     <link rel="stylesheet" href="/static/vendor/font-awesome-4.7.0/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script src="/static/vendor/js/jquery.form-4.2.2/jquery.form.min.js"></script>
     <script>
         function make_kit_validation_setup_func(form_name, submitHandler) {
@@ -83,36 +77,22 @@
             kit_validation_setup_func()
         });
     </script>
-</head>
-<body>
-    <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
-        <img src="/static/img/logo-co.png" class="resize"/>
-        <br />
-        <br />
-        Return to microsetta.ucsd.edu
-    </a>
-    <br />
-    <br />
+{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Account</a></li>
+    <li class="breadcrumb-item"><a>{{source_name}}</a></li>
+{% endblock %}
+{% block content %}
 
+    {% if needs_assignment %}
+    <div class="alert alert-warning" role="alert">
+        It looks like some samples do not have collection information recorded.
+    </div>
+    {% endif %}
     <div class="content">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/home">Home</a></li>
-            <li class="breadcrumb-item"><a href="/accounts/{{account_id}}">Sources</a></li>
-            <li class="breadcrumb-item">{{source_name}}</li>
-          </ol>
-        </nav>
-        {% if needs_assignment %}
-        <div class="alert alert-warning" role="alert">
-            It looks like some samples do not have collection information recorded.
-        </div>
-        {% endif %}
         <div class="container">
             {% if samples|length > 0 %}
                 Samples (click on a barcode to provide collection information):
-            {% if samples|length > 1 and is_human %}
-                <p><i>If collecting all samples on the same day, please only complete a single Food Frequency Questionnaire.</i></p>
-            {% endif %}  <!-- end of if samples|length > 1 and is_human -->
             <div class="list-group">
                 <div class="row">
                     <div class="col-sm">
@@ -156,8 +136,15 @@
                 {% endfor %}  <!-- end of for sample in samples -->
             </div>
             {% endif %}  <!-- end of if samples|length > 0 -->
+            {% if samples|length > 1 and is_human %}
+                <br>
+                <u><i>Do I need to take more than one Food Frequency Questionnaire (FFQ)</u></i>?
+    If you are taking all of your samples at the same time, you will only need to complete one. If you are collecting samples over time (e.g., once per week), then please consider taking an FFQ per time point. The FFQs provide valuable dietary research data for the project, so researchers can better understand the relationship between the food you eat and your microbes.
+            {% endif %}  <!-- end of if samples|length > 1 and is_human -->
         </div>
-        <p></p>
+        <br/>
+        <br/>
+        <br/>
         <div class="container">
             <form method="get" name="list_kit_form" action="/list_kit_samples">
                 <div class="form-group">
@@ -187,7 +174,7 @@
                 <p>Surveys taken:</p>
                 <div class="list-group">
                     {% for survey in surveys %}
-                    <a> <!--TODO: Err, should this link go somewhere? -->
+                    <a>
                         <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                           <div class="row">
                             <div class="col-sm">
@@ -209,18 +196,4 @@
         </div>
     </div>
 
-    <div>
-        <br />
-        <p>
-            Questions?  Check our <a href="/view_faq">FAQ</a>!
-        </p>
-        <p>
-            We are in the process of revising the site and
-            apologize for any inconvenience.
-            Please contact
-            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
-            for help.
-        </p>
-    </div>
-</body>
-</html>
+{% endblock %}

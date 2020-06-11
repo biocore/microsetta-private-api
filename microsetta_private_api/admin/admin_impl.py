@@ -96,13 +96,17 @@ def project_statistics_detailed(token_info, project_id):
         return jsonify(summary), 200
 
 
-def validate_admin_access(token_info):
+def token_grants_admin_access(token_info):
     with Transaction() as t:
         account_repo = AccountRepo(t)
         account = account_repo.find_linked_account(token_info['iss'],
                                                    token_info['sub'])
-        if account is None or account.account_type != 'admin':
-            raise Unauthorized()
+        return account is not None and account.account_type == 'admin'
+
+
+def validate_admin_access(token_info):
+    if not token_grants_admin_access(token_info):
+        raise Unauthorized()
 
 
 def create_project(body, token_info):

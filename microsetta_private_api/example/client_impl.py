@@ -1,3 +1,17 @@
+"""
+Functions to implement OpenAPI 3.0 interface to access private PHI.
+
+Underlies the resource server in the oauth2 workflow. "Resource Server: The
+server hosting user-owned resources that are protected by OAuth2. The resource
+server validates the access-token and serves the protected resources."
+--https://dzone.com/articles/oauth-20-beginners-guide
+
+Loosely based off examples in
+https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
+and associated file
+https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
+"""
+
 import flask
 from flask import render_template, session, redirect
 import jwt
@@ -27,6 +41,7 @@ PUB_KEY = pkg_resources.read_text(
     "authrocket.pubkey")
 
 TOKEN_KEY_NAME = 'token'
+ADMIN_MODE_KEY = 'admin_mode'
 HOME_URL = "/home"
 HELP_EMAIL = "microsetta@ucsd.edu"
 REROUTE_KEY = "reroute"
@@ -39,6 +54,11 @@ ACCT_EMAIL_KEY = "email"
 ACCT_ADDR_KEY = "address"
 ACCT_WRITEABLE_KEYS = [ACCT_FNAME_KEY, ACCT_LNAME_KEY, ACCT_EMAIL_KEY,
                        ACCT_ADDR_KEY]
+ACCT_ADDR_STREET_KEY = "street"
+ACCT_ADDR_CITY_KEY = "city"
+ACCT_ADDR_STATE_KEY = "state"
+ACCT_ADDR_POST_CODE_KEY = "post_code"
+ACCT_ADDR_COUNTRY_CODE_KEY = "country_code"
 
 # States
 NEEDS_REROUTE = "NeedsReroute"
@@ -95,7 +115,7 @@ def _check_home_prereqs():
         return NEEDS_LOGIN, current_state
 
     # Do they need to make an account? YES-> create_acct.html
-    needs_reroute, accts_output, _ = ApiRequest.get(_make_path())
+    needs_reroute, accts_output, _ = ApiRequest.get("/accounts")
     # if there's an error, reroute to error page
     if needs_reroute:
         current_state[REROUTE_KEY] = accts_output
@@ -103,8 +123,7 @@ def _check_home_prereqs():
 
     if len(accts_output) == 0:
         # NB: Overwriting outputs from get call above
-        needs_reroute, accts_output, _ = ApiRequest.post(
-            _make_path(suffix="legacies"))
+        needs_reroute, accts_output, _ = ApiRequest.post("/accounts/legacies")
         if needs_reroute:
             current_state[REROUTE_KEY] = accts_output
             return NEEDS_REROUTE, current_state
@@ -319,6 +338,7 @@ def get_show_error_page(error_msg):
         HELP_EMAIL, quote("minimal interface error"), error_txt)
 
     output = render_template('error.jinja2',
+                             admin_mode=session.get(ADMIN_MODE_KEY, False),
                              mailto_url=mailto_url,
                              error_msg=error_msg,
                              endpoint=SERVER_CONFIG["endpoint"],
@@ -330,6 +350,7 @@ def get_show_error_page(error_msg):
 # FAQ display does not require any prereqs, so this method doesn't check any
 def get_show_faq():
     output = render_template('faq.jinja2',
+                             admin_mode=session.get(ADMIN_MODE_KEY, False),
                              authrocket_url=SERVER_CONFIG["authrocket_url"],
                              endpoint=SERVER_CONFIG["endpoint"])
     return output
@@ -359,9 +380,18 @@ def get_home():
             if has_error:
                 return accts_output
 
+    # Switch out home page in administrator mode
+    if session.get(ADMIN_MODE_KEY, False):
+        return render_template('admin_home.jinja2',
+                               admin_mode=session.get(ADMIN_MODE_KEY, False),
+                               accounts=[],
+                               endpoint=SERVER_CONFIG["endpoint"],
+                               authrocket_url=SERVER_CONFIG["authrocket_url"])
+
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
     return render_template('home.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            user=user,
                            email_verified=email_verified,
                            accounts=accts_output,
@@ -375,15 +405,29 @@ def get_rootpath():
 
 def get_authrocket_callback(token):
     session[TOKEN_KEY_NAME] = token
+    do_return, accts_output, _ = ApiRequest.get('/accounts')
+    if do_return:
+        return accts_output
+
+    # new authrocket logins do not have an account yet
+    if len(accts_output) > 0:
+        session[ADMIN_MODE_KEY] = accts_output[0]['account_type'] == 'admin'
+    else:
+        session[ADMIN_MODE_KEY] = False
+
     return redirect(HOME_URL)
 
 
-def get_logout():
-    if TOKEN_KEY_NAME in session:
-        # delete these keys if they are here, otherwise ignore
-        session.pop(TOKEN_KEY_NAME, None)
-        session.pop(KIT_NAME_KEY, None)
-        session.pop(EMAIL_CHECK_KEY, None)
+# TODO: change name to get_ pattern
+def render_signup_intermediate():
+    output = render_template('signup_intermediate.jinja2',
+                             authrocket_url=SERVER_CONFIG["authrocket_url"],
+                             endpoint=SERVER_CONFIG["endpoint"])
+    return output
+
+
+def logout():
+    session.clear()
     return redirect(HOME_URL)
 
 
@@ -392,9 +436,27 @@ def get_create_account():
     if prereqs_step != NEEDS_ACCOUNT:
         return _route_to_closest_sink(prereqs_step, curr_state)
 
-    email, _ = _parse_jwt(session[TOKEN_KEY_NAME])
-    return render_template('create_acct.jinja2',
-                           authorized_email=email)
+    email, _ = parse_jwt(session[TOKEN_KEY_NAME])
+    # TODO:  Need to support other countries
+    #  and not default to US and California
+    default_account_values = {
+            ACCT_EMAIL_KEY: email,
+            ACCT_FNAME_KEY: '',
+            ACCT_LNAME_KEY: '',
+            ACCT_ADDR_KEY: {
+                ACCT_ADDR_STREET_KEY: '',
+                ACCT_ADDR_CITY_KEY: '',
+                ACCT_ADDR_STATE_KEY: 'CA',
+                ACCT_ADDR_POST_CODE_KEY: '',
+                ACCT_ADDR_COUNTRY_CODE_KEY: 'US'
+            }
+        }
+
+    return render_template('account_details.jinja2',
+                           CREATE_ACCT=True,
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           authorized_email=email,
+                           account=default_account_values)
 
 
 def post_create_account(body):
@@ -408,11 +470,11 @@ def post_create_account(body):
             ACCT_LNAME_KEY: body['last_name'],
             ACCT_EMAIL_KEY: body['email'],
             ACCT_ADDR_KEY: {
-                "street": body['street'],
-                "city": body['city'],
-                "state": body['state'],
-                "post_code": body['post_code'],
-                "country_code": body['country_code']
+                ACCT_ADDR_STREET_KEY: body['street'],
+                ACCT_ADDR_CITY_KEY: body['city'],
+                ACCT_ADDR_STATE_KEY: body['state'],
+                ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+                ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
             },
             KIT_NAME_KEY: kit_name
         }
@@ -422,6 +484,7 @@ def post_create_account(body):
         if has_error:
             return accts_output
 
+    # TODO: fix this for case where accts_output not set!
     new_acct_id = accts_output["account_id"]
     return _refresh_state_and_route_to_sink(new_acct_id)
 
@@ -431,7 +494,9 @@ def get_update_email(account_id):
     if prereqs_step != NEEDS_EMAIL_CHECK:
         return _route_to_closest_sink(prereqs_step, curr_state)
 
-    return render_template("update_email.jinja2", account_id=account_id)
+    return render_template("update_email.jinja2",
+                           admin_mode=session.get(ADMIN_MODE_KEY, False)
+                           account_id=account_id)
 
 
 def post_update_email(account_id, body):
@@ -452,7 +517,7 @@ def post_update_email(account_id, body):
             # retain only writeable fields; KeyError if any of them missing
             mod_acct = {k: acct_output[k] for k in ACCT_WRITEABLE_KEYS}
 
-            # write back the updated account info
+            # write back the updated account details
             has_error, put_output, _ = ApiRequest.put(
                 '/accounts/%s' % account_id, json=mod_acct)
             if has_error:
@@ -469,13 +534,59 @@ def get_account(account_id):
     if prereqs_step != ACCT_PREREQS_MET:
         return _route_to_closest_sink(prereqs_step, curr_state)
 
+    has_error, account, _ = ApiRequest.get('/accounts/%s' % account_id)
+    if has_error:
+        return account
+
     has_error, sources, _ = ApiRequest.get('/accounts/%s/sources' % account_id)
     if has_error:
         return sources
 
-    return render_template('account.jinja2',
+    return render_template('account_overview.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           # TODO: shouldn't need both id and account
                            account_id=account_id,
+                           account=account,
                            sources=sources)
+
+
+def get_account_details(account_id):
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
+    if prereqs_step != ACCT_PREREQS_MET:
+        return _route_to_closest_sink(prereqs_step, curr_state)
+
+    has_error, account, _ = ApiRequest.get('/accounts/%s' % account_id)
+    if has_error:
+        return account
+
+    return render_template('account_details.jinja2',
+                           CREATE_ACCT=False,
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           account=account)
+
+
+def post_account_details(account_id, body):
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
+    if prereqs_step == ACCT_PREREQS_MET:
+        acct = {
+            ACCT_FNAME_KEY: body['first_name'],
+            ACCT_LNAME_KEY: body['last_name'],
+            ACCT_EMAIL_KEY: body['email'],
+            ACCT_ADDR_KEY: {
+                ACCT_ADDR_STREET_KEY: body['street'],
+                ACCT_ADDR_CITY_KEY: body['city'],
+                ACCT_ADDR_STATE_KEY: body['state'],
+                ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+                ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
+            }
+        }
+
+        do_return, sample_output, _ = ApiRequest.put('/accounts/%s' %
+            (account_id,), json=acct)
+        if do_return:
+            return sample_output
+
+    return _refresh_state_and_route_to_sink(account_id)
 
 
 def get_create_human_source(account_id):
@@ -510,6 +621,7 @@ def post_create_human_source(account_id, body):
             return consent_output
 
         new_source_id = consent_output["source_id"]
+
     return _refresh_state_and_route_to_sink(account_id, new_source_id)
 
 
@@ -548,6 +660,7 @@ def get_fill_local_source_survey(account_id, source_id, survey_template_id):
         return survey_output
 
     return render_template("survey.jinja2",
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            endpoint=SERVER_CONFIG["endpoint"],
                            account_id=account_id,
                            source_id=source_id,
@@ -707,6 +820,7 @@ def get_source(account_id, source_id):
 
     is_human = source_output['source_type'] == Source.SOURCE_TYPE_HUMAN
     return render_template('source.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            account_id=account_id,
                            source_id=source_id,
                            is_human=is_human,
@@ -774,6 +888,7 @@ def get_update_sample(account_id, source_id, sample_id):
         .build()
 
     return render_template('sample.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            account_id=account_id,
                            source_id=source_id,
                            source_name=source_output['source_name'],
@@ -861,6 +976,22 @@ def post_claim_samples(account_id, source_id, body):
                     return sample_survey_output
 
     return _refresh_state_and_route_to_sink(account_id, source_id)
+
+
+# Administrator Mode Functionality
+def get_interactive_account_search(email_query):
+    do_return, email_diagnostics, _ = ApiRequest.get(
+        '/admin/search/account/%s' % (email_query,))
+    if do_return:
+        return email_diagnostics
+
+    accounts = [{"email": acct['email'], "account_id": acct['id']}
+                for acct in email_diagnostics['accounts']]
+    return render_template('admin_home.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           accounts=accounts,
+                           endpoint=SERVER_CONFIG["endpoint"],
+                           authrocket_url=SERVER_CONFIG["authrocket_url"])
 
 
 class BearerAuth(AuthBase):

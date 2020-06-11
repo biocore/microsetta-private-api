@@ -4,13 +4,38 @@
     <meta charset="utf-8"/>
     <title>Microsetta {{page_title}}</title>
 
-{%block head%}
-{%endblock%}
-
+    <!-- jquery must be enabled before bootstrap for collapsible functionality -->
+    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
+    <script src="/static/vendor/js/jquery.validate.min.js"></script>
+    {% if not disable_bootstrap %}
+    <script src="/static/vendor/bootstrap-4.4.1-dist/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    {% endif %}
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
+
+    {%block head%}
+    {%endblock%}
+
+    <style>
+    {% if admin_mode %}
+    body {
+        padding-top: 50px;
+        margin: 2%;
+    }
+    {% endif %}
+    </style>
 </head>
 <body>
+    {% if admin_mode %}
+    <nav class="navbar fixed-top navbar-light bg-warning">
+      Administrator Toolbar
+      <form class="form-inline" action="/admin/account_search" method="get">
+        <input id="email_query" name="email_query" class="form-control mr-sm-2" type="search" placeholder="User Email" aria-label="Search"/>
+        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Find Account</button>
+      </form>
+    </nav>
+    {% endif %}
+    {% if not admin_mode %}
     <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
         <img src="/static/img/logo-co.png" class="resize"/>
         <br />
@@ -19,6 +44,7 @@
     </a>
     <br />
     <br />
+    {% endif %}
 
     <div class="content">
 
@@ -26,6 +52,8 @@
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/home">Home</a></li>
+            {%block breadcrumb%}
+            {%endblock%}
           </ol>
         </nav>
     {% endif %}
@@ -42,10 +70,11 @@
     </div>
 {%block footer%}
 {%endblock%}
+    {% if not admin_mode %}
     <div>
         <br />
         <p>
-            Questions?  Check our <a href="/view_faq">FAQ</a>!
+            Questions?  Check our <a href="/view_faq" target="_blank">FAQ</a>!
         </p>
         <p>
             We are in the process of revising the site and
@@ -55,5 +84,6 @@
             for help.
         </p>
     </div>
+    {% endif %}
 </body>
 </html>
