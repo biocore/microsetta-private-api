@@ -7,17 +7,13 @@
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
     <script src="/static/vendor/js/jquery.validate.min.js"></script>
-
+    <!-- Can remove this line when source.jinja2 extends sitebase.jinja2 -->
+    <script src="/static/input_util.js"></script>
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script>
         // Wait for the DOM to be ready
         $(function() {
-            <!--https://stackoverflow.com/questions/12010275/strip-white-spaces-on-input-->
-            $('#kit_name').bind('input', function(){
-                $(this).val(function(_, v){
-                    return v.replace(/\s+/g, '');
-                });
-            });
+            preclude_whitespace('#kit_name')
 
             // Initialize form validation on the registration form.
             // It has the name attribute "registration"
