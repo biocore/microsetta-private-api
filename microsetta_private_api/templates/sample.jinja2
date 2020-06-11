@@ -116,7 +116,7 @@
           <div class="form-group">
             <label for="sample_notes" name="sample_notes_label">Notes</label>
             <div class="col-sm-10">
-                <input id="sample_notes" name="sample_notes" class="form-control" value="{{ sample.sample_notes |e}}" autocomplete="off" type="text" />
+                <textarea class="form-control" id="sample_notes" name="sample_notes" rows=3>{{ sample.sample_notes |e}}</textarea>
             </div>
           </div>
 
