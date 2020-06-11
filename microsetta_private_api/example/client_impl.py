@@ -18,6 +18,7 @@ import jwt
 import requests
 from requests.auth import AuthBase
 from urllib.parse import quote
+from datetime import datetime
 
 # Authrocket uses RS256 public keys, so you can validate anywhere and safely
 # store the key in code. Obviously using this mechanism, we'd have to push code
@@ -29,9 +30,6 @@ from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.source import Source
-from microsetta_private_api.model.vue.vue_factory import VueFactory
-from microsetta_private_api.model.vue.vue_field import VueInputField, \
-    VueTextAreaField, VueSelectField, VueDateTimePickerField
 import importlib.resources as pkg_resources
 
 
@@ -653,6 +651,15 @@ def get_source(account_id, source_id):
             if answer['survey_template_id'] == VIOSCREEN_ID:
                 sample['ffq'] = True
 
+    # prettify datetime
+    needs_assignment = False
+    for sample in samples_output:
+        if sample['sample_datetime'] is None:
+            needs_assignment = True
+        else:
+            dt = datetime.fromisoformat(sample['sample_datetime'])
+            sample['sample_datetime'] = dt.strftime("%b-%d-%Y %-I:%M %p")
+
     needs_assignment = any([sample['sample_datetime'] is None
                             for sample in samples_output])
 
@@ -787,29 +794,23 @@ def get_sample(account_id, source_id, sample_id):
     else:
         raise BadRequest("Sources of type %s are not supported at this time"
                          % source_output['source_type'])
-    factory = VueFactory()
 
-    schema = factory.start_group("Edit Sample Information")\
-        .add_field(VueInputField("sample_barcode", "Barcode")
-                   .set(disabled=True))\
-        .add_field(VueDateTimePickerField("sample_datetime", "Date and Time")
-                   .set(required=True,
-                        validator="string"))\
-        .add_field(VueSelectField("sample_site", "Site", sample_sites)
-                   .set(required=not is_environmental,
-                        validator="string",
-                        disabled=is_environmental,
-                        hint=site_hint)) \
-        .add_field(VueTextAreaField("sample_notes", "Notes")) \
-        .end_group()\
-        .build()
+    if sample_output['sample_datetime'] is not None:
+        dt = datetime.fromisoformat(sample_output['sample_datetime'])
+        sample_output['date'] = dt.strftime("%m/%d/%Y")
+        sample_output['time'] = dt.strftime("%-I:%M %p")
+    else:
+        sample_output['date'] = ""
+        sample_output['time'] = ""
 
     return render_template('sample.jinja2',
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
                            acct_id=account_id,
                            source_id=source_id,
                            sample=sample_output,
-                           schema=schema)
+                           sample_sites=sample_sites,
+                           site_hint=site_hint,
+                           is_environmental=is_environmental)
 
 
 def put_sample(account_id, source_id, sample_id):
@@ -820,6 +821,12 @@ def put_sample(account_id, source_id, sample_id):
     model = {}
     for x in flask.request.form:
         model[x] = flask.request.form[x]
+
+    date = model.pop('sample_date')
+    time = model.pop('sample_time')
+    date_and_time = date + " " + time
+    sample_datetime = datetime.strptime(date_and_time, "%m/%d/%Y %I:%M %p")
+    model['sample_datetime'] = sample_datetime.isoformat()
 
     do_return, sample_output, _ = ApiRequest.put(
         '/accounts/%s/sources/%s/samples/%s' %

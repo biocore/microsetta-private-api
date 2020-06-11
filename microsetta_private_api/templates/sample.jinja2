@@ -1,54 +1,126 @@
 {% extends "sitebase.jinja2" %}
 {% set page_title = "Sample Information" %}
 {% set show_breadcrumbs = True %}
-{% set disable_bootstrap = True %}
 {% block head %}
-    <!--  Argh, Bootstrap 3 and 4 don't mix.  So the header and footer look slightly different on this page -->
-    <!--  The Vue Form Generator date time picker requires bootstrap 3, can't use 4.0  -->
-    <link rel="stylesheet" href="/static/vendor/bootstrap-3.3.7-dist/css/bootstrap.css" />
-    <script type="text/javascript" src="/static/vendor/js/vue-2.5.17.min.js"></script>
-    <script type="text/javascript" src="/static/vendor/vue-form-generator-2.3.4/vfg.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/vendor/vue-form-generator-2.3.4/vfg.css" />
+    <link rel="stylesheet" href="/static/vendor/jquery-ui-1.12.1/jquery-ui.min.css"/>
+    <link rel="stylesheet" href="/static/vendor/css/jquery.timepicker.min.css"/>
 
-    <!--  The Vue Form Generator date time component requires jquery moment.js, and the bootstrap-datetimepicker component -->
-    <script type="text/javascript" src="/static/vendor/js/jquery-1.11.1.min.js"></script>
-    <script type="text/javascript" src="/static/vendor/js/moment-2.9.0-with-locales.js"></script>
-    <script type="text/javascript" src="/static/vendor/bootstrap-datetimepicker-4.14.30/bootstrap-datetimepicker.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/vendor/bootstrap-datetimepicker-4.14.30/bootstrap-datetimepicker.css"/>
+    <script type="text/javascript" src="/static/vendor/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/static/vendor/js/jquery.timepicker.min.js"></script>
+    
+    <script>
+    $( function() {
+      $( "#sample_date" ).datepicker({
+          onClose: function() {
+            $(this).valid();
+            }});
+
+      $( "#sample_time" ).timepicker({
+          timeFormat: 'h:mm p',
+          interval: 30,
+          {% if sample.sample_time == "" %}
+          defaultTime: 'now',
+          {% else %}
+          defaultTime: '{{ sample.sample_time }}',
+          {% endif %}
+          startTime: '8',
+          dynamic: false,
+          dropdown: true,
+          scrollbar: true,
+          change: function() {
+            $(this).valid();
+            }
+      });
+            
+      $("form[name='sample_form']").validate({
+                // don't automatically move into the Date field
+                // as that triggers the pop up and it's annoying
+                focusInvalid: false,
+                // Specify validation rules
+                rules: {
+                    // The key name on the left side is the name attribute
+                    // of an input field. Validation rules are defined
+                    // on the right side
+                    sample_date: "required",
+                    sample_time: "required",
+                    {% if not is_environmental %}
+                    sample_site: "required",
+                    {% endif %}
+                    // Make sure the form is submitted to the destination defined
+                    // in the "action" attribute of the form when valid
+                    submitHandler: function (form) {
+                        form.submit();
+                    }
+                }
+            });
+
+        {% if not is_environmental %}
+        // https://github.com/jquery-validation/jquery-validation/issues/1872#issuecomment-257874743
+        $('#sample_site').on('change', function(){
+            $("form[name='sample_form']").validate().element('select');
+        });
+        {% endif %}
+    });
+    </script>
 {% endblock %}
+
 {% block breadcrumb %}
     <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Account</a></li>
     <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}/sources/{{source_id}}">Source</a></li>
     <li class="breadcrumb-item active" aria-current="page">Sample Information</li>
 {% endblock %}
+
 {% block content %}
     <div class="container">
-        <div id="app">
-          <div class="panel panel-default">
-            <div class="panel-body">
-              <form method="post" id="sample_form">
-                <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
-              </form>
+      <form method="post" id="sample_form" name="sample_form">
+          <div class="form-group row">
+            <label for="sample" name="sample_label" class="col-sm-2 col-form-label">Barcode</label>
+            <div class="col-sm-4">
+                <input id="view_sample" name="view_sample" class="form-control" type="text" value="{{ sample.sample_barcode |e }}" disabled="disabled" readonly/>
             </div>
           </div>
-        </div>
-    </div>
 
-    <!-- These should really be in the head, but don't easily work there.
-    Probably needs a document.load handler or something?  -->
-    <script type="text/javascript">
-      var survey_model={{sample|tojson}};
-      var survey_schema={{schema|tojson}};
-      last_group = survey_schema.groups[survey_schema.groups.length-1];
-      last_group.fields.push(
-      {
-        buttonText: "Update",
-        type: "submit",
-        validateBeforeSubmit: true,
-        onSubmit: function(){
-          document.getElementById("sample_form").submit();
-        }
-      });
-    </script>
-    <script type="text/javascript" src="/static/vue_survey_form.js"></script>
+          <div class="form-group row">
+            <label for="sample_date" name="sample_date_label" class="col-sm-2 col-form-label">Date</label>
+            <div class="col-sm-4">
+                <input id="sample_date" name="sample_date" class="form-control" type="text" value="{{ sample.date | e }}" autocomplete="off" required\>
+            </div>
+            <label for="sample_date" generated="true" class="error"></label>
+          </div>
+
+          <div class="form-group row">
+            <label for="sample_time" name="sample_time_label" class="col-sm-2 col-form-label">Time</label>
+            <div class="col-sm-4">
+              <input id="sample_time" name="sample_time" class="form-control" type="text" value="{{ sample.time | e}}" autocomplete="off" required\>
+            </div>
+            <label for="sample_time" generated="true" class="error"></label>
+          </div>
+      
+          {% if not is_environmental %}
+          <div class="form-group row">
+            <label for="sample_site" name="sample_site_label" class="col-sm-2 col-form-label">Site sampled</label>
+            <div class="col-sm-4">
+              <select id="sample_site" name="sample_site" class="form-control" required>
+                {% if not sample.sample_site %}
+                <option disabled selected value> -- Select a sample type -- </option>
+                {% endif %}
+                {% for site in sample_sites %}
+                <option value="{{site}}" {% if sample.sample_site == site %}selected {% endif %}>{{site}}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <label for="sample_site" generated="true" class="error"></label>
+          </div>
+          {% endif %}
+
+          <div class="form-group">
+            <label for="sample_notes" name="sample_notes_label">Notes</label>
+            <div class="col-sm-10">
+                <textarea class="form-control" id="sample_notes" name="sample_notes" rows=3>{{ sample.sample_notes |e}}</textarea>
+            </div>
+          </div>
+
+         <button type="submit" class="btn btn-primary">Update</button>
+      </form>
+    </div>
 {% endblock %}
