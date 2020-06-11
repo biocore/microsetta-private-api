@@ -844,6 +844,8 @@ def _get_kit(kit_name):
     unable_to_validate_msg = "Unable to validate the kit name; please " \
                              "reload the page."
     error_msg = None
+    response = None
+
     try:
         # call api and find out if kit name has unclaimed samples.
         # NOT doing this through ApiRequest.get bc in this case
@@ -864,7 +866,11 @@ def _get_kit(kit_name):
         error_msg = unable_to_validate_msg
 
     if error_msg is not None:
-        return None, error_msg, response.status_code
+        if response is None:
+            return None, error_msg, 500
+        else:
+            return None, error_msg, response.status_code
+
     return response.json(), None, response.status_code
 
 
