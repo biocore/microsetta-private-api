@@ -91,7 +91,7 @@
                 <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                     <div class="row">
                         <div class="col-sm">
-                            <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
+                            <a class="btn btn-outline-info" href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
                         </div>
                         <div class="col-sm">
                             {{sample.sample_datetime |e}}
@@ -104,7 +104,7 @@
                         {% if sample.ffq %}
                             Food Frequency Questionnaire<span class="fa fa-check"/>
                         {% else %}
-                            <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
+                            <a class="btn btn-outline-primary" href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
                         {% endif %}  <!-- end of if sample.ffq -->
                         </div>
                     {% endif %}  <!-- end of if is_human -->
