@@ -332,6 +332,7 @@ class AdminRepo(BaseRepo):
 
         accounts_created = None
         if len(rows) > 0:
+            acct_repo = AccountRepo(self._transaction)
             accounts_created = [acct_repo.get_account(row['account_id'])
                                 for row in rows]
 

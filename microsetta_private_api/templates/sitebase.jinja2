@@ -7,10 +7,8 @@
     <!-- jquery must be enabled before bootstrap for collapsible functionality -->
     <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
     <script src="/static/vendor/js/jquery.validate.min.js"></script>
-    {% if not disable_bootstrap %}
     <script src="/static/vendor/bootstrap-4.4.1-dist/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
-    {% endif %}
     <link rel="stylesheet" href="/static/css/minimal_interface.css" />
 
     {%block head%}
@@ -51,10 +49,10 @@
     {% if show_breadcrumbs %}
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb">
-            {% if not is_home %}
-            <li class="breadcrumb-item"><a href="/home">Home</a></li>
-            {% else %}
+            {% if is_home %}
             <li class="breadcrumb-item active" aria-current="page">Home</li>
+            {% else %}
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
             {% endif %}
             {%block breadcrumb%}
             {%endblock%}

@@ -13,7 +13,7 @@
         function postSurvey() {
             $.ajax({
                 type: "POST",
-                url: "{{ endpoint }}/workflow_take_survey?survey_template_id={{ survey_template_id }}",
+                url: "{{ endpoint }}/accounts/{{ account_id }}/sources/{{ source_id }}/take_survey?survey_template_id={{ survey_template_id }}",
                 data: JSON.stringify(survey_model),
                 success: function (data, textStatus, jqXHR) {
                     result_txt = data;
