@@ -13,18 +13,12 @@
     </div>
     {% if email_verified %}
     <div class="list-group">
-        {% if acct_id %}
-            {% if has_multiple_hs_sources %}
-                It appears that this account has more than one human participant associated with it.
-                Unfortunately, we are not yet able to display multiple participants.
-                We are actively modifying our infrastructure to support COVID-19 research,
-                and we’re still in the process of handling the different type of scenarios
-                that can happen on the website. We apologize for the inconvenience.
+            {% if accounts|length > 0 %}
+                {% for account in accounts %}
+                    <a href="/accounts/{{ account.account_id }}" class="list-group-item list-group-item-action">{{ account.email }}'s account</a>
+                {% endfor %}  <!-- end of for account in accounts -->
             {% else %}
-                <a href="/workflow" class="list-group-item list-group-item-action">Click here for {{user}}'s account</a>
-            {% endif %}
-        {% else %}
-        <a href="/workflow" class="list-group-item list-group-item-action">
+                <a href="/create_account" class="list-group-item list-group-item-action">
             Click here to create a new account...
         </a>
         {% endif %}
