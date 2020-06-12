@@ -114,7 +114,7 @@
                 <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                     <div class="row">
                         <div class="col-sm">
-                            <a href="/accounts/{{account_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
+                            <a class="btn btn-outline-info" href="/accounts/{{account_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
                         </div>
                         <div class="col-sm">
                             {{sample.sample_datetime |e}}
@@ -127,7 +127,7 @@
                         {% if sample.ffq %}
                             Food Frequency Questionnaire<span class="fa fa-check"/>
                         {% else %}
-                            <a href="/accounts/{{account_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
+                            <a class="btn btn-outline-primary" href="/accounts/{{account_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
                         {% endif %}  <!-- end of if sample.ffq -->
                         </div>
                     {% endif %}  <!-- end of if is_human -->
@@ -151,8 +151,13 @@
         <div class="container">
             <form method="get" name="list_kit_form" action="/list_kit_samples">
                 <div class="form-group">
-                    <label for="kit_name" id="kit_name_label">To add samples, please enter a kit ID here:</label>
+                    {% if claim_kit_name_hint is not none %}
+                    <label for="kit_name" name="kit_name_label">The kit ID used to create your account has unclaimed samples. To claim samples from this kit, please click "List samples". To claim samples from another kit ID, please enter it here and then click "List Samples":</label>
+                    <input id="kit_name" name="kit_name" class="form-control" type="text" value="{{ claim_kit_name_hint }}"/>
+                    {% else %}
+                    <label for="kit_name" name="kit_name_label">To add samples, please enter a kit ID here:</label>
                     <input id="kit_name" name="kit_name" class="form-control" type="text"/>
+                    {% endif %}
                  </div>
                 <input type="submit" class="btn btn-primary" value="List Samples"/>
             </form>
@@ -171,7 +176,9 @@
                 </div>
             </div>
         </div>
-        <p></p>
+        <br/>
+        <br/>
+        <br/>
         <div class="container">
             {% if surveys|length > 0 %}
                 <p>Surveys taken:</p>

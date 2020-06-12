@@ -56,7 +56,7 @@
                 <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                   <div class="row">
                     <div class="col-sm">
-                      <a href="/accounts/{{account.account_id}}/sources/{{ source.source_id|e }}">
+                      <a class="btn btn-outline-info" href="/accounts/{{account.account_id}}/sources/{{ source.source_id|e }}">
                           {{ source.source_name|e}}
                       </a>
                     </div>
