@@ -116,7 +116,9 @@
 }
 </style>
 {% endblock %}
-
+{% block breadcrumb %}
+    <li class="breadcrumb-item active" aria-current="page">Consent</li>
+{% endblock %}
 {% block content%}
 <h2>{{ tl['ADD_HUMAN_TITLE'] |e}}</h2>
 {% if message %}
