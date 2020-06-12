@@ -78,9 +78,9 @@
         <div class="container">
             Add a new source to this account:
             <br />
-            <a href = "/accounts/{{ account_id }}/create_human_source">
+            <a href = "/accounts/{{ account.account_id }}/create_human_source">
                 <button class="btn btn-primary"> New Human Source</button></a>
-            <a href = "/accounts/{{ account_id }}/create_nonhuman_source">
+            <a href = "/accounts/{{ account.account_id }}/create_nonhuman_source">
                 <button class="btn btn-primary"> New Environmental Source</button></a>
         </div>
 {% endblock %}

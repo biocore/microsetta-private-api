@@ -1,17 +1,3 @@
-"""
-Functions to implement OpenAPI 3.0 interface to access private PHI.
-
-Underlies the resource server in the oauth2 workflow. "Resource Server: The
-server hosting user-owned resources that are protected by OAuth2. The resource
-server validates the access-token and serves the protected resources."
---https://dzone.com/articles/oauth-20-beginners-guide
-
-Loosely based off examples in
-https://realpython.com/flask-connexion-rest-api/#building-out-the-complete-api
-and associated file
-https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/people.py  # noqa: E501
-"""
-
 import flask
 from flask import render_template, session, redirect
 import jwt
@@ -418,15 +404,14 @@ def get_authrocket_callback(token):
     return redirect(HOME_URL)
 
 
-# TODO: change name to get_ pattern
-def render_signup_intermediate():
+def get_signup_intermediate():
     output = render_template('signup_intermediate.jinja2',
                              authrocket_url=SERVER_CONFIG["authrocket_url"],
                              endpoint=SERVER_CONFIG["endpoint"])
     return output
 
 
-def logout():
+def get_logout():
     session.clear()
     return redirect(HOME_URL)
 
@@ -436,7 +421,7 @@ def get_create_account():
     if prereqs_step != NEEDS_ACCOUNT:
         return _route_to_closest_sink(prereqs_step, curr_state)
 
-    email, _ = parse_jwt(session[TOKEN_KEY_NAME])
+    email, _ = _parse_jwt(session[TOKEN_KEY_NAME])
     # TODO:  Need to support other countries
     #  and not default to US and California
     default_account_values = {
@@ -460,6 +445,7 @@ def get_create_account():
 
 
 def post_create_account(body):
+    new_acct_id = None
     prereqs_step, curr_state = _check_relevant_prereqs()
     if prereqs_step == NEEDS_ACCOUNT:
         kit_name = body[KIT_NAME_KEY]
@@ -484,8 +470,8 @@ def post_create_account(body):
         if has_error:
             return accts_output
 
-    # TODO: fix this for case where accts_output not set!
-    new_acct_id = accts_output["account_id"]
+        new_acct_id = accts_output["account_id"]
+
     return _refresh_state_and_route_to_sink(new_acct_id)
 
 
@@ -495,7 +481,7 @@ def get_update_email(account_id):
         return _route_to_closest_sink(prereqs_step, curr_state)
 
     return render_template("update_email.jinja2",
-                           admin_mode=session.get(ADMIN_MODE_KEY, False)
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            account_id=account_id)
 
 
@@ -544,8 +530,6 @@ def get_account(account_id):
 
     return render_template('account_overview.jinja2',
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           # TODO: shouldn't need both id and account
-                           account_id=account_id,
                            account=account,
                            sources=sources)
 
@@ -582,7 +566,7 @@ def post_account_details(account_id, body):
         }
 
         do_return, sample_output, _ = ApiRequest.put('/accounts/%s' %
-            (account_id,), json=acct)
+                                                     account_id, json=acct)
         if do_return:
             return sample_output
 
@@ -753,7 +737,7 @@ def get_to_save_vioscreen_remote_sample_survey(account_id, source_id,
 
 def get_source(account_id, source_id):
     prereqs_step, curr_state = _check_relevant_prereqs(account_id,
-                                                          source_id)
+                                                       source_id)
     if prereqs_step != SOURCE_PREREQS_MET:
         return _route_to_closest_sink(prereqs_step, curr_state)
 
@@ -1039,9 +1023,9 @@ class ApiRequest:
         return error_code, output, headers
 
     @classmethod
-    def get(cls, path, params=None):
+    def get(cls, input_path, params=None):
         response = requests.get(
-            ApiRequest.API_URL + path,
+            ApiRequest.API_URL + input_path,
             auth=BearerAuth(session[TOKEN_KEY_NAME]),
             verify=ApiRequest.CAfile,
             params=cls.build_params(params))
@@ -1049,9 +1033,9 @@ class ApiRequest:
         return cls._check_response(response)
 
     @classmethod
-    def put(cls, path, params=None, json=None):
+    def put(cls, input_path, params=None, json=None):
         response = requests.put(
-            ApiRequest.API_URL + path,
+            ApiRequest.API_URL + input_path,
             auth=BearerAuth(session[TOKEN_KEY_NAME]),
             verify=ApiRequest.CAfile,
             params=cls.build_params(params),
@@ -1060,9 +1044,9 @@ class ApiRequest:
         return cls._check_response(response)
 
     @classmethod
-    def post(cls, path, params=None, json=None):
+    def post(cls, input_path, params=None, json=None):
         response = requests.post(
-            ApiRequest.API_URL + path,
+            ApiRequest.API_URL + input_path,
             auth=BearerAuth(session[TOKEN_KEY_NAME]),
             verify=ApiRequest.CAfile,
             params=cls.build_params(params),

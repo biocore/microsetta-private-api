@@ -79,8 +79,8 @@
     </script>
 {% endblock %}
 {% block breadcrumb %}
-    <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Account</a></li>
-    <li class="breadcrumb-item"><a>{{source_name}}</a></li>
+    <li class="breadcrumb-item"><a href="/accounts/{{account_id}}">Account</a></li>
+    <li class="breadcrumb-item active"><a>{{source_name}}</a></li>
 {% endblock %}
 {% block content %}
 
@@ -135,20 +135,23 @@
                 </div>
                 {% endfor %}  <!-- end of for sample in samples -->
             </div>
+                {% if samples|length > 1 and is_human %}
+                    <br>
+                    <u><i>Do I need to take more than one Food Frequency Questionnaire (FFQ)</i></u>?
+                    If you are taking all of your samples at the same time, you will only need to complete one.
+                    If you are collecting samples over time (e.g., once per week), then please consider taking an FFQ per
+                    time point. The FFQs provide valuable dietary research data for the project, so researchers can better
+                    understand the relationship between the food you eat and your microbes.
+                {% endif %}  <!-- end of if samples|length > 1 and is_human -->
+            <br/>
+            <br/>
+            <br/>
             {% endif %}  <!-- end of if samples|length > 0 -->
-            {% if samples|length > 1 and is_human %}
-                <br>
-                <u><i>Do I need to take more than one Food Frequency Questionnaire (FFQ)</u></i>?
-    If you are taking all of your samples at the same time, you will only need to complete one. If you are collecting samples over time (e.g., once per week), then please consider taking an FFQ per time point. The FFQs provide valuable dietary research data for the project, so researchers can better understand the relationship between the food you eat and your microbes.
-            {% endif %}  <!-- end of if samples|length > 1 and is_human -->
         </div>
-        <br/>
-        <br/>
-        <br/>
         <div class="container">
             <form method="get" name="list_kit_form" action="/list_kit_samples">
                 <div class="form-group">
-                    <label for="kit_name" name="kit_name_label">To add samples, please enter a kit ID here:</label>
+                    <label for="kit_name" id="kit_name_label">To add samples, please enter a kit ID here:</label>
                     <input id="kit_name" name="kit_name" class="form-control" type="text"/>
                  </div>
                 <input type="submit" class="btn btn-primary" value="List Samples"/>
