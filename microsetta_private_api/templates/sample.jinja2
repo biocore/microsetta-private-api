@@ -1,13 +1,15 @@
 {% extends "sitebase.jinja2" %}
 {% set page_title = "Sample Information" %}
 {% set show_breadcrumbs = True %}
+{% set disable_bootstrap = True %}
+{% set show_logout = True %}
 {% block head %}
     <link rel="stylesheet" href="/static/vendor/jquery-ui-1.12.1/jquery-ui.min.css"/>
     <link rel="stylesheet" href="/static/vendor/css/jquery.timepicker.min.css"/>
 
     <script type="text/javascript" src="/static/vendor/jquery-ui-1.12.1/jquery-ui.min.js"></script>
     <script type="text/javascript" src="/static/vendor/js/jquery.timepicker.min.js"></script>
-    
+
     <script>
     $( function() {
       $( "#sample_date" ).datepicker({
@@ -31,7 +33,7 @@
             $(this).valid();
             }
       });
-            
+
       $("form[name='sample_form']").validate({
                 // don't automatically move into the Date field
                 // as that triggers the pop up and it's annoying
@@ -65,8 +67,8 @@
 {% endblock %}
 
 {% block breadcrumb %}
-    <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Account</a></li>
-    <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}/sources/{{source_id}}">Source</a></li>
+    <li class="breadcrumb-item"><a href="/accounts/{{account_id}}">Account</a></li>
+    <li class="breadcrumb-item"><a href="/accounts/{{account_id}}/sources/{{source_id}}">Source</a></li>
     <li class="breadcrumb-item active" aria-current="page">Sample Information</li>
 {% endblock %}
 
@@ -94,8 +96,8 @@
               <input id="sample_time" name="sample_time" class="form-control" type="text" value="{{ sample.time | e}}" autocomplete="off" required\>
             </div>
             <label for="sample_time" generated="true" class="error"></label>
-          </div>
-      
+        </div>
+
           {% if not is_environmental %}
           <div class="form-group row">
               <div class="col-sm-12">
@@ -131,8 +133,7 @@
             <label for="sample_notes" name="sample_notes_label">Notes</label>
             <div class="col-sm-10">
                 <textarea class="form-control" id="sample_notes" name="sample_notes" rows=3>{{ sample.sample_notes |e}}</textarea>
-            </div>
-          </div>
+    </div>
 
          <button type="submit" class="btn btn-primary">Update</button>
       </form>

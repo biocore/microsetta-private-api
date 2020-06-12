@@ -1,6 +1,7 @@
 {% extends "sitebase.jinja2" %}
 {% set page_title = "Account Details" %}
 {% set show_breadcrumbs = True %}
+{% set show_logout = True %}
 {% block head %}
     <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
     <script src="/static/vendor/js/jquery.validate.min.js"></script>
@@ -25,8 +26,7 @@
                     kit_name: {
                         required: true,
                         remote: {
-                            url: "/check_acct_inputs",
-                            type: "post"
+                            url: "/check_kit_valid"
                         }
                     },
                     {% endif %}
@@ -47,117 +47,115 @@
     <li class="breadcrumb-item active" aria-current="page">Account Details</li>
 {% endblock %}
 {% block content %}
-        <div class="container">
-          <div class="card">
-            <h5 class="card-header">Account Details</h5>
-            <div class="card-body">
-                <form id="acct_form" name="acct_form" method="post">
-                    <div class="form-group">
-                        <label for="email" name="email_label">Email/Correo electrónico</label>
-                        <input id="email" name="email" class="form-control" type="hidden" value="{{account.email |e}}"/>
-                        <input id="view_email" name="view_email" class="form-control" type="email" value="{{account.email |e}}" disabled="disabled" readonly/>
-                    </div>
-                    <div class="form-group">
-                        <label for="first_name" name="first_name_label">First Name/Nombre</label>
-                        <input id="first_name" name="first_name" class="form-control" value="{{account.first_name |e}}" type="text" />
-                    </div>
-                    <div class="form-group">
-                        <label for="last_name" name="last_name_label">Last Name/Nombre de Familia</label>
-                        <input id="last_name" name="last_name" class="form-control" value="{{account.last_name |e}}" type="text" />
-                    </div>
-                    <div class="form-group">
-                        <label for="street" name="street_label" >Street Address/Dirección</label>
-                        <input id="street" name="street" class="form-control" value="{{account.address.street |e}}" type="text" />
-                    </div>
-                    <div class="form-group">
-                        <label for="city" name="city_label">City/Ciudad</label>
-                        <input id="city" name="city" class="form-control" value="{{account.address.city |e}}" type="text" />
-                    </div>
-                    <div class="form-group">
-                        <p>
-                        <strong>Note to non-US users:</strong> We are working on support for additional countries and
-                        expect to have that available soon.
-                        </p>
-                        <label for="state" name="state_label">State/Estado</label>
-
-                        {% set US_STATES = [
-                            ("CA", "California"),
-                            ("AL", "Alabama"),
-                            ("AK", "Alaska"),
-                            ("AZ", "Arizona"),
-                            ("AR", "Arkansas"),
-                            ("CO", "Colorado"),
-                            ("CT", "Connecticut"),
-                            ("DE", "Delaware"),
-                            ("DC", "District Of Columbia"),
-                            ("FL", "Florida"),
-                            ("GA", "Georgia"),
-                            ("HI", "Hawaii"),
-                            ("ID", "Idaho"),
-                            ("IL", "Illinois"),
-                            ("IN", "Indiana"),
-                            ("IA", "Iowa"),
-                            ("KS", "Kansas"),
-                            ("KY", "Kentucky"),
-                            ("LA", "Louisiana"),
-                            ("ME", "Maine"),
-                            ("MD", "Maryland"),
-                            ("MA", "Massachusetts"),
-                            ("MI", "Michigan"),
-                            ("MN", "Minnesota"),
-                            ("MS", "Mississippi"),
-                            ("MO", "Missouri"),
-                            ("MT", "Montana"),
-                            ("NE", "Nebraska"),
-                            ("NV", "Nevada"),
-                            ("NH", "New Hampshire"),
-                            ("NJ", "New Jersey"),
-                            ("NM", "New Mexico"),
-                            ("NY", "New York"),
-                            ("NC", "North Carolina"),
-                            ("ND", "North Dakota"),
-                            ("OH", "Ohio"),
-                            ("OK", "Oklahoma"),
-                            ("OR", "Oregon"),
-                            ("PA", "Pennsylvania"),
-                            ("RI", "Rhode Island"),
-                            ("SC", "South Carolina"),
-                            ("SD", "South Dakota"),
-                            ("TN", "Tennessee"),
-                            ("TX", "Texas"),
-                            ("UT", "Utah"),
-                            ("VT", "Vermont"),
-                            ("VA", "Virginia"),
-                            ("WA", "Washington"),
-                            ("WV", "West Virginia"),
-                            ("WI", "Wisconsin"),
-                            ("WY", "Wyoming")
-                        ] %}
-
-                        <select id="state" name="state" class="form-control">
-                            {% for code, full_name in US_STATES %}
-                            <option value="{{code}}" {% if account.address.state == code %}selected {% endif %}>{{full_name}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="post_code" name="post_code_label">Zip Code/Código Postal</label>
-                        <input id="post_code" name="post_code" class="form-control" value="{{account.address.post_code |e}}" type="text" />
-                    </div>
-                    {% if CREATE_ACCT %}
-                    <div class="form-group">
-                        <label for="kit_name" name="kit_name_label">Kit ID/ID del kit</label>
-                        <input id="kit_name" name="kit_name" class="form-control" type="text"/>
-                    </div>
-                    {% endif %}
-                    <input id="country_code" name="country_code" type="hidden" value="{{account.address.country_code |e}}"/>
-                    {% if CREATE_ACCT %}
-                    <button type="submit" class="btn btn-primary">Create Account</button>
-                    {% else %}
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    {% endif %}
-                </form>
+<div class="card">
+    <h5 class="card-header">Account Details</h5>
+    <div class="card-body">
+        <form id="acct_form" name="acct_form" method="post">
+            <div class="form-group">
+                <label for="email" name="email_label">Email/Correo electrónico</label>
+                <input id="email" name="email" class="form-control" type="hidden" value="{{account.email |e}}"/>
+                <input id="view_email" name="view_email" class="form-control" type="email" value="{{account.email |e}}" disabled="disabled" readonly/>
             </div>
-          </div>
-        </div>
+            <div class="form-group">
+                <label for="first_name" name="first_name_label">First Name/Nombre</label>
+                <input id="first_name" name="first_name" class="form-control" value="{{account.first_name |e}}" type="text" />
+            </div>
+            <div class="form-group">
+                <label for="last_name" name="last_name_label">Last Name/Nombre de Familia</label>
+                <input id="last_name" name="last_name" class="form-control" value="{{account.last_name |e}}" type="text" />
+            </div>
+            <div class="form-group">
+                <label for="street" name="street_label" >Street Address/Dirección</label>
+                <input id="street" name="street" class="form-control" value="{{account.address.street |e}}" type="text" />
+            </div>
+            <div class="form-group">
+                <label for="city" name="city_label">City/Ciudad</label>
+                <input id="city" name="city" class="form-control" value="{{account.address.city |e}}" type="text" />
+            </div>
+            <div class="form-group">
+                <p>
+                <strong>Note to non-US users:</strong> We are working on support for additional countries and
+                expect to have that available soon.
+                </p>
+                <label for="state" name="state_label">State/Estado</label>
+
+                {% set US_STATES = [
+                    ("CA", "California"),
+                    ("AL", "Alabama"),
+                    ("AK", "Alaska"),
+                    ("AZ", "Arizona"),
+                    ("AR", "Arkansas"),
+                    ("CO", "Colorado"),
+                    ("CT", "Connecticut"),
+                    ("DE", "Delaware"),
+                    ("DC", "District Of Columbia"),
+                    ("FL", "Florida"),
+                    ("GA", "Georgia"),
+                    ("HI", "Hawaii"),
+                    ("ID", "Idaho"),
+                    ("IL", "Illinois"),
+                    ("IN", "Indiana"),
+                    ("IA", "Iowa"),
+                    ("KS", "Kansas"),
+                    ("KY", "Kentucky"),
+                    ("LA", "Louisiana"),
+                    ("ME", "Maine"),
+                    ("MD", "Maryland"),
+                    ("MA", "Massachusetts"),
+                    ("MI", "Michigan"),
+                    ("MN", "Minnesota"),
+                    ("MS", "Mississippi"),
+                    ("MO", "Missouri"),
+                    ("MT", "Montana"),
+                    ("NE", "Nebraska"),
+                    ("NV", "Nevada"),
+                    ("NH", "New Hampshire"),
+                    ("NJ", "New Jersey"),
+                    ("NM", "New Mexico"),
+                    ("NY", "New York"),
+                    ("NC", "North Carolina"),
+                    ("ND", "North Dakota"),
+                    ("OH", "Ohio"),
+                    ("OK", "Oklahoma"),
+                    ("OR", "Oregon"),
+                    ("PA", "Pennsylvania"),
+                    ("RI", "Rhode Island"),
+                    ("SC", "South Carolina"),
+                    ("SD", "South Dakota"),
+                    ("TN", "Tennessee"),
+                    ("TX", "Texas"),
+                    ("UT", "Utah"),
+                    ("VT", "Vermont"),
+                    ("VA", "Virginia"),
+                    ("WA", "Washington"),
+                    ("WV", "West Virginia"),
+                    ("WI", "Wisconsin"),
+                    ("WY", "Wyoming")
+                ] %}
+
+                <select id="state" name="state" class="form-control">
+                    {% for code, full_name in US_STATES %}
+                    <option value="{{code}}" {% if account.address.state == code %}selected {% endif %}>{{full_name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="post_code" name="post_code_label">Zip Code/Código Postal</label>
+                <input id="post_code" name="post_code" class="form-control" value="{{account.address.post_code |e}}" type="text" />
+            </div>
+            {% if CREATE_ACCT %}
+            <div class="form-group">
+                <label for="kit_name" name="kit_name_label">Kit ID/ID del kit</label>
+                <input id="kit_name" name="kit_name" class="form-control" type="text"/>
+            </div>
+            {% endif %}
+            <input id="country_code" name="country_code" type="hidden" value="{{account.address.country_code |e}}"/>
+            {% if CREATE_ACCT %}
+            <button type="submit" class="btn btn-primary">Create Account</button>
+            {% else %}
+            <button type="submit" class="btn btn-primary">Save</button>
+            {% endif %}
+        </form>
+    </div>
+</div>
 {% endblock %}

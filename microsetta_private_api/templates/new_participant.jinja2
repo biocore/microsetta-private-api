@@ -1,6 +1,7 @@
 {% extends "sitebase.jinja2" %}
 {% set page_title = "Consent" %}
 {% set show_breadcrumbs = True %}
+{% set show_logout = True %}
 {% block head %}
 <script type="text/javascript" src="/static/vendor/js/jquery-3.4.1.min.js"></script>
 <script type="text/javascript" src="/static/vendor/jquery-ui-1.12.1/jquery-ui.min.js"></script>
@@ -116,7 +117,9 @@
 }
 </style>
 {% endblock %}
-
+{% block breadcrumb %}
+    <li class="breadcrumb-item active" aria-current="page">Consent</li>
+{% endblock %}
 {% block content%}
 <h2>{{ tl['ADD_HUMAN_TITLE'] |e}}</h2>
 {% if message %}
