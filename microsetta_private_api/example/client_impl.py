@@ -108,7 +108,8 @@ def _check_home_prereqs():
 
         if len(accts_output) == 0:
             # NB: Overwriting outputs from get call above
-            needs_reroute, accts_output, _ = ApiRequest.post("/accounts/legacies")
+            needs_reroute, accts_output, _ = ApiRequest.post(
+                "/accounts/legacies")
             if needs_reroute:
                 current_state[REROUTE_KEY] = accts_output
                 return NEEDS_REROUTE, current_state
@@ -976,7 +977,8 @@ def post_claim_samples(account_id, source_id, body):
         for curr_sample_id in sample_ids_to_claim:
             # Claim sample
             has_error, sample_output, _ = ApiRequest.post(
-                '/accounts/{0}/sources/{1}/samples'.format(account_id, source_id),
+                '/accounts/{0}/sources/{1}/samples'.format(
+                    account_id, source_id),
                 json={"sample_id": curr_sample_id})
             if has_error:
                 return sample_output
