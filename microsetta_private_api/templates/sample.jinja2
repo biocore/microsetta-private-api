@@ -100,18 +100,31 @@
 
           {% if not is_environmental %}
           <div class="form-group row">
-            <label for="sample_site" name="sample_site_label" class="col-sm-2 col-form-label">Site sampled</label>
-            <div class="col-sm-4">
-              <select id="sample_site" name="sample_site" class="form-control" required>
-                {% if not sample.sample_site %}
-                <option disabled selected value> -- Select a sample type -- </option>
-                {% endif %}
-                {% for site in sample_sites %}
-                <option value="{{site}}" {% if sample.sample_site == site %}selected {% endif %}>{{site}}</option>
-                {% endfor %}
-              </select>
-      </div>
-            <label for="sample_site" generated="true" class="error"></label>
+              <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-6">
+                    <ul>
+                        <lh><small id="sample_site_help" class="form-text text-muted">Guidelines for site identification:</small></lh>
+                        <li><small id="sample_site_help" class="form-text text-muted">If collecting a <i>BLOOD</i> sample, please select Blood (skin prick) </small></li>
+                        <li><small id="sample_site_help" class="form-text text-muted">For all swabs, please select the site as precisely as possible from the options available</small></li>
+                    </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <label for="sample_site" name="sample_site_label" class="col-sm-2 col-form-label">Site sampled</label>
+                    <div class="col-sm-4">
+                      <select id="sample_site" name="sample_site" class="form-control" required>
+                        {% if not sample.sample_site %}
+                        <option disabled selected value> -- Select a sample type -- </option>
+                        {% endif %}
+                        {% for site in sample_sites %}
+                        <option value="{{site}}" {% if sample.sample_site == site %}selected {% endif %}>{{site}}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <label for="sample_site" generated="true" class="error"></label>
+                </div>
+              </div>
           </div>
           {% endif %}
 

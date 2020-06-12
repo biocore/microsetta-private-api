@@ -869,18 +869,13 @@ def get_update_sample(account_id, source_id, sample_id):
 
     if is_human:
         # Human Settings
-        sample_sites = ["Blood (skin prick)", "Stool", "Mouth", "Nares",
-                        "Nasal mucus", "Right hand", "Left hand",
+        sample_sites = ["Blood (skin prick)", "Saliva", "Stool", "Mouth",
+                        "Nares", "Nasal mucus", "Right hand", "Left hand",
                         "Forehead", "Torso", "Right leg", "Left leg",
                         "Vaginal mucus", "Tears", "Ear wax", "Hair", "Fur"]
-        site_hint = None
     elif is_environmental:
         # Environment settings
         sample_sites = [None]
-        site_hint = "As we cannot enumerate all possible sampling sites for " \
-            "environmental sources, we recommend describing the site " \
-            "the sample was taken from in as much detail as " \
-            "possible below"
     else:
         raise BadRequest("Sources of type %s are not supported at this time"
                          % source_output['source_type'])
@@ -900,7 +895,6 @@ def get_update_sample(account_id, source_id, sample_id):
                            source_name=source_output['source_name'],
                            sample=sample_output,
                            sample_sites=sample_sites,
-                           site_hint=site_hint,
                            is_environmental=is_environmental)
 
 
