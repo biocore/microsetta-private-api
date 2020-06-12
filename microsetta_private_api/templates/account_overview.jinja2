@@ -1,6 +1,7 @@
 {% extends "sitebase.jinja2" %}
 {% set page_title = "Account" %}
 {% set show_breadcrumbs = True %}
+{% set show_logout = True %}
 {% block head %}
     <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
     <script src="/static/vendor/js/jquery.validate.min.js"></script>
@@ -26,69 +27,60 @@
     <li class="breadcrumb-item active" aria-current="page">Account</li>
 {% endblock %}
 {% block content %}
+    <h4>Account Details</h4>
     <div class="container">
-        <h4>Account Details</h4>
-        <div class="container">
-            <div class="card" style="width: 18rem;">
-              <div class="card-body">
-                <h5 class="card-title">{{account.first_name |e}} {{account.last_name |e}}</h5>
-                <h6 class="card-subtitle mb-2 text-muted">{{account.email |e}}</h6>
-                <a href="/accounts/{{account.account_id}}/details" class="card-link">View Account Details</a>
-              </div>
-            </div>
-        </div>
-        <hr style="border-top: dotted 1px;" />
-        <h4>Sources</h4>
-        <div class="container">
-            {%  if sources|length > 0 %}
-            Choose a source to assign samples to by clicking on a name, listed in blue below:
-            <div class="list-group">
-                <br>
-                <div class="row">
-                    <div class="col-sm">
-                        <i>Name</i>
-                    </div>
-                    <div class="col-sm">
-                        <i>Source type</i>
-                    </div>
-                </div>
-                {% for source in sources %}
-                <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
-                  <div class="row">
-                    <div class="col-sm">
-                      <a class="btn btn-outline-info" href="/accounts/{{account.account_id}}/sources/{{ source.source_id|e }}">
-                          {{ source.source_name|e}}
-                      </a>
-                    </div>
-                    <div class="col-sm">
-                      {{source.source_type|e}}
-                    </div>
-                  </div>
-                </div>
-                {% endfor %}
-            </div>
-            <br>
-            <i><u>How do I choose a Sample Source?</u></i>
-The Microsetta Initiative is researching both host-associated and environmental microbiomes, which means looking at microbes found on and in your body as well as those found in the world around you. At the moment, we have two categories of sample sources to choose from: Human and Environmental.
-            <br/><br/>
-            {% endif %}
-        </div>
-        <div class="container">
-            <br/>
-            Some projects and participants that use The Microsetta Initiative are interested in environmental samples (e.g., soil, household surfaces, etc). If you are interested in collecting an environmental sample, or if you are taking part in a project that has an environmental component, please use the fields below to create an environmental source:
-            <br/>
-            <br/>
-            <form method="post" name="new_source_form" action="/accounts/{{account.account_id}}/sources/">
-                <div class="form-group">
-                    <label for="source_name" name="source_name_label">Environment name (e.g., microwave):</label>
-                    <input id="source_name" name="source_name" class="form-control" type="text"/>
-                    <input id="source_type" name="source_type" type="hidden" value="environmental" />
-                    <br />
-                    <label for="source_description" name="source_description_label">Environment description (optional):</label>
-                    <input id="source_description" name="source_description" class="form-control" type="text"/>
-                 </div>
-                <input type="submit" class="btn btn-primary" value="Create Source"/>
-            </form>
+        <div class="card" style="width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">{{account.first_name |e}} {{account.last_name |e}}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">{{account.email |e}}</h6>
+            <a href="/accounts/{{account.account_id}}/details" class="card-link">View Account Details</a>
+          </div>
         </div>
     </div>
+    <hr style="border-top: dotted 1px;" />
+    <h4>Sources</h4>
+    <div class="container">
+        {%  if sources|length > 0 %}
+        Choose a source to assign samples to by clicking on a name, listed in blue below:
+        <div class="list-group">
+            <br>
+            <div class="row">
+                <div class="col-sm">
+                    <i>Name</i>
+                </div>
+                <div class="col-sm">
+                    <i>Source type</i>
+                </div>
+            </div>
+            {% for source in sources %}
+            <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
+              <div class="row">
+                <div class="col-sm">
+                      <a class="btn btn-outline-info" href="/accounts/{{account.account_id}}/sources/{{ source.source_id|e }}">
+                      {{ source.source_name|e}}
+                  </a>
+                </div>
+                <div class="col-sm">
+                  {{source.source_type|e}}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        <br>
+        <i><u>How do I choose a Sample Source?</u></i>
+The Microsetta Initiative is researching both host-associated and environmental microbiomes, which means looking at microbes found on and in your body as well as those found in the world around you. At the moment, we have two categories of sample sources to choose from: Human and Environmental.
+                <br />
+                Some projects and participants that use The Microsetta Initiative are interested in environmental samples (e.g., soil, household surfaces, etc).
+        <br/><br/>
+    <div class="container">
+            Add a new source to this account:
+                <br />
+            <a href = "/accounts/{{ account.account_id }}/create_human_source">
+                <button class="btn btn-primary"> New Human Source</button></a>
+            <a href = "/accounts/{{ account.account_id }}/create_nonhuman_source">
+                <button class="btn btn-primary"> New Environmental Source</button></a>
+        </div>
 {% endblock %}

@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Microsetta Participant Survey</title>
-    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
+{% extends "sitebase.jinja2" %}
+{% set page_title = "Participant Survey" %}
+{% set show_breadcrumbs = True %}
+{% set show_logout = True %}
+{% block head %}
     <script type="text/javascript" src="/static/vendor/js/vue-2.5.17.min.js"></script>
-    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
     <script type="text/javascript" src="/static/vendor/vue-form-generator-2.3.4/vfg.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/vendor/vue-form-generator-2.3.4/vfg.css">
-
-    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script>
         var result_txt = "";
         var error_txt = "";
@@ -16,7 +13,7 @@
         function postSurvey() {
             $.ajax({
                 type: "POST",
-                url: "{{ endpoint }}/workflow_take_survey?survey_template_id={{ survey_template_id }}",
+                url: "{{ endpoint }}/accounts/{{ account_id }}/sources/{{ source_id }}/take_survey?survey_template_id={{ survey_template_id }}",
                 data: JSON.stringify(survey_model),
                 success: function (data, textStatus, jqXHR) {
                     result_txt = data;
@@ -66,47 +63,18 @@
             }
         }
     </script>
-</head>
-<body>
-    <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
-        <img src="/static/img/logo-co.png" class="resize"/>
-        <br />
-        <br />
-        Return to microsetta.ucsd.edu
-    </a>
-    <br />
-    <br />
-
-    <div class="content">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/home">Home</a></li>
-          </ol>
-        </nav>
-        <div class="container" id="app">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <form id="survey_form">
-                        <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
-                    </form>
-                </div>
-            </div>
+{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item active" aria-current="page">Participant Survey</li>
+{% endblock %}
+{% block content %}
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <form id="survey_form">
+                <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+            </form>
         </div>
     </div>
-
-<!--  <div class="panel panel-default">-->
-<!--    <div class="panel-heading">Model</div>-->
-<!--    <div class="panel-body">-->
-<!--      <pre v-if="model" v-html="prettyJSON(model)"></pre>-->
-<!--    </div>-->
-<!--  </div>-->
-
-<!--  <div class="panel panel-default">-->
-<!--    <div class="panel-heading">Schema</div>-->
-<!--    <div class="panel-body">-->
-<!--      <pre v-if="model" v-html="prettyJSON(schema)"></pre>-->
-<!--    </div>-->
-<!--  </div>-->
 
     <script type="text/javascript">
       var survey_model = {}
@@ -135,19 +103,4 @@
       });
     </script>
     <script type="text/javascript" src="/static/vue_survey_form.js"></script>
-
-    <div>
-        <br />
-        <p>
-            Questions?  Check our <a href="/view_faq" target="_blank">FAQ</a>!
-        </p>
-        <p>
-            We are in the process of revising the site and
-            apologize for any inconvenience.
-            Please contact
-            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
-            for help.
-        </p>
-    </div>
-</body>
-</html>
+{% endblock %}

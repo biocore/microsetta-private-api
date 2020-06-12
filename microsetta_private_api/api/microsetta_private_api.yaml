@@ -1250,14 +1250,14 @@ components:
       description: Client url to which the customized consent form should be posted.
       schema:
         type: string
-        example: "https://www.microsetta.org/workflow_create_human_source"
+        example: "https://www.microsetta.org/accounts/72d2cc55-8522-4528-a85b-78be2ec0933f/create_human_source"
     survey_redirect_url:
       name: survey_redirect_url
       in: query
       description: Url that some external surveys will redirect browser to after survey completion
       schema:
         type: string
-        example: "https://www.microsetta.org/workflow_create_human_source"
+        example: "https://www.microsetta.org/accounts/72d2cc55-8522-4528-a85b-78be2ec0933f/sources/bfed3a1b-0855-4dce-9398-7c54f5b4ac8f"
     source_type:
       name: source_type
       in: query

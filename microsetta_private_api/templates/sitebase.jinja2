@@ -51,19 +51,24 @@
     {% if show_breadcrumbs %}
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb">
+            {% if is_home %}
+            <li class="breadcrumb-item active" aria-current="page">Home</li>
+            {% else %}
             <li class="breadcrumb-item"><a href="/home">Home</a></li>
+            {% endif %}
             {%block breadcrumb%}
             {%endblock%}
           </ol>
         </nav>
     {% endif %}
 
-    {% if show_logout %}
-        <div>
-            <a href="{{authrocket_url}}/logout?redirect_uri={{endpoint}}/logout">Log Out</a>
-        </div>
-    {% endif %}
-        <div class="container">
+        <!-- Vue Form Generator references a container named "app" -->
+        <div class="container" id="app">
+        {% if show_logout %}
+            <div>
+                <a href="{{authrocket_url}}/logout?redirect_uri={{endpoint}}/logout">Log Out</a>
+            </div>
+        {% endif %}
 {%block content%}
 {%endblock%}
         </div>
@@ -73,9 +78,11 @@
     {% if not admin_mode %}
     <div>
         <br />
+        {% if not disable_faq %}
         <p>
             Questions?  Check our <a href="/view_faq" target="_blank">FAQ</a>!
         </p>
+        {% endif %}
         <p>
             We are in the process of revising the site and
             apologize for any inconvenience.
