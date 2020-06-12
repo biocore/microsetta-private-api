@@ -49,10 +49,10 @@
     {% if show_breadcrumbs %}
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb">
-            {% if not is_home %}
-            <li class="breadcrumb-item"><a href="/home">Home</a></li>
-            {% else %}
+            {% if is_home %}
             <li class="breadcrumb-item active" aria-current="page">Home</li>
+            {% else %}
+            <li class="breadcrumb-item"><a href="/home">Home</a></li>
             {% endif %}
             {%block breadcrumb%}
             {%endblock%}
