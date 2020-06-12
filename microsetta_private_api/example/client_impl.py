@@ -60,7 +60,7 @@ SOURCE_PREREQS_MET = "SourcePrereqsMet"
 VIOSCREEN_ID = 10001
 
 
-def _get_required_survey_templates_by_source_type(source_type):
+def _get_req_survey_templates_by_source_type(source_type):
     if source_type == Source.SOURCE_TYPE_HUMAN:
         return [1, 6]
     elif source_type == Source.SOURCE_TYPE_ANIMAL:
@@ -98,24 +98,27 @@ def _check_home_prereqs():
     if TOKEN_KEY_NAME not in session:
         return NEEDS_LOGIN, current_state
 
-    # Do they need to make an account? YES-> create_acct.html
-    needs_reroute, accts_output, _ = ApiRequest.get("/accounts")
-    # if there's an error, reroute to error page
-    if needs_reroute:
-        current_state[REROUTE_KEY] = accts_output
-        return NEEDS_REROUTE, current_state
-
-    if len(accts_output) == 0:
-        # NB: Overwriting outputs from get call above
-        needs_reroute, accts_output, _ = ApiRequest.post("/accounts/legacies")
+    if not session[ADMIN_MODE_KEY]:
+        # Do they need to make an account? YES-> create_acct.html
+        needs_reroute, accts_output, _ = ApiRequest.get("/accounts")
+        # if there's an error, reroute to error page
         if needs_reroute:
             current_state[REROUTE_KEY] = accts_output
             return NEEDS_REROUTE, current_state
-        # if no legacy account found, need new account
+
         if len(accts_output) == 0:
-            return NEEDS_ACCOUNT, current_state
+            # NB: Overwriting outputs from get call above
+            needs_reroute, accts_output, _ = ApiRequest.post("/accounts/legacies")
+            if needs_reroute:
+                current_state[REROUTE_KEY] = accts_output
+                return NEEDS_REROUTE, current_state
+            # if no legacy account found, need new account
+            if len(accts_output) == 0:
+                return NEEDS_ACCOUNT, current_state
 
     # If you got here, you have a token and you have (at least one) account
+    # (True even of admins who skipped the above account check, as you can't
+    # be an admin unless you have a microsetta account that says you are)
     return HOME_PREREQS_MET, current_state
 
 
@@ -123,8 +126,10 @@ def _check_acct_prereqs(account_id, current_state=None):
     current_state = {} if current_state is None else current_state
     current_state['account_id'] = account_id
 
-    # If we haven't yet checked for email mismatches and gotten user decision:
-    if not session.get(EMAIL_CHECK_KEY, False):
+    # If we haven't yet checked for email mismatches and gotten user decision,
+    # and the user isn't an admin (who could be looking at another person's
+    # account and thus have that email not match their login one):
+    if not session.get(EMAIL_CHECK_KEY, False) and not session[ADMIN_MODE_KEY]:
         # Does email in our accounts table match email in authrocket?
         needs_reroute, email_match, _ = ApiRequest.get(
             '/accounts/{0}/email_match'.format(account_id))
@@ -148,33 +153,35 @@ def _check_source_prereqs(acct_id, source_id, current_state=None):
     current_state = {} if current_state is None else current_state
     current_state['source_id'] = source_id
 
-    # Get the input source
-    has_error, source_output, _ = ApiRequest.get(
-        '/accounts/%s/sources/%s' %
-        (acct_id, source_id))
-    if has_error:
-        return source_output
+    if not session[ADMIN_MODE_KEY]:
+        # Get the input source
+        has_error, source_output, _ = ApiRequest.get(
+            '/accounts/%s/sources/%s' %
+            (acct_id, source_id))
+        if has_error:
+            return source_output
 
-    # Get all required survey template ids for this source type
-    req_survey_template_ids = _get_required_survey_templates_by_source_type(
-        source_output["source_type"])
+        # Get all required survey template ids for this source type
+        req_survey_template_ids = _get_req_survey_templates_by_source_type(
+            source_output["source_type"])
 
-    # Get all the current answered surveys for this source
-    needs_reroute, surveys_output, _ = ApiRequest.get(
-        '/accounts/{0}/sources/{1}/surveys'.format(acct_id, source_id))
-    if needs_reroute:
-        current_state[REROUTE_KEY] = surveys_output
-        return NEEDS_REROUTE, current_state
-    template_ids_of_answered_surveys = [x[SURVEY_TEMPLATE_ID_KEY] for x
-                                        in surveys_output]
+        # Get all the current answered surveys for this source
+        needs_reroute, surveys_output, _ = ApiRequest.get(
+            '/accounts/{0}/sources/{1}/surveys'.format(acct_id, source_id))
+        if needs_reroute:
+            current_state[REROUTE_KEY] = surveys_output
+            return NEEDS_REROUTE, current_state
+        template_ids_of_answered_surveys = [x[SURVEY_TEMPLATE_ID_KEY] for x
+                                            in surveys_output]
 
-    # For each required survey template id for this source type
-    for curr_req_survey_template_id in req_survey_template_ids:
-        # Does this source LACK an answered survey with this template id?
-        if curr_req_survey_template_id not in template_ids_of_answered_surveys:
-            current_state["needed_survey_template_id"] = \
-                curr_req_survey_template_id
-            return NEEDS_SURVEY, current_state
+        # For each required survey template id for this source type
+        for curr_req_survey_template_id in req_survey_template_ids:
+            # Does this source LACK an answered survey with this template id?
+            if curr_req_survey_template_id not in \
+                    template_ids_of_answered_surveys:
+                current_state["needed_survey_template_id"] = \
+                    curr_req_survey_template_id
+                return NEEDS_SURVEY, current_state
 
     return SOURCE_PREREQS_MET, current_state
 
@@ -774,7 +781,7 @@ def get_source(account_id, source_id):
 
     per_sample = []
     per_source = []
-    restrict_to = _get_required_survey_templates_by_source_type(
+    restrict_to = _get_req_survey_templates_by_source_type(
         source_output["source_type"])
     for survey in surveys_output:
         if survey['survey_template_id'] in restrict_to:
