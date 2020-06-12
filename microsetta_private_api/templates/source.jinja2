@@ -127,11 +127,12 @@
                             <a class="btn btn-outline-primary" href="/accounts/{{account_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
                 {% endif %}  <!-- end of if sample.ffq -->
                 </div>
-            {% endif %}  <!-- end of if is_human -->
+                {% endif %}  <!-- end of if is_human -->
             </div>
         </div>
         {% endfor %}  <!-- end of for sample in samples -->
     </div>
+    {% endif %}
     {% if samples|length > 1 and is_human %}
         <br>
                     <u><i>Do I need to take more than one Food Frequency Questionnaire (FFQ)</i></u>?
@@ -171,27 +172,27 @@
     </div>
     {% if surveys|length > 0 %}
     <hr style="border-top: dotted 1px"/>
-        <p>Surveys taken:</p>
-        <div class="list-group">
-            {% for survey in surveys %}
-            <a>
-                <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
-                  <div class="row">
-                    <div class="col-sm">
-                      {{survey.survey_template_title |e}}
-                    </div>
-                    <div class="col-sm">
-                        {% if survey.answered %}
-                        <span class="fa fa-check"/>
-                        {% else %}
-                        <span class="fa fa-unchecked"/>
-                        {% endif %}
-                    </div>
-                  </div>
+    <p>Surveys taken:</p>
+    <div class="list-group">
+        {% for survey in surveys %}
+        <a>
+            <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
+              <div class="row">
+                <div class="col-sm">
+                  {{survey.survey_template_title |e}}
                 </div>
-            </a>
-            {% endfor %}
-        {% endif %}
+                <div class="col-sm">
+                    {% if survey.answered %}
+                    <span class="fa fa-check"/>
+                    {% else %}
+                    <span class="fa fa-unchecked"/>
+                    {% endif %}
+                </div>
+              </div>
+            </div>
+        </a>
+        {% endfor %}
     </div>
+    {% endif %}
 
 {% endblock %}
