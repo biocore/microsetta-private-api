@@ -218,6 +218,43 @@ paths:
               schema:
                 type: string
 
+  '/accounts/{account_id}/details':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_account_details
+      tags:
+        - Accounts
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '200':
+          description: Editable display of account details
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_account_details
+      tags:
+        - Accounts
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Error report
+          content:
+            text/html:
+              schema:
+                type: string
+        '302':
+          description: Redirecting to necessary action
+
+
   '/accounts/{account_id}/sources/':
     post:
       operationId: microsetta_private_api.example.client_impl.post_source
@@ -450,6 +487,26 @@ paths:
             text/html:
               schema:
                 type: string
+
+  '/admin/account_search':
+    get:
+      operationId: microsetta_private_api.example.client_impl.get_interactive_account_search
+      tags:
+        - Admin
+      parameters:
+        - in: query
+          name: email_query
+          description: Email to search for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of identified accounts
+          content:
+            text/html:
+              schema:
+                type: string
+
 components:
   parameters:
     account_id: # Can be referenced as '#/components/parameters/account_id'

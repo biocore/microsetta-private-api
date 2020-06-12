@@ -18,6 +18,7 @@ import jwt
 import requests
 from requests.auth import AuthBase
 from urllib.parse import quote
+from datetime import datetime
 
 # Authrocket uses RS256 public keys, so you can validate anywhere and safely
 # store the key in code. Obviously using this mechanism, we'd have to push code
@@ -29,9 +30,6 @@ from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.source import Source
-from microsetta_private_api.model.vue.vue_factory import VueFactory
-from microsetta_private_api.model.vue.vue_field import VueInputField, \
-    VueTextAreaField, VueSelectField, VueDateTimePickerField
 import importlib.resources as pkg_resources
 
 
@@ -40,6 +38,7 @@ PUB_KEY = pkg_resources.read_text(
     "authrocket.pubkey")
 
 TOKEN_KEY_NAME = 'token'
+ADMIN_MODE_KEY = 'admin_mode'
 WORKFLOW_URL = '/workflow'
 HELP_EMAIL = "microsetta@ucsd.edu"
 KIT_NAME_KEY = "kit_name"
@@ -51,6 +50,12 @@ ACCT_EMAIL_KEY = "email"
 ACCT_ADDR_KEY = "address"
 ACCT_WRITEABLE_KEYS = [ACCT_FNAME_KEY, ACCT_LNAME_KEY, ACCT_EMAIL_KEY,
                        ACCT_ADDR_KEY]
+
+ACCT_ADDR_STREET_KEY = "street"
+ACCT_ADDR_CITY_KEY = "city"
+ACCT_ADDR_STATE_KEY = "state"
+ACCT_ADDR_POST_CODE_KEY = "post_code"
+ACCT_ADDR_COUNTRY_CODE_KEY = "country_code"
 
 _NEEDS_SURVEY_PREFIX = "NeedsSurvey"
 
@@ -106,9 +111,18 @@ def home():
             acct_id = workflow_state.get("account_id", None)
             has_multiple_hs_sources = workflow_needs == TOO_MANY_HUMAN_SOURCES
 
+    # Switch out home page in administrator mode
+    if session.get(ADMIN_MODE_KEY, False):
+        return render_template('admin_home.jinja2',
+                               admin_mode=session.get(ADMIN_MODE_KEY, False),
+                               accounts=[],
+                               endpoint=SERVER_CONFIG["endpoint"],
+                               authrocket_url=SERVER_CONFIG["authrocket_url"])
+
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
     return render_template('home.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            user=user,
                            email_verified=email_verified,
                            acct_id=acct_id,
@@ -119,15 +133,21 @@ def home():
 
 def authrocket_callback(token):
     session[TOKEN_KEY_NAME] = token
+    do_return, accts_output, _ = ApiRequest.get('/accounts')
+    if do_return:
+        return accts_output
+
+    # new authrocket logins do not have an account yet
+    if len(accts_output) > 0:
+        session[ADMIN_MODE_KEY] = accts_output[0]['account_type'] == 'admin'
+    else:
+        session[ADMIN_MODE_KEY] = False
+
     return redirect("/home")
 
 
 def logout():
-    if TOKEN_KEY_NAME in session:
-        # delete these keys if they are here, otherwise ignore
-        session.pop(TOKEN_KEY_NAME, None)
-        session.pop(KIT_NAME_KEY, None)
-        session.pop(EMAIL_CHECK_KEY, None)
+    session.clear()
     return redirect("/home")
 
 
@@ -246,8 +266,26 @@ def get_workflow_create_account():
         return redirect(WORKFLOW_URL)
 
     email, _ = parse_jwt(session[TOKEN_KEY_NAME])
-    return render_template('create_acct.jinja2',
-                           authorized_email=email)
+    # TODO:  Need to support other countries
+    #  and not default to US and California
+    default_account_values = {
+            ACCT_EMAIL_KEY: email,
+            ACCT_FNAME_KEY: '',
+            ACCT_LNAME_KEY: '',
+            ACCT_ADDR_KEY: {
+                ACCT_ADDR_STREET_KEY: '',
+                ACCT_ADDR_CITY_KEY: '',
+                ACCT_ADDR_STATE_KEY: 'CA',
+                ACCT_ADDR_POST_CODE_KEY: '',
+                ACCT_ADDR_COUNTRY_CODE_KEY: 'US'
+            }
+        }
+
+    return render_template('account_details.jinja2',
+                           CREATE_ACCT=True,
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           authorized_email=email,
+                           account=default_account_values)
 
 
 def post_workflow_create_account(body):
@@ -261,11 +299,11 @@ def post_workflow_create_account(body):
             ACCT_LNAME_KEY: body['last_name'],
             ACCT_EMAIL_KEY: body['email'],
             ACCT_ADDR_KEY: {
-                "street": body['street'],
-                "city": body['city'],
-                "state": body['state'],
-                "post_code": body['post_code'],
-                "country_code": body['country_code']
+                ACCT_ADDR_STREET_KEY: body['street'],
+                ACCT_ADDR_CITY_KEY: body['city'],
+                ACCT_ADDR_STATE_KEY: body['state'],
+                ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+                ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
             },
             KIT_NAME_KEY: kit_name
         }
@@ -283,7 +321,8 @@ def get_workflow_update_email():
     if next_state != NEEDS_EMAIL_CHECK:
         return redirect(WORKFLOW_URL)
 
-    return render_template("update_email.jinja2")
+    return render_template("update_email.jinja2",
+                           admin_mode=session.get(ADMIN_MODE_KEY, False))
 
 
 def post_workflow_update_email(body):
@@ -306,7 +345,7 @@ def post_workflow_update_email(body):
         # retain only writeable fields; KeyError if any of them missing
         mod_acct = {k: acct_output[k] for k in ACCT_WRITEABLE_KEYS}
 
-        # write back the updated account info
+        # write back the updated account details
         do_return, put_output, _ = ApiRequest.put(
             '/accounts/%s' % acct_id, json=mod_acct)
         if do_return:
@@ -442,6 +481,7 @@ def get_workflow_fill_survey(survey_template_id):
         return survey_output
 
     return render_template("survey.jinja2",
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            endpoint=SERVER_CONFIG["endpoint"],
                            survey_template_id=survey_template_id,
                            survey_schema=survey_output[
@@ -473,19 +513,82 @@ def get_account(account_id):
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
 
+    do_return, account, _ = ApiRequest.get('/accounts/%s' % account_id)
+    if do_return:
+        return account
+
     do_return, sources, _ = ApiRequest.get('/accounts/%s/sources' % account_id)
     if do_return:
         return sources
 
-    return render_template('account.jinja2',
+    return render_template('account_overview.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            acct_id=account_id,
+                           account=account,
                            sources=sources)
+
+
+def get_account_details(account_id):
+    next_state, current_state = determine_workflow_state()
+    if next_state != ALL_DONE:
+        return redirect(WORKFLOW_URL)
+
+    do_return, account, _ = ApiRequest.get('/accounts/%s' % account_id)
+    if do_return:
+        return account
+
+    return render_template('account_details.jinja2',
+                           CREATE_ACCT=False,
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           account=account)
+
+
+def post_account_details(account_id, body):
+    next_state, current_state = determine_workflow_state()
+    if next_state != ALL_DONE:
+        return redirect(WORKFLOW_URL)
+
+    acct = {
+        ACCT_FNAME_KEY: body['first_name'],
+        ACCT_LNAME_KEY: body['last_name'],
+        ACCT_EMAIL_KEY: body['email'],
+        ACCT_ADDR_KEY: {
+            ACCT_ADDR_STREET_KEY: body['street'],
+            ACCT_ADDR_CITY_KEY: body['city'],
+            ACCT_ADDR_STATE_KEY: body['state'],
+            ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+            ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
+        }
+    }
+
+    do_return, sample_output, _ = ApiRequest.put(
+        '/accounts/%s' %
+        (account_id,),
+        json=acct)
+
+    if do_return:
+        return sample_output
+
+    return redirect('/accounts/%s' % (account_id,))
 
 
 def get_source(account_id, source_id):
     next_state, current_state = determine_workflow_state()
     if next_state != ALL_DONE:
         return redirect(WORKFLOW_URL)
+
+    # Retrieve the account to determine which kit it was created with
+    do_return, account_output, _ = ApiRequest.get(
+        '/accounts/%s' % account_id)
+    if do_return:
+        return account_output
+
+    # Check if there are any unclaimed samples in the kit
+    original_kit, _, kit_status = _get_kit(account_output['kit_name'])
+    if kit_status == 404:
+        claim_kit_name_hint = None
+    else:
+        claim_kit_name_hint = account_output['kit_name']
 
     # Retrieve the source
     do_return, source_output, _ = ApiRequest.get(
@@ -548,11 +651,21 @@ def get_source(account_id, source_id):
             if answer['survey_template_id'] == VIOSCREEN_ID:
                 sample['ffq'] = True
 
+    # prettify datetime
+    needs_assignment = False
+    for sample in samples_output:
+        if sample['sample_datetime'] is None:
+            needs_assignment = True
+        else:
+            dt = datetime.fromisoformat(sample['sample_datetime'])
+            sample['sample_datetime'] = dt.strftime("%b-%d-%Y %-I:%M %p")
+
     needs_assignment = any([sample['sample_datetime'] is None
                             for sample in samples_output])
 
     is_human = source_output['source_type'] == Source.SOURCE_TYPE_HUMAN
     return render_template('source.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            acct_id=account_id,
                            source_id=source_id,
                            is_human=is_human,
@@ -560,7 +673,8 @@ def get_source(account_id, source_id):
                            samples=samples_output,
                            surveys=per_source,
                            source_name=source_output['source_name'],
-                           vioscreen_id=VIOSCREEN_ID)
+                           vioscreen_id=VIOSCREEN_ID,
+                           claim_kit_name_hint=claim_kit_name_hint)
 
 
 def show_source_survey(account_id, source_id, survey_template_id):
@@ -587,6 +701,7 @@ def show_sample_survey(account_id, source_id, sample_id, survey_template_id):
 
     # Handle local surveys
     return render_template("survey.jinja2",
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            survey_template_id=survey_template_id,
                            survey_schema=survey_output[
                                'survey_template_text'])
@@ -679,28 +794,23 @@ def get_sample(account_id, source_id, sample_id):
     else:
         raise BadRequest("Sources of type %s are not supported at this time"
                          % source_output['source_type'])
-    factory = VueFactory()
 
-    schema = factory.start_group("Edit Sample Information")\
-        .add_field(VueInputField("sample_barcode", "Barcode")
-                   .set(disabled=True))\
-        .add_field(VueDateTimePickerField("sample_datetime", "Date and Time")
-                   .set(required=True,
-                        validator="string"))\
-        .add_field(VueSelectField("sample_site", "Site", sample_sites)
-                   .set(required=not is_environmental,
-                        validator="string",
-                        disabled=is_environmental,
-                        hint=site_hint)) \
-        .add_field(VueTextAreaField("sample_notes", "Notes")) \
-        .end_group()\
-        .build()
+    if sample_output['sample_datetime'] is not None:
+        dt = datetime.fromisoformat(sample_output['sample_datetime'])
+        sample_output['date'] = dt.strftime("%m/%d/%Y")
+        sample_output['time'] = dt.strftime("%-I:%M %p")
+    else:
+        sample_output['date'] = ""
+        sample_output['time'] = ""
 
     return render_template('sample.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
                            acct_id=account_id,
                            source_id=source_id,
                            sample=sample_output,
-                           schema=schema)
+                           sample_sites=sample_sites,
+                           site_hint=site_hint,
+                           is_environmental=is_environmental)
 
 
 def put_sample(account_id, source_id, sample_id):
@@ -711,6 +821,12 @@ def put_sample(account_id, source_id, sample_id):
     model = {}
     for x in flask.request.form:
         model[x] = flask.request.form[x]
+
+    date = model.pop('sample_date')
+    time = model.pop('sample_time')
+    date_and_time = date + " " + time
+    sample_datetime = datetime.strptime(date_and_time, "%m/%d/%Y %I:%M %p")
+    model['sample_datetime'] = sample_datetime.isoformat()
 
     do_return, sample_output, _ = ApiRequest.put(
         '/accounts/%s/sources/%s/samples/%s' %
@@ -811,6 +927,7 @@ def generate_error_page(error_msg):
         HELP_EMAIL, quote("minimal interface error"), error_txt)
 
     output = render_template('error.jinja2',
+                             admin_mode=session.get(ADMIN_MODE_KEY, False),
                              mailto_url=mailto_url,
                              error_msg=error_msg,
                              endpoint=SERVER_CONFIG["endpoint"],
@@ -821,6 +938,7 @@ def generate_error_page(error_msg):
 
 def render_faq():
     output = render_template('faq.jinja2',
+                             admin_mode=session.get(ADMIN_MODE_KEY, False),
                              authrocket_url=SERVER_CONFIG["authrocket_url"],
                              endpoint=SERVER_CONFIG["endpoint"])
     return output
@@ -831,6 +949,22 @@ def render_signup_intermediate():
                              authrocket_url=SERVER_CONFIG["authrocket_url"],
                              endpoint=SERVER_CONFIG["endpoint"])
     return output
+
+
+# Administrator Mode Functionality
+def get_interactive_account_search(email_query):
+    do_return, email_diagnostics, _ = ApiRequest.get(
+        '/admin/search/account/%s' % (email_query,))
+    if do_return:
+        return email_diagnostics
+
+    accounts = [{"email": acct['email'], "account_id": acct['id']}
+                for acct in email_diagnostics['accounts']]
+    return render_template('admin_home.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           accounts=accounts,
+                           endpoint=SERVER_CONFIG["endpoint"],
+                           authrocket_url=SERVER_CONFIG["authrocket_url"])
 
 
 class BearerAuth(AuthBase):

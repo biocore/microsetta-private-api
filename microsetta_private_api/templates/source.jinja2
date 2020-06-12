@@ -1,16 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <title>Microsetta Account Samples</title>
-    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
-    <script src="/static/vendor/js/jquery.validate.min.js"></script>
-    <!-- Can remove this line when source.jinja2 extends sitebase.jinja2 -->
-    <script src="/static/input_util.js"></script>
-    <script src="/static/vendor/bootstrap-4.4.1-dist/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+{% extends "sitebase.jinja2" %}
+{% set page_title = "Account Samples" %}
+{% set show_breadcrumbs = True %}
+{% block head %}
     <link rel="stylesheet" href="/static/vendor/font-awesome-4.7.0/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script src="/static/vendor/js/jquery.form-4.2.2/jquery.form.min.js"></script>
     <script src="/static/kit_check.js"></script>
     <script>
@@ -65,16 +57,12 @@
             setup_kit_claim()
         });
     </script>
-</head>
-<body>
-    <a href="https://microsetta.ucsd.edu" title="microsetta.ucsd.edu">
-        <img src="/static/img/logo-co.png" class="resize"/>
-        <br />
-        <br />
-        Return to microsetta.ucsd.edu
-    </a>
-    <br />
-    <br />
+{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Account</a></li>
+    <li class="breadcrumb-item"><a>{{source_name}}</a></li>
+{% endblock %}
+{% block content %}
 
     {% if needs_assignment %}
     <div class="alert alert-warning" role="alert">
@@ -82,13 +70,6 @@
     </div>
     {% endif %}
     <div class="content">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/home">Home</a></li>
-            <li class="breadcrumb-item"><a href="/accounts/{{acct_id}}">Sources</a></li>
-            <li class="breadcrumb-item"><a>{{source_name}}</a></li>
-          </ol>
-        </nav>
         <div class="container">
             {% if samples|length > 0 %}
                 Samples (click on a barcode to provide collection information):
@@ -113,7 +94,7 @@
                 <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
                     <div class="row">
                         <div class="col-sm">
-                            <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
+                            <a class="btn btn-outline-info" href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}">{{sample.sample_barcode |e}}</a>
                         </div>
                         <div class="col-sm">
                             {{sample.sample_datetime |e}}
@@ -126,7 +107,7 @@
                         {% if sample.ffq %}
                             Food Frequency Questionnaire<span class="fa fa-check"/>
                         {% else %}
-                            <a href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
+                            <a class="btn btn-outline-primary" href="/accounts/{{acct_id}}/sources/{{source_id}}/samples/{{sample.sample_id}}/survey_templates/{{vioscreen_id}}">Food Frequency Questionnaire</a><span class="fa fa-unchecked"/>
                         {% endif %}  <!-- end of if sample.ffq -->
                         </div>
                     {% endif %}  <!-- end of if is_human -->
@@ -147,8 +128,13 @@
         <div class="container">
             <form method="get" name="list_kit_form" action="/list_kit_samples">
                 <div class="form-group">
+                    {% if claim_kit_name_hint is not none %}
+                    <label for="kit_name" name="kit_name_label">The kit ID used to create your account has unclaimed samples. To claim samples from this kit, please click "List samples". To claim samples from another kit ID, please enter it here and then click "List Samples":</label>
+                    <input id="kit_name" name="kit_name" class="form-control" type="text" value="{{ claim_kit_name_hint }}"/>
+                    {% else %}
                     <label for="kit_name" name="kit_name_label">To add samples, please enter a kit ID here:</label>
                     <input id="kit_name" name="kit_name" class="form-control" type="text"/>
+                    {% endif %}
                  </div>
                 <input type="submit" class="btn btn-primary" value="List Samples"/>
             </form>
@@ -167,7 +153,9 @@
                 </div>
             </div>
         </div>
-        <p></p>
+        <br/>
+        <br/>
+        <br/>
         <div class="container">
             {% if surveys|length > 0 %}
                 <p>Surveys taken:</p>
@@ -195,18 +183,4 @@
         </div>
     </div>
 
-    <div>
-        <br />
-        <p>
-            Questions?  Check our <a href="/view_faq">FAQ</a>!
-        </p>
-        <p>
-            We are in the process of revising the site and
-            apologize for any inconvenience.
-            Please contact
-            <a href="mailto:microsetta@ucsd.edu">microsetta@ucsd.edu</a>
-            for help.
-        </p>
-    </div>
-</body>
-</html>
+{% endblock %}
