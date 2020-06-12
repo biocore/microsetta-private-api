@@ -34,7 +34,7 @@
             you logged in with.  Would you like us to update your email in our records?
             <br />
             <br />
-            <form method="post" name="update_email_form" action="/workflow_update_email">
+            <form method="post" name="update_email_form" action="/accounts/{{ account_id }}/update_email">
                 <input type="hidden" id="do_update" name = "do_update" value="Yes" />
                 <button type="submit" class="btn btn-light" onclick="cancelEmailUpdate();">
                     No, skip and continue
