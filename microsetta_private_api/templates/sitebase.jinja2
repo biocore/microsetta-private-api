@@ -27,6 +27,7 @@
     {% if admin_mode %}
     <nav class="navbar fixed-top navbar-light bg-warning">
       Administrator Toolbar
+      <a class="btn btn-outline-success" href="/admin/system_message">System Panel</a>
       <form class="form-inline" action="/admin/account_search" method="get">
         <input id="email_query" name="email_query" class="form-control mr-sm-2" type="search" placeholder="User Email" aria-label="Search"/>
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Find Account</button>

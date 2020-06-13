@@ -1,0 +1,22 @@
+{% extends "sitebase.jinja2" %}
+{% set page_title = "ADMINISTRATOR SYSTEM PANEL" %}
+{% set show_breadcrumbs = False %}
+{% set show_logout = True %}
+{% block head %}
+
+{% endblock %}
+{% block content %}
+    <h4> Set System Message </h4>
+    <div id="test_msg" class="alert alert-primary" role="alert">
+      A simple primary alert—check it out!
+    </div>
+
+    <form method="post" id="sample_form" name="sample_form">
+    <div class="form-group row">
+        <label for="system_msg" name="system_msg_label" class="col-sm-2 col-form-label">System Message:</label>
+        <div class="col-sm-4">
+            <textarea class="form-control" id="system_msg" name="system_msg" rows="3">The system is entering scheduled downtime.</textarea>
+        </div>
+    </div>
+    </form>
+{% endblock %}

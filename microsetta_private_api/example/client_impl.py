@@ -59,6 +59,13 @@ SOURCE_PREREQS_MET = "SourcePrereqsMet"
 #  in some way, as well as any special handling for external surveys.
 VIOSCREEN_ID = 10001
 
+# TODO FIXME HACK:  In the future, we will want to be able to persist these
+#  messages, or tie them to dates of specific events like system downtime.
+#  Placing them in memory here is a stopgap until the minimal interface can be
+#  properly separated out.
+SYSTEM_MSG = None
+SYSTEM_MSG_STYLE = None
+
 
 def _get_req_survey_templates_by_source_type(source_type):
     if source_type == Source.SOURCE_TYPE_HUMAN:
@@ -1007,6 +1014,15 @@ def get_interactive_account_search(email_query):
                            accounts=accounts,
                            endpoint=SERVER_CONFIG["endpoint"],
                            authrocket_url=SERVER_CONFIG["authrocket_url"])
+
+
+def get_system_message():
+    return render_template('admin_system_panel.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False))
+
+
+def post_system_message():
+    pass
 
 
 class BearerAuth(AuthBase):
