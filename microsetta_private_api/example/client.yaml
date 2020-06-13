@@ -534,14 +534,27 @@ paths:
                 type: string
     post:
       operationId: microsetta_private_api.example.client_impl.post_system_message
-      parameters:
-        - $ref: '#/components/parameters/system_msg'
-        - $ref: '#/components/parameters/msg_style'
       tags:
         - Admin
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                system_msg:
+                  type: string
+                  nullable: true
+                msg_style:
+                  type: string
+                  enum: [null, "primary", "secondary", "success", "danger", "warning", "info", "light", "dark"]
       responses:
-        '204':
-          description: Successfully set system message
+        '200':
+          description: System Message Builder Webpage
+          content:
+            text/html:
+              schema:
+                type: string
 
 components:
   parameters:
@@ -601,19 +614,6 @@ components:
       description: Error message provided by front-end
       schema:
         $ref: '#/components/schemas/error_msg'
-    system_msg:
-      name: system_msg
-      in: query
-      description: System wide message set by administrator
-      schema:
-        $ref: '#/components/schemas/system_msg'
-    msg_style:
-      name: msg_style
-      in: query
-      description: Styling of system_msg
-      schema:
-        $ref: '#/components/schemas/msg_style'
-
 
   schemas:
     # account section
@@ -635,16 +635,6 @@ components:
     error_msg:
       type: string
       example: "%7B%0A%20%20%22detail%22%3A%20%22The%20browser%20(or%20proxy)%20sent%20a%20request%20that%20this%20server%20could%20not%20understand.%22%2C%0A%20%20%22status%22%3A%20400%2C%0A%20%20%22title%22%3A%20%22Bad%20Request%22%2C%0A%20%20%22type%22%3A%20%22about%3Ablank%22%0A%7D%0A"
-    system_msg:
-      type: string
-      nullable: true
-      example: "%7B%0A%20%20%22detail%22%3A%20%22The%20browser%20(or%20proxy)%20sent%20a%20request%20that%20this%20server%20could%20not%20understand.%22%2C%0A%20%20%22status%22%3A%20400%2C%0A%20%20%22title%22%3A%20%22Bad%20Request%22%2C%0A%20%20%22type%22%3A%20%22about%3Ablank%22%0A%7D%0A"
-    msg_style:
-      type: string
-      nullable: true
-      enum: [null, "primary", "secondary", "success", "danger", "warning", "info", "light", "dark"]
-      example: "warning"
-
     kit_name:
       type: string
       example: "aaaaa"

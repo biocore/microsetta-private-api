@@ -47,6 +47,12 @@
     <br />
     {% endif %}
 
+    {% if system_msg_text and not admin_mode  %}
+    <div id="system_message" class="alert alert-{{system_msg_style|e}}" role="alert">
+      {{system_msg_text}}
+    </div>
+    {% endif %}
+
     <div class="content">
 
     {% if show_breadcrumbs %}
