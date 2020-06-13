@@ -72,8 +72,11 @@
             });
         };
 
+
         // Wait for the DOM to be ready
         $(document).ready(function(){
+            preclude_whitespace('#kit_name')
+
             let kit_validation_setup_func = make_kit_validation_setup_func('list_kit_form', kitSubmitHandler);
             kit_validation_setup_func()
         });

@@ -1412,7 +1412,7 @@ components:
       nullable: true
       example: "Oops, I dropped it"
     sample_site:
-      enum: ["Blood (skin prick)", "Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
+      enum: ["Blood (skin prick)", "Saliva", "Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
              "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", null]
       example: "Stool"
     sample_locked:
