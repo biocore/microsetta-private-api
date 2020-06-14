@@ -4,13 +4,14 @@
 {% set show_logout = True %}
 {% block head %}
     <script>
-        // Wait for the DOM to be ready
-        $(function() {
-            preclude_whitespace("#kit_name")
+        $(document).ready(function(){
+            let form_name = 'acct_form';
+            preventImplicitSubmission(form_name);
+            preclude_whitespace("#kit_name");
 
             // Initialize form validation on the registration form.
             // It has the name attribute "registration"
-            $("form[name='acct_form']").validate({
+            $("form[name='" + form_name + "']").validate({
                 // Specify validation rules
                 rules: {
                     // The key name on the left side is the name attribute

@@ -2,7 +2,11 @@
 {% set page_title = "Create Non-human Source" %}
 {% set show_breadcrumbs = True %}
 {% block head %}
-
+    <script>
+        $(document).ready(function(){
+            preventImplicitSubmission("new_source_form");
+        });
+    </script>
 {% endblock %}
 {% block content %}
     <div class="container">

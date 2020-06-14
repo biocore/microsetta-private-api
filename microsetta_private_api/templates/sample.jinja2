@@ -11,30 +11,34 @@
     <script type="text/javascript" src="/static/vendor/js/jquery.timepicker.min.js"></script>
 
     <script>
-    $( function() {
-      $( "#sample_date" ).datepicker({
-          onClose: function() {
-            $(this).valid();
-            }});
+        $(document).ready(function(){
+            let form_name = 'sample_form';
+            preventImplicitSubmission(form_name);
 
-      $( "#sample_time" ).timepicker({
-          timeFormat: 'h:mm p',
-          interval: 30,
-          {% if sample.sample_time == "" %}
-          defaultTime: 'now',
-          {% else %}
-          defaultTime: '{{ sample.sample_time }}',
-          {% endif %}
-          startTime: '8',
-          dynamic: false,
-          dropdown: true,
-          scrollbar: true,
-          change: function() {
-            $(this).valid();
-            }
-      });
+            $("#sample_date" ).datepicker({
+                onClose: function() {
+                    $(this).valid();
+                }
+            });
 
-      $("form[name='sample_form']").validate({
+            $( "#sample_time" ).timepicker({
+                timeFormat: 'h:mm p',
+                interval: 30,
+                {% if sample.sample_time == "" %}
+                defaultTime: 'now',
+                {% else %}
+                defaultTime: '{{ sample.sample_time }}',
+                {% endif %}
+                startTime: '8',
+                dynamic: false,
+                dropdown: true,
+                scrollbar: true,
+                change: function() {
+                    $(this).valid();
+                }
+            });
+
+            $("form[name='" + form_name + "']").validate({
                 // don't automatically move into the Date field
                 // as that triggers the pop up and it's annoying
                 focusInvalid: false,
@@ -56,12 +60,12 @@
                 }
             });
 
-        {% if not is_environmental %}
-        // https://github.com/jquery-validation/jquery-validation/issues/1872#issuecomment-257874743
-        $('#sample_site').on('change', function(){
-            $("form[name='sample_form']").validate().element('select');
-        });
-        {% endif %}
+            {% if not is_environmental %}
+            // https://github.com/jquery-validation/jquery-validation/issues/1872#issuecomment-257874743
+            $('#sample_site').on('change', function(){
+                $("form[name='" + form_name + "']").validate().element('select');
+            });
+            {% endif %}
     });
     </script>
 {% endblock %}
