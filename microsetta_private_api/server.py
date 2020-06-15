@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import secrets
+import logging
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from flask import jsonify
@@ -65,6 +66,11 @@ def build_app():
 
     # attach the reverse proxy mechanism
     app.app.wsgi_app = ReverseProxied(app.app.wsgi_app)
+
+    if not SERVER_CONFIG['debug']:
+        gunicorn_logger = logging.getLogger('gunicorn.error')
+        app.app.logger.handlers = gunicorn_logger.handlers
+        app.app.logger.setLevel(gunicorn_logger.level)
 
     @app.route('/americangut/static/<path:filename>')
     def reroute_americangut(filename):
