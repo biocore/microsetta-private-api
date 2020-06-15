@@ -3,16 +3,15 @@
 {% set show_breadcrumbs = True %}
 {% set show_logout = True %}
 {% block head %}
-    <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
-    <script src="/static/vendor/js/jquery.validate.min.js"></script>
     <script>
-        // Wait for the DOM to be ready
-        $(function() {
-            preclude_whitespace("#kit_name")
+        $(document).ready(function(){
+            let form_name = 'acct_form';
+            preventImplicitSubmission(form_name);
+            preclude_whitespace("#kit_name");
 
             // Initialize form validation on the registration form.
             // It has the name attribute "registration"
-            $("form[name='acct_form']").validate({
+            $("form[name='" + form_name + "']").validate({
                 // Specify validation rules
                 rules: {
                     // The key name on the left side is the name attribute

@@ -49,16 +49,14 @@
             return false;
         }
 
-        function set_triggers(model, field)
-        {
-            if ('triggered_by' in field && field.triggered_by !== null && field.triggered_by.length > 0)
-            {
-                field.visible = function()
-                {
-                  visible = false
-                  for (var entry of field.triggered_by)
-                      visible |= (model[entry['q_id']] === entry['response'])
-                  return visible
+        function set_triggers(model, field) {
+            if ('triggered_by' in field && field.triggered_by !== null && field.triggered_by.length > 0) {
+                field.visible = function() {
+                    let visible = false;
+                    for (let entry of field.triggered_by) {
+                        visible |= (model[entry['q_id']] === entry['response']);
+                    }
+                    return visible;
                 }
             }
         }
@@ -70,37 +68,36 @@
 {% block content %}
     <div class="panel panel-default">
         <div class="panel-body">
-            <form id="survey_form">
+            <form id="survey_form" name="survey_form">
                 <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
             </form>
         </div>
     </div>
 
     <script type="text/javascript">
-      var survey_model = {}
-      var survey_schema={{survey_schema|tojson}}
+        var survey_model = {};
+        var survey_schema= {{survey_schema|tojson}} ;
 
-      if (survey_schema.fields !== null)
-        for (var field of survey_schema.fields)
-        {
-          set_triggers(survey_model, field)
+        if (survey_schema.fields !== null) {
+            for (let field of survey_schema.fields) {
+                set_triggers(survey_model, field)
+            }
+            for (let group of survey_schema.groups) {
+                for (let field of group.fields) {
+                    set_triggers(survey_model, field)
+                }
+            }
         }
-        for (var group of survey_schema.groups)
-          for (var field of group.fields)
-          {
-            set_triggers(survey_model, field)
-          }
 
-      last_group = survey_schema.groups[survey_schema.groups.length-1]
-      last_group.fields.push(
-      {
-        buttonText: "Submit Survey",
-        type: "submit",
-        validateBeforeSubmit: true,
-        onSubmit: function(){
-            return postSurvey();
-        }
-      });
+        last_group = survey_schema.groups[survey_schema.groups.length-1];
+        last_group.fields.push({
+            buttonText: "Submit Survey",
+            type: "submit",
+            validateBeforeSubmit: true,
+            onSubmit: function(){
+                return postSurvey();
+            }
+        });
     </script>
     <script type="text/javascript" src="/static/vue_survey_form.js"></script>
 {% endblock %}

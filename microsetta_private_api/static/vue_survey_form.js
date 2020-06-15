@@ -40,3 +40,7 @@ var vm = new Vue({
         }
     },
 });
+
+// This CANNOT be done in $(document).ready() on the page containing the vue form because
+// the vue form is not created until after point :(
+preventImplicitSubmission("survey_form");
