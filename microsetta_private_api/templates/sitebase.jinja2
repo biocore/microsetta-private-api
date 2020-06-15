@@ -29,6 +29,7 @@
     {% if admin_mode %}
     <nav class="navbar fixed-top navbar-light bg-warning">
       Administrator Toolbar
+      <a class="btn btn-outline-success" href="/admin/system_message">System Panel</a>
       <form class="form-inline" action="/admin/account_search" method="get">
         <input id="email_query" name="email_query" class="form-control mr-sm-2" type="search" placeholder="User Email" aria-label="Search"/>
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Find Account</button>
@@ -44,6 +45,12 @@
     </a>
     <br />
     <br />
+    {% endif %}
+
+    {% if system_msg_text and not admin_mode  %}
+    <div id="system_message" class="alert alert-{{system_msg_style|e}}" role="alert">
+      {{system_msg_text}}
+    </div>
     {% endif %}
 
     <div class="content">

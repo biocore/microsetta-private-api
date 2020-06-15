@@ -1,0 +1,39 @@
+{% extends "sitebase.jinja2" %}
+{% set page_title = "ADMINISTRATOR SYSTEM PANEL" %}
+{% set show_breadcrumbs = False %}
+{% set show_logout = True %}
+{% block head %}
+    <script>
+    $(function(){
+        to_class = function(choice){ return ["alert", "alert-"+choice]; }
+        replicate_text("#system_msg", "#test_msg");
+        select_class("#msg_style", "#test_msg", to_class);
+    });
+    </script>
+{% endblock %}
+{% block content %}
+    <h4> Set System Message </h4>
+    <div id="test_msg" class="alert alert-{{msg_style|e}}" role="alert">
+      {{system_msg}}
+    </div>
+
+    <form method="post" id="system_msg_form" name="system_msg_form">
+    <div class="form-group row">
+        <label for="system_msg" name="system_msg_label" class="col-sm-2 col-form-label">System Message:</label>
+        <div class="col-sm-8">
+            <textarea class="form-control" id="system_msg" name="system_msg" rows="5">{{system_msg |e}}</textarea>
+            <select id="msg_style" name="msg_style" class="form-control" required>
+                <option value="primary" {% if msg_style == "primary" %} selected {% endif %}>primary</option>
+                <option value="secondary" {% if msg_style == "secondary" %} selected {% endif %}>secondary</option>
+                <option value="success" {% if msg_style == "success" %} selected {% endif %}>success</option>
+                <option value="danger" {% if msg_style == "danger" %} selected {% endif %}>danger</option>
+                <option value="warning" {% if msg_style == "warning" %} selected {% endif %}>warning</option>
+                <option value="info" {% if msg_style == "info" %} selected {% endif %}>info</option>
+                <option value="light" {% if msg_style == "light" %} selected {% endif %}>light</option>
+                <option value="dark" {% if msg_style == "dark" %} selected {% endif %}>dark</option>
+            </select>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Set System Message</button>
+    </form>
+{% endblock %}
