@@ -528,9 +528,19 @@ def dissociate_sample(account_id, source_id, sample_id, token_info):
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
+        answers_repo = SurveyAnswersRepo(t)
+        answered_survey_ids = answers_repo.list_answered_surveys_by_sample(
+            account_id, source_id, sample_id)
+
+        for curr_answered_survey_id in answered_survey_ids:
+            answers_repo.dissociate_answered_survey_from_sample(
+                account_id, source_id, sample_id, curr_answered_survey_id)
+
         sample_repo = SampleRepo(t)
         sample_repo.dissociate_sample(account_id, source_id, sample_id)
+
         t.commit()
+
         return '', 204
 
 

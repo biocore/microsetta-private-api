@@ -385,6 +385,23 @@ paths:
               schema:
                 type: string
 
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/remove':
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_remove_sample_from_source
+      tags:
+        - Sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Display of revised source info or error info
+          content:
+            text/html:
+              schema:
+                type: string
+
   '/accounts/{account_id}/sources/{source_id}/take_survey':
     get:
       operationId: microsetta_private_api.example.client_impl.get_fill_local_source_survey

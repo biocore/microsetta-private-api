@@ -72,6 +72,12 @@
             });
         };
 
+        function verifyDissociateSample(sampleId){
+            let confirmMsg = "Do you really want to remove this sample from this source? " +
+                "Doing so will remove any collection info saved for this sample and will " +
+                "unlink it from all surveys.";
+            return window.confirm(confirmMsg);
+        }
 
         // Wait for the DOM to be ready
         $(document).ready(function(){
@@ -110,6 +116,7 @@
                 <i>Sample-specific survey</i>
             </div>
             {% endif %}
+            <div class="col-sm"></div>
         </div>
         {% for sample in samples %}
         <div class="container list-group-item {{loop.cycle('odd', 'even') }}">
@@ -132,6 +139,9 @@
                 {% endif %}  <!-- end of if sample.ffq -->
                 </div>
                 {% endif %}  <!-- end of if is_human -->
+                <div class="col-sm">
+                    <form name="remove_{{ sample.sample_id }}_form" method="post" action="/accounts/{{ account_id }}/sources/{{ source_id }}/samples/{{ sample.sample_id }}/remove" onsubmit="return verifyDissociateSample('{{sample.sample_id}}');"><button type="submit" class="btn btn-danger">Remove</button></form>
+                </div>
             </div>
         </div>
         {% endfor %}  <!-- end of for sample in samples -->
