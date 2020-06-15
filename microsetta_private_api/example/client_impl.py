@@ -899,7 +899,7 @@ def get_update_sample(account_id, source_id, sample_id):
 
 
 # TODO: guess we should also rewrite as ajax post for sample vue form?
-def put_update_sample(account_id, source_id, sample_id):
+def post_update_sample(account_id, source_id, sample_id):
     prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
     # Checking for only SOURCE_PREREQS_MET here because there are currently no
     # sample-specific prerequisites

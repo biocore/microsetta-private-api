@@ -364,7 +364,7 @@ paths:
               schema:
                 type: string
     post:
-      operationId: microsetta_private_api.example.client_impl.put_update_sample
+      operationId: microsetta_private_api.example.client_impl.post_update_sample
       tags:
         - Sample
       parameters:

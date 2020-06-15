@@ -86,8 +86,8 @@ class SurveyAnswersRepo(BaseRepo):
         # Note: Retrieving sample in this way validates permissions.
         sample = sample_repo.get_sample(account_id, source_id, sample_id)
         if sample is None:
-            raise werkzeug.exceptions.NotFound("No sample ID: %s" %
-                                               sample.id)
+            raise werkzeug.exceptions.NotFound("No sample with id %s" %
+                                               sample_id)
 
         with self._transaction.cursor() as cur:
             cur.execute("SELECT "
