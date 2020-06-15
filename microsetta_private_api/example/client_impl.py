@@ -13,7 +13,7 @@ from datetime import datetime
 # config somewhere and reload
 
 # Python is dumb, don't put spaces anywhere in this string.
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Unauthorized
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.source import Source
@@ -58,6 +58,13 @@ SOURCE_PREREQS_MET = "SourcePrereqsMet"
 #  special handling is required.  API must specify per-sample survey templates
 #  in some way, as well as any special handling for external surveys.
 VIOSCREEN_ID = 10001
+
+# TODO FIXME HACK:  In the future, we will want to be able to persist these
+#  messages, or tie them to dates of specific events like system downtime.
+#  Placing them in memory here is a stopgap until the minimal interface can be
+#  properly separated out.
+SYSTEM_MSG = None
+SYSTEM_MSG_STYLE = None
 
 
 def _get_req_survey_templates_by_source_type(source_type):
@@ -332,6 +339,8 @@ def get_show_error_page(error_msg):
 
     output = render_template('error.jinja2',
                              admin_mode=session.get(ADMIN_MODE_KEY, False),
+                             system_msg_text=SYSTEM_MSG,
+                             system_msg_style=SYSTEM_MSG_STYLE,
                              mailto_url=mailto_url,
                              error_msg=error_msg,
                              endpoint=SERVER_CONFIG["endpoint"],
@@ -344,6 +353,8 @@ def get_show_error_page(error_msg):
 def get_show_faq():
     output = render_template('faq.jinja2',
                              admin_mode=session.get(ADMIN_MODE_KEY, False),
+                             system_msg_text=SYSTEM_MSG,
+                             system_msg_style=SYSTEM_MSG_STYLE,
                              authrocket_url=SERVER_CONFIG["authrocket_url"],
                              endpoint=SERVER_CONFIG["endpoint"])
     return output
@@ -377,6 +388,8 @@ def get_home():
     if session.get(ADMIN_MODE_KEY, False):
         return render_template('admin_home.jinja2',
                                admin_mode=session.get(ADMIN_MODE_KEY, False),
+                               system_msg_text=SYSTEM_MSG,
+                               system_msg_style=SYSTEM_MSG_STYLE,
                                accounts=[],
                                endpoint=SERVER_CONFIG["endpoint"],
                                authrocket_url=SERVER_CONFIG["authrocket_url"])
@@ -385,6 +398,8 @@ def get_home():
     # login if they aren't logged in yet.
     return render_template('home.jinja2',
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           system_msg_text=SYSTEM_MSG,
+                           system_msg_style=SYSTEM_MSG_STYLE,
                            user=user,
                            email_verified=email_verified,
                            accounts=accts_output,
@@ -447,6 +462,8 @@ def get_create_account():
     return render_template('account_details.jinja2',
                            CREATE_ACCT=True,
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           system_msg_text=SYSTEM_MSG,
+                           system_msg_style=SYSTEM_MSG_STYLE,
                            authorized_email=email,
                            account=default_account_values)
 
@@ -489,6 +506,8 @@ def get_update_email(account_id):
 
     return render_template("update_email.jinja2",
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           system_msg_text=SYSTEM_MSG,
+                           system_msg_style=SYSTEM_MSG_STYLE,
                            account_id=account_id)
 
 
@@ -537,6 +556,8 @@ def get_account(account_id):
 
     return render_template('account_overview.jinja2',
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           system_msg_text=SYSTEM_MSG,
+                           system_msg_style=SYSTEM_MSG_STYLE,
                            account=account,
                            sources=sources)
 
@@ -553,6 +574,8 @@ def get_account_details(account_id):
     return render_template('account_details.jinja2',
                            CREATE_ACCT=False,
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           system_msg_text=SYSTEM_MSG,
+                           system_msg_style=SYSTEM_MSG_STYLE,
                            account=account)
 
 
@@ -652,6 +675,8 @@ def get_fill_local_source_survey(account_id, source_id, survey_template_id):
 
     return render_template("survey.jinja2",
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           system_msg_text=SYSTEM_MSG,
+                           system_msg_style=SYSTEM_MSG_STYLE,
                            endpoint=SERVER_CONFIG["endpoint"],
                            account_id=account_id,
                            source_id=source_id,
@@ -834,6 +859,8 @@ def get_source(account_id, source_id):
     is_human = source_output['source_type'] == Source.SOURCE_TYPE_HUMAN
     return render_template('source.jinja2',
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           system_msg_text=SYSTEM_MSG,
+                           system_msg_style=SYSTEM_MSG_STYLE,
                            account_id=account_id,
                            source_id=source_id,
                            is_human=is_human,
@@ -890,6 +917,8 @@ def get_update_sample(account_id, source_id, sample_id):
 
     return render_template('sample.jinja2',
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           system_msg_text=SYSTEM_MSG,
+                           system_msg_style=SYSTEM_MSG_STYLE,
                            account_id=account_id,
                            source_id=source_id,
                            source_name=source_output['source_name'],
@@ -1004,6 +1033,9 @@ def post_claim_samples(account_id, source_id, body):
 
 # Administrator Mode Functionality
 def get_interactive_account_search(email_query):
+    if not session.get(ADMIN_MODE_KEY, False):
+        raise Unauthorized()
+
     do_return, email_diagnostics, _ = ApiRequest.get(
         '/admin/search/account/%s' % (email_query,))
     if do_return:
@@ -1013,9 +1045,40 @@ def get_interactive_account_search(email_query):
                 for acct in email_diagnostics['accounts']]
     return render_template('admin_home.jinja2',
                            admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           system_msg_text=SYSTEM_MSG,
+                           system_msg_style=SYSTEM_MSG_STYLE,
                            accounts=accounts,
                            endpoint=SERVER_CONFIG["endpoint"],
                            authrocket_url=SERVER_CONFIG["authrocket_url"])
+
+
+def get_system_message():
+    if not session.get(ADMIN_MODE_KEY, False):
+        raise Unauthorized()
+
+    return render_template('admin_system_panel.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           system_msg=SYSTEM_MSG,
+                           msg_style=SYSTEM_MSG_STYLE)
+
+
+def post_system_message(body):
+    if not session.get(ADMIN_MODE_KEY, False):
+        raise Unauthorized()
+
+    global SYSTEM_MSG
+    global SYSTEM_MSG_STYLE
+    SYSTEM_MSG = body.get("system_msg")
+    SYSTEM_MSG_STYLE = body.get("msg_style")
+
+    if not SYSTEM_MSG or len(SYSTEM_MSG) == 0:
+        SYSTEM_MSG = None
+        SYSTEM_MSG_STYLE = None
+
+    return render_template('admin_system_panel.jinja2',
+                           admin_mode=session.get(ADMIN_MODE_KEY, False),
+                           system_msg=SYSTEM_MSG,
+                           msg_style=SYSTEM_MSG_STYLE)
 
 
 class BearerAuth(AuthBase):

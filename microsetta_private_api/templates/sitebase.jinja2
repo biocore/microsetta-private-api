@@ -4,31 +4,31 @@
     <meta charset="utf-8"/>
     <title>Microsetta {{page_title}}</title>
 
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
+    <style>
+        {% if admin_mode %}
+        body {
+            padding-top: 50px;
+            margin: 2%;
+        }
+        {% endif %}
+    </style>
+
     <!-- jquery must be enabled before bootstrap for collapsible functionality -->
     <script src="/static/vendor/js/jquery-3.4.1.min.js"></script>
     <script src="/static/vendor/js/jquery.validate.min.js"></script>
     <script src="/static/vendor/bootstrap-4.4.1-dist/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="/static/vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="/static/css/minimal_interface.css" />
     <script src="/static/input_util.js"></script>
 
     {%block head%}
     {%endblock%}
-
-
-    <style>
-    {% if admin_mode %}
-    body {
-        padding-top: 50px;
-        margin: 2%;
-    }
-    {% endif %}
-    </style>
 </head>
 <body>
     {% if admin_mode %}
     <nav class="navbar fixed-top navbar-light bg-warning">
       Administrator Toolbar
+      <a class="btn btn-outline-success" href="/admin/system_message">System Panel</a>
       <form class="form-inline" action="/admin/account_search" method="get">
         <input id="email_query" name="email_query" class="form-control mr-sm-2" type="search" placeholder="User Email" aria-label="Search"/>
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Find Account</button>
@@ -44,6 +44,12 @@
     </a>
     <br />
     <br />
+    {% endif %}
+
+    {% if system_msg_text and not admin_mode  %}
+    <div id="system_message" class="alert alert-{{system_msg_style|e}}" role="alert">
+      {{system_msg_text}}
+    </div>
     {% endif %}
 
     <div class="content">
