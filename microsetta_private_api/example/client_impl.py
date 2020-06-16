@@ -1,5 +1,3 @@
-import json
-
 import flask
 from flask import render_template, session, redirect
 import jwt
@@ -1017,16 +1015,14 @@ def post_system_message(body):
     if not session.get(ADMIN_MODE_KEY, False):
         raise Unauthorized()
 
-    client_state[RedisCache.SYSTEM_BANNER] = (
-        body.get("system_msg_text"),
-        body.get("system_msg_style")
-    )
-    SYSTEM_MSG = body.get("system_msg_text")
-    SYSTEM_MSG_STYLE = body.get("system_msg_style")
+    text = body.get("system_msg_text")
+    style = body.get("system_msg_style")
 
-    if not SYSTEM_MSG or len(SYSTEM_MSG) == 0:
-        SYSTEM_MSG = None
-        SYSTEM_MSG_STYLE = None
+    if text is None or len(text) == 0:
+        text = None
+        style = None
+
+    client_state[RedisCache.SYSTEM_BANNER] = (text, style)
 
     return _render_with_defaults('admin_system_panel.jinja2')
 
