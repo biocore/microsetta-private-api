@@ -95,6 +95,7 @@
             type: "submit",
             validateBeforeSubmit: true,
             onSubmit: function(){
+                $("input").prop('disabled', true);
                 return postSurvey();
             }
         });
