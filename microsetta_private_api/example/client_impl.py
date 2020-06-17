@@ -18,7 +18,7 @@ from werkzeug.exceptions import BadRequest, Unauthorized
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.source import Source
 import importlib.resources as pkg_resources
-
+from microsetta_private_api.client_state.redis_cache import RedisCache
 
 PUB_KEY = pkg_resources.read_text(
     'microsetta_private_api',
@@ -59,12 +59,27 @@ SOURCE_PREREQS_MET = "SourcePrereqsMet"
 #  in some way, as well as any special handling for external surveys.
 VIOSCREEN_ID = 10001
 
-# TODO FIXME HACK:  In the future, we will want to be able to persist these
-#  messages, or tie them to dates of specific events like system downtime.
-#  Placing them in memory here is a stopgap until the minimal interface can be
-#  properly separated out.
-SYSTEM_MSG = None
-SYSTEM_MSG_STYLE = None
+client_state = RedisCache()
+
+
+def _render_with_defaults(template_name, **context):
+    defaults = {}
+
+    admin_mode = session.get(ADMIN_MODE_KEY, False)
+    defaults["admin_mode"] = admin_mode
+
+    msg, style = client_state.get(RedisCache.SYSTEM_BANNER, (None, None))
+    defaults["system_msg_text"] = msg
+    defaults["system_msg_style"] = style
+
+    endpoint = SERVER_CONFIG["endpoint"]
+    authrocket_url = SERVER_CONFIG["authrocket_url"]
+    defaults["endpoint"] = endpoint
+    defaults["authrocket_url"] = authrocket_url
+
+    defaults.update(context)
+
+    return render_template(template_name, **defaults)
 
 
 def _get_req_survey_templates_by_source_type(source_type):
@@ -337,26 +352,16 @@ def get_show_error_page(error_msg):
     mailto_url = "mailto:{0}?subject={1}&body={2}".format(
         HELP_EMAIL, quote("minimal interface error"), error_txt)
 
-    output = render_template('error.jinja2',
-                             admin_mode=session.get(ADMIN_MODE_KEY, False),
-                             system_msg_text=SYSTEM_MSG,
-                             system_msg_style=SYSTEM_MSG_STYLE,
-                             mailto_url=mailto_url,
-                             error_msg=error_msg,
-                             endpoint=SERVER_CONFIG["endpoint"],
-                             authrocket_url=SERVER_CONFIG["authrocket_url"])
+    output = _render_with_defaults('error.jinja2',
+                                   mailto_url=mailto_url,
+                                   error_msg=error_msg)
 
     return output
 
 
 # FAQ display does not require any prereqs, so this method doesn't check any
 def get_show_faq():
-    output = render_template('faq.jinja2',
-                             admin_mode=session.get(ADMIN_MODE_KEY, False),
-                             system_msg_text=SYSTEM_MSG,
-                             system_msg_style=SYSTEM_MSG_STYLE,
-                             authrocket_url=SERVER_CONFIG["authrocket_url"],
-                             endpoint=SERVER_CONFIG["endpoint"])
+    output = _render_with_defaults('faq.jinja2')
     return output
 
 
@@ -386,25 +391,15 @@ def get_home():
 
     # Switch out home page in administrator mode
     if session.get(ADMIN_MODE_KEY, False):
-        return render_template('admin_home.jinja2',
-                               admin_mode=session.get(ADMIN_MODE_KEY, False),
-                               system_msg_text=SYSTEM_MSG,
-                               system_msg_style=SYSTEM_MSG_STYLE,
-                               accounts=[],
-                               endpoint=SERVER_CONFIG["endpoint"],
-                               authrocket_url=SERVER_CONFIG["authrocket_url"])
+        return _render_with_defaults('admin_home.jinja2',
+                                     accounts=[])
 
     # Note: home.jinja2 sends the user directly to authrocket to complete the
     # login if they aren't logged in yet.
-    return render_template('home.jinja2',
-                           admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           system_msg_text=SYSTEM_MSG,
-                           system_msg_style=SYSTEM_MSG_STYLE,
-                           user=user,
-                           email_verified=email_verified,
-                           accounts=accts_output,
-                           endpoint=SERVER_CONFIG["endpoint"],
-                           authrocket_url=SERVER_CONFIG["authrocket_url"])
+    return _render_with_defaults('home.jinja2',
+                                 user=user,
+                                 email_verified=email_verified,
+                                 accounts=accts_output)
 
 
 def get_rootpath():
@@ -427,9 +422,7 @@ def get_authrocket_callback(token):
 
 
 def get_signup_intermediate():
-    output = render_template('signup_intermediate.jinja2',
-                             authrocket_url=SERVER_CONFIG["authrocket_url"],
-                             endpoint=SERVER_CONFIG["endpoint"])
+    output = _render_with_defaults('signup_intermediate.jinja2')
     return output
 
 
@@ -459,13 +452,10 @@ def get_create_account():
             }
         }
 
-    return render_template('account_details.jinja2',
-                           CREATE_ACCT=True,
-                           admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           system_msg_text=SYSTEM_MSG,
-                           system_msg_style=SYSTEM_MSG_STYLE,
-                           authorized_email=email,
-                           account=default_account_values)
+    return _render_with_defaults('account_details.jinja2',
+                                 CREATE_ACCT=True,
+                                 authorized_email=email,
+                                 account=default_account_values)
 
 
 def post_create_account(body):
@@ -504,11 +494,8 @@ def get_update_email(account_id):
     if prereqs_step != NEEDS_EMAIL_CHECK:
         return _route_to_closest_sink(prereqs_step, curr_state)
 
-    return render_template("update_email.jinja2",
-                           admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           system_msg_text=SYSTEM_MSG,
-                           system_msg_style=SYSTEM_MSG_STYLE,
-                           account_id=account_id)
+    return _render_with_defaults("update_email.jinja2",
+                                 account_id=account_id)
 
 
 def post_update_email(account_id, body):
@@ -554,12 +541,9 @@ def get_account(account_id):
     if has_error:
         return sources
 
-    return render_template('account_overview.jinja2',
-                           admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           system_msg_text=SYSTEM_MSG,
-                           system_msg_style=SYSTEM_MSG_STYLE,
-                           account=account,
-                           sources=sources)
+    return _render_with_defaults('account_overview.jinja2',
+                                 account=account,
+                                 sources=sources)
 
 
 def get_account_details(account_id):
@@ -571,12 +555,9 @@ def get_account_details(account_id):
     if has_error:
         return account
 
-    return render_template('account_details.jinja2',
-                           CREATE_ACCT=False,
-                           admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           system_msg_text=SYSTEM_MSG,
-                           system_msg_style=SYSTEM_MSG_STYLE,
-                           account=account)
+    return _render_with_defaults('account_details.jinja2',
+                                 CREATE_ACCT=False,
+                                 account=account)
 
 
 def post_account_details(account_id, body):
@@ -644,8 +625,8 @@ def get_create_nonhuman_source(account_id):
     if prereqs_step != ACCT_PREREQS_MET:
         return _route_to_closest_sink(prereqs_step, curr_state)
 
-    return render_template('create_nonhuman_source.jinja2',
-                           account_id=account_id)
+    return _render_with_defaults('create_nonhuman_source.jinja2',
+                                 account_id=account_id)
 
 
 def post_create_nonhuman_source(account_id, body):
@@ -673,16 +654,12 @@ def get_fill_local_source_survey(account_id, source_id, survey_template_id):
     if has_error:
         return survey_output
 
-    return render_template("survey.jinja2",
-                           admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           system_msg_text=SYSTEM_MSG,
-                           system_msg_style=SYSTEM_MSG_STYLE,
-                           endpoint=SERVER_CONFIG["endpoint"],
-                           account_id=account_id,
-                           source_id=source_id,
-                           survey_template_id=survey_template_id,
-                           survey_schema=survey_output[
-                               'survey_template_text'])
+    return _render_with_defaults("survey.jinja2",
+                                 account_id=account_id,
+                                 source_id=source_id,
+                                 survey_template_id=survey_template_id,
+                                 survey_schema=survey_output[
+                                   'survey_template_text'])
 
 
 def post_ajax_fill_local_source_survey(account_id, source_id,
@@ -857,19 +834,16 @@ def get_source(account_id, source_id):
                             for sample in samples_output])
 
     is_human = source_output['source_type'] == Source.SOURCE_TYPE_HUMAN
-    return render_template('source.jinja2',
-                           admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           system_msg_text=SYSTEM_MSG,
-                           system_msg_style=SYSTEM_MSG_STYLE,
-                           account_id=account_id,
-                           source_id=source_id,
-                           is_human=is_human,
-                           needs_assignment=needs_assignment,
-                           samples=samples_output,
-                           surveys=per_source,
-                           source_name=source_output['source_name'],
-                           vioscreen_id=VIOSCREEN_ID,
-                           claim_kit_name_hint=claim_kit_name_hint)
+    return _render_with_defaults('source.jinja2',
+                                 account_id=account_id,
+                                 source_id=source_id,
+                                 is_human=is_human,
+                                 needs_assignment=needs_assignment,
+                                 samples=samples_output,
+                                 surveys=per_source,
+                                 source_name=source_output['source_name'],
+                                 vioscreen_id=VIOSCREEN_ID,
+                                 claim_kit_name_hint=claim_kit_name_hint)
 
 
 def get_update_sample(account_id, source_id, sample_id):
@@ -915,16 +889,13 @@ def get_update_sample(account_id, source_id, sample_id):
         sample_output['date'] = ""
         sample_output['time'] = ""
 
-    return render_template('sample.jinja2',
-                           admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           system_msg_text=SYSTEM_MSG,
-                           system_msg_style=SYSTEM_MSG_STYLE,
-                           account_id=account_id,
-                           source_id=source_id,
-                           source_name=source_output['source_name'],
-                           sample=sample_output,
-                           sample_sites=sample_sites,
-                           is_environmental=is_environmental)
+    return _render_with_defaults('sample.jinja2',
+                                 account_id=account_id,
+                                 source_id=source_id,
+                                 source_name=source_output['source_name'],
+                                 sample=sample_output,
+                                 sample_sites=sample_sites,
+                                 is_environmental=is_environmental)
 
 
 # TODO: guess we should also rewrite as ajax post for sample vue form?
@@ -1043,42 +1014,31 @@ def get_interactive_account_search(email_query):
 
     accounts = [{"email": acct['email'], "account_id": acct['id']}
                 for acct in email_diagnostics['accounts']]
-    return render_template('admin_home.jinja2',
-                           admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           system_msg_text=SYSTEM_MSG,
-                           system_msg_style=SYSTEM_MSG_STYLE,
-                           accounts=accounts,
-                           endpoint=SERVER_CONFIG["endpoint"],
-                           authrocket_url=SERVER_CONFIG["authrocket_url"])
+    return _render_with_defaults('admin_home.jinja2',
+                                 accounts=accounts)
 
 
 def get_system_message():
     if not session.get(ADMIN_MODE_KEY, False):
         raise Unauthorized()
 
-    return render_template('admin_system_panel.jinja2',
-                           admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           system_msg=SYSTEM_MSG,
-                           msg_style=SYSTEM_MSG_STYLE)
+    return _render_with_defaults('admin_system_panel.jinja2')
 
 
 def post_system_message(body):
     if not session.get(ADMIN_MODE_KEY, False):
         raise Unauthorized()
 
-    global SYSTEM_MSG
-    global SYSTEM_MSG_STYLE
-    SYSTEM_MSG = body.get("system_msg")
-    SYSTEM_MSG_STYLE = body.get("msg_style")
+    text = body.get("system_msg_text")
+    style = body.get("system_msg_style")
 
-    if not SYSTEM_MSG or len(SYSTEM_MSG) == 0:
-        SYSTEM_MSG = None
-        SYSTEM_MSG_STYLE = None
+    if text is None or len(text) == 0:
+        text = None
+        style = None
 
-    return render_template('admin_system_panel.jinja2',
-                           admin_mode=session.get(ADMIN_MODE_KEY, False),
-                           system_msg=SYSTEM_MSG,
-                           msg_style=SYSTEM_MSG_STYLE)
+    client_state[RedisCache.SYSTEM_BANNER] = (text, style)
+
+    return _render_with_defaults('admin_system_panel.jinja2')
 
 
 class BearerAuth(AuthBase):

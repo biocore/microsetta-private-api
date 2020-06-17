@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import secrets
+import logging
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from flask import jsonify
@@ -16,6 +17,21 @@ Modified from https://github.com/zalando/connexion/blob/master/examples/swagger2
 
 import connexion
 from microsetta_private_api.util.util import JsonifyDefaultEncoder
+
+
+# https://stackoverflow.com/a/37842465
+# allow for rewriting the scheme in a reverse proxy production
+# environment. this is what allows url_for and redirect calls
+# to use https
+class ReverseProxied(object):
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        scheme = SERVER_CONFIG.get('url_scheme')
+        if scheme is not None:
+            environ['wsgi.url_scheme'] = scheme
+        return self.app(environ, start_response)
 
 
 def handle_422(repo_exc):
@@ -47,6 +63,14 @@ def build_app():
 
     # Set mapping from exception type to response code
     app.app.register_error_handler(RepoException, handle_422)
+
+    # attach the reverse proxy mechanism
+    app.app.wsgi_app = ReverseProxied(app.app.wsgi_app)
+
+    if not SERVER_CONFIG['debug']:
+        gunicorn_logger = logging.getLogger('gunicorn.error')
+        app.app.logger.handlers = gunicorn_logger.handlers
+        app.app.logger.setLevel(gunicorn_logger.level)
 
     @app.route('/americangut/static/<path:filename>')
     def reroute_americangut(filename):

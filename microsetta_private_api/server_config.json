@@ -2,6 +2,7 @@
   "endpoint": "http://localhost:8082",
   "port": 8082,
   "debug": true,
+  "url_scheme": "http",
   "ssl_cert_path": null,
   "ssl_key_path": null,
   "CAfile": null,

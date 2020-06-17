@@ -3,3 +3,4 @@ psycopg2
 flask
 natsort
 pycryptodome
+redis-py

@@ -46,7 +46,7 @@
     <br />
     {% endif %}
 
-    {% if system_msg_text and not admin_mode  %}
+    {% if system_msg_text %}
     <div id="system_message" class="alert alert-{{system_msg_style|e}}" role="alert">
       {{system_msg_text}}
     </div>
