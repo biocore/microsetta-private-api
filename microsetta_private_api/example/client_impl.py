@@ -77,8 +77,7 @@ def _render_with_defaults(template_name, **context):
     defaults["endpoint"] = endpoint
     defaults["authrocket_url"] = authrocket_url
 
-    for key in context:
-        defaults[key] = context[key]
+    defaults.update(context)
 
     return render_template(template_name, **defaults)
 
