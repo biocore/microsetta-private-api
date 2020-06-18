@@ -6,6 +6,7 @@ import json
 import copy
 import collections
 import datetime
+from dateutil.parser import isoparse
 from urllib.parse import urlencode
 from unittest import TestCase
 import microsetta_private_api.server
@@ -14,8 +15,12 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
+from microsetta_private_api.model.sample import Sample, SampleInfo
+from microsetta_private_api.api.tests.test_integration import \
+    _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
 
 
 # region helper methods
@@ -74,6 +79,41 @@ DUMMY_HUMAN_SOURCE = {
                 },
             }
 DUMMY_CONSENT_DATE = datetime.datetime.strptime('Jun 1 2005', '%b %d %Y')
+
+PRIMARY_SURVEY_TEMPLATE_ID = 1  # primary survey
+DUMMY_ANSWERED_SURVEY_ID = "5935e83a-a726-49af-b6dc-d68f1eacca5b"
+# This is a model of a partially-filled survey that includes
+# a single-select field, a multi-select field with multiple
+# entries selected, an input field required to be an integer,
+# an input field required to be single-line string, and a text field
+# including a line break
+DUMMY_SURVEY_ANSWERS_MODEL = {'6': 'Yes',
+               '30': ['Red wine', 'Spirits/hard alcohol'],
+               '104': 'candy corn\ngreen m&ms',
+               '107': 'Female',
+               '108': 68,
+               '109': 'inches',
+               '115': 'K7G-2G8'}
+
+DUMMY_EMPTY_SAMPLE_INFO = {
+    'sample_barcode': BARCODE,
+    'sample_datetime': None,
+    'sample_id': MOCK_SAMPLE_ID,
+    'sample_locked': False,
+    'sample_notes': None,
+    'sample_projects': ['American Gut Project'],
+    'sample_site': None
+    }
+
+DUMMY_FILLED_SAMPLE_INFO = {
+    'sample_barcode': BARCODE,
+    'sample_datetime': "2017-07-21T17:32:28Z",
+    'sample_id': MOCK_SAMPLE_ID,
+    'sample_locked': False,
+    'sample_notes': "Oops, I dropped it",
+    'sample_projects': ['American Gut Project'],
+    'sample_site': 'Saliva'
+    }
 
 ACCT_ID_KEY = "account_id"
 ACCT_TYPE_KEY = "account_type"
@@ -191,28 +231,76 @@ def extract_last_id_from_location_header(response):
 
 
 def delete_dummy_accts():
+    all_sample_ids = []
+    acct_ids = [ACCT_ID_1, ACCT_ID_2]
+
     with Transaction() as t:
+        acct_repo = AccountRepo(t)
         source_repo = SourceRepo(t)
         survey_answers_repo = SurveyAnswersRepo(t)
-        sources = source_repo.get_sources_in_account(ACCT_ID_1)
-        for curr_source in sources:
-            answers = survey_answers_repo.list_answered_surveys(
-                ACCT_ID_1, curr_source.id)
-            for survey_id in answers:
-                survey_answers_repo.delete_answered_survey(
-                    ACCT_ID_1, survey_id)
+        sample_repo = SampleRepo(t)
 
-            source_repo.delete_source(ACCT_ID_1, curr_source.id)
+        for curr_acct_id in acct_ids:
+            sources = source_repo.get_sources_in_account(curr_acct_id)
+            for curr_source in sources:
+                source_samples = sample_repo.get_samples_by_source(
+                    curr_acct_id, curr_source.id)
+                sample_ids = [x.id for x in source_samples]
+                all_sample_ids.extend(sample_ids)
 
-        acct_repo = AccountRepo(t)
-        acct_repo.delete_account(ACCT_ID_1)
-        acct_repo.delete_account(ACCT_ID_2)
+                # Dissociate all samples linked to this source from all
+                # answered surveys linked to this source, then delete all
+                # answered surveys
+                delete_dummy_answered_surveys_from_source_with_t(
+                    t, curr_acct_id, curr_source.id, sample_ids,
+                    survey_answers_repo)
+
+                # Now dissociate all the samples from this source
+                for curr_sample_id in sample_ids:
+                    sample_repo.dissociate_sample(curr_acct_id, curr_source.id,
+                                                  curr_sample_id)
+
+                # Finally, delete the source
+                source_repo.delete_source(curr_acct_id, curr_source.id)
+
+            # Delete the account
+            acct_repo.delete_account(curr_acct_id)
+
         # Belt and suspenders: these test emails are used by some tests outside
         # of this module as well, so can't be sure they are paired with the
         # above dummy account ids
         acct_repo.delete_account_by_email(TEST_EMAIL)
         acct_repo.delete_account_by_email(TEST_EMAIL_2)
+
+        # Delete the kit and all samples that were attached to any sources
+        # NB: This won't clean up any samples that were created but NOT
+        # attached to any sources ...
+        if len(all_sample_ids) == 0:
+            all_sample_ids = None
+        _remove_mock_kit(t, mock_sample_ids=all_sample_ids)
+
         t.commit()
+
+
+def delete_dummy_answered_surveys_from_source_with_t(
+        t, dummy_acct_id, dummy_source_id, sample_ids,
+        survey_answers_repo=None):
+    if survey_answers_repo is None:
+        survey_answers_repo = SurveyAnswersRepo(t)
+    answers = survey_answers_repo.list_answered_surveys(
+        dummy_acct_id, dummy_source_id)
+    for survey_id in answers:
+        for curr_sample_id in sample_ids:
+            # dissociate this survey from any used sample
+            try:
+                survey_answers_repo.dissociate_answered_survey_from_sample(
+                    dummy_acct_id, dummy_source_id, curr_sample_id, survey_id)
+            except werkzeug.exceptions.NotFound:
+                pass
+
+        # Now delete the answered survey
+        survey_answers_repo.delete_answered_survey(
+            dummy_acct_id, survey_id)
 
 
 def create_dummy_acct(create_dummy_1=True,
@@ -229,8 +317,19 @@ def create_dummy_source(name, source_type, content_dict, create_dummy_1=True,
                         iss=ACCT_MOCK_ISS,
                         sub=ACCT_MOCK_SUB):
     with Transaction() as t:
-        dummy_acct_id, dummy_source_id = _create_dummy_source_from_t(
-            t, name, source_type, content_dict, create_dummy_1, iss, sub)
+        dummy_source_id = SOURCE_ID_1
+        dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub)
+        source_repo = SourceRepo(t)
+        if source_type == Source.SOURCE_TYPE_HUMAN:
+            dummy_info_obj = HumanInfo.from_dict(content_dict,
+                                                 DUMMY_CONSENT_DATE,
+                                                 None)
+        else:
+            dummy_info_obj = NonHumanInfo.from_dict(content_dict)
+
+        source_repo.create_source(Source(dummy_source_id, dummy_acct_id,
+                                         source_type, name,
+                                         dummy_info_obj))
         t.commit()
 
     return dummy_acct_id, dummy_source_id
@@ -256,24 +355,73 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
     return dummy_acct_id
 
 
-def _create_dummy_source_from_t(t, name, source_type, content_dict,
-                                create_dummy_1=True,
-                                iss=ACCT_MOCK_ISS, sub=ACCT_MOCK_SUB):
+def create_dummy_answered_survey(dummy_acct_id, dummy_source_id,
+                                 survey_template_id=PRIMARY_SURVEY_TEMPLATE_ID,
+                                 survey_answers_id=DUMMY_ANSWERED_SURVEY_ID,
+                                 survey_model=None, dummy_sample_id=None):
 
-    dummy_source_id = SOURCE_ID_1
-    dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub)
-    source_repo = SourceRepo(t)
-    if source_type == Source.SOURCE_TYPE_HUMAN:
-        dummy_info_obj = HumanInfo.from_dict(content_dict, DUMMY_CONSENT_DATE,
-                                             None)
-    else:
-        dummy_info_obj = NonHumanInfo.from_dict(content_dict)
+    if survey_model is None:
+        survey_model = DUMMY_SURVEY_ANSWERS_MODEL
 
-    source_repo.create_source(Source(dummy_source_id, dummy_acct_id,
-                                     source_type, name,
-                                     dummy_info_obj))
+    with Transaction() as t:
+        survey_answers_repo = SurveyAnswersRepo(t)
+        survey_answers_id = survey_answers_repo.submit_answered_survey(
+            dummy_acct_id,
+            dummy_source_id,
+            localization.EN_US,
+            survey_template_id,
+            survey_model,
+            survey_answers_id
+        )
 
-    return dummy_acct_id, dummy_source_id
+        if dummy_sample_id is not None:
+            survey_answers_repo.associate_answered_survey_with_sample(
+                dummy_acct_id, dummy_source_id, dummy_sample_id,
+                survey_answers_id)
+
+        t.commit()
+
+    return survey_answers_id
+
+
+def create_dummy_kit(account_id=None, source_id=None):
+    with Transaction() as t:
+        _create_mock_kit(t, barcodes=[BARCODE],
+                         mock_sample_ids=[MOCK_SAMPLE_ID])
+
+        # if an account and source were provided, put some dummy
+        # collection info into the sample and associate it to this source
+        if account_id is not None and source_id is not None:
+
+            sample_info, _ = create_dummy_sample_objects(True)
+            sample_repo = SampleRepo(t)
+            sample_repo.associate_sample(account_id, source_id, MOCK_SAMPLE_ID)
+            sample_repo.update_info(account_id, source_id, sample_info)
+
+        t.commit()
+
+
+def create_dummy_sample_objects(filled=False):
+    info_dict = DUMMY_FILLED_SAMPLE_INFO if filled else DUMMY_EMPTY_SAMPLE_INFO
+    datetime_str = info_dict["sample_datetime"]
+    datetime_obj = None if datetime_str is None else isoparse(datetime_str)
+
+    sample_info = SampleInfo(
+        info_dict["sample_id"],
+        datetime_obj,
+        info_dict["sample_site"],
+        info_dict["sample_notes"]
+    )
+
+    sample = Sample(info_dict["sample_id"],
+                    datetime_obj,
+                    info_dict["sample_site"],
+                    info_dict["sample_notes"],
+                    info_dict["sample_barcode"],
+                    None,
+                    info_dict["sample_projects"])
+
+    return sample_info, sample
 # endregion help methods
 
 
@@ -951,75 +1099,14 @@ class SourceTests(ApiTests):
 @pytest.mark.usefixtures("client")
 class SurveyTests(ApiTests):
 
-    # region source create/post
-    def test_survey_create_success(self):
-        """Successfully create a new answered survey"""
-        dummy_acct_id, dummy_source_id = create_dummy_source(
-            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
-            create_dummy_1=True)
-
-        survey_template_id = 1  # primary survey
-        # This is a model of a partially-filled survey that includes
-        # a single-select field, a multi-select field with multiple
-        # entries selected, an input field required to be an integer,
-        # an input field required to be single-line string, and a text field
-        # including a line break
-        input_model = {'6': 'Yes',
-                       '30': ['Red wine', 'Spirits/hard alcohol'],
-                       '104': 'candy corn\ngreen m&ms',
-                       '107': 'Female',
-                       '108': 68,
-                       '109': 'inches',
-                       '115': 'K7G-2G8'}
-
-        post_resp = self.client.post(
-            '/api/accounts/%s/sources/%s/surveys?%s'
-            % (dummy_acct_id, dummy_source_id, self.default_lang_querystring),
-            content_type='application/json',
-            data=json.dumps(
-                {
-                    'survey_template_id': survey_template_id,
-                    'survey_text': input_model
-                }),
-            headers=self.dummy_auth
-        )
-
-        # check response code
-        self.assertEqual(201, post_resp.status_code)
-
-        # check location header was provided, with new survey id
-        real_id_from_loc = extract_last_id_from_location_header(post_resp)
-        self.assertIsNotNone(real_id_from_loc)
-
-        # load that new survey and ensure it matches the expected contents
-        get_resp = self.client.get(
-            '%s?%s' %
-            (post_resp.headers.get("Location"), self.default_lang_querystring),
-            headers=self.dummy_auth)
-
-        # check response code
-        self.assertEqual(200, get_resp.status_code)
-
+    def _validate_survey_info(self, response, expected_output, expected_model):
         # load the response body
-        get_resp_obj = json.loads(get_resp.data)
+        get_resp_obj = json.loads(response.data)
 
-        # check all elements of object in body are correct
-        expected_model = copy.deepcopy(input_model)
-
-        # the output order from the multiple choice question (30) from the
-        # database is not stable
+        # the output order from the multiple choice questions from the
+        # database is not stable, so pop survey text value out and test it
+        # separately
         observed_model = get_resp_obj.pop('survey_text')
-
-        # TODO: determine whether the current behavior that returns
-        #  fields input as numbers as strings is actually correct or not
-        expected_model['108'] = "68"
-        expected_output = {
-            "survey_template_id": survey_template_id,
-            "survey_template_title": "Primary",
-            "survey_template_version": "1.0",
-            "survey_template_type": "local",
-            "survey_id": real_id_from_loc,
-        }
         self.assertEqual(expected_output, get_resp_obj)
 
         # check dict keys
@@ -1034,13 +1121,48 @@ class SurveyTests(ApiTests):
 
             self.assertEqual(obs, exp)
 
-    def test_survey_create_success_empty(self):
-        """Successfully create a new answered survey without any answers"""
+    def _validate_survey_create(self, post_response):
+        # check response code
+        self.assertEqual(201, post_response.status_code)
+
+        # check location header was provided, with new survey id
+        real_id_from_loc = extract_last_id_from_location_header(post_response)
+        self.assertIsNotNone(real_id_from_loc)
+
+        # load that new survey and ensure it matches the expected contents
+        get_response = self.client.get(
+            '%s?%s' %
+            (post_response.headers.get("Location"),
+             self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, get_response.status_code)
+        return real_id_from_loc, get_response
+
+    def _make_expected_survey_output(self, replacement_dict,
+                                     real_id_from_loc, base_dict=None):
+        if base_dict is None:
+            base_dict = DUMMY_SURVEY_ANSWERS_MODEL
+        expected_model = copy.deepcopy(base_dict)
+        for k, v in replacement_dict.items():
+            expected_model[k] = v
+
+        expected_output = {
+            "survey_template_id": PRIMARY_SURVEY_TEMPLATE_ID,
+            "survey_template_title": "Primary",
+            "survey_template_version": "1.0",
+            "survey_template_type": "local",
+            "survey_id": real_id_from_loc,
+        }
+
+        return expected_output, expected_model
+
+    def test_survey_create_success(self):
+        """Successfully create a new answered survey"""
         dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
-
-        survey_template_id = 1  # primary survey
 
         post_resp = self.client.post(
             '/api/accounts/%s/sources/%s/surveys?%s'
@@ -1048,8 +1170,57 @@ class SurveyTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': survey_template_id,
+                    'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
+                    'survey_text': DUMMY_SURVEY_ANSWERS_MODEL
+                }),
+            headers=self.dummy_auth
+        )
+
+        real_id_from_loc, get_resp = self._validate_survey_create(post_resp)
+        expected_output, expected_model = self._make_expected_survey_output(
+            {'108': '68'}, real_id_from_loc)
+        self._validate_survey_info(get_resp, expected_output, expected_model)
+
+    def test_survey_create_success_empty(self):
+        """Successfully create a new answered survey without any answers"""
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        post_resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?%s'
+            % (dummy_acct_id, dummy_source_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
                     'survey_text': {}
+                }),
+            headers=self.dummy_auth
+        )
+
+        real_id_from_loc, get_resp = self._validate_survey_create(post_resp)
+        expected_output, expected_model = self._make_expected_survey_output(
+            {'108': ""}, real_id_from_loc, base_dict={})
+        self._validate_survey_info(get_resp, expected_output, expected_model)
+
+
+@pytest.mark.usefixtures("client")
+class SampleTests(ApiTests):
+    def test_associate_sample_to_source_success(self):
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+        create_dummy_kit()
+
+        base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
+            dummy_acct_id, dummy_source_id)
+        post_resp = self.client.post(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'sample_id': MOCK_SAMPLE_ID,
                 }),
             headers=self.dummy_auth
         )
@@ -1057,30 +1228,120 @@ class SurveyTests(ApiTests):
         # check response code
         self.assertEqual(201, post_resp.status_code)
 
-        # check location header was provided, with new survey id
-        real_id_from_loc = extract_last_id_from_location_header(post_resp)
-        self.assertIsNotNone(real_id_from_loc)
+        # check location header was provided, pointing to sample
+        loc = post_resp.headers.get("Location")
+        url = werkzeug.urls.url_parse(loc)
+        self.assertEqual(base_url + "/" + MOCK_SAMPLE_ID, url.path)
 
-        # load that new survey and ensure it matches the expected contents
-        get_resp = self.client.get(
-            '%s?%s' %
-            (post_resp.headers.get("Location"), self.default_lang_querystring),
+        # load the samples associated to this source to ensure this one is
+        get_response = self.client.get(
+            '%s?%s' % (base_url, self.default_lang_querystring),
             headers=self.dummy_auth)
 
         # check response code
-        self.assertEqual(200, get_resp.status_code)
+        self.assertEqual(200, get_response.status_code)
 
-        # load the response body
-        get_resp_obj = json.loads(get_resp.data)
+        # ensure there is precisely one sample associated with this source
+        # (that is empty of collection info)
+        get_resp_obj = json.loads(get_response.data)
+        self.assertEqual(get_resp_obj, [DUMMY_EMPTY_SAMPLE_INFO])
 
-        # check all elements of object in body are correct
-        expected_model = {'108': ""}
-        expected_output = {
-            "survey_template_id": survey_template_id,
-            "survey_template_title": "Primary",
-            "survey_template_version": "1.0",
-            "survey_template_type": "local",
-            "survey_id": real_id_from_loc,
-            "survey_text": expected_model
-        }
-        self.assertEqual(expected_output, get_resp_obj)
+        # TODO: We should also have tests of associating a sample to a source
+        #  that fail with with a 401 (sample not found) and a 422 (sample
+        #  already assigned)
+
+    def test_associate_answered_survey_to_sample_success(self):
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+        create_dummy_kit(dummy_acct_id, dummy_source_id)
+        dummy_answered_survey_id = create_dummy_answered_survey(
+            dummy_acct_id, dummy_source_id)
+
+        base_url = '/api/accounts/{0}/sources/{1}'.format(
+            dummy_acct_id, dummy_source_id)
+        sample_surveys_url = '%s/samples/%s/surveys?%s' % (
+            base_url, MOCK_SAMPLE_ID, self.default_lang_querystring)
+        post_resp = self.client.post(
+            sample_surveys_url,
+            content_type='application/json',
+            data=json.dumps({
+                    'survey_id': dummy_answered_survey_id,
+                }),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(201, post_resp.status_code)
+
+        # check location header was provided, pointing to sample
+        url = werkzeug.urls.url_parse(post_resp.headers.get("Location"))
+        expected_url = base_url + "/surveys/" + dummy_answered_survey_id
+        self.assertEqual(expected_url, url.path)
+
+        # load the surveys associated to this sample to ensure this one is
+        get_response = self.client.get(sample_surveys_url,
+                                       headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, get_response.status_code)
+
+        # ensure there is precisely one survey associated with this sample
+        expected_output = [
+            {'survey_id': dummy_answered_survey_id,
+             'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
+             'survey_template_title': "Primary",
+             'survey_template_version': '1.0',
+             'survey_template_type': 'local'
+             }]
+        get_resp_obj = json.loads(get_response.data)
+        self.assertEqual(get_resp_obj, expected_output)
+
+        # TODO: We should also have tests of associating a survey to a sample
+        #  that fail with with a 401 for answered survey not found and
+        #  a 401 for sample not found
+
+    def test_dissociate_sample_from_source_success(self):
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+        create_dummy_kit(dummy_acct_id, dummy_source_id)
+        dummy_answered_survey_id = create_dummy_answered_survey(
+            dummy_acct_id, dummy_source_id, dummy_sample_id=MOCK_SAMPLE_ID)
+
+        base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
+            dummy_acct_id, dummy_source_id)
+        sample_url = "{0}/{1}".format(base_url, MOCK_SAMPLE_ID)
+        delete_resp = self.client.delete(
+            '%s?%s' % (sample_url, self.default_lang_querystring),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(204, delete_resp.status_code)
+
+        # load the samples associated to this source
+        get_response = self.client.get(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(200, get_response.status_code)
+
+        # ensure there are zero samples associated with this source
+        get_resp_obj = json.loads(get_response.data)
+        self.assertEqual(get_resp_obj, [])
+
+        # load the sample info
+        _, expected_sample = create_dummy_sample_objects(False)
+        with Transaction() as t:
+            # make sure the sample's collection info is wiped
+            sample_repo = SampleRepo(t)
+            obs_sample = sample_repo._get_sample_by_id(MOCK_SAMPLE_ID)
+            self.assertEqual(expected_sample.__dict__, obs_sample.__dict__)
+
+            # make sure answered survey no longer associated with any samples
+            answered_survey_repo = SurveyAnswersRepo(t)
+            answered_survey_ids = answered_survey_repo.\
+                _get_survey_sample_associations(dummy_answered_survey_id)
+            self.assertEqual([], answered_survey_ids)
