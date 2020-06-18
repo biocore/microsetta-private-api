@@ -87,13 +87,14 @@ DUMMY_ANSWERED_SURVEY_ID = "5935e83a-a726-49af-b6dc-d68f1eacca5b"
 # entries selected, an input field required to be an integer,
 # an input field required to be single-line string, and a text field
 # including a line break
-DUMMY_SURVEY_ANSWERS_MODEL = {'6': 'Yes',
-               '30': ['Red wine', 'Spirits/hard alcohol'],
-               '104': 'candy corn\ngreen m&ms',
-               '107': 'Female',
-               '108': 68,
-               '109': 'inches',
-               '115': 'K7G-2G8'}
+DUMMY_SURVEY_ANSWERS_MODEL = {
+    '6': 'Yes',
+    '30': ['Red wine', 'Spirits/hard alcohol'],
+    '104': 'candy corn\ngreen m&ms',
+    '107': 'Female',
+    '108': 68,
+    '109': 'inches',
+    '115': 'K7G-2G8'}
 
 DUMMY_EMPTY_SAMPLE_INFO = {
     'sample_barcode': BARCODE,
@@ -102,8 +103,7 @@ DUMMY_EMPTY_SAMPLE_INFO = {
     'sample_locked': False,
     'sample_notes': None,
     'sample_projects': ['American Gut Project'],
-    'sample_site': None
-    }
+    'sample_site': None}
 
 DUMMY_FILLED_SAMPLE_INFO = {
     'sample_barcode': BARCODE,
@@ -112,8 +112,7 @@ DUMMY_FILLED_SAMPLE_INFO = {
     'sample_locked': False,
     'sample_notes': "Oops, I dropped it",
     'sample_projects': ['American Gut Project'],
-    'sample_site': 'Saliva'
-    }
+    'sample_site': 'Saliva'}
 
 ACCT_ID_KEY = "account_id"
 ACCT_TYPE_KEY = "account_type"
