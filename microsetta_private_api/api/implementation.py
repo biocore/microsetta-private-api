@@ -453,7 +453,7 @@ def associate_sample(account_id, source_id, body, token_info):
     response = flask.Response()
     response.status_code = 201
     response.headers['Location'] = '/api/accounts/%s/sources/%s/samples/%s' % \
-                                   (account_id, source_id, ['sample_id'])
+                                   (account_id, source_id, body['sample_id'])
     return response
 
 
