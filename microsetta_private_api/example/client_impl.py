@@ -6,6 +6,7 @@ from requests.auth import AuthBase
 from urllib.parse import quote
 from os import path
 from datetime import datetime
+import base64
 
 # Authrocket uses RS256 public keys, so you can validate anywhere and safely
 # store the key in code. Obviously using this mechanism, we'd have to push code
@@ -406,7 +407,7 @@ def get_rootpath():
     return redirect(HOME_URL)
 
 
-def get_authrocket_callback(token):
+def get_authrocket_callback(token, redirect_uri=None):
     session[TOKEN_KEY_NAME] = token
     do_return, accts_output, _ = ApiRequest.get('/accounts')
     if do_return:
@@ -417,6 +418,10 @@ def get_authrocket_callback(token):
         session[ADMIN_MODE_KEY] = accts_output[0]['account_type'] == 'admin'
     else:
         session[ADMIN_MODE_KEY] = False
+
+    if redirect_uri:
+        uri = base64.urlsafe_b64decode(redirect_uri).decode()
+        return redirect(uri)
 
     return redirect(HOME_URL)
 
