@@ -22,7 +22,7 @@ Install the JSON Web Tokens library with cryptography support:
 
 Install redis:
 
-`sudo pip install redis`
+`pip install redis`
 
 Then install the microsetta-private-api in editable mode:
 
