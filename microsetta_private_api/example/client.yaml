@@ -385,6 +385,9 @@ paths:
               schema:
                 type: string
 
+  # Note: ideally this would be represented as a DELETE, not as a POST
+  # However, it is used as a form submission action, and HTML forms do not support
+  # delete as an action
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/remove':
     post:
       operationId: microsetta_private_api.example.client_impl.post_remove_sample_from_source

@@ -927,6 +927,9 @@ def post_update_sample(account_id, source_id, sample_id):
     return _refresh_state_and_route_to_sink(account_id, source_id)
 
 
+# Note: ideally this would be represented as a DELETE, not as a POST
+# However, it is used as a form submission action, and HTML forms do not
+# support delete as an action
 def post_remove_sample_from_source(account_id, source_id, sample_id):
     prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
     # Checking for only SOURCE_PREREQS_MET here because there are currently no
