@@ -45,7 +45,7 @@ class SendEmail:
             raise smtplib.SMTPException("Unable to connect")
 
     @classmethod
-    def send(cls, to, email_template, **email_template_args):
+    def send(cls, to, email_template, email_template_args=None, from_=None):
         """Send a message
 
         Parameters
@@ -56,20 +56,19 @@ class SendEmail:
             An object that contains a .plain and .html jinja2
             template for rendering
         email_template_args : dict, optional
-            Arguments to provide for rendering. If "from" is included
-            in the arguments, it is extracted and used as the "from"
-            address in sending the email
+            Arguments to provide for rendering.
+        from_ : str, optional
+            A from email address. This is optional, and if not provided
+            the default defined by this class is used.
         """
-        from_ = email_template_args.pop('from', None)
-
         message = MIMEMultipart("alternative")
         message['To'] = to
         message['From'] = from_ or cls.from_
         message['Reply-To'] = cls.reply_to
         message['Subject'] = email_template.subject
 
-        plain = email_template.plain.render(**email_template_args)
-        html = email_template.html.render(**email_template_args)
+        plain = email_template.plain.render(**email_template_args or {})
+        html = email_template.html.render(**email_template_args or {})
 
         first = MIMEText(plain, "plain")
         second = MIMEText(html, "html")

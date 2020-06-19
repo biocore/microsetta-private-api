@@ -34,7 +34,6 @@ class MockTemplate:
         self.content = content
 
     def render(self, **kwargs):
-        print(json.dumps(sorted(kwargs.items())))
         return self.content + "|" + json.dumps(sorted(kwargs.items()))
 
 
@@ -66,7 +65,7 @@ class EmailTests(unittest.TestCase):
     def test_send_valid_message_args(self):
         SendEmail._connect = MockConnect(False)
 
-        SendEmail.send("foo", self.message, **{'foo': 'bar', 'baz': 'biz'})
+        SendEmail.send("foo", self.message, {'foo': 'bar', 'baz': 'biz'})
         obs = SendEmail.connection.observed.as_string()
         self.assertRegex(obs, 'Content-Type: text/html')
         self.assertRegex(obs, 'Content-Type: text/plain')
