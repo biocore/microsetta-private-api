@@ -16,9 +16,13 @@ Install connexion version 2.0 (which supports the OpenAPI Specification 3.0) as 
 
 `pip install connexion[swagger-ui]`
 
-Also install the JSON Web Tokens library with cryptography support:
+Install the JSON Web Tokens library with cryptography support:
 
 `pip install pyjwt[crypto]`
+
+Install redis:
+
+`pip install redis`
 
 Then install the microsetta-private-api in editable mode:
 

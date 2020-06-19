@@ -364,7 +364,7 @@ paths:
               schema:
                 type: string
     post:
-      operationId: microsetta_private_api.example.client_impl.put_update_sample
+      operationId: microsetta_private_api.example.client_impl.post_update_sample
       tags:
         - Sample
       parameters:
@@ -380,6 +380,26 @@ paths:
       responses:
         '200':
           description: Display of sample info
+          content:
+            text/html:
+              schema:
+                type: string
+
+  # Note: ideally this would be represented as a DELETE, not as a POST
+  # However, it is used as a form submission action, and HTML forms do not support
+  # delete as an action
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/remove':
+    post:
+      operationId: microsetta_private_api.example.client_impl.post_remove_sample_from_source
+      tags:
+        - Sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Display of revised source info or error info
           content:
             text/html:
               schema:

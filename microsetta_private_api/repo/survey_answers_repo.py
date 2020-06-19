@@ -86,8 +86,8 @@ class SurveyAnswersRepo(BaseRepo):
         # Note: Retrieving sample in this way validates permissions.
         sample = sample_repo.get_sample(account_id, source_id, sample_id)
         if sample is None:
-            raise werkzeug.exceptions.NotFound("No sample ID: %s" %
-                                               sample.id)
+            raise werkzeug.exceptions.NotFound("No sample with id %s" %
+                                               sample_id)
 
         with self._transaction.cursor() as cur:
             cur.execute("SELECT "
@@ -160,7 +160,10 @@ class SurveyAnswersRepo(BaseRepo):
         return model
 
     def submit_answered_survey(self, ag_login_id, source_id,
-                               language_tag, survey_template_id, survey_model):
+                               language_tag, survey_template_id, survey_model,
+                               survey_answers_id=None):
+        # note that "ag_login_id" is the same as account_id
+
         # This is actually pretty complicated in the current schema:
         #   We need to filter the model down to questions that are in the
         #       template
@@ -172,7 +175,9 @@ class SurveyAnswersRepo(BaseRepo):
 
         # TODO: We need to ensure that the account has access to write the
         #  given participant!?!
-        survey_answers_id = str(uuid.uuid4())
+
+        if survey_answers_id is None:
+            survey_answers_id = str(uuid.uuid4())
 
         survey_template_repo = SurveyTemplateRepo(self._transaction)
         survey_template = survey_template_repo.get_survey_template(
@@ -378,3 +383,17 @@ class SurveyAnswersRepo(BaseRepo):
                 raise BadRequest("Invalid survey response: %s" % answer)
             normalized_answer = row[0]
             return normalized_answer
+
+    def _get_survey_sample_associations(self, answered_survey_id):
+        """ Do not use from api layer, you must validate account and source."""
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT barcode "
+                        "FROM source_barcodes_surveys "
+                        "WHERE survey_id = %s",
+                        (answered_survey_id,))
+
+            sample_rows = cur.fetchall()
+            if sample_rows is None:
+                return []
+            else:
+                return [r[0] for r in sample_rows]

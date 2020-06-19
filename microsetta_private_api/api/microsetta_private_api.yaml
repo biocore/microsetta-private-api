@@ -764,8 +764,8 @@ paths:
       tags:
         - Sample
       operationId: microsetta_private_api.api.implementation.dissociate_sample
-      summary: Dissociate a sample from a source
-      description: Dissociate a sample from a source
+      summary: Dissociate a sample from a source and any of its associated surveys
+      description: Dissociate a sample from a source and any of its associated surveys
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
@@ -773,7 +773,7 @@ paths:
         - $ref: '#/components/parameters/language_tag'
       responses:
         '204':
-          description: Sample was dissociated from source
+          description: Sample was dissociated from source and source's surveys
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':

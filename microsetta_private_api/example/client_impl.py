@@ -899,7 +899,7 @@ def get_update_sample(account_id, source_id, sample_id):
 
 
 # TODO: guess we should also rewrite as ajax post for sample vue form?
-def put_update_sample(account_id, source_id, sample_id):
+def post_update_sample(account_id, source_id, sample_id):
     prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
     # Checking for only SOURCE_PREREQS_MET here because there are currently no
     # sample-specific prerequisites
@@ -923,6 +923,24 @@ def put_update_sample(account_id, source_id, sample_id):
 
     if has_error:
         return sample_output
+
+    return _refresh_state_and_route_to_sink(account_id, source_id)
+
+
+# Note: ideally this would be represented as a DELETE, not as a POST
+# However, it is used as a form submission action, and HTML forms do not
+# support delete as an action
+def post_remove_sample_from_source(account_id, source_id, sample_id):
+    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
+    # Checking for only SOURCE_PREREQS_MET here because there are currently no
+    # sample-specific prerequisites
+    if prereqs_step == SOURCE_PREREQS_MET:
+        has_error, delete_output, _ = ApiRequest.delete(
+            '/accounts/%s/sources/%s/samples/%s' %
+            (account_id, source_id, sample_id))
+
+        if has_error:
+            return delete_output
 
     return _refresh_state_and_route_to_sink(account_id, source_id)
 
@@ -1099,4 +1117,14 @@ class ApiRequest:
             verify=ApiRequest.CAfile,
             params=cls.build_params(params),
             json=json)
+        return cls._check_response(response)
+
+    @classmethod
+    def delete(cls, input_path, params=None):
+        response = requests.delete(
+            ApiRequest.API_URL + input_path,
+            auth=BearerAuth(session[TOKEN_KEY_NAME]),
+            verify=ApiRequest.CAfile,
+            params=cls.build_params(params))
+
         return cls._check_response(response)
