@@ -8,7 +8,4 @@
   "CAfile": null,
   "authrocket_url": "https://jubilant-smoke-a54b.e2.loginrocket.com",
   "FLASK_SECRET_KEY": null,
-  "vioscreen_endpoint": "https://demo.vioscreen.com",
-  "vioscreen_regcode": "regcode",
-  "vioscreen_cryptokey": "1234567891011121"
 }
