@@ -26,7 +26,8 @@ setup(
                      'db/*.*',
                      'db/patches/*.sql',
                      'api/microsetta_private_api.yaml',
-                     'authrocket.pubkey'
+                     'authrocket.pubkey',
+                     'server_config.json'
                   ]},
     entry_points='''
         [console_scripts]
