@@ -7,6 +7,8 @@ from urllib.parse import quote
 from os import path
 from datetime import datetime
 import base64
+import functools
+import inspect
 
 # Authrocket uses RS256 public keys, so you can validate anywhere and safely
 # store the key in code. Obviously using this mechanism, we'd have to push code
@@ -1048,6 +1050,65 @@ def post_system_message(body):
     client_state[RedisCache.SYSTEM_BANNER] = (text, style)
 
     return _render_with_defaults('admin_system_panel.jinja2')
+
+
+# To send arguments to a decorator, you define a factory method with those args
+# that returns a decorator.  The decorator then takes a function and returns
+# a wrapper that you want to call instead.  Thus there should be three layers.
+def get_requires(target_state):
+    def decorator(func):
+        # Since we don't know what arguments the function to wrap will take
+        # we need to figure out how to parse an account_id and source_id out
+        # of the function when it's called.  To do that we inspect the function
+        # signature and find the locations of the arguments named 'account_id'
+        # and 'source_id'.  (Yes, this will break if arguments are renamed)
+
+        # NOTE:  Rather than inspecting the function signature,
+        # we could potentially switch on the target_state value and decide how
+        # many arguments to take from the beginning of *args, this is because
+        # by our current design, if an account_id is required, it's the first
+        # argument, and if a source_id is required, it's the second argument.
+
+        # Determine whether/where wrapped function takes account_id, source_id
+        sig = inspect.signature(func)
+        param_names = sig[0]
+        acct_idx = None
+        source_idx = None
+        acct_default = None
+        source_default = None
+        if 'account_id' in param_names:
+            acct_idx = param_names.index('account_id')
+            acct_default = sig[1 + acct_idx]
+        if 'source_id' in param_names:
+            source_idx = param_names.index('source_id')
+            source_default = sig[1 + source_idx]
+
+        # Calling functools.wraps preserves information about the wrapped func
+        # so introspection/reflection can pull the original documentation even
+        # when passed the wrapper function.
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            # Parse account_id/source_id
+            acct_id = acct_default
+            src_id = source_default
+            if acct_idx is not None:
+                if acct_idx < len(args):
+                    acct_id = args[acct_idx]
+            if source_idx is not None:
+                if source_idx < len(args):
+                    src_id = args[source_idx]
+
+            # Check relevant prereqs from those arguments
+            prereqs_step, curr_state = _check_relevant_prereqs(acct_id, src_id)
+
+            # Route to closest sink if state doesn't match a required state
+            if prereqs_step != target_state:
+                return _route_to_closest_sink(prereqs_step, curr_state)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 class BearerAuth(AuthBase):
