@@ -231,6 +231,87 @@ def _check_relevant_prereqs(acct_id=None, source_id=None):
     return _check_source_prereqs(acct_id, source_id, current_state)
 
 
+# To send arguments to a decorator, you define a factory method with those args
+# that returns a decorator.  The decorator then takes a function and returns
+# a wrapper that you want to call instead.  Thus there should be three layers.
+def get_requires(target_state):
+    """
+    Usage
+    @get_requires(NEEDS_EMAIL_CHECK)
+    def get_update_email(account_id):
+        # If client is not in the NEEDS_EMAIL_CHECK state, they will be
+        # redirected rather than reaching get_update_email.
+
+    @get_requires([State1, State2, State3])
+    def crazy_function(account_id, source_id):
+        # If client is not in one of State1, State2, State3 stats, they will
+        # be redirected.
+
+    :param target_state: A state or a list/set of states that are valid for
+    entry to the decorated function
+    """
+    def decorator(func):
+        # Since we don't know what arguments the function to wrap will take
+        # we need to figure out how to parse an account_id and source_id out
+        # of the function when it's called.  To do that we inspect the function
+        # signature and find the locations of the arguments named 'account_id'
+        # and 'source_id'.  (Yes, this will break if arguments are renamed)
+
+        # NOTE:  Rather than inspecting the function signature,
+        # we could potentially switch on the target_state value and decide how
+        # many arguments to take from the beginning of *args, this is because
+        # by our current design, if an account_id is required, it's the first
+        # argument, and if a source_id is required, it's the second argument.
+
+        # Determine whether/where wrapped function takes account_id, source_id
+        sig = inspect.signature(func)
+        param_names = sig[0]
+        acct_idx = None
+        source_idx = None
+        acct_default = None
+        source_default = None
+        if 'account_id' in param_names:
+            acct_idx = param_names.index('account_id')
+            acct_default = sig[1 + acct_idx]
+        if 'source_id' in param_names:
+            source_idx = param_names.index('source_id')
+            source_default = sig[1 + source_idx]
+
+        # Calling functools.wraps preserves information about the wrapped func
+        # so introspection/reflection can pull the original documentation even
+        # when passed the wrapper function.
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            # Parse account_id/source_id
+            acct_id = acct_default
+            src_id = source_default
+            if acct_idx is not None:
+                if acct_idx < len(args):
+                    acct_id = args[acct_idx]
+            if source_idx is not None:
+                if source_idx < len(args):
+                    src_id = args[source_idx]
+
+            # Check relevant prereqs from those arguments
+            prereqs_step, curr_state = _check_relevant_prereqs(acct_id, src_id)
+
+            # Route to closest sink if state doesn't match a required state
+            # TODO: Do we actually need set functionality?
+            #  It looks like its allowed by one function,
+            #  but doesn't actually appear to be used anywhere...
+            if isinstance(target_state, list) or isinstance(target_state, set):
+                if prereqs_step not in target_state:
+                    return _route_to_closest_sink(prereqs_step, curr_state)
+            else:
+                if prereqs_step != target_state:
+                    return _route_to_closest_sink(prereqs_step, curr_state)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 # Client might not technically care who the user is, but if they do, they
 # get the token, validate it, and pull email out of it.
 def _parse_jwt(token):
@@ -439,11 +520,8 @@ def get_logout():
     return redirect(HOME_URL)
 
 
+@get_requires(NEEDS_ACCOUNT)
 def get_create_account():
-    prereqs_step, curr_state = _check_relevant_prereqs()
-    if prereqs_step != NEEDS_ACCOUNT:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
     email, _ = _parse_jwt(session[TOKEN_KEY_NAME])
     # TODO:  Need to support other countries
     #  and not default to US and California
@@ -466,81 +544,72 @@ def get_create_account():
                                  account=default_account_values)
 
 
+@get_requires(NEEDS_ACCOUNT)
 def post_create_account(body):
-    new_acct_id = None
-    prereqs_step, curr_state = _check_relevant_prereqs()
-    if prereqs_step == NEEDS_ACCOUNT:
-        kit_name = body[KIT_NAME_KEY]
-        session[KIT_NAME_KEY] = kit_name
+    kit_name = body[KIT_NAME_KEY]
+    session[KIT_NAME_KEY] = kit_name
 
-        api_json = {
-            ACCT_FNAME_KEY: body['first_name'],
-            ACCT_LNAME_KEY: body['last_name'],
-            ACCT_EMAIL_KEY: body['email'],
-            ACCT_ADDR_KEY: {
-                ACCT_ADDR_STREET_KEY: body['street'],
-                ACCT_ADDR_CITY_KEY: body['city'],
-                ACCT_ADDR_STATE_KEY: body['state'],
-                ACCT_ADDR_POST_CODE_KEY: body['post_code'],
-                ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
-            },
-            KIT_NAME_KEY: kit_name
-        }
+    api_json = {
+        ACCT_FNAME_KEY: body['first_name'],
+        ACCT_LNAME_KEY: body['last_name'],
+        ACCT_EMAIL_KEY: body['email'],
+        ACCT_ADDR_KEY: {
+            ACCT_ADDR_STREET_KEY: body['street'],
+            ACCT_ADDR_CITY_KEY: body['city'],
+            ACCT_ADDR_STATE_KEY: body['state'],
+            ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+            ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
+        },
+        KIT_NAME_KEY: kit_name
+    }
 
-        has_error, accts_output, _ = \
-            ApiRequest.post("/accounts", json=api_json)
-        if has_error:
-            return accts_output
+    has_error, accts_output, _ = \
+        ApiRequest.post("/accounts", json=api_json)
+    if has_error:
+        return accts_output
 
-        new_acct_id = accts_output["account_id"]
+    new_acct_id = accts_output["account_id"]
 
     return _refresh_state_and_route_to_sink(new_acct_id)
 
 
+@get_requires(NEEDS_EMAIL_CHECK)
 def get_update_email(account_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step != NEEDS_EMAIL_CHECK:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
     return _render_with_defaults("update_email.jinja2",
                                  account_id=account_id)
 
 
+@get_requires(NEEDS_EMAIL_CHECK)
 def post_update_email(account_id, body):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step == NEEDS_EMAIL_CHECK:
-        # if the customer wants to update their email:
-        update_email = body["do_update"] == "Yes"
-        if update_email:
-            # get the existing account object
-            has_error, acct_output, _ = ApiRequest.get(
-                '/accounts/%s' % account_id)
-            if has_error:
-                return acct_output
+    # if the customer wants to update their email:
+    update_email = body["do_update"] == "Yes"
+    if update_email:
+        # get the existing account object
+        has_error, acct_output, _ = ApiRequest.get(
+            '/accounts/%s' % account_id)
+        if has_error:
+            return acct_output
 
-            # change the email to the one in the authrocket account
-            authrocket_email, _ = _parse_jwt(session[TOKEN_KEY_NAME])
-            acct_output[ACCT_EMAIL_KEY] = authrocket_email
-            # retain only writeable fields; KeyError if any of them missing
-            mod_acct = {k: acct_output[k] for k in ACCT_WRITEABLE_KEYS}
+        # change the email to the one in the authrocket account
+        authrocket_email, _ = _parse_jwt(session[TOKEN_KEY_NAME])
+        acct_output[ACCT_EMAIL_KEY] = authrocket_email
+        # retain only writeable fields; KeyError if any of them missing
+        mod_acct = {k: acct_output[k] for k in ACCT_WRITEABLE_KEYS}
 
-            # write back the updated account details
-            has_error, put_output, _ = ApiRequest.put(
-                '/accounts/%s' % account_id, json=mod_acct)
-            if has_error:
-                return put_output
+        # write back the updated account details
+        has_error, put_output, _ = ApiRequest.put(
+            '/accounts/%s' % account_id, json=mod_acct)
+        if has_error:
+            return put_output
 
-        # even if they decided NOT to update, don't ask again this session
-        session[EMAIL_CHECK_KEY] = True
+    # even if they decided NOT to update, don't ask again this session
+    session[EMAIL_CHECK_KEY] = True
 
     return _refresh_state_and_route_to_sink(account_id)
 
 
+@get_requires(ACCT_PREREQS_MET)
 def get_account(account_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step != ACCT_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
     has_error, account, _ = ApiRequest.get('/accounts/%s' % account_id)
     if has_error:
         return account
@@ -554,11 +623,8 @@ def get_account(account_id):
                                  sources=sources)
 
 
+@get_requires(ACCT_PREREQS_MET)
 def get_account_details(account_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step != ACCT_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
     has_error, account, _ = ApiRequest.get('/accounts/%s' % account_id)
     if has_error:
         return account
@@ -568,35 +634,31 @@ def get_account_details(account_id):
                                  account=account)
 
 
+@get_requires(ACCT_PREREQS_MET)
 def post_account_details(account_id, body):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step == ACCT_PREREQS_MET:
-        acct = {
-            ACCT_FNAME_KEY: body['first_name'],
-            ACCT_LNAME_KEY: body['last_name'],
-            ACCT_EMAIL_KEY: body['email'],
-            ACCT_ADDR_KEY: {
-                ACCT_ADDR_STREET_KEY: body['street'],
-                ACCT_ADDR_CITY_KEY: body['city'],
-                ACCT_ADDR_STATE_KEY: body['state'],
-                ACCT_ADDR_POST_CODE_KEY: body['post_code'],
-                ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
-            }
+    acct = {
+        ACCT_FNAME_KEY: body['first_name'],
+        ACCT_LNAME_KEY: body['last_name'],
+        ACCT_EMAIL_KEY: body['email'],
+        ACCT_ADDR_KEY: {
+            ACCT_ADDR_STREET_KEY: body['street'],
+            ACCT_ADDR_CITY_KEY: body['city'],
+            ACCT_ADDR_STATE_KEY: body['state'],
+            ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+            ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
         }
+    }
 
-        do_return, sample_output, _ = ApiRequest.put('/accounts/%s' %
-                                                     account_id, json=acct)
-        if do_return:
-            return sample_output
+    do_return, sample_output, _ = ApiRequest.put('/accounts/%s' %
+                                                 account_id, json=acct)
+    if do_return:
+        return sample_output
 
     return _refresh_state_and_route_to_sink(account_id)
 
 
+@get_requires(ACCT_PREREQS_MET)
 def get_create_human_source(account_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step != ACCT_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
     endpoint = SERVER_CONFIG["endpoint"]
     relative_post_url = _make_acct_path(account_id,
                                         suffix="create_human_source")
@@ -614,36 +676,30 @@ def get_create_human_source(account_id):
     return consent_output["consent_html"]
 
 
+@get_requires(ACCT_PREREQS_MET)
 def post_create_human_source(account_id, body):
-    new_source_id = None
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step == ACCT_PREREQS_MET:
-        has_error, consent_output, _ = ApiRequest.post(
-            "/accounts/{0}/consent".format(account_id), json=body)
-        if has_error:
-            return consent_output
+    has_error, consent_output, _ = ApiRequest.post(
+        "/accounts/{0}/consent".format(account_id), json=body)
+    if has_error:
+        return consent_output
 
-        new_source_id = consent_output["source_id"]
+    new_source_id = consent_output["source_id"]
 
     return _refresh_state_and_route_to_sink(account_id, new_source_id)
 
 
+@get_requires(ACCT_PREREQS_MET)
 def get_create_nonhuman_source(account_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step != ACCT_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
     return _render_with_defaults('create_nonhuman_source.jinja2',
                                  account_id=account_id)
 
 
+@get_requires(ACCT_PREREQS_MET)
 def post_create_nonhuman_source(account_id, body):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step == ACCT_PREREQS_MET:
-        has_error, sources_output, _ = ApiRequest.post(
-            "/accounts/{0}/sources".format(account_id), json=body)
-        if has_error:
-            return sources_output
+    has_error, sources_output, _ = ApiRequest.post(
+        "/accounts/{0}/sources".format(account_id), json=body)
+    if has_error:
+        return sources_output
 
     return _refresh_state_and_route_to_sink(account_id)
 
@@ -752,12 +808,8 @@ def get_to_save_vioscreen_remote_sample_survey(account_id, source_id,
     return _refresh_state_and_route_to_sink(account_id, source_id)
 
 
+@get_requires(SOURCE_PREREQS_MET)
 def get_source(account_id, source_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id,
-                                                       source_id)
-    if prereqs_step != SOURCE_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
     # Retrieve the account to determine which kit it was created with
     has_error, account_output, _ = ApiRequest.get(
         '/accounts/%s' % account_id)
@@ -854,11 +906,8 @@ def get_source(account_id, source_id):
                                  claim_kit_name_hint=claim_kit_name_hint)
 
 
+@get_requires(SOURCE_PREREQS_MET)
 def get_update_sample(account_id, source_id, sample_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
-    if prereqs_step != SOURCE_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
     has_error, source_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s' %
         (account_id, source_id)
@@ -907,13 +956,8 @@ def get_update_sample(account_id, source_id, sample_id):
 
 
 # TODO: guess we should also rewrite as ajax post for sample vue form?
+@get_requires(SOURCE_PREREQS_MET)
 def post_update_sample(account_id, source_id, sample_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
-    # Checking for only SOURCE_PREREQS_MET here because there are currently no
-    # sample-specific prerequisites
-    if prereqs_step != SOURCE_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
     model = {}
     for x in flask.request.form:
         model[x] = flask.request.form[x]
@@ -938,17 +982,14 @@ def post_update_sample(account_id, source_id, sample_id):
 # Note: ideally this would be represented as a DELETE, not as a POST
 # However, it is used as a form submission action, and HTML forms do not
 # support delete as an action
+@get_requires(SOURCE_PREREQS_MET)
 def post_remove_sample_from_source(account_id, source_id, sample_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
-    # Checking for only SOURCE_PREREQS_MET here because there are currently no
-    # sample-specific prerequisites
-    if prereqs_step == SOURCE_PREREQS_MET:
-        has_error, delete_output, _ = ApiRequest.delete(
-            '/accounts/%s/sources/%s/samples/%s' %
-            (account_id, source_id, sample_id))
+    has_error, delete_output, _ = ApiRequest.delete(
+        '/accounts/%s/sources/%s/samples/%s' %
+        (account_id, source_id, sample_id))
 
-        if has_error:
-            return delete_output
+    if has_error:
+        return delete_output
 
     return _refresh_state_and_route_to_sink(account_id, source_id)
 
@@ -968,47 +1009,46 @@ def get_ajax_list_kit_samples(kit_name):
 # NB: associating surveys with samples when samples are claimed means that any
 # surveys added to this source AFTER these samples are claimed will NOT be
 # associated with these samples.  This behavior is by design.
+@get_requires(SOURCE_PREREQS_MET)
 def post_claim_samples(account_id, source_id, body):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
-    if prereqs_step == SOURCE_PREREQS_MET:
-        sample_ids_to_claim = body.get('sample_id')
-        if sample_ids_to_claim is None:
-            # User claimed no samples ... shrug
-            return _route_to_closest_sink(prereqs_step, curr_state)
+    sample_ids_to_claim = body.get('sample_id')
+    if sample_ids_to_claim is None:
+        # User claimed no samples ... shrug
+        return _refresh_state_and_route_to_sink(account_id, source_id)
 
-        has_error, survey_output, _ = ApiRequest.get(
-            '/accounts/{0}/sources/{1}/surveys'.format(account_id, source_id))
+    has_error, survey_output, _ = ApiRequest.get(
+        '/accounts/{0}/sources/{1}/surveys'.format(account_id, source_id))
+    if has_error:
+        return survey_output
+
+    # TODO: this will have to get more nuanced when we add animal surveys?
+    # Grab all primary and covid surveys from the source and associate with
+    # newly claimed samples; non-human sources always have none of these
+    survey_ids_to_associate_with_samples = [
+        x['survey_id'] for x in survey_output
+        if x['survey_template_id'] in [1, 6]
+    ]
+
+    # TODO:  Any of these requests may fail independently, but we don't
+    #  have a good policy to deal with partial failures.  Currently, we
+    #  abort early but that will result in some set of associations being
+    #  already made, one association failing, and the remaining
+    #  associations not attempted.
+    for curr_sample_id in sample_ids_to_claim:
+        # Claim sample
+        has_error, sample_output, _ = ApiRequest.post(
+            '/accounts/{0}/sources/{1}/samples'.format(
+                account_id, source_id),
+            json={"sample_id": curr_sample_id})
         if has_error:
-            return survey_output
+            return sample_output
 
-        # TODO: this will have to get more nuanced when we add animal surveys?
-        # Grab all primary and covid surveys from the source and associate with
-        # newly claimed samples; non-human sources always have none of these
-        survey_ids_to_associate_with_samples = [
-            x['survey_id'] for x in survey_output
-            if x['survey_template_id'] in [1, 6]
-        ]
-
-        # TODO:  Any of these requests may fail independently, but we don't
-        #  have a good policy to deal with partial failures.  Currently, we
-        #  abort early but that will result in some set of associations being
-        #  already made, one association failing, and the remaining
-        #  associations not attempted.
-        for curr_sample_id in sample_ids_to_claim:
-            # Claim sample
-            has_error, sample_output, _ = ApiRequest.post(
-                '/accounts/{0}/sources/{1}/samples'.format(
-                    account_id, source_id),
-                json={"sample_id": curr_sample_id})
-            if has_error:
-                return sample_output
-
-            # Associate the input answered surveys with this sample.
-            for survey_id in survey_ids_to_associate_with_samples:
-                sample_survey_output = _associate_sample_to_survey(
-                        account_id, source_id, curr_sample_id, survey_id)
-                if sample_survey_output is not None:
-                    return sample_survey_output
+        # Associate the input answered surveys with this sample.
+        for survey_id in survey_ids_to_associate_with_samples:
+            sample_survey_output = _associate_sample_to_survey(
+                    account_id, source_id, curr_sample_id, survey_id)
+            if sample_survey_output is not None:
+                return sample_survey_output
 
     return _refresh_state_and_route_to_sink(account_id, source_id)
 
@@ -1050,87 +1090,6 @@ def post_system_message(body):
     client_state[RedisCache.SYSTEM_BANNER] = (text, style)
 
     return _render_with_defaults('admin_system_panel.jinja2')
-
-
-# To send arguments to a decorator, you define a factory method with those args
-# that returns a decorator.  The decorator then takes a function and returns
-# a wrapper that you want to call instead.  Thus there should be three layers.
-def get_requires(target_state):
-    """
-    Usage
-    @get_requires(NEEDS_EMAIL_CHECK)
-    def get_update_email(account_id):
-        # If client is not in the NEEDS_EMAIL_CHECK state, they will be
-        # redirected rather than reaching get_update_email.
-
-    @get_requires([State1, State2, State3])
-    def crazy_function(account_id, source_id):
-        # If client is not in one of State1, State2, State3 stats, they will
-        # be redirected.
-
-    :param target_state: A state or a list/set of states that are valid for
-    entry to the decorated function
-    """
-    def decorator(func):
-        # Since we don't know what arguments the function to wrap will take
-        # we need to figure out how to parse an account_id and source_id out
-        # of the function when it's called.  To do that we inspect the function
-        # signature and find the locations of the arguments named 'account_id'
-        # and 'source_id'.  (Yes, this will break if arguments are renamed)
-
-        # NOTE:  Rather than inspecting the function signature,
-        # we could potentially switch on the target_state value and decide how
-        # many arguments to take from the beginning of *args, this is because
-        # by our current design, if an account_id is required, it's the first
-        # argument, and if a source_id is required, it's the second argument.
-
-        # Determine whether/where wrapped function takes account_id, source_id
-        sig = inspect.signature(func)
-        param_names = sig[0]
-        acct_idx = None
-        source_idx = None
-        acct_default = None
-        source_default = None
-        if 'account_id' in param_names:
-            acct_idx = param_names.index('account_id')
-            acct_default = sig[1 + acct_idx]
-        if 'source_id' in param_names:
-            source_idx = param_names.index('source_id')
-            source_default = sig[1 + source_idx]
-
-        # Calling functools.wraps preserves information about the wrapped func
-        # so introspection/reflection can pull the original documentation even
-        # when passed the wrapper function.
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            # Parse account_id/source_id
-            acct_id = acct_default
-            src_id = source_default
-            if acct_idx is not None:
-                if acct_idx < len(args):
-                    acct_id = args[acct_idx]
-            if source_idx is not None:
-                if source_idx < len(args):
-                    src_id = args[source_idx]
-
-            # Check relevant prereqs from those arguments
-            prereqs_step, curr_state = _check_relevant_prereqs(acct_id, src_id)
-
-            # Route to closest sink if state doesn't match a required state
-            # TODO: Do we actually need set functionality?
-            #  It looks like its allowed by one function,
-            #  but doesn't actually appear to be used anywhere...
-            if isinstance(target_state, list) or isinstance(target_state, set):
-                if prereqs_step not in target_state:
-                    return _route_to_closest_sink(prereqs_step, curr_state)
-            else:
-                if prereqs_step != target_state:
-                    return _route_to_closest_sink(prereqs_step, curr_state)
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
 
 
 class BearerAuth(AuthBase):
