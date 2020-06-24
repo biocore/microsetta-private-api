@@ -251,6 +251,12 @@ def get_requires(target_state):
     entry to the decorated function
     """
     def decorator(func):
+        # TODO:  This probably isn't robust to the myriad ways python
+        #  has to call functions with mixtures of positional and keyword args.
+        #  Appears that connexion always calls in with keyword arguments,
+        #  but should also work if we try to call a wrapped function with
+        #  positional arguments
+
         # Since we don't know what arguments the function to wrap will take
         # we need to figure out how to parse an account_id and source_id out
         # of the function when it's called.  To do that we inspect the function
@@ -265,17 +271,22 @@ def get_requires(target_state):
 
         # Determine whether/where wrapped function takes account_id, source_id
         sig = inspect.signature(func)
-        param_names = sig[0]
+        params = sig.parameters
+
+        # Argh.  OrderedDict doesn't know how to find the indexes of its keys.
+        idx = 0
         acct_idx = None
         source_idx = None
         acct_default = None
         source_default = None
-        if 'account_id' in param_names:
-            acct_idx = param_names.index('account_id')
-            acct_default = sig[1 + acct_idx]
-        if 'source_id' in param_names:
-            source_idx = param_names.index('source_id')
-            source_default = sig[1 + source_idx]
+        for key in params:
+            if key == 'account_id':
+                acct_idx = idx
+                acct_default = params[key].default
+            if key == 'source_id':
+                source_idx = idx
+                source_default = params[key].default
+            idx += 1
 
         # Calling functools.wraps preserves information about the wrapped func
         # so introspection/reflection can pull the original documentation even
@@ -288,9 +299,13 @@ def get_requires(target_state):
             if acct_idx is not None:
                 if acct_idx < len(args):
                     acct_id = args[acct_idx]
+                else:
+                    acct_id = kwargs['account_id']
             if source_idx is not None:
                 if source_idx < len(args):
                     src_id = args[source_idx]
+                else:
+                    src_id = kwargs['source_id']
 
             # Check relevant prereqs from those arguments
             prereqs_step, curr_state = _check_relevant_prereqs(acct_id, src_id)
