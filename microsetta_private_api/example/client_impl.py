@@ -1056,6 +1056,21 @@ def post_system_message(body):
 # that returns a decorator.  The decorator then takes a function and returns
 # a wrapper that you want to call instead.  Thus there should be three layers.
 def get_requires(target_state):
+    """
+    Usage
+    @get_requires(NEEDS_EMAIL_CHECK)
+    def get_update_email(account_id):
+        # If client is not in the NEEDS_EMAIL_CHECK state, they will be
+        # redirected rather than reaching get_update_email.
+
+    @get_requires([State1, State2, State3])
+    def crazy_function(account_id, source_id):
+        # If client is not in one of State1, State2, State3 stats, they will
+        # be redirected.
+
+    :param target_state: A state or a list/set of states that are valid for
+    entry to the decorated function
+    """
     def decorator(func):
         # Since we don't know what arguments the function to wrap will take
         # we need to figure out how to parse an account_id and source_id out
@@ -1102,8 +1117,15 @@ def get_requires(target_state):
             prereqs_step, curr_state = _check_relevant_prereqs(acct_id, src_id)
 
             # Route to closest sink if state doesn't match a required state
-            if prereqs_step != target_state:
-                return _route_to_closest_sink(prereqs_step, curr_state)
+            # TODO: Do we actually need set functionality?
+            #  It looks like its allowed by one function,
+            #  but doesn't actually appear to be used anywhere...
+            if isinstance(target_state, list) or isinstance(target_state, set):
+                if prereqs_step not in target_state:
+                    return _route_to_closest_sink(prereqs_step, curr_state)
+            else:
+                if prereqs_step != target_state:
+                    return _route_to_closest_sink(prereqs_step, curr_state)
             return func(*args, **kwargs)
 
         return wrapper
