@@ -211,21 +211,22 @@ def _check_source_prereqs(acct_id, source_id, current_state=None):
 
 
 def _check_relevant_prereqs(acct_id=None, source_id=None):
+    # Check home prereqs
     prereq_step, current_state = _check_home_prereqs()
-    if prereq_step == HOME_PREREQS_MET:
-        if acct_id is not None:
-            prereq_step, current_state = _check_acct_prereqs(
-                acct_id, current_state)
-            if prereq_step == ACCT_PREREQS_MET:
-                if source_id is not None:
-                    prereq_step, current_state = _check_source_prereqs(
-                        acct_id, source_id, current_state)
-                # end if there is a source id
-            # end if acct prereqs are met
-        # end if there is an acct id
-    # end if home prereqs are met
+    if prereq_step != HOME_PREREQS_MET:
+        return prereq_step, current_state
 
-    return prereq_step, current_state
+    # Check acct prereqs
+    if acct_id is None:
+        return prereq_step, current_state
+    prereq_step, current_state = _check_acct_prereqs(acct_id, current_state)
+    if prereq_step != ACCT_PREREQS_MET:
+        return prereq_step, current_state
+
+    # Check source prereqs
+    if source_id is None:
+        return prereq_step, current_state
+    return _check_source_prereqs(acct_id, source_id, current_state)
 
 
 # Client might not technically care who the user is, but if they do, they
