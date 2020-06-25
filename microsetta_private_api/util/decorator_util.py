@@ -1,5 +1,4 @@
 import inspect
-from collections import defaultdict
 
 
 def build_param_map(func, param_names):
@@ -19,7 +18,7 @@ def build_param_map(func, param_names):
 
 
 def bind_param_map(param_map, parameter_overrides, func_args, func_kwargs):
-    output = defaultdict(None)
+    output = {}
     for key in param_map:
         idx = param_map[key][0]
         default = param_map[key][1]

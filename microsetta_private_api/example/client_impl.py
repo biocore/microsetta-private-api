@@ -306,8 +306,8 @@ def prerequisite(target_state, **parameter_overrides):
 
             # Check relevant prereqs from those arguments
             prereqs_step, curr_state = _check_relevant_prereqs(
-                bound_map['account_id'],
-                bound_map['source_id']
+                bound_map.get('account_id'),
+                bound_map.get('source_id')
             )
 
             # Route to closest sink if state doesn't match a required state
@@ -333,7 +333,7 @@ def prerequisite(target_state, **parameter_overrides):
             # TODO:  Please check you agree this logic correctly replaces the
             #  survey rerouting.
             if prereqs_step == NEEDS_SURVEY:
-                passed_id = bound_map['survey_template_id']
+                passed_id = bound_map.get('survey_template_id')
                 needed_id = curr_state.get("needed_survey_template_id")
                 passed_is_correct = passed_id == needed_id
                 if not passed_is_correct:
