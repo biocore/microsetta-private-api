@@ -8,7 +8,6 @@ from os import path
 from datetime import datetime
 import base64
 import functools
-import inspect
 from microsetta_private_api.util.decorator_util import build_param_map, \
     bind_param_map
 
