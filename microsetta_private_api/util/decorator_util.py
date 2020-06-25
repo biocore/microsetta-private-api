@@ -29,6 +29,7 @@ def bind_param_map(param_map, parameter_overrides, func_args, func_kwargs):
 
     # TODO: We only use this to set survey_template_id on vioscreen callback
     #  would we prefer defaults instead of overrides?
-    for key in parameter_overrides:
-        output[key] = parameter_overrides[key]
+    if parameter_overrides is not None:
+        for key in parameter_overrides:
+            output[key] = parameter_overrides[key]
     return output
