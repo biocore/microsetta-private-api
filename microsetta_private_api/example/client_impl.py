@@ -9,6 +9,8 @@ from datetime import datetime
 import base64
 import functools
 import inspect
+from microsetta_private_api.util.decorator_util import build_param_map, \
+    bind_param_map
 
 # Authrocket uses RS256 public keys, so you can validate anywhere and safely
 # store the key in code. Obviously using this mechanism, we'd have to push code
@@ -234,7 +236,7 @@ def _check_relevant_prereqs(acct_id=None, source_id=None):
 # To send arguments to a decorator, you define a factory method with those args
 # that returns a decorator.  The decorator then takes a function and returns
 # a wrapper that you want to call instead.  Thus there should be three layers.
-def prerequisite(target_state):
+def prerequisite(target_state, **parameter_overrides):
     """
     Usage
     @prerequisite(NEEDS_EMAIL_CHECK)
@@ -247,8 +249,22 @@ def prerequisite(target_state):
         # If client is not in one of State1, State2, State3 stats, they will
         # be redirected.
 
+    @prerequisite([State1, State2], survey_template_id=VIOSCREEN_ID)
+    def vioscreen_callback(account_id, source_id, key):
+        # If client is not in one of State1, State2, they will be redirected
+        # Further, if they are determined to be in NEEDS_SURVEY, but their
+        # required survey template id is not VIOSCREEN_ID, they will be
+        # redirected.  Note that this makes use of the parameter_overrides to
+        # set a specific parameter (survey_template_id) when the wrapped
+        # function knows what would be sent, but does not expose it within its
+        # method signature. (You might encounter this when the wrapped function
+        # is a callback function that must match some defined signature)
+
     :param target_state: A state or a list/set of states that are valid for
     entry to the decorated function
+    :param parameter_overrides: A set of keyword arguments added or replacing
+    the wrapped function's input args for the purpose of determining prereqs
+    The wrapped function itself will never see these overridden values.
     """
     def decorator(func):
         # TODO:  This probably isn't robust to the myriad ways python
@@ -269,57 +285,67 @@ def prerequisite(target_state):
         # by our current design, if an account_id is required, it's the first
         # argument, and if a source_id is required, it's the second argument.
 
-        # Determine whether/where wrapped function takes account_id, source_id
-        sig = inspect.signature(func)
-        params = sig.parameters
-
-        # Argh.  OrderedDict doesn't know how to find the indexes of its keys.
-        idx = 0
-        acct_idx = None
-        source_idx = None
-        acct_default = None
-        source_default = None
-        for key in params:
-            if key == 'account_id':
-                acct_idx = idx
-                acct_default = params[key].default
-            if key == 'source_id':
-                source_idx = idx
-                source_default = params[key].default
-            idx += 1
+        # Determine whether/where wrapped function takes
+        #   account_id,
+        #   source_id,
+        #   survey_template_id
+        param_map = build_param_map(func, ['account_id',
+                                           'source_id',
+                                           'survey_template_id'])
 
         # Calling functools.wraps preserves information about the wrapped func
         # so introspection/reflection can pull the original documentation even
         # when passed the wrapper function.
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            # Parse account_id/source_id
-            acct_id = acct_default
-            src_id = source_default
-            if acct_idx is not None:
-                if acct_idx < len(args):
-                    acct_id = args[acct_idx]
-                else:
-                    acct_id = kwargs['account_id']
-            if source_idx is not None:
-                if source_idx < len(args):
-                    src_id = args[source_idx]
-                else:
-                    src_id = kwargs['source_id']
+            # Parse account_id/source_id/survey_template_id out of function
+            # args and kwargs. Then apply overrides from the decorator
+            bound_map = bind_param_map(param_map,
+                                       parameter_overrides,
+                                       args,
+                                       kwargs)
 
             # Check relevant prereqs from those arguments
-            prereqs_step, curr_state = _check_relevant_prereqs(acct_id, src_id)
+            prereqs_step, curr_state = _check_relevant_prereqs(
+                bound_map['account_id'],
+                bound_map['source_id']
+            )
 
             # Route to closest sink if state doesn't match a required state
-            # TODO: Do we actually need set functionality?
-            #  It looks like its allowed by one function,
-            #  but doesn't actually appear to be used anywhere...
+            # TODO: Do we actually need contains/set functionality?
+            #  It looks like it is only in use for the vioscreen calls, and
+            #  neither of those is technically in the NEEDS_SURVEY state ever.
+            #  They always run from SOURCE_PREREQS_MET
             if isinstance(target_state, list) or isinstance(target_state, set):
                 if prereqs_step not in target_state:
                     return _route_to_closest_sink(prereqs_step, curr_state)
             else:
                 if prereqs_step != target_state:
                     return _route_to_closest_sink(prereqs_step, curr_state)
+
+            # For any states that require checking additional parameters, we do
+            # so here.
+            # TODO:  This section feels like it could be removed with some more
+            #  thought.  If our states were objects we could have states like
+            #  NEEDS_SURVEY(VIOSCREEN_ID), Then we could construct a
+            #  parameterized state object from the function's parameters
+            #  and compare directly, rather than having state specific checks.
+
+            # TODO:  Please check you agree this logic correctly replaces the
+            #  survey rerouting.
+            if prereqs_step == NEEDS_SURVEY:
+                passed_id = bound_map['survey_template_id']
+                needed_id = curr_state.get("needed_survey_template_id")
+                passed_is_correct = passed_id == needed_id
+                if not passed_is_correct:
+                    return _route_to_closest_sink(prereqs_step, curr_state)
+
+            # Add other state specific checks here
+            # if prereqs_state == XXX:
+            #   passed = bound_map['whatever']
+            #   needed = curr_state.get('needed_whatever')
+            #   if not equal, reroute.
+
             return func(*args, **kwargs)
 
         return wrapper
@@ -404,32 +430,6 @@ def _get_kit(kit_name):
             return None, error_msg, response.status_code
 
     return response.json(), None, response.status_code
-
-
-def _get_invalid_survey_state_reroute(account_id, source_id,
-                                      survey_template_id,
-                                      addtl_allowed_steps=None):
-    """ Get reroute if user isn't allowed to take this survey in current state.
-
-    Check if the user is in one of the externally-specified allowed states or,
-    if not, if they are the NEEDS_SURVEY state AND the survey they need is
-    the one whose survey_template_id is passed in.  If either of these
-    conditions is met, the user is allowed to take this survey now, so they
-    don't need to be rerouted, so this method returns None.  However, if
-    neither of these criteria is met, determine where the user should be
-    rerouted to and return that info.
-
-    """
-    if addtl_allowed_steps is None:
-        addtl_allowed_steps = []
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
-    if prereqs_step not in addtl_allowed_steps:
-        needed_template_id = curr_state.get("needed_survey_template_id")
-        request_is_needed_template = needed_template_id == survey_template_id
-        if not (prereqs_step == NEEDS_SURVEY and request_is_needed_template):
-            return _route_to_closest_sink(prereqs_step, curr_state)
-
-    return None
 
 
 def _associate_sample_to_survey(account_id, source_id, sample_id, survey_id):
@@ -719,14 +719,8 @@ def post_create_nonhuman_source(account_id, body):
     return _refresh_state_and_route_to_sink(account_id)
 
 
+@prerequisite(NEEDS_SURVEY)
 def get_fill_local_source_survey(account_id, source_id, survey_template_id):
-    # if we are filling out a source-level survey, it must come before the
-    # source prerequisites are met; if a sample-level one, it can come after
-    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
-                                                survey_template_id)
-    if reroute is not None:
-        return reroute
-
     has_error, survey_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/survey_templates/%s' %
         (account_id, source_id, survey_template_id))
@@ -741,13 +735,9 @@ def get_fill_local_source_survey(account_id, source_id, survey_template_id):
                                    'survey_template_text'])
 
 
+@prerequisite(NEEDS_SURVEY)
 def post_ajax_fill_local_source_survey(account_id, source_id,
                                        survey_template_id, body):
-    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
-                                                survey_template_id)
-    if reroute is not None:
-        return reroute
-
     has_error, surveys_output, _ = ApiRequest.post(
         "/accounts/%s/sources/%s/surveys" % (account_id, source_id),
         json={
@@ -760,19 +750,12 @@ def post_ajax_fill_local_source_survey(account_id, source_id,
     return _refresh_state_and_route_to_sink(account_id, source_id)
 
 
+@prerequisite([SOURCE_PREREQS_MET, NEEDS_SURVEY])
 def get_fill_vioscreen_remote_sample_survey(account_id, source_id, sample_id,
                                             survey_template_id):
     if survey_template_id != VIOSCREEN_ID:
         return get_show_error_page("Non-vioscreen remote surveys are "
                                    "not yet supported")
-
-    # if we are filling out a source-level survey, it must come before the
-    # source prerequisites are met, but a sample-level one can come after
-    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
-                                                VIOSCREEN_ID,
-                                                [SOURCE_PREREQS_MET])
-    if reroute is not None:
-        return reroute
 
     suffix = "samples/%s/vspassthru" % sample_id
     redirect_url = SERVER_CONFIG["endpoint"] + \
@@ -792,14 +775,10 @@ def get_fill_vioscreen_remote_sample_survey(account_id, source_id, sample_id,
 # per-sample survey we have is the remote food frequency questionnaire
 # administered through vioscreen, and saving that requires its own special
 # handling (this function).
+@prerequisite([SOURCE_PREREQS_MET, NEEDS_SURVEY],
+              survey_template_id=VIOSCREEN_ID)
 def get_to_save_vioscreen_remote_sample_survey(account_id, source_id,
                                                sample_id, key):
-    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
-                                                VIOSCREEN_ID,
-                                                [SOURCE_PREREQS_MET])
-    if reroute is not None:
-        return reroute
-
     # TODO FIXME HACK:  This is insanity.  I need to see the vioscreen docs
     #  to interface with our API...
     has_error, surveys_output, surveys_headers = ApiRequest.post(
