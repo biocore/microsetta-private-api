@@ -1,3 +1,5 @@
+import collections
+
 import flask
 from flask import render_template, session, redirect
 import jwt
@@ -235,10 +237,10 @@ def _check_relevant_prereqs(acct_id=None, source_id=None):
 # To send arguments to a decorator, you define a factory method with those args
 # that returns a decorator.  The decorator then takes a function and returns
 # a wrapper that you want to call instead.  Thus there should be three layers.
-def prerequisite(target_state, **parameter_overrides):
+def prerequisite(allowed_states: list, **parameter_overrides):
     """
     Usage
-    @prerequisite(NEEDS_EMAIL_CHECK)
+    @prerequisite([NEEDS_EMAIL_CHECK])
     def get_update_email(account_id):
         # If client is not in the NEEDS_EMAIL_CHECK state, they will be
         # redirected rather than reaching get_update_email.
@@ -259,12 +261,16 @@ def prerequisite(target_state, **parameter_overrides):
         # method signature. (You might encounter this when the wrapped function
         # is a callback function that must match some defined signature)
 
-    :param target_state: A state or a list/set of states that are valid for
+    :param allowed_states: A list of states that are valid for
     entry to the decorated function
     :param parameter_overrides: A set of keyword arguments added or replacing
     the wrapped function's input args for the purpose of determining prereqs
     The wrapped function itself will never see these overridden values.
     """
+    if not isinstance(allowed_states, list):
+        raise TypeError("allowed_states must be a list")
+    allowed_states = set(allowed_states)
+
     def decorator(func):
         # TODO:  This probably isn't robust to the myriad ways python
         #  has to call functions with mixtures of positional and keyword args.
@@ -277,12 +283,6 @@ def prerequisite(target_state, **parameter_overrides):
         # of the function when it's called.  To do that we inspect the function
         # signature and find the locations of the arguments named 'account_id'
         # and 'source_id'.  (Yes, this will break if arguments are renamed)
-
-        # NOTE:  Rather than inspecting the function signature,
-        # we could potentially switch on the target_state value and decide how
-        # many arguments to take from the beginning of *args, this is because
-        # by our current design, if an account_id is required, it's the first
-        # argument, and if a source_id is required, it's the second argument.
 
         # Determine whether/where wrapped function takes
         #   account_id,
@@ -311,27 +311,12 @@ def prerequisite(target_state, **parameter_overrides):
             )
 
             # Route to closest sink if state doesn't match a required state
-            # TODO: Do we actually need contains/set functionality?
-            #  It looks like it is only in use for the vioscreen calls, and
-            #  neither of those is technically in the NEEDS_SURVEY state ever.
-            #  They always run from SOURCE_PREREQS_MET
-            if isinstance(target_state, list) or isinstance(target_state, set):
-                if prereqs_step not in target_state:
-                    return _route_to_closest_sink(prereqs_step, curr_state)
-            else:
-                if prereqs_step != target_state:
-                    return _route_to_closest_sink(prereqs_step, curr_state)
+            if prereqs_step not in allowed_states:
+                return _route_to_closest_sink(prereqs_step, curr_state)
 
             # For any states that require checking additional parameters, we do
             # so here.
-            # TODO:  This section feels like it could be removed with some more
-            #  thought.  If our states were objects we could have states like
-            #  NEEDS_SURVEY(VIOSCREEN_ID), Then we could construct a
-            #  parameterized state object from the function's parameters
-            #  and compare directly, rather than having state specific checks.
-
-            # TODO:  Please check you agree this logic correctly replaces the
-            #  survey rerouting.
+            # TODO: Ensure state specific checks don't grow unwieldy
             if prereqs_step == NEEDS_SURVEY:
                 passed_id = bound_map.get('survey_template_id')
                 needed_id = curr_state.get("needed_survey_template_id")
@@ -339,11 +324,9 @@ def prerequisite(target_state, **parameter_overrides):
                 if not passed_is_correct:
                     return _route_to_closest_sink(prereqs_step, curr_state)
 
-            # Add other state specific checks here
+            # Add new state specific checks here
             # if prereqs_state == XXX:
-            #   passed = bound_map['whatever']
-            #   needed = curr_state.get('needed_whatever')
-            #   if not equal, reroute.
+            #   if something's not right, reroute.
 
             return func(*args, **kwargs)
 
@@ -534,7 +517,7 @@ def get_logout():
     return redirect(HOME_URL)
 
 
-@prerequisite(NEEDS_ACCOUNT)
+@prerequisite([NEEDS_ACCOUNT])
 def get_create_account():
     email, _ = _parse_jwt(session[TOKEN_KEY_NAME])
     # TODO:  Need to support other countries
@@ -558,7 +541,7 @@ def get_create_account():
                                  account=default_account_values)
 
 
-@prerequisite(NEEDS_ACCOUNT)
+@prerequisite([NEEDS_ACCOUNT])
 def post_create_account(body):
     kit_name = body[KIT_NAME_KEY]
     session[KIT_NAME_KEY] = kit_name
@@ -587,13 +570,13 @@ def post_create_account(body):
     return _refresh_state_and_route_to_sink(new_acct_id)
 
 
-@prerequisite(NEEDS_EMAIL_CHECK)
+@prerequisite([NEEDS_EMAIL_CHECK])
 def get_update_email(account_id):
     return _render_with_defaults("update_email.jinja2",
                                  account_id=account_id)
 
 
-@prerequisite(NEEDS_EMAIL_CHECK)
+@prerequisite([NEEDS_EMAIL_CHECK])
 def post_update_email(account_id, body):
     # if the customer wants to update their email:
     update_email = body["do_update"] == "Yes"
@@ -622,7 +605,7 @@ def post_update_email(account_id, body):
     return _refresh_state_and_route_to_sink(account_id)
 
 
-@prerequisite(ACCT_PREREQS_MET)
+@prerequisite([ACCT_PREREQS_MET])
 def get_account(account_id):
     has_error, account, _ = ApiRequest.get('/accounts/%s' % account_id)
     if has_error:
@@ -637,7 +620,7 @@ def get_account(account_id):
                                  sources=sources)
 
 
-@prerequisite(ACCT_PREREQS_MET)
+@prerequisite([ACCT_PREREQS_MET])
 def get_account_details(account_id):
     has_error, account, _ = ApiRequest.get('/accounts/%s' % account_id)
     if has_error:
@@ -648,7 +631,7 @@ def get_account_details(account_id):
                                  account=account)
 
 
-@prerequisite(ACCT_PREREQS_MET)
+@prerequisite([ACCT_PREREQS_MET])
 def post_account_details(account_id, body):
     acct = {
         ACCT_FNAME_KEY: body['first_name'],
@@ -671,7 +654,7 @@ def post_account_details(account_id, body):
     return _refresh_state_and_route_to_sink(account_id)
 
 
-@prerequisite(ACCT_PREREQS_MET)
+@prerequisite([ACCT_PREREQS_MET])
 def get_create_human_source(account_id):
     endpoint = SERVER_CONFIG["endpoint"]
     relative_post_url = _make_acct_path(account_id,
@@ -690,7 +673,7 @@ def get_create_human_source(account_id):
     return consent_output["consent_html"]
 
 
-@prerequisite(ACCT_PREREQS_MET)
+@prerequisite([ACCT_PREREQS_MET])
 def post_create_human_source(account_id, body):
     has_error, consent_output, _ = ApiRequest.post(
         "/accounts/{0}/consent".format(account_id), json=body)
@@ -702,13 +685,13 @@ def post_create_human_source(account_id, body):
     return _refresh_state_and_route_to_sink(account_id, new_source_id)
 
 
-@prerequisite(ACCT_PREREQS_MET)
+@prerequisite([ACCT_PREREQS_MET])
 def get_create_nonhuman_source(account_id):
     return _render_with_defaults('create_nonhuman_source.jinja2',
                                  account_id=account_id)
 
 
-@prerequisite(ACCT_PREREQS_MET)
+@prerequisite([ACCT_PREREQS_MET])
 def post_create_nonhuman_source(account_id, body):
     has_error, sources_output, _ = ApiRequest.post(
         "/accounts/{0}/sources".format(account_id), json=body)
@@ -718,7 +701,7 @@ def post_create_nonhuman_source(account_id, body):
     return _refresh_state_and_route_to_sink(account_id)
 
 
-@prerequisite(NEEDS_SURVEY)
+@prerequisite([NEEDS_SURVEY])
 def get_fill_local_source_survey(account_id, source_id, survey_template_id):
     has_error, survey_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/survey_templates/%s' %
@@ -734,7 +717,7 @@ def get_fill_local_source_survey(account_id, source_id, survey_template_id):
                                    'survey_template_text'])
 
 
-@prerequisite(NEEDS_SURVEY)
+@prerequisite([NEEDS_SURVEY])
 def post_ajax_fill_local_source_survey(account_id, source_id,
                                        survey_template_id, body):
     has_error, surveys_output, _ = ApiRequest.post(
@@ -801,7 +784,7 @@ def get_to_save_vioscreen_remote_sample_survey(account_id, source_id,
     return _refresh_state_and_route_to_sink(account_id, source_id)
 
 
-@prerequisite(SOURCE_PREREQS_MET)
+@prerequisite([SOURCE_PREREQS_MET])
 def get_source(account_id, source_id):
     # Retrieve the account to determine which kit it was created with
     has_error, account_output, _ = ApiRequest.get(
@@ -899,7 +882,7 @@ def get_source(account_id, source_id):
                                  claim_kit_name_hint=claim_kit_name_hint)
 
 
-@prerequisite(SOURCE_PREREQS_MET)
+@prerequisite([SOURCE_PREREQS_MET])
 def get_update_sample(account_id, source_id, sample_id):
     has_error, source_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s' %
@@ -949,7 +932,7 @@ def get_update_sample(account_id, source_id, sample_id):
 
 
 # TODO: guess we should also rewrite as ajax post for sample vue form?
-@prerequisite(SOURCE_PREREQS_MET)
+@prerequisite([SOURCE_PREREQS_MET])
 def post_update_sample(account_id, source_id, sample_id):
     model = {}
     for x in flask.request.form:
@@ -975,7 +958,7 @@ def post_update_sample(account_id, source_id, sample_id):
 # Note: ideally this would be represented as a DELETE, not as a POST
 # However, it is used as a form submission action, and HTML forms do not
 # support delete as an action
-@prerequisite(SOURCE_PREREQS_MET)
+@prerequisite([SOURCE_PREREQS_MET])
 def post_remove_sample_from_source(account_id, source_id, sample_id):
     has_error, delete_output, _ = ApiRequest.delete(
         '/accounts/%s/sources/%s/samples/%s' %
@@ -1002,7 +985,7 @@ def get_ajax_list_kit_samples(kit_name):
 # NB: associating surveys with samples when samples are claimed means that any
 # surveys added to this source AFTER these samples are claimed will NOT be
 # associated with these samples.  This behavior is by design.
-@prerequisite(SOURCE_PREREQS_MET)
+@prerequisite([SOURCE_PREREQS_MET])
 def post_claim_samples(account_id, source_id, body):
     sample_ids_to_claim = body.get('sample_id')
     if sample_ids_to_claim is None:
