@@ -9,19 +9,16 @@ def build_param_map(func, param_names):
 
     # Argh.  OrderedDict doesn't know how to find the indexes of its keys.
     output = {}
-    idx = 0
-    for key in params:
+    for idx, (key, value) in enumerate(params.items()):
         if key in desired_set:
-            output[key] = (idx, params[key].default)
-        idx += 1
+            output[key] = (idx, value.default)
     return output
 
 
 def bind_param_map(param_map, parameter_overrides, func_args, func_kwargs):
     output = {}
     for key in param_map:
-        idx = param_map[key][0]
-        default = param_map[key][1]
+        idx, default = param_map[key]
         if idx < len(func_args):
             output[key] = func_args[idx]
         else:
