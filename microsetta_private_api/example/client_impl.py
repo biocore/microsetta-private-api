@@ -8,8 +8,6 @@ from os import path
 from datetime import datetime
 import base64
 import functools
-from microsetta_private_api.util.decorator_util import build_param_map, \
-    bind_param_map
 
 # Authrocket uses RS256 public keys, so you can validate anywhere and safely
 # store the key in code. Obviously using this mechanism, we'd have to push code
@@ -23,6 +21,7 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.source import Source
 import importlib.resources as pkg_resources
 from microsetta_private_api.client_state.redis_cache import RedisCache
+from microsetta_private_api.util import decorator_util
 
 PUB_KEY = pkg_resources.read_text(
     'microsetta_private_api',
@@ -270,42 +269,23 @@ def prerequisite(allowed_states: list, **parameter_overrides):
     allowed_states = set(allowed_states)
 
     def decorator(func):
-        # TODO:  This probably isn't robust to the myriad ways python
-        #  has to call functions with mixtures of positional and keyword args.
-        #  Appears that connexion always calls in with keyword arguments,
-        #  but should also work if we try to call a wrapped function with
-        #  positional arguments
 
-        # Since we don't know what arguments the function to wrap will take
-        # we need to figure out how to parse an account_id and source_id out
-        # of the function when it's called.  To do that we inspect the function
-        # signature and find the locations of the arguments named 'account_id'
-        # and 'source_id'.  (Yes, this will break if arguments are renamed)
-
-        # Determine whether/where wrapped function takes
-        #   account_id,
-        #   source_id,
-        #   survey_template_id
-        param_map = build_param_map(func, ['account_id',
-                                           'source_id',
-                                           'survey_template_id'])
+        if decorator_util.has_non_keyword_arguments(func):
+            raise TypeError("Only functions with solely keyword arguments are "
+                            "supported by this decorator.  "
+                            "Example: f(*, a=1, b=2, c=3)")
 
         # Calling functools.wraps preserves information about the wrapped func
         # so introspection/reflection can pull the original documentation even
         # when passed the wrapper function.
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            # Parse account_id/source_id/survey_template_id out of function
-            # args and kwargs. Then apply overrides from the decorator
-            bound_map = bind_param_map(param_map,
-                                       parameter_overrides,
-                                       args,
-                                       kwargs)
+        def wrapper(**kwargs):
+            kwargs.update(parameter_overrides)
 
             # Check relevant prereqs from those arguments
             prereqs_step, curr_state = _check_relevant_prereqs(
-                bound_map.get('account_id'),
-                bound_map.get('source_id')
+                kwargs.get('account_id'),
+                kwargs.get('source_id')
             )
 
             # Route to closest sink if state doesn't match a required state
@@ -316,7 +296,7 @@ def prerequisite(allowed_states: list, **parameter_overrides):
             # so here.
             # TODO: Ensure state specific checks don't grow unwieldy
             if prereqs_step == NEEDS_SURVEY:
-                passed_id = bound_map.get('survey_template_id')
+                passed_id = kwargs.get('survey_template_id')
                 needed_id = curr_state.get("needed_survey_template_id")
                 if passed_id != needed_id:
                     return _route_to_closest_sink(prereqs_step, curr_state)
@@ -325,7 +305,7 @@ def prerequisite(allowed_states: list, **parameter_overrides):
             # if prereqs_state == XXX:
             #   if something's not right, reroute.
 
-            return func(*args, **kwargs)
+            return func(**kwargs)
 
         return wrapper
 
@@ -539,7 +519,7 @@ def get_create_account():
 
 
 @prerequisite([NEEDS_ACCOUNT])
-def post_create_account(body):
+def post_create_account(*, body=None):
     kit_name = body[KIT_NAME_KEY]
     session[KIT_NAME_KEY] = kit_name
 
@@ -568,13 +548,13 @@ def post_create_account(body):
 
 
 @prerequisite([NEEDS_EMAIL_CHECK])
-def get_update_email(account_id):
+def get_update_email(*, account_id=None):
     return _render_with_defaults("update_email.jinja2",
                                  account_id=account_id)
 
 
 @prerequisite([NEEDS_EMAIL_CHECK])
-def post_update_email(account_id, body):
+def post_update_email(*, account_id=None, body=None):
     # if the customer wants to update their email:
     update_email = body["do_update"] == "Yes"
     if update_email:
@@ -603,7 +583,7 @@ def post_update_email(account_id, body):
 
 
 @prerequisite([ACCT_PREREQS_MET])
-def get_account(account_id):
+def get_account(*, account_id=None):
     has_error, account, _ = ApiRequest.get('/accounts/%s' % account_id)
     if has_error:
         return account
@@ -618,7 +598,7 @@ def get_account(account_id):
 
 
 @prerequisite([ACCT_PREREQS_MET])
-def get_account_details(account_id):
+def get_account_details(*, account_id=None):
     has_error, account, _ = ApiRequest.get('/accounts/%s' % account_id)
     if has_error:
         return account
@@ -629,7 +609,7 @@ def get_account_details(account_id):
 
 
 @prerequisite([ACCT_PREREQS_MET])
-def post_account_details(account_id, body):
+def post_account_details(*, account_id=None, body=None):
     acct = {
         ACCT_FNAME_KEY: body['first_name'],
         ACCT_LNAME_KEY: body['last_name'],
@@ -652,7 +632,7 @@ def post_account_details(account_id, body):
 
 
 @prerequisite([ACCT_PREREQS_MET])
-def get_create_human_source(account_id):
+def get_create_human_source(*, account_id=None):
     endpoint = SERVER_CONFIG["endpoint"]
     relative_post_url = _make_acct_path(account_id,
                                         suffix="create_human_source")
@@ -671,7 +651,7 @@ def get_create_human_source(account_id):
 
 
 @prerequisite([ACCT_PREREQS_MET])
-def post_create_human_source(account_id, body):
+def post_create_human_source(*, account_id=None, body=None):
     has_error, consent_output, _ = ApiRequest.post(
         "/accounts/{0}/consent".format(account_id), json=body)
     if has_error:
@@ -683,13 +663,13 @@ def post_create_human_source(account_id, body):
 
 
 @prerequisite([ACCT_PREREQS_MET])
-def get_create_nonhuman_source(account_id):
+def get_create_nonhuman_source(*, account_id=None):
     return _render_with_defaults('create_nonhuman_source.jinja2',
                                  account_id=account_id)
 
 
 @prerequisite([ACCT_PREREQS_MET])
-def post_create_nonhuman_source(account_id, body):
+def post_create_nonhuman_source(*, account_id=None, body=None):
     has_error, sources_output, _ = ApiRequest.post(
         "/accounts/{0}/sources".format(account_id), json=body)
     if has_error:
@@ -699,7 +679,10 @@ def post_create_nonhuman_source(account_id, body):
 
 
 @prerequisite([NEEDS_SURVEY])
-def get_fill_local_source_survey(account_id, source_id, survey_template_id):
+def get_fill_local_source_survey(*,
+                                 account_id=None,
+                                 source_id=None,
+                                 survey_template_id=None):
     has_error, survey_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/survey_templates/%s' %
         (account_id, source_id, survey_template_id))
@@ -715,8 +698,8 @@ def get_fill_local_source_survey(account_id, source_id, survey_template_id):
 
 
 @prerequisite([NEEDS_SURVEY])
-def post_ajax_fill_local_source_survey(account_id, source_id,
-                                       survey_template_id, body):
+def post_ajax_fill_local_source_survey(*, account_id=None, source_id=None,
+                                       survey_template_id=None, body=None):
     has_error, surveys_output, _ = ApiRequest.post(
         "/accounts/%s/sources/%s/surveys" % (account_id, source_id),
         json={
@@ -730,8 +713,11 @@ def post_ajax_fill_local_source_survey(account_id, source_id,
 
 
 @prerequisite([SOURCE_PREREQS_MET, NEEDS_SURVEY])
-def get_fill_vioscreen_remote_sample_survey(account_id, source_id, sample_id,
-                                            survey_template_id):
+def get_fill_vioscreen_remote_sample_survey(*,
+                                            account_id=None,
+                                            source_id=None,
+                                            sample_id=None,
+                                            survey_template_id=None):
     if survey_template_id != VIOSCREEN_ID:
         return get_show_error_page("Non-vioscreen remote surveys are "
                                    "not yet supported")
@@ -756,8 +742,11 @@ def get_fill_vioscreen_remote_sample_survey(account_id, source_id, sample_id,
 # handling (this function).
 @prerequisite([SOURCE_PREREQS_MET, NEEDS_SURVEY],
               survey_template_id=VIOSCREEN_ID)
-def get_to_save_vioscreen_remote_sample_survey(account_id, source_id,
-                                               sample_id, key):
+def get_to_save_vioscreen_remote_sample_survey(*,
+                                               account_id=None,
+                                               source_id=None,
+                                               sample_id=None,
+                                               key=None):
     # TODO FIXME HACK:  This is insanity.  I need to see the vioscreen docs
     #  to interface with our API...
     has_error, surveys_output, surveys_headers = ApiRequest.post(
@@ -782,7 +771,7 @@ def get_to_save_vioscreen_remote_sample_survey(account_id, source_id,
 
 
 @prerequisite([SOURCE_PREREQS_MET])
-def get_source(account_id, source_id):
+def get_source(*, account_id=None, source_id=None):
     # Retrieve the account to determine which kit it was created with
     has_error, account_output, _ = ApiRequest.get(
         '/accounts/%s' % account_id)
@@ -880,7 +869,7 @@ def get_source(account_id, source_id):
 
 
 @prerequisite([SOURCE_PREREQS_MET])
-def get_update_sample(account_id, source_id, sample_id):
+def get_update_sample(*, account_id=None, source_id=None, sample_id=None):
     has_error, source_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s' %
         (account_id, source_id)
@@ -930,7 +919,7 @@ def get_update_sample(account_id, source_id, sample_id):
 
 # TODO: guess we should also rewrite as ajax post for sample vue form?
 @prerequisite([SOURCE_PREREQS_MET])
-def post_update_sample(account_id, source_id, sample_id):
+def post_update_sample(*, account_id=None, source_id=None, sample_id=None):
     model = {}
     for x in flask.request.form:
         model[x] = flask.request.form[x]
@@ -956,7 +945,10 @@ def post_update_sample(account_id, source_id, sample_id):
 # However, it is used as a form submission action, and HTML forms do not
 # support delete as an action
 @prerequisite([SOURCE_PREREQS_MET])
-def post_remove_sample_from_source(account_id, source_id, sample_id):
+def post_remove_sample_from_source(*,
+                                   account_id=None,
+                                   source_id=None,
+                                   sample_id=None):
     has_error, delete_output, _ = ApiRequest.delete(
         '/accounts/%s/sources/%s/samples/%s' %
         (account_id, source_id, sample_id))
@@ -983,7 +975,7 @@ def get_ajax_list_kit_samples(kit_name):
 # surveys added to this source AFTER these samples are claimed will NOT be
 # associated with these samples.  This behavior is by design.
 @prerequisite([SOURCE_PREREQS_MET])
-def post_claim_samples(account_id, source_id, body):
+def post_claim_samples(*, account_id=None, source_id=None, body=None):
     sample_ids_to_claim = body.get('sample_id')
     if sample_ids_to_claim is None:
         # User claimed no samples ... shrug
