@@ -320,8 +320,7 @@ def prerequisite(allowed_states: list, **parameter_overrides):
             if prereqs_step == NEEDS_SURVEY:
                 passed_id = bound_map.get('survey_template_id')
                 needed_id = curr_state.get("needed_survey_template_id")
-                passed_is_correct = passed_id == needed_id
-                if not passed_is_correct:
+                if passed_id != needed_id:
                     return _route_to_closest_sink(prereqs_step, curr_state)
 
             # Add new state specific checks here
