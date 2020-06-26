@@ -1,5 +1,3 @@
-import collections
-
 import flask
 from flask import render_template, session, redirect
 import jwt
