@@ -1724,7 +1724,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      x-bearerInfoFunc: microsetta_private_api.api.implementation.verify_authrocket
+      x-bearerInfoFunc: microsetta_private_api.api.verify_authrocket
 
 
 # END COMPONENTS

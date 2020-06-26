@@ -1,7 +1,7 @@
 from flask import render_template, jsonify
 
 from microsetta_private_api import localization
-from microsetta_private_api.api.implementation import \
+from microsetta_private_api.api._account import \
     _validate_account_access
 
 

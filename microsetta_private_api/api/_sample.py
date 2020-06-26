@@ -2,7 +2,7 @@ import flask
 from flask import jsonify
 from werkzeug.exceptions import BadRequest
 
-from microsetta_private_api.api.implementation import _validate_account_access
+from microsetta_private_api.api._account import _validate_account_access
 from microsetta_private_api.model.sample import SampleInfo
 from microsetta_private_api.model.source import Source
 from microsetta_private_api.repo.kit_repo import KitRepo
