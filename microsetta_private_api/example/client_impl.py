@@ -280,12 +280,13 @@ def prerequisite(allowed_states: list, **parameter_overrides):
         # when passed the wrapper function.
         @functools.wraps(func)
         def wrapper(**kwargs):
-            kwargs.update(parameter_overrides)
+            kwargs_copy = dict(kwargs)
+            kwargs_copy.update(parameter_overrides)
 
             # Check relevant prereqs from those arguments
             prereqs_step, curr_state = _check_relevant_prereqs(
-                kwargs.get('account_id'),
-                kwargs.get('source_id')
+                kwargs_copy.get('account_id'),
+                kwargs_copy.get('source_id')
             )
 
             # Route to closest sink if state doesn't match a required state
@@ -293,10 +294,10 @@ def prerequisite(allowed_states: list, **parameter_overrides):
                 return _route_to_closest_sink(prereqs_step, curr_state)
 
             # For any states that require checking additional parameters, we do
-            # so here.
+            # so here.  (Remember to lookup from kwargs_copy)
             # TODO: Ensure state specific checks don't grow unwieldy
             if prereqs_step == NEEDS_SURVEY:
-                passed_id = kwargs.get('survey_template_id')
+                passed_id = kwargs_copy.get('survey_template_id')
                 needed_id = curr_state.get("needed_survey_template_id")
                 if passed_id != needed_id:
                     return _route_to_closest_sink(prereqs_step, curr_state)
