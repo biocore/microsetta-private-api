@@ -95,3 +95,49 @@ class EventLogTests(unittest.TestCase):
             with self.assertRaises(psycopg2.errors.UniqueViolation):
                 events.add_event(event)
             t.rollback()
+
+    def test_empty_emails(self):
+        acct_id = uuid.uuid4()
+        event1 = LogEvent(
+            uuid.uuid4(),
+            EventType.EMAIL,
+            EventSubtype.EMAIL_BANKED_SAMPLE_NOW_PLATED,
+            None,
+            {
+                'email': "foobarbaz@itzatest.com"
+            }
+        )
+        event2 = LogEvent(
+            uuid.uuid4(),
+            EventType.EMAIL,
+            EventSubtype.EMAIL_BANKED_SAMPLE_NOW_PLATED,
+            None,
+            {
+                'email': "foobarbaz@itzatest.com"
+            }
+        )
+        event3 = LogEvent(
+            uuid.uuid4(),
+            EventType.EMAIL,
+            EventSubtype.EMAIL_BANKED_SAMPLE_NOW_PLATED,
+            None,
+            {
+                'account_id': str(acct_id)
+            }
+        )
+        with Transaction() as t:
+            events = EventLogRepo(t)
+            events.add_event(event1)
+            events.add_event(event2)
+            events.add_event(event3)
+
+            self.assertEqual(
+                len(events.get_events_by_email("foobarbaz@itzatest.com")),
+                2
+            )
+            self.assertEqual(
+                len(events.get_events_by_account(acct_id)),
+                1
+            )
+
+            t.rollback()
