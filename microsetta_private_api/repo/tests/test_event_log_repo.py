@@ -10,7 +10,7 @@ from microsetta_private_api.repo.transaction import Transaction
 
 import uuid
 
-from microsetta_private_api.util.util import json_converter, fromisotime
+from microsetta_private_api.util.util import json_converter
 
 
 class EventLogTests(unittest.TestCase):
