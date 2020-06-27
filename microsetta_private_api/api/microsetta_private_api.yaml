@@ -194,9 +194,62 @@ paths:
               schema:
                 type: object
                 properties:
-                  consent_html:
+                  post_url:
                     type: string
-                    example: "<html><body>Consent form here</body></html>"
+                    example: https://microsetta-rest.ucsd.edu/accounts/72d2cc55-8522-4528-a85b-78be2ec0933f/create_human_source
+                  add_human_title:
+                    type: string
+                    example: Add a New Human Source
+                  sel_age_range:
+                    type: string
+                    example: Select age range of participant
+                  age_0_6:
+                    type: string
+                  age_7_12:
+                    type: string
+                  age_12_17:
+                    type: string
+                  age_18:
+                    type: string
+                  consent_your_child:
+                    type: string
+                  participation_agreement:
+                    type: string
+                  exhibit_a:
+                    type: string
+                  bill_of_rights:
+                    type: string
+                  text_i_have_read_parent:
+                    type: string
+                  participant_name:
+                    type: string
+                  participant_email:
+                    type: string
+                  participant_parent_1:
+                    type: string
+                  participant_parent_2:
+                    type: string
+                  participant_deceased_parents:
+                    type: string
+                  assent_7_12:
+                    type: string
+                  text_i_have_read_simplified:
+                    type: string
+                  person_attaining_assent:
+                    type: string
+                  text_assent_witness:
+                    type: string
+                  obtainer_name:
+                    type: string
+                  consent_your_child:
+                    type: string
+                  assent_13_17:
+                    type: string
+                  text_i_have_read_1:
+                    type: string
+                  consent_18:
+                    type: string
+
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':
