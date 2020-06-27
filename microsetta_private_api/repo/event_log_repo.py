@@ -12,7 +12,7 @@ _read_cols = "id, event_type, event_subtype, event_time, event_state"
 
 def _event_to_row(event: LogEvent):
     return {
-        "id": event.event_id,
+        "id": str(event.event_id),
         "event_type": event.event_type.value,
         "event_subtype": event.event_subtype.value,
         # event_time is set by db upon creation, need not be passed in.
@@ -21,7 +21,7 @@ def _event_to_row(event: LogEvent):
 
 
 def _row_to_event(row):
-    return LogEvent(row['id'],
+    return LogEvent(UUID(row['id']),
                     EventType(row['event_type']),
                     EventSubtype(row['event_subtype']),
                     row['event_time'],
@@ -118,5 +118,5 @@ class EventLogRepo(BaseRepo):
             cur.execute("DELETE FROM event_log "
                         "WHERE "
                         "id = %s",
-                        (event_id,))
+                        (str(event_id),))
             return cur.rowcount == 1
