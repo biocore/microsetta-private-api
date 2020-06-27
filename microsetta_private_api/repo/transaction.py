@@ -17,6 +17,9 @@ class Transaction:
         host=AMGUT_CONFIG.host,
         port=AMGUT_CONFIG.port)
 
+    # Register any extra psycopg2 types we need it to understand
+    psycopg2.extras.register_uuid()
+
     @staticmethod
     @atexit.register
     def shutdown_pool():
