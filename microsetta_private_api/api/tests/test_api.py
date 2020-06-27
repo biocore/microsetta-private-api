@@ -432,7 +432,7 @@ def client(request):
     app.app.testing = True
     with app.app.test_client() as client:
         request.cls.client = client
-        with patch("microsetta_private_api.api.implementation."
+        with patch("microsetta_private_api.api."
                    "verify_authrocket") as mock_v:
             mock_v.side_effect = mock_verify
             yield client
