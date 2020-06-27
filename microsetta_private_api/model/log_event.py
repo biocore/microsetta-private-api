@@ -4,6 +4,7 @@ import uuid
 from microsetta_private_api.model.model_base import ModelBase
 from enum import Enum, unique
 
+
 # NOTE: The string values of these enums are persisted to the database
 #  therefore. They MUST NOT BE CHANGED.
 @unique
