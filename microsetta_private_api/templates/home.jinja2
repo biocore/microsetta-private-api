@@ -15,7 +15,7 @@
     <div class="list-group">
             {% if accounts|length > 0 %}
             <br/>
-            Please select an account from the entries below:
+            Choose an account to use by clicking on an account entry, listed below:
                 {% for account in accounts %}
                     <a href="/accounts/{{ account.account_id }}" class="list-group-item list-group-item-action">{{ account.email }}'s account</a>
                 {% endfor %}  <!-- end of for account in accounts -->
