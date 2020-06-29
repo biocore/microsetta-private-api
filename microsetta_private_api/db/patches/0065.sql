@@ -2,7 +2,7 @@ CREATE TABLE ag.event_log(
     id uuid PRIMARY KEY NOT NULL,
     event_type varchar(100) NOT NULL,
     event_subtype varchar(100) NOT NULL,
-    event_time timestamptz default current_timestamp,
+    event_time timestamptz default current_timestamp NOT NULL,
     event_state jsonb);
 
 -- Full event log sorted by time

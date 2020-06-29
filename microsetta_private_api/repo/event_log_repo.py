@@ -84,21 +84,20 @@ class EventLogRepo(BaseRepo):
     # See https://www.postgresql.org/docs/9.5/functions-json.html#FUNCTIONS-JSON-OP-TABLE  # noqa
     # to understand referencing email field from jsonb representation
 
-    # TODO: I believe the LIKE operator can make use of the btree index i've
-    #  set on this table so long as the pattern specified is a case sensitive
-    #  prefix.  To support ILIKE or searching middle of email field, may have
-    #  to pull it out of the jsonb field, or dive into gin_trgm_ops
+    # Based on results of EXPLAIN of queries in psql 9.5, looks like postgres
+    # can use our index for exact matches, but can't use it for anything with a
+    # wildcard
+    # TODO: Should test against newest postgresql, May need to look up gin
+    #  indexes to improve this if performance becomes an issue.
     #  See https://stackoverflow.com/questions/33025890/indexing-jsonb-data-for-pattern-matching-searches # noqa
     def get_events_by_email(self, email: str):
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + _read_cols + " FROM "
                         "event_log "
                         "WHERE "
-                        "event_state->>'email' LIKE %s "
+                        "event_state->>'email' ILIKE %s "
                         "ORDER BY "
                         "event_state->>'email', event_time DESC",
-                        # Do not change this pattern without analyzing
-                        # the query in postgres to ensure it uses indexes
                         (email+"%",))
             return [_row_to_event(row) for row in cur.fetchall()]
 
