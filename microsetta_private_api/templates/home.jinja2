@@ -13,14 +13,14 @@
     </div>
     {% if email_verified %}
     <div class="list-group">
+            <br/>
             {% if accounts|length > 0 %}
+            Choose an account to use by clicking on an account entry listed below:
                 {% for account in accounts %}
-                    <a href="/accounts/{{ account.account_id }}" class="list-group-item list-group-item-action">{{ account.email }}'s account</a>
+                    <a href="/accounts/{{ account.account_id }}" class="btn btn-outline-info w-50 p-2">{{ account.email }}'s account</a>
                 {% endfor %}  <!-- end of for account in accounts -->
             {% else %}
-                <a href="/create_account" class="list-group-item list-group-item-action">
-            Click here to create a new account...
-        </a>
+                <a href="/create_account" class="btn btn-outline-info w-50 p-2">Click here to create a new account...</a>
         {% endif %}
     </div>
     {% else %}
