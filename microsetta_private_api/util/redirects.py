@@ -24,6 +24,9 @@ def build_login_redirect(redirect_uri):
     # base64.urlsafe_base64encode("https://google.com".encode()).decode()
     # "{{authrocket_url}}/login?redirect_uri={{endpoint}}/authrocket_callback%3Fredirect_uri%3DaHR0cHM6Ly9nb29nbGUuY29t" # noqa
 
+    # TODO:  This endpoint refers to the client interface
+    #  this file (or knowledge of the client's endpoint)
+    #  will need to move along with client_impl when we separate
     endpoint = SERVER_CONFIG["endpoint"]
     authrocket_url = SERVER_CONFIG["authrocket_url"]
     inside_url = base64.urlsafe_b64encode(redirect_uri.encode()).decode()

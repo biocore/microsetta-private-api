@@ -4,12 +4,14 @@ import flask
 from flask import jsonify, Response
 
 from microsetta_private_api.admin.email_templates import EmailMessage
+from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.util.email import SendEmail
+from microsetta_private_api.util.redirects import build_login_redirect
 from werkzeug.exceptions import Unauthorized
 
 
@@ -157,22 +159,64 @@ def create_kits(body, token_info):
 def send_email(body, token_info):
     validate_admin_access(token_info)
 
-    template = EmailMessage[body['template']]
-    SendEmail.send(
-        body['email'],
-        template,
-        body['template_args']
-    )
-
     with Transaction() as t:
+        account_id = None
+        email = None
+        resolution_url = None
+
+        # Depending on issue type, determine what email to send to and
+        # what account is involved, as well as what link to send user to
+        # address the problem if that is required by the email template
+        if body["issue_type"] == "sample":
+            # TODO:  Building resolution url is very tricky, and it's not clear
+            #  what component should be responsible for doing it.  It requires
+            #  knowing what endpoint the client minimal interface is hosted at,
+            #  as well as a sample barcode's associated
+            #       account_id,
+            #       source_id,
+            #       sample_id
+            #  which generally requires lookup in the db with admin privilege.
+
+            diag = AdminRepo(t).retrieve_diagnostics_by_barcode(
+                       body["template_args"]["sample_barcode"],
+                       grab_kit=False)
+            account_id = diag["account"].id
+            source_id = diag["source"].id
+            sample_id = diag["sample"].id
+            email = diag["account"].email
+            endpoint = SERVER_CONFIG["endpoint"]
+            resolution_url = build_login_redirect(
+                endpoint + "/accounts/%s/sources/%s/samples/%s" %
+                (account_id, source_id, sample_id)
+            )
+        else:
+            raise Exception("Update Admin Impl to support more issue types")
+
+        # Determine what template must be sent, and build the template args
+        # from whatever is in the body and the resolution url we determined
+        template = EmailMessage[body['template']]
+        template_args = dict(body['template_args'])
+        template_args['resolution_url'] = resolution_url
+
+        # Send the email
+        SendEmail.send(email, template, template_args)
+
+        # Add an event to the log that we sent this email successfully
         event = LogEvent(
             uuid.uuid4(),
             template.event_type,
             template.event_subtype,
             None,
-            body)
-
+            {
+                # account_id and email are necessary to allow searching the
+                # event log.
+                "account_id": account_id,
+                "email": email,
+                "template": body["template"],
+                "template_args": body["template_args"]
+            })
         EventLogRepo(t).add_event(event)
+
         t.commit()
 
     return '', 204

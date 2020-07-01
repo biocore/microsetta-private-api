@@ -1185,11 +1185,10 @@ paths:
             schema:
               type: object
               properties:
-                email:
+                # issue type defines what resolution_url the user should go to
+                issue_type:
                   type: string
-                  example: "test-email@example.com"
-                account_id:
-                  type: string
+                  enum: ["sample"]
                 template:
                   type: string
                   enum: ["incorrect_sample_type",
