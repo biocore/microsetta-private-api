@@ -1,0 +1,13 @@
+Hello {{username |e}},
+    We recently received the following sample from you and noticed that the sample type was incorrectly assigned.
+
+        Barcode {{barcode |e}}: - Marked {{recorded_type |e}} but appears to be {{received_type |e}}
+
+    To process samples properly and provide accurate results, we must receive the correct information. If you believe {{received}} is correct, then please confirm with us at microsetta@ucsd.edu. We will then update your information so the samples can be appropriately associated.
+
+    If you have any questions, please contact us at microsetta@ucsd.edu.
+
+    Thank you for supporting our project.
+
+    Sincerely,
+    The Microsetta Team

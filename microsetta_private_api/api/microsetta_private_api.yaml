@@ -1172,6 +1172,31 @@ paths:
             application/json:
               schema:
                 type: object
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.send_email
+      tags:
+        - Admin
+      summary: Send a templated email to an end user
+      description: Send a templated email to an end user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "test-email@example.com"
+                template:
+                  type: string
+                  enum: ["incorrect_sample_type",
+                         "missing_sample_info"]
+                  example: "incorrect_sample_type"
+                template_args:
+                  type: object
+      responses:
+        '204':
+          description: Email sent
 
 components:
   parameters:

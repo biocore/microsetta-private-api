@@ -1,9 +1,15 @@
-import flask
-from flask import jsonify
+import uuid
 
+import flask
+from flask import jsonify, Response
+
+from microsetta_private_api.admin.email_templates import EmailMessage
+from microsetta_private_api.model.log_event import LogEvent
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
+from microsetta_private_api.util.email import SendEmail
 from werkzeug.exceptions import Unauthorized
 
 
@@ -146,3 +152,27 @@ def create_kits(body, token_info):
             t.commit()
 
     return jsonify(kits), 201
+
+
+def send_email(body, token_info):
+    validate_admin_access(token_info)
+
+    template = EmailMessage[body['template']]
+    SendEmail.send(
+        body['email'],
+        template,
+        body['template_args']
+    )
+
+    with Transaction() as t:
+        event = LogEvent(
+            uuid.uuid4(),
+            template.event_type,
+            template.event_subtype,
+            None,
+            body)
+
+        EventLogRepo(t).add_event(event)
+        t.commit()
+
+    return '', 204
