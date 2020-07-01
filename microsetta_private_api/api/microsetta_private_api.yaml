@@ -1172,6 +1172,7 @@ paths:
             application/json:
               schema:
                 type: object
+  '/admin/email':
     post:
       operationId: microsetta_private_api.admin.admin_impl.send_email
       tags:
@@ -1187,6 +1188,8 @@ paths:
                 email:
                   type: string
                   example: "test-email@example.com"
+                account_id:
+                  type: string
                 template:
                   type: string
                   enum: ["incorrect_sample_type",

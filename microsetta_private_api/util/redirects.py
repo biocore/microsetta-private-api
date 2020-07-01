@@ -20,7 +20,8 @@ def build_login_redirect(redirect_uri):
     # "{{authrocket_url}}/login?redirect_uri={{endpoint}}/authrocket_callback%3Fredirect_uri%3DaGVsbG8=" # noqa
 
     # Example: Redirect to "https://google.com"
-    # "aGVsbG8=" == base64.urlsafe_base64encode("hello".encode()).decode()
+    # "aHR0cHM6Ly9nb29nbGUuY29t" ==
+    # base64.urlsafe_base64encode("https://google.com".encode()).decode()
     # "{{authrocket_url}}/login?redirect_uri={{endpoint}}/authrocket_callback%3Fredirect_uri%3DaHR0cHM6Ly9nb29nbGUuY29t" # noqa
 
     endpoint = SERVER_CONFIG["endpoint"]
