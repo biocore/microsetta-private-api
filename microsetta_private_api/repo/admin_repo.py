@@ -99,11 +99,15 @@ class AdminRepo(BaseRepo):
                 first['projects'] = [
                     {
                         'project_id': r['project_id'],
-                        'project': r['project']
+                        'project': r['project'],
+                        'bank_samples': r['bank_samples'],
+                        'plating_start_date': r['plating_start_date']
                     }
                     for r in barcode_info]
                 del first['project_id']
                 del first['project']
+                del first['bank_samples']
+                del first['plating_start_date']
                 barcode_info = first
             else:
                 barcode_info = None
@@ -127,7 +131,8 @@ class AdminRepo(BaseRepo):
 
             return diagnostic
 
-    def create_project(self, project_name, is_microsetta):
+    def create_project(self, project_name, is_microsetta, bank_samples,
+                       plating_start_date=None):
         """Create a project entry in the database
 
         Parameters
@@ -136,6 +141,10 @@ class AdminRepo(BaseRepo):
             The name of the project to create
         is_microsetta : bool
             If the project is part of The Microsetta Initiative
+        bank_samples : bool
+            If the project's samples should be banked until some future date
+        plating_start_date : date
+            Optional date on which project's banked samples will be plated
         """
         if is_microsetta:
             tmi = 'yes'
@@ -148,9 +157,25 @@ class AdminRepo(BaseRepo):
             id_ = cur.fetchone()[0]
 
             cur.execute("INSERT INTO barcodes.project "
-                        "(project_id, project, is_microsetta) "
-                        "VALUES (%s, %s, %s)", [id_, project_name, tmi])
+                        "(project_id, project, is_microsetta, bank_samples, "
+                        "plating_start_date) "
+                        "VALUES (%s, %s, %s, %s, %s)",
+                        [id_, project_name, tmi, bank_samples,
+                         plating_start_date])
         return True
+
+    def delete_project_by_name(self, project_name):
+        """Delete a project entry in the database
+
+        Parameters
+        ----------
+        project_name : str
+            The name of the project to delete
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("DELETE FROM barcodes.project WHERE project = %s",
+                        (project_name,))
+            return cur.rowcount == 1
 
     def _generate_random_kit_name(self, name_length, prefix):
         if prefix is None:
