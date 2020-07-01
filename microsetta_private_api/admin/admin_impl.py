@@ -1,7 +1,7 @@
 import uuid
 
 import flask
-from flask import jsonify, Response
+from flask import jsonify
 
 from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.config_manager import SERVER_CONFIG
