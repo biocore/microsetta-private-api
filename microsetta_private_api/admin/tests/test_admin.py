@@ -1,4 +1,5 @@
 from unittest import TestCase
+from datetime import date
 
 from werkzeug.exceptions import Unauthorized, NotFound
 
@@ -129,19 +130,24 @@ class AdminTests(TestCase):
                             "WHERE project = 'doesnotexist'")
                 self.assertEqual(len(cur.fetchall()), 0)
 
-                admin_repo.create_project('doesnotexist', True)
-                cur.execute("SELECT project, is_microsetta "
+                admin_repo.create_project('doesnotexist', True, False)
+                cur.execute("SELECT project, is_microsetta, bank_samples, "
+                            "plating_start_date "
                             "FROM barcodes.project "
                             "WHERE project = 'doesnotexist'")
                 obs = cur.fetchall()
-                self.assertEqual(obs, [('doesnotexist', True), ])
+                self.assertEqual(obs, [('doesnotexist', True, False, None), ])
 
-                admin_repo.create_project('doesnotexist2', False)
-                cur.execute("SELECT project, is_microsetta "
+                plating_start_date = date(2020, 7, 31)
+                admin_repo.create_project('doesnotexist2', False, True,
+                                          plating_start_date)
+                cur.execute("SELECT project, is_microsetta, bank_samples, "
+                            "plating_start_date "
                             "FROM barcodes.project "
                             "WHERE project = 'doesnotexist2'")
                 obs = cur.fetchall()
-                self.assertEqual(obs, [('doesnotexist2', False), ])
+                self.assertEqual(obs, [('doesnotexist2', False, True,
+                                        plating_start_date), ])
 
     def test_create_kits(self):
         with Transaction() as t:

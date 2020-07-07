@@ -918,7 +918,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  # START ADMINISTRATOR PATHS
+  # ADMINISTRATOR PATHS
   '/admin/search/samples/{sample_barcode}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.search_barcode
@@ -939,6 +939,7 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+
   '/admin/search/kit/{kit_id}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.search_kit_id
@@ -964,6 +965,7 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+
   '/admin/search/account/{email}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.search_email
@@ -990,8 +992,9 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+
   '/admin/scan/{sample_barcode}':
-    post:
+    put:
       # Note: We might want to be able to differentiate system administrator operations
       # from technician operations in the future by user accounts and the routes they post to
       operationId: microsetta_private_api.admin.admin_impl.scan_barcode
@@ -1019,12 +1022,17 @@ paths:
                   type: string
                   example: "Sample Processing Complete!"
       responses:
-        '201':
-          description: Successfully registered new user account
+        '200':
+          description: Successfully processing information about barcode
           headers:
             Location:
               schema:
                 type: string
+          content:
+            application/json:
+              schema:
+                type: object
+
   '/admin/metadata/samples/{sample_barcode}/surveys/{survey_template_id}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_single_survey
@@ -1037,7 +1045,7 @@ paths:
         - $ref: '#/components/parameters/survey_template_id'
       responses:
         '200':
-          description: QIIME compatible sample metadata
+          description: QIIME-compatible sample metadata
           content:
             application/json:
               schema:
@@ -1046,6 +1054,7 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+
   '/admin/metadata/samples/{sample_barcode}/surveys/':
     get:
       operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_multiple_survey
@@ -1057,7 +1066,7 @@ paths:
         - $ref: '#/components/parameters/sample_barcode'
       responses:
         '200':
-          description: QIIIME compatible sample metadata
+          description: QIIME-compatible sample metadata
           content:
             application/json:
               schema:
@@ -1086,11 +1095,17 @@ paths:
                   type: string
                 is_microsetta:
                   type: boolean
-
+                bank_samples:
+                  type: boolean
+                plating_start_date:
+                  type: string
+                  format: date
+                  example: "2017-07-21"
+                  nullable: true
               required:
                 - project_name
                 - is_microsetta
-
+                - bank_samples
       responses:
         '201':
           description: Project successfully created
@@ -1122,12 +1137,10 @@ paths:
                     type: array
                     items:
                       type: string
-
                 required:
                   - number_of_kits
                   - number_of_samples
                   - projects
-
       responses:
         '201':
           description: Kit identifiers and associated samples were successfully created
@@ -1135,12 +1148,11 @@ paths:
             application/json:
               schema:
                 type: object
-
         '401':
           $ref: '#/components/responses/401Unauthorized'
-
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+
   '/admin/statistics/projects':
     get:
       operationId: microsetta_private_api.admin.admin_impl.project_statistics_summary
@@ -1153,6 +1165,7 @@ paths:
             application/json:
               schema:
                 type: array
+
   '/admin/statistics/project/{project_id}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.project_statistics_detailed
