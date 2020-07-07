@@ -165,7 +165,7 @@ class AdminRepo(BaseRepo):
         return True
 
     def delete_project_by_name(self, project_name):
-        """Delete a project entry in the database
+        """Delete a project entry and its associations to barcodes from db
 
         Parameters
         ----------
@@ -173,6 +173,14 @@ class AdminRepo(BaseRepo):
             The name of the project to delete
         """
         with self._transaction.cursor() as cur:
+            # delete associations between this project and any barcodes
+            cur.execute("DELETE FROM barcodes.project_barcode "
+                        "WHERE project_id in ("
+                        "SELECT project_id FROM barcodes.project "
+                        "WHERE project = %s)",
+                        (project_name,))
+
+            # now delete the project itself
             cur.execute("DELETE FROM barcodes.project WHERE project = %s",
                         (project_name,))
             return cur.rowcount == 1

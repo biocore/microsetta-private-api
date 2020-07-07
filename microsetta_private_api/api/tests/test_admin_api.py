@@ -174,13 +174,4 @@ class AdminApiTests(TestCase):
             headers=MOCK_HEADERS
         )
 
-        # NB: the date format SHOULD be checked by connexion
-        # and return a 400 error (invalid date input).  HOWEVER,
-        # connexion does not actually check dates or date-times
-        # because of license issues with the library (see
-        # https://github.com/zalando/connexion/issues/476
-        # Therefore, the invalid date is not caught until the
-        # actual SQL query to insert the new project record,
-        # which fails when trying to insert a non-date-castable
-        # input into a date-time column :|
-        self.assertEqual(500, response.status_code)
+        self.assertEqual(400, response.status_code)

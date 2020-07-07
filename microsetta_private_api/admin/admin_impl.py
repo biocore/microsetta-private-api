@@ -1,11 +1,12 @@
 import flask
 from flask import jsonify
+import datetime
 
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Unauthorized, BadRequest
 
 
 def search_barcode(token_info, sample_barcode):
@@ -117,6 +118,15 @@ def create_project(body, token_info):
     is_microsetta = body['is_microsetta']
     bank_samples = body['bank_samples']
     plating_start_date = body.get('plating_start_date')
+
+    if plating_start_date is not None:
+        try:
+            plating_start_date = datetime.datetime.strptime(
+                plating_start_date, "%Y-%m-%d")
+        except ValueError:
+            raise BadRequest(
+                "plating start date '{0}' is not a valid date in YYYY-MM-DD "
+                "format".format(plating_start_date))
 
     if len(project_name) == 0:
         return jsonify(code=400, message="No project name provided"), 400
