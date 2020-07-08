@@ -13,8 +13,7 @@ def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
     # the base of the URL that called it (which includes account_id)
 
     localization_info = localization.LANG_SUPPORT[language_tag]
-    payload = {'lang_tag': language_tag,
-               'post_url': consent_post_url}
+    payload = {'post_url': consent_post_url}
     content = localization_info[localization.NEW_PARTICIPANT_KEY]
     payload.update(content)
 
