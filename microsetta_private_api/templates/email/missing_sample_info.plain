@@ -1,17 +1,17 @@
 Hello {{contact_name |e}},
-    Thank you for your interest and participation in The Microsetta Initiative. We are writing as we've encountered an issue processing your samples, and we would appreciate your assistance in helping to resolve this matter.
+    Thank you for your interest and participation in The Microsetta Initiative. We are writing as we've encountered an issue processing your sample, and we would appreciate your assistance in helping to resolve this matter.
 
     Specifically, the following sample sent to the lab does not have a recorded sample type, date or time:
         Barcode {{sample_barcode |e}}
 
-    We require this information in order to process samples in compliance with our human subjects research protocol. If you have a record of the associated sample type, date, and time for this sample, please provide us with this information.
+    We require this information in order to process this sample in compliance with our human subjects research protocol. If you have a record of the associated sample type, date, and time for this sample, please provide us with this information.
 
     Based on what we can see, the sample type appears to be:
         Barcode {{sample_barcode |e}}: {{received_type |e}}
 
-    If you believe {{received_type |e}} is correct, then please confirm with us at microsetta@ucsd.edu. And if you have an approximate date and time of sample collection, we would greatly appreciate your sharing this information. We will then update your sample's information so it can be appropriately associated.
+    If you believe {{received_type |e}} is correct, then please confirm with us at microsetta@ucsd.edu by replying to this email. And if you have an approximate date and time of sample collection, we would greatly appreciate your sharing this information. We will then update your sample's information so it can be appropriately associated.
 
-    If you have any questions, please contact us at microsetta@ucsd.edu
+    If you have any questions, please reply to us at microsetta@ucsd.edu
 
     Thank you,
     The Microsetta Team
