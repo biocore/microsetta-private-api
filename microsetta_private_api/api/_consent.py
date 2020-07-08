@@ -5,7 +5,7 @@ from microsetta_private_api.api._account import \
     _validate_account_access
 
 
-def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
+def render_consent_doc(account_id, language_tag, token_info):
     _validate_account_access(token_info, account_id)
 
     # NB: Do NOT need to explicitly pass account_id into template for
@@ -13,8 +13,6 @@ def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
     # the base of the URL that called it (which includes account_id)
 
     localization_info = localization.LANG_SUPPORT[language_tag]
-    payload = {'post_url': consent_post_url}
     content = localization_info[localization.NEW_PARTICIPANT_KEY]
-    payload.update(content)
 
-    return jsonify(payload), 200
+    return jsonify(content), 200

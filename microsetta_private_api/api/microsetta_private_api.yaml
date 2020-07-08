@@ -185,7 +185,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/language_tag'
-        - $ref: '#/components/parameters/consent_post_url'
       responses:
         '200':
           description: Consent form
@@ -194,9 +193,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  post_url:
-                    type: string
-                    example: https://microsetta-rest.ucsd.edu/accounts/72d2cc55-8522-4528-a85b-78be2ec0933f/create_human_source
                   add_human_title:
                     type: string
                     example: Add a New Human Source
