@@ -1,4 +1,4 @@
-Hello {{username |e}},
+Hello {{contact_name |e}},
     Thank you for your interest and participation in The Microsetta Initiative. We are writing as we've encountered an issue processing your samples, and we would appreciate your assistance in helping to resolve this matter.
 
     Specifically, the following sample sent to the lab does not have a recorded sample type, date or time:

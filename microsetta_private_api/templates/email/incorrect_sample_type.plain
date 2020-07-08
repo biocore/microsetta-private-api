@@ -1,4 +1,4 @@
-Hello {{username |e}},
+Hello {{contact_name |e}},
     We recently received the following sample from you and noticed that the sample type was incorrectly assigned.
 
         Barcode {{sample_barcode |e}} - Marked {{recorded_type |e}} but appears to be {{received_type |e}}

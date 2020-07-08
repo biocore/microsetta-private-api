@@ -163,6 +163,7 @@ def send_email(body, token_info):
         account_id = None
         email = None
         resolution_url = None
+        contact_name = None
 
         # Depending on issue type, determine what email to send to and
         # what account is involved, as well as what link to send user to
@@ -184,6 +185,9 @@ def send_email(body, token_info):
             source_id = diag["source"].id
             sample_id = diag["sample"].id
             email = diag["account"].email
+            contact_name = diag["account"].first_name + " " + \
+                           diag["account"].last_name
+            contact_name = contact_name.strip()
             endpoint = SERVER_CONFIG["endpoint"]
             resolution_url = build_login_redirect(
                 endpoint + "/accounts/%s/sources/%s/samples/%s" %
@@ -197,6 +201,7 @@ def send_email(body, token_info):
         template = EmailMessage[body['template']]
         template_args = dict(body['template_args'])
         template_args['resolution_url'] = resolution_url
+        template_args['contact_name'] = contact_name
 
         # Send the email
         SendEmail.send(email, template, template_args)
