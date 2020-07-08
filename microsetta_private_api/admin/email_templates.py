@@ -24,7 +24,7 @@ class EmailMessage(Enum):
         ("username", "sample_barcode", "recorded_type", "received_type",
          "resolution_url"),
         EventType.EMAIL,
-        EventSubtype.EMAIL_SAMPLE_RECEIVED_WITH_PROBLEMS
+        EventSubtype.EMAIL_INCORRECT_SAMPLE_TYPE
     )
     missing_sample_info = (
         "Missing Sample Info",
@@ -32,7 +32,7 @@ class EmailMessage(Enum):
         "email/missing_sample_info.plain",
         ("username", "sample_barcode", "received_type", "resolution_url"),
         EventType.EMAIL,
-        EventSubtype.EMAIL_SAMPLE_RECEIVED_WITH_PROBLEMS
+        EventSubtype.EMAIL_MISSING_SAMPLE_INFO
     )
 
     def __init__(self, subject, html, plain, required, event_type, event_sub):
