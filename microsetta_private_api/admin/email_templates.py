@@ -21,7 +21,7 @@ class EmailMessage(Enum):
         "Incorrect Sample Type",
         "email/incorrect_sample_type.jinja2",
         "email/incorrect_sample_type.plain",
-        ("username", "sample_barcode", "recorded_type", "received_type",
+        ("contact_name", "sample_barcode", "recorded_type", "received_type",
          "resolution_url"),
         EventType.EMAIL,
         EventSubtype.EMAIL_INCORRECT_SAMPLE_TYPE
@@ -30,7 +30,7 @@ class EmailMessage(Enum):
         "Missing Sample Info",
         "email/missing_sample_info.jinja2",
         "email/missing_sample_info.plain",
-        ("username", "sample_barcode", "received_type", "resolution_url"),
+        ("contact_name", "sample_barcode", "received_type", "resolution_url"),
         EventType.EMAIL,
         EventSubtype.EMAIL_MISSING_SAMPLE_INFO
     )
