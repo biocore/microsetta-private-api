@@ -186,7 +186,7 @@ def send_email(body, token_info):
             sample_id = diag["sample"].id
             email = diag["account"].email
             contact_name = diag["account"].first_name + " " + \
-                           diag["account"].last_name
+                diag["account"].last_name
             contact_name = contact_name.strip()
             endpoint = SERVER_CONFIG["endpoint"]
             resolution_url = build_login_redirect(
