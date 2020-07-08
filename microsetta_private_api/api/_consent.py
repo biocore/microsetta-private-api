@@ -16,5 +16,6 @@ def render_consent_doc(account_id, language_tag, consent_post_url, token_info):
     payload = {'lang_tag': language_tag,
                'post_url': consent_post_url}
     content = localization_info[localization.NEW_PARTICIPANT_KEY]
-    payload.update({k.lower(): v for k, v in content.items()})
+    payload.update(content)
+
     return jsonify(payload), 200
