@@ -7,6 +7,7 @@ from urllib.parse import quote
 from os import path
 from datetime import datetime
 import base64
+import functools
 
 # Authrocket uses RS256 public keys, so you can validate anywhere and safely
 # store the key in code. Obviously using this mechanism, we'd have to push code
@@ -20,6 +21,7 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.source import Source
 import importlib.resources as pkg_resources
 from microsetta_private_api.client_state.redis_cache import RedisCache
+from microsetta_private_api.util import decorator_util
 
 PUB_KEY = pkg_resources.read_text(
     'microsetta_private_api',
@@ -211,21 +213,104 @@ def _check_source_prereqs(acct_id, source_id, current_state=None):
 
 
 def _check_relevant_prereqs(acct_id=None, source_id=None):
+    # Check home prereqs
     prereq_step, current_state = _check_home_prereqs()
-    if prereq_step == HOME_PREREQS_MET:
-        if acct_id is not None:
-            prereq_step, current_state = _check_acct_prereqs(
-                acct_id, current_state)
-            if prereq_step == ACCT_PREREQS_MET:
-                if source_id is not None:
-                    prereq_step, current_state = _check_source_prereqs(
-                        acct_id, source_id, current_state)
-                # end if there is a source id
-            # end if acct prereqs are met
-        # end if there is an acct id
-    # end if home prereqs are met
+    if prereq_step != HOME_PREREQS_MET:
+        return prereq_step, current_state
 
-    return prereq_step, current_state
+    # Check acct prereqs
+    if acct_id is None:
+        return prereq_step, current_state
+    prereq_step, current_state = _check_acct_prereqs(acct_id, current_state)
+    if prereq_step != ACCT_PREREQS_MET:
+        return prereq_step, current_state
+
+    # Check source prereqs
+    if source_id is None:
+        return prereq_step, current_state
+    return _check_source_prereqs(acct_id, source_id, current_state)
+
+
+# To send arguments to a decorator, you define a factory method with those args
+# that returns a decorator.  The decorator then takes a function and returns
+# a wrapper that you want to call instead.  Thus there should be three layers.
+def prerequisite(allowed_states: list, **parameter_overrides):
+    """
+    Usage
+    @prerequisite([NEEDS_EMAIL_CHECK])
+    def get_update_email(account_id):
+        # If client is not in the NEEDS_EMAIL_CHECK state, they will be
+        # redirected rather than reaching get_update_email.
+
+    @prerequisite([State1, State2, State3])
+    def crazy_function(account_id, source_id):
+        # If client is not in one of State1, State2, State3 stats, they will
+        # be redirected.
+
+    @prerequisite([State1, State2], survey_template_id=VIOSCREEN_ID)
+    def vioscreen_callback(account_id, source_id, key):
+        # If client is not in one of State1, State2, they will be redirected
+        # Further, if they are determined to be in NEEDS_SURVEY, but their
+        # required survey template id is not VIOSCREEN_ID, they will be
+        # redirected.  Note that this makes use of the parameter_overrides to
+        # set a specific parameter (survey_template_id) when the wrapped
+        # function knows what would be sent, but does not expose it within its
+        # method signature. (You might encounter this when the wrapped function
+        # is a callback function that must match some defined signature)
+
+    :param allowed_states: A list of states that are valid for
+    entry to the decorated function
+    :param parameter_overrides: A set of keyword arguments added or replacing
+    the wrapped function's input args for the purpose of determining prereqs
+    The wrapped function itself will never see these overridden values.
+    """
+    if not isinstance(allowed_states, list):
+        raise TypeError("allowed_states must be a list")
+    allowed_states = set(allowed_states)
+
+    def decorator(func):
+
+        if decorator_util.has_non_keyword_arguments(func):
+            raise TypeError("Only functions with solely keyword arguments are "
+                            "supported by this decorator.  "
+                            "Example: f(*, a=1, b=2, c=3)")
+
+        # Calling functools.wraps preserves information about the wrapped func
+        # so introspection/reflection can pull the original documentation even
+        # when passed the wrapper function.
+        @functools.wraps(func)
+        def wrapper(**kwargs):
+            kwargs_copy = dict(kwargs)
+            kwargs_copy.update(parameter_overrides)
+
+            # Check relevant prereqs from those arguments
+            prereqs_step, curr_state = _check_relevant_prereqs(
+                kwargs_copy.get('account_id'),
+                kwargs_copy.get('source_id')
+            )
+
+            # Route to closest sink if state doesn't match a required state
+            if prereqs_step not in allowed_states:
+                return _route_to_closest_sink(prereqs_step, curr_state)
+
+            # For any states that require checking additional parameters, we do
+            # so here.  (Remember to lookup from kwargs_copy)
+            # TODO: Ensure state specific checks don't grow unwieldy
+            if prereqs_step == NEEDS_SURVEY:
+                passed_id = kwargs_copy.get('survey_template_id')
+                needed_id = curr_state.get("needed_survey_template_id")
+                if passed_id != needed_id:
+                    return _route_to_closest_sink(prereqs_step, curr_state)
+
+            # Add new state specific checks here
+            # if prereqs_state == XXX:
+            #   if something's not right, reroute.
+
+            return func(**kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 # Client might not technically care who the user is, but if they do, they
@@ -305,32 +390,6 @@ def _get_kit(kit_name):
             return None, error_msg, response.status_code
 
     return response.json(), None, response.status_code
-
-
-def _get_invalid_survey_state_reroute(account_id, source_id,
-                                      survey_template_id,
-                                      addtl_allowed_steps=None):
-    """ Get reroute if user isn't allowed to take this survey in current state.
-
-    Check if the user is in one of the externally-specified allowed states or,
-    if not, if they are the NEEDS_SURVEY state AND the survey they need is
-    the one whose survey_template_id is passed in.  If either of these
-    conditions is met, the user is allowed to take this survey now, so they
-    don't need to be rerouted, so this method returns None.  However, if
-    neither of these criteria is met, determine where the user should be
-    rerouted to and return that info.
-
-    """
-    if addtl_allowed_steps is None:
-        addtl_allowed_steps = []
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
-    if prereqs_step not in addtl_allowed_steps:
-        needed_template_id = curr_state.get("needed_survey_template_id")
-        request_is_needed_template = needed_template_id == survey_template_id
-        if not (prereqs_step == NEEDS_SURVEY and request_is_needed_template):
-            return _route_to_closest_sink(prereqs_step, curr_state)
-
-    return None
 
 
 def _associate_sample_to_survey(account_id, source_id, sample_id, survey_id):
@@ -436,11 +495,8 @@ def get_logout():
     return redirect(HOME_URL)
 
 
+@prerequisite([NEEDS_ACCOUNT])
 def get_create_account():
-    prereqs_step, curr_state = _check_relevant_prereqs()
-    if prereqs_step != NEEDS_ACCOUNT:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
     email, _ = _parse_jwt(session[TOKEN_KEY_NAME])
     # TODO:  Need to support other countries
     #  and not default to US and California
@@ -463,81 +519,72 @@ def get_create_account():
                                  account=default_account_values)
 
 
-def post_create_account(body):
-    new_acct_id = None
-    prereqs_step, curr_state = _check_relevant_prereqs()
-    if prereqs_step == NEEDS_ACCOUNT:
-        kit_name = body[KIT_NAME_KEY]
-        session[KIT_NAME_KEY] = kit_name
+@prerequisite([NEEDS_ACCOUNT])
+def post_create_account(*, body=None):
+    kit_name = body[KIT_NAME_KEY]
+    session[KIT_NAME_KEY] = kit_name
 
-        api_json = {
-            ACCT_FNAME_KEY: body['first_name'],
-            ACCT_LNAME_KEY: body['last_name'],
-            ACCT_EMAIL_KEY: body['email'],
-            ACCT_ADDR_KEY: {
-                ACCT_ADDR_STREET_KEY: body['street'],
-                ACCT_ADDR_CITY_KEY: body['city'],
-                ACCT_ADDR_STATE_KEY: body['state'],
-                ACCT_ADDR_POST_CODE_KEY: body['post_code'],
-                ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
-            },
-            KIT_NAME_KEY: kit_name
-        }
+    api_json = {
+        ACCT_FNAME_KEY: body['first_name'],
+        ACCT_LNAME_KEY: body['last_name'],
+        ACCT_EMAIL_KEY: body['email'],
+        ACCT_ADDR_KEY: {
+            ACCT_ADDR_STREET_KEY: body['street'],
+            ACCT_ADDR_CITY_KEY: body['city'],
+            ACCT_ADDR_STATE_KEY: body['state'],
+            ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+            ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
+        },
+        KIT_NAME_KEY: kit_name
+    }
 
-        has_error, accts_output, _ = \
-            ApiRequest.post("/accounts", json=api_json)
-        if has_error:
-            return accts_output
+    has_error, accts_output, _ = \
+        ApiRequest.post("/accounts", json=api_json)
+    if has_error:
+        return accts_output
 
-        new_acct_id = accts_output["account_id"]
+    new_acct_id = accts_output["account_id"]
 
     return _refresh_state_and_route_to_sink(new_acct_id)
 
 
-def get_update_email(account_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step != NEEDS_EMAIL_CHECK:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
+@prerequisite([NEEDS_EMAIL_CHECK])
+def get_update_email(*, account_id=None):
     return _render_with_defaults("update_email.jinja2",
                                  account_id=account_id)
 
 
-def post_update_email(account_id, body):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step == NEEDS_EMAIL_CHECK:
-        # if the customer wants to update their email:
-        update_email = body["do_update"] == "Yes"
-        if update_email:
-            # get the existing account object
-            has_error, acct_output, _ = ApiRequest.get(
-                '/accounts/%s' % account_id)
-            if has_error:
-                return acct_output
+@prerequisite([NEEDS_EMAIL_CHECK])
+def post_update_email(*, account_id=None, body=None):
+    # if the customer wants to update their email:
+    update_email = body["do_update"] == "Yes"
+    if update_email:
+        # get the existing account object
+        has_error, acct_output, _ = ApiRequest.get(
+            '/accounts/%s' % account_id)
+        if has_error:
+            return acct_output
 
-            # change the email to the one in the authrocket account
-            authrocket_email, _ = _parse_jwt(session[TOKEN_KEY_NAME])
-            acct_output[ACCT_EMAIL_KEY] = authrocket_email
-            # retain only writeable fields; KeyError if any of them missing
-            mod_acct = {k: acct_output[k] for k in ACCT_WRITEABLE_KEYS}
+        # change the email to the one in the authrocket account
+        authrocket_email, _ = _parse_jwt(session[TOKEN_KEY_NAME])
+        acct_output[ACCT_EMAIL_KEY] = authrocket_email
+        # retain only writeable fields; KeyError if any of them missing
+        mod_acct = {k: acct_output[k] for k in ACCT_WRITEABLE_KEYS}
 
-            # write back the updated account details
-            has_error, put_output, _ = ApiRequest.put(
-                '/accounts/%s' % account_id, json=mod_acct)
-            if has_error:
-                return put_output
+        # write back the updated account details
+        has_error, put_output, _ = ApiRequest.put(
+            '/accounts/%s' % account_id, json=mod_acct)
+        if has_error:
+            return put_output
 
-        # even if they decided NOT to update, don't ask again this session
-        session[EMAIL_CHECK_KEY] = True
+    # even if they decided NOT to update, don't ask again this session
+    session[EMAIL_CHECK_KEY] = True
 
     return _refresh_state_and_route_to_sink(account_id)
 
 
-def get_account(account_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step != ACCT_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
+@prerequisite([ACCT_PREREQS_MET])
+def get_account(*, account_id=None):
     has_error, account, _ = ApiRequest.get('/accounts/%s' % account_id)
     if has_error:
         return account
@@ -551,11 +598,8 @@ def get_account(account_id):
                                  sources=sources)
 
 
-def get_account_details(account_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step != ACCT_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
+@prerequisite([ACCT_PREREQS_MET])
+def get_account_details(*, account_id=None):
     has_error, account, _ = ApiRequest.get('/accounts/%s' % account_id)
     if has_error:
         return account
@@ -565,35 +609,31 @@ def get_account_details(account_id):
                                  account=account)
 
 
-def post_account_details(account_id, body):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step == ACCT_PREREQS_MET:
-        acct = {
-            ACCT_FNAME_KEY: body['first_name'],
-            ACCT_LNAME_KEY: body['last_name'],
-            ACCT_EMAIL_KEY: body['email'],
-            ACCT_ADDR_KEY: {
-                ACCT_ADDR_STREET_KEY: body['street'],
-                ACCT_ADDR_CITY_KEY: body['city'],
-                ACCT_ADDR_STATE_KEY: body['state'],
-                ACCT_ADDR_POST_CODE_KEY: body['post_code'],
-                ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
-            }
+@prerequisite([ACCT_PREREQS_MET])
+def post_account_details(*, account_id=None, body=None):
+    acct = {
+        ACCT_FNAME_KEY: body['first_name'],
+        ACCT_LNAME_KEY: body['last_name'],
+        ACCT_EMAIL_KEY: body['email'],
+        ACCT_ADDR_KEY: {
+            ACCT_ADDR_STREET_KEY: body['street'],
+            ACCT_ADDR_CITY_KEY: body['city'],
+            ACCT_ADDR_STATE_KEY: body['state'],
+            ACCT_ADDR_POST_CODE_KEY: body['post_code'],
+            ACCT_ADDR_COUNTRY_CODE_KEY: body['country_code']
         }
+    }
 
-        do_return, sample_output, _ = ApiRequest.put('/accounts/%s' %
-                                                     account_id, json=acct)
-        if do_return:
-            return sample_output
+    do_return, sample_output, _ = ApiRequest.put('/accounts/%s' %
+                                                 account_id, json=acct)
+    if do_return:
+        return sample_output
 
     return _refresh_state_and_route_to_sink(account_id)
 
 
-def get_create_human_source(account_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step != ACCT_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
+@prerequisite([ACCT_PREREQS_MET])
+def get_create_human_source(*, account_id=None):
     endpoint = SERVER_CONFIG["endpoint"]
     relative_post_url = _make_acct_path(account_id,
                                         suffix="create_human_source")
@@ -611,48 +651,39 @@ def get_create_human_source(account_id):
     return consent_output["consent_html"]
 
 
-def post_create_human_source(account_id, body):
-    new_source_id = None
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step == ACCT_PREREQS_MET:
-        has_error, consent_output, _ = ApiRequest.post(
-            "/accounts/{0}/consent".format(account_id), json=body)
-        if has_error:
-            return consent_output
+@prerequisite([ACCT_PREREQS_MET])
+def post_create_human_source(*, account_id=None, body=None):
+    has_error, consent_output, _ = ApiRequest.post(
+        "/accounts/{0}/consent".format(account_id), json=body)
+    if has_error:
+        return consent_output
 
-        new_source_id = consent_output["source_id"]
+    new_source_id = consent_output["source_id"]
 
     return _refresh_state_and_route_to_sink(account_id, new_source_id)
 
 
-def get_create_nonhuman_source(account_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step != ACCT_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
+@prerequisite([ACCT_PREREQS_MET])
+def get_create_nonhuman_source(*, account_id=None):
     return _render_with_defaults('create_nonhuman_source.jinja2',
                                  account_id=account_id)
 
 
-def post_create_nonhuman_source(account_id, body):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id)
-    if prereqs_step == ACCT_PREREQS_MET:
-        has_error, sources_output, _ = ApiRequest.post(
-            "/accounts/{0}/sources".format(account_id), json=body)
-        if has_error:
-            return sources_output
+@prerequisite([ACCT_PREREQS_MET])
+def post_create_nonhuman_source(*, account_id=None, body=None):
+    has_error, sources_output, _ = ApiRequest.post(
+        "/accounts/{0}/sources".format(account_id), json=body)
+    if has_error:
+        return sources_output
 
     return _refresh_state_and_route_to_sink(account_id)
 
 
-def get_fill_local_source_survey(account_id, source_id, survey_template_id):
-    # if we are filling out a source-level survey, it must come before the
-    # source prerequisites are met; if a sample-level one, it can come after
-    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
-                                                survey_template_id)
-    if reroute is not None:
-        return reroute
-
+@prerequisite([NEEDS_SURVEY])
+def get_fill_local_source_survey(*,
+                                 account_id=None,
+                                 source_id=None,
+                                 survey_template_id=None):
     has_error, survey_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s/survey_templates/%s' %
         (account_id, source_id, survey_template_id))
@@ -667,13 +698,9 @@ def get_fill_local_source_survey(account_id, source_id, survey_template_id):
                                    'survey_template_text'])
 
 
-def post_ajax_fill_local_source_survey(account_id, source_id,
-                                       survey_template_id, body):
-    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
-                                                survey_template_id)
-    if reroute is not None:
-        return reroute
-
+@prerequisite([NEEDS_SURVEY])
+def post_ajax_fill_local_source_survey(*, account_id=None, source_id=None,
+                                       survey_template_id=None, body=None):
     has_error, surveys_output, _ = ApiRequest.post(
         "/accounts/%s/sources/%s/surveys" % (account_id, source_id),
         json={
@@ -686,19 +713,15 @@ def post_ajax_fill_local_source_survey(account_id, source_id,
     return _refresh_state_and_route_to_sink(account_id, source_id)
 
 
-def get_fill_vioscreen_remote_sample_survey(account_id, source_id, sample_id,
-                                            survey_template_id):
+@prerequisite([SOURCE_PREREQS_MET, NEEDS_SURVEY])
+def get_fill_vioscreen_remote_sample_survey(*,
+                                            account_id=None,
+                                            source_id=None,
+                                            sample_id=None,
+                                            survey_template_id=None):
     if survey_template_id != VIOSCREEN_ID:
         return get_show_error_page("Non-vioscreen remote surveys are "
                                    "not yet supported")
-
-    # if we are filling out a source-level survey, it must come before the
-    # source prerequisites are met, but a sample-level one can come after
-    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
-                                                VIOSCREEN_ID,
-                                                [SOURCE_PREREQS_MET])
-    if reroute is not None:
-        return reroute
 
     suffix = "samples/%s/vspassthru" % sample_id
     redirect_url = SERVER_CONFIG["endpoint"] + \
@@ -718,14 +741,13 @@ def get_fill_vioscreen_remote_sample_survey(account_id, source_id, sample_id,
 # per-sample survey we have is the remote food frequency questionnaire
 # administered through vioscreen, and saving that requires its own special
 # handling (this function).
-def get_to_save_vioscreen_remote_sample_survey(account_id, source_id,
-                                               sample_id, key):
-    reroute = _get_invalid_survey_state_reroute(account_id, source_id,
-                                                VIOSCREEN_ID,
-                                                [SOURCE_PREREQS_MET])
-    if reroute is not None:
-        return reroute
-
+@prerequisite([SOURCE_PREREQS_MET, NEEDS_SURVEY],
+              survey_template_id=VIOSCREEN_ID)
+def get_to_save_vioscreen_remote_sample_survey(*,
+                                               account_id=None,
+                                               source_id=None,
+                                               sample_id=None,
+                                               key=None):
     # TODO FIXME HACK:  This is insanity.  I need to see the vioscreen docs
     #  to interface with our API...
     has_error, surveys_output, surveys_headers = ApiRequest.post(
@@ -749,12 +771,8 @@ def get_to_save_vioscreen_remote_sample_survey(account_id, source_id,
     return _refresh_state_and_route_to_sink(account_id, source_id)
 
 
-def get_source(account_id, source_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id,
-                                                       source_id)
-    if prereqs_step != SOURCE_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
+@prerequisite([SOURCE_PREREQS_MET])
+def get_source(*, account_id=None, source_id=None):
     # Retrieve the account to determine which kit it was created with
     has_error, account_output, _ = ApiRequest.get(
         '/accounts/%s' % account_id)
@@ -851,11 +869,8 @@ def get_source(account_id, source_id):
                                  claim_kit_name_hint=claim_kit_name_hint)
 
 
-def get_update_sample(account_id, source_id, sample_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
-    if prereqs_step != SOURCE_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
+@prerequisite([SOURCE_PREREQS_MET])
+def get_update_sample(*, account_id=None, source_id=None, sample_id=None):
     has_error, source_output, _ = ApiRequest.get(
         '/accounts/%s/sources/%s' %
         (account_id, source_id)
@@ -904,13 +919,8 @@ def get_update_sample(account_id, source_id, sample_id):
 
 
 # TODO: guess we should also rewrite as ajax post for sample vue form?
-def post_update_sample(account_id, source_id, sample_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
-    # Checking for only SOURCE_PREREQS_MET here because there are currently no
-    # sample-specific prerequisites
-    if prereqs_step != SOURCE_PREREQS_MET:
-        return _route_to_closest_sink(prereqs_step, curr_state)
-
+@prerequisite([SOURCE_PREREQS_MET])
+def post_update_sample(*, account_id=None, source_id=None, sample_id=None):
     model = {}
     for x in flask.request.form:
         model[x] = flask.request.form[x]
@@ -935,17 +945,17 @@ def post_update_sample(account_id, source_id, sample_id):
 # Note: ideally this would be represented as a DELETE, not as a POST
 # However, it is used as a form submission action, and HTML forms do not
 # support delete as an action
-def post_remove_sample_from_source(account_id, source_id, sample_id):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
-    # Checking for only SOURCE_PREREQS_MET here because there are currently no
-    # sample-specific prerequisites
-    if prereqs_step == SOURCE_PREREQS_MET:
-        has_error, delete_output, _ = ApiRequest.delete(
-            '/accounts/%s/sources/%s/samples/%s' %
-            (account_id, source_id, sample_id))
+@prerequisite([SOURCE_PREREQS_MET])
+def post_remove_sample_from_source(*,
+                                   account_id=None,
+                                   source_id=None,
+                                   sample_id=None):
+    has_error, delete_output, _ = ApiRequest.delete(
+        '/accounts/%s/sources/%s/samples/%s' %
+        (account_id, source_id, sample_id))
 
-        if has_error:
-            return delete_output
+    if has_error:
+        return delete_output
 
     return _refresh_state_and_route_to_sink(account_id, source_id)
 
@@ -965,47 +975,46 @@ def get_ajax_list_kit_samples(kit_name):
 # NB: associating surveys with samples when samples are claimed means that any
 # surveys added to this source AFTER these samples are claimed will NOT be
 # associated with these samples.  This behavior is by design.
-def post_claim_samples(account_id, source_id, body):
-    prereqs_step, curr_state = _check_relevant_prereqs(account_id, source_id)
-    if prereqs_step == SOURCE_PREREQS_MET:
-        sample_ids_to_claim = body.get('sample_id')
-        if sample_ids_to_claim is None:
-            # User claimed no samples ... shrug
-            return _route_to_closest_sink(prereqs_step, curr_state)
+@prerequisite([SOURCE_PREREQS_MET])
+def post_claim_samples(*, account_id=None, source_id=None, body=None):
+    sample_ids_to_claim = body.get('sample_id')
+    if sample_ids_to_claim is None:
+        # User claimed no samples ... shrug
+        return _refresh_state_and_route_to_sink(account_id, source_id)
 
-        has_error, survey_output, _ = ApiRequest.get(
-            '/accounts/{0}/sources/{1}/surveys'.format(account_id, source_id))
+    has_error, survey_output, _ = ApiRequest.get(
+        '/accounts/{0}/sources/{1}/surveys'.format(account_id, source_id))
+    if has_error:
+        return survey_output
+
+    # TODO: this will have to get more nuanced when we add animal surveys?
+    # Grab all primary and covid surveys from the source and associate with
+    # newly claimed samples; non-human sources always have none of these
+    survey_ids_to_associate_with_samples = [
+        x['survey_id'] for x in survey_output
+        if x['survey_template_id'] in [1, 6]
+    ]
+
+    # TODO:  Any of these requests may fail independently, but we don't
+    #  have a good policy to deal with partial failures.  Currently, we
+    #  abort early but that will result in some set of associations being
+    #  already made, one association failing, and the remaining
+    #  associations not attempted.
+    for curr_sample_id in sample_ids_to_claim:
+        # Claim sample
+        has_error, sample_output, _ = ApiRequest.post(
+            '/accounts/{0}/sources/{1}/samples'.format(
+                account_id, source_id),
+            json={"sample_id": curr_sample_id})
         if has_error:
-            return survey_output
+            return sample_output
 
-        # TODO: this will have to get more nuanced when we add animal surveys?
-        # Grab all primary and covid surveys from the source and associate with
-        # newly claimed samples; non-human sources always have none of these
-        survey_ids_to_associate_with_samples = [
-            x['survey_id'] for x in survey_output
-            if x['survey_template_id'] in [1, 6]
-        ]
-
-        # TODO:  Any of these requests may fail independently, but we don't
-        #  have a good policy to deal with partial failures.  Currently, we
-        #  abort early but that will result in some set of associations being
-        #  already made, one association failing, and the remaining
-        #  associations not attempted.
-        for curr_sample_id in sample_ids_to_claim:
-            # Claim sample
-            has_error, sample_output, _ = ApiRequest.post(
-                '/accounts/{0}/sources/{1}/samples'.format(
-                    account_id, source_id),
-                json={"sample_id": curr_sample_id})
-            if has_error:
-                return sample_output
-
-            # Associate the input answered surveys with this sample.
-            for survey_id in survey_ids_to_associate_with_samples:
-                sample_survey_output = _associate_sample_to_survey(
-                        account_id, source_id, curr_sample_id, survey_id)
-                if sample_survey_output is not None:
-                    return sample_survey_output
+        # Associate the input answered surveys with this sample.
+        for survey_id in survey_ids_to_associate_with_samples:
+            sample_survey_output = _associate_sample_to_survey(
+                    account_id, source_id, curr_sample_id, survey_id)
+            if sample_survey_output is not None:
+                return sample_survey_output
 
     return _refresh_state_and_route_to_sink(account_id, source_id)
 

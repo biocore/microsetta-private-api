@@ -2,17 +2,19 @@ import uuid
 
 import flask
 from flask import jsonify
+import datetime
 
 from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.util.email import SendEmail
 from microsetta_private_api.util.redirects import build_login_redirect
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Unauthorized, BadRequest
 
 
 def search_barcode(token_info, sample_barcode):
@@ -122,13 +124,29 @@ def create_project(body, token_info):
 
     project_name = body['project_name']
     is_microsetta = body['is_microsetta']
+    bank_samples = body['bank_samples']
+    plating_start_date = body.get('plating_start_date')
+
+    if plating_start_date is not None:
+        try:
+            plating_start_date = datetime.datetime.strptime(
+                plating_start_date, "%Y-%m-%d")
+        except ValueError:
+            raise BadRequest(
+                "plating start date '{0}' is not a valid date in YYYY-MM-DD "
+                "format".format(plating_start_date))
 
     if len(project_name) == 0:
         return jsonify(code=400, message="No project name provided"), 400
 
+    if not bank_samples and plating_start_date is not None:
+        raise RepoException("Plating start date cannot be set for"
+                            " unbanked projects")
+
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-        admin_repo.create_project(project_name, is_microsetta)
+        admin_repo.create_project(project_name, is_microsetta, bank_samples,
+                                  plating_start_date)
         t.commit()
 
     return {}, 201

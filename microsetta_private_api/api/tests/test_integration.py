@@ -22,7 +22,7 @@ import json
 from unittest import TestCase
 from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 import copy
-import microsetta_private_api.api.implementation
+import microsetta_private_api.api
 
 ACCT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 NOT_ACCT_ID = "12341234-1234-1234-1234-123412341234"
@@ -71,7 +71,7 @@ def client(request):
     with app.app.test_client() as client:
         request.cls.client = client
 
-        with patch("microsetta_private_api.api.implementation."
+        with patch("microsetta_private_api.api."
                    "verify_authrocket") as mock_verify:
             mock_verify.side_effect = mock_verify_func
             yield client
