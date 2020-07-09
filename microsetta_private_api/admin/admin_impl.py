@@ -156,6 +156,14 @@ def create_kits(body, token_info):
     return jsonify(kits), 201
 
 
+def get_account_events(account_id, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        events = EventLogRepo(t).get_events_by_account(account_id)
+        return jsonify([x.to_api() for x in events]), 200
+
+
 def send_email(body, token_info):
     validate_admin_access(token_info)
 

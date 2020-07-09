@@ -1172,6 +1172,20 @@ paths:
             application/json:
               schema:
                 type: object
+  '/admin/events/accounts/{account_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_account_events
+      tags:
+        - Admin
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '200':
+          description: Event log associated with the account
+          content:
+            application/json:
+              schema:
+                type: array
   '/admin/email':
     post:
       operationId: microsetta_private_api.admin.admin_impl.send_email
