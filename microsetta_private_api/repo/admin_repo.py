@@ -408,7 +408,7 @@ class AdminRepo(BaseRepo):
 
             existing_scan_date = row[0]
             new_scan_date = existing_scan_date
-            if scan_info['sample_status'] == 'sample-is-valid':
+            if scan_info['sample_status'] == 'valid':
                 new_scan_date = date.today()
 
             update_args = (
