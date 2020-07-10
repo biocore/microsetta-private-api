@@ -24,10 +24,6 @@ Install the JSON Web Tokens library with cryptography support:
 
 `pip install pyjwt[crypto]`
 
-Install redis:
-
-`pip install redis`
-
 Then install the microsetta-private-api in editable mode:
 
 `pip install -e .`
