@@ -1,8 +1,7 @@
 import uuid
 import string
 import random
-
-from datetime import date
+import datetime
 
 from microsetta_private_api.exceptions import RepoException
 
@@ -398,44 +397,34 @@ class AdminRepo(BaseRepo):
     def scan_barcode(self, sample_barcode, scan_info):
         with self._transaction.cursor() as cur:
 
+            # not actually using the result, just checking there IS one
+            # to ensure this is a valid barcode
             cur.execute(
-                "SELECT scan_date FROM barcodes.barcode WHERE barcode=%s",
+                "SELECT barcode FROM barcodes.barcode WHERE barcode=%s",
                 (sample_barcode,)
-            )
-            row = cur.fetchone()
-            if row is None:
-                raise NotFound("No such barcode: %s" % sample_barcode)
-
-            existing_scan_date = row[0]
-            new_scan_date = existing_scan_date
-            if scan_info['sample_status'] == 'valid':
-                new_scan_date = date.today()
-
-            update_args = (
-                scan_info['sample_status'],
-                scan_info['technician_notes'],
-                new_scan_date,
-                sample_barcode
-            )
-
-            cur.execute(
-                "UPDATE barcodes.barcode "
-                "SET "
-                "sample_status = %s, "
-                "technician_notes = %s, "
-                "scan_date = %s "
-                "WHERE "
-                "barcode = %s",
-                update_args
             )
 
             if cur.rowcount == 0:
                 raise NotFound("No such barcode: %s" % sample_barcode)
-
-            if cur.rowcount > 1:
+            elif cur.rowcount > 1:
                 # Note: This "can't" happen.
                 raise RepoException("ERROR: Multiple barcode entries would be "
-                                    "updated by scan, failing out")
+                                    "affected by scan; failing out")
+
+            # put a new row in the barcodes.barcode_scans table
+            scan_args = (
+                sample_barcode,
+                datetime.datetime.now(),
+                scan_info['sample_status'],
+                scan_info['technician_notes']
+            )
+
+            cur.execute(
+                "INSERT INTO barcodes.barcode_scan "
+                "(barcode, scan_datetime, sample_status, technician_notes) "
+                "VALUES (%s, %s, %s, %s)",
+                scan_args
+            )
 
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
         ids = self._get_ids_relevant_to_barcode(sample_barcode)
