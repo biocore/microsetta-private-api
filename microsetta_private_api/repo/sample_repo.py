@@ -11,22 +11,22 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 
 class SampleRepo(BaseRepo):
     PARTIAL_SQL = """SELECT
-ag_kit_barcodes.ag_kit_barcode_id,
-ag.ag_kit_barcodes.sample_date,
-ag.ag_kit_barcodes.sample_time,
-ag.ag_kit_barcodes.site_sampled,
-ag.ag_kit_barcodes.notes,
-ag.ag_kit_barcodes.barcode,
-latest_scan.scan_timestamp
-FROM ag.ag_kit_barcodes
-LEFT JOIN (
+ ag_kit_barcodes.ag_kit_barcode_id,
+ ag.ag_kit_barcodes.sample_date,
+ ag.ag_kit_barcodes.sample_time,
+ ag.ag_kit_barcodes.site_sampled,
+ ag.ag_kit_barcodes.notes,
+ ag.ag_kit_barcodes.barcode,
+ latest_scan.scan_timestamp
+ FROM ag.ag_kit_barcodes
+ LEFT JOIN (
     SELECT barcode, max(scan_timestamp) AS scan_timestamp
     FROM barcodes.barcode_scans
     GROUP BY barcode
-) latest_scan
-ON ag.ag_kit_barcodes.barcode = latest_scan.barcode
-LEFT JOIN ag.source
-ON ag.ag_kit_barcodes.source_id = ag.source.id"""
+ ) latest_scan
+ ON ag.ag_kit_barcodes.barcode = latest_scan.barcode
+ LEFT JOIN ag.source
+ ON ag.ag_kit_barcodes.source_id = ag.source.id"""
 
     def __init__(self, transaction):
         super().__init__(transaction)
@@ -90,8 +90,8 @@ ON ag.ag_kit_barcodes.source_id = ag.source.id"""
 
         sql = "{0}{1}".format(
             self.PARTIAL_SQL,
-            "WHERE "
-            "ag_kit_barcodes.ag_kit_barcode_id = %s")
+            " WHERE"
+            " ag_kit_barcodes.ag_kit_barcode_id = %s")
 
         with self._transaction.cursor() as cur:
             cur.execute(sql, (sample_id,))
@@ -101,10 +101,10 @@ ON ag.ag_kit_barcodes.source_id = ag.source.id"""
     def get_samples_by_source(self, account_id, source_id):
         sql = "{0}{1}".format(
             self.PARTIAL_SQL,
-            "WHERE "
-            "source.account_id = %s "
-            "AND source.id = %s "
-            "ORDER BY ag_kit_barcodes.barcode asc")
+            " WHERE"
+            " source.account_id = %s"
+            " AND source.id = %s"
+            " ORDER BY ag_kit_barcodes.barcode asc")
 
         with self._transaction.cursor() as cur:
             acct_repo = AccountRepo(self._transaction)
@@ -125,10 +125,10 @@ ON ag.ag_kit_barcodes.source_id = ag.source.id"""
     def get_sample(self, account_id, source_id, sample_id):
         sql = "{0}{1}".format(
             self.PARTIAL_SQL,
-            "WHERE "
-            "source.account_id = %s "
-            "AND source.id = %s "
-            "AND ag_kit_barcodes.ag_kit_barcode_id = %s ")
+            " WHERE"
+            " source.account_id = %s"
+            " AND source.id = %s"
+            " AND ag_kit_barcodes.ag_kit_barcode_id = %s ")
 
         with self._transaction.cursor() as cur:
             cur.execute(sql, (account_id, source_id, sample_id))
