@@ -10,23 +10,23 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 
 
 class SampleRepo(BaseRepo):
-    PARTIAL_SQL = """SELECT 
+    PARTIAL_SQL = """SELECT
 ag_kit_barcodes.ag_kit_barcode_id,
-ag.ag_kit_barcodes.sample_date, 
-ag.ag_kit_barcodes.sample_time, 
-ag.ag_kit_barcodes.site_sampled, 
-ag.ag_kit_barcodes.notes, 
-ag.ag_kit_barcodes.barcode, 
-latest_scan.scan_timestamp 
-FROM ag.ag_kit_barcodes 
+ag.ag_kit_barcodes.sample_date,
+ag.ag_kit_barcodes.sample_time,
+ag.ag_kit_barcodes.site_sampled,
+ag.ag_kit_barcodes.notes,
+ag.ag_kit_barcodes.barcode,
+latest_scan.scan_timestamp
+FROM ag.ag_kit_barcodes
 LEFT JOIN (
     SELECT barcode, max(scan_timestamp) AS scan_timestamp
     FROM barcodes.barcode_scans
     GROUP BY barcode
-) latest_scan 
+) latest_scan
 ON ag.ag_kit_barcodes.barcode = latest_scan.barcode
-LEFT JOIN ag.source 
-ON ag.ag_kit_barcodes.source_id = ag.source.id """
+LEFT JOIN ag.source
+ON ag.ag_kit_barcodes.source_id = ag.source.id"""
 
     def __init__(self, transaction):
         super().__init__(transaction)
@@ -115,7 +115,7 @@ ON ag.ag_kit_barcodes.source_id = ag.source.id """
             if source_repo.get_source(account_id, source_id) is None:
                 raise NotFound("No such source")
 
-            cur.execute(sql,(account_id, source_id))
+            cur.execute(sql, (account_id, source_id))
 
             samples = []
             for sample_row in cur.fetchall():

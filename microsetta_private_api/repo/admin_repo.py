@@ -430,7 +430,8 @@ class AdminRepo(BaseRepo):
 
             cur.execute(
                 "INSERT INTO barcodes.barcode_scans "
-                "(barcode_scan_id, barcode, scan_timestamp, sample_status, technician_notes) "
+                "(barcode_scan_id, barcode, scan_timestamp, "
+                "sample_status, technician_notes) "
                 "VALUES (%s, %s, %s, %s, %s)",
                 scan_args
             )

@@ -221,9 +221,8 @@ class AdminApiTests(TestCase):
         finally:
             delete_test_scan(new_scan_id)
 
-
     def test_scan_barcode_fail_invalid_status(self):
-        """Store info on new scan for valid barcode"""
+        """Refuse to store scan info with invalid sample_status"""
 
         new_scan_id = None
         try:
@@ -247,5 +246,3 @@ class AdminApiTests(TestCase):
             self.assertEqual(400, response.status_code)
         finally:
             delete_test_scan(new_scan_id)
-
-

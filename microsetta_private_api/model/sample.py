@@ -13,7 +13,7 @@ class Sample(ModelBase):
         self.notes = notes
         # NB: site may be None if sample not yet used
         self.site = site
-        # NB: _latest_scan_timestamp may be None if sample not yet returned to lab
+        # NB: _latest_scan_timestamp may be None if not yet returned to lab
         self._latest_scan_timestamp = latest_scan_timestamp
         self.sample_projects = sample_projects
 
@@ -58,4 +58,3 @@ class SampleInfo:
         self.notes = notes
         # NB: site may be None if sample not yet used
         self.site = site
-
