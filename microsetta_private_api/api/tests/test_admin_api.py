@@ -7,9 +7,21 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.api.tests.test_api import client, MOCK_HEADERS, \
-    ACCT_ID_1, ACCT_MOCK_ISS, ACCT_MOCK_SUB  # noqa
+    ACCT_ID_1, ACCT_MOCK_ISS, ACCT_MOCK_SUB, \
+    extract_last_id_from_location_header  # noqa
 
 DUMMY_PROJ_NAME = "test project"
+
+
+def delete_test_scan(new_scan_id):
+    if new_scan_id is not None:
+        with Transaction() as t:
+            with t.cursor() as cur:
+                cur.execute("DELETE FROM barcode_scans "
+                            "WHERE "
+                            "barcode_scan_id = %s",
+                            (new_scan_id,))
+            t.commit()
 
 
 def teardown_test_data():
@@ -180,15 +192,60 @@ class AdminApiTests(TestCase):
     def test_scan_barcode_success(self):
         """Store info on new scan for valid barcode"""
 
-        # create post input json with a nonsense date field
-        scan_info = {
-            "project_name": DUMMY_PROJ_NAME,
-            "is_microsetta": False,
-            "bank_samples": True,
-            "plating_start_date": "red"
-        }
-        input_json = json.dumps(scan_info)
+        new_scan_id = None
+        try:
+            # create post input json with a nonsense date field
+            scan_info = {
+                "sample_barcode": self.TEST_BARCODE,
+                "sample_status": "valid",
+                "technician_notes": ""
+            }
+            input_json = json.dumps(scan_info)
 
-        self.fail("test not implemented")
+            # execute project post (create)
+            response = self.client.post(
+                "/api/admin/scan/{0}".format(self.TEST_BARCODE),
+                content_type='application/json',
+                data=input_json,
+                headers=MOCK_HEADERS
+            )
+
+            # check for successful create response code
+            self.assertEqual(201, response.status_code)
+
+            returned_barcode = extract_last_id_from_location_header(response)
+            self.assertEqual(self.TEST_BARCODE, returned_barcode)
+
+            response_obj = json.loads(response.data)
+            new_scan_id = response_obj['scan_id']
+        finally:
+            delete_test_scan(new_scan_id)
+
+
+    def test_scan_barcode_fail_invalid_status(self):
+        """Store info on new scan for valid barcode"""
+
+        new_scan_id = None
+        try:
+            # create post input json with a nonsense date field
+            scan_info = {
+                "sample_barcode": self.TEST_BARCODE,
+                "sample_status": "happy",
+                "technician_notes": ""
+            }
+            input_json = json.dumps(scan_info)
+
+            # execute project post (create)
+            response = self.client.post(
+                "/api/admin/scan/{0}".format(self.TEST_BARCODE),
+                content_type='application/json',
+                data=input_json,
+                headers=MOCK_HEADERS
+            )
+
+            # check for successful create response code
+            self.assertEqual(400, response.status_code)
+        finally:
+            delete_test_scan(new_scan_id)
 
 

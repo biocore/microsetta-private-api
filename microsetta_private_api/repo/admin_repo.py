@@ -419,7 +419,9 @@ class AdminRepo(BaseRepo):
                                     "affected by scan; failing out")
 
             # put a new row in the barcodes.barcode_scans table
+            new_uuid = str(uuid.uuid4())
             scan_args = (
+                new_uuid,
                 sample_barcode,
                 datetime.datetime.now(),
                 scan_info['sample_status'],
@@ -428,10 +430,12 @@ class AdminRepo(BaseRepo):
 
             cur.execute(
                 "INSERT INTO barcodes.barcode_scans "
-                "(barcode, scan_timestamp, sample_status, technician_notes) "
-                "VALUES (%s, %s, %s, %s)",
+                "(barcode_scan_id, barcode, scan_timestamp, sample_status, technician_notes) "
+                "VALUES (%s, %s, %s, %s, %s)",
                 scan_args
             )
+
+            return new_uuid
 
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
         ids = self._get_ids_relevant_to_barcode(sample_barcode)

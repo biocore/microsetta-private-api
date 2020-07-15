@@ -45,12 +45,13 @@ def search_email(token_info, email):
 def scan_barcode(token_info, sample_barcode, body):
     validate_admin_access(token_info)
 
+    scan_id = None
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-        admin_repo.scan_barcode(sample_barcode, body)
+        scan_id = admin_repo.scan_barcode(sample_barcode, body)
         t.commit()
 
-    response = flask.Response()
+    response = jsonify({"scan_id": scan_id})
     response.status_code = 201
     response.headers['Location'] = '/api/admin/search/samples/%s' % \
                                    sample_barcode
