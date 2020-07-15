@@ -4,7 +4,7 @@ from microsetta_private_api.model.model_base import ModelBase
 
 class Sample(ModelBase):
     def __init__(self, sample_id, datetime_collected, site, notes, barcode,
-                 scan_date, sample_projects):
+                 latest_scan_timestamp, sample_projects):
         self.id = sample_id
         # NB: datetime_collected may be None if sample not yet used
         self.datetime_collected = datetime_collected
@@ -13,19 +13,19 @@ class Sample(ModelBase):
         self.notes = notes
         # NB: site may be None if sample not yet used
         self.site = site
-        # NB: _scan_date may be None if sample not yet returned to lab
-        self._scan_date = scan_date
+        # NB: _latest_scan_timestamp may be None if sample not yet returned to lab
+        self._latest_scan_timestamp = latest_scan_timestamp
         self.sample_projects = sample_projects
 
     @property
     def is_locked(self):
         # If a sample has been scanned into the system, that means its
         # attributes can't be changed
-        return self._scan_date is not None
+        return self._latest_scan_timestamp is not None
 
     @classmethod
     def from_db(cls, sample_id, date_collected, time_collected,
-                site, notes, barcode, scan_date, sample_projects):
+                site, notes, barcode, latest_scan_timestamp, sample_projects):
         datetime_collected = None
         # NB a sample may NOT have date and time collected if it has been sent
         # out but not yet used
@@ -33,7 +33,7 @@ class Sample(ModelBase):
             datetime_collected = datetime.combine(date_collected,
                                                   time_collected)
         return cls(sample_id, datetime_collected, site, notes, barcode,
-                   scan_date, sample_projects)
+                   latest_scan_timestamp, sample_projects)
 
     def to_api(self):
         return {
@@ -58,3 +58,4 @@ class SampleInfo:
         self.notes = notes
         # NB: site may be None if sample not yet used
         self.site = site
+

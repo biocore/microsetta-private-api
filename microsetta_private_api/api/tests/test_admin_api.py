@@ -48,6 +48,7 @@ def setup_test_data():
 
 @pytest.mark.usefixtures("client")
 class AdminApiTests(TestCase):
+    TEST_BARCODE = '000000001'
 
     def setUp(self):
         app = microsetta_private_api.server.build_app()
@@ -175,3 +176,19 @@ class AdminApiTests(TestCase):
         )
 
         self.assertEqual(400, response.status_code)
+
+    def test_scan_barcode_success(self):
+        """Store info on new scan for valid barcode"""
+
+        # create post input json with a nonsense date field
+        scan_info = {
+            "project_name": DUMMY_PROJ_NAME,
+            "is_microsetta": False,
+            "bank_samples": True,
+            "plating_start_date": "red"
+        }
+        input_json = json.dumps(scan_info)
+
+        self.fail("test not implemented")
+
+

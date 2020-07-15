@@ -1020,7 +1020,7 @@ paths:
                          "invalid-no-account",
                          "invalid-no-collection-info",
                          "invalid-inconsistencies",
-                          "received-unknown-validity"]
+                         "received-unknown-validity"]
                   example: "invalid-inconsistencies"
                 technician_notes:
                   type: string

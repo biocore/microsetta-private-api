@@ -10,48 +10,26 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 
 
 class SampleRepo(BaseRepo):
+    PARTIAL_SQL = """SELECT 
+ag_kit_barcodes.ag_kit_barcode_id,
+ag.ag_kit_barcodes.sample_date, 
+ag.ag_kit_barcodes.sample_time, 
+ag.ag_kit_barcodes.site_sampled, 
+ag.ag_kit_barcodes.notes, 
+ag.ag_kit_barcodes.barcode, 
+latest_scan.scan_timestamp 
+FROM ag.ag_kit_barcodes 
+LEFT JOIN (
+    SELECT barcode, max(scan_timestamp) AS scan_timestamp
+    FROM barcodes.barcode_scans
+    GROUP BY barcode
+) latest_scan 
+ON ag.ag_kit_barcodes.barcode = latest_scan.barcode
+LEFT JOIN ag.source 
+ON ag.ag_kit_barcodes.source_id = ag.source.id """
+
     def __init__(self, transaction):
         super().__init__(transaction)
-
-    def get_samples_by_source(self, account_id, source_id):
-        with self._transaction.cursor() as cur:
-            acct_repo = AccountRepo(self._transaction)
-            if acct_repo.get_account(account_id) is None:
-                raise NotFound("No such account")
-
-            source_repo = SourceRepo(self._transaction)
-            if source_repo.get_source(account_id, source_id) is None:
-                raise NotFound("No such source")
-
-            cur.execute(
-                "SELECT "
-                "ag_kit_barcodes.ag_kit_barcode_id, "
-                "ag_kit_barcodes.sample_date, "
-                "ag_kit_barcodes.sample_time, "
-                "ag_kit_barcodes.site_sampled, "
-                "ag_kit_barcodes.notes, "
-                "ag_kit_barcodes.barcode, "
-                "barcode.scan_date "
-                "FROM ag_kit_barcodes "
-                "LEFT JOIN barcode "
-                "USING (barcode) "
-                "LEFT JOIN source "
-                "ON ag_kit_barcodes.source_id = source.id "
-                "WHERE "
-                "source.account_id = %s AND "
-                "source.id = %s "
-                "ORDER BY barcode.barcode asc",
-                (account_id, source_id)
-            )
-
-            samples = []
-            for sample_row in cur.fetchall():
-                barcode = sample_row[5]
-                sample_projects = self._retrieve_projects(barcode)
-                s = Sample.from_db(*sample_row,
-                                   sample_projects)
-                samples.append(s)
-            return samples
 
     def _retrieve_projects(self, sample_barcode):
         with self._transaction.cursor() as cur:
@@ -76,74 +54,86 @@ class SampleRepo(BaseRepo):
             sample_projects = [project[0] for project in project_rows]
             return sample_projects
 
+    def _create_sample_obj(self, sample_row):
+        if sample_row is None:
+            return None
+
+        sample_barcode = sample_row[5]
+        sample_projects = self._retrieve_projects(sample_barcode)
+
+        return Sample.from_db(*sample_row, sample_projects)
+
+    # TODO: I'm still not entirely happy with the linking between samples and
+    #  sources.  The new source_id is direct (and required for environmental
+    #  samples, which have no surveys) but samples can also link to
+    #  surveys which then may link to sources.
+    #  Having multiple pathways to link in the db is a recipe for badness.
+    #  Should something be done with the source_barcodes_surveys table? (which
+    #  itself is required for linking samples to surveys!)
+    def _update_sample_association(self, sample_id, source_id):
+        with self._transaction.cursor() as cur:
+            existing_sample = self._get_sample_by_id(sample_id)
+            if existing_sample.is_locked:
+                raise RepoException(
+                    "Sample edits locked: Sample already received")
+
+            cur.execute("UPDATE "
+                        "ag_kit_barcodes "
+                        "SET "
+                        "source_id = %s "
+                        "WHERE "
+                        "ag_kit_barcode_id = %s",
+                        (source_id, sample_id))
+
     def _get_sample_by_id(self, sample_id):
         """ Do not use from api layer, you must validate account and source."""
+
+        sql = "{0}{1}".format(
+            self.PARTIAL_SQL,
+            "WHERE "
+            "ag_kit_barcodes.ag_kit_barcode_id = %s")
+
         with self._transaction.cursor() as cur:
-            cur.execute(
-                "SELECT "
-                "ag.ag_kit_barcodes.sample_date, "
-                "ag.ag_kit_barcodes.sample_time, "
-                "ag.ag_kit_barcodes.site_sampled, "
-                "ag.ag_kit_barcodes.notes, "
-                "barcodes.barcode.barcode, "
-                "barcodes.barcode.scan_date "
-                "FROM "
-                "ag.ag_kit_barcodes "
-                "LEFT JOIN barcodes.barcode "
-                "ON "
-                "ag.ag_kit_barcodes.barcode = barcodes.barcode.barcode "
-                "LEFT JOIN source "
-                "ON "
-                "ag.ag_kit_barcodes.source_id = source.id "
-                "WHERE "
-                "ag_kit_barcodes.ag_kit_barcode_id = %s",
-                (sample_id,))
-
+            cur.execute(sql, (sample_id,))
             sample_row = cur.fetchone()
-            if sample_row is None:
-                return None
+            return self._create_sample_obj(sample_row)
 
-            sample_barcode = sample_row[4]
-            sample_projects = self._retrieve_projects(sample_barcode)
+    def get_samples_by_source(self, account_id, source_id):
+        sql = "{0}{1}".format(
+            self.PARTIAL_SQL,
+            "WHERE "
+            "source.account_id = %s "
+            "AND source.id = %s "
+            "ORDER BY ag_kit_barcodes.barcode asc")
 
-            return Sample.from_db(sample_id,
-                                  *sample_row,
-                                  sample_projects)
+        with self._transaction.cursor() as cur:
+            acct_repo = AccountRepo(self._transaction)
+            if acct_repo.get_account(account_id) is None:
+                raise NotFound("No such account")
+
+            source_repo = SourceRepo(self._transaction)
+            if source_repo.get_source(account_id, source_id) is None:
+                raise NotFound("No such source")
+
+            cur.execute(sql,(account_id, source_id))
+
+            samples = []
+            for sample_row in cur.fetchall():
+                samples.append(self._create_sample_obj(sample_row))
+            return samples
 
     def get_sample(self, account_id, source_id, sample_id):
+        sql = "{0}{1}".format(
+            self.PARTIAL_SQL,
+            "WHERE "
+            "source.account_id = %s "
+            "AND source.id = %s "
+            "AND ag_kit_barcodes.ag_kit_barcode_id = %s ")
+
         with self._transaction.cursor() as cur:
-            cur.execute(
-                "SELECT "
-                "ag.ag_kit_barcodes.sample_date, "
-                "ag.ag_kit_barcodes.sample_time, "
-                "ag.ag_kit_barcodes.site_sampled, "
-                "ag.ag_kit_barcodes.notes, "
-                "barcodes.barcode.barcode, "
-                "barcodes.barcode.scan_date "
-                "FROM "
-                "ag.ag_kit_barcodes "
-                "LEFT JOIN barcodes.barcode "
-                "ON "
-                "ag.ag_kit_barcodes.barcode = barcodes.barcode.barcode "
-                "LEFT JOIN source "
-                "ON "
-                "ag.ag_kit_barcodes.source_id = source.id "
-                "WHERE "
-                "ag_kit_barcodes.ag_kit_barcode_id = %s AND "
-                "source.id = %s AND "
-                "source.account_id = %s",
-                (sample_id, source_id, account_id))
-
+            cur.execute(sql, (account_id, source_id, sample_id))
             sample_row = cur.fetchone()
-            if sample_row is None:
-                return None
-
-            sample_barcode = sample_row[4]
-            sample_projects = self._retrieve_projects(sample_barcode)
-
-            return Sample.from_db(sample_id,
-                                  *sample_row,
-                                  sample_projects)
+            return self._create_sample_obj(sample_row)
 
     def update_info(self, account_id, source_id, sample_info):
         """
@@ -230,26 +220,3 @@ class SampleRepo(BaseRepo):
 
         # And detach the sample from the source
         self._update_sample_association(sample_id, None)
-
-    # TODO: I'm still not entirely happy with the linking between samples and
-    #  sources.  The new source_id is direct (and required for environmental
-    #  samples, which have no surveys) but samples can also link to
-    #  surveys which then may link to sources.
-    #  Having multiple pathways to link in the db is a recipe for badness.
-    #  Should something be done with the source_barcodes_surveys table? (which
-    #  itself is required for linking samples to surveys!)
-    def _update_sample_association(self, sample_id, source_id):
-        with self._transaction.cursor() as cur:
-
-            existing_sample = self._get_sample_by_id(sample_id)
-            if existing_sample.is_locked:
-                raise RepoException(
-                    "Sample edits locked: Sample already received")
-
-            cur.execute("UPDATE "
-                        "ag_kit_barcodes "
-                        "SET "
-                        "source_id = %s "
-                        "WHERE "
-                        "ag_kit_barcode_id = %s",
-                        (source_id, sample_id))
