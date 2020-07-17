@@ -46,7 +46,7 @@ class AdminRepo(BaseRepo):
 
     def retrieve_diagnostics_by_barcode(self, sample_barcode, grab_kit=True):
         def _rows_to_dicts_list(rows):
-            return [{k: v for k, v in x.items()} for x in rows]
+            return [dict(x) for x in rows]
 
         with self._transaction.dict_cursor() as cur:
             ids = self._get_ids_relevant_to_barcode(sample_barcode)
@@ -112,7 +112,7 @@ class AdminRepo(BaseRepo):
                         (sample_barcode,))
             barcode_row = cur.fetchone()
             if barcode_row is not None:
-                barcode_info = {k: v for k, v in barcode_row.items()}
+                barcode_info = dict(barcode_row)
 
             if account is None and source is None and sample is None and \
                     len(projects_info) == 0 and len(scans_info) == 0 \

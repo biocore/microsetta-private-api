@@ -44,7 +44,6 @@ def search_email(token_info, email):
 def scan_barcode(token_info, sample_barcode, body):
     validate_admin_access(token_info)
 
-    scan_id = None
     with Transaction() as t:
         admin_repo = AdminRepo(t)
         scan_id = admin_repo.scan_barcode(sample_barcode, body)
