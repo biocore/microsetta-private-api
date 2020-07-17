@@ -23,9 +23,10 @@ class EventSubtype(Enum):
     EMAIL_SAMPLE_RECEIVED_PLATED = "sample_received_plated"
     # indicate a previously banked sample is now being plated
     EMAIL_BANKED_SAMPLE_NOW_PLATED = "banked_sample_plated"
-    # indicate if there is a problem with a sample
-    # (messaging should be tailored to the problem)
-    EMAIL_SAMPLE_RECEIVED_WITH_PROBLEMS = "sample_received_with_problems"
+    # Indicate a sample was received but doesn't match the information provided
+    EMAIL_INCORRECT_SAMPLE_TYPE = "incorrect_sample_type"
+    # Indicate a sample was received but necessary information was not provided
+    EMAIL_MISSING_SAMPLE_INFO = "missing_sample_info"
 
 
 class LogEvent(ModelBase):

@@ -6,8 +6,9 @@ from microsetta_private_api.model.account import Account, Address
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
-from microsetta_private_api.api.tests.test_api import client, MOCK_HEADERS, \
-    ACCT_ID_1, ACCT_MOCK_ISS, ACCT_MOCK_SUB  # noqa
+from microsetta_private_api.api.tests.test_api import client  # noqa Screw you flake8, we use this by name.
+from microsetta_private_api.api.tests.test_api import MOCK_HEADERS, \
+    ACCT_ID_1, ACCT_MOCK_ISS, ACCT_MOCK_SUB
 
 DUMMY_PROJ_NAME = "test project"
 
