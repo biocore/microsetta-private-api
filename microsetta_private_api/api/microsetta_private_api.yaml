@@ -1015,13 +1015,13 @@ paths:
                   # NB: there is no "not-received" option
                   # because how can one be scanning a barcode
                   # one didn't receive?
-                  enum: ["valid",
-                         "invalid-no-source",
-                         "invalid-no-account",
-                         "invalid-no-collection-info",
-                         "invalid-inconsistencies",
+                  enum: ["sample-is-valid",
+                         "no-associated-consent",
+                         "no-registered-account",
+                         "no-collection-info",
+                         "sample-has-inconsistencies",
                          "received-unknown-validity"]
-                  example: "invalid-inconsistencies"
+                  example: "sample-has-inconsistencies"
                 technician_notes:
                   type: string
                   example: "Sample Processing Complete!"

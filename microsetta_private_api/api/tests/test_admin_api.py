@@ -197,7 +197,7 @@ class AdminApiTests(TestCase):
             # create post input json with a nonsense date field
             scan_info = {
                 "sample_barcode": self.TEST_BARCODE,
-                "sample_status": "valid",
+                "sample_status": "sample-is-valid",
                 "technician_notes": ""
             }
             input_json = json.dumps(scan_info)

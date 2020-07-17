@@ -23,7 +23,7 @@ AND sample_status IS null AND scan_date IS NOT null;
 -- case 2: barcode is part of AGP and linked to an account
 -- by way of a source but is missing (at least some) collection info
 UPDATE barcodes.barcode
-SET sample_status = 'invalid-no-collection-info'
+SET sample_status = 'no-collection-info'
 FROM ag.ag_kit_barcodes, ag.source, ag.account
 WHERE barcode.barcode = ag_kit_barcodes.barcode
 AND ag_kit_barcodes.source_id = ag.source.id 
@@ -35,7 +35,7 @@ AND sample_status IS null AND scan_date IS NOT null;
 -- (by being part of a kit used to create the account)
 -- but is NOT linked to a source; collection info not checked.
 UPDATE barcodes.barcode
-SET sample_status = 'invalid-no-source'
+SET sample_status = 'no-associated-consent'
 FROM ag.ag_kit_barcodes, ag.account
 WHERE barcode.barcode = ag_kit_barcodes.barcode
 AND barcodes.barcode.kit_id = ag.account.created_with_kit_id
@@ -45,7 +45,7 @@ AND sample_status IS null AND scan_date IS NOT null;
 -- case 4: barcode is part of AGP but not linked to an account
 -- nor a source; collection info not checked.
 UPDATE barcodes.barcode
-SET sample_status = 'invalid-no-account'
+SET sample_status = 'no-registered-account'
 FROM ag.ag_kit_barcodes
 WHERE barcode.barcode = ag_kit_barcodes.barcode
 AND source_id IS null
@@ -85,20 +85,8 @@ SET sample_status = null
 WHERE sample_status = 'not-received';
 
 UPDATE barcodes.barcode
-SET sample_status = 'valid'
-WHERE sample_status = 'sample-is-valid';
-
-UPDATE barcodes.barcode
-SET sample_status = 'invalid-no-account'
-WHERE sample_status = 'no-registered-account';
-
-UPDATE barcodes.barcode
-SET sample_status = 'invalid-no-source'
+SET sample_status = 'no-associated-source'
 WHERE sample_status = 'no-associated-consent';
-
-UPDATE barcodes.barcode
-SET sample_status = 'invalid-inconsistencies'
-WHERE sample_status = 'sample-has-inconsistencies';
 
 -- create table barcodes.barcode_scans
 CREATE TABLE barcodes.barcode_scans
