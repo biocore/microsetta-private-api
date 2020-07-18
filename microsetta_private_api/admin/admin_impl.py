@@ -1,6 +1,4 @@
 import uuid
-
-import flask
 from flask import jsonify
 import datetime
 

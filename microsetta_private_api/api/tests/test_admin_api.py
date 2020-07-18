@@ -8,10 +8,7 @@ from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.api.tests.test_api import client, MOCK_HEADERS, \
     ACCT_ID_1, ACCT_MOCK_ISS, ACCT_MOCK_SUB, \
-    extract_last_id_from_location_header  # noqa
-from microsetta_private_api.api.tests.test_api import client  # noqa Screw you flake8, we use this by name.
-from microsetta_private_api.api.tests.test_api import MOCK_HEADERS, \
-    ACCT_ID_1, ACCT_MOCK_ISS, ACCT_MOCK_SUB
+    extract_last_id_from_location_header  # noqa "client" IS used, by name
 
 DUMMY_PROJ_NAME = "test project"
 
