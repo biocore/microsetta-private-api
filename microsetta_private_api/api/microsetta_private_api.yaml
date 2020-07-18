@@ -237,8 +237,6 @@ paths:
                     type: string
                   obtainer_name:
                     type: string
-                  consent_your_child:
-                    type: string
                   assent_13_17:
                     type: string
                   text_i_have_read_1:
