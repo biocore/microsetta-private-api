@@ -33,8 +33,8 @@ class MockTemplate:
     def __init__(self, content):
         self.content = content
 
-    def render(self, **kwargs):
-        return self.content + "|" + json.dumps(sorted(kwargs.items()))
+    def render(self, template_args):
+        return self.content + "|" + json.dumps(sorted(template_args.items()))
 
 
 class MockMessage:

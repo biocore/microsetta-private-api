@@ -16,7 +16,7 @@ class SendEmail:
     reply_to = 'microsetta@ucsd.edu'
     connection = None
 
-    @staticmethod
+    @classmethod
     def _connect(cls):
         """Establish a SMTP connection"""
         connection = smtplib.SMTP(cls.host, port=cls.port)
@@ -67,8 +67,8 @@ class SendEmail:
         message['Reply-To'] = cls.reply_to
         message['Subject'] = email_template.subject
 
-        plain = email_template.plain.render(**email_template_args or {})
-        html = email_template.html.render(**email_template_args or {})
+        plain = email_template.plain.render(email_template_args or {})
+        html = email_template.html.render(email_template_args or {})
 
         first = MIMEText(plain, "plain")
         second = MIMEText(html, "html")
