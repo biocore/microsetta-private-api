@@ -103,18 +103,20 @@ class AdminTests(TestCase):
             #  these fixed ones
             admin_repo = AdminRepo(t)
             diag = admin_repo.retrieve_diagnostics_by_barcode('000038448')
-            self.assertIsNotNone(diag['barcode'])
+            self.assertIsNotNone(diag['barcode_info'])
             self.assertIsNone(diag['account'])
             self.assertIsNone(diag['source'])
             self.assertIsNotNone(diag['sample'])
-            self.assertGreater(len(diag['barcode_info']['projects']), 0)
+            self.assertGreater(len(diag['projects_info']), 0)
+            self.assertEqual(len(diag['scans_info']), 0)
 
             diag = admin_repo.retrieve_diagnostics_by_barcode('000033903')
-            self.assertIsNotNone(diag['barcode'])
+            self.assertIsNotNone(diag['barcode_info'])
             self.assertIsNone(diag['account'])
             self.assertIsNone(diag['source'])
             self.assertIsNone(diag['sample'])
-            self.assertGreater(len(diag['barcode_info']['projects']), 0)
+            self.assertGreater(len(diag['projects_info']), 0)
+            self.assertEqual(len(diag['scans_info']), 0)
 
             # Uhh, should this return a 404 not found or just an empty
             # diagnostic object...?
@@ -230,7 +232,7 @@ class AdminTests(TestCase):
             admin_repo = AdminRepo(t)
 
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            prestatus = diag['barcode_info']['status']
+            self.assertEqual(len(diag['scans_info']), 0)
 
             admin_repo.scan_barcode(
                 TEST_BARCODE,
@@ -241,12 +243,10 @@ class AdminTests(TestCase):
             )
 
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            self.assertEqual(diag['barcode_info']['technician_notes'],
-                             TEST_NOTES)
-            self.assertEqual(diag['barcode_info']['sample_status'],
-                             TEST_STATUS)
-            self.assertEqual(diag['barcode_info']['status'],
-                             prestatus)
+            self.assertEqual(len(diag['scans_info']), 1)
+            first_scan = diag['scans_info'][0]
+            self.assertEqual(first_scan['technician_notes'], TEST_NOTES)
+            self.assertEqual(first_scan['sample_status'], TEST_STATUS)
 
             with self.assertRaises(NotFound):
                 admin_repo.scan_barcode(
