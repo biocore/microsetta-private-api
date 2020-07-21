@@ -942,13 +942,13 @@ INSERT INTO barcodes.barcode_scans (barcode, scan_timestamp, sample_status, tech
 VALUES ('X00164586', '6/3/20', 'no-registered-account', '');
 
 INSERT INTO barcodes.barcode_scans (barcode, scan_timestamp, sample_status, technician_notes)
-VALUES ('X00172434', '7/2/20', 'no-registered-account', 'participant sent note with paper consent --> rubber banded with card + put on Dom's desk');
+VALUES ('X00172434', '7/2/20', 'no-registered-account', 'participant sent note with paper consent --> rubber banded with card + put on Dom\'s desk');
 
 INSERT INTO barcodes.barcode_scans (barcode, scan_timestamp, sample_status, technician_notes)
 VALUES ('X00164585', '6/3/20', 'no-registered-account', '');
 
 INSERT INTO barcodes.barcode_scans (barcode, scan_timestamp, sample_status, technician_notes)
-VALUES ('X00172433', '7/2/20', 'no-registered-account', 'participant sent note with paper consent --> rubber banded with card + put on Dom's desk');
+VALUES ('X00172433', '7/2/20', 'no-registered-account', 'participant sent note with paper consent --> rubber banded with card + put on Dom\'s desk');
 
 INSERT INTO barcodes.barcode_scans (barcode, scan_timestamp, sample_status, technician_notes)
 VALUES ('X00168691', '6/3/20', 'no-registered-account', '');
@@ -957,7 +957,7 @@ INSERT INTO barcodes.barcode_scans (barcode, scan_timestamp, sample_status, tech
 VALUES ('X00169556', '6/2/20', 'no-registered-account', '');
 
 INSERT INTO barcodes.barcode_scans (barcode, scan_timestamp, sample_status, technician_notes)
-VALUES ('X00172432', '7/2/20', 'no-registered-account', 'participant sent note with paper consent --> rubber banded with card + put on Dom's desk');
+VALUES ('X00172432', '7/2/20', 'no-registered-account', 'participant sent note with paper consent --> rubber banded with card + put on Dom\'s desk');
 
 INSERT INTO barcodes.barcode_scans (barcode, scan_timestamp, sample_status, technician_notes)
 VALUES ('X00169297', '6/12/20', 'no-associated-source', '');
