@@ -1063,7 +1063,7 @@ paths:
                   # because how can one be scanning a barcode
                   # one didn't receive?
                   enum: ["sample-is-valid",
-                         "no-associated-consent",
+                         "no-associated-source",
                          "no-registered-account",
                          "no-collection-info",
                          "sample-has-inconsistencies",
