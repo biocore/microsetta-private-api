@@ -91,7 +91,10 @@ class AdminRepo(BaseRepo):
             projects_info = _rows_to_dicts_list(cur.fetchall())
 
             # get scans_info list for this barcode
-            cur.execute("SELECT scan_timestamp, sample_status, "
+            # NB: ORDER MATTERS here. Do not change the order unless you
+            # are positive you know what already depends on it.
+            cur.execute("SELECT barcode_scan_id, barcode, "
+                        "scan_timestamp, sample_status, "
                         "technician_notes "
                         "FROM barcodes.barcode_scans "
                         "WHERE barcode=%s "
@@ -99,6 +102,12 @@ class AdminRepo(BaseRepo):
                         (sample_barcode,))
             # this can't be None; worst-case is an empty list
             scans_info = _rows_to_dicts_list(cur.fetchall())
+
+            latest_scan = None
+            if len(scans_info)>0:
+                # NB: the correctness of this depends on the scans (queried
+                # right above) being in ascending order by timestamp
+                latest_scan = scans_info[len(scans_info)-1]
 
             # get details about this barcode itself; CAN be None if the
             # barcode doesn't exist in db
@@ -123,9 +132,10 @@ class AdminRepo(BaseRepo):
                 "account": account,
                 "source": source,
                 "sample": sample,
-                "projects_info": projects_info,
+                "latest_scan": latest_scan,
                 "scans_info": scans_info,
-                "barcode_info": barcode_info
+                "barcode_info": barcode_info,
+                "projects_info": projects_info
             }
 
             if grab_kit:
