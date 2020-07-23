@@ -19,6 +19,7 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.model.sample import Sample, SampleInfo
+from microsetta_private_api.model.address import Address
 from microsetta_private_api.api.tests.test_integration import \
     _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
 
@@ -304,9 +305,11 @@ def delete_dummy_answered_surveys_from_source_with_t(
 
 def create_dummy_acct(create_dummy_1=True,
                       iss=ACCT_MOCK_ISS,
-                      sub=ACCT_MOCK_SUB):
+                      sub=ACCT_MOCK_SUB,
+                      dummy_is_admin=False):
     with Transaction() as t:
-        dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub)
+        dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub,
+                                                  dummy_is_admin)
         t.commit()
 
     return dummy_acct_id
@@ -336,7 +339,8 @@ def create_dummy_source(name, source_type, content_dict, create_dummy_1=True,
 
 def _create_dummy_acct_from_t(t, create_dummy_1=True,
                               iss=ACCT_MOCK_ISS,
-                              sub=ACCT_MOCK_SUB):
+                              sub=ACCT_MOCK_SUB,
+                              dummy_is_admin=False):
     if create_dummy_1:
         dummy_acct_id = ACCT_ID_1
         dict_to_copy = DUMMY_ACCT_INFO
@@ -347,10 +351,29 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
     input_obj = copy.deepcopy(dict_to_copy)
     input_obj["id"] = dummy_acct_id
     acct_repo = AccountRepo(t)
-    acct_repo.create_account(Account.from_dict(input_obj,
-                                               iss,
-                                               sub))
 
+    if dummy_is_admin:
+        acct = Account(
+            input_obj["id"],
+            input_obj['email'],
+            "admin",
+            iss,
+            sub,
+            input_obj['first_name'],
+            input_obj['last_name'],
+            Address(
+                input_obj['address']['street'],
+                input_obj['address']['city'],
+                input_obj['address']['state'],
+                input_obj['address']['post_code'],
+                input_obj['address']['country_code']
+            ),
+            input_obj['kit_name']
+        )
+    else:
+        acct = Account.from_dict(input_obj, iss, sub)
+
+    acct_repo.create_account(acct)
     return dummy_acct_id
 
 
