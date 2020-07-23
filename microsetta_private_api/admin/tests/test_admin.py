@@ -128,7 +128,7 @@ class AdminTests(TestCase):
             "barcode_scan_id": first_scan_id,
             "barcode": test_barcode,
             "scan_timestamp": make_tz_datetime(2017, 7, 16),
-            "sample_status":'no-registered-account',
+            "sample_status": 'no-registered-account',
             "technician_notes": "huh?"
         }
 
@@ -144,7 +144,7 @@ class AdminTests(TestCase):
             add_dummy_scan(second_scan)
 
             with Transaction() as t:
-                # TODO FIXME HACK:  Need to build mock barcodes rather than using
+                # TODO FIXME HACK: Build mock barcodes rather than using
                 #  these fixed ones
                 admin_repo = AdminRepo(t)
                 diag = admin_repo.retrieve_diagnostics_by_barcode(test_barcode)

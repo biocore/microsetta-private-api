@@ -104,7 +104,7 @@ class AdminRepo(BaseRepo):
             scans_info = _rows_to_dicts_list(cur.fetchall())
 
             latest_scan = None
-            if len(scans_info)>0:
+            if len(scans_info) > 0:
                 # NB: the correctness of this depends on the scans (queried
                 # right above) being in ascending order by timestamp
                 latest_scan = scans_info[len(scans_info)-1]
