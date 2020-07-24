@@ -282,7 +282,8 @@ def delete_dummy_accts():
                 # Now dissociate all the samples from this source
                 for curr_sample_id in sample_ids:
                     sample_repo.dissociate_sample(curr_acct_id, curr_source.id,
-                                                  curr_sample_id)
+                                                  curr_sample_id,
+                                                  override_locked=True)
 
                 # Finally, delete the source
                 source_repo.delete_source(curr_acct_id, curr_source.id)
@@ -1464,14 +1465,6 @@ class SampleTests(ApiTests):
         )
         self.assertEqual(200, get_resp.status_code)
         self.assertEqual(get_resp.json['sample_site'], 'Saliva')
-
-        # delete as admin so that tearDown doesn't require admin
-        delete_resp = self.client.delete(
-            '%s?%s' % (sample_url, self.default_lang_querystring),
-            headers=make_headers(FAKE_TOKEN_ADMIN))
-
-        # verify the delete was successful
-        self.assertEqual(204, delete_resp.status_code)
 
     def test_dissociate_sample_from_source_success(self):
         dummy_acct_id, dummy_source_id = create_dummy_source(
