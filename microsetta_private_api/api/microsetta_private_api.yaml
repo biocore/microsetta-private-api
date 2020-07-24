@@ -8,7 +8,7 @@ servers:
 paths:
   '/accounts':
     get:
-      operationId: microsetta_private_api.api.implementation.find_accounts_for_login
+      operationId: microsetta_private_api.api.find_accounts_for_login
       tags:
         - Account
       summary: Retrieve an array of accounts accessible to the provided login
@@ -29,7 +29,7 @@ paths:
         '403':
           $ref: '#/components/responses/403Forbidden'
     post:
-      operationId: microsetta_private_api.api.implementation.register_account
+      operationId: microsetta_private_api.api.register_account
       tags:
         - Account
       summary: Register new user account
@@ -71,7 +71,7 @@ paths:
 
   '/accounts/legacies':
     post:
-      operationId: microsetta_private_api.api.implementation.claim_legacy_acct
+      operationId: microsetta_private_api.api.claim_legacy_acct
       tags:
         - Account
       summary: Claim any legacy accounts for this user's email and return an array of them
@@ -96,7 +96,7 @@ paths:
 
   '/accounts/{account_id}':
     get:
-      operationId: microsetta_private_api.api.implementation.read_account
+      operationId: microsetta_private_api.api.read_account
       tags:
         - Account
       summary: Get user account information
@@ -118,7 +118,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     put:
-      operationId: microsetta_private_api.api.implementation.update_account
+      operationId: microsetta_private_api.api.update_account
       tags:
         - Account
       summary: Update user account information
@@ -149,7 +149,7 @@ paths:
 
   '/accounts/{account_id}/email_match':
     get:
-      operationId: microsetta_private_api.api.implementation.check_email_match
+      operationId: microsetta_private_api.api.check_email_match
       tags:
         - Account
       summary: Check if email on microsetta account matches email on authentication account
@@ -177,7 +177,7 @@ paths:
 
   '/accounts/{account_id}/consent':
     get:
-      operationId: microsetta_private_api.api.implementation.render_consent_doc
+      operationId: microsetta_private_api.api.render_consent_doc
       tags:
         - Consent
       summary: Retrieve personalized consent form for display to user
@@ -185,7 +185,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/language_tag'
-        - $ref: '#/components/parameters/consent_post_url'
       responses:
         '200':
           description: Consent form
@@ -194,15 +193,63 @@ paths:
               schema:
                 type: object
                 properties:
-                  consent_html:
+                  add_human_title:
                     type: string
-                    example: "<html><body>Consent form here</body></html>"
+                    example: Add a New Human Source
+                  sel_age_range:
+                    type: string
+                    example: Select age range of participant
+                  age_0_6:
+                    type: string
+                  age_7_12:
+                    type: string
+                  age_12_17:
+                    type: string
+                  age_18:
+                    type: string
+                  consent_your_child:
+                    type: string
+                  participation_agreement:
+                    type: string
+                  exhibit_a:
+                    type: string
+                  bill_of_rights:
+                    type: string
+                  text_i_have_read_parent:
+                    type: string
+                  participant_name:
+                    type: string
+                  participant_email:
+                    type: string
+                  participant_parent_1:
+                    type: string
+                  participant_parent_2:
+                    type: string
+                  participant_deceased_parents:
+                    type: string
+                  assent_7_12:
+                    type: string
+                  text_i_have_read_simplified:
+                    type: string
+                  person_attaining_assent:
+                    type: string
+                  text_assent_witness:
+                    type: string
+                  obtainer_name:
+                    type: string
+                  assent_13_17:
+                    type: string
+                  text_i_have_read_1:
+                    type: string
+                  consent_18:
+                    type: string
+
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':
           $ref: '#/components/responses/403Forbidden'
     post:
-      operationId: microsetta_private_api.api.implementation.create_human_source_from_consent
+      operationId: microsetta_private_api.api.create_human_source_from_consent
       tags:
         - Source (from Consent)
       summary: Create a new human source based on a consent form
@@ -263,7 +310,7 @@ paths:
 
   '/accounts/{account_id}/sources':
     get:
-      operationId: microsetta_private_api.api.implementation.read_sources
+      operationId: microsetta_private_api.api.read_sources
       tags:
         - Sources
       summary: Get sources associated with account, filtered by source type if a source type is provided
@@ -308,7 +355,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
-      operationId: microsetta_private_api.api.implementation.create_source
+      operationId: microsetta_private_api.api.create_source
       tags:
         - Source
       summary: Create new source of a specific type
@@ -361,7 +408,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}':
     get:
-      operationId: microsetta_private_api.api.implementation.read_source
+      operationId: microsetta_private_api.api.read_source
       tags:
         - Source
       summary: Get information about source
@@ -393,7 +440,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     put:
-      operationId: microsetta_private_api.api.implementation.update_source
+      operationId: microsetta_private_api.api.update_source
       tags:
         - Source
       summary: Update information for source
@@ -441,7 +488,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
     delete:
-      operationId: microsetta_private_api.api.implementation.delete_source
+      operationId: microsetta_private_api.api.delete_source
       tags:
         - Source
       summary: Delete source
@@ -465,7 +512,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/survey_templates':
     get:
-      operationId: microsetta_private_api.api.implementation.read_survey_templates
+      operationId: microsetta_private_api.api.read_survey_templates
       tags:
         - Survey Templates
       summary: Get survey templates available to this source
@@ -493,7 +540,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/survey_templates/{survey_template_id}':
     get:
-      operationId: microsetta_private_api.api.implementation.read_survey_template
+      operationId: microsetta_private_api.api.read_survey_template
       tags:
         - Survey Template
       summary: Get a particular survey template available to this source
@@ -531,7 +578,7 @@ paths:
     # NB: "survey" refers to an instance of an answered survey. In contrast, the set of *questions* comprising a survey
     # is called a "survey template" (see elsewhere in this api)
     get:
-      operationId: microsetta_private_api.api.implementation.read_answered_surveys
+      operationId: microsetta_private_api.api.read_answered_surveys
       tags:
         - Surveys (By Source)
       summary: Get answered survey instances associated with source
@@ -563,7 +610,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
-      operationId: microsetta_private_api.api.implementation.submit_answered_survey
+      operationId: microsetta_private_api.api.submit_answered_survey
       tags:
         - Survey (By Source)
       summary: Submit new answered survey
@@ -598,7 +645,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/surveys/{survey_id}':
     get:
-      operationId: microsetta_private_api.api.implementation.read_answered_survey
+      operationId: microsetta_private_api.api.read_answered_survey
       tags:
         - Survey (By Source)
       summary: Get information about an answered survey
@@ -636,7 +683,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/samples':
     get:
-      operationId: microsetta_private_api.api.implementation.read_sample_associations
+      operationId: microsetta_private_api.api.read_sample_associations
       tags:
         - Samples
       summary: Get samples associated with this source
@@ -661,7 +708,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
-      operationId: microsetta_private_api.api.implementation.associate_sample
+      operationId: microsetta_private_api.api.associate_sample
       tags:
         - Sample
       summary: Associate an unassociated sample with this source
@@ -705,7 +752,7 @@ paths:
     # NB: info about the sample--type, datetime, notes--does NOT exist *separate* from source association, so
     # it can only be read/updated/deleted in the context of a source association
     get:
-      operationId: microsetta_private_api.api.implementation.read_sample_association
+      operationId: microsetta_private_api.api.read_sample_association
       tags:
         - Sample
       summary: Get information about a sample associated with this source
@@ -729,7 +776,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     put:
-      operationId: microsetta_private_api.api.implementation.update_sample_association
+      operationId: microsetta_private_api.api.update_sample_association
       tags:
         - Sample
       summary: Update information about a sample associated with this source
@@ -763,7 +810,7 @@ paths:
     delete:
       tags:
         - Sample
-      operationId: microsetta_private_api.api.implementation.dissociate_sample
+      operationId: microsetta_private_api.api.dissociate_sample
       summary: Dissociate a sample from a source and any of its associated surveys
       description: Dissociate a sample from a source and any of its associated surveys
       parameters:
@@ -788,7 +835,7 @@ paths:
   # directly under source.  The dev team assessed this and decided this dual usage was not unacceptably confusing.
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/surveys':
     get:
-      operationId: microsetta_private_api.api.implementation.read_answered_survey_associations
+      operationId: microsetta_private_api.api.read_answered_survey_associations
       tags:
         - Surveys (By Sample)
       summary: Get list of answered surveys associated with this sample
@@ -832,7 +879,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
     post:
-      operationId: microsetta_private_api.api.implementation.associate_answered_survey
+      operationId: microsetta_private_api.api.associate_answered_survey
       tags:
         - Survey (By Sample)
       summary: Associate an answered survey with this sample
@@ -871,7 +918,7 @@ paths:
     delete:
       tags:
         - Survey (By Sample)
-      operationId: microsetta_private_api.api.implementation.dissociate_answered_survey
+      operationId: microsetta_private_api.api.dissociate_answered_survey
       summary: Dissociate an answered survey from a sample
       description: Dissociate an answered survey from a sample
       parameters:
@@ -892,7 +939,7 @@ paths:
 
   '/kits/':
     get:
-      operationId: microsetta_private_api.api.implementation.read_kit
+      operationId: microsetta_private_api.api.read_kit
       tags:
         - Kit Samples
       summary: Get list of samples in kit that are not assigned to a source
@@ -918,7 +965,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  # START ADMINISTRATOR PATHS
+  # ADMINISTRATOR PATHS
   '/admin/search/samples/{sample_barcode}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.search_barcode
@@ -939,6 +986,7 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+
   '/admin/search/kit/{kit_id}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.search_kit_id
@@ -964,6 +1012,7 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+
   '/admin/search/account/{email}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.search_email
@@ -990,6 +1039,7 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+
   '/admin/scan/{sample_barcode}':
     post:
       # Note: We might want to be able to differentiate system administrator operations
@@ -1009,22 +1059,31 @@ paths:
               properties:
                 sample_status:
                   type: string
-                  enum: ["not-received",
-                         "sample-is-valid",
-                         "no-associated-consent",
+                  # NB: there is no "not-received" option
+                  # because how can one be scanning a barcode
+                  # one didn't receive?
+                  enum: ["sample-is-valid",
+                         "no-associated-source",
                          "no-registered-account",
-                         "sample-has-inconsistencies"]
+                         "no-collection-info",
+                         "sample-has-inconsistencies",
+                         "received-unknown-validity"]
                   example: "sample-has-inconsistencies"
                 technician_notes:
                   type: string
                   example: "Sample Processing Complete!"
       responses:
         '201':
-          description: Successfully registered new user account
+          description: Successfully recorded new barcode scan
           headers:
             Location:
               schema:
                 type: string
+          content:
+            application/json:
+              schema:
+                type: object
+
   '/admin/metadata/samples/{sample_barcode}/surveys/{survey_template_id}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_single_survey
@@ -1037,7 +1096,7 @@ paths:
         - $ref: '#/components/parameters/survey_template_id'
       responses:
         '200':
-          description: QIIME compatible sample metadata
+          description: QIIME-compatible sample metadata
           content:
             application/json:
               schema:
@@ -1046,6 +1105,7 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+
   '/admin/metadata/samples/{sample_barcode}/surveys/':
     get:
       operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_multiple_survey
@@ -1057,7 +1117,7 @@ paths:
         - $ref: '#/components/parameters/sample_barcode'
       responses:
         '200':
-          description: QIIIME compatible sample metadata
+          description: QIIME-compatible sample metadata
           content:
             application/json:
               schema:
@@ -1086,11 +1146,17 @@ paths:
                   type: string
                 is_microsetta:
                   type: boolean
-
+                bank_samples:
+                  type: boolean
+                plating_start_date:
+                  type: string
+                  format: date
+                  example: "2017-07-21"
+                  nullable: true
               required:
                 - project_name
                 - is_microsetta
-
+                - bank_samples
       responses:
         '201':
           description: Project successfully created
@@ -1122,12 +1188,10 @@ paths:
                     type: array
                     items:
                       type: string
-
                 required:
                   - number_of_kits
                   - number_of_samples
                   - projects
-
       responses:
         '201':
           description: Kit identifiers and associated samples were successfully created
@@ -1135,12 +1199,11 @@ paths:
             application/json:
               schema:
                 type: object
-
         '401':
           $ref: '#/components/responses/401Unauthorized'
-
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+
   '/admin/statistics/projects':
     get:
       operationId: microsetta_private_api.admin.admin_impl.project_statistics_summary
@@ -1153,6 +1216,7 @@ paths:
             application/json:
               schema:
                 type: array
+
   '/admin/statistics/project/{project_id}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.project_statistics_detailed
@@ -1172,6 +1236,47 @@ paths:
             application/json:
               schema:
                 type: object
+  '/admin/events/accounts/{account_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_account_events
+      tags:
+        - Admin
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '200':
+          description: Event log associated with the account
+          content:
+            application/json:
+              schema:
+                type: array
+  '/admin/email':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.send_email
+      tags:
+        - Admin
+      summary: Send a templated email to an end user
+      description: Send a templated email to an end user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                # issue type defines what resolution_url the user should go to
+                issue_type:
+                  type: string
+                  enum: ["sample"]
+                template:
+                  type: string
+                  enum: ["incorrect_sample_type",
+                         "missing_sample_info"]
+                  example: "incorrect_sample_type"
+                template_args:
+                  type: object
+      responses:
+        '204':
+          description: Email sent
 
 components:
   parameters:
@@ -1724,7 +1829,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      x-bearerInfoFunc: microsetta_private_api.api.implementation.verify_authrocket
+      x-bearerInfoFunc: microsetta_private_api.api.verify_authrocket
 
 
 # END COMPONENTS

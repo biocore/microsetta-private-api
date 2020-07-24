@@ -22,7 +22,7 @@ import json
 from unittest import TestCase
 from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 import copy
-import microsetta_private_api.api.implementation
+import microsetta_private_api.api
 
 ACCT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 NOT_ACCT_ID = "12341234-1234-1234-1234-123412341234"
@@ -71,7 +71,7 @@ def client(request):
     with app.app.test_client() as client:
         request.cls.client = client
 
-        with patch("microsetta_private_api.api.implementation."
+        with patch("microsetta_private_api.api."
                    "verify_authrocket") as mock_verify:
             mock_verify.side_effect = mock_verify_func
             yield client
@@ -1068,11 +1068,11 @@ class IntegrationTests(TestCase):
         # Verify we can lock the sample to prevent further edits
         with Transaction() as t:
             with t.cursor() as cur:
-                cur.execute("UPDATE barcode "
-                            "SET scan_date = %s "
-                            "WHERE "
-                            "barcode = %s",
-                            (datetime.datetime.now(), BARCODE))
+                cur.execute("INSERT INTO barcode_scans "
+                            "(barcode, scan_timestamp, sample_status) "
+                            "VALUES "
+                            "(%s, %s, 'valid')",
+                            (BARCODE, datetime.datetime.now()))
             t.commit()
 
         data = {"sample_datetime": datetime.datetime.utcnow(),
@@ -1092,11 +1092,10 @@ class IntegrationTests(TestCase):
         # Finally, unlock the sample to clean up
         with Transaction() as t:
             with t.cursor() as cur:
-                cur.execute("UPDATE barcode "
-                            "SET scan_date = %s "
+                cur.execute("DELETE FROM barcode_scans "
                             "WHERE "
                             "barcode = %s",
-                            (None, BARCODE))
+                            (BARCODE,))
             t.commit()
 
     def test_survey_localization(self):
@@ -1341,6 +1340,10 @@ def _remove_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
             # Some tests may leak leftover surveys, wipe those out also
             cur.execute("DELETE FROM source_barcodes_surveys "
                         "WHERE barcode = %s", (barcode,))
+
+            # delete any scans for the barcode
+            cur.execute("DELETE FROM barcode_scans WHERE barcode = %s",
+                        (barcode,))
 
             # delete the barcode from the barcode table
             cur.execute("DELETE FROM barcode WHERE barcode = %s",

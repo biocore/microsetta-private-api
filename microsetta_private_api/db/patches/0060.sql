@@ -1,4 +1,4 @@
--- set sample-is-valid for existing samples that for all intensive purposes
+-- set sample-is-valid for existing samples that for all intents and purposes
 -- appear valid
 UPDATE barcodes.barcode SET sample_status = 'sample-is-valid' 
 WHERE barcode IN (SELECT barcode 

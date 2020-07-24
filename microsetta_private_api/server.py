@@ -4,7 +4,6 @@ import logging
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from flask import jsonify
-from werkzeug.utils import redirect
 
 from microsetta_private_api.exceptions import RepoException
 
@@ -45,9 +44,6 @@ def build_app():
     # Read the microsetta api spec file to configure the endpoints
     app.add_api('api/microsetta_private_api.yaml', validate_responses=True)
 
-    # ---
-    # Example Client Settings
-    app.add_api('example/client.yaml', validate_responses=True)
     flask_secret = SERVER_CONFIG["FLASK_SECRET_KEY"]
     if flask_secret is None:
         print("WARNING: FLASK_SECRET_KEY must be set to run with gUnicorn")
@@ -72,11 +68,6 @@ def build_app():
         app.app.logger.handlers = gunicorn_logger.handlers
         app.app.logger.setLevel(gunicorn_logger.level)
 
-    @app.route('/americangut/static/<path:filename>')
-    def reroute_americangut(filename):
-        # This is dumb as rocks, but it fixes static images referenced in
-        # surveys without a schema change.
-        return redirect('/static/' + filename)
     return app
 
 

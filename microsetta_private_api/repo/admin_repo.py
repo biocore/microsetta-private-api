@@ -1,8 +1,7 @@
 import uuid
 import string
 import random
-
-from datetime import date
+import datetime
 
 from microsetta_private_api.exceptions import RepoException
 
@@ -46,6 +45,9 @@ class AdminRepo(BaseRepo):
             return cur.fetchone()
 
     def retrieve_diagnostics_by_barcode(self, sample_barcode, grab_kit=True):
+        def _rows_to_dicts_list(rows):
+            return [dict(x) for x in rows]
+
         with self._transaction.dict_cursor() as cur:
             ids = self._get_ids_relevant_to_barcode(sample_barcode)
 
@@ -65,69 +67,88 @@ class AdminRepo(BaseRepo):
             sample = None
             kit = None
 
+            # get sample object for this barcode
             if sample_id is not None:
                 sample_repo = SampleRepo(self._transaction)
                 sample = sample_repo._get_sample_by_id(sample_id)
 
+            # get account and source objects for this barcode
             if source_id is not None and account_id is not None:
                 account_repo = AccountRepo(self._transaction)
                 source_repo = SourceRepo(self._transaction)
                 account = account_repo.get_account(account_id)
                 source = source_repo.get_source(account_id, source_id)
 
-            if kit_id is not None and grab_kit:
-                kit_repo = KitRepo(self._transaction)
-                kit = kit_repo.get_kit_all_samples_by_kit_id(kit_id)
-
-            cur.execute("SELECT * from barcodes.barcode "
-                        "LEFT OUTER JOIN barcodes.project_barcode "
-                        "USING (barcode) "
-                        "LEFT OUTER JOIN barcodes.project "
+            # get projects_info list for this barcode
+            cur.execute("SELECT project, is_microsetta, "
+                        "bank_samples, plating_start_date "
+                        "FROM barcodes.project "
+                        "INNER JOIN barcodes.project_barcode "
                         "USING (project_id) "
-                        "where barcode=%s",
+                        "WHERE barcode=%s",
                         (sample_barcode,))
-            barcode_info = cur.fetchall()
+            # this can't be None; worst-case is an empty list
+            projects_info = _rows_to_dicts_list(cur.fetchall())
 
-            # How to unwrap a psycopg2 DictRow.  I feel dirty.
-            barcode_info = [{k: v for k, v in x.items()}
-                            for x in barcode_info]  # Get Inceptioned!!
+            # get scans_info list for this barcode
+            # NB: ORDER MATTERS here. Do not change the order unless you
+            # are positive you know what already depends on it.
+            cur.execute("SELECT barcode_scan_id, barcode, "
+                        "scan_timestamp, sample_status, "
+                        "technician_notes "
+                        "FROM barcodes.barcode_scans "
+                        "WHERE barcode=%s "
+                        "ORDER BY scan_timestamp asc",
+                        (sample_barcode,))
+            # this can't be None; worst-case is an empty list
+            scans_info = _rows_to_dicts_list(cur.fetchall())
 
-            # Collapse info from joined project_barcode and project tables
-            # into array within barcode_info
-            if barcode_info:
-                first = barcode_info[0]
-                first['projects'] = [
-                    {
-                        'project_id': r['project_id'],
-                        'project': r['project']
-                    }
-                    for r in barcode_info]
-                del first['project_id']
-                del first['project']
-                barcode_info = first
-            else:
-                barcode_info = None
+            latest_scan = None
+            if len(scans_info) > 0:
+                # NB: the correctness of this depends on the scans (queried
+                # right above) being in ascending order by timestamp
+                latest_scan = scans_info[len(scans_info)-1]
 
-            if account is None and \
-                    source is None and \
-                    sample is None and \
-                    barcode_info is None:
+            # get details about this barcode itself; CAN be None if the
+            # barcode doesn't exist in db
+            barcode_info = None
+            cur.execute("SELECT barcode, assigned_on, status, "
+                        "sample_postmark_date, biomass_remaining, "
+                        "sequencing_status, obsolete, "
+                        "create_date_time, kit_id "
+                        "FROM barcodes.barcode "
+                        "WHERE barcode = %s",
+                        (sample_barcode,))
+            barcode_row = cur.fetchone()
+            if barcode_row is not None:
+                barcode_info = dict(barcode_row)
+
+            if account is None and source is None and sample is None and \
+                    len(projects_info) == 0 and len(scans_info) == 0 \
+                    and barcode_info is None:
                 return None
 
             diagnostic = {
-                "barcode": sample_barcode,
                 "account": account,
                 "source": source,
                 "sample": sample,
-                "barcode_info": barcode_info
+                "latest_scan": latest_scan,
+                "scans_info": scans_info,
+                "barcode_info": barcode_info,
+                "projects_info": projects_info
             }
 
             if grab_kit:
+                # get kit object
+                if kit_id is not None:
+                    kit_repo = KitRepo(self._transaction)
+                    kit = kit_repo.get_kit_all_samples_by_kit_id(kit_id)
                 diagnostic["kit"] = kit
 
             return diagnostic
 
-    def create_project(self, project_name, is_microsetta):
+    def create_project(self, project_name, is_microsetta, bank_samples,
+                       plating_start_date=None):
         """Create a project entry in the database
 
         Parameters
@@ -136,6 +157,10 @@ class AdminRepo(BaseRepo):
             The name of the project to create
         is_microsetta : bool
             If the project is part of The Microsetta Initiative
+        bank_samples : bool
+            If the project's samples should be banked until some future date
+        plating_start_date : date
+            Optional date on which project's banked samples will be plated
         """
         if is_microsetta:
             tmi = 'yes'
@@ -148,9 +173,33 @@ class AdminRepo(BaseRepo):
             id_ = cur.fetchone()[0]
 
             cur.execute("INSERT INTO barcodes.project "
-                        "(project_id, project, is_microsetta) "
-                        "VALUES (%s, %s, %s)", [id_, project_name, tmi])
+                        "(project_id, project, is_microsetta, bank_samples, "
+                        "plating_start_date) "
+                        "VALUES (%s, %s, %s, %s, %s)",
+                        [id_, project_name, tmi, bank_samples,
+                         plating_start_date])
         return True
+
+    def delete_project_by_name(self, project_name):
+        """Delete a project entry and its associations to barcodes from db
+
+        Parameters
+        ----------
+        project_name : str
+            The name of the project to delete
+        """
+        with self._transaction.cursor() as cur:
+            # delete associations between this project and any barcodes
+            cur.execute("DELETE FROM barcodes.project_barcode "
+                        "WHERE project_id in ("
+                        "SELECT project_id FROM barcodes.project "
+                        "WHERE project = %s)",
+                        (project_name,))
+
+            # now delete the project itself
+            cur.execute("DELETE FROM barcodes.project WHERE project = %s",
+                        (project_name,))
+            return cur.rowcount == 1
 
     def _generate_random_kit_name(self, name_length, prefix):
         if prefix is None:
@@ -365,44 +414,39 @@ class AdminRepo(BaseRepo):
     def scan_barcode(self, sample_barcode, scan_info):
         with self._transaction.cursor() as cur:
 
+            # not actually using the result, just checking there IS one
+            # to ensure this is a valid barcode
             cur.execute(
-                "SELECT scan_date FROM barcodes.barcode WHERE barcode=%s",
+                "SELECT barcode FROM barcodes.barcode WHERE barcode=%s",
                 (sample_barcode,)
-            )
-            row = cur.fetchone()
-            if row is None:
-                raise NotFound("No such barcode: %s" % sample_barcode)
-
-            existing_scan_date = row[0]
-            new_scan_date = existing_scan_date
-            if scan_info['sample_status'] == 'sample-is-valid':
-                new_scan_date = date.today()
-
-            update_args = (
-                scan_info['sample_status'],
-                scan_info['technician_notes'],
-                new_scan_date,
-                sample_barcode
-            )
-
-            cur.execute(
-                "UPDATE barcodes.barcode "
-                "SET "
-                "sample_status = %s, "
-                "technician_notes = %s, "
-                "scan_date = %s "
-                "WHERE "
-                "barcode = %s",
-                update_args
             )
 
             if cur.rowcount == 0:
                 raise NotFound("No such barcode: %s" % sample_barcode)
-
-            if cur.rowcount > 1:
+            elif cur.rowcount > 1:
                 # Note: This "can't" happen.
                 raise RepoException("ERROR: Multiple barcode entries would be "
-                                    "updated by scan, failing out")
+                                    "affected by scan; failing out")
+
+            # put a new row in the barcodes.barcode_scans table
+            new_uuid = str(uuid.uuid4())
+            scan_args = (
+                new_uuid,
+                sample_barcode,
+                datetime.datetime.now(),
+                scan_info['sample_status'],
+                scan_info['technician_notes']
+            )
+
+            cur.execute(
+                "INSERT INTO barcodes.barcode_scans "
+                "(barcode_scan_id, barcode, scan_timestamp, "
+                "sample_status, technician_notes) "
+                "VALUES (%s, %s, %s, %s, %s)",
+                scan_args
+            )
+
+            return new_uuid
 
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
         ids = self._get_ids_relevant_to_barcode(sample_barcode)
@@ -529,6 +573,7 @@ class AdminRepo(BaseRepo):
 
     def get_project_detailed_statistics(self, project_id):
         with self._transaction.dict_cursor() as cur:
+            # get total number of samples and kits
             cur.execute(
                 "SELECT "
                 "project_id, project, "
@@ -555,34 +600,43 @@ class AdminRepo(BaseRepo):
             number_of_samples = row['barcode_count']
             number_of_kits = row['kit_count']
 
+            # get number of scanned samples
             cur.execute(
                 "SELECT "
-                "project_id, count(barcode) "
+                "project_id, count(distinct barcode) "
                 "FROM project_barcode "
-                "LEFT JOIN "
-                "barcode "
-                "USING(barcode) "
+                "INNER JOIN "
+                "barcode_scans "
+                "USING (barcode) "
                 "WHERE "
-                "project_id = %s AND "
-                "scan_date is NOT NULL "
+                "project_id = %s "
                 "GROUP BY project_id",
                 (project_id,)
             )
             row = cur.fetchone()
             number_of_samples_scanned_in = row['count']
 
+            # get number of barcodes in each project with
+            # each (non-null) current sample_status
             cur.execute(
                 "SELECT "
-                "project_id, project, sample_status, count(barcode) "
+                "project_id, project, sample_status, "
+                "count(project_barcode.barcode) "
                 "FROM project "
                 "LEFT JOIN project_barcode "
                 "USING (project_id) "
-                "LEFT JOIN barcode "
+                "LEFT JOIN barcode_scans "
                 "USING (barcode) "
+                "LEFT JOIN ("
+                "   SELECT barcode, max(scan_timestamp) AS scan_timestamp "
+                "   FROM barcodes.barcode_scans "
+                "   GROUP BY barcode "
+                ") latest_scan "
+                "ON project_barcode.barcode = latest_scan.barcode "
                 "WHERE "
-                "project_id = 1 AND "
-                "sample_status IS NOT NULL "
-                "group by project_id, sample_status"
+                "project_id = %s "
+                "GROUP BY project_id, sample_status",
+                (project_id,)
             )
             rows = cur.fetchall()
             sample_status_counts = {
