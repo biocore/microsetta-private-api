@@ -1,4 +1,7 @@
 from unittest import TestCase
+from datetime import date
+import datetime
+import psycopg2
 
 from werkzeug.exceptions import Unauthorized, NotFound
 
@@ -8,9 +11,24 @@ from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.admin.admin_impl import validate_admin_access
+from microsetta_private_api.admin.tests.test_admin_api import delete_test_scan
 
 STANDARD_ACCT_ID = "12345678-bbbb-cccc-dddd-eeeeffffffff"
 ADMIN_ACCT_ID = "12345678-1234-1234-1234-123412341234"
+
+
+def add_dummy_scan(scan_dict):
+    with Transaction() as t:
+        with t.cursor() as cur:
+            cur.execute("INSERT INTO barcode_scans "
+                        "VALUES "
+                        "(%s, %s, %s, %s,%s)",
+                        (scan_dict["barcode_scan_id"],
+                         scan_dict["barcode"],
+                         scan_dict["scan_timestamp"],
+                         scan_dict["sample_status"],
+                         scan_dict["technician_notes"]))
+        t.commit()
 
 
 class AdminTests(TestCase):
@@ -96,25 +114,72 @@ class AdminTests(TestCase):
         except Unauthorized:
             pass
 
-    def test_search_barcode(self):
+    def test_retrieve_diagnostics_by_barcode_w_extra_info(self):
+        def make_tz_datetime(y, m, d):
+            return datetime.datetime(y, m, d, 0, 0,
+                                     tzinfo=psycopg2.tz.FixedOffsetTimezone(
+                                         offset=-420, name=None))
+
+        test_barcode = '000038448'
+        first_scan_id = 'f7fd3022-3a9c-4f79-b92c-5cebd83cba38'
+        second_scan_id = '76aec821-aa28-4dea-a796-2cfd1276f78c'
+
+        first_scan = {
+            "barcode_scan_id": first_scan_id,
+            "barcode": test_barcode,
+            "scan_timestamp": make_tz_datetime(2017, 7, 16),
+            "sample_status": 'no-registered-account',
+            "technician_notes": "huh?"
+        }
+
+        second_scan = {
+            "barcode_scan_id": second_scan_id,
+            "barcode": test_barcode,
+            "scan_timestamp": make_tz_datetime(2020, 12, 4),
+            "sample_status": 'sample-is-valid',
+            "technician_notes": None
+        }
+        try:
+            add_dummy_scan(first_scan)
+            add_dummy_scan(second_scan)
+
+            with Transaction() as t:
+                # TODO FIXME HACK: Build mock barcodes rather than using
+                #  these fixed ones
+                admin_repo = AdminRepo(t)
+                diag = admin_repo.retrieve_diagnostics_by_barcode(test_barcode)
+                self.assertIsNotNone(diag['barcode_info'])
+                self.assertIsNone(diag['account'])
+                self.assertIsNone(diag['source'])
+                self.assertIsNotNone(diag['sample'])
+                self.assertGreater(len(diag['projects_info']), 0)
+                self.assertEqual(len(diag['scans_info']), 2)
+                # order matters in the returned vals, so test that
+                self.assertEqual(diag['scans_info'][0], first_scan)
+                self.assertEqual(diag['scans_info'][1], second_scan)
+                self.assertEqual(diag['latest_scan'], second_scan)
+        finally:
+            delete_test_scan(first_scan_id)
+            delete_test_scan(second_scan_id)
+
+    def test_retrieve_diagnostics_by_barcode_wo_extra_info(self):
         with Transaction() as t:
             # TODO FIXME HACK:  Need to build mock barcodes rather than using
             #  these fixed ones
             admin_repo = AdminRepo(t)
-            diag = admin_repo.retrieve_diagnostics_by_barcode('000038448')
-            self.assertIsNotNone(diag['barcode'])
-            self.assertIsNone(diag['account'])
-            self.assertIsNone(diag['source'])
-            self.assertIsNotNone(diag['sample'])
-            self.assertGreater(len(diag['barcode_info']['projects']), 0)
-
             diag = admin_repo.retrieve_diagnostics_by_barcode('000033903')
-            self.assertIsNotNone(diag['barcode'])
+            self.assertIsNotNone(diag['barcode_info'])
             self.assertIsNone(diag['account'])
             self.assertIsNone(diag['source'])
             self.assertIsNone(diag['sample'])
-            self.assertGreater(len(diag['barcode_info']['projects']), 0)
+            self.assertGreater(len(diag['projects_info']), 0)
+            self.assertEqual(len(diag['scans_info']), 0)
 
+    def test_retrieve_diagnostics_by_barcode_nonexistent(self):
+        with Transaction() as t:
+            # TODO FIXME HACK:  Need to build mock barcodes rather than using
+            #  these fixed ones
+            admin_repo = AdminRepo(t)
             # Uhh, should this return a 404 not found or just an empty
             # diagnostic object...?
             diag = admin_repo.retrieve_diagnostics_by_barcode('NotABarcode :D')
@@ -129,19 +194,24 @@ class AdminTests(TestCase):
                             "WHERE project = 'doesnotexist'")
                 self.assertEqual(len(cur.fetchall()), 0)
 
-                admin_repo.create_project('doesnotexist', True)
-                cur.execute("SELECT project, is_microsetta "
+                admin_repo.create_project('doesnotexist', True, False)
+                cur.execute("SELECT project, is_microsetta, bank_samples, "
+                            "plating_start_date "
                             "FROM barcodes.project "
                             "WHERE project = 'doesnotexist'")
                 obs = cur.fetchall()
-                self.assertEqual(obs, [('doesnotexist', True), ])
+                self.assertEqual(obs, [('doesnotexist', True, False, None), ])
 
-                admin_repo.create_project('doesnotexist2', False)
-                cur.execute("SELECT project, is_microsetta "
+                plating_start_date = date(2020, 7, 31)
+                admin_repo.create_project('doesnotexist2', False, True,
+                                          plating_start_date)
+                cur.execute("SELECT project, is_microsetta, bank_samples, "
+                            "plating_start_date "
                             "FROM barcodes.project "
                             "WHERE project = 'doesnotexist2'")
                 obs = cur.fetchall()
-                self.assertEqual(obs, [('doesnotexist2', False), ])
+                self.assertEqual(obs, [('doesnotexist2', False, True,
+                                        plating_start_date), ])
 
     def test_create_kits(self):
         with Transaction() as t:
@@ -213,7 +283,7 @@ class AdminTests(TestCase):
             self.assertIsNotNone(diag)
             self.assertGreater(len(diag['accounts']), 1)
 
-    def test_scan_barcode(self):
+    def test_scan_barcode_success(self):
         with Transaction() as t:
             # TODO FIXME HACK:  Need to build mock barcodes rather than using
             #  these fixed ones
@@ -223,9 +293,11 @@ class AdminTests(TestCase):
             TEST_NOTES = "THIS IS A UNIT TEST"
             admin_repo = AdminRepo(t)
 
+            # check that before doing a scan, no scans are recorded for this
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            prestatus = diag['barcode_info']['status']
+            self.assertEqual(len(diag['scans_info']), 0)
 
+            # do a scan
             admin_repo.scan_barcode(
                 TEST_BARCODE,
                 {
@@ -234,14 +306,16 @@ class AdminTests(TestCase):
                 }
             )
 
+            # show that now a scan is recorded for this barcode
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            self.assertEqual(diag['barcode_info']['technician_notes'],
-                             TEST_NOTES)
-            self.assertEqual(diag['barcode_info']['sample_status'],
-                             TEST_STATUS)
-            self.assertEqual(diag['barcode_info']['status'],
-                             prestatus)
+            self.assertEqual(len(diag['scans_info']), 1)
+            first_scan = diag['scans_info'][0]
+            self.assertEqual(first_scan['technician_notes'], TEST_NOTES)
+            self.assertEqual(first_scan['sample_status'], TEST_STATUS)
 
+    def test_scan_barcode_error_nonexistent(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
             with self.assertRaises(NotFound):
                 admin_repo.scan_barcode(
                     "THIZIZNOTAREALBARCODEISWARE",
