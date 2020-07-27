@@ -70,10 +70,11 @@ class SampleRepo(BaseRepo):
     #  Having multiple pathways to link in the db is a recipe for badness.
     #  Should something be done with the source_barcodes_surveys table? (which
     #  itself is required for linking samples to surveys!)
-    def _update_sample_association(self, sample_id, source_id):
+    def _update_sample_association(self, sample_id, source_id,
+                                   override_locked=False):
         with self._transaction.cursor() as cur:
             existing_sample = self._get_sample_by_id(sample_id)
-            if existing_sample.is_locked:
+            if existing_sample.is_locked and not override_locked:
                 raise RepoException(
                     "Sample edits locked: Sample already received")
 
@@ -135,7 +136,8 @@ class SampleRepo(BaseRepo):
             sample_row = cur.fetchone()
             return self._create_sample_obj(sample_row)
 
-    def update_info(self, account_id, source_id, sample_info):
+    def update_info(self, account_id, source_id, sample_info,
+                    override_locked=False):
         """
         Updates end user writable information about a sample that is assigned
         to a source.
@@ -146,7 +148,7 @@ class SampleRepo(BaseRepo):
             raise werkzeug.exceptions.NotFound("No sample ID: %s" %
                                                sample_info.id)
 
-        if existing_sample.is_locked:
+        if existing_sample.is_locked and not override_locked:
             raise RepoException("Sample edits locked: Sample already received")
 
         sample_date = None
@@ -203,20 +205,25 @@ class SampleRepo(BaseRepo):
                     raise RepoException("Sample is already assigned")
             else:
                 # This is the case where the sample is not yet assigned
+                # NOTE: we are not passing override_locked here as a sample
+                # that is not yet assigned cannot be locked.
                 self._update_sample_association(sample_id, source_id)
 
-    def dissociate_sample(self, account_id, source_id, sample_id):
+    def dissociate_sample(self, account_id, source_id, sample_id,
+                          override_locked=False):
         existing_sample = self.get_sample(account_id, source_id, sample_id)
         if existing_sample is None:
             raise werkzeug.exceptions.NotFound("No sample ID: %s" %
                                                sample_id)
-        if existing_sample.is_locked:
+        if existing_sample.is_locked and not override_locked:
             raise RepoException(
                 "Sample edits locked: Sample already received")
 
         # Wipe any user entered fields from the sample:
         self.update_info(account_id, source_id,
-                         SampleInfo(sample_id, None, None, None))
+                         SampleInfo(sample_id, None, None, None),
+                         override_locked=override_locked)
 
         # And detach the sample from the source
-        self._update_sample_association(sample_id, None)
+        self._update_sample_association(sample_id, None,
+                                        override_locked=override_locked)
