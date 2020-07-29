@@ -77,7 +77,7 @@ class AdminApiTests(TestCase):
 
         # execute project post (create)
         response = self.client.post(
-            "/api/admin/create/project",
+            "/api/admin/projects",
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
@@ -85,6 +85,11 @@ class AdminApiTests(TestCase):
 
         # check for successful create response code
         self.assertEqual(201, response.status_code)
+
+        # check that a positive integer id was returned
+        # (isdigit fails if str contains '-')
+        new_id = extract_last_id_from_location_header(response)
+        self.assertTrue(new_id.isdigit())
 
     def test_project_create_success_unbanked_no_date(self):
         """Successfully create a new, unbanked project, do not pass date"""
@@ -158,7 +163,7 @@ class AdminApiTests(TestCase):
 
         # execute project post (create)
         response = self.client.post(
-            "/api/admin/create/project",
+            "/api/admin/projects",
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
@@ -181,13 +186,13 @@ class AdminApiTests(TestCase):
 
         # execute project post (create)
         response = self.client.post(
-            "/api/admin/create/project",
+            "/api/admin/projects",
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
         )
 
-        self.assertEqual(400, response.status_code)
+        self.assertEqual(422, response.status_code)
 
     def test_scan_barcode_success(self):
         """Store info on new scan for valid barcode"""

@@ -7,6 +7,16 @@ from werkzeug.exceptions import Unauthorized, NotFound
 
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.address import Address
+from microsetta_private_api.model.project import Project, PROJ_NAME_KEY, \
+    IS_MICROSETTA_KEY, BANK_SAMPLES_KEY, PLATING_START_DATE_KEY, \
+    CONTACT_NAME_KEY, ADDTL_CONTACT_NAME_KEY, CONTACT_EMAIL_KEY, \
+    DEADLINES_KEY, NUM_SUBJECTS_KEY, NUM_TIMEPOINTS_KEY, START_DATE_KEY, \
+    DISPOSITION_COMMENTS_KEY, COLLECTION_KEY, IS_FECAL_KEY, IS_SALIVA_KEY, \
+    IS_SKIN_KEY, IS_BLOOD_KEY, IS_OTHER_KEY, DO_16S_KEY, \
+    DO_SHALLOW_SHOTGUN_KEY, DO_SHOTGUN_KEY, DO_RT_QPCR_KEY, DO_SEROLOGY_KEY, \
+    DO_METATRANSCRIPTOMICS_KEY, DO_MASS_SPEC_KEY, MASS_SPEC_COMMENTS_KEY, \
+    MASS_SPEC_CONTACT_NAME_KEY, MASS_SPEC_CONTACT_EMAIL_KEY, DO_OTHER_KEY, \
+    BRANDING_ASSOC_INSTRUCTIONS_KEY, BRANDING_STATUS_KEY
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.transaction import Transaction
@@ -185,7 +195,7 @@ class AdminTests(TestCase):
             diag = admin_repo.retrieve_diagnostics_by_barcode('NotABarcode :D')
             self.assertIsNone(diag)
 
-    def test_create_project(self):
+    def test_create_project_success_no_banking(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             with t.cursor() as cur:
@@ -194,7 +204,13 @@ class AdminTests(TestCase):
                             "WHERE project = 'doesnotexist'")
                 self.assertEqual(len(cur.fetchall()), 0)
 
-                admin_repo.create_project('doesnotexist', True, False)
+                minimal_project_dict = {PROJ_NAME_KEY: 'doesnotexist',
+                                        IS_MICROSETTA_KEY: True,
+                                        BANK_SAMPLES_KEY: False}
+                input = Project(**minimal_project_dict)
+
+                admin_repo.create_project(input)
+
                 cur.execute("SELECT project, is_microsetta, bank_samples, "
                             "plating_start_date "
                             "FROM barcodes.project "
@@ -202,26 +218,43 @@ class AdminTests(TestCase):
                 obs = cur.fetchall()
                 self.assertEqual(obs, [('doesnotexist', True, False, None), ])
 
-                plating_start_date = date(2020, 7, 31)
-                admin_repo.create_project('doesnotexist2', False, True,
-                                          plating_start_date)
+                # NB: No need to clean up test project created because it is in
+                # a transaction that is never committed!
+
+    def test_create_project_success_banking(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            with t.cursor() as cur:
+                plating_start = date(2020, 7, 31)
+                minimal_proj_dict = {PROJ_NAME_KEY: 'doesnotexist2',
+                                     IS_MICROSETTA_KEY: False,
+                                     BANK_SAMPLES_KEY: True,
+                                     PLATING_START_DATE_KEY: "2020-07-31"}
+                input = Project(**minimal_proj_dict)
+                admin_repo.create_project(input)
                 cur.execute("SELECT project, is_microsetta, bank_samples, "
                             "plating_start_date "
                             "FROM barcodes.project "
                             "WHERE project = 'doesnotexist2'")
                 obs = cur.fetchall()
                 self.assertEqual(obs, [('doesnotexist2', False, True,
-                                        plating_start_date), ])
+                                        plating_start), ])
 
-    def test_create_kits(self):
+                # NB: No need to clean up test project created because it is in
+                # a transaction that is never committed!
+
+    def test_create_kits_fail_nonexistent_project(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
 
             with self.assertRaisesRegex(KeyError, "does not exist"):
                 admin_repo.create_kits(5, 3, '', ['foo', 'bar'])
 
+    def test_create_kits_success_not_microsetta(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
             non_tmi = admin_repo.create_kits(5, 3, '',
-                                             ['Project - /J/xL_|Eãt'])
+                                             ['Project - lm3eáqç(>?'])
             self.assertEqual(['created', ], list(non_tmi.keys()))
             self.assertEqual(len(non_tmi['created']), 5)
             for obj in non_tmi['created']:
@@ -239,6 +272,9 @@ class AdminTests(TestCase):
                 observed = cur.fetchall()
                 self.assertEqual(len(observed), 0)
 
+    def test_create_kits_success_is_microsetta(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
             tmi = admin_repo.create_kits(4, 2, 'foo',
                                          ['American Gut Project'])
             self.assertEqual(['created', ], list(tmi.keys()))
@@ -361,24 +397,22 @@ class AdminTests(TestCase):
                                          survey)
             self.assertTrue(found)
 
-    def test_summary_statistics(self):
+    def test_get_projects(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
 
-            summary = admin_repo.get_project_summary_statistics()
-            self.assertGreater(len(summary), 1)
-            for stats in summary:
-                self.assertIn('project_id', stats)
-                self.assertIn('project_name', stats)
-                self.assertIn('number_of_samples', stats)
+            output = admin_repo.get_projects()
+            self.assertGreater(len(output), 1)
+            first_proj = output[0]
+            self.assertEqual(1, first_proj.project_id)
+            self.assertEqual("American Gut Project", first_proj.project_name)
+            # TODO: expand tests
 
-    def test_detailed_project_statistics(self):
+    def test_get_project(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
 
-            agp_summary = admin_repo.get_project_detailed_statistics(1)
-            self.assertIn('project_id', agp_summary)
-            self.assertIn('project_name', agp_summary)
-            self.assertIn('number_of_samples', agp_summary)
-            self.assertIn('number_of_samples_scanned_in', agp_summary)
-            self.assertIn('sample_status_counts', agp_summary)
+            output = admin_repo.get_project(1)
+            self.assertEqual(1, output.project_id)
+            self.assertIn('American Gut Project', output.project_name)
+            # TODO: expand tests
