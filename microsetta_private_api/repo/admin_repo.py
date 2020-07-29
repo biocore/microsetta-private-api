@@ -5,6 +5,7 @@ import datetime
 
 from microsetta_private_api.exceptions import RepoException
 
+from microsetta_private_api.model.project import Project
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
@@ -15,6 +16,22 @@ from werkzeug.exceptions import NotFound
 from hashlib import sha512
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+
+PARTIAL_PROJ_DETAILS_SQL = """
+    SELECT
+    p.*,
+    count(barcode) as num_samples,
+    count(distinct kit_id) as num_kits
+    FROM barcodes.project as p
+    LEFT JOIN
+    barcodes.project_barcode
+    USING (project_id)
+    LEFT JOIN
+    barcodes.barcode
+    USING (barcode)
+"""
+
+GROUP_PROJ_SQL = " GROUP BY project_id"
 
 
 class AdminRepo(BaseRepo):
@@ -147,38 +164,213 @@ class AdminRepo(BaseRepo):
 
             return diagnostic
 
-    def create_project(self, project_name, is_microsetta, bank_samples,
-                       plating_start_date=None):
+    def create_project(self, project):
         """Create a project entry in the database
 
         Parameters
         ----------
-        project_name : str
-            The name of the project to create
-        is_microsetta : bool
-            If the project is part of The Microsetta Initiative
-        bank_samples : bool
-            If the project's samples should be banked until some future date
-        plating_start_date : date
-            Optional date on which project's banked samples will be plated
+        project : Project
+            A filled project object
         """
-        if is_microsetta:
-            tmi = 'yes'
-        else:
-            tmi = 'no'
 
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT MAX(project_id) + 1 "
-                        "FROM barcodes.project")
-            id_ = cur.fetchone()[0]
+            if project.project_id is not None:
+                id_ = project.project_id
+            else:
+                cur.execute("SELECT MAX(project_id) + 1 "
+                            "FROM barcodes.project")
+                id_ = cur.fetchone()[0]
 
             cur.execute("INSERT INTO barcodes.project "
                         "(project_id, project, is_microsetta, bank_samples, "
-                        "plating_start_date) "
-                        "VALUES (%s, %s, %s, %s, %s)",
-                        [id_, project_name, tmi, bank_samples,
-                         plating_start_date])
-        return True
+                        "plating_start_date, contact_name, "
+                        "additional_contact_name, contact_email, "
+                        "deadlines, num_subjects, num_timepoints, start_date, "
+                        "disposition_comments, collection,"
+                        "is_fecal, is_saliva, is_skin, is_blood, is_other, "
+                        "do_16s, do_shallow_shotgun, do_shotgun, do_rt_qpcr, "
+                        "do_serology, do_metatranscriptomics, do_mass_spec, "
+                        "mass_spec_comments, mass_spec_contact_name, "
+                        "mass_spec_contact_email, do_other, "
+                        "branding_associated_instructions, branding_status, "
+                        "subproject_name, alias, sponsor, coordination"
+                        ") "
+                        "VALUES ("
+                        " %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
+                        " %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
+                        " %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
+                        " %s, %s, %s, %s, %s, %s)",
+                        [id_, project.project_name, project.is_microsetta,
+                         project.bank_samples, project.plating_start_date,
+                         project.contact_name, project.additional_contact_name,
+                         project.contact_email, project.deadlines,
+                         project.num_subjects, project.num_timepoints,
+                         project.start_date, project.disposition_comments,
+                         project.collection, project.is_fecal,
+                         project.is_saliva, project.is_skin, project.is_blood,
+                         project.is_other, project.do_16s,
+                         project.do_shallow_shotgun, project.do_shotgun,
+                         project.do_rt_qpcr, project.do_serology,
+                         project.do_metatranscriptomics,
+                         project.do_mass_spec, project.mass_spec_comments,
+                         project.mass_spec_contact_name,
+                         project.mass_spec_contact_email,
+                         project.do_other,
+                         project.branding_associated_instructions,
+                         project.branding_status, project.subproject_name,
+                         project.alias, project.sponsor, project.coordination])
+
+        # if we made it this far, all is well
+        return id_
+
+    def get_projects(self):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT project_id "
+                "FROM barcodes.project "
+                "ORDER BY project_id ASC;")
+            rows = cur.fetchall()
+
+            result = []
+            project_ids = [row[0] for row in rows]
+            for curr_project_id in project_ids:
+                curr_project = self.get_project(curr_project_id)
+                result.append(curr_project)
+
+            return result
+
+    def get_project(self, project_id):
+        with self._transaction.dict_cursor() as cur:
+            # get basic project info + total number of samples and kits
+            sql = "{}{}{}".format(PARTIAL_PROJ_DETAILS_SQL,
+                                  "WHERE project_id=%s ",
+                                  GROUP_PROJ_SQL)
+            cur.execute(sql, (project_id,))
+            row = cur.fetchone()
+
+            if row is None:
+                raise NotFound("No such project")
+
+            proj_dict = dict(row)
+
+            # get number of scanned samples
+            cur.execute(
+                "SELECT "
+                "project_id, count(distinct barcode) as num_samples_received "
+                "FROM project_barcode "
+                "INNER JOIN "
+                "barcode_scans "
+                "USING (barcode) "
+                "WHERE "
+                "project_id = %s "
+                "GROUP BY project_id",
+                (project_id,)
+            )
+            row = cur.fetchone()
+
+            num_samples_received = 0  # default assumption
+            if row is not None:
+                num_samples_received = row['num_samples_received']
+            proj_dict["num_samples_received"] = num_samples_received
+
+            # TODO: get number of unique sources
+
+            a_project = Project(**proj_dict)
+            return a_project
+
+    def update_project(self, project_id, project):
+        """
+        Updates end-user writable information about a project.
+        """
+
+        with self._transaction.cursor() as cur:
+            # ensure this project exists
+            cur.execute(
+                "SELECT project_id "
+                "FROM barcodes.project "
+                "WHERE project_id=%s;",
+                (project_id,))
+
+            row = cur.fetchone()
+            if row is None:
+                raise NotFound("No project with ID %s" % project_id)
+
+            cur.execute("UPDATE barcodes.project "
+                        "SET project=%s, "
+                        "subproject_name=%s, "
+                        "alias=%s, "
+                        "is_microsetta=%s, "
+                        "sponsor=%s, "
+                        "coordination=%s, "
+                        "contact_name=%s, "
+                        "additional_contact_name=%s, "
+                        "contact_email=%s, "
+                        "deadlines=%s, "
+                        "num_subjects=%s, "
+                        "num_timepoints=%s, "
+                        "start_date=%s, "
+                        "bank_samples=%s, "
+                        "plating_start_date=%s, "
+                        "disposition_comments=%s, "
+                        "collection=%s, "
+                        "is_fecal=%s, "
+                        "is_saliva=%s, "
+                        "is_skin=%s, "
+                        "is_blood=%s, "
+                        "is_other=%s, "
+                        "do_16s=%s, "
+                        "do_shallow_shotgun=%s, "
+                        "do_shotgun=%s, "
+                        "do_rt_qpcr=%s, "
+                        "do_serology=%s, "
+                        "do_metatranscriptomics=%s, "
+                        "do_mass_spec=%s, "
+                        "mass_spec_comments=%s, "
+                        "mass_spec_contact_name=%s, "
+                        "mass_spec_contact_email=%s, "
+                        "do_other=%s, "
+                        "branding_associated_instructions=%s, "
+                        "branding_status=%s "
+                        "WHERE project_id=%s;",
+                        (
+                            project.project_name,
+                            project.subproject_name,
+                            project.alias,
+                            project.is_microsetta,
+                            project.sponsor,
+                            project.coordination,
+                            project.contact_name,
+                            project.additional_contact_name,
+                            project.contact_email,
+                            project.deadlines,
+                            project.num_subjects,
+                            project.num_timepoints,
+                            project.start_date,
+                            project.bank_samples,
+                            project.plating_start_date,
+                            project.disposition_comments,
+                            project.collection,
+                            project.is_fecal,
+                            project.is_saliva,
+                            project.is_skin,
+                            project.is_blood,
+                            project.is_other,
+                            project.do_16s,
+                            project.do_shallow_shotgun,
+                            project.do_shotgun,
+                            project.do_rt_qpcr,
+                            project.do_serology,
+                            project.do_metatranscriptomics,
+                            project.do_mass_spec,
+                            project.mass_spec_comments,
+                            project.mass_spec_contact_name,
+                            project.mass_spec_contact_email,
+                            project.do_other,
+                            project.branding_associated_instructions,
+                            project.branding_status,
+                            project_id
+                        ))
+            return cur.rowcount == 1
 
     def delete_project_by_name(self, project_name):
         """Delete a project entry and its associations to barcodes from db
@@ -540,116 +732,3 @@ class AdminRepo(BaseRepo):
         }
 
         return pulldown
-
-    def get_project_summary_statistics(self):
-        with self._transaction.dict_cursor() as cur:
-            cur.execute(
-                "SELECT "
-                "project_id, project, "
-                "count(barcode) as barcode_count, "
-                "count(distinct kit_id) as kit_count "
-                "FROM project "
-                "LEFT JOIN "
-                "project_barcode "
-                "USING(project_id) "
-                "LEFT JOIN "
-                "barcode "
-                "USING(barcode) "
-                "GROUP BY project_id "
-                "ORDER BY barcode_count DESC"
-            )
-            rows = cur.fetchall()
-
-            proj_stats = [
-                {
-                    'project_id': row['project_id'],
-                    'project_name': row['project'],
-                    'number_of_samples': row['barcode_count'],
-                    'number_of_kits': row['kit_count']
-                }
-                for row in rows]
-
-            return proj_stats
-
-    def get_project_detailed_statistics(self, project_id):
-        with self._transaction.dict_cursor() as cur:
-            # get total number of samples and kits
-            cur.execute(
-                "SELECT "
-                "project_id, project, "
-                "count(barcode) as barcode_count, "
-                "count(distinct kit_id) as kit_count "
-                "FROM project "
-                "LEFT JOIN "
-                "project_barcode "
-                "USING(project_id) "
-                "LEFT JOIN "
-                "barcode "
-                "USING(barcode) "
-                "WHERE project_id=%s "
-                "GROUP BY project_id",
-                (project_id,)
-            )
-            row = cur.fetchone()
-
-            if row is None:
-                raise NotFound("No such project")
-
-            project_id = row['project_id']
-            project_name = row['project']
-            number_of_samples = row['barcode_count']
-            number_of_kits = row['kit_count']
-
-            # get number of scanned samples
-            cur.execute(
-                "SELECT "
-                "project_id, count(distinct barcode) "
-                "FROM project_barcode "
-                "INNER JOIN "
-                "barcode_scans "
-                "USING (barcode) "
-                "WHERE "
-                "project_id = %s "
-                "GROUP BY project_id",
-                (project_id,)
-            )
-            row = cur.fetchone()
-            number_of_samples_scanned_in = row['count']
-
-            # get number of barcodes in each project with
-            # each (non-null) current sample_status
-            cur.execute(
-                "SELECT "
-                "project_id, project, sample_status, "
-                "count(project_barcode.barcode) "
-                "FROM project "
-                "LEFT JOIN project_barcode "
-                "USING (project_id) "
-                "LEFT JOIN barcode_scans "
-                "USING (barcode) "
-                "LEFT JOIN ("
-                "   SELECT barcode, max(scan_timestamp) AS scan_timestamp "
-                "   FROM barcodes.barcode_scans "
-                "   GROUP BY barcode "
-                ") latest_scan "
-                "ON project_barcode.barcode = latest_scan.barcode "
-                "WHERE "
-                "project_id = %s "
-                "GROUP BY project_id, sample_status",
-                (project_id,)
-            )
-            rows = cur.fetchall()
-            sample_status_counts = {
-                row['sample_status']: row['count'] for row in rows
-            }
-
-            detailed_stats = {
-                'project_id': project_id,
-                'project_name': project_name,
-                'number_of_kits': number_of_kits,
-                'number_of_samples': number_of_samples,
-                'number_of_samples_scanned_in': number_of_samples_scanned_in,
-                'sample_status_counts': sample_status_counts
-            }
-
-            return detailed_stats
