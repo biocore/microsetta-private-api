@@ -273,7 +273,25 @@ class AdminRepo(BaseRepo):
                 num_samples_received = row['num_samples_received']
             proj_dict["num_samples_received"] = num_samples_received
 
-            # TODO: get number of unique sources
+            # get number of distinct sources linked to barcodes associated
+            # with this project
+            cur.execute(
+                "SELECT project_barcode.project_id, " 
+                "count(distinct ag_kit_barcodes.source_id) "
+                "   as num_unique_sources "
+                "FROM barcodes.project_barcode " 
+                "INNER JOIN ag.ag_kit_barcodes "
+                "USING (barcode) "
+                "WHERE project_id = %s "
+                "GROUP BY project_id;",
+                (project_id,)
+            )
+            row = cur.fetchone()
+
+            num_unique_sources = 0  # default assumption
+            if row is not None:
+                num_unique_sources = row['num_unique_sources']
+            proj_dict["num_unique_sources"] = num_unique_sources
 
             a_project = Project(**proj_dict)
             return a_project
