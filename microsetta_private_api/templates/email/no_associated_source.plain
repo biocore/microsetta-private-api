@@ -1,0 +1,18 @@
+Hello {{contact_name |e}},
+    Thank you for your interest and participation in The Microsetta Initiative. We are writing as we've encountered an issue processing your sample, and we would appreciate your assistance in helping to resolve this matter.
+
+    Specifically, the following sample sent to the lab is not associated with a source:
+        Barcode {{sample_barcode |e}}
+
+    We require this information in order to process this sample in compliance with our human subjects research protocol. Please log back into the participant website by clicking or copying on the following URL:
+    {{ account_url}}
+
+    After accessing your account using the above URL, you will need to:
+    * Create a source: Click on one of the buttons under the "Sources" section
+    * Add the sample to the source: After creating a source, claim the sample using the associated kit ID
+    * Record the sample specific information: After claiming the sample, click on its button to update its information (e.g., date of collection)
+
+    If you have any questions, please reply to us at microsetta@ucsd.edu
+
+    Thank you,
+    The Microsetta Team
