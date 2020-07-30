@@ -34,6 +34,22 @@ class EmailMessage(Enum):
         EventType.EMAIL,
         EventSubtype.EMAIL_MISSING_SAMPLE_INFO
     )
+    sample_is_valid = (
+        "Sample is valid",
+        "email/sample_is_valid.jinja2",
+        "email/sample_is_valid.plain",
+        ("contact_name", "sample_barcode", "received_type", "resolution_url"),
+        EventType.EMAIL,
+        EventSubtype.EMAIL_SAMPLE_IS_VALID
+    )
+    no_associated_source = (
+        "No associated source",
+        "email/no_associated_source.jinja2",
+        "email/no_associated_source.plain",
+        ("contact_name", "sample_barcode", "received_type", "resolution_url"),
+        EventType.EMAIL,
+        EventSubtype.EMAIL_NO_SOURCE
+    )
 
     def __init__(self, subject, html, plain, required, event_type, event_sub):
         self.subject = subject

@@ -27,6 +27,10 @@ class EventSubtype(Enum):
     EMAIL_INCORRECT_SAMPLE_TYPE = "incorrect_sample_type"
     # Indicate a sample was received but necessary information was not provided
     EMAIL_MISSING_SAMPLE_INFO = "missing_sample_info"
+    # A valid sample was received
+    EMAIL_SAMPLE_IS_VALID = "sample_is_valid"
+    # Sample is not associated with a source
+    EMAIL_NO_SOURCE = "no_associated_source"
 
 
 class LogEvent(ModelBase):
