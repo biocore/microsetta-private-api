@@ -111,13 +111,14 @@ class Project:
             self.project_name = project_name
 
         if self.plating_start_date is not None:
-            try:
-                self.plating_start_date = datetime.datetime.strptime(
-                    self.plating_start_date, "%Y-%m-%d")
-            except ValueError:
-                raise ValueError(
-                    "plating start date '{0}' is not a valid date in "
-                    "YYYY-MM-DD format".format(self.plating_start_date))
+            if isinstance(self.plating_start_date, str):
+                try:
+                    self.plating_start_date = datetime.datetime.strptime(
+                        self.plating_start_date, "%Y-%m-%d")
+                except ValueError:
+                    raise ValueError(
+                        "plating start date '{0}' is not a valid date in "
+                        "YYYY-MM-DD format".format(self.plating_start_date))
 
         if not self.bank_samples and self.plating_start_date is not None:
             raise ValueError("Plating start date cannot be set for"
