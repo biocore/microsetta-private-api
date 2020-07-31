@@ -114,13 +114,17 @@ class AdminTests(TestCase):
         except Unauthorized:
             pass
 
+    # TODO FIXME HACK:  Need to build mock barcodes rather than using
+    #  these fixed ones
     def test_retrieve_diagnostics_by_barcode_w_scans(self):
         def make_tz_datetime(y, m, d):
             return datetime.datetime(y, m, d, 0, 0,
                                      tzinfo=psycopg2.tz.FixedOffsetTimezone(
                                          offset=-420, name=None))
 
-        test_barcode = '000044481'  # non-AGP barcode--no acct, source, etc
+        # Non-AGP barcode so no acct, source, or sample;
+        # also no preexisting scans in test db
+        test_barcode = '000004531'
         first_scan_id = 'f7fd3022-3a9c-4f79-b92c-5cebd83cba38'
         second_scan_id = '76aec821-aa28-4dea-a796-2cfd1276f78c'
 
@@ -144,8 +148,6 @@ class AdminTests(TestCase):
             add_dummy_scan(second_scan)
 
             with Transaction() as t:
-                # TODO FIXME HACK: Build mock barcodes rather than using
-                #  these fixed ones
                 admin_repo = AdminRepo(t)
                 diag = admin_repo.retrieve_diagnostics_by_barcode(test_barcode)
                 self.assertIsNotNone(diag['barcode_info'])
@@ -164,8 +166,6 @@ class AdminTests(TestCase):
 
     def test_retrieve_diagnostics_by_barcode_wo_scans(self):
         with Transaction() as t:
-            # TODO FIXME HACK:  Need to build mock barcodes rather than using
-            #  these fixed ones
             admin_repo = AdminRepo(t)
             diag = admin_repo.retrieve_diagnostics_by_barcode('000033903')
             self.assertIsNotNone(diag['barcode_info'])
@@ -177,8 +177,6 @@ class AdminTests(TestCase):
 
     def test_retrieve_diagnostics_by_barcode_nonexistent(self):
         with Transaction() as t:
-            # TODO FIXME HACK:  Need to build mock barcodes rather than using
-            #  these fixed ones
             admin_repo = AdminRepo(t)
             # Uhh, should this return a 404 not found or just an empty
             # diagnostic object...?
@@ -228,7 +226,6 @@ class AdminTests(TestCase):
             self.assertIsNone(diag['sample'])
             self.assertGreater(len(diag['scans_info']), 0)
             self.assertGreater(len(diag['projects_info']), 0)
-
 
     def test_create_project(self):
         with Transaction() as t:

@@ -17,15 +17,11 @@ FROM ag.ag_kit_barcodes, ag.source, ag.account
 WHERE barcode.barcode = ag_kit_barcodes.barcode
 AND ag_kit_barcodes.source_id = ag.source.id 
 AND ag.source.account_id = account.id
-AND site_sampled IS NOT null
+AND sample_date IS NOT null
 AND sample_status IS null AND scan_date IS NOT null;
 
 -- case 2: barcode is part of AGP and linked to an account
 -- by way of a source but is missing (at least some) collection info.
--- NB sample collection date is used as the bellwether for the whole
--- set of sample collection info because it is relevant to all
--- kinds of samples (whereas previously used field, sample site, is not
--- filled when environmental samples are returned).
 UPDATE barcodes.barcode
 SET sample_status = 'no-collection-info'
 FROM ag.ag_kit_barcodes, ag.source, ag.account
