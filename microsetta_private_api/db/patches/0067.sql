@@ -12,7 +12,7 @@
 -- a sample (whereas, e.g., environmental sources don't require
 -- site_sampled, etc).
 UPDATE barcodes.barcode
-SET sample_status = 'valid'
+SET sample_status = 'sample-is-valid'
 FROM ag.ag_kit_barcodes, ag.source, ag.account
 WHERE barcode.barcode = ag_kit_barcodes.barcode
 AND ag_kit_barcodes.source_id = ag.source.id 
