@@ -276,10 +276,10 @@ class AdminRepo(BaseRepo):
             # get number of distinct sources linked to barcodes associated
             # with this project
             cur.execute(
-                "SELECT project_barcode.project_id, " 
+                "SELECT project_barcode.project_id, "
                 "count(distinct ag_kit_barcodes.source_id) "
                 "   as num_unique_sources "
-                "FROM barcodes.project_barcode " 
+                "FROM barcodes.project_barcode "
                 "INNER JOIN ag.ag_kit_barcodes "
                 "USING (barcode) "
                 "WHERE project_id = %s "

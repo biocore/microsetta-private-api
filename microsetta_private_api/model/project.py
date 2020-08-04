@@ -96,7 +96,6 @@ class Project:
         self.sponsor = kwargs.get(SPONSOR_KEY)
         self.coordination = kwargs.get(COORDINATION_KEY)
 
-
         project_name = kwargs.get(PROJ_NAME_KEY)
         db_project_name = kwargs.get(DB_PROJ_NAME_KEY)
 
