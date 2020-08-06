@@ -38,7 +38,7 @@ class EmailMessage(Enum):
         "Sample is valid",
         "email/sample_is_valid.jinja2",
         "email/sample_is_valid.plain",
-        ("contact_name", "sample_barcode", "received_type", "resolution_url"),
+        ("contact_name",),
         EventType.EMAIL,
         EventSubtype.EMAIL_SAMPLE_IS_VALID
     )
@@ -46,7 +46,7 @@ class EmailMessage(Enum):
         "No associated source",
         "email/no_associated_source.jinja2",
         "email/no_associated_source.plain",
-        ("contact_name", "sample_barcode", "received_type", "resolution_url"),
+        ("contact_name", "sample_barcode", "resolution_url"),
         EventType.EMAIL,
         EventSubtype.EMAIL_NO_SOURCE
     )
