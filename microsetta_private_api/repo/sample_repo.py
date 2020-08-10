@@ -176,7 +176,8 @@ class SampleRepo(BaseRepo):
                             sample_info.id
                         ))
 
-    def associate_sample(self, account_id, source_id, sample_id):
+    def associate_sample(self, account_id, source_id, sample_id,
+                         override_locked=False):
         with self._transaction.cursor() as cur:
             cur.execute("SELECT "
                         "ag_kit_barcode_id, "
@@ -193,7 +194,6 @@ class SampleRepo(BaseRepo):
             if row is None:
                 raise werkzeug.exceptions.NotFound("No sample ID: %s" %
                                                    sample_id)
-
             if row[2] is not None:
                 if row[1] != account_id:
                     # This is the case where the sample is already assigned in
@@ -205,9 +205,8 @@ class SampleRepo(BaseRepo):
                     raise RepoException("Sample is already assigned")
             else:
                 # This is the case where the sample is not yet assigned
-                # NOTE: we are not passing override_locked here as a sample
-                # that is not yet assigned cannot be locked.
-                self._update_sample_association(sample_id, source_id)
+                self._update_sample_association(sample_id, source_id,
+                                                override_locked=override_locked)  # noqa
 
     def dissociate_sample(self, account_id, source_id, sample_id,
                           override_locked=False):
