@@ -28,12 +28,15 @@ def read_sample_associations(account_id, source_id, token_info):
 def associate_sample(account_id, source_id, body, token_info):
     _validate_account_access(token_info, account_id)
 
+    is_admin = token_grants_admin_access(token_info)
     with Transaction() as t:
         sample_repo = SampleRepo(t)
         sample_repo.associate_sample(account_id,
                                      source_id,
-                                     body['sample_id'])
+                                     body['sample_id'],
+                                     override_locked=is_admin)
         t.commit()
+
     response = flask.Response()
     response.status_code = 201
     response.headers['Location'] = '/api/accounts/%s/sources/%s/samples/%s' % \

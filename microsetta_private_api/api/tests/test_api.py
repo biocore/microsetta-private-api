@@ -434,7 +434,7 @@ def create_dummy_answered_survey(dummy_acct_id, dummy_source_id,
     return survey_answers_id
 
 
-def create_dummy_kit(account_id=None, source_id=None):
+def create_dummy_kit(account_id=None, source_id=None, associate_sample=True):
     with Transaction() as t:
         _create_mock_kit(t, barcodes=[BARCODE],
                          mock_sample_ids=[MOCK_SAMPLE_ID])
@@ -445,8 +445,11 @@ def create_dummy_kit(account_id=None, source_id=None):
 
             sample_info, _ = create_dummy_sample_objects(True)
             sample_repo = SampleRepo(t)
-            sample_repo.associate_sample(account_id, source_id, MOCK_SAMPLE_ID)
-            sample_repo.update_info(account_id, source_id, sample_info)
+
+            if associate_sample:
+                sample_repo.associate_sample(account_id, source_id,
+                                             MOCK_SAMPLE_ID)
+                sample_repo.update_info(account_id, source_id, sample_info)
 
         t.commit()
 
@@ -1350,6 +1353,58 @@ class SampleTests(ApiTests):
         # TODO: We should also have tests of associating a survey to a sample
         #  that fail with with a 401 for answered survey not found and
         #  a 401 for sample not found
+
+    def test_associate_sample_locked(self):
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        create_dummy_kit(dummy_acct_id, dummy_source_id,
+                         associate_sample=False)
+        _ = create_dummy_answered_survey(
+            dummy_acct_id, dummy_source_id)
+
+        base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
+            dummy_acct_id, dummy_source_id)
+
+        # "scan" the sample in
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
+                                     json={'sample_status': 'sample-is-valid',
+                                           'technician_notes': "foobar"},
+                                     headers=make_headers(FAKE_TOKEN_ADMIN))
+        self.assertEqual(201, post_resp.status_code)
+
+        # attempt to associate as a regular user
+        post_resp = self.client.post(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'sample_id': MOCK_SAMPLE_ID,
+                }),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(422, post_resp.status_code)
+
+        # associate as admin user
+        post_resp = self.client.post(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'sample_id': MOCK_SAMPLE_ID,
+                }),
+            headers=make_headers(FAKE_TOKEN_ADMIN)
+        )
+
+        # check response code
+        self.assertEqual(201, post_resp.status_code)
 
     def test_dissociate_sample_from_source_locked(self):
         dummy_acct_id, dummy_source_id = create_dummy_source(
