@@ -12,23 +12,23 @@
 -- a sample (whereas, e.g., environmental sources don't require
 -- site_sampled, etc).
 UPDATE barcodes.barcode
-SET sample_status = 'sample-is-valid'
+SET sample_status = 'valid'
 FROM ag.ag_kit_barcodes, ag.source, ag.account
 WHERE barcode.barcode = ag_kit_barcodes.barcode
-AND ag_kit_barcodes.source_id = ag.source.id 
+AND ag_kit_barcodes.source_id = ag.source.id
 AND ag.source.account_id = account.id
-AND sample_date IS NOT null
+AND site_sampled IS NOT null
 AND sample_status IS null AND scan_date IS NOT null;
 
 -- case 2: barcode is part of AGP and linked to an account
--- by way of a source but is missing (at least some) collection info.
+-- by way of a source but is missing (at least some) collection info
 UPDATE barcodes.barcode
 SET sample_status = 'no-collection-info'
 FROM ag.ag_kit_barcodes, ag.source, ag.account
 WHERE barcode.barcode = ag_kit_barcodes.barcode
-AND ag_kit_barcodes.source_id = ag.source.id 
+AND ag_kit_barcodes.source_id = ag.source.id
 AND ag.source.account_id = account.id
-AND sample_date IS null
+AND site_sampled IS null
 AND sample_status IS null AND scan_date IS NOT null;
 
 -- case 3: barcode is part of AGP and is linked to an account
