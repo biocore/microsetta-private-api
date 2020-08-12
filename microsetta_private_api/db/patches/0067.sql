@@ -6,11 +6,7 @@
 -- put into barcode
 --
 -- case 1: (happy path) scanned barcode belongs to AGP, is linked to an
--- account by way of a source, and has collection info.  Note that
--- collection date is used as a proxy for collection info
--- because all kinds of sources require collection_date for
--- a sample (whereas, e.g., environmental sources don't require
--- site_sampled, etc).
+-- account by way of a source, and has collection info.
 UPDATE barcodes.barcode
 SET sample_status = 'valid'
 FROM ag.ag_kit_barcodes, ag.source, ag.account
