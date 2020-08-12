@@ -25,8 +25,8 @@ AND sample_status IS null AND scan_date IS NOT null;
 UPDATE barcodes.barcode
 SET sample_status = 'no-collection-info'
 FROM ag.ag_kit_barcodes, ag.source, ag.account
-WHERE barcode.barcode = ag_kit_barcodes.barcode 
-AND ag_kit_barcodes.source_id = ag.source.id
+WHERE barcode.barcode = ag_kit_barcodes.barcode
+AND ag_kit_barcodes.source_id = ag.source.id 
 AND ag.source.account_id = account.id
 AND site_sampled IS null
 AND sample_status IS null AND scan_date IS NOT null;
