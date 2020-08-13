@@ -4,6 +4,8 @@
 A private microservice to support The Microsetta Initiative
 
 ## Installation
+The private microservice depends on Postgres 9.5. For OSX users, we recommend installing [Postgres.app](https://postgresapp.com/). For Linux users, please consult documentation for the Linux distribution in use. 
+
 Create a new `conda` environment containing `flask` and other necessary packages:
 
 `conda create -n microsetta-private-api flask psycopg2 natsort pycryptodome`
@@ -30,7 +32,11 @@ Then install the microsetta-private-api in editable mode:
  
 ## Test Usage
 
-In the activated conda environment, start the microservice using flask's built-in server by running, e.g., 
+In the activated conda environment, initialize a test database:
+
+`python microsetta_private_api/LEGACY/build_db.py`
+
+Next, start the microservice using flask's built-in server by running, e.g., 
 
 `python ./microsetta_private_api/server.py`
 

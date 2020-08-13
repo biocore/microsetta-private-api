@@ -11,6 +11,7 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.util.util import fromisotime
+from microsetta_private_api.admin.admin_impl import token_grants_admin_access
 
 
 def read_sample_associations(account_id, source_id, token_info):
@@ -27,12 +28,15 @@ def read_sample_associations(account_id, source_id, token_info):
 def associate_sample(account_id, source_id, body, token_info):
     _validate_account_access(token_info, account_id)
 
+    is_admin = token_grants_admin_access(token_info)
     with Transaction() as t:
         sample_repo = SampleRepo(t)
         sample_repo.associate_sample(account_id,
                                      source_id,
-                                     body['sample_id'])
+                                     body['sample_id'],
+                                     override_locked=is_admin)
         t.commit()
+
     response = flask.Response()
     response.status_code = 201
     response.headers['Location'] = '/api/accounts/%s/sources/%s/samples/%s' % \
@@ -101,7 +105,10 @@ def update_sample_association(account_id, source_id, sample_id, body,
             body["sample_notes"]
         )
 
-        sample_repo.update_info(account_id, source_id, sample_info)
+        is_admin = token_grants_admin_access(token_info)
+        sample_repo.update_info(account_id, source_id, sample_info,
+                                override_locked=is_admin)
+
         final_sample = sample_repo.get_sample(account_id, source_id, sample_id)
         t.commit()
     return jsonify(final_sample), 200
@@ -120,7 +127,9 @@ def dissociate_sample(account_id, source_id, sample_id, token_info):
                 account_id, source_id, sample_id, curr_answered_survey_id)
 
         sample_repo = SampleRepo(t)
-        sample_repo.dissociate_sample(account_id, source_id, sample_id)
+        is_admin = token_grants_admin_access(token_info)
+        sample_repo.dissociate_sample(account_id, source_id, sample_id,
+                                      override_locked=is_admin)
 
         t.commit()
 

@@ -19,6 +19,7 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.model.sample import Sample, SampleInfo
+from microsetta_private_api.model.address import Address
 from microsetta_private_api.api.tests.test_integration import \
     _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
 
@@ -29,9 +30,11 @@ CONTENT_KEY = "content"
 
 TEST_EMAIL = "test_email@example.com"
 TEST_EMAIL_2 = "second_test_email@example.com"
+TEST_EMAIL_3 = "admintestemail@example.com"
 
 ACCT_ID_1 = "7a98df6a-e4db-40f4-91ec-627ac315d881"
 ACCT_ID_2 = "9457c58f-7464-46c9-b6e0-116273cf8f28"
+ACCT_ID_3 = "80413d05-8568-4791-985f-da1feea824d4"
 MISSING_ACCT_ID = "a6cbd48e-f8da-4c0e-bdd6-3ffbbb5958ba"
 
 KIT_NAME_KEY = "kit_name"
@@ -63,6 +66,19 @@ DUMMY_ACCT_INFO_2 = {
         "street": "489 College St."
     },
     "email": TEST_EMAIL_2,
+    "first_name": "Obie",
+    "last_name": "Dobie",
+    KIT_NAME_KEY: EXISTING_KIT_NAME_2
+}
+DUMMY_ACCT_ADMIN = {
+    "address": {
+        "city": "Oberlin",
+        "country_code": "US",
+        "post_code": "44074",
+        "state": "OH",
+        "street": "489 College St."
+    },
+    "email": TEST_EMAIL_3,
     "first_name": "Obie",
     "last_name": "Dobie",
     KIT_NAME_KEY: EXISTING_KIT_NAME_2
@@ -122,12 +138,15 @@ ACCT_MOCK_ISS = "MrUnitTest.go"
 ACCT_MOCK_SUB = "NotARealSub"
 ACCT_MOCK_ISS_2 = "NewPhone"
 ACCT_MOCK_SUB_2 = "WhoDis"
+ACCT_MOCK_ISS_3 = "admin"
+ACCT_MOCK_SUB_3 = "adminer"
 
 SOURCE_ID_KEY = 'source_id'
 
 MOCK_HEADERS = {"Authorization": "Bearer mockone"}
 FAKE_TOKEN_IMPOSTOR = "mockimpostor"
 FAKE_TOKEN_EMAIL_MISMATCH = "mockemailmismatch"
+FAKE_TOKEN_ADMIN = "fakeadmin"
 
 
 def make_headers(fake_token):
@@ -140,6 +159,12 @@ def mock_verify(token):
             'email': TEST_EMAIL,
             'iss': ACCT_MOCK_ISS,
             'sub': ACCT_MOCK_SUB
+        }
+    elif token == FAKE_TOKEN_ADMIN:
+        return {
+            'email': TEST_EMAIL_3,
+            'iss': ACCT_MOCK_ISS_3,
+            'sub': ACCT_MOCK_SUB_3
         }
     elif token == FAKE_TOKEN_EMAIL_MISMATCH:
         return {
@@ -231,7 +256,7 @@ def extract_last_id_from_location_header(response):
 
 def delete_dummy_accts():
     all_sample_ids = []
-    acct_ids = [ACCT_ID_1, ACCT_ID_2]
+    acct_ids = [ACCT_ID_1, ACCT_ID_2, ACCT_ID_3]
 
     with Transaction() as t:
         acct_repo = AccountRepo(t)
@@ -257,7 +282,8 @@ def delete_dummy_accts():
                 # Now dissociate all the samples from this source
                 for curr_sample_id in sample_ids:
                     sample_repo.dissociate_sample(curr_acct_id, curr_source.id,
-                                                  curr_sample_id)
+                                                  curr_sample_id,
+                                                  override_locked=True)
 
                 # Finally, delete the source
                 source_repo.delete_source(curr_acct_id, curr_source.id)
@@ -304,9 +330,11 @@ def delete_dummy_answered_surveys_from_source_with_t(
 
 def create_dummy_acct(create_dummy_1=True,
                       iss=ACCT_MOCK_ISS,
-                      sub=ACCT_MOCK_SUB):
+                      sub=ACCT_MOCK_SUB,
+                      dummy_is_admin=False):
     with Transaction() as t:
-        dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub)
+        dummy_acct_id = _create_dummy_acct_from_t(t, create_dummy_1, iss, sub,
+                                                  dummy_is_admin)
         t.commit()
 
     return dummy_acct_id
@@ -336,7 +364,8 @@ def create_dummy_source(name, source_type, content_dict, create_dummy_1=True,
 
 def _create_dummy_acct_from_t(t, create_dummy_1=True,
                               iss=ACCT_MOCK_ISS,
-                              sub=ACCT_MOCK_SUB):
+                              sub=ACCT_MOCK_SUB,
+                              dummy_is_admin=False):
     if create_dummy_1:
         dummy_acct_id = ACCT_ID_1
         dict_to_copy = DUMMY_ACCT_INFO
@@ -347,10 +376,32 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
     input_obj = copy.deepcopy(dict_to_copy)
     input_obj["id"] = dummy_acct_id
     acct_repo = AccountRepo(t)
-    acct_repo.create_account(Account.from_dict(input_obj,
-                                               iss,
-                                               sub))
 
+    if dummy_is_admin:
+        # the Account.from_dict method intentionally does not allow for
+        # creating an admin account. As such, let's use the constructor
+        # directly.
+        acct = Account(
+            ACCT_ID_3,
+            TEST_EMAIL_3,  # use a different email from the dummy accounts
+            "admin",
+            iss,
+            sub,
+            input_obj['first_name'],
+            input_obj['last_name'],
+            Address(
+                input_obj['address']['street'],
+                input_obj['address']['city'],
+                input_obj['address']['state'],
+                input_obj['address']['post_code'],
+                input_obj['address']['country_code']
+            ),
+            input_obj['kit_name']
+        )
+    else:
+        acct = Account.from_dict(input_obj, iss, sub)
+
+    acct_repo.create_account(acct)
     return dummy_acct_id
 
 
@@ -383,7 +434,7 @@ def create_dummy_answered_survey(dummy_acct_id, dummy_source_id,
     return survey_answers_id
 
 
-def create_dummy_kit(account_id=None, source_id=None):
+def create_dummy_kit(account_id=None, source_id=None, associate_sample=True):
     with Transaction() as t:
         _create_mock_kit(t, barcodes=[BARCODE],
                          mock_sample_ids=[MOCK_SAMPLE_ID])
@@ -394,8 +445,11 @@ def create_dummy_kit(account_id=None, source_id=None):
 
             sample_info, _ = create_dummy_sample_objects(True)
             sample_repo = SampleRepo(t)
-            sample_repo.associate_sample(account_id, source_id, MOCK_SAMPLE_ID)
-            sample_repo.update_info(account_id, source_id, sample_info)
+
+            if associate_sample:
+                sample_repo.associate_sample(account_id, source_id,
+                                             MOCK_SAMPLE_ID)
+                sample_repo.update_info(account_id, source_id, sample_info)
 
         t.commit()
 
@@ -1299,6 +1353,173 @@ class SampleTests(ApiTests):
         # TODO: We should also have tests of associating a survey to a sample
         #  that fail with with a 401 for answered survey not found and
         #  a 401 for sample not found
+
+    def test_associate_sample_locked(self):
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        create_dummy_kit(dummy_acct_id, dummy_source_id,
+                         associate_sample=False)
+        _ = create_dummy_answered_survey(
+            dummy_acct_id, dummy_source_id)
+
+        base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
+            dummy_acct_id, dummy_source_id)
+
+        # "scan" the sample in
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
+                                     json={'sample_status': 'sample-is-valid',
+                                           'technician_notes': "foobar"},
+                                     headers=make_headers(FAKE_TOKEN_ADMIN))
+        self.assertEqual(201, post_resp.status_code)
+
+        # attempt to associate as a regular user
+        post_resp = self.client.post(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'sample_id': MOCK_SAMPLE_ID,
+                }),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(422, post_resp.status_code)
+
+        # associate as admin user
+        post_resp = self.client.post(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'sample_id': MOCK_SAMPLE_ID,
+                }),
+            headers=make_headers(FAKE_TOKEN_ADMIN)
+        )
+
+        # check response code
+        self.assertEqual(201, post_resp.status_code)
+
+    def test_dissociate_sample_from_source_locked(self):
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        create_dummy_kit(dummy_acct_id, dummy_source_id)
+        _ = create_dummy_answered_survey(
+            dummy_acct_id, dummy_source_id, dummy_sample_id=MOCK_SAMPLE_ID)
+
+        base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
+            dummy_acct_id, dummy_source_id)
+        sample_url = "{0}/{1}".format(base_url, MOCK_SAMPLE_ID)
+
+        # "scan" the sample in
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
+                                     json={'sample_status': 'sample-is-valid',
+                                           'technician_notes': "foobar"},
+                                     headers=make_headers(FAKE_TOKEN_ADMIN))
+        self.assertEqual(201, post_resp.status_code)
+
+        delete_resp = self.client.delete(
+            '%s?%s' % (sample_url, self.default_lang_querystring),
+            headers=self.dummy_auth
+        )
+
+        # check response code that a delete was not possible for a standard
+        # account
+        self.assertEqual(422, delete_resp.status_code)
+
+        # delete as admin so that tearDown doesn't require admin
+        delete_resp = self.client.delete(
+            '%s?%s' % (sample_url, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # verify the delete was successful
+        self.assertEqual(204, delete_resp.status_code)
+
+    def test_update_sample_association_locked(self):
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        create_dummy_kit(dummy_acct_id, dummy_source_id)
+        _ = create_dummy_answered_survey(
+            dummy_acct_id, dummy_source_id, dummy_sample_id=MOCK_SAMPLE_ID)
+
+        base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
+            dummy_acct_id, dummy_source_id)
+        sample_url = "{0}/{1}".format(base_url, MOCK_SAMPLE_ID)
+
+        body = {'sample_site': 'Stool', "sample_notes": "",
+                'sample_datetime': "2017-07-21T17:32:28Z"}
+
+        put_resp = self.client.put(
+            '%s?%s' % (sample_url, self.default_lang_querystring),
+            json=body,
+            headers=self.dummy_auth
+        )
+
+        self.assertEqual(200, put_resp.status_code)
+
+        # "scan" the sample in
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
+                                     json={'sample_status': 'sample-is-valid',
+                                           'technician_notes': "foobar"},
+                                     headers=make_headers(FAKE_TOKEN_ADMIN))
+        self.assertEqual(201, post_resp.status_code)
+
+        # attempt to modify the locked sample as the participant
+        body = {'sample_site': 'Saliva', "sample_notes": "",
+                'sample_datetime': "2017-07-21T17:32:28Z"}
+
+        put_resp = self.client.put(
+            '%s?%s' % (sample_url, self.default_lang_querystring),
+            json=body,
+            headers=self.dummy_auth
+        )
+        # ...verify we were unable
+        self.assertEqual(422, put_resp.status_code)
+
+        # ...and double check just to be very sure
+        get_resp = self.client.get(
+            '%s?%s' % (sample_url, self.default_lang_querystring),
+            headers=self.dummy_auth
+        )
+        self.assertEqual(200, get_resp.status_code)
+        self.assertEqual(get_resp.json['sample_site'], 'Stool')
+
+        # attempt to modify the locked sample as an admin
+        body = {'sample_site': 'Saliva', "sample_notes": "",
+                'sample_datetime': "2017-07-21T17:32:28Z"}
+
+        put_resp = self.client.put(
+            '%s?%s' % (sample_url, self.default_lang_querystring),
+            json=body,
+            headers=make_headers(FAKE_TOKEN_ADMIN)
+        )
+        self.assertEqual(200, put_resp.status_code)
+
+        # verify the sample was changed and visible from the participant
+        get_resp = self.client.get(
+            '%s?%s' % (sample_url, self.default_lang_querystring),
+            headers=self.dummy_auth
+        )
+        self.assertEqual(200, get_resp.status_code)
+        self.assertEqual(get_resp.json['sample_site'], 'Saliva')
 
     def test_dissociate_sample_from_source_success(self):
         dummy_acct_id, dummy_source_id = create_dummy_source(

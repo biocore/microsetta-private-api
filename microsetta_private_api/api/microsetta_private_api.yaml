@@ -1294,7 +1294,9 @@ paths:
                 template:
                   type: string
                   enum: ["incorrect_sample_type",
-                         "missing_sample_info"]
+                         "missing_sample_info",
+                         "sample_is_valid",
+                         "no_associated_source"]
                   example: "incorrect_sample_type"
                 template_args:
                   type: object
