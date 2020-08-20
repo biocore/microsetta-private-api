@@ -1,3 +1,8 @@
+-- tablefunc is an additional supplied module that comes with postgres
+-- and enables data pivoting in queries
+CREATE EXTENSION IF NOT EXISTS tablefunc;
+
+-- extend the project table to hold lots more info
 ALTER TABLE barcodes.project ADD COLUMN subproject_name varchar;
 ALTER TABLE barcodes.project ADD COLUMN alias varchar;
 ALTER TABLE barcodes.project ADD COLUMN sponsor varchar;
