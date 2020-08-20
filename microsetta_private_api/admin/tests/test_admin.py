@@ -124,6 +124,8 @@ class AdminTests(TestCase):
         except Unauthorized:
             pass
 
+
+class AdminRepoTests(AdminTests):
     def test_retrieve_diagnostics_by_barcode_w_extra_info(self):
         def make_tz_datetime(y, m, d):
             return datetime.datetime(y, m, d, 0, 0,
