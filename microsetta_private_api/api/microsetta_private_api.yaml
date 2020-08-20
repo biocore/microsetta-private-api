@@ -1888,19 +1888,6 @@ components:
         branding_status:
           type: string
           nullable: true
-        num_kits:
-          type: integer
-          readOnly: true
-        num_samples:
-          type: integer
-          readOnly: true
-        num_samples_received:
-          type: integer
-          readOnly: true
-        num_unique_sources:
-          type: integer
-          readOnly: true
-          nullable: true
       required:
         - project_name
         - is_microsetta
