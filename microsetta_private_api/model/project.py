@@ -41,10 +41,57 @@ SUBPROJECT_NAME_KEY = 'subproject_name'
 ALIAS_KEY = 'alias'
 SPONSOR_KEY = 'sponsor'
 COORDINATION_KEY = 'coordination'
+COMPUTED_STATS_KEY = 'computed_stats'
+
+# Clearly the set of computed statistics for projects is going to grow and
+# mutate. Any new ones need their keys defined here and then added in
+# get_computed_stats_keys() below.
 NUM_KITS_KEY = 'num_kits'
 NUM_SAMPLES_KEY = 'num_samples'
 NUM_SAMPLES_RECEIVED_KEY = 'num_samples_received'
 NUM_UNIQUE_SOURCES_KEY = 'num_unique_sources'
+NUM_PARTIALLY_RETURNED_KITS_KEY = 'num_partially_returned_kits'
+NUM_FULLY_RETURNED_KITS_KEY = 'num_fully_returned_kits'
+NUM_KITS_W_PROBLEMS_KEY = "num_kits_w_problems"
+
+# I hate these status strings. They are independently (re)defined
+# in the sql patches, in the microsetta-private-api yaml, AND in at least one
+# of the microsetta-admin templates, and they MUST be the same in all places.
+# Adding yet one more redefinition here because it is preferable to hard-coding
+# them into the AdminRepo ...
+VALID_SAMPLES_STATUS = 'sample-is-valid'
+UNKNOWN_VALIDITY_STATUS = 'received-unknown-validity'
+NO_ACCOUNT_STATUS = 'no-registered-account'
+NO_SOURCE_STATUS = 'no-associated-source'
+NO_COLLECTION_INFO_STATUS = 'no-collection-info'
+SAMPLE_STATUSES = [VALID_SAMPLES_STATUS, UNKNOWN_VALIDITY_STATUS,
+                   NO_ACCOUNT_STATUS, NO_SOURCE_STATUS,
+                   NO_COLLECTION_INFO_STATUS]
+
+
+def get_computed_stats_keys():
+    """Return list of all keys for computed statistics about a project."""
+
+    # order not important
+    result = [NUM_KITS_KEY, NUM_SAMPLES_KEY,
+              NUM_SAMPLES_RECEIVED_KEY, NUM_UNIQUE_SOURCES_KEY,
+              NUM_PARTIALLY_RETURNED_KITS_KEY,
+              NUM_FULLY_RETURNED_KITS_KEY, NUM_KITS_W_PROBLEMS_KEY]
+
+    num_status_keys = get_num_status_keys()
+    result.extend(num_status_keys)
+    return result
+
+
+def get_num_status_keys():
+    """Return list of the stats keys for number of samples with each status."""
+
+    result = []
+    for curr_status in SAMPLE_STATUSES:
+        status_w_underscores = curr_status.replace("-", "_")
+        result.append("num_{0}".format(status_w_underscores))
+
+    return result
 
 
 class Project:
@@ -87,14 +134,12 @@ class Project:
         self.branding_associated_instructions = kwargs.get(
             BRANDING_ASSOC_INSTRUCTIONS_KEY)
         self.branding_status = kwargs.get(BRANDING_STATUS_KEY)
-        self.num_kits = kwargs.get(NUM_KITS_KEY)
-        self.num_samples = kwargs.get(NUM_SAMPLES_KEY)
-        self.num_samples_received = kwargs.get(NUM_SAMPLES_RECEIVED_KEY)
-        self.num_unique_sources = kwargs.get(NUM_UNIQUE_SOURCES_KEY)
         self.subproject_name = kwargs.get(SUBPROJECT_NAME_KEY)
         self.alias = kwargs.get(ALIAS_KEY)
         self.sponsor = kwargs.get(SPONSOR_KEY)
         self.coordination = kwargs.get(COORDINATION_KEY)
+
+        self.computed_stats = kwargs.get(COMPUTED_STATS_KEY, {})
 
         project_name = kwargs.get(PROJ_NAME_KEY)
         db_project_name = kwargs.get(DB_PROJ_NAME_KEY)

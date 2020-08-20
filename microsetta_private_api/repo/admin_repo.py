@@ -2,10 +2,16 @@ import uuid
 import string
 import random
 import datetime
+import pandas as pd
 
 from microsetta_private_api.exceptions import RepoException
 
-from microsetta_private_api.model.project import Project
+from microsetta_private_api.model.project import Project, COMPUTED_STATS_KEY, \
+    get_computed_stats_keys, SAMPLE_STATUSES, get_num_status_keys,\
+    NUM_KITS_KEY, NUM_SAMPLES_KEY, NUM_UNIQUE_SOURCES_KEY, \
+    NUM_SAMPLES_RECEIVED_KEY, NUM_FULLY_RETURNED_KITS_KEY, \
+    NUM_PARTIALLY_RETURNED_KITS_KEY, NUM_KITS_W_PROBLEMS_KEY, \
+    VALID_SAMPLES_STATUS
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
@@ -17,26 +23,235 @@ from hashlib import sha512
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 
-PARTIAL_PROJ_DETAILS_SQL = """
+# TODO: Refactor repeated elements in project-related sql queries?
+PROJECTS_BASICS_SQL = """
     SELECT
     p.*,
-    count(barcode) as num_samples,
-    count(distinct kit_id) as num_kits
+    count(distinct barcode) as {0},  -- number of samples
+    count(distinct kit_id) as {1}  -- number of kits
     FROM barcodes.project as p
     LEFT JOIN
     barcodes.project_barcode
     USING (project_id)
     LEFT JOIN
     barcodes.barcode
-    USING (barcode)
+    USING (barcode)  
+    GROUP BY project_id
+    ORDER BY project_id;      
 """
 
-GROUP_PROJ_SQL = " GROUP BY project_id"
+# The below sql statements pull various computed counts about projects.
+# Each query must follow the convention that it returns a column named
+# "project_id" to join on, and that all other columns it returns are unique
+# to that query (not also returned by any other query).
+NUM_UNIQUE_SOURCES_SQL = """
+    SELECT project_barcode.project_id,
+    count(distinct ag_kit_barcodes.source_id) as {0}  --num_unique_sources
+    FROM barcodes.project_barcode
+    INNER JOIN ag.ag_kit_barcodes
+    USING (barcode)
+    GROUP BY project_id
+    ORDER BY project_id; """
+
+NUM_RECEIVED_SAMPLES_SQL = """
+    SELECT project_id,
+    count(distinct barcode) as {0}  --num_samples_received
+    FROM project_barcode
+    INNER JOIN
+    barcode_scans
+    USING (barcode)
+    GROUP BY project_id
+    ORDER BY project_id; """
+
+NUM_FULLY_RECEIVED_KITS_SQL = """
+    SELECT project_id, 
+    count(distinct ag_kit_id) as {0}  --num_fully_returned_kits
+    FROM (
+        -- query to get a list of kits for which ALL samples have been 
+        -- returned (not guaranteed to be returned *valid*, just 
+        -- returned), per project.  Uses an intersect to only keep kits
+        -- for which the total number of samples in a kit matches the 
+        -- number of returned (scanned) samples for that kit.
+
+        -- get total number of samples (barcodes) in each kit, per proj
+        SELECT  
+        project_barcode.project_id, 
+        ag_kit_barcodes.ag_kit_id,
+        count(ag_kit_barcodes.barcode)
+        FROM ag.ag_kit_barcodes
+        LEFT JOIN barcodes.project_barcode
+        USING (barcode)
+        GROUP BY project_id, ag_kit_id
+        INTERSECT
+        -- get the number of returned samples (via latest barcode scan)
+        -- in each kit with at least one returned sample, per project
+        SELECT 
+        project_barcode.project_id, 
+        ag_kit_barcodes.ag_kit_id,
+        count(barcode_scans.barcode)
+        FROM ag.ag_kit_barcodes
+        INNER JOIN barcodes.project_barcode
+        USING (barcode)
+        INNER JOIN barcodes.barcode_scans
+        USING (barcode)
+        INNER JOIN (
+            SELECT barcode, max(scan_timestamp) AS scan_timestamp
+            FROM barcodes.barcode_scans
+            GROUP BY barcode
+        ) latest_scan
+        USING (barcode)
+        GROUP BY project_id, ag_kit_id
+        ORDER BY project_id, ag_kit_id
+        ) as kits_list
+        GROUP BY project_id  
+        ORDER BY project_id;   
+    """
+
+
+def _make_statuses_sql(_):
+    first_chunk = """
+        SELECT * FROM crosstab(
+            $$select p.project_id, scans.sample_status, 
+            coalesce(count(scans.barcode),0)
+            FROM barcodes.project as p
+            INNER JOIN barcodes.project_barcode as pb 
+            USING (project_id)
+            INNER JOIN barcodes.barcode_scans as scans
+            USING (barcode)
+            INNER JOIN (
+                SELECT barcode, max(scan_timestamp) AS scan_timestamp
+                FROM barcodes.barcode_scans
+                GROUP BY barcode
+            ) latest_scan
+            ON pb.barcode = latest_scan.barcode
+            GROUP BY project_id, sample_status
+            ORDER BY project_id, 
+            CASE sample_status """
+
+    second_chunk = """
+            END; $$,
+            $$VALUES """
+
+    third_chunk = """; $$
+        ) AS ct(project_id bigint, """
+
+    fourth_chunk = """)
+        ORDER BY ct;"""
+
+    cases = []
+    values = []
+    colnames = []
+    case_num = 1
+    for curr_status in SAMPLE_STATUSES:
+        cases.append("WHEN '{0}' THEN {1} ".format(curr_status, case_num))
+        values.append("('{0}')".format(curr_status))
+        case_num += 1
+
+    num_status_keys = get_num_status_keys()
+    for curr_num_status_key in num_status_keys:
+        colnames.append("{0} bigint".format(curr_num_status_key))
+
+    cases_sql = " ".join(cases)
+    values_sql = ", ".join(values)
+    colnames_sql = ", ".join(colnames)
+
+    final_sql = "{}{}{}{}{}{}{}".format(first_chunk, cases_sql, second_chunk,
+                                        values_sql, third_chunk, colnames_sql,
+                                        fourth_chunk)
+
+    return final_sql
+
+
+def _make_received_kits_sql(count_name, limit_to_problems):
+    first_chunk = """
+        SELECT project_barcode.project_id, 
+        count(distinct ag_kit_barcodes.ag_kit_id) as {0}  --num_partially_returned_kits
+        FROM ag.ag_kit_barcodes
+        INNER JOIN barcodes.project_barcode
+        USING (barcode)
+        INNER JOIN barcodes.barcode_scans
+        USING (barcode)
+        INNER JOIN (
+            SELECT barcode, max(scan_timestamp) AS scan_timestamp
+            FROM barcodes.barcode_scans
+            GROUP BY barcode
+        ) latest_scan
+        USING (barcode)"""
+
+    second_chunk = """
+        GROUP BY project_barcode.project_id
+        ORDER BY project_barcode.project_id        
+    """
+
+    limit_to_problems_chunk = """
+        -- this constraint limits query to getting number of kits with 
+        -- at least one PROBLEM sample
+        WHERE barcode_scans.sample_status <> '{0}'
+    """
+
+    constraint = ""
+    if limit_to_problems:
+        constraint = limit_to_problems_chunk.format(VALID_SAMPLES_STATUS)
+
+    qualified_first_chunk = first_chunk.format(count_name)
+    final_sql = "{}{}{}".format(qualified_first_chunk, constraint,
+                                second_chunk)
+    return final_sql
+
+
+# NB: PROJECTS_BASICS_SQL *must* come first since its list of project id is a
+# superset of other queries' lists.
+_PROJECT_SQLS = [
+                ((NUM_KITS_KEY, NUM_SAMPLES_KEY), PROJECTS_BASICS_SQL),
+                ((NUM_UNIQUE_SOURCES_KEY,), NUM_UNIQUE_SOURCES_SQL),
+                ((NUM_SAMPLES_RECEIVED_KEY,), NUM_RECEIVED_SAMPLES_SQL),
+                (("statuses",), _make_statuses_sql),
+                ((NUM_PARTIALLY_RETURNED_KITS_KEY, False),
+                 _make_received_kits_sql),
+                ((NUM_KITS_W_PROBLEMS_KEY, True),
+                 _make_received_kits_sql),
+                ((NUM_FULLY_RETURNED_KITS_KEY,), NUM_FULLY_RECEIVED_KITS_SQL)
+                ]
 
 
 class AdminRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
+
+    def _read_projects_df_from_db(self):
+        """Return pandas data frame of project info and statistics from db."""
+
+        projects_df = None
+
+        # TODO: should cursor be created here or no?
+        # https://www.datacamp.com/community/tutorials/tutorial-postgresql-python  # noqa
+        # shows creation of a cursor even though no methods are called on it
+        with self._transaction.dict_cursor():
+            # TODO: is there a better way to access this?
+            conn = self._transaction._conn
+
+            for stats_keys, sql_source in _PROJECT_SQLS:
+                if callable(sql_source):
+                    curr_sql = sql_source(*stats_keys)
+                else:
+                    curr_sql = sql_source.format(*stats_keys)
+
+                curr_df = pd.read_sql(curr_sql, conn)
+
+                if projects_df is None:
+                    projects_df = curr_df
+                else:
+                    # left join here: the first query produces a df with a
+                    # COMPLETE list of all projects, whereas subsequent
+                    # queries only return info on projects relevant to their
+                    # computed statistic.
+                    projects_df = pd.merge(projects_df, curr_df,
+                                           how="left", on=["project_id"])
+
+        # make the project_id the index of the final data frame, but
+        # do NOT drop the project_id column from the data frame.
+        projects_df.set_index('project_id', drop=False, inplace=True)
+        return projects_df
 
     def _get_ids_relevant_to_barcode(self, sample_barcode):
         with self._transaction.dict_cursor() as cur:
@@ -337,6 +552,48 @@ class AdminRepo(BaseRepo):
             cur.execute("DELETE FROM barcodes.project WHERE project = %s",
                         (project_name,))
             return cur.rowcount == 1
+
+    def get_projects(self):
+        """Return a list of Project objects, ordered by project id."""
+
+        # read all kinds of project info and computed counts from the db
+        # into a pandas data frame
+        projects_df = self._read_projects_df_from_db()
+
+        # convert data frame into dictionary of dictionaries;
+        # important to use built-in pandas method, which automatically
+        # converts numpy data types (e.g., numpy.bool_, numpy.int64) to
+        # appropriate python-native data types
+        projects_dict = projects_df.to_dict(orient='index')
+
+        # turn the above dictionary into a list of Project objects, ordered
+        # by project id, while also pulling out the computed statistics for
+        # each project into their own sub-dictionary in the Project object.
+        result = []
+        for k, v in projects_dict.items():
+            stats_dict = {}
+            # pull computed statistics out of main project dictionary and
+            # into a sub-dictionary, cleaning them up in the process
+            computed_stats_keys = get_computed_stats_keys()
+            for curr_stats_key in computed_stats_keys:
+                curr_stat = v.pop(curr_stats_key)
+
+                # only NaN returns false when compared to itself;
+                # in case of NaN, set value of metric to 0
+                if curr_stat != curr_stat:
+                    curr_stat = 0
+                # alternately, if the metric is an integer, cast it to that;
+                # for some weird reason pandas is pulling in counts as floats
+                elif curr_stat == int(curr_stat):
+                    curr_stat = int(curr_stat)
+
+                stats_dict[curr_stats_key] = curr_stat
+
+            v[COMPUTED_STATS_KEY] = stats_dict
+            a_project = Project(**v)
+            result.append(a_project)
+
+        return result
 
     def _generate_random_kit_name(self, name_length, prefix):
         if prefix is None:
