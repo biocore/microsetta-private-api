@@ -35,9 +35,9 @@ PROJECTS_BASICS_SQL = """
     USING (project_id)
     LEFT JOIN
     barcodes.barcode
-    USING (barcode)  
+    USING (barcode)
     GROUP BY project_id
-    ORDER BY project_id;      
+    ORDER BY project_id;
 """
 
 # The below sql statements pull various computed counts about projects.
@@ -64,18 +64,18 @@ NUM_RECEIVED_SAMPLES_SQL = """
     ORDER BY project_id; """
 
 NUM_FULLY_RECEIVED_KITS_SQL = """
-    SELECT project_id, 
+    SELECT project_id,
     count(distinct ag_kit_id) as {0}  --num_fully_returned_kits
     FROM (
-        -- query to get a list of kits for which ALL samples have been 
-        -- returned (not guaranteed to be returned *valid*, just 
+        -- query to get a list of kits for which ALL samples have been
+        -- returned (not guaranteed to be returned *valid*, just
         -- returned), per project.  Uses an intersect to only keep kits
-        -- for which the total number of samples in a kit matches the 
+        -- for which the total number of samples in a kit matches the
         -- number of returned (scanned) samples for that kit.
 
         -- get total number of samples (barcodes) in each kit, per proj
-        SELECT  
-        project_barcode.project_id, 
+        SELECT
+        project_barcode.project_id,
         ag_kit_barcodes.ag_kit_id,
         count(ag_kit_barcodes.barcode)
         FROM ag.ag_kit_barcodes
@@ -85,8 +85,8 @@ NUM_FULLY_RECEIVED_KITS_SQL = """
         INTERSECT
         -- get the number of returned samples (via latest barcode scan)
         -- in each kit with at least one returned sample, per project
-        SELECT 
-        project_barcode.project_id, 
+        SELECT
+        project_barcode.project_id,
         ag_kit_barcodes.ag_kit_id,
         count(barcode_scans.barcode)
         FROM ag.ag_kit_barcodes
@@ -103,18 +103,18 @@ NUM_FULLY_RECEIVED_KITS_SQL = """
         GROUP BY project_id, ag_kit_id
         ORDER BY project_id, ag_kit_id
         ) as kits_list
-        GROUP BY project_id  
-        ORDER BY project_id;   
+        GROUP BY project_id
+        ORDER BY project_id;
     """
 
 
 def _make_statuses_sql(_):
     first_chunk = """
         SELECT * FROM crosstab(
-            $$select p.project_id, scans.sample_status, 
+            $$select p.project_id, scans.sample_status,
             coalesce(count(scans.barcode),0)
             FROM barcodes.project as p
-            INNER JOIN barcodes.project_barcode as pb 
+            INNER JOIN barcodes.project_barcode as pb
             USING (project_id)
             INNER JOIN barcodes.barcode_scans as scans
             USING (barcode)
@@ -125,7 +125,7 @@ def _make_statuses_sql(_):
             ) latest_scan
             ON pb.barcode = latest_scan.barcode
             GROUP BY project_id, sample_status
-            ORDER BY project_id, 
+            ORDER BY project_id,
             CASE sample_status """
 
     second_chunk = """
@@ -164,8 +164,9 @@ def _make_statuses_sql(_):
 
 def _make_received_kits_sql(count_name, limit_to_problems):
     first_chunk = """
-        SELECT project_barcode.project_id, 
-        count(distinct ag_kit_barcodes.ag_kit_id) as {0}  --num_partially_returned_kits
+        SELECT project_barcode.project_id,
+        -- num_partially_returned_kits
+        count(distinct ag_kit_barcodes.ag_kit_id) as {0}
         FROM ag.ag_kit_barcodes
         INNER JOIN barcodes.project_barcode
         USING (barcode)
@@ -180,11 +181,11 @@ def _make_received_kits_sql(count_name, limit_to_problems):
 
     second_chunk = """
         GROUP BY project_barcode.project_id
-        ORDER BY project_barcode.project_id        
+        ORDER BY project_barcode.project_id
     """
 
     limit_to_problems_chunk = """
-        -- this constraint limits query to getting number of kits with 
+        -- this constraint limits query to getting number of kits with
         -- at least one PROBLEM sample
         WHERE barcode_scans.sample_status <> '{0}'
     """

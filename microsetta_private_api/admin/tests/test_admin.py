@@ -8,15 +8,7 @@ from werkzeug.exceptions import Unauthorized, NotFound
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.model.project import Project, PROJ_NAME_KEY, \
-    IS_MICROSETTA_KEY, BANK_SAMPLES_KEY, PLATING_START_DATE_KEY, \
-    CONTACT_NAME_KEY, ADDTL_CONTACT_NAME_KEY, CONTACT_EMAIL_KEY, \
-    DEADLINES_KEY, NUM_SUBJECTS_KEY, NUM_TIMEPOINTS_KEY, START_DATE_KEY, \
-    DISPOSITION_COMMENTS_KEY, COLLECTION_KEY, IS_FECAL_KEY, IS_SALIVA_KEY, \
-    IS_SKIN_KEY, IS_BLOOD_KEY, IS_OTHER_KEY, DO_16S_KEY, \
-    DO_SHALLOW_SHOTGUN_KEY, DO_SHOTGUN_KEY, DO_RT_QPCR_KEY, DO_SEROLOGY_KEY, \
-    DO_METATRANSCRIPTOMICS_KEY, DO_MASS_SPEC_KEY, MASS_SPEC_COMMENTS_KEY, \
-    MASS_SPEC_CONTACT_NAME_KEY, MASS_SPEC_CONTACT_EMAIL_KEY, DO_OTHER_KEY, \
-    BRANDING_ASSOC_INSTRUCTIONS_KEY, BRANDING_STATUS_KEY
+    IS_MICROSETTA_KEY, BANK_SAMPLES_KEY, PLATING_START_DATE_KEY
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.transaction import Transaction
