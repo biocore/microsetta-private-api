@@ -407,12 +407,3 @@ class AdminTests(TestCase):
             self.assertEqual(1, first_proj.project_id)
             self.assertEqual("American Gut Project", first_proj.project_name)
             # TODO: expand tests
-
-    def test_get_project(self):
-        with Transaction() as t:
-            admin_repo = AdminRepo(t)
-
-            output = admin_repo.get_project(1)
-            self.assertEqual(1, output.project_id)
-            self.assertIn('American Gut Project', output.project_name)
-            # TODO: expand tests

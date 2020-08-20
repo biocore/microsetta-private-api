@@ -109,15 +109,6 @@ def get_projects(token_info):
         return jsonify(result), 200
 
 
-def get_project(token_info, project_id):
-    validate_admin_access(token_info)
-
-    with Transaction() as t:
-        admin_repo = AdminRepo(t)
-        project = admin_repo.get_project(project_id)
-        return jsonify(project.to_api()), 200
-
-
 def create_project(body, token_info):
     validate_admin_access(token_info)
 
