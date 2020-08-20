@@ -1071,7 +1071,7 @@ class IntegrationTests(TestCase):
                 cur.execute("INSERT INTO barcode_scans "
                             "(barcode, scan_timestamp, sample_status) "
                             "VALUES "
-                            "(%s, %s, 'valid')",
+                            "(%s, %s, 'sample-is-valid')",
                             (BARCODE, datetime.datetime.now()))
             t.commit()
 
