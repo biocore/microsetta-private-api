@@ -256,6 +256,10 @@ class AdminRepo(BaseRepo):
 
     def _get_ids_relevant_to_barcode(self, sample_barcode):
         with self._transaction.dict_cursor() as cur:
+            # First, look for this barcode in the set of barcodes
+            # associated with AGP kits; if it is there, get its ag kit id
+            # (a uuid) and follow the source id associated with that AGP
+            # barcode to its source and account ids.
             cur.execute(
                 "SELECT "
                 "ag_kit_barcodes.ag_kit_barcode_id as sample_id, "
@@ -264,18 +268,45 @@ class AdminRepo(BaseRepo):
                 "ag_kit_barcodes.ag_kit_id as kit_id "
                 "FROM "
                 "ag.ag_kit_barcodes "
-                "LEFT OUTER JOIN "
+                "INNER JOIN "
                 "source "
                 "ON "
                 "ag_kit_barcodes.source_id = source.id "
-                "LEFT OUTER JOIN "
+                "INNER JOIN "
                 "account "
                 "ON "
                 "account.id = source.account_id "
                 "WHERE "
                 "ag_kit_barcodes.barcode = %s",
                 (sample_barcode,))
-            return cur.fetchone()
+            result = cur.fetchone()
+
+            if result is not None:
+                return result
+
+            # else if the barcode is not associated with a source id, it may
+            # still be (more tenuously) associated with an account if it in
+            # the set of barcodes associated with AGP kits and the kit it is
+            # in has been used to open an AGP account; in this case, we can get
+            # an account id and a kit id but NOT a source id.
+            # Even if there is no such account association, we can still get
+            # the ag kit id (uuid) if this is an AGP kit
+            cur.execute(
+                "SELECT ag_kit_barcodes.ag_kit_barcode_id as sample_id, "
+                "ag_kit_barcodes.ag_kit_id as kit_id, "
+                "ag.account.id as account_id "
+                "FROM ag.ag_kit_barcodes "
+                "INNER JOIN barcodes.barcode "
+                "ON ag_kit_barcodes.barcode = barcode.barcode "
+                "LEFT OUTER JOIN ag.account "
+                "ON barcodes.barcode.kit_id = ag.account.created_with_kit_id "
+                "WHERE ag_kit_barcodes.barcode = %s;",
+                (sample_barcode,))
+            result = cur.fetchone()
+            # NB: if still nothing, this is not an AGP-associated barcode so
+            # we can't collect any useful ids
+
+            return result
 
     def retrieve_diagnostics_by_barcode(self, sample_barcode, grab_kit=True):
         def _rows_to_dicts_list(rows):
@@ -285,34 +316,37 @@ class AdminRepo(BaseRepo):
             ids = self._get_ids_relevant_to_barcode(sample_barcode)
 
             if ids is None:
-                sample_id = None
-                source_id = None
-                account_id = None
-                kit_id = None
-            else:
-                sample_id = ids["sample_id"]
-                source_id = ids["source_id"]
-                account_id = ids["account_id"]
-                kit_id = ids["kit_id"]
+                ids = {}
+
+            # default for not found is None
+            sample_id = ids.get("sample_id")
+            source_id = ids.get("source_id")
+            account_id = ids.get("account_id")
+            # NB: this is the true UUID kit id (the primary key of
+            # ag.ag_kit), NOT the kit's participant-facing string "id"
+            kit_id = ids.get("kit_id")
 
             account = None
             source = None
             sample = None
             kit = None
 
-            # get sample object for this barcode
+            # get sample object for this barcode, if any
             if sample_id is not None:
                 sample_repo = SampleRepo(self._transaction)
                 sample = sample_repo._get_sample_by_id(sample_id)
 
-            # get account and source objects for this barcode
-            if source_id is not None and account_id is not None:
+            # get account object for this barcode, if any
+            if account_id is not None:
                 account_repo = AccountRepo(self._transaction)
-                source_repo = SourceRepo(self._transaction)
                 account = account_repo.get_account(account_id)
+
+            # and source object for this barcode, if any
+            if source_id is not None:
+                source_repo = SourceRepo(self._transaction)
                 source = source_repo.get_source(account_id, source_id)
 
-            # get projects_info list for this barcode
+            # get (partial) projects_info list for this barcode
             cur.execute("SELECT project, is_microsetta, "
                         "bank_samples, plating_start_date "
                         "FROM barcodes.project "
@@ -849,9 +883,9 @@ class AdminRepo(BaseRepo):
         if ids is None:
             raise NotFound("No such barcode")
 
-        account_id = ids['account_id']
-        source_id = ids['source_id']
-        sample_id = ids['sample_id']
+        account_id = ids.get('account_id')
+        source_id = ids.get('source_id')
+        sample_id = ids.get('sample_id')
 
         account = None
         source = None

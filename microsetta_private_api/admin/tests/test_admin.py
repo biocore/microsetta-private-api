@@ -116,15 +116,18 @@ class AdminTests(TestCase):
         except Unauthorized:
             pass
 
-
 class AdminRepoTests(AdminTests):
+    # TODO FIXME HACK:  Need to build mock barcodes rather than using
+    #  these fixed ones
     def test_retrieve_diagnostics_by_barcode_w_extra_info(self):
         def make_tz_datetime(y, m, d):
             return datetime.datetime(y, m, d, 0, 0,
                                      tzinfo=psycopg2.tz.FixedOffsetTimezone(
                                          offset=-420, name=None))
 
-        test_barcode = '000038448'
+        # Non-AGP barcode so no acct, source, or sample;
+        # also no preexisting scans in test db
+        test_barcode = '000004531'
         first_scan_id = 'f7fd3022-3a9c-4f79-b92c-5cebd83cba38'
         second_scan_id = '76aec821-aa28-4dea-a796-2cfd1276f78c'
 
@@ -148,14 +151,12 @@ class AdminRepoTests(AdminTests):
             add_dummy_scan(second_scan)
 
             with Transaction() as t:
-                # TODO FIXME HACK: Build mock barcodes rather than using
-                #  these fixed ones
                 admin_repo = AdminRepo(t)
                 diag = admin_repo.retrieve_diagnostics_by_barcode(test_barcode)
                 self.assertIsNotNone(diag['barcode_info'])
                 self.assertIsNone(diag['account'])
                 self.assertIsNone(diag['source'])
-                self.assertIsNotNone(diag['sample'])
+                self.assertIsNone(diag['sample'])
                 self.assertGreater(len(diag['projects_info']), 0)
                 self.assertEqual(len(diag['scans_info']), 2)
                 # order matters in the returned vals, so test that
@@ -166,10 +167,8 @@ class AdminRepoTests(AdminTests):
             delete_test_scan(first_scan_id)
             delete_test_scan(second_scan_id)
 
-    def test_retrieve_diagnostics_by_barcode_wo_extra_info(self):
+    def test_retrieve_diagnostics_by_barcode_wo_scans(self):
         with Transaction() as t:
-            # TODO FIXME HACK:  Need to build mock barcodes rather than using
-            #  these fixed ones
             admin_repo = AdminRepo(t)
             diag = admin_repo.retrieve_diagnostics_by_barcode('000033903')
             self.assertIsNotNone(diag['barcode_info'])
@@ -181,13 +180,55 @@ class AdminRepoTests(AdminTests):
 
     def test_retrieve_diagnostics_by_barcode_nonexistent(self):
         with Transaction() as t:
-            # TODO FIXME HACK:  Need to build mock barcodes rather than using
-            #  these fixed ones
             admin_repo = AdminRepo(t)
             # Uhh, should this return a 404 not found or just an empty
             # diagnostic object...?
             diag = admin_repo.retrieve_diagnostics_by_barcode('NotABarcode :D')
             self.assertIsNone(diag)
+
+    def test_retrieve_diagnostics_by_barcode_valid_sample(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            diag = admin_repo.retrieve_diagnostics_by_barcode('000004801')
+            self.assertIsNotNone(diag['barcode_info'])
+            self.assertIsNotNone(diag['account'])
+            self.assertIsNotNone(diag['source'])
+            self.assertIsNotNone(diag['sample'])
+            self.assertGreater(len(diag['scans_info']), 0)
+            self.assertGreater(len(diag['projects_info']), 0)
+
+    def test_retrieve_diagnostics_by_barcode_no_source(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            diag = admin_repo.retrieve_diagnostics_by_barcode('000009207')
+            self.assertIsNotNone(diag['barcode_info'])
+            self.assertIsNotNone(diag['account'])
+            self.assertIsNone(diag['source'])
+            self.assertIsNotNone(diag['sample'])
+            self.assertGreater(len(diag['scans_info']), 0)
+            self.assertGreater(len(diag['projects_info']), 0)
+
+    def test_retrieve_diagnostics_by_barcode_no_account(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            diag = admin_repo.retrieve_diagnostics_by_barcode('000030673')
+            self.assertIsNotNone(diag['barcode_info'])
+            self.assertIsNone(diag['account'])
+            self.assertIsNone(diag['source'])
+            self.assertIsNotNone(diag['sample'])
+            self.assertGreater(len(diag['scans_info']), 0)
+            self.assertGreater(len(diag['projects_info']), 0)
+
+    def test_retrieve_diagnostics_by_barcode_not_agp(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            diag = admin_repo.retrieve_diagnostics_by_barcode('000044481')
+            self.assertIsNotNone(diag['barcode_info'])
+            self.assertIsNone(diag['account'])
+            self.assertIsNone(diag['source'])
+            self.assertIsNone(diag['sample'])
+            self.assertGreater(len(diag['scans_info']), 0)
+            self.assertGreater(len(diag['projects_info']), 0)
 
     def test_create_project_success_no_banking(self):
         with Transaction() as t:
