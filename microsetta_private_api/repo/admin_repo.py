@@ -24,9 +24,9 @@ class AdminRepo(BaseRepo):
     def _get_ids_relevant_to_barcode(self, sample_barcode):
         with self._transaction.dict_cursor() as cur:
             # First, look for this barcode in the set of barcodes
-            # associated with AGP kits; if it is there, get its kit id and
-            # follow the source id associated with that AGP barcode to its
-            # source and account ids.
+            # associated with AGP kits; if it is there, get its ag kit id
+            # (a uuid) and follow the source id associated with that AGP
+            # barcode to its source and account ids.
             cur.execute(
                 "SELECT "
                 "ag_kit_barcodes.ag_kit_barcode_id as sample_id, "
@@ -57,7 +57,7 @@ class AdminRepo(BaseRepo):
             # in has been used to open an AGP account; in this case, we can get
             # an account id and a kit id but NOT a source id.
             # Even if there is no such account association, we can still get
-            # the (official, UUID) kit id if this is an AGP kit
+            # the ag kit id (uuid) if this is an AGP kit
             cur.execute(
                 "SELECT ag_kit_barcodes.ag_kit_barcode_id as sample_id, "
                 "ag_kit_barcodes.ag_kit_id as kit_id, "
