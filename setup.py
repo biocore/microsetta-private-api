@@ -25,6 +25,8 @@ setup(
                   [
                      'db/*.*',
                      'db/patches/*.sql',
+                     'templates/*',
+                     'templates/email/*',
                      'api/microsetta_private_api.yaml',
                      'authrocket.pubkey',
                      'server_config.json'
