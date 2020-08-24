@@ -231,8 +231,7 @@ def send_email(body, token_info):
                     endpoint + "/accounts/%s/sources/%s/samples/%s" %
                     (account_id, source_id, sample_id)
                 )
-            elif account_id is not None and \
-               source_id is not None:
+            elif account_id is not None and source_id is not None:
                 resolution_url = build_login_redirect(
                     endpoint + "/accounts/%s/sources/%s" %
                     (account_id, source_id)
