@@ -205,18 +205,45 @@ def send_email(body, token_info):
             diag = AdminRepo(t).retrieve_diagnostics_by_barcode(
                        body["template_args"]["sample_barcode"],
                        grab_kit=False)
-            account_id = diag["account"].id
-            source_id = diag["source"].id
-            sample_id = diag["sample"].id
-            email = diag["account"].email
-            contact_name = diag["account"].first_name + " " + \
-                diag["account"].last_name
-            contact_name = contact_name.strip()
+            account_id = None
+            email = None
+            contact_name = None
+            if diag["account"] is not None:
+                account_id = diag["account"].id
+                email = diag["account"].email
+                contact_name = diag["account"].first_name + " " + \
+                    diag["account"].last_name
+                contact_name = contact_name.strip()
+
+            source_id = None
+            if diag["source"] is not None:
+                source_id = diag["source"].id
+
+            sample_id = None
+            if diag["sample"] is not None:
+                sample_id = diag["sample"].id
             endpoint = SERVER_CONFIG["endpoint"]
-            resolution_url = build_login_redirect(
-                endpoint + "/accounts/%s/sources/%s/samples/%s" %
-                (account_id, source_id, sample_id)
-            )
+
+            if sample_id is not None and \
+               source_id is not None and \
+               account_id is not None:
+                resolution_url = build_login_redirect(
+                    endpoint + "/accounts/%s/sources/%s/samples/%s" %
+                    (account_id, source_id, sample_id)
+                )
+            elif account_id is not None and source_id is not None:
+                resolution_url = build_login_redirect(
+                    endpoint + "/accounts/%s/sources/%s" %
+                    (account_id, source_id)
+                )
+            elif account_id is not None:
+                resolution_url = build_login_redirect(
+                    endpoint + "/accounts/%s" % (account_id,)
+                )
+            else:
+                resolution_url = build_login_redirect(
+                    endpoint + "/"
+                )
         else:
             raise Exception("Update Admin Impl to support more issue types")
 
