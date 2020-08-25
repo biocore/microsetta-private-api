@@ -1558,8 +1558,10 @@ components:
           $ref: '#/components/schemas/sample_projects'
         source_id:
           $ref: '#/components/schemas/source_id'
+          nullable: true
         account_id:
           $ref: '#/components/schemas/account_id'
+          nullable: true
 
     # source section
     source_id:
