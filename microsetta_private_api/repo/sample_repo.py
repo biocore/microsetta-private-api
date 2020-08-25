@@ -17,7 +17,9 @@ class SampleRepo(BaseRepo):
         ag.ag_kit_barcodes.site_sampled,
         ag.ag_kit_barcodes.notes,
         ag.ag_kit_barcodes.barcode,
-        latest_scan.scan_timestamp
+        latest_scan.scan_timestamp,
+        ag.source.id,
+        ag.source.account_id
         FROM ag.ag_kit_barcodes
         LEFT JOIN (
             SELECT barcode, max(scan_timestamp) AS scan_timestamp

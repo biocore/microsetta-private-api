@@ -119,6 +119,8 @@ DUMMY_EMPTY_SAMPLE_INFO = {
     'sample_locked': False,
     'sample_notes': None,
     'sample_projects': ['American Gut Project'],
+    'account_id': None,
+    'source_id': None,
     'sample_site': None}
 
 DUMMY_FILLED_SAMPLE_INFO = {
@@ -128,6 +130,8 @@ DUMMY_FILLED_SAMPLE_INFO = {
     'sample_locked': False,
     'sample_notes': "Oops, I dropped it",
     'sample_projects': ['American Gut Project'],
+    'account_id': 'foobar',
+    'source_id': 'foobarbaz',
     'sample_site': 'Saliva'}
 
 ACCT_ID_KEY = "account_id"
@@ -472,6 +476,8 @@ def create_dummy_sample_objects(filled=False):
                     info_dict["sample_notes"],
                     info_dict["sample_barcode"],
                     None,
+                    info_dict['source_id'],
+                    info_dict['account_id'],
                     info_dict["sample_projects"])
 
     return sample_info, sample
@@ -1297,7 +1303,12 @@ class SampleTests(ApiTests):
         # ensure there is precisely one sample associated with this source
         # (that is empty of collection info)
         get_resp_obj = json.loads(get_response.data)
-        self.assertEqual(get_resp_obj, [DUMMY_EMPTY_SAMPLE_INFO])
+
+        exp = DUMMY_EMPTY_SAMPLE_INFO.copy()
+        exp['source_id'] = SOURCE_ID_1
+        exp['account_id'] = ACCT_ID_1
+
+        self.assertEqual(get_resp_obj, [exp])
 
         # TODO: We should also have tests of associating a sample to a source
         #  that fail with with a 401 (sample not found) and a 422 (sample
