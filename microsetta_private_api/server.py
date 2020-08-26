@@ -71,6 +71,7 @@ def build_app():
         app.app.logger.setLevel(gunicorn_logger.level)
 
     init_celery(celery, app.app)
+    celery.autodiscover_tasks([__name__.split('.')[0]])
 
     return app
 

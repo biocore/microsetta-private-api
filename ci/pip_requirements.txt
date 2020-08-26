@@ -6,3 +6,4 @@ coveralls
 pycountry
 python-dateutil
 celery[redis]
+redis
