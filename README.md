@@ -26,6 +26,11 @@ Install the JSON Web Tokens library with cryptography support:
 
 `pip install pyjwt[crypto]`
 
+Install Redis and Celery with Redis support for out-of-band compute:
+
+`conda install redis`
+`pip install celery[redis]`
+
 Then install the microsetta-private-api in editable mode:
 
 `pip install -e .`
