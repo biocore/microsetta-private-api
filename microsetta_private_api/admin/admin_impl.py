@@ -255,7 +255,8 @@ def send_email(body, token_info):
         template_args = dict(body['template_args'])
         template_args['resolution_url'] = resolution_url
         template_args['contact_name'] = contact_name
-        celery_send_email.delay(email, template_name, template_args)
+        celery_send_email.delay(email, template_name, template_args,
+                                ignore_result=True)
 
         # Add an event to the log that we sent this email successfully
         event = LogEvent(
