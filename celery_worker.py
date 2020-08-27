@@ -1,3 +1,3 @@
-from microsetta_private_api.server import build_app
-from microsetta_private_api.celery_utils import celery  # noqa
-app = build_app()
+from microsetta_private_api.server import app
+from microsetta_private_api.celery_utils import celery, init_celery
+init_celery(celery, app.app)
