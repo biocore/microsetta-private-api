@@ -1827,14 +1827,13 @@ components:
 
 # Defines the authRocket scheme: this is an OIDC jwt that comes in a bearer token header.
   securitySchemes:
-    authRocket:
+    jwt:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      x-bearerInfoFunc: microsetta_private_api.api.verify_authrocket
-
+      x-bearerInfoFunc: microsetta_private_api.api.verify_jwt
 
 # END COMPONENTS
 # This enables the authRocket securityScheme defined in components for all routes
 security:
-  - authRocket: []
+  - jwt: []
