@@ -29,6 +29,7 @@ setup(
                      'templates/email/*',
                      'api/microsetta_private_api.yaml',
                      'authrocket.pubkey',
+                     'cronjob.pubkey',
                      'server_config.json'
                   ]},
     entry_points='''
