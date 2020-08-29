@@ -1266,6 +1266,31 @@ class SurveyTests(ApiTests):
 
 @pytest.mark.usefixtures("client")
 class SampleTests(ApiTests):
+    def test_get_unclaimed_samples(self):
+        get_resp = self.client.get('/api/kits/?language_tag=en_US&'
+                                   'kit_name=%s' % MISSING_KIT_NAME,
+                                   headers=self.dummy_auth)
+        self.assertEqual(get_resp.status_code, 404)
+
+        get_resp = self.client.get('/api/kits/?language_tag=en_US&'
+                                   'kit_name=%s' % EXISTING_KIT_NAME,
+                                   headers=self.dummy_auth)
+
+        # valid kit but all samples are assigned
+        self.assertEqual(get_resp.status_code, 404)
+
+        get_resp = self.client.get('/api/kits/?language_tag=en_US&'
+                                   'kit_name=%s' % EXISTING_KIT_NAME_2,
+                                   headers=self.dummy_auth)
+
+        # valid kit but all samples are assigned
+        self.assertEqual(get_resp.status_code, 200)
+        get_resp_obj = json.loads(get_resp.data)
+        self.assertEqual(len(get_resp_obj), 1)
+        self.assertEqual(get_resp_obj[0]['source_id'], None)
+        self.assertEqual(get_resp_obj[0]['account_id'], None)
+        self.assertEqual(get_resp_obj[0]['sample_barcode'], '000014119')
+
     def test_associate_sample_to_source_success(self):
         dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
