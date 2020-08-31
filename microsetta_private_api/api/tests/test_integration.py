@@ -72,7 +72,7 @@ def client(request):
         request.cls.client = client
 
         with patch("microsetta_private_api.api."
-                   "verify_authrocket") as mock_verify:
+                   "verify_jwt") as mock_verify:
             mock_verify.side_effect = mock_verify_func
             yield client
 

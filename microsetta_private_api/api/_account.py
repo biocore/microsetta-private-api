@@ -8,7 +8,7 @@ from werkzeug.exceptions import Unauthorized, Forbidden, NotFound
 
 from microsetta_private_api.api.literals import AUTHROCKET_PUB_KEY, \
     INVALID_TOKEN_MSG, JWT_ISS_CLAIM_KEY, JWT_SUB_CLAIM_KEY, \
-    JWT_EMAIL_CLAIM_KEY, ACCT_NOT_FOUND_MSG
+    JWT_EMAIL_CLAIM_KEY, ACCT_NOT_FOUND_MSG, CRONJOB_PUB_KEY
 from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.repo.account_repo import AccountRepo
@@ -123,17 +123,32 @@ def update_account(account_id, body, token_info):
         return jsonify(acc.to_api()), 200
 
 
-def verify_authrocket(token):
+JWT_SCHEMES = (
+    {'key': AUTHROCKET_PUB_KEY,
+     'algorithms': ["RS256"],
+     'verify': True,
+     'issuer': 'https://authrocket.com'},
+    {'key': CRONJOB_PUB_KEY,
+     'algorithms': ["RS256"],
+     'verify': True,
+     'issuer': 'https://microsetta.ucsd.edu'},
+)
+
+
+def verify_jwt(token):
     email_verification_key = 'email_verified'
 
-    try:
-        token_info = jwt.decode(token,
-                                AUTHROCKET_PUB_KEY,
-                                algorithms=["RS256"],
-                                verify=True,
-                                issuer="https://authrocket.com")
-    except InvalidTokenError as e:
-        raise(Unauthorized(INVALID_TOKEN_MSG, e))
+    token_info = None
+    for scheme in JWT_SCHEMES:
+        try:
+            token_info = jwt.decode(token, **scheme)
+        except InvalidTokenError:
+            continue
+        else:
+            break
+
+    if token_info is None:
+        raise Unauthorized(INVALID_TOKEN_MSG)
 
     if JWT_ISS_CLAIM_KEY not in token_info or \
             JWT_SUB_CLAIM_KEY not in token_info or \
