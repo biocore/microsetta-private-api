@@ -1,0 +1,21 @@
+Hello {{contact_name |e}},
+    Thank you for your interest and participation in The Microsetta Initiative. We are writing as we've encountered an issue processing your sample, and we would appreciate your assistance in helping resolve this matter.
+
+    Specifically, the following sample sent to the lab was associated as an environmental sample:
+        Barcode {{sample_barcode |e}}
+
+    Our lab noted that the above sample is a human sample, so we would need to ensure it is properly associated so we can accurately process this sample.   Please log back into the participant website by clicking or copying the following URL:
+    {{ account_url}}
+    
+    Check that you have a human source type set up in the "Sources" table.  
+    
+    If there is a human source set up, please email us back, specifying who the sample belongs to and if the below sample type is correct.
+    If there is not a human source, please add one for this sample's owner.  Once a source has been set up, please email us back, specifying who the sample belongs to and if the below sample type is correct.
+        Barcode {{sample_barcode |e}}: {{received_type |e}}
+       
+    If you have more details about this sample (such as the collection date or time), please communicate this to microsetta@ucsd.edu by replying to this email. We will then update your sample's information so it can be appropriately associated.
+
+    If you have any questions, please reply to us at microsetta@ucsd.edu.
+
+    Thank you,
+    The Microsetta Team
