@@ -1266,12 +1266,13 @@ class SurveyTests(ApiTests):
 
 @pytest.mark.usefixtures("client")
 class SampleTests(ApiTests):
-    def test_get_unclaimed_samples(self):
+    def test_kits_get_fail_missing(self):
         get_resp = self.client.get('/api/kits/?language_tag=en_US&'
                                    'kit_name=%s' % MISSING_KIT_NAME,
                                    headers=self.dummy_auth)
         self.assertEqual(get_resp.status_code, 404)
 
+    def test_kits_get_fail_all_samples_assigned(self):
         get_resp = self.client.get('/api/kits/?language_tag=en_US&'
                                    'kit_name=%s' % EXISTING_KIT_NAME,
                                    headers=self.dummy_auth)
@@ -1279,11 +1280,11 @@ class SampleTests(ApiTests):
         # valid kit but all samples are assigned
         self.assertEqual(get_resp.status_code, 404)
 
+    def test_kits_get_success(self):
         get_resp = self.client.get('/api/kits/?language_tag=en_US&'
                                    'kit_name=%s' % EXISTING_KIT_NAME_2,
                                    headers=self.dummy_auth)
 
-        # valid kit but all samples are assigned
         self.assertEqual(get_resp.status_code, 200)
         get_resp_obj = json.loads(get_resp.data)
         self.assertEqual(len(get_resp_obj), 1)
