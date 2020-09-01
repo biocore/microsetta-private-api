@@ -11,6 +11,7 @@ CELERY_BROKER_URI = 'celery_broker_uri'
 # https://medium.com/@frassetto.stefano/flask-celery-howto-d106958a15fe
 def init_celery(celery, app):
     celery.conf.update(app.config)
+    celery.conf.task_default_queue = 'microsetta-private-api'
     TaskBase = celery.Task
 
     class ContextTask(TaskBase):
