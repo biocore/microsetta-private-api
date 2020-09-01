@@ -1402,6 +1402,11 @@ components:
       type: string
       readOnly: true
       example: "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
+    account_id_nullable:
+      type: string
+      readOnly: true
+      example: "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
+      nullable: true
     account_type: # e.g., regular user or admin--room to grow
       type: string
       readOnly: true
@@ -1556,12 +1561,21 @@ components:
           $ref: '#/components/schemas/sample_notes'
         sample_projects:
           $ref: '#/components/schemas/sample_projects'
+        source_id:
+          $ref: '#/components/schemas/source_id_nullable'
+        account_id:
+          $ref: '#/components/schemas/account_id_nullable'
 
     # source section
     source_id:
       type: string
       readOnly: true # sent in GET, not in POST/PUT/PATCH
       example: "b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0"
+    source_id_nullable:
+      type: string
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
+      example: "b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0"
+      nullable: true
     source_name:
       type: string
     source_type:

@@ -936,7 +936,8 @@ class IntegrationTests(TestCase):
         # Many fields are not writable, each should individually cause failure.
         readonly_fields = [
             'sample_id', 'sample_barcode',
-            'sample_locked', 'sample_projects'
+            'sample_locked', 'sample_projects',
+            'source_id', 'account_id'
         ]
 
         for readonly_field in readonly_fields:

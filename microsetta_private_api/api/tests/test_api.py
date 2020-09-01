@@ -119,6 +119,8 @@ DUMMY_EMPTY_SAMPLE_INFO = {
     'sample_locked': False,
     'sample_notes': None,
     'sample_projects': ['American Gut Project'],
+    'account_id': None,
+    'source_id': None,
     'sample_site': None}
 
 DUMMY_FILLED_SAMPLE_INFO = {
@@ -128,6 +130,8 @@ DUMMY_FILLED_SAMPLE_INFO = {
     'sample_locked': False,
     'sample_notes': "Oops, I dropped it",
     'sample_projects': ['American Gut Project'],
+    'account_id': 'foobar',
+    'source_id': 'foobarbaz',
     'sample_site': 'Saliva'}
 
 ACCT_ID_KEY = "account_id"
@@ -472,6 +476,8 @@ def create_dummy_sample_objects(filled=False):
                     info_dict["sample_notes"],
                     info_dict["sample_barcode"],
                     None,
+                    info_dict['source_id'],
+                    info_dict['account_id'],
                     info_dict["sample_projects"])
 
     return sample_info, sample
@@ -1260,6 +1266,32 @@ class SurveyTests(ApiTests):
 
 @pytest.mark.usefixtures("client")
 class SampleTests(ApiTests):
+    def test_kits_get_fail_missing(self):
+        get_resp = self.client.get('/api/kits/?language_tag=en_US&'
+                                   'kit_name=%s' % MISSING_KIT_NAME,
+                                   headers=self.dummy_auth)
+        self.assertEqual(get_resp.status_code, 404)
+
+    def test_kits_get_fail_all_samples_assigned(self):
+        get_resp = self.client.get('/api/kits/?language_tag=en_US&'
+                                   'kit_name=%s' % EXISTING_KIT_NAME,
+                                   headers=self.dummy_auth)
+
+        # valid kit but all samples are assigned
+        self.assertEqual(get_resp.status_code, 404)
+
+    def test_kits_get_success(self):
+        get_resp = self.client.get('/api/kits/?language_tag=en_US&'
+                                   'kit_name=%s' % EXISTING_KIT_NAME_2,
+                                   headers=self.dummy_auth)
+
+        self.assertEqual(get_resp.status_code, 200)
+        get_resp_obj = json.loads(get_resp.data)
+        self.assertEqual(len(get_resp_obj), 1)
+        self.assertEqual(get_resp_obj[0]['source_id'], None)
+        self.assertEqual(get_resp_obj[0]['account_id'], None)
+        self.assertEqual(get_resp_obj[0]['sample_barcode'], '000014119')
+
     def test_associate_sample_to_source_success(self):
         dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
@@ -1297,7 +1329,12 @@ class SampleTests(ApiTests):
         # ensure there is precisely one sample associated with this source
         # (that is empty of collection info)
         get_resp_obj = json.loads(get_response.data)
-        self.assertEqual(get_resp_obj, [DUMMY_EMPTY_SAMPLE_INFO])
+
+        exp = DUMMY_EMPTY_SAMPLE_INFO.copy()
+        exp['source_id'] = SOURCE_ID_1
+        exp['account_id'] = ACCT_ID_1
+
+        self.assertEqual(get_resp_obj, [exp])
 
         # TODO: We should also have tests of associating a sample to a source
         #  that fail with with a 401 (sample not found) and a 422 (sample
