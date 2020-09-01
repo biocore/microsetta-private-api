@@ -2,7 +2,6 @@ import uuid
 from flask import jsonify
 import datetime
 
-from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
 from microsetta_private_api.exceptions import RepoException
@@ -10,7 +9,8 @@ from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
-from microsetta_private_api.util.email import SendEmail
+from microsetta_private_api.tasks import send_email as celery_send_email
+from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
 from werkzeug.exceptions import Unauthorized, BadRequest
 
@@ -249,13 +249,14 @@ def send_email(body, token_info):
 
         # Determine what template must be sent, and build the template args
         # from whatever is in the body and the resolution url we determined
-        template = EmailMessage[body['template']]
+        template_name = body['template']
+        template = EmailMessage[template_name]
+
         template_args = dict(body['template_args'])
         template_args['resolution_url'] = resolution_url
         template_args['contact_name'] = contact_name
-
-        # Send the email
-        SendEmail.send(email, template, template_args)
+        celery_send_email.apply_async(args=[email, template_name,
+                                            template_args])
 
         # Add an event to the log that we sent this email successfully
         event = LogEvent(

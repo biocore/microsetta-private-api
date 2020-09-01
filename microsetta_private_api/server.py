@@ -6,6 +6,8 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from flask import jsonify
 
 from microsetta_private_api.exceptions import RepoException
+from microsetta_private_api.celery_utils import celery, init_celery
+
 
 """
 Basic flask/connexion-based web application
@@ -68,6 +70,8 @@ def build_app():
         app.app.logger.handlers = gunicorn_logger.handlers
         app.app.logger.setLevel(gunicorn_logger.level)
 
+    init_celery(celery, app.app)
+
     return app
 
 
@@ -86,7 +90,9 @@ def run(app):
     )
 
 
+app = build_app()
+
+
 # If we're running in stand alone mode, run the application
 if __name__ == '__main__':
-    app = build_app()
     run(app)
