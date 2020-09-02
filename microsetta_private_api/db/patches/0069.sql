@@ -11,6 +11,9 @@ ALTER TABLE barcodes.project ADD COLUMN contact_name varchar;
 ALTER TABLE barcodes.project ADD COLUMN additional_contact_name varchar;
 ALTER TABLE barcodes.project ADD COLUMN contact_email varchar;
 ALTER TABLE barcodes.project ADD COLUMN deadlines varchar;
+-- The below two columns are varchar bc there are projects with variable or
+-- unknown numbers of subjects or time points ... and we don't expect to do
+-- math on this column, so it is acceptable to store e.g. num_subjects = "Variable"
 ALTER TABLE barcodes.project ADD COLUMN num_subjects varchar;
 ALTER TABLE barcodes.project ADD COLUMN num_timepoints varchar;
 ALTER TABLE barcodes.project ADD COLUMN start_date varchar;
