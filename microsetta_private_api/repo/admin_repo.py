@@ -6,12 +6,7 @@ import pandas as pd
 
 from microsetta_private_api.exceptions import RepoException
 
-from microsetta_private_api.model.project import Project, COMPUTED_STATS_KEY, \
-    get_computed_stats_keys, SAMPLE_STATUSES, get_num_status_keys,\
-    NUM_KITS_KEY, NUM_SAMPLES_KEY, NUM_UNIQUE_SOURCES_KEY, \
-    NUM_SAMPLES_RECEIVED_KEY, NUM_FULLY_RETURNED_KITS_KEY, \
-    NUM_PARTIALLY_RETURNED_KITS_KEY, NUM_KITS_W_PROBLEMS_KEY, \
-    VALID_SAMPLES_STATUS
+import microsetta_private_api.model.project as p
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
@@ -24,12 +19,33 @@ from hashlib import sha512
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 
 # TODO: Refactor repeated elements in project-related sql queries?
-PROJECTS_BASICS_SQL = """
+PROJECT_FIELDS = f"""
+                project_id, {p.DB_PROJ_NAME_KEY}, 
+                {p.IS_MICROSETTA_KEY}, {p.BANK_SAMPLES_KEY},
+                {p.PLATING_START_DATE_KEY}, {p.CONTACT_NAME_KEY},
+                {p.ADDTL_CONTACT_NAME_KEY}, {p.CONTACT_EMAIL_KEY},
+                {p.DEADLINES_KEY}, {p.NUM_SUBJECTS_KEY}, 
+                {p.NUM_TIMEPOINTS_KEY}, {p.START_DATE_KEY},
+                {p.DISPOSITION_COMMENTS_KEY}, {p.COLLECTION_KEY},
+                {p.IS_FECAL_KEY}, {p.IS_SALIVA_KEY}, {p.IS_SKIN_KEY},
+                {p.IS_BLOOD_KEY}, {p.IS_OTHER_KEY},
+                {p.DO_16S_KEY}, {p.DO_SHALLOW_SHOTGUN_KEY}, 
+                {p.DO_SHOTGUN_KEY}, {p.DO_RT_QPCR_KEY},
+                {p.DO_SEROLOGY_KEY}, {p.DO_METATRANSCRIPTOMICS_KEY}, 
+                {p.DO_MASS_SPEC_KEY}, {p.MASS_SPEC_COMMENTS_KEY},
+                {p.MASS_SPEC_CONTACT_NAME_KEY}, 
+                {p.MASS_SPEC_CONTACT_EMAIL_KEY}, {p.DO_OTHER_KEY},
+                {p.BRANDING_ASSOC_INSTRUCTIONS_KEY}, 
+                {p.BRANDING_STATUS_KEY},
+                {p.SUBPROJECT_NAME_KEY}, {p.ALIAS_KEY}, 
+                {p.SPONSOR_KEY}, {p.COORDINATION_KEY}"""
+
+PROJECTS_BASICS_SQL = f"""
     SELECT
-    p.*,
-    count(distinct barcode) as {0},  -- number of samples
-    count(distinct kit_id) as {1}  -- number of kits
-    FROM barcodes.project as p
+    {PROJECT_FIELDS},
+    count(distinct barcode) as {p.NUM_SAMPLES_KEY},
+    count(distinct kit_id) as {p.NUM_KITS_KEY}
+    FROM barcodes.project
     LEFT JOIN
     barcodes.project_barcode
     USING (project_id)
@@ -37,58 +53,47 @@ PROJECTS_BASICS_SQL = """
     barcodes.barcode
     USING (barcode)
     GROUP BY project_id
-    ORDER BY project_id;
-"""
+    ORDER BY project_id;"""
 
 # The below sql statements pull various computed counts about projects.
 # Each query must follow the convention that it returns a column named
 # "project_id" to join on, and that all other columns it returns are unique
 # to that query (not also returned by any other query).
-NUM_UNIQUE_SOURCES_SQL = """
+NUM_UNIQUE_SOURCES_SQL = f"""
     SELECT project_barcode.project_id,
-    count(distinct ag_kit_barcodes.source_id) as {0}  --num_unique_sources
+    count(distinct ag_kit_barcodes.source_id) as {p.NUM_UNIQUE_SOURCES_KEY}
     FROM barcodes.project_barcode
     INNER JOIN ag.ag_kit_barcodes
     USING (barcode)
     GROUP BY project_id
-    ORDER BY project_id; """
+    ORDER BY project_id;"""
 
-NUM_RECEIVED_SAMPLES_SQL = """
+NUM_RECEIVED_SAMPLES_SQL = f"""
     SELECT project_id,
-    count(distinct barcode) as {0}  --num_samples_received
+    count(distinct barcode) as {p.NUM_SAMPLES_RECEIVED_KEY}
     FROM project_barcode
     INNER JOIN
     barcode_scans
     USING (barcode)
     GROUP BY project_id
-    ORDER BY project_id; """
+    ORDER BY project_id;"""
 
-NUM_FULLY_RECEIVED_KITS_SQL = """
-    SELECT project_id,
-    count(distinct ag_kit_id) as {0}  --num_fully_returned_kits
-    FROM (
-        -- query to get a list of kits for which ALL samples have been
-        -- returned (not guaranteed to be returned *valid*, just
-        -- returned), per project.  Uses an intersect to only keep kits
-        -- for which the total number of samples in a kit matches the
-        -- number of returned (scanned) samples for that kit.
+NUM_AT_LEAST_PARTIALLY_RECEIVED_KITS = f"""
+    SELECT project_barcode.project_id,
+    count(distinct ag_kit_barcodes.ag_kit_id) 
+    as {p.NUM_PARTIALLY_RETURNED_KITS_KEY}
+    FROM ag.ag_kit_barcodes
+    INNER JOIN barcodes.project_barcode
+    USING (barcode)
+    INNER JOIN barcodes.barcode_scans
+    USING (barcode)
+    GROUP BY project_barcode.project_id
+    ORDER BY project_barcode.project_id;"""
 
-        -- get total number of samples (barcodes) in each kit, per proj
-        SELECT
-        project_barcode.project_id,
-        ag_kit_barcodes.ag_kit_id,
-        count(ag_kit_barcodes.barcode)
-        FROM ag.ag_kit_barcodes
-        LEFT JOIN barcodes.project_barcode
-        USING (barcode)
-        GROUP BY project_id, ag_kit_id
-        INTERSECT
-        -- get the number of returned samples (via latest barcode scan)
-        -- in each kit with at least one returned sample, per project
-        SELECT
-        project_barcode.project_id,
-        ag_kit_barcodes.ag_kit_id,
-        count(barcode_scans.barcode)
+NUM_KITS_W_AT_LEAST_ONE_PROBLEM_SAMPLE_SQL = f"""
+        SELECT project_barcode.project_id,
+        count(distinct ag_kit_barcodes.ag_kit_id) 
+        as {p.NUM_KITS_W_PROBLEMS_KEY}
         FROM ag.ag_kit_barcodes
         INNER JOIN barcodes.project_barcode
         USING (barcode)
@@ -99,17 +104,34 @@ NUM_FULLY_RECEIVED_KITS_SQL = """
             FROM barcodes.barcode_scans
             GROUP BY barcode
         ) latest_scan
+        ON barcode_scans.barcode = latest_scan.barcode
+		AND barcode_scans.scan_timestamp = latest_scan.scan_timestamp
+		AND barcode_scans.sample_status <> '{p.VALID_SAMPLES_STATUS}'
+        GROUP BY project_barcode.project_id;"""
+
+NUM_FULLY_RECEIVED_KITS_SQL = f"""
+    SELECT project_id,
+    count(distinct ag_kit_id) as {p.NUM_FULLY_RETURNED_KITS_KEY}
+    FROM (
+		SELECT
+        project_barcode.project_id,
+        ag_kit_barcodes.ag_kit_id,
+        count(distinct ag_kit_barcodes.barcode) as uniq_barcodes_in_kit,
+		count(distinct barcode_scans.barcode) as uniq_received_barcodes_in_kit
+        FROM ag.ag_kit_barcodes
+        INNER JOIN barcodes.project_barcode
         USING (barcode)
+		LEFT JOIN barcodes.barcode_scans
+		USING (barcode)
         GROUP BY project_id, ag_kit_id
-        ORDER BY project_id, ag_kit_id
-        ) as kits_list
-        GROUP BY project_id
-        ORDER BY project_id;
-    """
+	) as kit_lists
+	WHERE uniq_barcodes_in_kit = uniq_received_barcodes_in_kit
+	GROUP by project_id
+	ORDER by project_id;"""
 
 
 def _make_statuses_sql(_):
-    first_chunk = """
+    joins = """
         SELECT * FROM crosstab(
             $$select p.project_id, scans.sample_status,
             coalesce(count(scans.barcode),0)
@@ -123,95 +145,56 @@ def _make_statuses_sql(_):
                 FROM barcodes.barcode_scans
                 GROUP BY barcode
             ) latest_scan
-            ON pb.barcode = latest_scan.barcode
+            ON scans.barcode = latest_scan.barcode
+			AND scans.scan_timestamp = latest_scan.scan_timestamp
             GROUP BY project_id, sample_status
             ORDER BY project_id,
             CASE sample_status """
 
-    second_chunk = """
+    case_values_connector = """
             END; $$,
             $$VALUES """
 
-    third_chunk = """; $$
+    results_name = """; $$
         ) AS ct(project_id bigint, """
 
-    fourth_chunk = """)
+    results_order = """)
         ORDER BY ct;"""
 
     cases = []
     values = []
     colnames = []
     case_num = 1
-    for curr_status in SAMPLE_STATUSES:
-        cases.append("WHEN '{0}' THEN {1} ".format(curr_status, case_num))
-        values.append("('{0}')".format(curr_status))
+    for curr_status in p.SAMPLE_STATUSES:
+        cases.append(f"WHEN '{curr_status}' THEN {case_num} ")
+        values.append(f"('{curr_status}')")
         case_num += 1
 
-    num_status_keys = get_num_status_keys()
+    num_status_keys = p.get_status_num_keys()
     for curr_num_status_key in num_status_keys:
-        colnames.append("{0} bigint".format(curr_num_status_key))
+        colnames.append(f"{curr_num_status_key} bigint")
 
     cases_sql = " ".join(cases)
     values_sql = ", ".join(values)
     colnames_sql = ", ".join(colnames)
 
-    final_sql = "{}{}{}{}{}{}{}".format(first_chunk, cases_sql, second_chunk,
-                                        values_sql, third_chunk, colnames_sql,
-                                        fourth_chunk)
+    final_sql = f"{joins}{cases_sql}{case_values_connector}{values_sql}" \
+                f"{results_name}{colnames_sql}{results_order}"
 
     return final_sql
-
-
-def _make_received_kits_sql(count_name, limit_to_problems):
-    first_chunk = """
-        SELECT project_barcode.project_id,
-        -- num_partially_returned_kits
-        count(distinct ag_kit_barcodes.ag_kit_id) as {0}
-        FROM ag.ag_kit_barcodes
-        INNER JOIN barcodes.project_barcode
-        USING (barcode)
-        INNER JOIN barcodes.barcode_scans
-        USING (barcode)
-        INNER JOIN (
-            SELECT barcode, max(scan_timestamp) AS scan_timestamp
-            FROM barcodes.barcode_scans
-            GROUP BY barcode
-        ) latest_scan
-        USING (barcode)"""
-
-    second_chunk = """
-        GROUP BY project_barcode.project_id
-        ORDER BY project_barcode.project_id
-    """
-
-    limit_to_problems_chunk = """
-        -- this constraint limits query to getting number of kits with
-        -- at least one PROBLEM sample
-        WHERE barcode_scans.sample_status <> '{0}'
-    """
-
-    constraint = ""
-    if limit_to_problems:
-        constraint = limit_to_problems_chunk.format(VALID_SAMPLES_STATUS)
-
-    qualified_first_chunk = first_chunk.format(count_name)
-    final_sql = "{}{}{}".format(qualified_first_chunk, constraint,
-                                second_chunk)
-    return final_sql
-
 
 # NB: PROJECTS_BASICS_SQL *must* come first since its list of project id is a
 # superset of other queries' lists.
 _PROJECT_SQLS = [
-                ((NUM_KITS_KEY, NUM_SAMPLES_KEY), PROJECTS_BASICS_SQL),
-                ((NUM_UNIQUE_SOURCES_KEY,), NUM_UNIQUE_SOURCES_SQL),
-                ((NUM_SAMPLES_RECEIVED_KEY,), NUM_RECEIVED_SAMPLES_SQL),
+                ((p.NUM_KITS_KEY, p.NUM_SAMPLES_KEY), PROJECTS_BASICS_SQL),
+                ((p.NUM_UNIQUE_SOURCES_KEY,), NUM_UNIQUE_SOURCES_SQL),
+                ((p.NUM_SAMPLES_RECEIVED_KEY,), NUM_RECEIVED_SAMPLES_SQL),
                 (("statuses",), _make_statuses_sql),
-                ((NUM_PARTIALLY_RETURNED_KITS_KEY, False),
-                 _make_received_kits_sql),
-                ((NUM_KITS_W_PROBLEMS_KEY, True),
-                 _make_received_kits_sql),
-                ((NUM_FULLY_RETURNED_KITS_KEY,), NUM_FULLY_RECEIVED_KITS_SQL)
+                ((p.NUM_PARTIALLY_RETURNED_KITS_KEY,),
+                    NUM_AT_LEAST_PARTIALLY_RECEIVED_KITS),
+                ((p.NUM_KITS_W_PROBLEMS_KEY,),
+                    NUM_KITS_W_AT_LEAST_ONE_PROBLEM_SAMPLE_SQL),
+                ((p.NUM_FULLY_RETURNED_KITS_KEY,), NUM_FULLY_RECEIVED_KITS_SQL)
                 ]
 
 
@@ -347,13 +330,15 @@ class AdminRepo(BaseRepo):
                 source = source_repo.get_source(account_id, source_id)
 
             # get (partial) projects_info list for this barcode
-            cur.execute("SELECT project, is_microsetta, "
-                        "bank_samples, plating_start_date "
-                        "FROM barcodes.project "
-                        "INNER JOIN barcodes.project_barcode "
-                        "USING (project_id) "
-                        "WHERE barcode=%s",
-                        (sample_barcode,))
+            query = f"""
+                    SELECT {p.DB_PROJ_NAME_KEY}, {p.IS_MICROSETTA_KEY},
+                    {p.BANK_SAMPLES_KEY}, {p.PLATING_START_DATE_KEY}
+                    FROM barcodes.project
+                    INNER JOIN barcodes.project_barcode
+                    USING (project_id)
+                    WHERE barcode=%s;"""
+
+            cur.execute(query, (sample_barcode,))
             # this can't be None; worst-case is an empty list
             projects_info = _rows_to_dicts_list(cur.fetchall())
 
@@ -431,25 +416,16 @@ class AdminRepo(BaseRepo):
                             "FROM barcodes.project")
                 id_ = cur.fetchone()[0]
 
-            cur.execute("INSERT INTO barcodes.project "
-                        "(project_id, project, is_microsetta, bank_samples, "
-                        "plating_start_date, contact_name, "
-                        "additional_contact_name, contact_email, "
-                        "deadlines, num_subjects, num_timepoints, start_date, "
-                        "disposition_comments, collection,"
-                        "is_fecal, is_saliva, is_skin, is_blood, is_other, "
-                        "do_16s, do_shallow_shotgun, do_shotgun, do_rt_qpcr, "
-                        "do_serology, do_metatranscriptomics, do_mass_spec, "
-                        "mass_spec_comments, mass_spec_contact_name, "
-                        "mass_spec_contact_email, do_other, "
-                        "branding_associated_instructions, branding_status, "
-                        "subproject_name, alias, sponsor, coordination"
-                        ") "
-                        "VALUES ("
-                        " %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
-                        " %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
-                        " %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
-                        " %s, %s, %s, %s, %s, %s)",
+            query = f"""
+                    INSERT INTO barcodes.project
+                    ({PROJECT_FIELDS})
+                    VALUES (
+                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                     %s, %s, %s, %s, %s, %s);"""
+
+            cur.execute(query,
                         [id_, project.project_name, project.is_microsetta,
                          project.bank_samples, project.plating_start_date,
                          project.contact_name, project.additional_contact_name,
@@ -490,43 +466,46 @@ class AdminRepo(BaseRepo):
             if row is None:
                 raise NotFound("No project with ID %s" % project_id)
 
-            cur.execute("UPDATE barcodes.project "
-                        "SET project=%s, "
-                        "subproject_name=%s, "
-                        "alias=%s, "
-                        "is_microsetta=%s, "
-                        "sponsor=%s, "
-                        "coordination=%s, "
-                        "contact_name=%s, "
-                        "additional_contact_name=%s, "
-                        "contact_email=%s, "
-                        "deadlines=%s, "
-                        "num_subjects=%s, "
-                        "num_timepoints=%s, "
-                        "start_date=%s, "
-                        "bank_samples=%s, "
-                        "plating_start_date=%s, "
-                        "disposition_comments=%s, "
-                        "collection=%s, "
-                        "is_fecal=%s, "
-                        "is_saliva=%s, "
-                        "is_skin=%s, "
-                        "is_blood=%s, "
-                        "is_other=%s, "
-                        "do_16s=%s, "
-                        "do_shallow_shotgun=%s, "
-                        "do_shotgun=%s, "
-                        "do_rt_qpcr=%s, "
-                        "do_serology=%s, "
-                        "do_metatranscriptomics=%s, "
-                        "do_mass_spec=%s, "
-                        "mass_spec_comments=%s, "
-                        "mass_spec_contact_name=%s, "
-                        "mass_spec_contact_email=%s, "
-                        "do_other=%s, "
-                        "branding_associated_instructions=%s, "
-                        "branding_status=%s "
-                        "WHERE project_id=%s;",
+            query = f"""
+                    UPDATE barcodes.project
+                    SET {p.DB_PROJ_NAME_KEY}=%s,
+                    {p.SUBPROJECT_NAME_KEY}=%s,
+                    {p.ALIAS_KEY}=%s,
+                    {p.IS_MICROSETTA_KEY}=%s,
+                    {p.SPONSOR_KEY}=%s,
+                    {p.COORDINATION_KEY}=%s,
+                    {p.CONTACT_NAME_KEY}=%s,
+                    {p.ADDTL_CONTACT_NAME_KEY}=%s,
+                    {p.CONTACT_EMAIL_KEY}=%s,
+                    {p.DEADLINES_KEY}=%s,
+                    {p.NUM_SUBJECTS_KEY}=%s,
+                    {p.NUM_TIMEPOINTS_KEY}=%s,
+                    {p.START_DATE_KEY}=%s,
+                    {p.BANK_SAMPLES_KEY}=%s,
+                    {p.PLATING_START_DATE_KEY}=%s,
+                    {p.DISPOSITION_COMMENTS_KEY}=%s,
+                    {p.COLLECTION_KEY}=%s,
+                    {p.IS_FECAL_KEY}=%s,
+                    {p.IS_SALIVA_KEY}=%s,
+                    {p.IS_SKIN_KEY}=%s,
+                    {p.IS_BLOOD_KEY}=%s,
+                    {p.IS_OTHER_KEY}=%s,
+                    {p.DO_16S_KEY}=%s,
+                    {p.DO_SHALLOW_SHOTGUN_KEY}=%s,
+                    {p.DO_SHOTGUN_KEY}=%s,
+                    {p.DO_RT_QPCR_KEY}=%s,
+                    {p.DO_SEROLOGY_KEY}=%s,
+                    {p.DO_METATRANSCRIPTOMICS_KEY}=%s,
+                    {p.DO_MASS_SPEC_KEY}=%s,
+                    {p.MASS_SPEC_COMMENTS_KEY}=%s,
+                    {p.MASS_SPEC_CONTACT_NAME_KEY}=%s,
+                    {p.MASS_SPEC_CONTACT_EMAIL_KEY}=%s,
+                    {p.DO_OTHER_KEY}=%s,
+                    {p.BRANDING_ASSOC_INSTRUCTIONS_KEY}=%s,
+                    {p.BRANDING_STATUS_KEY}=%s
+                    WHERE project_id=%s;"""
+
+            cur.execute(query,
                         (
                             project.project_name,
                             project.subproject_name,
@@ -609,7 +588,7 @@ class AdminRepo(BaseRepo):
             stats_dict = {}
             # pull computed statistics out of main project dictionary and
             # into a sub-dictionary, cleaning them up in the process
-            computed_stats_keys = get_computed_stats_keys()
+            computed_stats_keys = p.get_computed_stats_keys()
             for curr_stats_key in computed_stats_keys:
                 curr_stat = v.pop(curr_stats_key)
 
@@ -624,8 +603,8 @@ class AdminRepo(BaseRepo):
 
                 stats_dict[curr_stats_key] = curr_stat
 
-            v[COMPUTED_STATS_KEY] = stats_dict
-            a_project = Project(**v)
+            v[p.COMPUTED_STATS_KEY] = stats_dict
+            a_project = p.Project(**v)
             result.append(a_project)
 
         return result
@@ -658,8 +637,12 @@ class AdminRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             # get existing projects
-            cur.execute("SELECT project, project_id, is_microsetta "
-                        "FROM barcodes.project")
+            query = f"""
+                    SELECT {p.DB_PROJ_NAME_KEY}, project_id, 
+                    {p.IS_MICROSETTA_KEY}
+                    FROM barcodes.project;"""
+
+            cur.execute(query)
             known_projects = {prj: (id_, tmi)
                               for prj, id_, tmi in cur.fetchall()}
             is_tmi = False

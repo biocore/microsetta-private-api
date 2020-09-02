@@ -1,6 +1,5 @@
 import datetime
 
-PROJ_ID_KEY = "project_id"
 # This is a pain: in the db, the field that holds the project name is called
 # "project", but that is the idiom that code/yaml uses for the whole object.
 # Too risky to change the db, too likely to cause bugs to change the code
