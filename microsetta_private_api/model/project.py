@@ -78,12 +78,12 @@ def get_computed_stats_keys():
               NUM_PARTIALLY_RETURNED_KITS_KEY,
               NUM_FULLY_RETURNED_KITS_KEY, NUM_KITS_W_PROBLEMS_KEY]
 
-    num_status_keys = get_num_status_keys()
+    num_status_keys = get_status_num_keys()
     result.extend(num_status_keys)
     return result
 
 
-def get_num_status_keys():
+def get_status_num_keys():
     """Return list of the stats keys for number of samples with each status."""
 
     result = []
@@ -98,7 +98,7 @@ class Project:
     def __init__(self, **kwargs):
         # when project is created with input from front api, id
         # won't yet exist
-        self.project_id = kwargs.get(PROJ_ID_KEY)
+        self.project_id = kwargs.get("project_id")
 
         # these and project_name (handled later) are the only required fields
         self.is_microsetta = kwargs[IS_MICROSETTA_KEY]
@@ -148,13 +148,14 @@ class Project:
             if db_project_name is None:
                 raise ValueError("No project name provided")
             self.project_name = db_project_name
-        elif project_name is not None:
+        else:
             if db_project_name is not None:
                 if project_name != db_project_name:
                     raise ValueError("Conflicting project names provided")
             self.project_name = project_name
 
         if self.plating_start_date is not None:
+            # if this value has not yet been explicitly made into a date object
             if isinstance(self.plating_start_date, str):
                 try:
                     self.plating_start_date = datetime.datetime.strptime(
@@ -171,11 +172,11 @@ class Project:
     @classmethod
     def from_db(cls, row):
         row_dict = dict(row)
-        return Project(**row_dict)
+        return cls(**row_dict)
 
-    @staticmethod
-    def from_dict(values_dict):
-        return Project(**values_dict)
+    @classmethod
+    def from_dict(cls, values_dict):
+        return cls(**values_dict)
 
     def to_api(self):
         return vars(self)
