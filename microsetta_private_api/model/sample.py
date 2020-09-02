@@ -4,7 +4,8 @@ from microsetta_private_api.model.model_base import ModelBase
 
 class Sample(ModelBase):
     def __init__(self, sample_id, datetime_collected, site, notes, barcode,
-                 latest_scan_timestamp, sample_projects):
+                 latest_scan_timestamp, source_id, account_id,
+                 sample_projects):
         self.id = sample_id
         # NB: datetime_collected may be None if sample not yet used
         self.datetime_collected = datetime_collected
@@ -17,6 +18,9 @@ class Sample(ModelBase):
         self._latest_scan_timestamp = latest_scan_timestamp
         self.sample_projects = sample_projects
 
+        self.source_id = source_id
+        self.account_id = account_id
+
     @property
     def is_locked(self):
         # If a sample has been scanned into the system, that means its
@@ -25,7 +29,8 @@ class Sample(ModelBase):
 
     @classmethod
     def from_db(cls, sample_id, date_collected, time_collected,
-                site, notes, barcode, latest_scan_timestamp, sample_projects):
+                site, notes, barcode, latest_scan_timestamp,
+                source_id, account_id, sample_projects):
         datetime_collected = None
         # NB a sample may NOT have date and time collected if it has been sent
         # out but not yet used
@@ -33,7 +38,8 @@ class Sample(ModelBase):
             datetime_collected = datetime.combine(date_collected,
                                                   time_collected)
         return cls(sample_id, datetime_collected, site, notes, barcode,
-                   latest_scan_timestamp, sample_projects)
+                   latest_scan_timestamp, source_id, account_id,
+                   sample_projects)
 
     def to_api(self):
         return {
@@ -43,6 +49,8 @@ class Sample(ModelBase):
             "sample_locked": self.is_locked,
             "sample_datetime": self.datetime_collected,
             "sample_notes": self.notes,
+            "source_id": self.source_id,
+            "account_id": self.account_id,
             "sample_projects": list(self.sample_projects)
         }
 

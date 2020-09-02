@@ -7,6 +7,8 @@
   "ssl_key_path": null,
   "CAfile": null,
   "authrocket_url": "https://jubilant-smoke-a54b.e2.loginrocket.com",
+  "celery_backend_uri": "redis://localhost:6379",
+  "celery_broker_uri": "redis://localhost:6379",
   "FLASK_SECRET_KEY": null,
   "vioscreen_endpoint": "https://demo.vioscreen.com",
   "vioscreen_regcode": "regcode",

@@ -65,7 +65,7 @@ FAKE_TOKEN_NO_EMAIL = "noemail"
 FAKE_TOKEN_NO_EMAIL_VERIFY = "noemailver"
 
 
-def decode_fake_token(fake_token, pubkey, algorithms, verify, issuer):
+def decode_fake_token(fake_token, key, algorithms, verify, issuer):
     result = {
         'email': 'a@test.com',
         'email_verified': True,

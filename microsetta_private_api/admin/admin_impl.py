@@ -1,7 +1,6 @@
 import uuid
 from flask import jsonify, Response
 
-from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
 from microsetta_private_api.model.project import Project
@@ -10,7 +9,8 @@ from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
-from microsetta_private_api.util.email import SendEmail
+from microsetta_private_api.tasks import send_email as celery_send_email
+from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
 from werkzeug.exceptions import Unauthorized
 
@@ -194,30 +194,58 @@ def send_email(body, token_info):
             diag = AdminRepo(t).retrieve_diagnostics_by_barcode(
                        body["template_args"]["sample_barcode"],
                        grab_kit=False)
-            account_id = diag["account"].id
-            source_id = diag["source"].id
-            sample_id = diag["sample"].id
-            email = diag["account"].email
-            contact_name = diag["account"].first_name + " " + \
-                diag["account"].last_name
-            contact_name = contact_name.strip()
+            account_id = None
+            email = None
+            contact_name = None
+            if diag["account"] is not None:
+                account_id = diag["account"].id
+                email = diag["account"].email
+                contact_name = diag["account"].first_name + " " + \
+                    diag["account"].last_name
+                contact_name = contact_name.strip()
+
+            source_id = None
+            if diag["source"] is not None:
+                source_id = diag["source"].id
+
+            sample_id = None
+            if diag["sample"] is not None:
+                sample_id = diag["sample"].id
             endpoint = SERVER_CONFIG["endpoint"]
-            resolution_url = build_login_redirect(
-                endpoint + "/accounts/%s/sources/%s/samples/%s" %
-                (account_id, source_id, sample_id)
-            )
+
+            if sample_id is not None and \
+               source_id is not None and \
+               account_id is not None:
+                resolution_url = build_login_redirect(
+                    endpoint + "/accounts/%s/sources/%s/samples/%s" %
+                    (account_id, source_id, sample_id)
+                )
+            elif account_id is not None and source_id is not None:
+                resolution_url = build_login_redirect(
+                    endpoint + "/accounts/%s/sources/%s" %
+                    (account_id, source_id)
+                )
+            elif account_id is not None:
+                resolution_url = build_login_redirect(
+                    endpoint + "/accounts/%s" % (account_id,)
+                )
+            else:
+                resolution_url = build_login_redirect(
+                    endpoint + "/"
+                )
         else:
             raise Exception("Update Admin Impl to support more issue types")
 
         # Determine what template must be sent, and build the template args
         # from whatever is in the body and the resolution url we determined
-        template = EmailMessage[body['template']]
+        template_name = body['template']
+        template = EmailMessage[template_name]
+
         template_args = dict(body['template_args'])
         template_args['resolution_url'] = resolution_url
         template_args['contact_name'] = contact_name
-
-        # Send the email
-        SendEmail.send(email, template, template_args)
+        celery_send_email.apply_async(args=[email, template_name,
+                                            template_args])
 
         # Add an event to the log that we sent this email successfully
         event = LogEvent(
