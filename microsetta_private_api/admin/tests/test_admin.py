@@ -286,7 +286,7 @@ class AdminRepoTests(AdminTests):
 
                 full_project_dict = self._FULL_PROJECT_DICT.copy()
                 full_project_dict[p.PROJ_NAME_KEY] = 'full_test_proj'
-                input = p.Project(**full_project_dict)
+                input = p.Project.from_dict(full_project_dict)
 
                 output_id = admin_repo.create_project(input)
 
@@ -315,7 +315,7 @@ class AdminRepoTests(AdminTests):
                 minimal_project_dict = {p.PROJ_NAME_KEY: 'doesnotexist',
                                         p.IS_MICROSETTA_KEY: True,
                                         p.BANK_SAMPLES_KEY: False}
-                input = p.Project(**minimal_project_dict)
+                input = p.Project.from_dict(minimal_project_dict)
 
                 admin_repo.create_project(input)
 
@@ -338,7 +338,7 @@ class AdminRepoTests(AdminTests):
                                      p.IS_MICROSETTA_KEY: False,
                                      p.BANK_SAMPLES_KEY: True,
                                      p.PLATING_START_DATE_KEY: "2020-07-31"}
-                input = p.Project(**minimal_proj_dict)
+                input = p.Project.from_dict(minimal_proj_dict)
                 admin_repo.create_project(input)
                 cur.execute("SELECT project, is_microsetta, bank_samples, "
                             "plating_start_date "
@@ -357,7 +357,7 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
 
-            input = p.Project(**updated_dict)
+            input = p.Project.from_dict(updated_dict)
             # existing project 8 in test db
             admin_repo.update_project(8, input)
 
@@ -529,7 +529,7 @@ class AdminRepoTests(AdminTests):
     def test_get_projects(self):
         updated_dict = self._FULL_PROJECT_DICT.copy()
         updated_dict[p.PROJ_NAME_KEY] = 'test_proj'
-        input = p.Project(**updated_dict)
+        input = p.Project.from_dict(updated_dict)
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)

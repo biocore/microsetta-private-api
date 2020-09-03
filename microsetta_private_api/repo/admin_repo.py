@@ -586,38 +586,34 @@ class AdminRepo(BaseRepo):
         # into a pandas data frame
         projects_df = self._read_projects_df_from_db()
 
-        # convert data frame into dictionary of dictionaries;
-        # important to use built-in pandas method, which automatically
-        # converts numpy data types (e.g., numpy.bool_, numpy.int64) to
-        # appropriate python-native data types
-        projects_dict = projects_df.to_dict(orient='index')
+        def _normalize_stats_types(v):
+            # within computed stats columns (ONLY--does not apply to
+            # descriptive columns from the project table, where None is
+            # a real, non-numeric value), NaN and None (which pandas treats as
+            # interchangeable :-| ) should be converted to zero.
+            if pd.isnull(v):
+                return 0
+            # alternately, if the metric is an integer, cast it to that;
+            # for some weird reason pandas is pulling in counts as floats
+            elif v == int(v):
+                return int(v)
+            else:
+                return v
 
-        # turn the above dictionary into a list of Project objects, ordered
-        # by project id, while also pulling out the computed statistics for
-        # each project into their own sub-dictionary in the Project object.
+        stats_keys = p.get_computed_stats_keys()
+        # cut stats columns out into own df (w same index as projects one)
+        stats_df = projects_df[stats_keys].copy()
+        projects_df = projects_df.drop(stats_keys, axis=1)
+        # change nans to 0s, etc, in stats (only)
+        stats_df = stats_df.applymap(_normalize_stats_types)
+
         result = []
-        for k, v in projects_dict.items():
-            stats_dict = {}
-            # pull computed statistics out of main project dictionary and
-            # into a sub-dictionary, cleaning them up in the process
-            computed_stats_keys = p.get_computed_stats_keys()
-            for curr_stats_key in computed_stats_keys:
-                curr_stat = v.pop(curr_stats_key)
-
-                # only NaN returns false when compared to itself;
-                # in case of NaN, set value of metric to 0
-                if curr_stat != curr_stat:
-                    curr_stat = 0
-                # alternately, if the metric is an integer, cast it to that;
-                # for some weird reason pandas is pulling in counts as floats
-                elif curr_stat == int(curr_stat):
-                    curr_stat = int(curr_stat)
-
-                stats_dict[curr_stats_key] = curr_stat
-
-            v[p.COMPUTED_STATS_KEY] = stats_dict
-            a_project = p.Project(**v)
-            result.append(a_project)
+        for curr_project_id in projects_df.index:
+            # these _should_ still be in index order but use .loc to be safe
+            curr_project = projects_df.loc[curr_project_id].to_dict()
+            stats = stats_df.loc[curr_project_id].to_dict()
+            curr_project[p.COMPUTED_STATS_KEY] = stats
+            result.append(p.Project.from_dict(curr_project))
 
         return result
 

@@ -113,7 +113,7 @@ def create_project(body, token_info):
     validate_admin_access(token_info)
 
     try:
-        project = Project(**body)
+        project = Project.from_dict(body)
     except ValueError as e:
         raise RepoException(e)
 
@@ -129,7 +129,7 @@ def create_project(body, token_info):
 
 
 def update_project(project_id, body):
-    project = Project(**body)
+    project = Project.from_dict(body)
     with Transaction() as t:
         admin_repo = AdminRepo(t)
         admin_repo.update_project(project_id, project)
