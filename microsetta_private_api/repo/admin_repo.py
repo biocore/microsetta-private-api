@@ -20,24 +20,24 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 
 # TODO: Refactor repeated elements in project-related sql queries?
 PROJECT_FIELDS = f"""
-                project_id, {p.DB_PROJ_NAME_KEY}, 
+                project_id, {p.DB_PROJ_NAME_KEY},
                 {p.IS_MICROSETTA_KEY}, {p.BANK_SAMPLES_KEY},
                 {p.PLATING_START_DATE_KEY}, {p.CONTACT_NAME_KEY},
                 {p.ADDTL_CONTACT_NAME_KEY}, {p.CONTACT_EMAIL_KEY},
-                {p.DEADLINES_KEY}, {p.NUM_SUBJECTS_KEY}, 
+                {p.DEADLINES_KEY}, {p.NUM_SUBJECTS_KEY},
                 {p.NUM_TIMEPOINTS_KEY}, {p.START_DATE_KEY},
                 {p.DISPOSITION_COMMENTS_KEY}, {p.COLLECTION_KEY},
                 {p.IS_FECAL_KEY}, {p.IS_SALIVA_KEY}, {p.IS_SKIN_KEY},
                 {p.IS_BLOOD_KEY}, {p.IS_OTHER_KEY},
-                {p.DO_16S_KEY}, {p.DO_SHALLOW_SHOTGUN_KEY}, 
+                {p.DO_16S_KEY}, {p.DO_SHALLOW_SHOTGUN_KEY},
                 {p.DO_SHOTGUN_KEY}, {p.DO_RT_QPCR_KEY},
-                {p.DO_SEROLOGY_KEY}, {p.DO_METATRANSCRIPTOMICS_KEY}, 
+                {p.DO_SEROLOGY_KEY}, {p.DO_METATRANSCRIPTOMICS_KEY},
                 {p.DO_MASS_SPEC_KEY}, {p.MASS_SPEC_COMMENTS_KEY},
-                {p.MASS_SPEC_CONTACT_NAME_KEY}, 
+                {p.MASS_SPEC_CONTACT_NAME_KEY},
                 {p.MASS_SPEC_CONTACT_EMAIL_KEY}, {p.DO_OTHER_KEY},
-                {p.BRANDING_ASSOC_INSTRUCTIONS_KEY}, 
+                {p.BRANDING_ASSOC_INSTRUCTIONS_KEY},
                 {p.BRANDING_STATUS_KEY},
-                {p.SUBPROJECT_NAME_KEY}, {p.ALIAS_KEY}, 
+                {p.SUBPROJECT_NAME_KEY}, {p.ALIAS_KEY},
                 {p.SPONSOR_KEY}, {p.COORDINATION_KEY}"""
 
 PROJECTS_BASICS_SQL = f"""
@@ -80,7 +80,7 @@ NUM_RECEIVED_SAMPLES_SQL = f"""
 
 NUM_AT_LEAST_PARTIALLY_RECEIVED_KITS = f"""
     SELECT project_barcode.project_id,
-    count(distinct ag_kit_barcodes.ag_kit_id) 
+    count(distinct ag_kit_barcodes.ag_kit_id)
     as {p.NUM_PARTIALLY_RETURNED_KITS_KEY}
     FROM ag.ag_kit_barcodes
     INNER JOIN barcodes.project_barcode
@@ -92,7 +92,7 @@ NUM_AT_LEAST_PARTIALLY_RECEIVED_KITS = f"""
 
 NUM_KITS_W_AT_LEAST_ONE_PROBLEM_SAMPLE_SQL = f"""
         SELECT project_barcode.project_id,
-        count(distinct ag_kit_barcodes.ag_kit_id) 
+        count(distinct ag_kit_barcodes.ag_kit_id)
         as {p.NUM_KITS_W_PROBLEMS_KEY}
         FROM ag.ag_kit_barcodes
         INNER JOIN barcodes.project_barcode
@@ -105,29 +105,29 @@ NUM_KITS_W_AT_LEAST_ONE_PROBLEM_SAMPLE_SQL = f"""
             GROUP BY barcode
         ) latest_scan
         ON barcode_scans.barcode = latest_scan.barcode
-		AND barcode_scans.scan_timestamp = latest_scan.scan_timestamp
-		AND barcode_scans.sample_status <> '{p.VALID_SAMPLES_STATUS}'
+        AND barcode_scans.scan_timestamp = latest_scan.scan_timestamp
+        AND barcode_scans.sample_status <> '{p.VALID_SAMPLES_STATUS}'
         GROUP BY project_barcode.project_id;"""
 
 NUM_FULLY_RECEIVED_KITS_SQL = f"""
     SELECT project_id,
     count(distinct ag_kit_id) as {p.NUM_FULLY_RETURNED_KITS_KEY}
     FROM (
-		SELECT
+        SELECT
         project_barcode.project_id,
         ag_kit_barcodes.ag_kit_id,
         count(distinct ag_kit_barcodes.barcode) as uniq_barcodes_in_kit,
-		count(distinct barcode_scans.barcode) as uniq_received_barcodes_in_kit
+        count(distinct barcode_scans.barcode) as uniq_received_barcodes_in_kit
         FROM ag.ag_kit_barcodes
         INNER JOIN barcodes.project_barcode
         USING (barcode)
-		LEFT JOIN barcodes.barcode_scans
-		USING (barcode)
+        LEFT JOIN barcodes.barcode_scans
+        USING (barcode)
         GROUP BY project_id, ag_kit_id
-	) as kit_lists
-	WHERE uniq_barcodes_in_kit = uniq_received_barcodes_in_kit
-	GROUP by project_id
-	ORDER by project_id;"""
+    ) as kit_lists
+    WHERE uniq_barcodes_in_kit = uniq_received_barcodes_in_kit
+    GROUP by project_id
+    ORDER by project_id;"""
 
 
 def _make_statuses_sql(_):
@@ -146,7 +146,7 @@ def _make_statuses_sql(_):
                 GROUP BY barcode
             ) latest_scan
             ON scans.barcode = latest_scan.barcode
-			AND scans.scan_timestamp = latest_scan.scan_timestamp
+            AND scans.scan_timestamp = latest_scan.scan_timestamp
             GROUP BY project_id, sample_status
             ORDER BY project_id,
             CASE sample_status """
@@ -182,6 +182,7 @@ def _make_statuses_sql(_):
                 f"{results_name}{colnames_sql}{results_order}"
 
     return final_sql
+
 
 # NB: PROJECTS_BASICS_SQL *must* come first since its list of project id is a
 # superset of other queries' lists.
@@ -638,7 +639,7 @@ class AdminRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             # get existing projects
             query = f"""
-                    SELECT {p.DB_PROJ_NAME_KEY}, project_id, 
+                    SELECT {p.DB_PROJ_NAME_KEY}, project_id,
                     {p.IS_MICROSETTA_KEY}
                     FROM barcodes.project;"""
 

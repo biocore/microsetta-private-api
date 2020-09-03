@@ -116,6 +116,7 @@ class AdminTests(TestCase):
         except Unauthorized:
             pass
 
+
 class AdminRepoTests(AdminTests):
     # TODO FIXME HACK:  Need to build mock barcodes rather than using
     #  these fixed ones
