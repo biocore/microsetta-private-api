@@ -586,26 +586,18 @@ class AdminRepo(BaseRepo):
         # into a pandas data frame
         projects_df = self._read_projects_df_from_db()
 
-        def _normalize_stats_types(v):
-            # within computed stats columns (ONLY--does not apply to
-            # descriptive columns from the project table, where None is
-            # a real, non-numeric value), NaN and None (which pandas treats as
-            # interchangeable :-| ) should be converted to zero.
-            if pd.isnull(v):
-                return 0
-            # alternately, if the metric is an integer, cast it to that;
-            # for some weird reason pandas is pulling in counts as floats
-            elif v == int(v):
-                return int(v)
-            else:
-                return v
-
-        stats_keys = p.get_computed_stats_keys()
         # cut stats columns out into own df (w same index as projects one)
+        stats_keys = p.get_computed_stats_keys()
         stats_df = projects_df[stats_keys].copy()
         projects_df = projects_df.drop(stats_keys, axis=1)
-        # change nans to 0s, etc, in stats (only)
-        stats_df = stats_df.applymap(_normalize_stats_types)
+
+        # within computed stats columns (ONLY--does not apply to
+        # descriptive columns from the project table, where None is
+        # a real, non-numeric value), NaN and None (which pandas treats as
+        # interchangeable :-| ) should be converted to zero.  Everything
+        # else should be cast to an integer; for some weird reason pandas is
+        # pulling in counts as floats
+        stats_df = stats_df.fillna(0).astype(int)
 
         result = []
         for curr_project_id in projects_df.index:
