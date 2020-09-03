@@ -553,9 +553,13 @@ class AdminRepoTests(AdminTests):
                 (barcode, scan_timestamp, sample_status)
                 VALUES ('000007640', '2012-12-01', 'sample-is-valid');
 
-                -- add an additional scan for a different barcode that has a 
-                -- timestamp after its existing 'is valid' status, thus 
-                -- indicating this sample currently has a problem.
+                -- add two additional scans for a different barcode: a valid
+                -- scan followed by a problem scan, thus indicting this sample
+                -- currently has a problem.
+                insert into barcodes.barcode_scans
+                (barcode, scan_timestamp, sample_status)
+                VALUES ('000070796', '2020-07-01', 'sample-is-valid');
+
                 insert into barcodes.barcode_scans
                 (barcode, scan_timestamp, sample_status)
                 VALUES ('000070796', '2020-09-01', 'no-registered-account');
@@ -572,7 +576,7 @@ class AdminRepoTests(AdminTests):
                  p.NUM_KITS_W_PROBLEMS_KEY: 1,
                  'num_no_associated_source': 0,
                  'num_no_collection_info': 0,
-                 'num_no_registered_account': 2,
+                 'num_no_registered_account': 1,
                  'num_received_unknown_validity': 0,
                  'num_sample_is_valid': 4,
                  p.NUM_PARTIALLY_RETURNED_KITS_KEY: 2,

@@ -131,10 +131,21 @@ NUM_FULLY_RECEIVED_KITS_SQL = f"""
 
 
 def _make_statuses_sql(_):
+    # Note: scans with multiple identical timestamps are quite unlikely
+    # in real life but easy to create in test code.  Such a situation is
+    # pathological; we can't tell which scan is the current status (which we
+    # base on latest timestamp) if there are multiple scans for the same
+    # barcode with the SAME latest timestamp.  The below code is robust to
+    # this pathological situation IF the multiple same-latest-timestamp scans
+    # for a barcode have identical statuses.  However, if the the multiple
+    # same-latest-timestamp scans for a barcode have DIFFERENT statuses, this
+    # code will double-count that barcode.  I doubt this situation will ever
+    # happen in real life.
+
     joins = """
         SELECT * FROM crosstab(
             $$select p.project_id, scans.sample_status,
-            coalesce(count(scans.barcode),0)
+            coalesce(count(distinct scans.barcode),0)
             FROM barcodes.project as p
             INNER JOIN barcodes.project_barcode as pb
             USING (project_id)
