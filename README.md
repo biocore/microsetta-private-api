@@ -28,8 +28,10 @@ Install the JSON Web Tokens library with cryptography support:
 
 Install Redis and Celery with Redis support for out-of-band compute:
 
-`conda install redis`
-`pip install celery[redis]`
+```bash
+conda install redis
+pip install celery[redis]
+```
 
 Then install the microsetta-private-api in editable mode:
 
