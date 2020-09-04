@@ -133,10 +133,9 @@ def update_project(project_id, body):
     with Transaction() as t:
         admin_repo = AdminRepo(t)
         admin_repo.update_project(project_id, project)
-        updated_project = admin_repo.get_project(project_id)
         t.commit()
 
-        return jsonify(updated_project.to_api()), 200
+        return '', 204
 
 
 def create_kits(body, token_info):

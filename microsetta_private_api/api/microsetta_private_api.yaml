@@ -1187,12 +1187,10 @@ paths:
             schema:
               $ref: '#/components/schemas/project'
       responses:
-        '200':
+        '204':
+          # Returns 204 rather than 200 (with a project object) bc don't want
+          # to recalculate stats (which won't have been changed by update)
           description: Successfully updated sample information
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/project'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':
