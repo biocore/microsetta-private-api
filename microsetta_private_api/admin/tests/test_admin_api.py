@@ -3,6 +3,7 @@ from unittest import TestCase
 import json
 import microsetta_private_api.server
 from microsetta_private_api.model.account import Account, Address
+from microsetta_private_api.model.project import Project
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -60,6 +61,43 @@ def setup_test_data():
 
 @pytest.mark.usefixtures("client")
 class AdminApiTests(TestCase):
+    FULL_PROJ_INFO = {"project_name": DUMMY_PROJ_NAME,
+                          "is_microsetta": True,
+                          "bank_samples": False,
+                          "plating_start_date": None,
+                          "contact_name": "Jane Doe",
+                          "contact_email": "jd@test.com",
+                          "additional_contact_name": "John Doe",
+                          "deadlines": "Spring 2021",
+                          "num_subjects": "Variable",
+                          "num_timepoints": "4",
+                          "start_date": "Fall 2020",
+                          "disposition_comments": "Store",
+                          "collection": "AGP",
+                          "is_fecal": "X",
+                          "is_saliva": "",
+                          "is_skin": "?",
+                          "is_blood": "X",
+                          "is_other": "Nares, mouth",
+                          "do_16s": "",
+                          "do_shallow_shotgun": "Subset",
+                          "do_shotgun": "X",
+                          "do_rt_qpcr": "",
+                          "do_serology": "",
+                          "do_metatranscriptomics": "X",
+                          "do_mass_spec": "X",
+                          "mass_spec_comments": "Dorrestein",
+                          "mass_spec_contact_name": "Ted Doe",
+                          "mass_spec_contact_email": "td@test.com",
+                          "do_other": "",
+                          "branding_associated_instructions":
+                              "branding_doc.pdf",
+                          "branding_status": "In Review",
+                          "subproject_name": "IBL SIBL",
+                          "alias": "Healthy Sitting",
+                          "sponsor": "Crowdfunded",
+                          "coordination": "TMI"}
+
     TEST_BARCODE = '000000001'
 
     def setUp(self):
@@ -90,6 +128,9 @@ class AdminApiTests(TestCase):
         # (isdigit fails if str contains '-')
         new_id = extract_last_id_from_location_header(response)
         self.assertTrue(new_id.isdigit())
+
+    def test_project_create_success_full(self):
+        self._test_project_create_success(self.FULL_PROJ_INFO)
 
     def test_project_create_success_unbanked_no_date(self):
         """Successfully create a new, unbanked project, do not pass date"""
@@ -193,6 +234,108 @@ class AdminApiTests(TestCase):
         )
 
         self.assertEqual(422, response.status_code)
+
+    def test_update_project(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            proj_id = admin_repo.create_project(
+                Project(project_name=DUMMY_PROJ_NAME,
+                        is_microsetta=False,
+                        bank_samples=False))
+            t.commit()
+
+        # create post input json
+        input_json = json.dumps(self.FULL_PROJ_INFO)
+
+        # execute project put (update)
+        response = self.client.put(
+            f"/api/admin/projects/{proj_id}",
+            content_type='application/json',
+            data=input_json,
+            headers=MOCK_HEADERS
+        )
+
+        # check response code
+        self.assertEqual(204, response.status_code)
+
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                cur.execute("select * FROM project "
+                            "WHERE "
+                            "project_id = %s",
+                            (proj_id,))
+                row = cur.fetchone()
+                stored_result = dict(row)
+
+        expected_result = self.FULL_PROJ_INFO.copy()
+        expected_result["project"] = expected_result.pop("project_name")
+        expected_result["project_id"] = proj_id
+        self.assertEqual(expected_result, stored_result)
+
+    def test_get_projects(self):
+        # execute projects get
+        response = self.client.get(
+            "/api/admin/projects",
+            headers=MOCK_HEADERS
+        )
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        expected_record_1 = {'additional_contact_name': None,
+                             'alias': None,
+                             'bank_samples': False,
+                             'branding_associated_instructions': None,
+                             'branding_status': None,
+                             'collection': None,
+                             'computed_stats': {
+                                 'num_fully_returned_kits': 7493,
+                                 'num_kits': 21023,
+                                 'num_kits_w_problems': 391,
+                                 'num_no_associated_source': 416,
+                                 'num_no_collection_info': 2,
+                                 'num_no_registered_account': 149,
+                                 'num_partially_returned_kits': 8381,
+                                 'num_received_unknown_validity': 0,
+                                 'num_sample_is_valid': 12462,
+                                 'num_samples': 41379,
+                                 'num_samples_received': 13029,
+                                 'num_unique_sources': 11848},
+                             'contact_email': None,
+                             'contact_name': None,
+                             'coordination': None,
+                             'deadlines': None,
+                             'disposition_comments': None,
+                             'do_16s': None,
+                             'do_mass_spec': None,
+                             'do_metatranscriptomics': None,
+                             'do_other': None,
+                             'do_rt_qpcr': None,
+                             'do_serology': None,
+                             'do_shallow_shotgun': None,
+                             'do_shotgun': None,
+                             'is_blood': None,
+                             'is_fecal': None,
+                             'is_microsetta': True,
+                             'is_other': None,
+                             'is_saliva': None,
+                             'is_skin': None,
+                             'mass_spec_comments': None,
+                             'mass_spec_contact_email': None,
+                             'mass_spec_contact_name': None,
+                             'num_subjects': None,
+                             'num_timepoints': None,
+                             'plating_start_date': None,
+                             'project_id': 1,
+                             'project_name': 'American Gut Project',
+                             'sponsor': None,
+                             'start_date': None,
+                             'subproject_name': None}
+        self.assertEqual(56, len(response_obj))
+        self.assertEqual(expected_record_1, response_obj[0])
 
     def test_scan_barcode_success(self):
         """Store info on new scan for valid barcode"""

@@ -600,12 +600,15 @@ class AdminRepo(BaseRepo):
         stats_df = stats_df.fillna(0).astype(int)
 
         result = []
-        for curr_project_id in projects_df.index:
-            # these _should_ still be in index order but use .loc to be safe
-            curr_project = projects_df.loc[curr_project_id].to_dict()
-            stats = stats_df.loc[curr_project_id].to_dict()
-            curr_project[p.COMPUTED_STATS_KEY] = stats
-            result.append(p.Project.from_dict(curr_project))
+        # NB: *dataframe*'s to_dict automatically converts numpy data types
+        # (e.g., numpy.bool_, numpy.int64) to appropriate python-native data
+        # types, but *series* to_dict does NOT do this automatic conversion
+        # (at least, as of this writing).  Be cautious if refactoring the below
+        projects_dict = projects_df.to_dict(orient='index')
+        stats_dict = stats_df.to_dict(orient='index')
+        for k, v in projects_dict.items():
+            v[p.COMPUTED_STATS_KEY] = stats_dict[k]
+            result.append(p.Project.from_dict(v))
 
         return result
 
