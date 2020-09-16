@@ -2,6 +2,9 @@
 -- and enables data pivoting in queries
 CREATE EXTENSION IF NOT EXISTS tablefunc;
 
+-- add an index on project_barcodes' barcode field
+CREATE INDEX ind_barcode on barcodes.project_barcode (barcode);
+
 -- extend the project table to hold lots more info
 ALTER TABLE barcodes.project ADD COLUMN subproject_name varchar;
 ALTER TABLE barcodes.project ADD COLUMN alias varchar;
