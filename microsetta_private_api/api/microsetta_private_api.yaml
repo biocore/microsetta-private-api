@@ -1129,41 +1129,74 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/admin/create/project':
+  '/admin/projects':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_projects
+      tags:
+        - Admin
+      summary: Retrieve a list of existing projects
+      description: Retrieve a list of existing projects
+      responses:
+        '200':
+          description: Array of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/project'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
     post:
       operationId: microsetta_private_api.admin.admin_impl.create_project
       tags:
         - Admin
-      summary: Create a project which kits can be associated too
-      description: Create a project which kits can be associated too
+      summary: Create a project to which kits can be associated
+      description: Create a project to which kits can be associated
       requestBody:
         content:
           application/json:
             schema:
-              type: "object"
-              properties:
-                project_name:
-                  type: string
-                is_microsetta:
-                  type: boolean
-                bank_samples:
-                  type: boolean
-                plating_start_date:
-                  type: string
-                  format: date
-                  example: "2017-07-21"
-                  nullable: true
-              required:
-                - project_name
-                - is_microsetta
-                - bank_samples
+              $ref: '#/components/schemas/project'
       responses:
         '201':
           description: Project successfully created
+          headers:
+            Location:
+              schema:
+                type: string
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+
+  '/admin/projects/{project_id}':
+    put:
+      operationId: microsetta_private_api.admin.admin_impl.update_project
+      tags:
+        - Admin
+      summary: Update information about a project
+      description:  Update information about a project
+      parameters:
+        - $ref: '#/components/parameters/project_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project'
+      responses:
+        '204':
+          # Returns 204 rather than 200 (with a project object) bc don't want
+          # to recalculate stats (which won't have been changed by update)
+          description: Successfully updated sample information
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   '/admin/create/kits':
     post:
@@ -1204,38 +1237,6 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/admin/statistics/projects':
-    get:
-      operationId: microsetta_private_api.admin.admin_impl.project_statistics_summary
-      tags:
-        - Admin
-      responses:
-        '200':
-          description: Object describing project statistics for all projects
-          content:
-            application/json:
-              schema:
-                type: array
-
-  '/admin/statistics/project/{project_id}':
-    get:
-      operationId: microsetta_private_api.admin.admin_impl.project_statistics_detailed
-      tags:
-        - Admin
-      parameters:
-        - in: path
-          name: project_id
-          description: Project ID
-          schema:
-            type: integer
-            example: 1
-      responses:
-        '200':
-          description: Object describing specific project statistics in more detail
-          content:
-            application/json:
-              schema:
-                type: object
   '/admin/events/accounts/{account_id}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.get_account_events
@@ -1333,6 +1334,12 @@ components:
       schema:
         $ref: '#/components/schemas/sample_barcode'
       required: true
+    project_id:
+      name: project_id
+      in: path
+      description: Project ID
+      schema:
+        $ref: '#/components/schemas/project_id'
 
 
     # query parameters
@@ -1773,6 +1780,130 @@ components:
                       "Exclude refined sugars"
                     ]
                 }
+
+    # project section
+    project_id:
+      type: integer
+      example: 1
+      readOnly: true
+    project_name:
+      type: string
+      nullable: false
+    project:
+      type: "object"
+      properties:
+        project_id:
+          $ref: '#/components/schemas/project_id'
+        project_name:
+          $ref: '#/components/schemas/project_name'
+        is_microsetta:
+          type: boolean
+        bank_samples:
+          type: boolean
+        plating_start_date:
+          type: string
+          format: date
+          example: "2017-07-21"
+          nullable: true
+        subproject_name:
+          type: string
+          nullable: true
+        alias:
+          type: string
+          nullable: true
+        sponsor:
+          type: string
+          nullable: true
+        coordination:
+          type: string
+          nullable: true
+        contact_name:
+          type: string
+          nullable: true
+        additional_contact_name:
+          type: string
+          nullable: true
+        contact_email:
+          type: string
+          format: email
+          nullable: true
+        deadlines:
+          type: string
+          nullable: true
+        num_subjects:
+          # no data type specified--this can be integer or string :-|
+          nullable: true
+        num_timepoints:
+          # no data type specified--this can be integer or string :-|
+          nullable: true
+        start_date:
+          type: string
+          nullable: true
+        disposition_comments:
+          type: string
+          nullable: true
+        collection:
+          type: string
+          nullable: true
+        is_fecal:
+          type: string
+          nullable: true
+        is_saliva:
+          type: string
+          nullable: true
+        is_skin:
+          type: string
+          nullable: true
+        is_blood:
+          type: string
+          nullable: true
+        is_other:
+          type: string
+          nullable: true
+        do_16s:
+          type: string
+          nullable: true
+        do_shallow_shotgun:
+          type: string
+          nullable: true
+        do_shotgun:
+          type: string
+          nullable: true
+        do_rt_qpcr:
+          type: string
+          nullable: true
+        do_serology:
+          type: string
+          nullable: true
+        do_metatranscriptomics:
+          type: string
+          nullable: true
+        do_mass_spec:
+          type: string
+          nullable: true
+        mass_spec_comments:
+          type: string
+          nullable: true
+        mass_spec_contact_name:
+          type: string
+          nullable: true
+        mass_spec_contact_email:
+          type: string
+          format: email
+          nullable: true
+        do_other:
+          type: string
+          nullable: true
+        branding_associated_instructions:
+          type: string
+          nullable: true
+        branding_status:
+          type: string
+          nullable: true
+      required:
+        - project_name
+        - is_microsetta
+        - bank_samples
 
     # error section
     Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/

@@ -3,6 +3,8 @@ from datetime import date
 import datetime
 import psycopg2
 
+import microsetta_private_api.model.project as p
+
 from werkzeug.exceptions import Unauthorized, NotFound
 
 from microsetta_private_api.model.account import Account
@@ -114,9 +116,53 @@ class AdminTests(TestCase):
         except Unauthorized:
             pass
 
+
+class AdminRepoTests(AdminTests):
+    _FULL_PROJECT_DICT = {p.PROJ_NAME_KEY: 'full_test_proj',
+                          p.IS_MICROSETTA_KEY: True,
+                          p.BANK_SAMPLES_KEY: False,
+                          p.PLATING_START_DATE_KEY: None,
+                          p.CONTACT_NAME_KEY: "Jane Doe",
+                          # note key out of order from that used
+                          # in project inputs list, sql, etc:
+                          # should be fine bc everything SHOULD
+                          # be done by name rather than order
+                          p.CONTACT_EMAIL_KEY: "jd@test.com",
+                          p.ADDTL_CONTACT_NAME_KEY: "John Doe",
+                          p.DEADLINES_KEY: "Spring 2021",
+                          p.NUM_SUBJECTS_KEY: "Variable",
+                          p.NUM_TIMEPOINTS_KEY: "4",
+                          p.START_DATE_KEY: "Fall 2020",
+                          p.DISPOSITION_COMMENTS_KEY: "Store",
+                          p.COLLECTION_KEY: "AGP",
+                          p.IS_FECAL_KEY: "X",
+                          p.IS_SALIVA_KEY: "",
+                          p.IS_SKIN_KEY: "?",
+                          p.IS_BLOOD_KEY: "X",
+                          p.IS_OTHER_KEY: "Nares, mouth",
+                          p.DO_16S_KEY: "",
+                          p.DO_SHALLOW_SHOTGUN_KEY: "Subset",
+                          p.DO_SHOTGUN_KEY: "X",
+                          p.DO_RT_QPCR_KEY: "",
+                          p.DO_SEROLOGY_KEY: "",
+                          p.DO_METATRANSCRIPTOMICS_KEY: "X",
+                          p.DO_MASS_SPEC_KEY: "X",
+                          p.MASS_SPEC_COMMENTS_KEY: "Dorrestein",
+                          p.MASS_SPEC_CONTACT_NAME_KEY: "Ted Doe",
+                          p.MASS_SPEC_CONTACT_EMAIL_KEY:
+                              "td@test.com",
+                          p.DO_OTHER_KEY: "",
+                          p.BRANDING_ASSOC_INSTRUCTIONS_KEY:
+                              "branding_doc.pdf",
+                          p.BRANDING_STATUS_KEY: "In Review",
+                          p.SUBPROJECT_NAME_KEY: "IBL SIBL",
+                          p.ALIAS_KEY: "Healthy Sitting",
+                          p.SPONSOR_KEY: "Crowdfunded",
+                          p.COORDINATION_KEY: "TMI"}
+
     # TODO FIXME HACK:  Need to build mock barcodes rather than using
     #  these fixed ones
-    def test_retrieve_diagnostics_by_barcode_w_scans(self):
+    def test_retrieve_diagnostics_by_barcode_w_extra_info(self):
         def make_tz_datetime(y, m, d):
             return datetime.datetime(y, m, d, 0, 0,
                                      tzinfo=psycopg2.tz.FixedOffsetTimezone(
@@ -227,7 +273,37 @@ class AdminTests(TestCase):
             self.assertGreater(len(diag['scans_info']), 0)
             self.assertGreater(len(diag['projects_info']), 0)
 
-    def test_create_project(self):
+    def test_create_project_success_full(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            # Note: using dict_cursor here so results are DictRow
+            # objects that can easily be converted to a dictionary
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT project "
+                            "FROM barcodes.project "
+                            "WHERE project = 'full_test_proj'")
+                self.assertEqual(len(cur.fetchall()), 0)
+
+                full_project_dict = self._FULL_PROJECT_DICT.copy()
+                full_project_dict[p.PROJ_NAME_KEY] = 'full_test_proj'
+                input = p.Project.from_dict(full_project_dict)
+
+                output_id = admin_repo.create_project(input)
+
+                cur.execute("SELECT * "
+                            "FROM barcodes.project "
+                            "WHERE project = 'full_test_proj'")
+                row = cur.fetchone()
+                obs_dict = dict(row)
+                full_project_dict["project_id"] = output_id
+                full_project_dict[p.DB_PROJ_NAME_KEY] = \
+                    full_project_dict.pop(p.PROJ_NAME_KEY)
+                self.assertEqual(obs_dict, full_project_dict)
+
+                # NB: No need to clean up test project created because it is in
+                # a transaction that is never committed!
+
+    def test_create_project_success_no_banking(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             with t.cursor() as cur:
@@ -236,7 +312,13 @@ class AdminTests(TestCase):
                             "WHERE project = 'doesnotexist'")
                 self.assertEqual(len(cur.fetchall()), 0)
 
-                admin_repo.create_project('doesnotexist', True, False)
+                minimal_project_dict = {p.PROJ_NAME_KEY: 'doesnotexist',
+                                        p.IS_MICROSETTA_KEY: True,
+                                        p.BANK_SAMPLES_KEY: False}
+                input = p.Project.from_dict(minimal_project_dict)
+
+                admin_repo.create_project(input)
+
                 cur.execute("SELECT project, is_microsetta, bank_samples, "
                             "plating_start_date "
                             "FROM barcodes.project "
@@ -244,26 +326,64 @@ class AdminTests(TestCase):
                 obs = cur.fetchall()
                 self.assertEqual(obs, [('doesnotexist', True, False, None), ])
 
-                plating_start_date = date(2020, 7, 31)
-                admin_repo.create_project('doesnotexist2', False, True,
-                                          plating_start_date)
+                # NB: No need to clean up test project created because it is in
+                # a transaction that is never committed!
+
+    def test_create_project_success_banking(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            with t.cursor() as cur:
+                plating_start = date(2020, 7, 31)
+                minimal_proj_dict = {p.PROJ_NAME_KEY: 'doesnotexist2',
+                                     p.IS_MICROSETTA_KEY: False,
+                                     p.BANK_SAMPLES_KEY: True,
+                                     p.PLATING_START_DATE_KEY: "2020-07-31"}
+                input = p.Project.from_dict(minimal_proj_dict)
+                admin_repo.create_project(input)
                 cur.execute("SELECT project, is_microsetta, bank_samples, "
                             "plating_start_date "
                             "FROM barcodes.project "
                             "WHERE project = 'doesnotexist2'")
                 obs = cur.fetchall()
                 self.assertEqual(obs, [('doesnotexist2', False, True,
-                                        plating_start_date), ])
+                                        plating_start), ])
 
-    def test_create_kits(self):
+                # NB: No need to clean up test project created because it is in
+                # a transaction that is never committed!
+
+    def test_update_project_success(self):
+        updated_dict = self._FULL_PROJECT_DICT.copy()
+        updated_dict[p.PROJ_NAME_KEY] = 'test_proj'
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            input = p.Project.from_dict(updated_dict)
+            # existing project 8 in test db
+            admin_repo.update_project(8, input)
+
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT * "
+                            "FROM barcodes.project "
+                            "WHERE project_id = 8")
+                obs_dict = dict(cur.fetchone())
+
+                updated_dict["project_id"] = 8
+                updated_dict[p.DB_PROJ_NAME_KEY] = \
+                    updated_dict.pop(p.PROJ_NAME_KEY)
+                self.assertEqual(obs_dict, updated_dict)
+
+    def test_create_kits_fail_nonexistent_project(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
 
             with self.assertRaisesRegex(KeyError, "does not exist"):
                 admin_repo.create_kits(5, 3, '', ['foo', 'bar'])
 
+    def test_create_kits_success_not_microsetta(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
             non_tmi = admin_repo.create_kits(5, 3, '',
-                                             ['Project - /J/xL_|Eãt'])
+                                             ['Project - lm3eáqç(>?'])
             self.assertEqual(['created', ], list(non_tmi.keys()))
             self.assertEqual(len(non_tmi['created']), 5)
             for obj in non_tmi['created']:
@@ -277,10 +397,13 @@ class AdminTests(TestCase):
                 cur.execute("SELECT supplied_kit_id "
                             "FROM ag.ag_kit "
                             "WHERE supplied_kit_id IN %s",
-                            (tuple(non_tmi_kits), ))
+                            (tuple(non_tmi_kits),))
                 observed = cur.fetchall()
                 self.assertEqual(len(observed), 0)
 
+    def test_create_kits_success_is_microsetta(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
             tmi = admin_repo.create_kits(4, 2, 'foo',
                                          ['American Gut Project'])
             self.assertEqual(['created', ], list(tmi.keys()))
@@ -297,7 +420,7 @@ class AdminTests(TestCase):
                 cur.execute("SELECT supplied_kit_id "
                             "FROM ag.ag_kit "
                             "WHERE supplied_kit_id IN %s",
-                            (tuple(tmi_kits), ))
+                            (tuple(tmi_kits),))
                 observed = cur.fetchall()
                 self.assertEqual(len(observed), 4)
 
@@ -403,24 +526,69 @@ class AdminTests(TestCase):
                                          survey)
             self.assertTrue(found)
 
-    def test_summary_statistics(self):
+    def test_get_projects(self):
+        updated_dict = self._FULL_PROJECT_DICT.copy()
+        updated_dict[p.PROJ_NAME_KEY] = 'test_proj'
+        input = p.Project.from_dict(updated_dict)
+
         with Transaction() as t:
             admin_repo = AdminRepo(t)
+            # existing project 8 in test db
+            admin_repo.update_project(8, input)
 
-            summary = admin_repo.get_project_summary_statistics()
-            self.assertGreater(len(summary), 1)
-            for stats in summary:
-                self.assertIn('project_id', stats)
-                self.assertIn('project_name', stats)
-                self.assertIn('number_of_samples', stats)
+            set_up_sql = """
+                -- add some additional scans to project 8 so can test that
+                -- computed statistics based on latest scans are choosing all
+                -- (and only) the scans that they should:
+                -- add a scan w an earlier timestamp (though added into db
+                -- later) than existing one showing that this barcode USED TO
+                -- have a problem but no longer does.
+                insert into barcodes.barcode_scans
+                (barcode, scan_timestamp, sample_status)
+                VALUES ('000007640', '2012-11-01', 'no-registered-account');
 
-    def test_detailed_project_statistics(self):
-        with Transaction() as t:
-            admin_repo = AdminRepo(t)
+                -- add a second *sample-is-valid* scan for the same barcode
+                -- so can ensure that sample status count are distinct
+                insert into barcodes.barcode_scans
+                (barcode, scan_timestamp, sample_status)
+                VALUES ('000007640', '2012-12-01', 'sample-is-valid');
 
-            agp_summary = admin_repo.get_project_detailed_statistics(1)
-            self.assertIn('project_id', agp_summary)
-            self.assertIn('project_name', agp_summary)
-            self.assertIn('number_of_samples', agp_summary)
-            self.assertIn('number_of_samples_scanned_in', agp_summary)
-            self.assertIn('sample_status_counts', agp_summary)
+                -- add two additional scans for a different barcode: a valid
+                -- scan followed by a problem scan, thus indicting this sample
+                -- currently has a problem.
+                insert into barcodes.barcode_scans
+                (barcode, scan_timestamp, sample_status)
+                VALUES ('000070796', '2020-07-01', 'sample-is-valid');
+
+                insert into barcodes.barcode_scans
+                (barcode, scan_timestamp, sample_status)
+                VALUES ('000070796', '2020-09-01', 'no-registered-account');
+            """
+            with t.cursor() as cur:
+                cur.execute(set_up_sql)
+
+            output = admin_repo.get_projects()
+
+            updated_dict["project_id"] = 8
+            updated_dict[p.COMPUTED_STATS_KEY] = \
+                {p.NUM_FULLY_RETURNED_KITS_KEY: 1,
+                 p.NUM_KITS_KEY: 5,
+                 p.NUM_KITS_W_PROBLEMS_KEY: 1,
+                 'num_no_associated_source': 0,
+                 'num_no_collection_info': 0,
+                 'num_no_registered_account': 1,
+                 'num_received_unknown_validity': 0,
+                 'num_sample_is_valid': 4,
+                 p.NUM_PARTIALLY_RETURNED_KITS_KEY: 2,
+                 p.NUM_SAMPLES_KEY: 20,
+                 p.NUM_SAMPLES_RECEIVED_KEY: 5,
+                 p.NUM_UNIQUE_SOURCES_KEY: 4}
+
+            # Test we have the correct number of projects
+            self.assertEqual(len(output), 56)
+
+            # For one fully-characterized test project, ensure all the
+            # output values are what we expect
+            test_proj = output[7]  # ordered by project id, so this is proj 8
+            test_proj_dict = test_proj.to_api()
+            self.assertEqual(updated_dict, test_proj_dict)

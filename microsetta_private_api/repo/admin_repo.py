@@ -2,9 +2,11 @@ import uuid
 import string
 import random
 import datetime
+import pandas as pd
 
 from microsetta_private_api.exceptions import RepoException
 
+import microsetta_private_api.model.project as p
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
@@ -16,10 +18,236 @@ from hashlib import sha512
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 
+# TODO: Refactor repeated elements in project-related sql queries?
+PROJECT_FIELDS = f"""
+                project_id, {p.DB_PROJ_NAME_KEY},
+                {p.IS_MICROSETTA_KEY}, {p.BANK_SAMPLES_KEY},
+                {p.PLATING_START_DATE_KEY}, {p.CONTACT_NAME_KEY},
+                {p.ADDTL_CONTACT_NAME_KEY}, {p.CONTACT_EMAIL_KEY},
+                {p.DEADLINES_KEY}, {p.NUM_SUBJECTS_KEY},
+                {p.NUM_TIMEPOINTS_KEY}, {p.START_DATE_KEY},
+                {p.DISPOSITION_COMMENTS_KEY}, {p.COLLECTION_KEY},
+                {p.IS_FECAL_KEY}, {p.IS_SALIVA_KEY}, {p.IS_SKIN_KEY},
+                {p.IS_BLOOD_KEY}, {p.IS_OTHER_KEY},
+                {p.DO_16S_KEY}, {p.DO_SHALLOW_SHOTGUN_KEY},
+                {p.DO_SHOTGUN_KEY}, {p.DO_RT_QPCR_KEY},
+                {p.DO_SEROLOGY_KEY}, {p.DO_METATRANSCRIPTOMICS_KEY},
+                {p.DO_MASS_SPEC_KEY}, {p.MASS_SPEC_COMMENTS_KEY},
+                {p.MASS_SPEC_CONTACT_NAME_KEY},
+                {p.MASS_SPEC_CONTACT_EMAIL_KEY}, {p.DO_OTHER_KEY},
+                {p.BRANDING_ASSOC_INSTRUCTIONS_KEY},
+                {p.BRANDING_STATUS_KEY},
+                {p.SUBPROJECT_NAME_KEY}, {p.ALIAS_KEY},
+                {p.SPONSOR_KEY}, {p.COORDINATION_KEY}"""
+
+PROJECTS_BASICS_SQL = f"""
+    SELECT
+    {PROJECT_FIELDS},
+    count(distinct barcode) as {p.NUM_SAMPLES_KEY},
+    count(distinct kit_id) as {p.NUM_KITS_KEY}
+    FROM barcodes.project
+    LEFT JOIN
+    barcodes.project_barcode
+    USING (project_id)
+    LEFT JOIN
+    barcodes.barcode
+    USING (barcode)
+    GROUP BY project_id
+    ORDER BY project_id;"""
+
+# The below sql statements pull various computed counts about projects.
+# Each query must follow the convention that it returns a column named
+# "project_id" to join on, and that all other columns it returns are unique
+# to that query (not also returned by any other query).
+NUM_UNIQUE_SOURCES_SQL = f"""
+    SELECT project_barcode.project_id,
+    count(distinct ag_kit_barcodes.source_id) as {p.NUM_UNIQUE_SOURCES_KEY}
+    FROM barcodes.project_barcode
+    INNER JOIN ag.ag_kit_barcodes
+    USING (barcode)
+    GROUP BY project_id
+    ORDER BY project_id;"""
+
+NUM_RECEIVED_SAMPLES_SQL = f"""
+    SELECT project_id,
+    count(distinct barcode) as {p.NUM_SAMPLES_RECEIVED_KEY}
+    FROM project_barcode
+    INNER JOIN
+    barcode_scans
+    USING (barcode)
+    GROUP BY project_id
+    ORDER BY project_id;"""
+
+NUM_AT_LEAST_PARTIALLY_RECEIVED_KITS = f"""
+    SELECT project_barcode.project_id,
+    count(distinct ag_kit_barcodes.ag_kit_id)
+    as {p.NUM_PARTIALLY_RETURNED_KITS_KEY}
+    FROM ag.ag_kit_barcodes
+    INNER JOIN barcodes.project_barcode
+    USING (barcode)
+    INNER JOIN barcodes.barcode_scans
+    USING (barcode)
+    GROUP BY project_barcode.project_id
+    ORDER BY project_barcode.project_id;"""
+
+NUM_KITS_W_AT_LEAST_ONE_PROBLEM_SAMPLE_SQL = f"""
+        SELECT project_barcode.project_id,
+        count(distinct ag_kit_barcodes.ag_kit_id)
+        as {p.NUM_KITS_W_PROBLEMS_KEY}
+        FROM ag.ag_kit_barcodes
+        INNER JOIN barcodes.project_barcode
+        USING (barcode)
+        INNER JOIN barcodes.barcode_scans
+        USING (barcode)
+        INNER JOIN (
+            SELECT barcode, max(scan_timestamp) AS scan_timestamp
+            FROM barcodes.barcode_scans
+            GROUP BY barcode
+        ) latest_scan
+        ON barcode_scans.barcode = latest_scan.barcode
+        AND barcode_scans.scan_timestamp = latest_scan.scan_timestamp
+        AND barcode_scans.sample_status <> '{p.VALID_SAMPLES_STATUS}'
+        GROUP BY project_barcode.project_id;"""
+
+NUM_FULLY_RECEIVED_KITS_SQL = f"""
+    SELECT project_id,
+    count(distinct ag_kit_id) as {p.NUM_FULLY_RETURNED_KITS_KEY}
+    FROM (
+        SELECT
+        project_barcode.project_id,
+        ag_kit_barcodes.ag_kit_id,
+        count(distinct ag_kit_barcodes.barcode) as uniq_barcodes_in_kit,
+        count(distinct barcode_scans.barcode) as uniq_received_barcodes_in_kit
+        FROM ag.ag_kit_barcodes
+        INNER JOIN barcodes.project_barcode
+        USING (barcode)
+        LEFT JOIN barcodes.barcode_scans
+        USING (barcode)
+        GROUP BY project_id, ag_kit_id
+    ) as kit_lists
+    WHERE uniq_barcodes_in_kit = uniq_received_barcodes_in_kit
+    GROUP by project_id
+    ORDER by project_id;"""
+
+
+def _make_statuses_sql(_):
+    # Note: scans with multiple identical timestamps are quite unlikely
+    # in real life but easy to create in test code.  Such a situation is
+    # pathological; we can't tell which scan is the current status (which we
+    # base on latest timestamp) if there are multiple scans for the same
+    # barcode with the SAME latest timestamp.  The below code is robust to
+    # this pathological situation IF the multiple same-latest-timestamp scans
+    # for a barcode have identical statuses.  However, if the the multiple
+    # same-latest-timestamp scans for a barcode have DIFFERENT statuses, this
+    # code will double-count that barcode.  I doubt this situation will ever
+    # happen in real life.
+
+    joins = """
+        SELECT * FROM crosstab(
+            $$select p.project_id, scans.sample_status,
+            coalesce(count(distinct scans.barcode),0)
+            FROM barcodes.project as p
+            INNER JOIN barcodes.project_barcode as pb
+            USING (project_id)
+            INNER JOIN barcodes.barcode_scans as scans
+            USING (barcode)
+            INNER JOIN (
+                SELECT barcode, max(scan_timestamp) AS scan_timestamp
+                FROM barcodes.barcode_scans
+                GROUP BY barcode
+            ) latest_scan
+            ON scans.barcode = latest_scan.barcode
+            AND scans.scan_timestamp = latest_scan.scan_timestamp
+            GROUP BY project_id, sample_status
+            ORDER BY project_id,
+            CASE sample_status """
+
+    case_values_connector = """
+            END; $$,
+            $$VALUES """
+
+    results_name = """; $$
+        ) AS ct(project_id bigint, """
+
+    results_order = """)
+        ORDER BY ct;"""
+
+    cases = []
+    values = []
+    colnames = []
+    case_num = 1
+    for curr_status in p.SAMPLE_STATUSES:
+        cases.append(f"WHEN '{curr_status}' THEN {case_num} ")
+        values.append(f"('{curr_status}')")
+        case_num += 1
+
+    num_status_keys = p.get_status_num_keys()
+    for curr_num_status_key in num_status_keys:
+        colnames.append(f"{curr_num_status_key} bigint")
+
+    cases_sql = " ".join(cases)
+    values_sql = ", ".join(values)
+    colnames_sql = ", ".join(colnames)
+
+    final_sql = f"{joins}{cases_sql}{case_values_connector}{values_sql}" \
+                f"{results_name}{colnames_sql}{results_order}"
+
+    return final_sql
+
+
+# NB: PROJECTS_BASICS_SQL *must* come first since its list of project id is a
+# superset of other queries' lists.
+_PROJECT_SQLS = [
+                ((p.NUM_KITS_KEY, p.NUM_SAMPLES_KEY), PROJECTS_BASICS_SQL),
+                ((p.NUM_UNIQUE_SOURCES_KEY,), NUM_UNIQUE_SOURCES_SQL),
+                ((p.NUM_SAMPLES_RECEIVED_KEY,), NUM_RECEIVED_SAMPLES_SQL),
+                (("statuses",), _make_statuses_sql),
+                ((p.NUM_PARTIALLY_RETURNED_KITS_KEY,),
+                    NUM_AT_LEAST_PARTIALLY_RECEIVED_KITS),
+                ((p.NUM_KITS_W_PROBLEMS_KEY,),
+                    NUM_KITS_W_AT_LEAST_ONE_PROBLEM_SAMPLE_SQL),
+                ((p.NUM_FULLY_RETURNED_KITS_KEY,), NUM_FULLY_RECEIVED_KITS_SQL)
+                ]
+
 
 class AdminRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
+
+    def _read_projects_df_from_db(self):
+        """Return pandas data frame of project info and statistics from db."""
+
+        projects_df = None
+
+        # TODO: should cursor be created here or no?
+        # https://www.datacamp.com/community/tutorials/tutorial-postgresql-python  # noqa
+        # shows creation of a cursor even though no methods are called on it
+        with self._transaction.dict_cursor():
+            # TODO: is there a better way to access this?
+            conn = self._transaction._conn
+
+            for stats_keys, sql_source in _PROJECT_SQLS:
+                if callable(sql_source):
+                    curr_sql = sql_source(*stats_keys)
+                else:
+                    curr_sql = sql_source.format(*stats_keys)
+
+                curr_df = pd.read_sql(curr_sql, conn)
+
+                if projects_df is None:
+                    projects_df = curr_df
+                else:
+                    # left join here: the first query produces a df with a
+                    # COMPLETE list of all projects, whereas subsequent
+                    # queries only return info on projects relevant to their
+                    # computed statistic.
+                    projects_df = pd.merge(projects_df, curr_df,
+                                           how="left", on=["project_id"])
+
+        # make the project_id the index of the final data frame, but
+        # do NOT drop the project_id column from the data frame.
+        projects_df.set_index('project_id', drop=False, inplace=True)
+        return projects_df
 
     def _get_ids_relevant_to_barcode(self, sample_barcode):
         with self._transaction.dict_cursor() as cur:
@@ -114,13 +342,15 @@ class AdminRepo(BaseRepo):
                 source = source_repo.get_source(account_id, source_id)
 
             # get (partial) projects_info list for this barcode
-            cur.execute("SELECT project, is_microsetta, "
-                        "bank_samples, plating_start_date "
-                        "FROM barcodes.project "
-                        "INNER JOIN barcodes.project_barcode "
-                        "USING (project_id) "
-                        "WHERE barcode=%s",
-                        (sample_barcode,))
+            query = f"""
+                    SELECT {p.DB_PROJ_NAME_KEY}, {p.IS_MICROSETTA_KEY},
+                    {p.BANK_SAMPLES_KEY}, {p.PLATING_START_DATE_KEY}
+                    FROM barcodes.project
+                    INNER JOIN barcodes.project_barcode
+                    USING (project_id)
+                    WHERE barcode=%s;"""
+
+            cur.execute(query, (sample_barcode,))
             # this can't be None; worst-case is an empty list
             projects_info = _rows_to_dicts_list(cur.fetchall())
 
@@ -181,38 +411,152 @@ class AdminRepo(BaseRepo):
 
             return diagnostic
 
-    def create_project(self, project_name, is_microsetta, bank_samples,
-                       plating_start_date=None):
+    def create_project(self, project):
         """Create a project entry in the database
 
         Parameters
         ----------
-        project_name : str
-            The name of the project to create
-        is_microsetta : bool
-            If the project is part of The Microsetta Initiative
-        bank_samples : bool
-            If the project's samples should be banked until some future date
-        plating_start_date : date
-            Optional date on which project's banked samples will be plated
+        project : Project
+            A filled project object
         """
-        if is_microsetta:
-            tmi = 'yes'
-        else:
-            tmi = 'no'
 
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT MAX(project_id) + 1 "
-                        "FROM barcodes.project")
-            id_ = cur.fetchone()[0]
+            if project.project_id is not None:
+                id_ = project.project_id
+            else:
+                cur.execute("SELECT MAX(project_id) + 1 "
+                            "FROM barcodes.project")
+                id_ = cur.fetchone()[0]
 
-            cur.execute("INSERT INTO barcodes.project "
-                        "(project_id, project, is_microsetta, bank_samples, "
-                        "plating_start_date) "
-                        "VALUES (%s, %s, %s, %s, %s)",
-                        [id_, project_name, tmi, bank_samples,
-                         plating_start_date])
-        return True
+            query = f"""
+                    INSERT INTO barcodes.project
+                    ({PROJECT_FIELDS})
+                    VALUES (
+                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                     %s, %s, %s, %s, %s, %s);"""
+
+            cur.execute(query,
+                        [id_, project.project_name, project.is_microsetta,
+                         project.bank_samples, project.plating_start_date,
+                         project.contact_name, project.additional_contact_name,
+                         project.contact_email, project.deadlines,
+                         project.num_subjects, project.num_timepoints,
+                         project.start_date, project.disposition_comments,
+                         project.collection, project.is_fecal,
+                         project.is_saliva, project.is_skin, project.is_blood,
+                         project.is_other, project.do_16s,
+                         project.do_shallow_shotgun, project.do_shotgun,
+                         project.do_rt_qpcr, project.do_serology,
+                         project.do_metatranscriptomics,
+                         project.do_mass_spec, project.mass_spec_comments,
+                         project.mass_spec_contact_name,
+                         project.mass_spec_contact_email,
+                         project.do_other,
+                         project.branding_associated_instructions,
+                         project.branding_status, project.subproject_name,
+                         project.alias, project.sponsor, project.coordination])
+
+        # if we made it this far, all is well
+        return id_
+
+    def update_project(self, project_id, project):
+        """
+        Updates end-user writable information about a project.
+        """
+
+        with self._transaction.cursor() as cur:
+            # ensure this project exists
+            cur.execute(
+                "SELECT project_id "
+                "FROM barcodes.project "
+                "WHERE project_id=%s;",
+                (project_id,))
+
+            row = cur.fetchone()
+            if row is None:
+                raise NotFound("No project with ID %s" % project_id)
+
+            query = f"""
+                    UPDATE barcodes.project
+                    SET {p.DB_PROJ_NAME_KEY}=%s,
+                    {p.SUBPROJECT_NAME_KEY}=%s,
+                    {p.ALIAS_KEY}=%s,
+                    {p.IS_MICROSETTA_KEY}=%s,
+                    {p.SPONSOR_KEY}=%s,
+                    {p.COORDINATION_KEY}=%s,
+                    {p.CONTACT_NAME_KEY}=%s,
+                    {p.ADDTL_CONTACT_NAME_KEY}=%s,
+                    {p.CONTACT_EMAIL_KEY}=%s,
+                    {p.DEADLINES_KEY}=%s,
+                    {p.NUM_SUBJECTS_KEY}=%s,
+                    {p.NUM_TIMEPOINTS_KEY}=%s,
+                    {p.START_DATE_KEY}=%s,
+                    {p.BANK_SAMPLES_KEY}=%s,
+                    {p.PLATING_START_DATE_KEY}=%s,
+                    {p.DISPOSITION_COMMENTS_KEY}=%s,
+                    {p.COLLECTION_KEY}=%s,
+                    {p.IS_FECAL_KEY}=%s,
+                    {p.IS_SALIVA_KEY}=%s,
+                    {p.IS_SKIN_KEY}=%s,
+                    {p.IS_BLOOD_KEY}=%s,
+                    {p.IS_OTHER_KEY}=%s,
+                    {p.DO_16S_KEY}=%s,
+                    {p.DO_SHALLOW_SHOTGUN_KEY}=%s,
+                    {p.DO_SHOTGUN_KEY}=%s,
+                    {p.DO_RT_QPCR_KEY}=%s,
+                    {p.DO_SEROLOGY_KEY}=%s,
+                    {p.DO_METATRANSCRIPTOMICS_KEY}=%s,
+                    {p.DO_MASS_SPEC_KEY}=%s,
+                    {p.MASS_SPEC_COMMENTS_KEY}=%s,
+                    {p.MASS_SPEC_CONTACT_NAME_KEY}=%s,
+                    {p.MASS_SPEC_CONTACT_EMAIL_KEY}=%s,
+                    {p.DO_OTHER_KEY}=%s,
+                    {p.BRANDING_ASSOC_INSTRUCTIONS_KEY}=%s,
+                    {p.BRANDING_STATUS_KEY}=%s
+                    WHERE project_id=%s;"""
+
+            cur.execute(query,
+                        (
+                            project.project_name,
+                            project.subproject_name,
+                            project.alias,
+                            project.is_microsetta,
+                            project.sponsor,
+                            project.coordination,
+                            project.contact_name,
+                            project.additional_contact_name,
+                            project.contact_email,
+                            project.deadlines,
+                            project.num_subjects,
+                            project.num_timepoints,
+                            project.start_date,
+                            project.bank_samples,
+                            project.plating_start_date,
+                            project.disposition_comments,
+                            project.collection,
+                            project.is_fecal,
+                            project.is_saliva,
+                            project.is_skin,
+                            project.is_blood,
+                            project.is_other,
+                            project.do_16s,
+                            project.do_shallow_shotgun,
+                            project.do_shotgun,
+                            project.do_rt_qpcr,
+                            project.do_serology,
+                            project.do_metatranscriptomics,
+                            project.do_mass_spec,
+                            project.mass_spec_comments,
+                            project.mass_spec_contact_name,
+                            project.mass_spec_contact_email,
+                            project.do_other,
+                            project.branding_associated_instructions,
+                            project.branding_status,
+                            project_id
+                        ))
+            return cur.rowcount == 1
 
     def delete_project_by_name(self, project_name):
         """Delete a project entry and its associations to barcodes from db
@@ -234,6 +578,39 @@ class AdminRepo(BaseRepo):
             cur.execute("DELETE FROM barcodes.project WHERE project = %s",
                         (project_name,))
             return cur.rowcount == 1
+
+    def get_projects(self):
+        """Return a list of Project objects, ordered by project id."""
+
+        # read all kinds of project info and computed counts from the db
+        # into a pandas data frame
+        projects_df = self._read_projects_df_from_db()
+
+        # cut stats columns out into own df (w same index as projects one)
+        stats_keys = p.get_computed_stats_keys()
+        stats_df = projects_df[stats_keys].copy()
+        projects_df = projects_df.drop(stats_keys, axis=1)
+
+        # within computed stats columns (ONLY--does not apply to
+        # descriptive columns from the project table, where None is
+        # a real, non-numeric value), NaN and None (which pandas treats as
+        # interchangeable :-| ) should be converted to zero.  Everything
+        # else should be cast to an integer; for some weird reason pandas is
+        # pulling in counts as floats
+        stats_df = stats_df.fillna(0).astype(int)
+
+        result = []
+        # NB: *dataframe*'s to_dict automatically converts numpy data types
+        # (e.g., numpy.bool_, numpy.int64) to appropriate python-native data
+        # types, but *series* to_dict does NOT do this automatic conversion
+        # (at least, as of this writing).  Be cautious if refactoring the below
+        projects_dict = projects_df.to_dict(orient='index')
+        stats_dict = stats_df.to_dict(orient='index')
+        for k, v in projects_dict.items():
+            v[p.COMPUTED_STATS_KEY] = stats_dict[k]
+            result.append(p.Project.from_dict(v))
+
+        return result
 
     def _generate_random_kit_name(self, name_length, prefix):
         if prefix is None:
@@ -263,8 +640,12 @@ class AdminRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             # get existing projects
-            cur.execute("SELECT project, project_id, is_microsetta "
-                        "FROM barcodes.project")
+            query = f"""
+                    SELECT {p.DB_PROJ_NAME_KEY}, project_id,
+                    {p.IS_MICROSETTA_KEY}
+                    FROM barcodes.project;"""
+
+            cur.execute(query)
             known_projects = {prj: (id_, tmi)
                               for prj, id_, tmi in cur.fetchall()}
             is_tmi = False
@@ -574,116 +955,3 @@ class AdminRepo(BaseRepo):
         }
 
         return pulldown
-
-    def get_project_summary_statistics(self):
-        with self._transaction.dict_cursor() as cur:
-            cur.execute(
-                "SELECT "
-                "project_id, project, "
-                "count(barcode) as barcode_count, "
-                "count(distinct kit_id) as kit_count "
-                "FROM project "
-                "LEFT JOIN "
-                "project_barcode "
-                "USING(project_id) "
-                "LEFT JOIN "
-                "barcode "
-                "USING(barcode) "
-                "GROUP BY project_id "
-                "ORDER BY barcode_count DESC"
-            )
-            rows = cur.fetchall()
-
-            proj_stats = [
-                {
-                    'project_id': row['project_id'],
-                    'project_name': row['project'],
-                    'number_of_samples': row['barcode_count'],
-                    'number_of_kits': row['kit_count']
-                }
-                for row in rows]
-
-            return proj_stats
-
-    def get_project_detailed_statistics(self, project_id):
-        with self._transaction.dict_cursor() as cur:
-            # get total number of samples and kits
-            cur.execute(
-                "SELECT "
-                "project_id, project, "
-                "count(barcode) as barcode_count, "
-                "count(distinct kit_id) as kit_count "
-                "FROM project "
-                "LEFT JOIN "
-                "project_barcode "
-                "USING(project_id) "
-                "LEFT JOIN "
-                "barcode "
-                "USING(barcode) "
-                "WHERE project_id=%s "
-                "GROUP BY project_id",
-                (project_id,)
-            )
-            row = cur.fetchone()
-
-            if row is None:
-                raise NotFound("No such project")
-
-            project_id = row['project_id']
-            project_name = row['project']
-            number_of_samples = row['barcode_count']
-            number_of_kits = row['kit_count']
-
-            # get number of scanned samples
-            cur.execute(
-                "SELECT "
-                "project_id, count(distinct barcode) "
-                "FROM project_barcode "
-                "INNER JOIN "
-                "barcode_scans "
-                "USING (barcode) "
-                "WHERE "
-                "project_id = %s "
-                "GROUP BY project_id",
-                (project_id,)
-            )
-            row = cur.fetchone()
-            number_of_samples_scanned_in = row['count']
-
-            # get number of barcodes in each project with
-            # each (non-null) current sample_status
-            cur.execute(
-                "SELECT "
-                "project_id, project, sample_status, "
-                "count(project_barcode.barcode) "
-                "FROM project "
-                "LEFT JOIN project_barcode "
-                "USING (project_id) "
-                "LEFT JOIN barcode_scans "
-                "USING (barcode) "
-                "LEFT JOIN ("
-                "   SELECT barcode, max(scan_timestamp) AS scan_timestamp "
-                "   FROM barcodes.barcode_scans "
-                "   GROUP BY barcode "
-                ") latest_scan "
-                "ON project_barcode.barcode = latest_scan.barcode "
-                "WHERE "
-                "project_id = %s "
-                "GROUP BY project_id, sample_status",
-                (project_id,)
-            )
-            rows = cur.fetchall()
-            sample_status_counts = {
-                row['sample_status']: row['count'] for row in rows
-            }
-
-            detailed_stats = {
-                'project_id': project_id,
-                'project_name': project_name,
-                'number_of_kits': number_of_kits,
-                'number_of_samples': number_of_samples,
-                'number_of_samples_scanned_in': number_of_samples_scanned_in,
-                'sample_status_counts': sample_status_counts
-            }
-
-            return detailed_stats

@@ -1,9 +1,9 @@
 import uuid
-from flask import jsonify
-import datetime
+from flask import jsonify, Response
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
+from microsetta_private_api.model.project import Project
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
@@ -12,7 +12,7 @@ from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.tasks import send_email as celery_send_email
 from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
-from werkzeug.exceptions import Unauthorized, BadRequest
+from werkzeug.exceptions import Unauthorized
 
 
 def search_barcode(token_info, sample_barcode):
@@ -86,24 +86,6 @@ def sample_pulldown_multiple_survey(token_info,
     return jsonify(sample_pulldown), 200
 
 
-def project_statistics_summary(token_info):
-    validate_admin_access(token_info)
-
-    with Transaction() as t:
-        admin_repo = AdminRepo(t)
-        summary = admin_repo.get_project_summary_statistics()
-        return jsonify(summary), 200
-
-
-def project_statistics_detailed(token_info, project_id):
-    validate_admin_access(token_info)
-
-    with Transaction() as t:
-        admin_repo = AdminRepo(t)
-        summary = admin_repo.get_project_detailed_statistics(project_id)
-        return jsonify(summary), 200
-
-
 def token_grants_admin_access(token_info):
     with Transaction() as t:
         account_repo = AccountRepo(t)
@@ -117,37 +99,43 @@ def validate_admin_access(token_info):
         raise Unauthorized()
 
 
-def create_project(body, token_info):
+def get_projects(token_info):
     validate_admin_access(token_info)
-
-    project_name = body['project_name']
-    is_microsetta = body['is_microsetta']
-    bank_samples = body['bank_samples']
-    plating_start_date = body.get('plating_start_date')
-
-    if plating_start_date is not None:
-        try:
-            plating_start_date = datetime.datetime.strptime(
-                plating_start_date, "%Y-%m-%d")
-        except ValueError:
-            raise BadRequest(
-                "plating start date '{0}' is not a valid date in YYYY-MM-DD "
-                "format".format(plating_start_date))
-
-    if len(project_name) == 0:
-        return jsonify(code=400, message="No project name provided"), 400
-
-    if not bank_samples and plating_start_date is not None:
-        raise RepoException("Plating start date cannot be set for"
-                            " unbanked projects")
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-        admin_repo.create_project(project_name, is_microsetta, bank_samples,
-                                  plating_start_date)
+        projects_list = admin_repo.get_projects()
+        result = [x.to_api() for x in projects_list]
+        return jsonify(result), 200
+
+
+def create_project(body, token_info):
+    validate_admin_access(token_info)
+
+    try:
+        project = Project.from_dict(body)
+    except ValueError as e:
+        raise RepoException(e)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        proj_id = admin_repo.create_project(project)
         t.commit()
 
-    return {}, 201
+    response = Response()
+    response.status_code = 201
+    response.headers['Location'] = '/api/admin/projects/%s' % (proj_id,)
+    return response
+
+
+def update_project(project_id, body):
+    project = Project.from_dict(body)
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        admin_repo.update_project(project_id, project)
+        t.commit()
+
+        return '', 204
 
 
 def create_kits(body, token_info):
