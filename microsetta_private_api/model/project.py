@@ -41,6 +41,7 @@ ALIAS_KEY = 'alias'
 SPONSOR_KEY = 'sponsor'
 COORDINATION_KEY = 'coordination'
 COMPUTED_STATS_KEY = 'computed_stats'
+IS_ACTIVE_KEY = 'is_active'
 
 # Clearly the set of computed statistics for projects is going to grow and
 # mutate. Any new ones need their keys defined here and then added in
@@ -137,6 +138,11 @@ class Project:
         self.alias = kwargs.get(ALIAS_KEY)
         self.sponsor = kwargs.get(SPONSOR_KEY)
         self.coordination = kwargs.get(COORDINATION_KEY)
+
+        # default value of boolean is_active field is True
+        self.is_active = kwargs.get(IS_ACTIVE_KEY)
+        if self.is_active is None:
+            self.is_active = True
 
         self.computed_stats = kwargs.get(COMPUTED_STATS_KEY, {})
 

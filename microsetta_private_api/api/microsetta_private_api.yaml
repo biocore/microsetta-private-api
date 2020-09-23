@@ -1136,6 +1136,8 @@ paths:
         - Admin
       summary: Retrieve a list of existing projects
       description: Retrieve a list of existing projects
+      parameters:
+        - $ref: '#/components/parameters/is_active'
       responses:
         '200':
           description: Array of projects
@@ -1340,6 +1342,12 @@ components:
       description: Project ID
       schema:
         $ref: '#/components/schemas/project_id'
+    is_active:
+      name: is_active
+      in: query
+      description: active status of projects by which to limit returned project list; may be true or false. Optional.
+      schema:
+        $ref: '#/components/schemas/is_active'
 
 
     # query parameters
@@ -1789,6 +1797,8 @@ components:
     project_name:
       type: string
       nullable: false
+    is_active:
+      type: boolean
     project:
       type: "object"
       properties:
@@ -1900,6 +1910,8 @@ components:
         branding_status:
           type: string
           nullable: true
+        is_active:
+          $ref: '#/components/schemas/is_active'
       required:
         - project_name
         - is_microsetta

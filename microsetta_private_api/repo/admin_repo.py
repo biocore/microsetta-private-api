@@ -38,7 +38,8 @@ PROJECT_FIELDS = f"""
                 {p.BRANDING_ASSOC_INSTRUCTIONS_KEY},
                 {p.BRANDING_STATUS_KEY},
                 {p.SUBPROJECT_NAME_KEY}, {p.ALIAS_KEY},
-                {p.SPONSOR_KEY}, {p.COORDINATION_KEY}"""
+                {p.SPONSOR_KEY}, {p.COORDINATION_KEY}, 
+                {p.IS_ACTIVE_KEY}"""
 
 PROJECTS_BASICS_SQL = f"""
     SELECT
@@ -435,7 +436,7 @@ class AdminRepo(BaseRepo):
                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                     %s, %s, %s, %s, %s, %s);"""
+                     %s, %s, %s, %s, %s, %s, %s);"""
 
             cur.execute(query,
                         [id_, project.project_name, project.is_microsetta,
@@ -456,7 +457,8 @@ class AdminRepo(BaseRepo):
                          project.do_other,
                          project.branding_associated_instructions,
                          project.branding_status, project.subproject_name,
-                         project.alias, project.sponsor, project.coordination])
+                         project.alias, project.sponsor, project.coordination,
+                         project.is_active])
 
         # if we made it this far, all is well
         return id_
@@ -579,12 +581,29 @@ class AdminRepo(BaseRepo):
                         (project_name,))
             return cur.rowcount == 1
 
-    def get_projects(self):
-        """Return a list of Project objects, ordered by project id."""
+    def get_projects(self, is_active_val=None):
+        """Return a list of Project objects, ordered by project id.
+
+
+        Parameters
+        ----------
+        is_active_val : True, False, or None.
+            If True or False, the resulting project list will be filtered
+            to include only the projects with that active status. If None, all
+            projects will be returned regardless of active status.
+        """
+
 
         # read all kinds of project info and computed counts from the db
         # into a pandas data frame
         projects_df = self._read_projects_df_from_db()
+
+        # if an active value has been provided, look only at project records
+        # that have that active value.
+        if not is_active_val is None:
+            is_active_val_mask = projects_df[p.IS_ACTIVE_KEY] == is_active_val
+            filtered_df = projects_df.loc[is_active_val_mask]
+            projects_df = filtered_df
 
         # cut stats columns out into own df (w same index as projects one)
         stats_keys = p.get_computed_stats_keys()
