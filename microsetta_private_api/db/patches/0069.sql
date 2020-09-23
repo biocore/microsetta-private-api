@@ -40,3 +40,4 @@ ALTER TABLE barcodes.project ADD COLUMN mass_spec_contact_email varchar;
 ALTER TABLE barcodes.project ADD COLUMN do_other varchar;
 ALTER TABLE barcodes.project ADD COLUMN branding_associated_instructions varchar;
 ALTER TABLE barcodes.project ADD COLUMN branding_status varchar;
+ALTER TABLE barcodes.project ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;

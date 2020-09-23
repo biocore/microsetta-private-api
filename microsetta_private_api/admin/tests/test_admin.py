@@ -158,7 +158,8 @@ class AdminRepoTests(AdminTests):
                           p.SUBPROJECT_NAME_KEY: "IBL SIBL",
                           p.ALIAS_KEY: "Healthy Sitting",
                           p.SPONSOR_KEY: "Crowdfunded",
-                          p.COORDINATION_KEY: "TMI"}
+                          p.COORDINATION_KEY: "TMI",
+                          p.IS_ACTIVE_KEY: True}
 
     # TODO FIXME HACK:  Need to build mock barcodes rather than using
     #  these fixed ones
@@ -526,69 +527,109 @@ class AdminRepoTests(AdminTests):
                                          survey)
             self.assertTrue(found)
 
-    def test_get_projects(self):
+    def _set_up_and_query_projects(self, t, is_active_val):
         updated_dict = self._FULL_PROJECT_DICT.copy()
         updated_dict[p.PROJ_NAME_KEY] = 'test_proj'
         input = p.Project.from_dict(updated_dict)
 
+        admin_repo = AdminRepo(t)
+        # existing project 8 in test db
+        admin_repo.update_project(8, input)
+
+        set_up_sql = """
+            -- add some additional scans to project 8 so can test that
+            -- computed statistics based on latest scans are choosing all
+            -- (and only) the scans that they should:
+            -- add a scan w an earlier timestamp (though added into db
+            -- later) than existing one showing that this barcode USED TO
+            -- have a problem but no longer does.
+            insert into barcodes.barcode_scans
+            (barcode, scan_timestamp, sample_status)
+            VALUES ('000007640', '2012-11-01', 'no-registered-account');
+
+            -- add a second *sample-is-valid* scan for the same barcode
+            -- so can ensure that sample status count are distinct
+            insert into barcodes.barcode_scans
+            (barcode, scan_timestamp, sample_status)
+            VALUES ('000007640', '2012-12-01', 'sample-is-valid');
+
+            -- add two additional scans for a different barcode: a valid
+            -- scan followed by a problem scan, thus indicting this sample
+            -- currently has a problem.
+            insert into barcodes.barcode_scans
+            (barcode, scan_timestamp, sample_status)
+            VALUES ('000070796', '2020-07-01', 'sample-is-valid');
+
+            insert into barcodes.barcode_scans
+            (barcode, scan_timestamp, sample_status)
+            VALUES ('000070796', '2020-09-01', 'no-registered-account');
+
+            UPDATE barcodes.project SET is_active = FALSE
+            WHERE project_id = 2;
+        """
+        with t.cursor() as cur:
+            cur.execute(set_up_sql)
+
+        output = admin_repo.get_projects(is_active_val)
+
+        updated_dict["project_id"] = 8
+        updated_dict[p.COMPUTED_STATS_KEY] = \
+            {p.NUM_FULLY_RETURNED_KITS_KEY: 1,
+             p.NUM_KITS_KEY: 5,
+             p.NUM_KITS_W_PROBLEMS_KEY: 1,
+             'num_no_associated_source': 0,
+             'num_no_collection_info': 0,
+             'num_no_registered_account': 1,
+             'num_received_unknown_validity': 0,
+             'num_sample_is_valid': 4,
+             p.NUM_PARTIALLY_RETURNED_KITS_KEY: 2,
+             p.NUM_SAMPLES_KEY: 20,
+             p.NUM_SAMPLES_RECEIVED_KEY: 5,
+             p.NUM_UNIQUE_SOURCES_KEY: 4}
+
+        return updated_dict, output
+
+    def test_get_projects_all(self):
         with Transaction() as t:
-            admin_repo = AdminRepo(t)
-            # existing project 8 in test db
-            admin_repo.update_project(8, input)
+            updated_dict, output = self._set_up_and_query_projects(
+                t, is_active_val=None)
 
-            set_up_sql = """
-                -- add some additional scans to project 8 so can test that
-                -- computed statistics based on latest scans are choosing all
-                -- (and only) the scans that they should:
-                -- add a scan w an earlier timestamp (though added into db
-                -- later) than existing one showing that this barcode USED TO
-                -- have a problem but no longer does.
-                insert into barcodes.barcode_scans
-                (barcode, scan_timestamp, sample_status)
-                VALUES ('000007640', '2012-11-01', 'no-registered-account');
+        # Test we have the correct number of total projects
+        self.assertEqual(len(output), 56)
 
-                -- add a second *sample-is-valid* scan for the same barcode
-                -- so can ensure that sample status count are distinct
-                insert into barcodes.barcode_scans
-                (barcode, scan_timestamp, sample_status)
-                VALUES ('000007640', '2012-12-01', 'sample-is-valid');
+        # For one fully-characterized test project, ensure all the
+        # output values are what we expect (project 8)
+        self.assertEqual(updated_dict, output[7].to_api())
 
-                -- add two additional scans for a different barcode: a valid
-                -- scan followed by a problem scan, thus indicting this sample
-                -- currently has a problem.
-                insert into barcodes.barcode_scans
-                (barcode, scan_timestamp, sample_status)
-                VALUES ('000070796', '2020-07-01', 'sample-is-valid');
+    def test_get_projects_active(self):
+        with Transaction() as t:
+            updated_dict, output = self._set_up_and_query_projects(
+                t, is_active_val=True)
 
-                insert into barcodes.barcode_scans
-                (barcode, scan_timestamp, sample_status)
-                VALUES ('000070796', '2020-09-01', 'no-registered-account');
-            """
+        # Test we have the correct number of active projects
+        self.assertEqual(len(output), 55)
+
+        # For one fully-characterized test project, ensure all the
+        # output values are what we expect.  Project 8 is now 7th in
+        # list (note zero-based) bc project 2 is inactive, so not returned
+        self.assertEqual(updated_dict, output[6].to_api())
+
+    def test_get_projects_inactive(self):
+        with Transaction() as t:
             with t.cursor() as cur:
-                cur.execute(set_up_sql)
+                cur.execute("UPDATE barcodes.project"
+                            " SET is_active = FALSE"
+                            " WHERE project_id = 8;")
 
-            output = admin_repo.get_projects()
+            updated_dict, output = self._set_up_and_query_projects(
+                t, is_active_val=False)
 
-            updated_dict["project_id"] = 8
-            updated_dict[p.COMPUTED_STATS_KEY] = \
-                {p.NUM_FULLY_RETURNED_KITS_KEY: 1,
-                 p.NUM_KITS_KEY: 5,
-                 p.NUM_KITS_W_PROBLEMS_KEY: 1,
-                 'num_no_associated_source': 0,
-                 'num_no_collection_info': 0,
-                 'num_no_registered_account': 1,
-                 'num_received_unknown_validity': 0,
-                 'num_sample_is_valid': 4,
-                 p.NUM_PARTIALLY_RETURNED_KITS_KEY: 2,
-                 p.NUM_SAMPLES_KEY: 20,
-                 p.NUM_SAMPLES_RECEIVED_KEY: 5,
-                 p.NUM_UNIQUE_SOURCES_KEY: 4}
+        updated_dict["is_active"] = False
 
-            # Test we have the correct number of projects
-            self.assertEqual(len(output), 56)
+        # Test we have the correct number of inactive projects
+        self.assertEqual(len(output), 2)
 
-            # For one fully-characterized test project, ensure all the
-            # output values are what we expect
-            test_proj = output[7]  # ordered by project id, so this is proj 8
-            test_proj_dict = test_proj.to_api()
-            self.assertEqual(updated_dict, test_proj_dict)
+        # For one fully-characterized test project, ensure all the
+        # output values are what we expect.  Project 8 is now inactive,
+        # and is 2nd in (zero-based) list, after project 2
+        self.assertEqual(updated_dict, output[1].to_api())
