@@ -584,7 +584,6 @@ class AdminRepo(BaseRepo):
     def get_projects(self, is_active_val=None):
         """Return a list of Project objects, ordered by project id.
 
-
         Parameters
         ----------
         is_active_val : True, False, or None.
