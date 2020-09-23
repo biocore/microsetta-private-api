@@ -28,8 +28,10 @@ Install the JSON Web Tokens library with cryptography support:
 
 Install Redis and Celery with Redis support for out-of-band compute:
 
-`conda install redis`
-`pip install celery[redis]`
+```bash
+conda install redis
+pip install celery[redis]
+```
 
 Then install the microsetta-private-api in editable mode:
 
@@ -43,7 +45,7 @@ In the activated conda environment, initialize a test database:
 
 Then we'll initiate a Celery worker:
 
-`celery -A celery_worker.celery worker --loglevel=info`
+`celery -A microsetta_private_api.celery_worker.celery worker --loglevel=info`
 
 Next, start the microservice using flask's built-in server by running, e.g., 
 
