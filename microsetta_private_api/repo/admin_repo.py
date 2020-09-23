@@ -38,7 +38,7 @@ PROJECT_FIELDS = f"""
                 {p.BRANDING_ASSOC_INSTRUCTIONS_KEY},
                 {p.BRANDING_STATUS_KEY},
                 {p.SUBPROJECT_NAME_KEY}, {p.ALIAS_KEY},
-                {p.SPONSOR_KEY}, {p.COORDINATION_KEY}, 
+                {p.SPONSOR_KEY}, {p.COORDINATION_KEY},
                 {p.IS_ACTIVE_KEY}"""
 
 PROJECTS_BASICS_SQL = f"""
@@ -593,14 +593,14 @@ class AdminRepo(BaseRepo):
             projects will be returned regardless of active status.
         """
 
-
         # read all kinds of project info and computed counts from the db
         # into a pandas data frame
         projects_df = self._read_projects_df_from_db()
 
         # if an active value has been provided, look only at project records
-        # that have that active value.
-        if not is_active_val is None:
+        # that have that active value.  NB this has to be a test against None,
+        # not against "false-ish" (if not is_active_val)
+        if is_active_val is not None:
             is_active_val_mask = projects_df[p.IS_ACTIVE_KEY] == is_active_val
             filtered_df = projects_df.loc[is_active_val_mask]
             projects_df = filtered_df

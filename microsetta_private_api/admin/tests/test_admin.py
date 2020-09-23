@@ -563,8 +563,8 @@ class AdminRepoTests(AdminTests):
             insert into barcodes.barcode_scans
             (barcode, scan_timestamp, sample_status)
             VALUES ('000070796', '2020-09-01', 'no-registered-account');
-        
-            UPDATE barcodes.project SET is_active = FALSE 
+
+            UPDATE barcodes.project SET is_active = FALSE
             WHERE project_id = 2;
         """
         with t.cursor() as cur:
