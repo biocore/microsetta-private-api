@@ -12,12 +12,10 @@ class VioscreenRepo(BaseRepo):
 
     def upsert_vioscreen_status(self, account_id, source_id,
                                 survey_id, status):
-        # Check that account has permissions for source:
-        source_repo = SourceRepo(self._transaction)
-        source_repo.get_source(account_id, source_id)
-
         # Check current survey status
-        cur_status = self.get_vioscreen_status(survey_id)
+        cur_status = self.get_vioscreen_status(account_id,
+                                               source_id,
+                                               survey_id)
 
         # If there is no status, insert a row.
         if cur_status is None:
@@ -43,7 +41,25 @@ class VioscreenRepo(BaseRepo):
                 if cur.rowcount != 1:
                     raise NotFound("No such survey id: " + survey_id)
 
-    def get_vioscreen_status(self, survey_id):
+    def get_vioscreen_status(self, account_id, source_id, survey_id):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT "
+                "vioscreen_status "
+                "FROM "
+                "ag.ag_login_surveys "
+                "WHERE "
+                "ag_login_id = %s AND "
+                "source_id = %s AND "
+                "survey_id = %s",
+                (account_id, source_id, survey_id,)
+            )
+            row = cur.fetchone()
+            if row is None:
+                return None
+            return row[0]
+
+    def _get_vioscreen_status(self, survey_id):
         with self._transaction.cursor() as cur:
             cur.execute(
                 "SELECT "

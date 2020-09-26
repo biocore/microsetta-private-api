@@ -10,6 +10,7 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
+from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 from microsetta_private_api.util.util import fromisotime
 from microsetta_private_api.admin.admin_impl import token_grants_admin_access
 

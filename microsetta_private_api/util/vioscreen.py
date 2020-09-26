@@ -1,11 +1,18 @@
+import base64
 import secrets
+import uuid
+from urllib.parse import urljoin
 
 from Crypto.Cipher import AES
 from Crypto import Random
 from base64 import b64decode, b64encode
+
+from celery import Task
 from werkzeug.exceptions import BadRequest
 from werkzeug.urls import url_encode
+import requests
 
+from microsetta_private_api.celery_utils import celery
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
@@ -79,3 +86,213 @@ def decode_key(encoded):
     iv = Random.new().read(16)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     return pkcs7_unpad_message(cipher.decrypt(b64decode(encoded))[16:])
+
+
+# In addition to the ciphered protocol that lets users interact through their
+# own browsers, vioscreen supports a server to server communications channel
+# for generation and retrieval of reports.  We wrap this comms channel in
+# celery for async functionality.
+
+# Note:  We expect the VioscreenAdminAPITask class to be instantiated once per
+# celery worker process.  That per process instance maintains its own requests
+# session and acquires vioscreen admin credentials upon instantiation.
+
+# Calls out to vioscreen are expected to be bound to the singleton instance,
+# and should thus reuse connections and tokens across multiple requests.
+# This class is not expected to be instantiated by the main flask application
+class VioscreenAdminAPITask(Task):
+    def __init__(self):
+        print("Initializing Vioscreen Communications Task")
+        self.baseurl = urljoin('https://api.viocare.com',
+                               SERVER_CONFIG["vioscreen_regcode"]) + '/'
+        self.user = SERVER_CONFIG["vioscreen_admin_username"]
+        self.password = SERVER_CONFIG["vioscreen_admin_password"]
+        self.session = requests.Session()
+        self.headers = None
+        # TODO:  Rage.  The flask side instantiates this task upon doing RPC
+        #  to celery for no apparent reason.
+        # # Ideally we can grab a valid token on creation of the celery worker
+        # # so that future calls to the api will be fast (til token expiration)
+        # # But we need to construct the task object even if we can't currently
+        # # communicate with Vioscreen, otherwise celery will not be able to
+        # # run any of the Vioscreen comms ever
+        # try:
+        #     print("Acquiring vioscreen token ")
+        #     self.update_headers()
+        # except Exception as e:
+        #     print("Failed to acquire vioscreen token")
+        #     print(e)
+
+    def update_headers(self):
+        data = {"username": self.user,
+                "password": self.password}
+
+        url = urljoin(self.baseurl, 'auth/login')
+        req = self.session.post(url, data=data)
+        if req.status_code != 200:
+            # TODO: Check if this can send back 3XX redirects or anything
+            #  else that we have to handle to get tokens robustly
+            raise ValueError("Failed to obtain token")
+        else:
+            token = req.json()['token']
+        self.headers = {'Accept': 'application/json',
+                        'Authorization': 'Bearer %s' % token}
+
+
+@celery.task(
+    base=VioscreenAdminAPITask,
+    bind=True,  # This task is bound to a VioscreenAdminAPITask instance
+    ignore_result=False,  # We need the results back
+    default_retry_delay=5  # Default policy: wait 5 seconds on failure
+)
+def make_vioscreen_request(self, method, url, **kwargs):
+    if self.headers is None:
+        self.update_headers()
+
+    if method == "GET":
+        method = self.session.get
+    elif method == "POST":
+        method = self.session.post
+    else:
+        raise Exception("Unknown Method")
+
+    url = urljoin(self.baseurl, url)
+
+    req = None
+    for try_twice in range(2):
+        req = method(url, headers=self.headers, **kwargs)
+        if req.status_code != 200:
+            data = req.json()
+            code = data.get('Code')
+
+            if code == 1016:
+                # need a new token
+                self.update_headers()
+                continue  # Allow one immediate retry with updated headers
+            elif code == 1002:
+                # unknown user
+                return {'error': 'unknown user'}
+            elif code == 1000:
+                # ffq isn't taken
+                return {'error': 'ffq not taken'}
+            else:
+                # Unknown exception type, requeue the celery task (up to
+                # max retries times)
+                exc = ValueError(str(req.status_code) + " ::: " +
+                                 str(req.content))
+                raise self.retry(exc=exc)
+        else:
+            if 'Content-Type' in req.headers:
+                ct = req.headers['Content-Type']
+                cts = ct.split(';')
+                cts = [s.strip() for s in cts]
+                if "application/json" in cts:
+                    return req.json()
+                elif "application/pdf" in cts:
+                    # Well this is maddening.  Since celery is an RPC framework
+                    # you can't just send bytes back and forth, so we have to
+                    # encode it as a string across the redis server to get back
+                    # to flask
+                    return base64.b64encode(req.content).decode("utf-8")
+                else:
+                    raise Exception("Unhandled response content type")
+            else:
+                raise Exception("Unknown response content type")
+
+    # Got code 1016 (unauthenticated), then logged in, then got code 1016
+    # again!
+    exc = ValueError(str(req.status_code) + " ::: " + str(req.content))
+    raise self.retry(exc=exc)
+
+
+# This object provides a cleaner facade atop the RPC interface to celery
+# and lets you do all the standard vioscreen api operations we support
+class VioscreenAdminAPI:
+    def get(self, url, **kwargs):
+        return make_vioscreen_request.delay(
+            "GET",
+            url,
+            **kwargs)
+
+    def post(self, url, **kwargs):
+        return make_vioscreen_request.delay(
+            "POST",
+            url,
+            **kwargs)
+
+    def _get_session_data(self, id_, name):
+        url = 'sessions/%s/%s' % (id_, name)
+        result = self.get(url)
+        if 'error' in result:
+            return {}
+        else:
+            return result
+
+    def foodcomponents(self, id_):
+        return self._get_session_data(id_, 'foodcomponents').get('data')
+
+    def percentenergy(self, id_):
+        return self._get_session_data(id_, 'percentenergy').get('calculations')
+
+    def mpeds(self, id_):
+        return self._get_session_data(id_, 'mpeds').get('data')
+
+    def eatingpatterns(self, id_):
+        return self._get_session_data(id_, 'eatingpatterns').get('data')
+
+    def foodconsumption(self, id_):
+        return self._get_session_data(id_, 'foodconsumption').get('foodConsumption')
+
+    def dietaryscore(self, id_):
+        return self._get_session_data(id_, 'dietaryscore').get('dietaryScore')
+
+    def users(self):
+        return self.get('users')['users']
+
+    def sessions(self, vioscreen_user):
+        detail = self.get('users/%s/sessions' % vioscreen_user)
+
+        # TODO: Can we push waiting for the async result out to flask to
+        #  free up the flask worker for more requests?
+        detail = detail.get()  # Wait for async result
+
+        if 'error' in detail:
+            return []
+        else:
+            return detail['sessions']
+
+    def session_detail(self, session_id):
+        return self.get('sessions/%s/detail' % session_id)
+
+    def get_ffq(self, session_id):
+        errors = []
+        name_func = [('foodcomponents', self.foodcomponents),
+                     ('percentenergy', self.percentenergy),
+                     ('mpeds', self.mpeds),
+                     ('eatingpatterns', self.eatingpatterns),
+                     ('foodconsumption', self.foodconsumption),
+                     ('dietaryscore', self.dietaryscore)]
+        results = {}
+        for name, f in name_func:
+            data = f(session_id)
+            if data is None:
+                errors.append("FFQ appears incomplete or not taken")
+                break
+
+            results[name] = data
+
+        return errors, results
+
+    def top_food_report(self, session_id):
+        async_result = self.post(
+            "report/topfoodreport",
+            data={
+                "requestId": str(uuid.uuid4()),
+                "sessionId": session_id,
+                "companyName": "The Microsetta Initiative",
+                "providerName": "The Microsetta Initiative"
+            })
+
+        # TODO: Celery becomes a lot harder to use when you need to wait for
+        #  answers and encode/decode things.  Blah.
+        return base64.b64decode(async_result.get().encode("utf-8"))

@@ -12,7 +12,7 @@ from ._source import (
 from ._survey import (
     read_survey_template, read_survey_templates, read_answered_survey,
     read_answered_surveys, submit_answered_survey,
-    read_answered_survey_associations,
+    read_answered_survey_associations, top_food_report,
 )
 from ._sample import (
     read_sample_association, associate_sample, read_sample_associations,
