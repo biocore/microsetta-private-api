@@ -39,6 +39,7 @@ __all__ = [
     'read_answered_survey',
     'read_answered_surveys',
     'read_answered_survey_associations',
+    'top_food_report',
     'read_sample_association',
     'associate_sample',
     'read_sample_associations',

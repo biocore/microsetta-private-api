@@ -241,7 +241,8 @@ class VioscreenAdminAPI:
         return self._get_session_data(id_, 'eatingpatterns').get('data')
 
     def foodconsumption(self, id_):
-        return self._get_session_data(id_, 'foodconsumption').get('foodConsumption')
+        return self._get_session_data(id_, 'foodconsumption')\
+            .get('foodConsumption')
 
     def dietaryscore(self, id_):
         return self._get_session_data(id_, 'dietaryscore').get('dietaryScore')

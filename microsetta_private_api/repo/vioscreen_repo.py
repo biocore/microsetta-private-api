@@ -3,9 +3,6 @@ from werkzeug.exceptions import NotFound
 
 
 # This was ported from the american_gut_project's ag_data_access.py.
-from microsetta_private_api.repo.source_repo import SourceRepo
-
-
 class VioscreenRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)

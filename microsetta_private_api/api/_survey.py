@@ -1,7 +1,5 @@
-import io
-
 import flask
-from flask import jsonify, make_response, send_file
+from flask import jsonify, make_response
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.api._account import \
@@ -239,7 +237,9 @@ def top_food_report(account_id, source_id, survey_id, token_info):
         vioscreen_repo = VioscreenRepo(t)
 
         # Vioscreen username is our survey_id
-        status = vioscreen_repo.get_vioscreen_status(account_id, source_id, survey_id)
+        status = vioscreen_repo.get_vioscreen_status(account_id,
+                                                     source_id,
+                                                     survey_id)
         if status != 3:
             # Oops, we don't have results available for this one
             raise NotFound("No such survey recorded")
