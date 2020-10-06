@@ -158,23 +158,20 @@ def make_vioscreen_request(self, method, url, **kwargs):
 
     url = urljoin(self.baseurl, url)
 
-    req = None
-    for try_twice in range(2):
-        req = method(url, headers=self.headers, **kwargs)
+    def handle_response(req):
         if req.status_code != 200:
             data = req.json()
             code = data.get('Code')
 
             if code == 1016:
                 # need a new token
-                self.update_headers()
-                continue  # Allow one immediate retry with updated headers
+                return None, True
             elif code == 1002:
                 # unknown user
-                return {'error': 'unknown user'}
+                return {'error': 'unknown user'}, False
             elif code == 1000:
                 # ffq isn't taken
-                return {'error': 'ffq not taken'}
+                return {'error': 'ffq not taken'}, False
             else:
                 # Unknown exception type, requeue the celery task (up to
                 # max retries times)
@@ -187,22 +184,32 @@ def make_vioscreen_request(self, method, url, **kwargs):
                 cts = ct.split(';')
                 cts = [s.strip() for s in cts]
                 if "application/json" in cts:
-                    return req.json()
+                    return req.json(), False
                 elif "application/pdf" in cts:
                     # Well this is maddening.  Since celery is an RPC framework
                     # you can't just send bytes back and forth, so we have to
                     # encode it as a string across the redis server to get back
                     # to flask
-                    return base64.b64encode(req.content).decode("utf-8")
+                    return base64.b64encode(req.content).decode("utf-8"), False
                 else:
                     raise Exception("Unhandled response content type")
             else:
                 raise Exception("Unknown response content type")
 
-    # Got code 1016 (unauthenticated), then logged in, then got code 1016
-    # again!
-    exc = ValueError(str(req.status_code) + " ::: " + str(req.content))
-    raise self.retry(exc=exc)
+    req = method(url, headers=self.headers, **kwargs)
+    result, auth_failure = handle_response(req)
+    if auth_failure:
+        self.update_headers()
+        req = method(url, headers=self.headers, **kwargs)
+        result, auth_failure = handle_response(req)
+
+    if auth_failure:
+        # Got code 1016 (unauthenticated), then logged in, then got code 1016
+        # again!
+        exc = ValueError(str(req.status_code) + " ::: " + str(req.content))
+        raise self.retry(exc=exc)
+
+    return result
 
 
 # This object provides a cleaner facade atop the RPC interface to celery
