@@ -21,43 +21,57 @@ class SurveyTemplateRepo(BaseRepo):
             1,
             "Primary",
             "1.0",
-            "local"
+            "local",
+            "source",
+            True
         ),
         2: SurveyTemplateLinkInfo(
             2,
             "Pet Information",
             "1.0",
-            "local"
+            "local",
+            "source",
+            True
         ),
         3: SurveyTemplateLinkInfo(
             3,
             "Fermented Foods Questionnaire",
             "1.0",
-            "local"
+            "local",
+            "sample",
+            False
         ),
         4: SurveyTemplateLinkInfo(
             4,
             "Surfer Questionnaire",
             "1.0",
-            "local"
+            "local",
+            "source",
+            False
         ),
         5: SurveyTemplateLinkInfo(
             5,
             "Personal Microbiome Information",
             "1.0",
-            "local"
+            "local",
+            "source",
+            False
         ),
         6: SurveyTemplateLinkInfo(
             6,
             "COVID-19 Questionnaire",
             "1.0",
-            "local"
+            "local",
+            "source",
+            True
         ),
         VIOSCREEN_ID: SurveyTemplateLinkInfo(
             VIOSCREEN_ID,
             "Vioscreen Food Frequency Questionnaire",
             "1.0",
-            "remote"
+            "remote",
+            "sample",
+            False
         )
     }
 

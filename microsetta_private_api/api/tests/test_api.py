@@ -1213,6 +1213,8 @@ class SurveyTests(ApiTests):
             "survey_template_version": "1.0",
             "survey_template_type": "local",
             "survey_id": real_id_from_loc,
+            "survey_scope": "source",
+            "survey_is_required": True
         }
 
         return expected_output, expected_model
@@ -1382,7 +1384,9 @@ class SampleTests(ApiTests):
              'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
              'survey_template_title': "Primary",
              'survey_template_version': '1.0',
-             'survey_template_type': 'local'
+             'survey_template_type': 'local',
+             'survey_scope': "source",
+             'survey_is_required': True
              }]
         get_resp_obj = json.loads(get_response.data)
         self.assertEqual(get_resp_obj, expected_output)

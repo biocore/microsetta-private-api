@@ -1680,6 +1680,13 @@ components:
     survey_template_version:
       type: string
       example: "0.1"
+    survey_scope:
+      type: string
+      enum: [source, sample]
+      example: "source"
+    survey_is_required:
+      type: boolean
+      example: true
     survey_template_text:
       # The contents of this object ARE structured, but their structure is not specified in THIS api.
       # Could be *either* vue-compatible json to be used to generate an HTML form OR
@@ -1754,11 +1761,17 @@ components:
           $ref: '#/components/schemas/survey_template_version'
         survey_template_type:
           $ref: '#/components/schemas/survey_template_type'
+        survey_scope:
+          $ref: '#/components/schemas/survey_scope'
+        survey_is_required:
+          $ref: '#/components/schemas/survey_is_required'
       required:
         - survey_template_id
         - survey_template_title
         - survey_template_version
         - survey_template_type
+        - survey_scope
+        - survey_is_required
 
     # survey section
     survey_id:
