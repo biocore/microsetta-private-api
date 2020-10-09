@@ -49,18 +49,19 @@ class SurveyAnswersRepo(BaseRepo):
             #  in dev builds)
             # TODO:  It's even worse than I feared.  Some of our primary
             #  surveys are ALSO vioscreen surveys with the same key. wtf.
-            # if len(rows) == 0:
-            vioscreen_repo = VioscreenRepo(self._transaction)
-            status = vioscreen_repo._get_vioscreen_status(survey_answers_id)
-            if status is not None:
-                return SurveyTemplateRepo.VIOSCREEN_ID
-            else:
-                return None
-                # TODO: Maybe this should throw an exception, but doing so
-                #  locks the end user out of the minimal implementation
-                #  if they submit an empty survey response.
-                # raise RepoException("No answers in survey: %s" %
-                #                     survey_answers_id)
+            if len(rows) == 0:
+                vioscreen_repo = VioscreenRepo(self._transaction)
+                status = vioscreen_repo._get_vioscreen_status(
+                    survey_answers_id)
+                if status is not None:
+                    return SurveyTemplateRepo.VIOSCREEN_ID
+                else:
+                    return None
+                    # TODO: Maybe this should throw an exception, but doing so
+                    #  locks the end user out of the minimal implementation
+                    #  if they submit an empty survey response.
+                    # raise RepoException("No answers in survey: %s" %
+                    #                     survey_answers_id)
 
             arbitrary_question_id = rows[0][1]
             cur.execute("SELECT surveys.survey_id FROM "
