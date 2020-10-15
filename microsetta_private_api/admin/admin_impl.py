@@ -99,12 +99,12 @@ def validate_admin_access(token_info):
         raise Unauthorized()
 
 
-def get_projects(token_info, is_active=None):
+def get_projects(token_info, include_stats, is_active=None):
     validate_admin_access(token_info)
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-        projects_list = admin_repo.get_projects(is_active)
+        projects_list = admin_repo.get_projects(include_stats, is_active)
         result = [x.to_api() for x in projects_list]
         return jsonify(result), 200
 

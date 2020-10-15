@@ -215,7 +215,7 @@ class AdminRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
 
-    def _read_projects_df_from_db(self):
+    def _read_projects_df_from_db(self, include_stats=True):
         """Return pandas data frame of project info and statistics from db."""
 
         projects_df = None
@@ -227,7 +227,8 @@ class AdminRepo(BaseRepo):
             # TODO: is there a better way to access this?
             conn = self._transaction._conn
 
-            for stats_keys, sql_source in _PROJECT_SQLS:
+            queries = _PROJECT_SQLS if include_stats else [_PROJECT_SQLS[0]]
+            for stats_keys, sql_source in queries:
                 if callable(sql_source):
                     curr_sql = sql_source(*stats_keys)
                 else:
@@ -581,7 +582,7 @@ class AdminRepo(BaseRepo):
                         (project_name,))
             return cur.rowcount == 1
 
-    def get_projects(self, is_active_val=None):
+    def get_projects(self, include_stats, is_active_val=None):
         """Return a list of Project objects, ordered by project id.
 
         Parameters
@@ -594,7 +595,8 @@ class AdminRepo(BaseRepo):
 
         # read all kinds of project info and computed counts from the db
         # into a pandas data frame
-        projects_df = self._read_projects_df_from_db()
+        projects_df = self._read_projects_df_from_db(
+            include_stats=include_stats)
 
         # if an active value has been provided, look only at project records
         # that have that active value.  NB this has to be a test against None,
@@ -604,18 +606,21 @@ class AdminRepo(BaseRepo):
             filtered_df = projects_df.loc[is_active_val_mask]
             projects_df = filtered_df
 
-        # cut stats columns out into own df (w same index as projects one)
-        stats_keys = p.get_computed_stats_keys()
-        stats_df = projects_df[stats_keys].copy()
-        projects_df = projects_df.drop(stats_keys, axis=1)
+        if include_stats:
+            # cut stats columns out into own df (w same index as projects one)
+            stats_keys = p.get_computed_stats_keys()
+            stats_df = projects_df[stats_keys].copy()
+            projects_df = projects_df.drop(stats_keys, axis=1)
 
-        # within computed stats columns (ONLY--does not apply to
-        # descriptive columns from the project table, where None is
-        # a real, non-numeric value), NaN and None (which pandas treats as
-        # interchangeable :-| ) should be converted to zero.  Everything
-        # else should be cast to an integer; for some weird reason pandas is
-        # pulling in counts as floats
-        stats_df = stats_df.fillna(0).astype(int)
+            # within computed stats columns (ONLY--does not apply to
+            # descriptive columns from the project table, where None is
+            # a real, non-numeric value), NaN and None (which pandas treats as
+            # interchangeable :-| ) should be converted to zero.  Everything
+            # else should be cast to an integer; for some weird reason pandas
+            # is pulling in counts as floats
+            stats_df = stats_df.fillna(0).astype(int)
+
+            stats_dict = stats_df.to_dict(orient='index')
 
         result = []
         # NB: *dataframe*'s to_dict automatically converts numpy data types
@@ -623,9 +628,9 @@ class AdminRepo(BaseRepo):
         # types, but *series* to_dict does NOT do this automatic conversion
         # (at least, as of this writing).  Be cautious if refactoring the below
         projects_dict = projects_df.to_dict(orient='index')
-        stats_dict = stats_df.to_dict(orient='index')
         for k, v in projects_dict.items():
-            v[p.COMPUTED_STATS_KEY] = stats_dict[k]
+            if include_stats:
+                v[p.COMPUTED_STATS_KEY] = stats_dict[k]
             result.append(p.Project.from_dict(v))
 
         return result
