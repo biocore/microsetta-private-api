@@ -1219,14 +1219,14 @@ paths:
                     type: integer
                   kit_id_prefix:
                     type: string
-                  projects:
+                  project_ids:
                     type: array
                     items:
                       type: string
                 required:
                   - number_of_kits
                   - number_of_samples
-                  - projects
+                  - project_ids
       responses:
         '201':
           description: Kit identifiers and associated samples were successfully created

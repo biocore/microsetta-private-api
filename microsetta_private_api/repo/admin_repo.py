@@ -642,7 +642,7 @@ class AdminRepo(BaseRepo):
         return prefix + '_' + rand_name
 
     def create_kits(self, number_of_kits, number_of_samples, kit_prefix,
-                    projects):
+                    project_ids):
         """Create kits each with the same number of samples
 
         Parameters
@@ -653,24 +653,30 @@ class AdminRepo(BaseRepo):
             Number of samples that each kit will contain
         kit_prefix : str or None
             A prefix to put on to the kit IDs, this is optional.
-        projects : list of str
-            Project names the samples are to be associated with
+        project_ids : list of int
+            Project ids the samples are to be associated with
         """
+        # int ids come in as strings ...
+        project_ids = [int(x) for x in project_ids]
+
         with self._transaction.cursor() as cur:
             # get existing projects
             query = f"""
-                    SELECT {p.DB_PROJ_NAME_KEY}, project_id,
+                    SELECT project_id,
                     {p.IS_MICROSETTA_KEY}
                     FROM barcodes.project;"""
 
             cur.execute(query)
-            known_projects = {prj: (id_, tmi)
-                              for prj, id_, tmi in cur.fetchall()}
+            known_projects = {id_: tmi for id_, tmi in cur.fetchall()}
             is_tmi = False
-            for name in projects:
-                if name not in known_projects:
-                    raise KeyError("%s does not exist" % name)
-                if known_projects[name][1]:
+            for input_proj_id in project_ids:
+                if input_proj_id not in known_projects:
+                    raise KeyError("Project id %s does not exist" %
+                                   input_proj_id)
+                # if *any* of the projects the kits will be associate with are
+                # microsetta projects, set is_tmi to true
+                curr_tmi = bool(known_projects[input_proj_id])
+                if curr_tmi:
                     is_tmi = True
 
             # get existing kits to test for conflicts
@@ -712,8 +718,7 @@ class AdminRepo(BaseRepo):
             # create barcode project associations
             barcode_projects = []
             for barcode in new_barcodes:
-                for project in projects:
-                    prj_id = known_projects[project][0]
+                for prj_id in project_ids:
                     barcode_projects.append((barcode, prj_id))
 
             # create shipping IDs
