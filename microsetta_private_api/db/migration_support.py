@@ -298,9 +298,86 @@ class MigrationSupport:
                      r['latitude'], r['longitude'],
                      r['cannot_geocode'], r['elevation']))
 
+    @staticmethod
+    def migrate_70(TRN):
+        """
+        At some point in the past, primary surveys and vioscreen surveys
+        shared the same ID.  This means that there are entrees in
+        ag_login_surveys which indicate both a vioscreen status and are tied
+        to answers in survey_answers.  This does not match our desired model
+        as it must always be possible to query which survey template a given
+        survey id corresponds to.  This migration script splits the identifiers
+        in ag_login_surveys.  The split will generate a new identifier for
+        the primary survey, insert a new row into ag_login_surveys, and update
+        the necessary rows in those tables that refer to survey_id:
+            source_barcodes_surveys,
+            survey_answers,
+            survey_answers_other,
+            external_survey_answers
+        """
+        # Plan:
+        # 1: Find offending IDs
+        #
+        # For each offending ID,
+        # 2:    generate a new primary ID
+        # 3:    insert a new row into ag_login_surveys
+        # 4:    update referencing tables.
+        #       Note that updating primary keys in postgres appears to
+        #       work in the referencing tables.  Also note that no cascade
+        #       strategy could solve this more simply, as there are also
+        #       vioscreen tables in our database that must continue to refer
+        #       to the existing vioscreen survey id.
+
+        # 1: Find offending IDs:  Offending IDs are those that both have a
+        # vioscreen status of 3 (meaning a completed vioscreen survey) and at
+        # least one answer in the survey_answers table.
+        TRN.add("SELECT DISTINCT survey_id FROM ag_login_surveys "
+                "LEFT OUTER JOIN survey_answers USING (survey_id) "
+                "WHERE vioscreen_status=3 AND response is not null")
+        rows = TRN.execute()[-1]
+        offending_ids = [r[0] for r in rows]
+
+        for old_survey_id in offending_ids:
+            # 2: Generate a new primary ID
+            # Newly returned survey responses at the moment are uuid v4,
+            # legacy IDs are 16 random hex character strings
+            # We will use the new survey ID format matching survey_answers_repo
+            new_survey_id = str(uuid.uuid4())
+
+            # 3: Insert a new row into ag_login_surveys
+            TRN.add("SELECT ag_login_id, source_id, creation_time "
+                    "FROM ag_login_surveys "
+                    "WHERE survey_id=%s", (old_survey_id,))
+            ag_login_id, source_id, creation_time = TRN.execute()[-1][-1]
+            TRN.add("INSERT INTO ag_login_surveys "
+                    "(ag_login_id, survey_id, vioscreen_status, "
+                    "source_id, creation_time) "
+                    "VALUES (%s, %s, %s, %s, %s)",
+                    (ag_login_id, new_survey_id, None,
+                     source_id, creation_time))
+
+            # 4: Update referencing tables
+            for table_name in [
+                               "source_barcodes_surveys",
+                               "survey_answers",
+                               "survey_answers_other",
+                               "external_survey_answers"]:
+                TRN.add("UPDATE " + table_name + " SET survey_id=%s "
+                        "WHERE survey_id=%s", (new_survey_id, old_survey_id))
+
+        # Check that we were successful - no offending ids should remain
+        TRN.add("SELECT DISTINCT survey_id FROM ag_login_surveys "
+                "LEFT OUTER JOIN survey_answers USING (survey_id) "
+                "WHERE vioscreen_status=3 AND response is not null")
+        rows = TRN.execute()[-1]
+        offending_ids = [r[0] for r in rows]
+        if len(offending_ids) != 0:
+            raise Exception("Couldn't resolve vioscreen/primary split :(")
+
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
-        "0050.sql": migrate_50.__func__
+        "0050.sql": migrate_50.__func__,
+        "0070.sql": migrate_70.__func__
         # ...
     }
 
