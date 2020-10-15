@@ -378,7 +378,7 @@ class AdminRepoTests(AdminTests):
             admin_repo = AdminRepo(t)
 
             with self.assertRaisesRegex(KeyError, "does not exist"):
-                admin_repo.create_kits(5, 3, '', ['foo', 'bar'])
+                admin_repo.create_kits(5, 3, '', [10000, 10001])
 
     def test_create_kits_success_not_microsetta(self):
         with Transaction() as t:
