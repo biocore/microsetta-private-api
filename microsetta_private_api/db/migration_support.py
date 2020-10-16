@@ -373,7 +373,7 @@ class MigrationSupport:
                     linked_barcode = row[0]
                     TRN.add("INSERT INTO source_barcodes_surveys "
                             "(barcode, survey_id) "
-                            "VALUES(%s, %s)", linked_barcode, new_survey_id)
+                            "VALUES(%s, %s)", (linked_barcode, new_survey_id))
 
         # Check that we were successful - no offending ids should remain
         TRN.add("SELECT DISTINCT survey_id FROM ag_login_surveys "
