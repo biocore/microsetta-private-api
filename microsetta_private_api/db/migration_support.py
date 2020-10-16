@@ -310,10 +310,10 @@ class MigrationSupport:
         in ag_login_surveys.  The split will generate a new identifier for
         the primary survey, insert a new row into ag_login_surveys, and update
         the necessary rows in those tables that refer to survey_id:
-            source_barcodes_surveys,
-            survey_answers,
-            survey_answers_other,
-            external_survey_answers
+            source_barcodes_surveys - Link samples to vioscreen AND primary.
+            survey_answers - Link answers to primary
+            survey_answers_other - Link answers_other to primary
+            external_survey_answers - ??? Link to primary I guess.
         """
         # Plan:
         # 1: Find offending IDs
@@ -321,7 +321,7 @@ class MigrationSupport:
         # For each offending ID,
         # 2:    generate a new primary ID
         # 3:    insert a new row into ag_login_surveys
-        # 4:    update referencing tables.
+        # 4/5:  update/replicate entries in referencing tables.
         #       Note that updating primary keys in postgres appears to
         #       work in the referencing tables.  Also note that no cascade
         #       strategy could solve this more simply, as there are also
@@ -356,14 +356,24 @@ class MigrationSupport:
                     (ag_login_id, new_survey_id, None,
                      source_id, creation_time))
 
-            # 4: Update referencing tables
+            # 4: Update referencing tables entries
             for table_name in [
-                               "source_barcodes_surveys",
                                "survey_answers",
                                "survey_answers_other",
                                "external_survey_answers"]:
                 TRN.add("UPDATE " + table_name + " SET survey_id=%s "
                         "WHERE survey_id=%s", (new_survey_id, old_survey_id))
+
+            # 5: or Fork entries referencing tables
+            for table_name in ["source_barcodes_surveys"]:
+                TRN.add("SELECT barcode, survey_id FROM " + table_name + " "
+                        "WHERE survey_id=%s", (old_survey_id,))
+                rows = TRN.execute()[-1]
+                for row in rows:
+                    linked_barcode = row[0]
+                    TRN.add("INSERT INTO source_barcodes_surveys "
+                            "(barcode, survey_id) "
+                            "VALUES(%s, %s)", linked_barcode, new_survey_id)
 
         # Check that we were successful - no offending ids should remain
         TRN.add("SELECT DISTINCT survey_id FROM ag_login_surveys "
