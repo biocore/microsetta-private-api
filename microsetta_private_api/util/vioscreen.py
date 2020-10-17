@@ -8,11 +8,11 @@ from Crypto import Random
 from base64 import b64decode, b64encode
 
 from celery import Task
+from microsetta_private_api.celery_utils import celery
 from werkzeug.exceptions import BadRequest
 from werkzeug.urls import url_encode
 import requests
 
-from microsetta_private_api.celery_utils import celery
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
@@ -93,14 +93,14 @@ def decode_key(encoded):
 # for generation and retrieval of reports.  We wrap this comms channel in
 # celery for async functionality.
 
-# Note:  We expect the VioscreenAdminAPITask class to be instantiated once per
+# Note:  We expect the VioscreenAdminAPIAgent class to be instantiated once per
 # celery worker process.  That per process instance maintains its own requests
 # session and acquires vioscreen admin credentials upon instantiation.
 
 # Calls out to vioscreen are expected to be bound to the singleton instance,
 # and should thus reuse connections and tokens across multiple requests.
 # This class is not expected to be instantiated by the main flask application
-class VioscreenAdminAPITask(Task):
+class VioscreenAdminAPIAgent(Task):
     def __init__(self):
         print("Initializing Vioscreen Communications Task")
         self.baseurl = urljoin('https://api.viocare.com',
@@ -109,19 +109,6 @@ class VioscreenAdminAPITask(Task):
         self.password = SERVER_CONFIG["vioscreen_admin_password"]
         self.session = requests.Session()
         self.headers = None
-        # TODO:  Rage.  The flask side instantiates this task upon doing RPC
-        #  to celery for no apparent reason.
-        # # Ideally we can grab a valid token on creation of the celery worker
-        # # so that future calls to the api will be fast (til token expiration)
-        # # But we need to construct the task object even if we can't currently
-        # # communicate with Vioscreen, otherwise celery will not be able to
-        # # run any of the Vioscreen comms ever
-        # try:
-        #     print("Acquiring vioscreen token ")
-        #     self.update_headers()
-        # except Exception as e:
-        #     print("Failed to acquire vioscreen token")
-        #     print(e)
 
     def update_headers(self):
         data = {"username": self.user,
@@ -135,28 +122,54 @@ class VioscreenAdminAPITask(Task):
             raise ValueError("Failed to obtain token")
         else:
             token = req.json()['token']
-        self.headers = {'Accept': 'application/json',
-                        'Authorization': 'Bearer %s' % token}
+            self.headers = {'Accept': 'application/json',
+                            'Authorization': 'Bearer %s' % token}
+
+    def refresh_token(self):
+        if self.headers is None:
+            print("Cannot refresh, no headers set")
+        refresh_url = urljoin(self.baseurl, 'auth/refreshtoken')
+        req = self.session.get(refresh_url, headers=self.headers)
+        if req.status_code != 200:
+            print("Failed to refresh vioscreen token!  Status Code:",
+                  req.status_code)
+        else:
+            token = req.json()['token']
+            self.headers = {'Accept': 'application/json',
+                            'Authorization': 'Bearer %s' % token}
+
+
+# In flagrant disregard for celery's own documentation, three functions that
+# declare the same task base class do not appear to share the same instance
+# of that class.  So we implement our own singleton.
+VIOSCREEN_API = VioscreenAdminAPIAgent()
+
+
+@celery.task
+def refresh_headers():
+    if VIOSCREEN_API.headers is None:
+        VIOSCREEN_API.update_headers()
+    else:
+        VIOSCREEN_API.refresh_token()
 
 
 @celery.task(
-    base=VioscreenAdminAPITask,
-    bind=True,  # This task is bound to a VioscreenAdminAPITask instance
+    bind=True,  # This function is bound to a Task instance
     ignore_result=False,  # We need the results back
     default_retry_delay=5  # Default policy: wait 5 seconds on failure
 )
 def make_vioscreen_request(self, method, url, **kwargs):
-    if self.headers is None:
-        self.update_headers()
+    if VIOSCREEN_API.headers is None:
+        VIOSCREEN_API.update_headers()
 
     if method == "GET":
-        method = self.session.get
+        method = VIOSCREEN_API.session.get
     elif method == "POST":
-        method = self.session.post
+        method = VIOSCREEN_API.session.post
     else:
         raise Exception("Unknown Method")
 
-    url = urljoin(self.baseurl, url)
+    url = urljoin(VIOSCREEN_API.baseurl, url)
 
     def handle_response(req):
         if req.status_code != 200:
@@ -196,11 +209,11 @@ def make_vioscreen_request(self, method, url, **kwargs):
             else:
                 raise Exception("Unknown response content type")
 
-    req = method(url, headers=self.headers, **kwargs)
+    req = method(url, headers=VIOSCREEN_API.headers, **kwargs)
     result, auth_failure = handle_response(req)
     if auth_failure:
-        self.update_headers()
-        req = method(url, headers=self.headers, **kwargs)
+        VIOSCREEN_API.update_headers()
+        req = method(url, headers=VIOSCREEN_API.headers, **kwargs)
         result, auth_failure = handle_response(req)
 
     if auth_failure:

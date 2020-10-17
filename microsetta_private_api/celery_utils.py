@@ -22,6 +22,15 @@ def init_celery(celery, app):
     celery.Task = ContextTask
     celery.autodiscover_tasks([PACKAGE])
 
+    # Set up "Celery Beat", events that run on a fixed time interval
+    celery.conf.beat_schedule = {
+        # Vioscreen tokens are good for an hour, refresh every 55 minutes
+        "refresh_vioscreen_token": {
+            "task": "microsetta_private_api.util.vioscreen.refresh_headers",
+            "schedule": 55 * 60
+        }
+    }
+
 
 def make_celery(app_name):
     celery_backend = SERVER_CONFIG[CELERY_BACKEND_URI]
