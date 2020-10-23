@@ -4,15 +4,15 @@ Hello {{contact_name |e}},
     Specifically, the following sample sent to the lab does not have a recorded sample type, date or time:
         Barcode {{sample_barcode |e}}
 
-    Based on what we can see, the sample type appears to be:
+    Based on what we can see, we think the sample type is:
         Barcode {{sample_barcode |e}}: {{received_type |e}}
 
- We require this information in order to process this sample in compliance with our human subjects research protocol. In order to update your sample's information to ensure it is compliant, our team will be able to do this on your behalf--but first, we would need your consent to do so and the following information:
- - Collection date
- - Collection time
- - Sample type (the above sample type is a suggestion based on our lab)
- 
-Please provide us with this information by replying to this email, and confirming that we can update your sample. We will then update your sample's information so it can be appropriately associated.
+    We require this information in order to process this sample in compliance with our human subjects research protocol. Sample editing by participants is locked for received samples, and updating this information requires the involvement of a team member with Microsetta. Could you please reply to this email, and provide the following information?
+        - Collection date
+        - Collection time
+        - Sample type 
+     
+    Once we have this detail, we will update the record so the sample can be processed appropriately.
 
     If you have any questions, please reply to us at microsetta@ucsd.edu
 
