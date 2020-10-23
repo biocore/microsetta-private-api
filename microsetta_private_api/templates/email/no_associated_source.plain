@@ -7,10 +7,12 @@ Hello {{contact_name |e}},
     We require this information in order to process this sample in compliance with our human subjects research protocol. Please log back into the participant website by clicking or copying on the following URL:
     {{ account_url}}
 
-    After accessing your account using the above URL, you will need to:
-    * Create a source: Click on one of the buttons under the "Sources" section
-    * Add the sample to the source: After creating a source, claim the sample using the associated kit ID
-    * Record the sample specific information: After claiming the sample, click on its button to update its information (e.g., date of collection)
+    After accessing your account using the above URL, you will need to create a source by clicking on one of the buttons under the "Sources" section. After creating a source, please email us. back Our team will be able to associate your sample to your newly-created source and update its information--but first, we would need your consent to do so and the following information:
+ - Collection date
+ - Collection time
+ - Sample type
+
+Please provide us with this information by replying to this email, and confirming that we can update your sample. We will then update your sample's information so it can be appropriately associated.
 
     If you have any questions, please reply to us at microsetta@ucsd.edu
 
