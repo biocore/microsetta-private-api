@@ -527,7 +527,7 @@ class AdminRepoTests(AdminTests):
                                          survey)
             self.assertTrue(found)
 
-    def _set_up_and_query_projects(self, t, is_active_val):
+    def _set_up_and_query_projects(self, t, include_stats, is_active_val):
         updated_dict = self._FULL_PROJECT_DICT.copy()
         updated_dict[p.PROJ_NAME_KEY] = 'test_proj'
         input = p.Project.from_dict(updated_dict)
@@ -570,10 +570,10 @@ class AdminRepoTests(AdminTests):
         with t.cursor() as cur:
             cur.execute(set_up_sql)
 
-        output = admin_repo.get_projects(is_active_val)
+        output = admin_repo.get_projects(include_stats, is_active_val)
 
         updated_dict["project_id"] = 8
-        updated_dict[p.COMPUTED_STATS_KEY] = \
+        computed_stats = \
             {p.NUM_FULLY_RETURNED_KITS_KEY: 1,
              p.NUM_KITS_KEY: 5,
              p.NUM_KITS_W_PROBLEMS_KEY: 1,
@@ -587,12 +587,15 @@ class AdminRepoTests(AdminTests):
              p.NUM_SAMPLES_RECEIVED_KEY: 5,
              p.NUM_UNIQUE_SOURCES_KEY: 4}
 
+        updated_dict[p.COMPUTED_STATS_KEY] = \
+            computed_stats if include_stats else {}
+
         return updated_dict, output
 
-    def test_get_projects_all(self):
+    def test_get_projects_all_w_stats(self):
         with Transaction() as t:
             updated_dict, output = self._set_up_and_query_projects(
-                t, is_active_val=None)
+                t, include_stats=True, is_active_val=None)
 
         # Test we have the correct number of total projects
         self.assertEqual(len(output), 56)
@@ -601,10 +604,10 @@ class AdminRepoTests(AdminTests):
         # output values are what we expect (project 8)
         self.assertEqual(updated_dict, output[7].to_api())
 
-    def test_get_projects_active(self):
+    def test_get_projects_active_w_stats(self):
         with Transaction() as t:
             updated_dict, output = self._set_up_and_query_projects(
-                t, is_active_val=True)
+                t, include_stats=True, is_active_val=True)
 
         # Test we have the correct number of active projects
         self.assertEqual(len(output), 55)
@@ -614,7 +617,7 @@ class AdminRepoTests(AdminTests):
         # list (note zero-based) bc project 2 is inactive, so not returned
         self.assertEqual(updated_dict, output[6].to_api())
 
-    def test_get_projects_inactive(self):
+    def test_get_projects_inactive_w_stats(self):
         with Transaction() as t:
             with t.cursor() as cur:
                 cur.execute("UPDATE barcodes.project"
@@ -622,7 +625,52 @@ class AdminRepoTests(AdminTests):
                             " WHERE project_id = 8;")
 
             updated_dict, output = self._set_up_and_query_projects(
-                t, is_active_val=False)
+                t, include_stats=True, is_active_val=False)
+
+        updated_dict["is_active"] = False
+
+        # Test we have the correct number of inactive projects
+        self.assertEqual(len(output), 2)
+
+        # For one fully-characterized test project, ensure all the
+        # output values are what we expect.  Project 8 is now inactive,
+        # and is 2nd in (zero-based) list, after project 2
+        self.assertEqual(updated_dict, output[1].to_api())
+
+    def test_get_projects_all_wo_stats(self):
+        with Transaction() as t:
+            updated_dict, output = self._set_up_and_query_projects(
+                t, include_stats=False, is_active_val=None)
+
+        # Test we have the correct number of total projects
+        self.assertEqual(len(output), 56)
+
+        # For one fully-characterized test project, ensure all the
+        # output values are what we expect (project 8)
+        self.assertEqual(updated_dict, output[7].to_api())
+
+    def test_get_projects_active_wo_stats(self):
+        with Transaction() as t:
+            updated_dict, output = self._set_up_and_query_projects(
+                t, include_stats=False, is_active_val=True)
+
+        # Test we have the correct number of active projects
+        self.assertEqual(len(output), 55)
+
+        # For one fully-characterized test project, ensure all the
+        # output values are what we expect.  Project 8 is now 7th in
+        # list (note zero-based) bc project 2 is inactive, so not returned
+        self.assertEqual(updated_dict, output[6].to_api())
+
+    def test_get_projects_inactive_wo_stats(self):
+        with Transaction() as t:
+            with t.cursor() as cur:
+                cur.execute("UPDATE barcodes.project"
+                            " SET is_active = FALSE"
+                            " WHERE project_id = 8;")
+
+            updated_dict, output = self._set_up_and_query_projects(
+                t, include_stats=False, is_active_val=False)
 
         updated_dict["is_active"] = False
 

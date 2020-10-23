@@ -282,10 +282,10 @@ class AdminApiTests(TestCase):
         expected_result["project_id"] = proj_id
         self.assertEqual(expected_result, stored_result)
 
-    def test_get_projects_all(self):
+    def test_get_projects_all_w_stats(self):
         # execute projects get
         response = self.client.get(
-            "/api/admin/projects",
+            "/api/admin/projects?include_stats=true",
             headers=MOCK_HEADERS
         )
 
@@ -348,10 +348,10 @@ class AdminApiTests(TestCase):
         self.assertEqual(56, len(response_obj))
         self.assertEqual(expected_record, response_obj[7])
 
-    def test_get_projects_active(self):
+    def test_get_projects_active_w_stats(self):
         # execute projects get
         response = self.client.get(
-            "/api/admin/projects?is_active=true",
+            "/api/admin/projects?include_stats=true&is_active=true",
             headers=MOCK_HEADERS
         )
 
@@ -414,10 +414,10 @@ class AdminApiTests(TestCase):
         self.assertEqual(55, len(response_obj))
         self.assertEqual(expected_record, response_obj[6])
 
-    def test_get_projects_inactive(self):
+    def test_get_projects_inactive_w_stats(self):
         # execute projects get
         response = self.client.get(
-            "/api/admin/projects?is_active=false",
+            "/api/admin/projects?include_stats=true&is_active=false",
             headers=MOCK_HEADERS
         )
 
@@ -446,6 +446,168 @@ class AdminApiTests(TestCase):
                                 'num_samples': 800,
                                 'num_samples_received': 0,
                                 'num_unique_sources': 0},
+                           'contact_email': None,
+                           'contact_name': None,
+                           'coordination': None,
+                           'deadlines': None,
+                           'disposition_comments': None,
+                           'do_16s': None,
+                           'do_mass_spec': None,
+                           'do_metatranscriptomics': None,
+                           'do_other': None,
+                           'do_rt_qpcr': None,
+                           'do_serology': None,
+                           'do_shallow_shotgun': None,
+                           'do_shotgun': None,
+                           'is_active': False,
+                           'is_blood': None,
+                           'is_fecal': None,
+                           'is_microsetta': False,
+                           'is_other': None,
+                           'is_saliva': None,
+                           'is_skin': None,
+                           'mass_spec_comments': None,
+                           'mass_spec_contact_email': None,
+                           'mass_spec_contact_name': None,
+                           'num_subjects': None,
+                           'num_timepoints': None,
+                           'plating_start_date': None,
+                           'project_id': 2,
+                           'project_name': 'Project - /J/xL_|Eãt',
+                           'sponsor': None,
+                           'start_date': None,
+                           'subproject_name': None}
+        self.assertEqual(1, len(response_obj))
+        self.assertEqual(expected_record, response_obj[0])
+
+    def test_get_projects_all_wo_stats(self):
+        # execute projects get
+        response = self.client.get(
+            "/api/admin/projects?include_stats=false",
+            headers=MOCK_HEADERS
+        )
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        expected_record = {'additional_contact_name': None,
+                           'alias': None,
+                           'bank_samples': False,
+                           'branding_associated_instructions': None,
+                           'branding_status': None,
+                           'collection': None,
+                           'computed_stats': {},
+                           'contact_email': None,
+                           'contact_name': None,
+                           'coordination': None,
+                           'deadlines': None,
+                           'disposition_comments': None,
+                           'do_16s': None,
+                           'do_mass_spec': None,
+                           'do_metatranscriptomics': None,
+                           'do_other': None,
+                           'do_rt_qpcr': None,
+                           'do_serology': None,
+                           'do_shallow_shotgun': None,
+                           'do_shotgun': None,
+                           'is_blood': None,
+                           'is_fecal': None,
+                           'is_microsetta': False,
+                           'is_other': None,
+                           'is_saliva': None,
+                           'is_skin': None,
+                           'mass_spec_comments': None,
+                           'mass_spec_contact_email': None,
+                           'mass_spec_contact_name': None,
+                           'num_subjects': None,
+                           'num_timepoints': None,
+                           'plating_start_date': None,
+                           'project_id': 8,
+                           'project_name': 'Project - %u[zGmÅq=g',
+                           'sponsor': None,
+                           'start_date': None,
+                           'subproject_name': None,
+                           'is_active': True}
+        self.assertEqual(56, len(response_obj))
+        self.assertEqual(expected_record, response_obj[7])
+
+    def test_get_projects_active_wo_stats(self):
+        # execute projects get
+        response = self.client.get(
+            "/api/admin/projects?include_stats=false&is_active=true",
+            headers=MOCK_HEADERS
+        )
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        expected_record = {'additional_contact_name': None,
+                           'alias': None,
+                           'bank_samples': False,
+                           'branding_associated_instructions': None,
+                           'branding_status': None,
+                           'collection': None,
+                           'computed_stats': {},
+                           'contact_email': None,
+                           'contact_name': None,
+                           'coordination': None,
+                           'deadlines': None,
+                           'disposition_comments': None,
+                           'do_16s': None,
+                           'do_mass_spec': None,
+                           'do_metatranscriptomics': None,
+                           'do_other': None,
+                           'do_rt_qpcr': None,
+                           'do_serology': None,
+                           'do_shallow_shotgun': None,
+                           'do_shotgun': None,
+                           'is_blood': None,
+                           'is_fecal': None,
+                           'is_microsetta': False,
+                           'is_other': None,
+                           'is_saliva': None,
+                           'is_skin': None,
+                           'mass_spec_comments': None,
+                           'mass_spec_contact_email': None,
+                           'mass_spec_contact_name': None,
+                           'num_subjects': None,
+                           'num_timepoints': None,
+                           'plating_start_date': None,
+                           'project_id': 8,
+                           'project_name': 'Project - %u[zGmÅq=g',
+                           'sponsor': None,
+                           'start_date': None,
+                           'subproject_name': None,
+                           'is_active': True}
+        self.assertEqual(55, len(response_obj))
+        self.assertEqual(expected_record, response_obj[6])
+
+    def test_get_projects_inactive_wo_stats(self):
+        # execute projects get
+        response = self.client.get(
+            "/api/admin/projects?include_stats=false&is_active=false",
+            headers=MOCK_HEADERS
+        )
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        expected_record = {'additional_contact_name': None,
+                           'alias': None,
+                           'bank_samples': False,
+                           'branding_associated_instructions': None,
+                           'branding_status': None,
+                           'collection': None,
+                           'computed_stats': {},
                            'contact_email': None,
                            'contact_name': None,
                            'coordination': None,
