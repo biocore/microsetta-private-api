@@ -43,9 +43,15 @@ In the activated conda environment, initialize a test database:
 
 `python microsetta_private_api/LEGACY/build_db.py`
 
-Then we'll initiate a Celery worker:
+Then we'll initiate a Celery worker (Example shown is with embedded Celery Beat scheduler):
 
-`celery -A microsetta_private_api.celery_worker.celery worker --loglevel=info`
+`celery -A microsetta_private_api.celery_worker.celery worker -B --loglevel=info`
+
+*** OR (Allowing for multiple workers)***
+
+`celery -A microsetta_private_api.celery_worker.celery worker --loglevel=info` (Start 1 worker)
+`celery -A microsetta_private_api.celery_worker.celery beat --loglevel=info` (Start the Celery Beat scheduler)
+
 
 Next, start the microservice using flask's built-in server by running, e.g., 
 

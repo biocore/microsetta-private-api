@@ -1,5 +1,6 @@
 import flask
-from flask import jsonify
+from flask import jsonify, make_response
+from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.api._account import \
     _validate_account_access
@@ -10,6 +11,7 @@ from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 from microsetta_private_api.util import vioscreen, vue_adapter
+from microsetta_private_api.util.vioscreen import VioscreenAdminAPI
 
 
 def read_survey_templates(account_id, source_id, language_tag, token_info):
@@ -226,3 +228,33 @@ def _submit_vioscreen_status(account_id, source_id, info_str):
                                     source_id,
                                     vio_info["username"])
     return response
+
+
+def top_food_report(account_id, source_id, survey_id, token_info):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        vioscreen_repo = VioscreenRepo(t)
+
+        # Vioscreen username is our survey_id
+        status = vioscreen_repo.get_vioscreen_status(account_id,
+                                                     source_id,
+                                                     survey_id)
+        if status != 3:
+            # Oops, we don't have results available for this one
+            raise NotFound("No such survey recorded")
+
+        vio = VioscreenAdminAPI()
+        sessions = vio.sessions(survey_id)
+        # Looks like vioscreen supports multiple sessions per user, do we care?
+        session_id = sessions[0]['sessionId']
+        report = vio.top_food_report(session_id)
+
+        response = make_response(report)
+        response.headers.set("Content-Type", "application/pdf")
+        # TODO: Do we want it to download a file or be embedded in the html?
+        # response.headers.set('Content-Disposition',
+        #                      'attachment',
+        #                      filename='top-food-report.pdf')
+
+        return response
