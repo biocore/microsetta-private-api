@@ -667,16 +667,15 @@ class AdminRepo(BaseRepo):
                     FROM barcodes.project;"""
 
             cur.execute(query)
-            known_projects = {id_: tmi for id_, tmi in cur.fetchall()}
+            projects_tmi = {id_: bool(tmi) for id_, tmi in cur.fetchall()}
             is_tmi = False
             for input_proj_id in project_ids:
-                if input_proj_id not in known_projects:
+                if input_proj_id not in projects_tmi:
                     raise KeyError("Project id %s does not exist" %
                                    input_proj_id)
                 # if *any* of the projects the kits will be associate with are
                 # microsetta projects, set is_tmi to true
-                curr_tmi = bool(known_projects[input_proj_id])
-                if curr_tmi:
+                if projects_tmi[input_proj_id]:
                     is_tmi = True
 
             # get existing kits to test for conflicts
