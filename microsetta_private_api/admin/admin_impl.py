@@ -144,14 +144,14 @@ def create_kits(body, token_info):
     number_of_kits = body['number_of_kits']
     number_of_samples = body['number_of_samples']
     kit_prefix = body.get('kit_id_prefix', None)
-    projects = body['projects']
+    project_ids = body['project_ids']
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
 
         try:
             kits = admin_repo.create_kits(number_of_kits, number_of_samples,
-                                          kit_prefix, projects)
+                                          kit_prefix, project_ids)
         except KeyError:
             return jsonify(code=422, message="Unable to create kits"), 422
         else:
