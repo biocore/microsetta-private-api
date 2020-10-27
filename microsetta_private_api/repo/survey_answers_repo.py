@@ -44,9 +44,15 @@ class SurveyAnswersRepo(BaseRepo):
                         (survey_answers_id,))
             rows += cur.fetchall()
 
+            # TODO:  We probably can't merge the PR with this change, need
+            #  a policy to resolve these survey ids (unless they only happen
+            #  in dev builds)
+            # TODO:  It's even worse than I feared.  Some of our primary
+            #  surveys are ALSO vioscreen surveys with the same key. wtf.
             if len(rows) == 0:
                 vioscreen_repo = VioscreenRepo(self._transaction)
-                status = vioscreen_repo.get_vioscreen_status(survey_answers_id)
+                status = vioscreen_repo._get_vioscreen_status(
+                    survey_answers_id)
                 if status is not None:
                     return SurveyTemplateRepo.VIOSCREEN_ID
                 else:

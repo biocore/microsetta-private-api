@@ -12,5 +12,7 @@
   "FLASK_SECRET_KEY": null,
   "vioscreen_endpoint": "https://demo.vioscreen.com",
   "vioscreen_regcode": "regcode",
-  "vioscreen_cryptokey": "1234567891011121"
+  "vioscreen_cryptokey": "1234567891011121",
+  "vioscreen_admin_username": "",
+  "vioscreen_admin_password": ""
 }

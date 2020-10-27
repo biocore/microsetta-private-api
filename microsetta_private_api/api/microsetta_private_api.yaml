@@ -681,6 +681,32 @@ paths:
     # NB: NO "put"--you shouldn't update an answered survey, but instead should take a new one
     # NB: Currently no delete ... can dissociate a survey from a sample but not delete the survey itself
 
+  '/accounts/{account_id}/sources/{source_id}/surveys/{survey_id}/reports/topfoodreport':
+    # Attempts to generate the vioscreen top food report pdf from this vioscreen survey
+    get:
+      # TODO: Unsure if this should be get or post- it's post on vioscreen, but
+      # we can't easily embed the pdf if the link is a post.  May need to post
+      # and cache results so we can make it a get for embedding.
+      operationId: microsetta_private_api.api.top_food_report
+      tags:
+        - Survey
+      summary: Generate vioscreen top food report
+      description:  Generate vioscreen top food report
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/survey_id'
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Top Food Report pdf
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/accounts/{account_id}/sources/{source_id}/samples':
     get:
       operationId: microsetta_private_api.api.read_sample_associations
@@ -1137,6 +1163,7 @@ paths:
       summary: Retrieve a list of existing projects
       description: Retrieve a list of existing projects
       parameters:
+        - $ref: '#/components/parameters/include_stats'
         - $ref: '#/components/parameters/is_active'
       responses:
         '200':
@@ -1342,13 +1369,6 @@ components:
       description: Project ID
       schema:
         $ref: '#/components/schemas/project_id'
-    is_active:
-      name: is_active
-      in: query
-      description: active status of projects by which to limit returned project list; may be true or false. Optional.
-      schema:
-        $ref: '#/components/schemas/is_active'
-
 
     # query parameters
     kit_name:
@@ -1386,6 +1406,19 @@ components:
       description: Type of sample
       schema:
         $ref: '#/components/schemas/source_type'
+    is_active:
+      name: is_active
+      in: query
+      description: active status of projects by which to limit returned project list; may be true or false. Optional.
+      schema:
+        $ref: '#/components/schemas/is_active'
+    include_stats:
+      name: include_stats
+      in: query
+      description: true if computed statistics about projects should be included in projects list (takes longer)
+      schema:
+        type: boolean
+
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
       description: Invalid or missing token.
@@ -1411,6 +1444,7 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+
   schemas:
     # account section
     account_id:
