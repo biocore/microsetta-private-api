@@ -1,7 +1,7 @@
 import unittest
-import json
 import pandas as pd
 import pandas.testing as pdt
+from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.metadata_repo._constants import (
     HUMAN_SITE_INVARIANTS, MISSING_VALUE)
 from microsetta_private_api.repo.metadata_repo._repo import (
@@ -41,7 +41,7 @@ class MetadataUtilTests(unittest.TestCase):
                                   '6': ['OTHER_SUPPLEMENT_FREQUENCY', 'No'],
                                   '9': ['ALLERGIC_TO', ['blahblah',
                                                         'stuff']]}},
-                    {'template': 10,
+                    {'template': 2,
                      'response': {'1': ['abc', 'okay'],
                                   '2': ['def', 'No']}}]}
 
@@ -114,12 +114,17 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertEqual(obs, exp)
 
     def test_fetch_observed_survey_templates(self):
-        res = {'a': 'dict', 'of': 'stuff'}
-        self.mock_get.return_value.status_code = 200
-        self.mock_get.return_value.json = lambda: res
-        self.mock_get.return_value.text = json.dumps(res)
+        exp = {1: {'survey_id': None,
+                   'survey_template_id': 1,
+                   'survey_template_title': 'Primary',
+                   'survey_template_type': 'local',
+                   'survey_template_version': '1.0'},
+               2: {'survey_id': None,
+                   'survey_template_id': 2,
+                   'survey_template_title': 'Pet Information',
+                   'survey_template_type': 'local',
+                   'survey_template_version': '1.0'}}
 
-        exp = {1: res, 10: res}
         obs, errors = _fetch_observed_survey_templates([self.raw_sample_1,
                                                         self.raw_sample_2])
 
@@ -127,18 +132,17 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertEqual(errors, None)
 
     def test_fetch_survey_template(self):
-        res = {'a': 'dict', 'of': 'stuff'}
-        self.mock_get.return_value.status_code = 200
-        self.mock_get.return_value.json = lambda: res
-        self.mock_get.return_value.text = json.dumps(res)
-
-        survey, errors = _fetch_survey_template(1, {'account_id': 'foo',
-                                                    'source_id': 'bar'})
+        exp = {'survey_id': None,
+               'survey_template_id': 1,
+               'survey_template_title': 'Primary',
+               'survey_template_type': 'local',
+               'survey_template_version': '1.0'}
+        survey, errors = _fetch_survey_template(1)
 
         # verify we obtained data. it is not the responsibility of this
         # test to assert the structure of the metadata as that is the scope of
         # the admin interfaces on the private API
-        self.assertEqual(survey, res)
+        self.assertEqual(survey, exp)
         self.assertEqual(errors, None)
 
     def test_drop_private_columns(self):
@@ -170,11 +174,6 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertEqual(errors, None)
 
     def test_fetch_barcode_metadata(self):
-        res = {'sample_barcode': '000004216'}
-        self.mock_get.return_value.status_code = 200
-        self.mock_get.return_value.json = lambda: res
-        self.mock_get.return_value.text = json.dumps(res)
-
         obs, obs_errors = _fetch_barcode_metadata('000004216')
 
         # verify we obtained metadata. it is not the responsibility of this
@@ -184,15 +183,8 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertEqual(obs_errors, None)
 
     def test_fetch_barcode_metadata_missing(self):
-        res = {}
-        self.mock_get.return_value.status_code = 404
-        self.mock_get.return_value.json = lambda: res
-        self.mock_get.return_value.text = json.dumps(res)
-
-        obs, obs_errors = _fetch_barcode_metadata('badbarcode')
-        self.assertNotIn('sample_barcode', obs)
-        self.assertEqual(obs_errors, {'barcode': 'badbarcode',
-                                      'error': "404 from api"})
+        with self.assertRaises(NotFound):
+            _fetch_barcode_metadata('badbarcode')
 
     def test_to_pandas_dataframe(self):
         data = [self.raw_sample_1, self.raw_sample_2]

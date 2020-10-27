@@ -1,8 +1,17 @@
 from ._constants import HUMAN_SITE_INVARIANTS, MISSING_VALUE
 from ._transforms import HUMAN_TRANSFORMS, apply_transforms
+
+from ..admin_repo import AdminRepo
+from ..survey_template_repo import SurveyTemplateRepo
+from ..transaction import Transaction
+from ...util import vue_adapter
+
 from collections import Counter
 import re
 import pandas as pd
+import json
+jsonify = json.dumps
+#from flask import jsonify
 
 # the vioscreen survey currently cannot be fetched from the database
 TEMPLATES_TO_IGNORE = {10001, }
@@ -124,7 +133,7 @@ def _fetch_observed_survey_templates(sample_metadata):
 
     surveys = {}
     for template_id, ids in templates.items():
-        survey, error = _fetch_survey_template(template_id, ids)
+        survey, error = _fetch_survey_template(template_id)
         if error:
             errors[template_id] = error
         else:
@@ -133,15 +142,13 @@ def _fetch_observed_survey_templates(sample_metadata):
     return surveys, errors if errors else None
 
 
-def _fetch_survey_template(template_id, ids):
+def _fetch_survey_template(template_id):
     """Fetch the survey structure to get full multi-choice detail
 
     Parameters
     ----------
     template_id : int
         The survey template ID to fetch
-    ids : dict
-        An account and source ID to use
 
     Returns
     -------
@@ -151,18 +158,17 @@ def _fetch_survey_template(template_id, ids):
         Any error information associated with the retreival. If an error is
         observed, the survey responses should not be considered valid.
     """
-    errors = None
+    with Transaction() as t:
+        survey_template_repo = SurveyTemplateRepo(t)
+        info = survey_template_repo.get_survey_template_link_info(
+            template_id)
 
-    ids['template_id'] = template_id
-    url = ("/api/accounts/%(account_id)s/sources/%(source_id)s/"
-           "survey_templates/%(template_id)d?language_tag=en-US")
+        # For local surveys, we generate the json representing the survey
+        survey_template = survey_template_repo.get_survey_template(
+            template_id, 'en-US')
+        info.survey_template_text = vue_adapter.to_vue_schema(survey_template)
 
-    status, response = APIRequest.get(url % ids)
-    if status != 200:
-        errors = {"ids": ids,
-                  "error": str(status) + " from api"}
-
-    return response, errors
+        return info.to_api(None), None
 
 
 def _to_pandas_dataframe(metadatas, survey_templates):
@@ -357,16 +363,10 @@ def _fetch_barcode_metadata(sample_barcode):
         Any error information associated with the retreival. If an error is
         observed, the survey responses should not be considered valid.
     """
-    errors = None
-
-    status, response = APIRequest.get(
-        '/api/admin/metadata/samples/%s/surveys/' % sample_barcode
-    )
-    if status != 200:
-        errors = {"barcode": sample_barcode,
-                  "error": str(status) + " from api"}
-
-    return response, errors
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        sample_pulldown = admin_repo.get_survey_metadata(sample_barcode)
+    return sample_pulldown, None
 
 
 def _build_col_name(col_name, multiselect_answer):
