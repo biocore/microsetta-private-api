@@ -11,7 +11,7 @@ import re
 import pandas as pd
 import json
 jsonify = json.dumps
-#from flask import jsonify
+
 
 # the vioscreen survey currently cannot be fetched from the database
 TEMPLATES_TO_IGNORE = {10001, }
