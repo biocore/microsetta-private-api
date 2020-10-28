@@ -16,19 +16,31 @@ from microsetta_private_api.repo.metadata_repo._repo import (
     drop_private_columns)
 
 
+class MM:
+    """Mock model object"""
+    def __init__(self, data):
+        self.d = data
+
+    def __getattr__(self, key):
+        return self.d[key]
+
+    def __getitem__(self, key):
+        return self.d[key]
+
+
 class MetadataUtilTests(unittest.TestCase):
     def setUp(self):
         self.raw_sample_1 = {
                 'sample_barcode': '000004216',
                 'host_subject_id': 'foo',
-                'account': {'id': 'foo'},
-                'source': {'id': 'bar',
-                           'source_type': 'human'},
-                "sample": {
+                'account': MM({'id': 'foo'}),
+                'source': MM({'id': 'bar',
+                              'source_type': 'human'}),
+                "sample": MM({
                     "sample_projects": ["American Gut Project"],
                     "datetime_collected": "2013-10-15T09:30:00",
                     "site": "Stool"
-                },
+                }),
                 'survey_answers': [
                     {'template': 1,
                      'response': {'1': ['DIET_TYPE', '[""]'],
@@ -48,14 +60,14 @@ class MetadataUtilTests(unittest.TestCase):
         self.raw_sample_2 = {
                 'sample_barcode': 'XY0004216',
                 'host_subject_id': 'bar',
-                'account': {'id': 'baz'},
-                'source': {'id': 'bonkers',
-                           'source_type': 'human'},
-                "sample": {
+                'account': MM({'id': 'baz'}),
+                'source': MM({'id': 'bonkers',
+                              'source_type': 'human'}),
+                "sample": MM({
                     "sample_projects": ["American Gut Project"],
                     "datetime_collected": "2013-10-15T09:30:00",
                     "site": "Stool"
-                },
+                }),
                 'survey_answers': [
                     {'template': 1,
                      'response': {'1': ['DIET_TYPE', '["Vegan"]'],
@@ -71,32 +83,32 @@ class MetadataUtilTests(unittest.TestCase):
                                                         'stuff']]}}]}
 
         self.fake_survey_template1 = {
-            'survey_template_text': {
+            'survey_template_text': MM({
                 'groups': [
-                    {'fields': [
-                        {'id': "5",
-                         'shortname': 'foo',
-                         'multi': False,
-                         'values': ['a', 'b', 'c']},
-                        {'id': "7",
-                         'shortname': 'bar',
-                         'multi': True,
-                         'values': ['e', 'f', 'g  h']}
-                        ]}]}}
+                    MM({'fields': [
+                        MM({'id': "5",
+                            'shortname': 'foo',
+                            'multi': False,
+                            'values': ['a', 'b', 'c']}),
+                        MM({'id': "7",
+                            'shortname': 'bar',
+                            'multi': True,
+                            'values': ['e', 'f', 'g  h']})
+                        ]})]})}
 
         self.fake_survey_template2 = {
-            'survey_template_text': {
+            'survey_template_text': MM({
                 'groups': [
-                    {'fields': [
-                        {'id': "8",
-                         'shortname': 'foo',
-                         'multi': False,
-                         'values': ['a', 'b', 'c']},
-                        {'id': "9",
-                         'shortname': 'ALLERGIC_TO',
-                         'multi': True,
-                         'values': ['x', 'baz', 'stuff', 'blahblah']}
-                        ]}]}}
+                    MM({'fields': [
+                        MM({'id': "8",
+                            'shortname': 'foo',
+                            'multi': False,
+                            'values': ['a', 'b', 'c']}),
+                        MM({'id': "9",
+                            'shortname': 'ALLERGIC_TO',
+                            'multi': True,
+                            'values': ['x', 'baz', 'stuff', 'blahblah']})
+                        ]})]})}
 
         super().setUp()
 
@@ -127,7 +139,9 @@ class MetadataUtilTests(unittest.TestCase):
 
         obs, errors = _fetch_observed_survey_templates([self.raw_sample_1,
                                                         self.raw_sample_2])
-
+        # concern here is that this key exists, not its content
+        for o in obs.values():
+            o.pop('survey_template_text')
         self.assertEqual(obs, exp)
         self.assertEqual(errors, None)
 
@@ -138,6 +152,9 @@ class MetadataUtilTests(unittest.TestCase):
                'survey_template_type': 'local',
                'survey_template_version': '1.0'}
         survey, errors = _fetch_survey_template(1)
+
+        # concern here is that this key exists, not its content
+        survey.pop('survey_template_text')
 
         # verify we obtained data. it is not the responsibility of this
         # test to assert the structure of the metadata as that is the scope of

@@ -1173,7 +1173,9 @@ paths:
                 'sample_barcodes':
                   type: array
                   items:
-                    $ref: '#/components/schemas/sample_barcode'
+                    # not using the defined schema for sample_barcode as it is 
+                    # readOnly
+                    type: string
       responses:
         '200':
           description: Summarized sample metadata
@@ -1469,7 +1471,7 @@ components:
       in: query
       description: include private information in a metadata pulldown; may be true or false. Optional.
       schema:
-        $ref: '#/components/schemas/is_active'
+        $ref: '#/components/schemas/include_private'
 
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
@@ -2018,6 +2020,7 @@ components:
     # metadata section
     include_private:
       type: boolean
+      default: false
 
   examples:
     human_adult_source:

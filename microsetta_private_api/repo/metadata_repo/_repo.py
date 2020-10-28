@@ -119,8 +119,8 @@ def _fetch_observed_survey_templates(sample_metadata):
 
     templates = {}
     for bc_md in sample_metadata:
-        account_id = bc_md['account']['id']
-        source_id = bc_md['source']['id']
+        account_id = bc_md['account'].id
+        source_id = bc_md['source'].id
         observed_templates = {s['template'] for s in bc_md['survey_answers']
                               if s['template'] not in TEMPLATES_TO_IGNORE}
 
@@ -166,9 +166,12 @@ def _fetch_survey_template(template_id):
         # For local surveys, we generate the json representing the survey
         survey_template = survey_template_repo.get_survey_template(
             template_id, 'en-US')
-        info.survey_template_text = vue_adapter.to_vue_schema(survey_template)
+        survey_template_text = vue_adapter.to_vue_schema(survey_template)
 
-        return info.to_api(None), None
+        info = info.to_api(None)
+        info['survey_template_text'] = survey_template_text
+
+        return info, None
 
 
 def _to_pandas_dataframe(metadatas, survey_templates):
@@ -243,14 +246,14 @@ def _construct_multiselect_map(survey_templates):
     for template_id, template in survey_templates.items():
         template_text = template['survey_template_text']
 
-        for group in template_text['groups']:
-            for field in group['fields']:
-                if not field['multi']:
+        for group in template_text.groups:
+            for field in group.fields:
+                if not field.multi:
                     continue
 
-                base = field['shortname']
-                choices = field['values']
-                qid = field['id']
+                base = field.shortname
+                choices = field.values
+                qid = field.id
 
                 multi_values = {}
                 for choice in choices:
@@ -284,16 +287,16 @@ def _to_pandas_series(metadata, multiselect_map):
     """
     name = metadata['sample_barcode']
     hsi = metadata['host_subject_id']
-    source_type = metadata['source']["source_type"]
+    source_type = metadata['source'].source_type
 
     sample_detail = metadata['sample']
-    collection_timestamp = sample_detail['datetime_collected']
+    collection_timestamp = sample_detail.datetime_collected
 
     if source_type == 'human':
-        sample_type = sample_detail['site']
+        sample_type = sample_detail.site
         sample_invariants = HUMAN_SITE_INVARIANTS[sample_type]
     elif source_type == 'animal':
-        sample_type = sample_detail['site']
+        sample_type = sample_detail.site
         sample_invariants = {}
     else:
         if 'source' not in sample_detail:
@@ -301,7 +304,7 @@ def _to_pandas_series(metadata, multiselect_map):
             # information?
             return pd.Series([], index=[], name=name)
 
-        sample_type = sample_detail['source']['description']
+        sample_type = sample_detail['source'].description
         sample_invariants = {}
 
     values = [hsi, collection_timestamp]

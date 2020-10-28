@@ -95,11 +95,15 @@ def qiita_compatible_metadata(token_info, include_private, body):
     if samples is None:
         return jsonify(code=404, message='No samples provided'), 404
 
-    df, _ = retrieve_metadata(samples)
+    df, errors = retrieve_metadata(samples)
+
+    if errors:
+        return jsonify(code=404, message=str(errors)), 404
+
     if not include_private:
         df = drop_private_columns(df)
 
-    return jsonify(df.to_json(orient='index')), 200
+    return jsonify(df.to_dict(orient='index')), 200
 
 
 def token_grants_admin_access(token_info):
