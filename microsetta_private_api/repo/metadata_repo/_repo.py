@@ -14,7 +14,9 @@ jsonify = json.dumps
 
 
 # the vioscreen survey currently cannot be fetched from the database
-TEMPLATES_TO_IGNORE = {10001, }
+# there seems to be some detached survey IDs -- see 000089779
+# that account has a long and unusual history though
+TEMPLATES_TO_IGNORE = {10001, None}
 
 EBI_REMOVE = ['ABOUT_YOURSELF_TEXT', 'ANTIBIOTIC_CONDITION',
               'ANTIBIOTIC_MED', 'PM_NAME', 'PM_EMAIL',
