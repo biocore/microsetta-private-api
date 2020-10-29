@@ -361,7 +361,6 @@ HUMAN_SITE_INVARIANTS = {
 for site in HUMAN_SITE_INVARIANTS.values():
     site.update({
         'host_taxid': '9606',
-        'scientific_name': 'human gut metagenome',
         'title': 'American Gut Project',
         'assigned_from_geo': 'Yes',
         'env_biome': 'dense settlement biome',
