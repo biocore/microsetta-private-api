@@ -681,3 +681,27 @@ class AdminRepoTests(AdminTests):
         # output values are what we expect.  Project 8 is now inactive,
         # and is 2nd in (zero-based) list, after project 2
         self.assertEqual(updated_dict, output[1].to_api())
+
+    def test_get_daklapack_articles(self):
+        expected_val = {'dak_article_code': 350100,
+                        'short_description': 'TMI 1 tube',
+                        'num_2point5ml_etoh_tubes': 1,
+                        'num_7ml_etoh_tube': 0,
+                        'num_neoteryx_kit': 0,
+                        'outer_sleeve': 'Microsetta',
+                        'box': 'Microsetta',
+                        'return_label': 'Microsetta',
+                        'compartment_bag': 'Microsetta',
+                        'num_stool_collector': 0,
+                        'instructions': 'Fv1',
+                        'registration_card': 'Microsetta',
+                        'swabs': '1x bag of two',
+                        'rigid_safety_bag': 'yes'}
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            articles = admin_repo.get_daklapack_articles()
+            self.assertEqual(24, len(articles))
+            first_article = articles[0]
+            first_article.pop("dak_article_id")
+            self.assertEqual(expected_val, first_article)
