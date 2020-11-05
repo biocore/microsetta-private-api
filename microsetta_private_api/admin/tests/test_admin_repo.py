@@ -17,19 +17,19 @@ from microsetta_private_api.admin.admin_impl import validate_admin_access
 STANDARD_ACCT_ID = "12345678-bbbb-cccc-dddd-eeeeffffffff"
 ADMIN_ACCT_ID = "12345678-1234-1234-1234-123412341234"
 FIRST_DAKLAPACK_ARTICLE = {'dak_article_code': 350100,
-                        'short_description': 'TMI 1 tube',
-                        'num_2point5ml_etoh_tubes': 1,
-                        'num_7ml_etoh_tube': 0,
-                        'num_neoteryx_kit': 0,
-                        'outer_sleeve': 'Microsetta',
-                        'box': 'Microsetta',
-                        'return_label': 'Microsetta',
-                        'compartment_bag': 'Microsetta',
-                        'num_stool_collector': 0,
-                        'instructions': 'Fv1',
-                        'registration_card': 'Microsetta',
-                        'swabs': '1x bag of two',
-                        'rigid_safety_bag': 'yes'}
+                           'short_description': 'TMI 1 tube',
+                           'num_2point5ml_etoh_tubes': 1,
+                           'num_7ml_etoh_tube': 0,
+                           'num_neoteryx_kit': 0,
+                           'outer_sleeve': 'Microsetta',
+                           'box': 'Microsetta',
+                           'return_label': 'Microsetta',
+                           'compartment_bag': 'Microsetta',
+                           'num_stool_collector': 0,
+                           'instructions': 'Fv1',
+                           'registration_card': 'Microsetta',
+                           'swabs': '1x bag of two',
+                           'rigid_safety_bag': 'yes'}
 
 
 def add_dummy_scan(scan_dict):

@@ -715,4 +715,3 @@ class AdminApiTests(TestCase):
 
         self.assertEqual(len(article_dicts_list), len(response_obj))
         self.assertEqual(FIRST_DAKLAPACK_ARTICLE, response_obj[0])
-
