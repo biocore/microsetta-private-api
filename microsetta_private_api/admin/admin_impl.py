@@ -265,3 +265,12 @@ def send_email(body, token_info):
         t.commit()
 
     return '', 204
+
+
+def get_daklapack_articles(token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        dak_article_dicts = admin_repo.get_daklapack_articles()
+        return jsonify(dak_article_dicts), 200

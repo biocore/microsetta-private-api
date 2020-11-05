@@ -13,10 +13,23 @@ from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.admin.admin_impl import validate_admin_access
-from microsetta_private_api.admin.tests.test_admin_api import delete_test_scan
 
 STANDARD_ACCT_ID = "12345678-bbbb-cccc-dddd-eeeeffffffff"
 ADMIN_ACCT_ID = "12345678-1234-1234-1234-123412341234"
+FIRST_DAKLAPACK_ARTICLE = {'dak_article_code': 350100,
+                        'short_description': 'TMI 1 tube',
+                        'num_2point5ml_etoh_tubes': 1,
+                        'num_7ml_etoh_tube': 0,
+                        'num_neoteryx_kit': 0,
+                        'outer_sleeve': 'Microsetta',
+                        'box': 'Microsetta',
+                        'return_label': 'Microsetta',
+                        'compartment_bag': 'Microsetta',
+                        'num_stool_collector': 0,
+                        'instructions': 'Fv1',
+                        'registration_card': 'Microsetta',
+                        'swabs': '1x bag of two',
+                        'rigid_safety_bag': 'yes'}
 
 
 def add_dummy_scan(scan_dict):
@@ -31,6 +44,17 @@ def add_dummy_scan(scan_dict):
                          scan_dict["sample_status"],
                          scan_dict["technician_notes"]))
         t.commit()
+
+
+def delete_test_scan(new_scan_id):
+    if new_scan_id is not None:
+        with Transaction() as t:
+            with t.cursor() as cur:
+                cur.execute("DELETE FROM barcode_scans "
+                            "WHERE "
+                            "barcode_scan_id = %s",
+                            (new_scan_id,))
+            t.commit()
 
 
 class AdminTests(TestCase):
@@ -683,25 +707,10 @@ class AdminRepoTests(AdminTests):
         self.assertEqual(updated_dict, output[1].to_api())
 
     def test_get_daklapack_articles(self):
-        expected_val = {'dak_article_code': 350100,
-                        'short_description': 'TMI 1 tube',
-                        'num_2point5ml_etoh_tubes': 1,
-                        'num_7ml_etoh_tube': 0,
-                        'num_neoteryx_kit': 0,
-                        'outer_sleeve': 'Microsetta',
-                        'box': 'Microsetta',
-                        'return_label': 'Microsetta',
-                        'compartment_bag': 'Microsetta',
-                        'num_stool_collector': 0,
-                        'instructions': 'Fv1',
-                        'registration_card': 'Microsetta',
-                        'swabs': '1x bag of two',
-                        'rigid_safety_bag': 'yes'}
-
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             articles = admin_repo.get_daklapack_articles()
             self.assertEqual(24, len(articles))
             first_article = articles[0]
             first_article.pop("dak_article_id")
-            self.assertEqual(expected_val, first_article)
+            self.assertEqual(FIRST_DAKLAPACK_ARTICLE, first_article)
