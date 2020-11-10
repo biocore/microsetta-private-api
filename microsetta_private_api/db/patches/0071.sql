@@ -18,7 +18,8 @@ CREATE TABLE barcodes.daklapack_article
     registration_card VARCHAR,
     swabs VARCHAR,
     rigid_safety_bag VARCHAR,
-    CONSTRAINT dak_article_pkey PRIMARY KEY (dak_article_id)
+    CONSTRAINT dak_article_pkey PRIMARY KEY (dak_article_id),
+    CONSTRAINT idx_dak_article_code UNIQUE (dak_article_code)
 );
 
 INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, num_2point5ml_etoh_tubes, num_7ml_etoh_tube, num_neoteryx_kit, outer_sleeve, box, return_label, compartment_bag, num_stool_collector, instructions, registration_card, swabs, rigid_safety_bag) VALUES (350100,'TMI 1 tube', '1', '0', '0', 'Microsetta', 'Microsetta', 'Microsetta', 'Microsetta', '0', 'Fv1', 'Microsetta', '1x bag of two', 'yes');
