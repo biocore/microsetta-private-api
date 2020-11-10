@@ -10,19 +10,10 @@ from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.api.tests.test_api import client, MOCK_HEADERS, \
     ACCT_ID_1, ACCT_MOCK_ISS, ACCT_MOCK_SUB, \
     extract_last_id_from_location_header  # noqa "client" IS used, by name
+from microsetta_private_api.admin.tests.test_admin_repo import \
+    FIRST_DAKLAPACK_ARTICLE, delete_test_scan
 
 DUMMY_PROJ_NAME = "test project"
-
-
-def delete_test_scan(new_scan_id):
-    if new_scan_id is not None:
-        with Transaction() as t:
-            with t.cursor() as cur:
-                cur.execute("DELETE FROM barcode_scans "
-                            "WHERE "
-                            "barcode_scan_id = %s",
-                            (new_scan_id,))
-            t.commit()
 
 
 def teardown_test_data():
@@ -699,3 +690,28 @@ class AdminApiTests(TestCase):
             self.assertEqual(400, response.status_code)
         finally:
             delete_test_scan(new_scan_id)
+
+    def test_get_daklapack_articles(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            article_dicts_list = admin_repo.get_daklapack_articles()
+            t.commit()
+
+        # execute articles get
+        response = self.client.get(
+            "/api/admin/daklapack_articles",
+            headers=MOCK_HEADERS
+        )
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        # get the first article returned and pop out its id
+        first_article = response_obj[0]
+        first_article.pop("dak_article_id")
+
+        self.assertEqual(len(article_dicts_list), len(response_obj))
+        self.assertEqual(FIRST_DAKLAPACK_ARTICLE, response_obj[0])
