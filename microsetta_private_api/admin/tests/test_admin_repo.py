@@ -1,7 +1,9 @@
 from unittest import TestCase
 from datetime import date
 import datetime
+import dateutil.parser
 import psycopg2
+import json
 
 import microsetta_private_api.model.project as p
 
@@ -9,6 +11,7 @@ from werkzeug.exceptions import Unauthorized, NotFound
 
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.address import Address
+from microsetta_private_api.model.daklapack_order import DaklapackOrder
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.transaction import Transaction
@@ -714,3 +717,129 @@ class AdminRepoTests(AdminTests):
             first_article = articles[0]
             first_article.pop("dak_article_id")
             self.assertEqual(FIRST_DAKLAPACK_ARTICLE, first_article)
+
+    def test_create_daklapack_order(self):
+        with Transaction() as t:
+            # need a valid submitter id from the account table to input
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT id, first_name, last_name "
+                            "FROM ag.account "
+                            "WHERE account_type = 'admin' "
+                            "ORDER BY id "
+                            "LIMIT 1;")
+                submitter_record = cur.fetchone()
+                submitter_id = submitter_record[0]
+                submitter_name = f"{submitter_record[1]} " \
+                                 f"{submitter_record[2]}"
+
+                # need real project ids to show can link order to project
+                cur.execute("SELECT project_id "
+                            "FROM barcodes.project "
+                            "ORDER BY project_id "
+                            "LIMIT 2;")
+                project_id_records = cur.fetchall()
+                project_ids = [x[0] for x in project_id_records]
+
+            order_struct = {
+                'orderId': '7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                'articles': [
+                    {
+                        'articleCode': 350102,
+                        'addresses': [
+                            {
+                                'firstName': 'Jane',
+                                'lastName': 'Doe',
+                                'address1': '123 Main St',
+                                'insertion': 'Apt 2',
+                                'address2': '',
+                                'postalCode': 92210,
+                                'city': 'San Diego',
+                                'state': 'CA',
+                                'country': 'USA',
+                                'countryCode': 'us',
+                                'phone': '(858) 555-1212',
+                                'creationDate': '2020-10-09T22:43:52.219328Z',
+                                'companyName': submitter_name
+                            },
+                            {
+                                'firstName': 'Tom',
+                                'lastName': 'Thumb',
+                                'address1': '29 Side St',
+                                'insertion': '',
+                                'address2': 'Kew Gardens',
+                                'postalCode': 'KG7-448',
+                                'city': 'Gananoque',
+                                'state': 'Ontario',
+                                'country': 'Canada',
+                                'countryCode': 'ca',
+                                'phone': '(858) 555-1212',
+                                'creationDate': '2020-10-09T22:43:52.219350Z',
+                                'companyName': submitter_name
+                            }
+                        ]
+                    }
+                ],
+                'shippingProvider': 'FedEx',
+                'shippingType': 'FEDEX_2_DAY',
+                'shippingProviderMetadata': [
+                    {'key': 'Reference 1',
+                     'value': 'Bill Ted'}
+                ]
+            }
+
+            acct_repo = AccountRepo(t)
+            submitter_acct = acct_repo.get_account(submitter_id)
+
+            input_id = '7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b'
+            creation_timestamp = dateutil.parser.isoparse(
+                "2020-10-09T22:43:52.219328Z")
+            last_polling_timestamp = dateutil.parser.isoparse(
+                "2020-10-19T12:40:19.219328Z")
+            desc = "a description"
+            hold_msg = "hold this order"
+            last_status = "accepted"
+
+            # create dummy daklapack order object
+            input = DaklapackOrder(input_id, submitter_acct, list(project_ids),
+                                   order_struct, desc, hold_msg,
+                                   creation_timestamp, last_polling_timestamp,
+                                   last_status)
+
+            # call create_daklapack_order
+            admin_repo = AdminRepo(t)
+            returned_id = admin_repo.create_daklapack_order(input)
+
+            self.assertEqual(input_id, returned_id)
+
+            expected_record = [input_id,
+                               submitter_id,
+                               desc,
+                               hold_msg,
+                               json.dumps(order_struct),
+                               creation_timestamp,
+                               last_polling_timestamp,
+                               last_status
+            ]
+
+            # check db to show new records exist
+            with t.dict_cursor() as cur:
+                # need real project ids to show can link order to project
+                cur.execute("SELECT * "
+                            "FROM barcodes.daklapack_order "
+                            "WHERE dak_order_id =  %s",
+                            (input_id, ))
+                curr_records = cur.fetchall()
+                self.assertEqual(len(curr_records), 1)
+                self.assertEqual(expected_record, curr_records[0])
+
+                cur.execute("SELECT project_id "
+                            "FROM barcodes.daklapack_order_to_project "
+                            "WHERE dak_order_id =  %s",
+                            (input_id, ))
+                curr_proj_records = cur.fetchall()
+                self.assertEqual(len(curr_proj_records), 2)
+                for curr_proj_rec in curr_proj_records:
+                    self.assertTrue(curr_proj_rec[0] in project_ids)
+
+        # NB: all the above happens within a transaction that we then DO NOT
+        # commit so the db changes are not permanent

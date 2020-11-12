@@ -12,6 +12,9 @@ from microsetta_private_api.api.tests.test_api import client, MOCK_HEADERS, \
     extract_last_id_from_location_header  # noqa "client" IS used, by name
 from microsetta_private_api.admin.tests.test_admin_repo import \
     FIRST_DAKLAPACK_ARTICLE, delete_test_scan
+from microsetta_private_api.model.tests.test_daklapack_order import \
+    DUMMY_PROJ_ID_LIST, DUMMY_DAK_ARTICLE_CODE, DUMMY_ADDRESSES, \
+    DUMMY_DAK_ORDER_DESC, DUMMY_HOLD_MSG, DUMMY_FEDEX_REFS
 
 DUMMY_PROJ_NAME = "test project"
 
@@ -57,6 +60,22 @@ def setup_test_data():
                         " SET is_active = FALSE"
                         " WHERE project_id = 2")
         t.commit()
+
+
+def delete_test_daklapack_order(new_order_id):
+    if new_order_id is not None:
+        with Transaction() as t:
+            with t.cursor() as cur:
+                cur.execute("DELETE FROM barcodes.daklapack_order_to_project "
+                            "WHERE "
+                            "dak_order_id = %s",
+                            (new_order_id,))
+
+                cur.execute("DELETE FROM barcodes.daklapack_order "
+                            "WHERE "
+                            "dak_order_id = %s",
+                            (new_order_id,))
+            t.commit()
 
 
 @pytest.mark.usefixtures("client")
@@ -715,3 +734,53 @@ class AdminApiTests(TestCase):
 
         self.assertEqual(len(article_dicts_list), len(response_obj))
         self.assertEqual(FIRST_DAKLAPACK_ARTICLE, response_obj[0])
+
+    def _test_post_daklapack_orders(self, order_info):
+        input_json = json.dumps(order_info)
+
+        new_order_id = None
+        try:
+            # execute articles post
+            response = self.client.post(
+                "api/admin/daklapack_orders",
+                content_type='application/json',
+                data=input_json,
+                headers=MOCK_HEADERS
+            )
+
+            # check for successful create response code
+            self.assertEqual(201, response.status_code)
+
+            new_order_id = extract_last_id_from_location_header(response)
+        finally:
+            delete_test_daklapack_order(new_order_id)
+
+    def test_post_daklapack_orders_fully_specified(self):
+        # create post input json with a nonsense date field
+        order_info = {
+            "project_ids": DUMMY_PROJ_ID_LIST,
+            "article_code": DUMMY_DAK_ARTICLE_CODE,
+            "addresses": DUMMY_ADDRESSES,
+            "description": DUMMY_DAK_ORDER_DESC,
+            "fedex_ref_1": DUMMY_FEDEX_REFS[0],
+            "fedex_ref_2": DUMMY_FEDEX_REFS[1],
+            "fedex_ref_3": DUMMY_FEDEX_REFS[2],
+            "fulfillment_hold_msg": DUMMY_HOLD_MSG
+        }
+
+        self._test_post_daklapack_orders(order_info)
+
+    def test_post_daklapack_orders_wo_optionals(self):
+        # create post input json with a nonsense date field
+        order_info = {
+            "project_ids": DUMMY_PROJ_ID_LIST,
+            "article_code": DUMMY_DAK_ARTICLE_CODE,
+            "addresses": DUMMY_ADDRESSES,
+            "description": None,
+            "fedex_ref_1": None,
+            "fedex_ref_2": None,
+            "fedex_ref_3": None,
+            "fulfillment_hold_msg": None
+        }
+
+        self._test_post_daklapack_orders(order_info)
