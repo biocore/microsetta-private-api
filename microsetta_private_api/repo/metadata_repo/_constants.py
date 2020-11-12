@@ -1,4 +1,4 @@
-MISSING_VALUE = 'not provided'
+MISSING_VALUE = 'not applicable'
 
 # standard fields that are set based on sampling site
 ENV_LOOKUP = {
