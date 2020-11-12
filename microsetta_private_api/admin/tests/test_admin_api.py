@@ -788,6 +788,14 @@ class AdminApiTests(TestCase):
         # sanity check the the default is false
         data = json.dumps({'sample_barcodes': ['000004216', '000004213']})
         response = self.client.post('/api/admin/metadata/qiita-compatible',
+                                    content_type='application/json',
+                                    data=data,
+                                    headers=MOCK_HEADERS)
+        self.assertEqual(200, response.status_code)
+        result = json.loads(response.data)
+        self.assertEqual(set(result.keys()), {'000004216', '000004213'})
+        obs = {c.lower() for c in result['000004216']}
+        self.assertNotIn('about_yourself_text', obs)
 
     def _test_post_daklapack_orders(self, order_info):
         input_json = json.dumps(order_info)
