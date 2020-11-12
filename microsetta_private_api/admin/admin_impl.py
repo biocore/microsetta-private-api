@@ -283,7 +283,6 @@ def create_daklapack_order(body, token_info):
 
     body[ORDER_ID_KEY] = str(uuid.uuid4())
 
-
     with Transaction() as t:
         account_repo = AccountRepo(t)
         body[SUBMITTER_ACCT_KEY] = account_repo.find_linked_account(
