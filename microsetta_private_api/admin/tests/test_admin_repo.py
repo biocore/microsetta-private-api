@@ -818,8 +818,7 @@ class AdminRepoTests(AdminTests):
                                json.dumps(order_struct),
                                creation_timestamp,
                                last_polling_timestamp,
-                               last_status
-            ]
+                               last_status]
 
             # check db to show new records exist
             with t.dict_cursor() as cur:
