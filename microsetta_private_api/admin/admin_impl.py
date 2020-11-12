@@ -11,6 +11,8 @@ from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
+from microsetta_private_api.repo.metadata_repo import (retrieve_metadata,
+                                                       drop_private_columns)
 from microsetta_private_api.tasks import send_email as celery_send_email
 from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
@@ -86,6 +88,27 @@ def sample_pulldown_multiple_survey(token_info,
         admin_repo = AdminRepo(t)
         sample_pulldown = admin_repo.get_survey_metadata(sample_barcode)
     return jsonify(sample_pulldown), 200
+
+
+def qiita_compatible_metadata(token_info, include_private, body):
+    validate_admin_access(token_info)
+
+    samples = body.get('sample_barcodes')
+    if samples is None:
+        return jsonify(code=404, message='No samples provided'), 404
+
+    # TODO: this call constructs transactions implicitly. It would be
+    # better for the transaction to be established and passed in,
+    # similar to how other "repo" objects are managed
+    df, errors = retrieve_metadata(samples)
+
+    if errors:
+        return jsonify(code=404, message=str(errors)), 404
+
+    if not include_private:
+        df = drop_private_columns(df)
+
+    return jsonify(df.to_dict(orient='index')), 200
 
 
 def token_grants_admin_access(token_info):

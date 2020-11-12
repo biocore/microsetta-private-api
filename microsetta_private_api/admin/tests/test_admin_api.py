@@ -735,6 +735,60 @@ class AdminApiTests(TestCase):
         self.assertEqual(len(article_dicts_list), len(response_obj))
         self.assertEqual(FIRST_DAKLAPACK_ARTICLE, response_obj[0])
 
+    def test_metadata_qiita_compatible_invalid(self):
+        data = json.dumps({'sample_barcodes': ['bad']})
+        response = self.client.post('/api/admin/metadata/qiita-compatible',
+                                    content_type='application/json',
+                                    data=data,
+                                    headers=MOCK_HEADERS)
+        self.assertEqual(404, response.status_code)
+        data = json.dumps({'sample_barcodes': ['bad', '000004216']})
+        response = self.client.post('/api/admin/metadata/qiita-compatible',
+                                    content_type='application/json',
+                                    data=data,
+                                    headers=MOCK_HEADERS)
+        self.assertEqual(404, response.status_code)
+
+    def test_metadata_qiita_compatible_valid(self):
+        data = json.dumps({'sample_barcodes': ['000004216', '000004213']})
+        response = self.client.post('/api/admin/metadata/qiita-compatible',
+                                    content_type='application/json',
+                                    data=data,
+                                    headers=MOCK_HEADERS)
+        self.assertEqual(200, response.status_code)
+        result = json.loads(response.data)
+        self.assertEqual(set(result.keys()), {'000004216', '000004213'})
+
+    def test_metadata_qiita_compatible_valid_private(self):
+        data = json.dumps({'sample_barcodes': ['000004216', '000004213']})
+        response = self.client.post('/api/admin/metadata/qiita-compatible'
+                                    '?include_private=True',
+                                    content_type='application/json',
+                                    data=data,
+                                    headers=MOCK_HEADERS)
+        self.assertEqual(200, response.status_code)
+        result = json.loads(response.data)
+        self.assertEqual(set(result.keys()), {'000004216', '000004213'})
+        obs = {c.lower() for c in result['000004216']}
+        self.assertIn('about_yourself_text', obs)
+
+    def test_metadata_qiita_compatible_valid_no_private(self):
+        data = json.dumps({'sample_barcodes': ['000004216', '000004213']})
+        response = self.client.post('/api/admin/metadata/qiita-compatible'
+                                    '?include_private=False',
+                                    content_type='application/json',
+                                    data=data,
+                                    headers=MOCK_HEADERS)
+        self.assertEqual(200, response.status_code)
+        result = json.loads(response.data)
+        self.assertEqual(set(result.keys()), {'000004216', '000004213'})
+        obs = {c.lower() for c in result['000004216']}
+        self.assertNotIn('about_yourself_text', obs)
+
+        # sanity check the the default is false
+        data = json.dumps({'sample_barcodes': ['000004216', '000004213']})
+        response = self.client.post('/api/admin/metadata/qiita-compatible',
+
     def _test_post_daklapack_orders(self, order_info):
         input_json = json.dumps(order_info)
 

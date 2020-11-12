@@ -1143,7 +1143,42 @@ paths:
         - $ref: '#/components/parameters/sample_barcode'
       responses:
         '200':
-          description: QIIME-compatible sample metadata
+          description: Summarized sample metadata
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/admin/metadata/qiita-compatible':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.qiita_compatible_metadata
+      tags:
+        - Admin
+      summary: Retrieve Qiita compatible metadata in JSON for a set of samples
+      description: Retrieve Qiita compatible metadata in JSON for a set of samples
+      parameters:
+        - $ref: '#/components/parameters/include_private'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'sample_barcodes':
+                  type: array
+                  items:
+                    # not using the defined schema for sample_barcode as it is 
+                    # readOnly
+                    type: string
+      responses:
+        '200':
+          description: Summarized sample metadata
           content:
             application/json:
               schema:
@@ -1477,6 +1512,12 @@ components:
       description: true if computed statistics about projects should be included in projects list (takes longer)
       schema:
         type: boolean
+    include_private:
+      name: include_private
+      in: query
+      description: include private information in a metadata pulldown; may be true or false. Optional.
+      schema:
+        $ref: '#/components/schemas/include_private'
 
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
@@ -2021,6 +2062,11 @@ components:
       required:
         - code
         - message
+
+    # metadata section
+    include_private:
+      type: boolean
+      default: false
 
   examples:
     human_adult_source:
