@@ -95,6 +95,9 @@ def qiita_compatible_metadata(token_info, include_private, body):
     if samples is None:
         return jsonify(code=404, message='No samples provided'), 404
 
+    # TODO: this call constructs transactions implicitly. It would be
+    # better for the transaction to be established and passed in,
+    # similar to how other "repo" objects are managed
     df, errors = retrieve_metadata(samples)
 
     if errors:
