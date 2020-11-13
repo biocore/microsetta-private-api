@@ -1350,8 +1350,6 @@ paths:
       operationId: microsetta_private_api.admin.admin_impl.get_daklapack_articles
       tags:
         - Admin
-      parameters:
-        - $ref: '#/components/parameters/account_id'
       responses:
         '200':
           description: Return list of dictionaries of full info on all daklapack articles
