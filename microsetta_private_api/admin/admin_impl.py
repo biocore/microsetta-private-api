@@ -1,4 +1,6 @@
 import uuid
+from collections import defaultdict
+
 from flask import jsonify, Response
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
@@ -7,6 +9,9 @@ from microsetta_private_api.model.project import Project
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
+from microsetta_private_api.repo.kit_repo import KitRepo
+from microsetta_private_api.repo.sample_repo import SampleRepo
+from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.metadata_repo import (retrieve_metadata,
@@ -297,3 +302,74 @@ def get_daklapack_articles(token_info):
         admin_repo = AdminRepo(t)
         dak_article_dicts = admin_repo.get_daklapack_articles()
         return jsonify(dak_article_dicts), 200
+
+
+def query_email_stats(body, token_info):
+    validate_admin_access(token_info)
+
+    email_list = body.get("emails")
+    project = body.get("project")
+
+    results = []
+    with Transaction() as t:
+        account_repo = AccountRepo(t)
+        kit_repo = KitRepo(t)
+        source_repo = SourceRepo(t)
+        sample_repo = SampleRepo(t)
+
+        for email in email_list:
+            result = {'email': email, 'project': project}
+            results.append(result)
+            # can use internal lookup by email, because we have admin access
+            account = account_repo._find_account_by_email(email)  # noqa
+            if account is None:
+                result['summary'] = "No Account"
+                continue
+            else:
+                result['account_id'] = account.id
+                result['creation_time'] = account.creation_time
+                result['kit_name'] = account.created_with_kit_id
+
+            if account.created_with_kit_id is not None:
+                unused = kit_repo.get_kit_unused_samples(
+                             account.created_with_kit_id
+                         )
+                result['outstanding-kit-samples'] = len(unused.samples)
+
+            sample_statuses = defaultdict(int)
+            sources = source_repo.get_sources_in_account(account.id)
+
+            samples_in_project = 0
+            for source in sources:
+                samples = sample_repo.get_samples_by_source(account.id,
+                                                            source.id)
+                for sample in samples:
+                    if project is not None and \
+                       project not in sample.sample_projects:
+                        continue
+                    samples_in_project += 1
+                    sample_status = sample_repo.get_sample_status(
+                        sample.barcode,
+                        sample._latest_scan_timestamp
+                    )
+                    sample_statuses[sample_status] += 1
+            result.update(sample_statuses)
+
+            if result.get('outstanding-kit-samples', 0) > 0:
+                result['summary'] = 'Possible Unreturned Samples'
+            elif result.get('sample-is-valid') == samples_in_project:
+                result['summary'] = 'All Samples Valid'
+            else:
+                result['summary'] = 'May Require User Interaction'
+
+    return jsonify(results), 200
+
+
+
+
+
+
+
+
+
+
