@@ -334,7 +334,10 @@ def query_email_stats(body, token_info):
                 unused = kit_repo.get_kit_unused_samples(
                              account.created_with_kit_id
                          )
-                result['outstanding-kit-samples'] = len(unused.samples)
+                if unused is None:
+                    result['unclaimed-samples-in-kit'] = 0
+                else:
+                    result['unclaimed-samples-in-kit'] = len(unused.samples)
 
             sample_statuses = defaultdict(int)
             sources = source_repo.get_sources_in_account(account.id)
@@ -345,18 +348,23 @@ def query_email_stats(body, token_info):
                                                             source.id)
                 for sample in samples:
                     if project is not None and \
+                       project != "" and \
                        project not in sample.sample_projects:
                         continue
                     samples_in_project += 1
                     sample_status = sample_repo.get_sample_status(
                         sample.barcode,
-                        sample._latest_scan_timestamp
+                        sample._latest_scan_timestamp  # noqa
                     )
+                    if sample_status is None:
+                        sample_status = "never-scanned"
                     sample_statuses[sample_status] += 1
             result.update(sample_statuses)
 
-            if result.get('outstanding-kit-samples', 0) > 0:
+            if result.get('unclaimed-samples-in-kit', 0) > 0:
                 result['summary'] = 'Possible Unreturned Samples'
+            elif samples_in_project == 0:
+                result['summary'] = "No Samples In Specified Project"
             elif result.get('sample-is-valid') == samples_in_project:
                 result['summary'] = 'All Samples Valid'
             else:
