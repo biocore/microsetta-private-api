@@ -371,13 +371,3 @@ def query_email_stats(body, token_info):
                 result['summary'] = 'May Require User Interaction'
 
     return jsonify(results), 200
-
-
-
-
-
-
-
-
-
-
