@@ -307,7 +307,7 @@ def get_daklapack_articles(token_info):
 def query_email_stats(body, token_info):
     validate_admin_access(token_info)
 
-    email_list = body.get("emails")
+    email_list = body.get("emails", [])
     project = body.get("project")
 
     results = []
