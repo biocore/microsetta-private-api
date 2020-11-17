@@ -3,7 +3,6 @@ from datetime import date
 import datetime
 import dateutil.parser
 import psycopg2
-import json
 
 import microsetta_private_api.model.project as p
 
