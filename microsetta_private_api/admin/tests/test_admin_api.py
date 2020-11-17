@@ -735,6 +735,34 @@ class AdminApiTests(TestCase):
         self.assertEqual(len(article_dicts_list), len(response_obj))
         self.assertEqual(FIRST_DAKLAPACK_ARTICLE, response_obj[0])
 
+    def test_email_stats(self):
+        with Transaction() as t:
+            accts = AccountRepo(t)
+            acct1 = accts.get_account("65dcd6c8-69fa-4de8-a33a-3de4957a0c79")
+            acct2 = accts.get_account("556f5dc4-8cf2-49ae-876c-32fbdfb005dd")
+
+            # execute articles get
+            for project in [None, "American Gut Project", "NotAProj"]:
+                response = self.client.post(
+                    "/api/admin/account_email_summary",
+                    headers=MOCK_HEADERS,
+                    content_type='application/json',
+                    data=json.dumps({
+                        "emails": [acct1.email, acct2.email],
+                        "project": project
+                    })
+                )
+                self.assertEqual(200, response.status_code)
+                result = json.loads(response.data)
+                self.assertEqual(result[0]["account_id"],
+                                 "65dcd6c8-69fa-4de8-a33a-3de4957a0c79")
+                self.assertEqual(result[1]["account_id"],
+                                 "556f5dc4-8cf2-49ae-876c-32fbdfb005dd")
+                if project is None or project == "American Gut Project":
+                    self.assertEqual(result[0]["sample-is-valid"], 1)
+                else:
+                    self.assertEqual(result[0].get("sample-is-valid", 0), 0)
+
     def test_metadata_qiita_compatible_invalid(self):
         data = json.dumps({'sample_barcodes': ['bad']})
         response = self.client.post('/api/admin/metadata/qiita-compatible',

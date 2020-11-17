@@ -228,3 +228,18 @@ class SampleRepo(BaseRepo):
         # And detach the sample from the source
         self._update_sample_association(sample_id, None,
                                         override_locked=override_locked)
+
+    def get_sample_status(self, sample_barcode, scan_timestamp):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT "
+                "sample_status "
+                "FROM barcodes.barcode_scans "
+                "WHERE barcode=%s AND scan_timestamp = %s "
+                "LIMIT 1",
+                (sample_barcode, scan_timestamp)
+            )
+            row = cur.fetchone()
+            if row is None:
+                return None
+            return row[0]

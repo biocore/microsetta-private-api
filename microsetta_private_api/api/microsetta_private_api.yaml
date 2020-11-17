@@ -1404,6 +1404,33 @@ paths:
               schema:
                 type: string
 
+  '/admin/account_email_summary':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.query_email_stats
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                # issue type defines what resolution_url the user should go to
+                emails:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/email'
+                project:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Return list of dictionaries of sample status for requested accounts
+          content:
+            application/json:
+              schema:
+                type: array
+
 components:
   parameters:
     # path parameters
