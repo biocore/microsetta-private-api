@@ -304,6 +304,7 @@ def get_daklapack_articles(token_info):
 def create_daklapack_order(body, token_info):
     validate_admin_access(token_info)
 
+    body = body.copy()
     body[ORDER_ID_KEY] = str(uuid.uuid4())
 
     with Transaction() as t:

@@ -85,13 +85,13 @@ class DaklapackOrder:
                     "key": curr_val,
                     "value": curr_input})
 
-        for curr_addr_dict in address_dicts_list:
-            # creation date is now
-            curr_timestamp = datetime.now(timezone.utc)
-            curr_timestamp_str = curr_timestamp.isoformat()
-            curr_timestamp_str = curr_timestamp_str.replace("+00:00", "Z")
-            curr_addr_dict["creationDate"] = curr_timestamp_str
+        # creation date is now
+        curr_timestamp = datetime.now(timezone.utc)
+        curr_timestamp_str = curr_timestamp.isoformat()
+        curr_timestamp_str = curr_timestamp_str.replace("+00:00", "Z")
 
+        for curr_addr_dict in address_dicts_list:
+            curr_addr_dict["creationDate"] = curr_timestamp_str
             # "companyName" is actually the name of the submitter
             curr_addr_dict["companyName"] = f"{submitter_acct.first_name} " \
                                             f"{submitter_acct.last_name}"

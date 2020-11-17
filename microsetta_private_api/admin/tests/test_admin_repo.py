@@ -815,7 +815,7 @@ class AdminRepoTests(AdminTests):
                                submitter_id,
                                desc,
                                hold_msg,
-                               json.dumps(order_struct),
+                               order_struct,
                                creation_timestamp,
                                last_polling_timestamp,
                                last_status]
