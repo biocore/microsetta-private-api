@@ -3,6 +3,7 @@ import string
 import random
 import datetime
 import pandas as pd
+import psycopg2.extras
 
 from microsetta_private_api.exceptions import RepoException
 
@@ -996,3 +997,37 @@ class AdminRepo(BaseRepo):
                 "ORDER BY daklapack_article.dak_article_code;")
             rows = cur.fetchall()
             return [dict(x) for x in rows]
+
+    def create_daklapack_order(self, daklapack_order):
+        order_id = daklapack_order.id
+
+        order_args = (
+            order_id,
+            daklapack_order.submitter_acct.id,
+            daklapack_order.description,
+            daklapack_order.fulfillment_hold_msg,
+            daklapack_order.order_json,
+            daklapack_order.creation_timestamp,
+            daklapack_order.last_polling_timestamp,
+            daklapack_order.last_polling_status
+        )
+
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "INSERT INTO barcodes.daklapack_order "
+                "(dak_order_id, submitter_acct_id, description, "
+                "fulfillment_hold_msg, order_json, creation_timestamp, "
+                "last_polling_timestamp, last_polling_status) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                order_args
+            )
+
+            project_ids = daklapack_order.project_ids_list
+            project_ids_tuples = [(order_id, i) for i in project_ids]
+
+            insert_sql = 'insert into barcodes.daklapack_order_to_project' \
+                         ' (dak_order_id, project_id) values %s'
+            psycopg2.extras.execute_values(cur, insert_sql, project_ids_tuples,
+                                           template=None, page_size=100)
+
+        return order_id

@@ -6,6 +6,8 @@ from flask import jsonify, Response
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
 from microsetta_private_api.model.project import Project
+from microsetta_private_api.model.daklapack_order import DaklapackOrder, \
+    ORDER_ID_KEY, SUBMITTER_ACCT_KEY
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
@@ -371,3 +373,35 @@ def query_email_stats(body, token_info):
                 result['summary'] = 'May Require User Interaction'
 
     return jsonify(results), 200
+
+
+def create_daklapack_order(body, token_info):
+    validate_admin_access(token_info)
+
+    body = body.copy()
+    body[ORDER_ID_KEY] = str(uuid.uuid4())
+
+    with Transaction() as t:
+        account_repo = AccountRepo(t)
+        body[SUBMITTER_ACCT_KEY] = account_repo.find_linked_account(
+            token_info['iss'], token_info['sub'])
+
+        try:
+            daklapack_order = DaklapackOrder.from_api(**body)
+        except ValueError as e:
+            raise RepoException(e)
+
+        # write order to db
+        admin_repo = AdminRepo(t)
+        order_id = admin_repo.create_daklapack_order(daklapack_order)
+        t.commit()
+
+    # return response to caller
+    # Note: the response msg is largely here as room to grow on--will need
+    # to be able to send back more info when daklapack api submission and
+    # automatic emailing are incorporated
+    response_msg = {"order_id": order_id}
+    response = jsonify(response_msg)
+    response.status_code = 201
+    response.headers['Location'] = f'/api/admin/daklapack_orders/{order_id}'
+    return response

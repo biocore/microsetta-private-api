@@ -1358,6 +1358,52 @@ paths:
               schema:
                 type: array
 
+  '/admin/daklapack_orders':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.create_daklapack_order
+      tags:
+        - Admin
+      summary: Submit a new order to Daklapack and record to db
+      description: Submit a new order to Daklapack and record to db
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_ids:
+                  type: array
+                  items:
+                    type: integer
+                article_code:
+                  type: integer
+                addresses:
+                  type: array
+                  items:
+                    type: object
+                description:
+                  type: string
+                  nullable: true
+                fedex_ref_1:
+                  type: string
+                  nullable: true
+                fedex_ref_2:
+                  type: string
+                  nullable: true
+                fedex_ref_3:
+                  type: string
+                  nullable: true
+                fulfillment_hold_msg:
+                  type: string
+                  nullable: true
+      responses:
+        '201':
+          description: Order successfully submitted and recorded
+          headers:
+            Location:
+              schema:
+                type: string
+
   '/admin/account_email_summary':
     post:
       operationId: microsetta_private_api.admin.admin_impl.query_email_stats
