@@ -14,5 +14,12 @@
   "vioscreen_regcode": "regcode",
   "vioscreen_cryptokey": "1234567891011121",
   "vioscreen_admin_username": "",
-  "vioscreen_admin_password": ""
+  "vioscreen_admin_password": "",
+  "daklapack_auth_url": "ok or not to have real value in github?",
+  "daklapack_client_id": "4ok or not to have real value in github?",
+  "daklapack_client_secret": "def not ok to have real value in github",
+  "daklapack_subscription_key_name": "ok or not to have real value in github?",
+  "daklapack_subscription_key_val": "def not ok to have real value in github",
+  "daklapack_api_base_url": "ok or not to have real value in github?",
+  "daklapack_service_email": "TBD"
 }

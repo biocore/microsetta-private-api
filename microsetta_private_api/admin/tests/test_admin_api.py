@@ -842,6 +842,11 @@ class AdminApiTests(TestCase):
             self.assertEqual(201, response.status_code)
 
             new_order_id = extract_last_id_from_location_header(response)
+
+            result = json.loads(response.data)
+            for a_key in ["order_id", "email_success"]:
+                self.assertTrue(a_key in result)
+            return result
         finally:
             delete_test_daklapack_order(new_order_id)
 
@@ -858,7 +863,8 @@ class AdminApiTests(TestCase):
             "fulfillment_hold_msg": DUMMY_HOLD_MSG
         }
 
-        self._test_post_daklapack_orders(order_info)
+        real_out = self._test_post_daklapack_orders(order_info)
+        self.assertTrue(real_out["email_success"])
 
     def test_post_daklapack_orders_wo_optionals(self):
         # create post input json with a nonsense date field
@@ -873,4 +879,5 @@ class AdminApiTests(TestCase):
             "fulfillment_hold_msg": None
         }
 
-        self._test_post_daklapack_orders(order_info)
+        real_out = self._test_post_daklapack_orders(order_info)
+        self.assertIsNone(real_out["email_success"])

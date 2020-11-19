@@ -57,3 +57,15 @@ class EmailMessage(Enum):
         self.plain = EmailTemplate(plain, required)
         self.event_type = event_type
         self.event_subtype = event_sub
+
+
+class BasicEmailMessage:
+    def __init__(self, subject, template_base_fp, req_template_keys,
+                 event_type, event_sub):
+        self.subject = subject
+        self.html = EmailTemplate(f"{template_base_fp}.jinja2",
+                                  req_template_keys)
+        self.plain = EmailTemplate(f"{template_base_fp}.plain",
+                                   req_template_keys)
+        self.event_type = event_type
+        self.event_subtype = event_sub
