@@ -22,6 +22,8 @@ from microsetta_private_api.repo.metadata_repo import (retrieve_metadata,
 from microsetta_private_api.tasks import send_email as celery_send_email
 from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
+from microsetta_private_api.admin.daklapack_communication import \
+    post_daklapack_order, send_daklapack_hold_email
 from werkzeug.exceptions import Unauthorized
 
 
@@ -376,6 +378,7 @@ def query_email_stats(body, token_info):
     return jsonify(results), 200
 
 
+# TODO: AB: Extend unit-tests for create_daklapack_order
 def create_daklapack_order(body, token_info):
     validate_admin_access(token_info)
 
@@ -392,16 +395,30 @@ def create_daklapack_order(body, token_info):
         except ValueError as e:
             raise RepoException(e)
 
+        post_response = post_daklapack_order(daklapack_order.order_structure)
+        if post_response.status_code >= 400:
+            # for now, very basic error handling--just pass on dak api error
+            return post_response
+
+        # IFF submission is successful AND has fulfillment hold msg,
+        # email hold fulfillment info and the order id to Daklapack contact
+        email_success = None
+        if daklapack_order.fulfillment_hold_msg:
+            email_success = send_daklapack_hold_email(daklapack_order)
+            # if couldn't send the fulfillment hold message for any reason,
+            # still DO save order to db bc it WAS sent to Daklapack, but also
+            # record the email failure to the db and return info to caller
+            if not email_success:
+                daklapack_order.set_last_polling_info(
+                    "fulfillment hold message not sent")
+
         # write order to db
         admin_repo = AdminRepo(t)
         order_id = admin_repo.create_daklapack_order(daklapack_order)
         t.commit()
 
     # return response to caller
-    # Note: the response msg is largely here as room to grow on--will need
-    # to be able to send back more info when daklapack api submission and
-    # automatic emailing are incorporated
-    response_msg = {"order_id": order_id}
+    response_msg = {"order_id": order_id, "email_success": email_success}
     response = jsonify(response_msg)
     response.status_code = 201
     response.headers['Location'] = f'/api/admin/daklapack_orders/{order_id}'

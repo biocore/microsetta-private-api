@@ -31,6 +31,8 @@ class EventSubtype(Enum):
     EMAIL_SAMPLE_IS_VALID = "sample_is_valid"
     # Sample is not associated with a source
     EMAIL_NO_SOURCE = "no_associated_source"
+    # Fulfillment of a daklapack order must be held
+    DAK_ORDER_HOLD = "daklapack_order_hold"
 
 
 class LogEvent(ModelBase):
