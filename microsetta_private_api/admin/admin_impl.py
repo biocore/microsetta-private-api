@@ -10,6 +10,7 @@ from microsetta_private_api.model.daklapack_order import DaklapackOrder, \
     ORDER_ID_KEY, SUBMITTER_ACCT_KEY
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.barcode_repo import BarcodeRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
@@ -405,3 +406,13 @@ def create_daklapack_order(body, token_info):
     response.status_code = 201
     response.headers['Location'] = f'/api/admin/daklapack_orders/{order_id}'
     return response
+
+
+def get_preparations(sample_barcode, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        r = BarcodeRepo(t)
+        preps = r.list_preparations(sample_barcode)
+        preps_api = [p.to_api() for p in preps]
+        return jsonify(preps_api), 200

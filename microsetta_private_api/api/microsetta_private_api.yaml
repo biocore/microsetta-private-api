@@ -1431,6 +1431,24 @@ paths:
               schema:
                 type: array
 
+  '/admin/preparations/{sample_barcode}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_preparations
+      tags:
+        - Admin
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+      responses:
+        '200':
+          description: Return list of preparations associated with barcode
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/preparation'
+
+
 components:
   parameters:
     # path parameters
@@ -1741,6 +1759,18 @@ components:
           $ref: '#/components/schemas/source_id_nullable'
         account_id:
           $ref: '#/components/schemas/account_id_nullable'
+
+    preparation:
+      type: object
+      properties:
+        barcode:
+          type: string
+        preparation_id:
+          type: integer
+        preparation_type:
+          type: string
+        num_sequences:
+          type: integer
 
     # source section
     source_id:

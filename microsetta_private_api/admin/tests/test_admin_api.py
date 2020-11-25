@@ -3,6 +3,7 @@ from unittest import TestCase
 import json
 import microsetta_private_api.server
 from microsetta_private_api.model.account import Account, Address
+from microsetta_private_api.model.preparation import Preparation
 from microsetta_private_api.model.project import Project
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
@@ -15,8 +16,21 @@ from microsetta_private_api.admin.tests.test_admin_repo import \
 from microsetta_private_api.model.tests.test_daklapack_order import \
     DUMMY_PROJ_ID_LIST, DUMMY_DAK_ARTICLE_CODE, DUMMY_ADDRESSES, \
     DUMMY_DAK_ORDER_DESC, DUMMY_HOLD_MSG, DUMMY_FEDEX_REFS
+from microsetta_private_api.api.tests.test_integration import \
+    _create_mock_kit, _remove_mock_kit
+from microsetta_private_api.repo.barcode_repo import BarcodeRepo
 
 DUMMY_PROJ_NAME = "test project"
+
+BC1 = "77777777"
+BC2 = "88888888"
+BC3 = "99999999"
+S1 = '99999999-aaaa-aaaa-aaaa-bbbbcccccccc'
+S2 = '99999999-aaaa-aaaa-aaaa-bbbbcccccccd'
+S3 = '99999999-aaaa-aaaa-aaaa-bbbbccccccce'
+
+FAKE_BARCODES = [BC1, BC2, BC3]
+FAKE_SAMPLES = [S1, S2, S3]
 
 
 def teardown_test_data():
@@ -29,6 +43,15 @@ def teardown_test_data():
             cur.execute("UPDATE barcodes.project"
                         " SET is_active = TRUE"
                         " WHERE project_id = 2")
+            repo = BarcodeRepo(t)
+            repo.delete_preparation(BC1, 1234)
+            repo.delete_preparation(BC2, 1234)
+            repo.delete_preparation(BC1, 2468)
+
+        _remove_mock_kit(t,
+                         barcodes=FAKE_BARCODES,
+                         mock_sample_ids=FAKE_SAMPLES)
+
         t.commit()
 
 
@@ -55,10 +78,22 @@ def setup_test_data():
                       "fakekit")
         acct_repo.create_account(acc)
 
+        h1 = Preparation(BC1, 1234, "16S", 127)
+        h2 = Preparation(BC2, 1234, "16S", 18302)
+        h3 = Preparation(BC1, 2468, "WGS", 230182)
+        _create_mock_kit(t,
+                         barcodes=FAKE_BARCODES,
+                         mock_sample_ids=FAKE_SAMPLES)
+
         with t.cursor() as cur:
             cur.execute("UPDATE barcodes.project"
                         " SET is_active = FALSE"
                         " WHERE project_id = 2")
+            repo = BarcodeRepo(t)
+            repo.upsert_preparation(h1)
+            repo.upsert_preparation(h2)
+            repo.upsert_preparation(h3)
+
         t.commit()
 
 
@@ -874,3 +909,22 @@ class AdminApiTests(TestCase):
         }
 
         self._test_post_daklapack_orders(order_info)
+
+    def test_get_preps(self):
+        response = self.client.get(
+            '/api/admin/preparations/' + BC1,
+            headers=MOCK_HEADERS)
+
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+        self.assertEqual(len(response_obj), 2)
+
+        response = self.client.get(
+            '/api/admin/preparations/' + BC2,
+            headers=MOCK_HEADERS)
+
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+        self.assertEqual(len(response_obj), 1)
+
+        self.assertEqual(response_obj[0]["num_sequences"], 18302)
