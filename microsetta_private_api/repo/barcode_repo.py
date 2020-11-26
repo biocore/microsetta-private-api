@@ -7,9 +7,6 @@ class BarcodeRepo(BaseRepo):
     Repo handling interactions with barcodes.barcode and surrounding tables
     """
 
-    def __init__(self, transaction):
-        super().__init__(transaction)
-
     @staticmethod
     def _row_to_prep(r):
         return Preparation(
