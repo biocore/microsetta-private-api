@@ -11,6 +11,8 @@ from urllib.parse import urlencode
 from unittest import TestCase
 import microsetta_private_api.server
 from microsetta_private_api import localization
+from microsetta_private_api.model.preparation import Preparation
+from microsetta_private_api.repo.barcode_repo import BarcodeRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
@@ -152,6 +154,18 @@ FAKE_TOKEN_IMPOSTOR = "mockimpostor"
 FAKE_TOKEN_EMAIL_MISMATCH = "mockemailmismatch"
 FAKE_TOKEN_ADMIN = "fakeadmin"
 
+BC1 = "77777789"
+BC2 = "88888890"
+BC3 = "99999901"
+S1 = '99999999-aaaa-aaaa-aaaa-bbbbcccccccd'
+S2 = '99999999-aaaa-aaaa-aaaa-bbbbccccccce'
+S3 = '99999999-aaaa-aaaa-aaaa-bbbbcccccccf'
+
+FAKE_BARCODES = [BC1, BC2, BC3]
+FAKE_SAMPLES = [S1, S2, S3]
+FAKE_KIT = "12345678-aaaa-aaaa-aaaa-bbbbccccccce"
+FAKE_KIT_PW = "MockItToMe"
+
 
 def make_headers(fake_token):
     return {"Authorization": "Bearer %s" % fake_token}
@@ -267,6 +281,16 @@ def delete_dummy_accts():
         source_repo = SourceRepo(t)
         survey_answers_repo = SurveyAnswersRepo(t)
         sample_repo = SampleRepo(t)
+        barcode_repo = BarcodeRepo(t)
+
+        # Delete fake kit and barcode preps
+        barcode_repo.delete_preparation(BC1, 1234)
+        barcode_repo.delete_preparation(BC2, 1234)
+        barcode_repo.delete_preparation(BC1, 2468)
+        _remove_mock_kit(t,
+                         barcodes=FAKE_BARCODES,
+                         mock_sample_ids=FAKE_SAMPLES,
+                         kit_id=FAKE_KIT)
 
         for curr_acct_id in acct_ids:
             sources = source_repo.get_sources_in_account(curr_acct_id)
@@ -517,6 +541,20 @@ class ApiTests(TestCase):
         # a 'with' call?
         self.client.__enter__()
         delete_dummy_accts()
+        h1 = Preparation(BC1, 1234, "16S", 127)
+        h2 = Preparation(BC2, 1234, "16S", 18302)
+        h3 = Preparation(BC1, 2468, "WGS", 230182)
+        with Transaction() as t:
+            _create_mock_kit(t,
+                             barcodes=FAKE_BARCODES,
+                             mock_sample_ids=FAKE_SAMPLES,
+                             kit_id=FAKE_KIT,
+                             supplied_kit_id=FAKE_KIT_PW)
+            repo = BarcodeRepo(t)
+            repo.upsert_preparation(h1)
+            repo.upsert_preparation(h2)
+            repo.upsert_preparation(h3)
+            t.commit()
 
     def tearDown(self):
         # This isn't perfect, due to possibility of exceptions being thrown
@@ -1602,3 +1640,23 @@ class SampleTests(ApiTests):
             answered_survey_ids = answered_survey_repo.\
                 _get_survey_sample_associations(dummy_answered_survey_id)
             self.assertEqual([], answered_survey_ids)
+
+    def test_get_preps(self):
+
+        response = self.client.get(
+            '/api/preparations/' + BC1,
+            headers=MOCK_HEADERS)
+
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+        self.assertEqual(len(response_obj), 2)
+
+        response = self.client.get(
+            '/api/preparations/' + BC2,
+            headers=MOCK_HEADERS)
+
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+        self.assertEqual(len(response_obj), 1)
+
+        self.assertEqual(response_obj[0]["num_sequences"], 18302)

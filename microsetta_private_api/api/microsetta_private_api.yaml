@@ -991,6 +991,24 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/preparations/{sample_barcode}':
+    get:
+      operationId: microsetta_private_api.api.get_preparations
+      tags:
+        - Stats
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+      responses:
+        '200':
+          description: Return list of preparations associated with barcode
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/preparation'
+
+
   # ADMINISTRATOR PATHS
   '/admin/search/samples/{sample_barcode}':
     get:
@@ -1430,23 +1448,6 @@ paths:
             application/json:
               schema:
                 type: array
-
-  '/admin/preparations/{sample_barcode}':
-    get:
-      operationId: microsetta_private_api.admin.admin_impl.get_preparations
-      tags:
-        - Admin
-      parameters:
-        - $ref: '#/components/parameters/sample_barcode'
-      responses:
-        '200':
-          description: Return list of preparations associated with barcode
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/preparation'
 
 
 components:

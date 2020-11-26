@@ -17,7 +17,7 @@ from ._survey import (
 from ._sample import (
     read_sample_association, associate_sample, read_sample_associations,
     update_sample_association, dissociate_answered_survey,
-    dissociate_sample, read_kit, associate_answered_survey
+    dissociate_sample, read_kit, associate_answered_survey, get_preparations
 )
 
 __all__ = [

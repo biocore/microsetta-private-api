@@ -406,13 +406,3 @@ def create_daklapack_order(body, token_info):
     response.status_code = 201
     response.headers['Location'] = f'/api/admin/daklapack_orders/{order_id}'
     return response
-
-
-def get_preparations(sample_barcode, token_info):
-    validate_admin_access(token_info)
-
-    with Transaction() as t:
-        r = BarcodeRepo(t)
-        preps = r.list_preparations(sample_barcode)
-        preps_api = [p.to_api() for p in preps]
-        return jsonify(preps_api), 200

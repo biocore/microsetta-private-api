@@ -5,6 +5,7 @@ from werkzeug.exceptions import BadRequest
 from microsetta_private_api.api._account import _validate_account_access
 from microsetta_private_api.model.sample import SampleInfo
 from microsetta_private_api.model.source import Source
+from microsetta_private_api.repo.barcode_repo import BarcodeRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
@@ -180,3 +181,14 @@ def read_kit(kit_name):
         if kit is None:
             return jsonify(code=404, message="No such kit"), 404
         return jsonify(kit.to_api()), 200
+
+
+def get_preparations(sample_barcode):
+    # NOTE:  Nothing in this route requires a particular user to be logged in,
+    # so long as the user has -an- account.
+
+    with Transaction() as t:
+        r = BarcodeRepo(t)
+        preps = r.list_preparations(sample_barcode)
+        preps_api = [p.to_api() for p in preps]
+        return jsonify(preps_api), 200
