@@ -82,8 +82,10 @@ def retrieve_metadata(sample_barcodes):
     for sample_barcode in set(sample_barcodes):
         try:
             bc_md, errors = _fetch_barcode_metadata(sample_barcode)
-        except (NotFound, RepoException) as e:
+        except RepoException as e:
             errors = e.args[0]
+        except NotFound as e:
+            errors = e.description
 
         if errors is not None:
             error_report.append({sample_barcode: errors})
