@@ -1,11 +1,12 @@
 from ._constants import HUMAN_SITE_INVARIANTS, MISSING_VALUE
 from ._transforms import HUMAN_TRANSFORMS, apply_transforms
-
 from ..admin_repo import AdminRepo
 from ..survey_template_repo import SurveyTemplateRepo
 from ..transaction import Transaction
+from ...exceptions import RepoException
 from ...util import vue_adapter
 
+from werkzeug.exceptions import NotFound
 from collections import Counter
 import re
 import pandas as pd
@@ -79,9 +80,13 @@ def retrieve_metadata(sample_barcodes):
 
     fetched = []
     for sample_barcode in set(sample_barcodes):
-        bc_md, errors = _fetch_barcode_metadata(sample_barcode)
+        try:
+            bc_md, errors = _fetch_barcode_metadata(sample_barcode)
+        except (NotFound, RepoException) as e:
+            errors = e.args[0]
+
         if errors is not None:
-            error_report.append(errors)
+            error_report.append({sample_barcode: errors})
             continue
 
         fetched.append(bc_md)
