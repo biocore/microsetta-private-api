@@ -3,6 +3,7 @@ from unittest import TestCase
 import json
 import microsetta_private_api.server
 from microsetta_private_api.model.account import Account, Address
+from microsetta_private_api.model.preparation import Preparation
 from microsetta_private_api.model.project import Project
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
@@ -15,6 +16,9 @@ from microsetta_private_api.admin.tests.test_admin_repo import \
 from microsetta_private_api.model.tests.test_daklapack_order import \
     DUMMY_PROJ_ID_LIST, DUMMY_DAK_ARTICLE_CODE, DUMMY_ADDRESSES, \
     DUMMY_DAK_ORDER_DESC, DUMMY_HOLD_MSG, DUMMY_FEDEX_REFS
+from microsetta_private_api.api.tests.test_integration import \
+    _create_mock_kit, _remove_mock_kit
+from microsetta_private_api.repo.barcode_repo import BarcodeRepo
 
 DUMMY_PROJ_NAME = "test project"
 
@@ -29,6 +33,7 @@ def teardown_test_data():
             cur.execute("UPDATE barcodes.project"
                         " SET is_active = TRUE"
                         " WHERE project_id = 2")
+
         t.commit()
 
 

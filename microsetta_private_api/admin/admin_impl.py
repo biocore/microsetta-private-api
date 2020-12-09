@@ -10,6 +10,7 @@ from microsetta_private_api.model.daklapack_order import DaklapackOrder, \
     ORDER_ID_KEY, SUBMITTER_ACCT_KEY
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.barcode_repo import BarcodeRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
