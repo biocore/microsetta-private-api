@@ -4,6 +4,7 @@ import pandas.testing as pdt
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.metadata_repo._constants import (
     HUMAN_SITE_INVARIANTS, MISSING_VALUE)
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.metadata_repo._repo import (
     _build_col_name,
     _find_duplicates,
@@ -202,6 +203,10 @@ class MetadataUtilTests(unittest.TestCase):
     def test_fetch_barcode_metadata_missing(self):
         with self.assertRaises(NotFound):
             _fetch_barcode_metadata('badbarcode')
+
+    def test_fetch_valid_unlinked_barcode(self):
+        with self.assertRaises(RepoException):
+            _fetch_barcode_metadata('000004126')
 
     def test_to_pandas_dataframe(self):
         data = [self.raw_sample_1, self.raw_sample_2]

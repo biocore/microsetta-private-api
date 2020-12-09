@@ -1,11 +1,12 @@
 from ._constants import HUMAN_SITE_INVARIANTS, MISSING_VALUE
 from ._transforms import HUMAN_TRANSFORMS, apply_transforms
-
 from ..admin_repo import AdminRepo
 from ..survey_template_repo import SurveyTemplateRepo
 from ..transaction import Transaction
+from ...exceptions import RepoException
 from ...util import vue_adapter
 
+from werkzeug.exceptions import NotFound
 from collections import Counter
 import re
 import pandas as pd
@@ -79,9 +80,15 @@ def retrieve_metadata(sample_barcodes):
 
     fetched = []
     for sample_barcode in set(sample_barcodes):
-        bc_md, errors = _fetch_barcode_metadata(sample_barcode)
+        try:
+            bc_md, errors = _fetch_barcode_metadata(sample_barcode)
+        except RepoException as e:
+            errors = e.args[0]
+        except NotFound as e:
+            errors = e.description
+
         if errors is not None:
-            error_report.append(errors)
+            error_report.append({sample_barcode: errors})
             continue
 
         fetched.append(bc_md)
@@ -294,20 +301,20 @@ def _to_pandas_series(metadata, multiselect_map):
     sample_detail = metadata['sample']
     collection_timestamp = sample_detail.datetime_collected
 
+    if source_type is None:
+        raise RepoException("Sample is missing a source type")
+
     if source_type == 'human':
         sample_type = sample_detail.site
         sample_invariants = HUMAN_SITE_INVARIANTS[sample_type]
     elif source_type == 'animal':
         sample_type = sample_detail.site
         sample_invariants = {}
-    else:
-        if 'source' not in sample_detail:
-            # HACK: this can occur if a source does not have collection
-            # information?
-            return pd.Series([], index=[], name=name)
-
+    elif source_type == 'environmental':
         sample_type = sample_detail['source'].description
         sample_invariants = {}
+    else:
+        raise RepoException("Sample has an unknown sample type")
 
     values = [hsi, collection_timestamp]
     index = ['HOST_SUBJECT_ID', 'COLLECTION_TIMESTAMP']
