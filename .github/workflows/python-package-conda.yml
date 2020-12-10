@@ -45,7 +45,7 @@ jobs:
       - name: Install dependencies
         shell: bash -l {0}
         run: |
-          conda create --yes -n test-microsetta-private python=${{ PYTYHONVERSION }}
+          conda create --yes -n test-microsetta-private python=3.6
           conda env create -f ci/conda_requirements.yml
           conda activate test-microsetta-private
           pip install -r ci/pip_requirements.txt
