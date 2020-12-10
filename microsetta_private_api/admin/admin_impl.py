@@ -378,7 +378,6 @@ def query_email_stats(body, token_info):
     return jsonify(results), 200
 
 
-# TODO: AB: Extend unit-tests for create_daklapack_order
 def create_daklapack_order(body, token_info):
     validate_admin_access(token_info)
 
@@ -421,5 +420,6 @@ def create_daklapack_order(body, token_info):
     response_msg = {"order_id": order_id, "email_success": email_success}
     response = jsonify(response_msg)
     response.status_code = 201
+    # TODO: AB: Add this endpoint as part of support for polling dak orders
     response.headers['Location'] = f'/api/admin/daklapack_orders/{order_id}'
     return response

@@ -20,7 +20,6 @@ def _get_daklapack_oauth2_session():
     return dak_session
 
 
-# TODO: AB: unit-test daklapack_communication.post_daklapack_order
 def post_daklapack_order(payload):
     oauth_session = _get_daklapack_oauth2_session()
     # the json parameter sets the content-type in the headers
@@ -35,7 +34,6 @@ def post_daklapack_order(payload):
     return result
 
 
-# TODO: AB: unit-test daklapack_communication.send_daklapack_hold_email
 def send_daklapack_hold_email(daklapack_order):
     try:
         template_args = {"order_id": daklapack_order.id,
