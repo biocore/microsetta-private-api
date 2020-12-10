@@ -7,4 +7,5 @@ pycountry
 python-dateutil
 celery[redis]
 redis
-requests requests_oauthlib
+requests
+requests_oauthlib
