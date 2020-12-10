@@ -47,7 +47,7 @@ jobs:
         run: |
           conda create --yes -n test-microsetta-private python=3.6
           conda activate test-microsetta-private
-          conda install -f ci/conda_requirements.txt
+          conda install --yes --file ci/conda_requirements.txt
           pip install -r ci/pip_requirements.txt
           make install
       - name: Tests
