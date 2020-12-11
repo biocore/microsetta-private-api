@@ -16,8 +16,10 @@ jobs:
       # Label used to access the service container
       postgres:
         # Docker Hub image
-        image: postgres
-
+        image: postgres:9.5
+        env:
+          POSTGRES_PASSWORD: ''
+          
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
