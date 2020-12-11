@@ -18,6 +18,7 @@ jobs:
         # Docker Hub image
         image: postgres:9.5
         env:
+          POSTGRES_DB: ag_test  
           POSTGRES_PASSWORD: postgres
           
         # Set health checks to wait until postgres has started
