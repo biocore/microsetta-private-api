@@ -18,7 +18,7 @@ jobs:
         # Docker Hub image
         image: postgres:9.5
         env:
-          POSTGRES_DB: ag_test  
+          #POSTGRES_DB: ag_test  
           POSTGRES_USER: postgres  
           POSTGRES_PASSWORD: postgres
           
@@ -47,7 +47,7 @@ jobs:
       - name: Install dependencies
         shell: bash -l {0}
         run: |
-          pg_restore -d ag_test --no-privileges --no-owner --role=postgres microsetta_private_api/db/ag_test_patch_39_20170321.dump
+          pg_restore --no-privileges --no-owner --role=postgres microsetta_private_api/db/ag_test_patch_39_20170321.dump
           conda create --yes -n test-microsetta-private python=3.7
           conda activate test-microsetta-private
           conda install --yes --file ci/conda_requirements.txt
