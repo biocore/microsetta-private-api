@@ -7,7 +7,8 @@ from microsetta_private_api.model.project import Project
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
-from microsetta_private_api.api.tests.test_api import (client,  # noqa
+from microsetta_private_api.api.tests.test_api import (  # noqa
+    client,
     MOCK_HEADERS,  ACCT_ID_1, ACCT_MOCK_ISS, ACCT_MOCK_SUB,
     extract_last_id_from_location_header)
 from microsetta_private_api.admin.tests.test_admin_repo import \
