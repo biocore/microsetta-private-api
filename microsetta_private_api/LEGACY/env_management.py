@@ -150,7 +150,8 @@ def make_settings_table():
 def populate_test_db():
     command = ['pg_restore', '-d', AMGUT_CONFIG.database, '--no-privileges',
                '-p', str(AMGUT_CONFIG.port), '-h', AMGUT_CONFIG.host,
-               '--no-owner', '--role=%s' % AMGUT_CONFIG.user, POPULATE_FP]
+               '--no-owner', '--role=%s' % AMGUT_CONFIG.user,
+               '-U', AMGUT_CONFIG.user, POPULATE_FP]
     import sys
     print(' '.join(command))
     sys.stdout.flush()
