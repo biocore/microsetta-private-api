@@ -48,7 +48,9 @@ jobs:
         shell: bash -l {0}
         run: |
           #pg_isready
-          #pg_restore -d ag_test --no-privileges --no-owner --role=postgres microsetta_private_api/db/ag_test_patch_39_20170321.dump -p ${{ job.services.postgres.ports[5432] }} -h localhost
+          echo ${{ job.services.postgres.ports[5432] }}
+          export PGPASSWORD=postgres
+          pg_restore -d ag_test -U postgres --no-privileges --no-owner --role=postgres microsetta_private_api/db/ag_test_patch_39_20170321.dump -p ${{ job.services.postgres.ports[5432] }} -h localhost
           conda create --yes -n test-microsetta-private python=3.7
           conda activate test-microsetta-private
           conda install --yes --file ci/conda_requirements.txt
