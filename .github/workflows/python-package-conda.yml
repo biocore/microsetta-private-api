@@ -51,7 +51,7 @@ jobs:
           echo ${{ job.services.postgres.ports[5432] }}
           export PGPASSWORD=postgres
           pgport=${{ job.services.postgres.ports[5432] }}
-          sed -i "s/self.port = 5432/self.port = $pgport/" microsetta_private_api/config.py
+          sed -i "s/self.port = 5432/self.port = $pgport/" microsetta_private_api/config_manager.py
           #pg_restore -d ag_test -U postgres --no-privileges --no-owner --role=postgres microsetta_private_api/db/ag_test_patch_39_20170321.dump -p ${{ job.services.postgres.ports[5432] }} -h localhost
           conda create --yes -n test-microsetta-private python=3.7
           conda activate test-microsetta-private
