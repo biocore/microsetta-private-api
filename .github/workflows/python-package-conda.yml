@@ -44,8 +44,6 @@ jobs:
           python-version: 3.7 
       - name: Install and test
         shell: bash -l {0}
-        # the port number is apparently random, so grab it and update the configuration            
-        # actions would stall if I had this as a separate step, so doing all here
         run: |
           pgport=${{ job.services.postgres.ports[5432] }}
           sed -i "s/self.port = 5432/self.port = $pgport/" microsetta_private_api/config_manager.py
