@@ -3,12 +3,11 @@ from unittest import TestCase
 import json
 import microsetta_private_api.server
 from microsetta_private_api.model.account import Account, Address
-from microsetta_private_api.model.preparation import Preparation
 from microsetta_private_api.model.project import Project
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
-from microsetta_private_api.api.tests.test_api import client, MOCK_HEADERS, \
+from microsetta_private_api.api.tests.test_api import MOCK_HEADERS, \
     ACCT_ID_1, ACCT_MOCK_ISS, ACCT_MOCK_SUB, \
     extract_last_id_from_location_header  # noqa "client" IS used, by name
 from microsetta_private_api.admin.tests.test_admin_repo import \
@@ -16,9 +15,7 @@ from microsetta_private_api.admin.tests.test_admin_repo import \
 from microsetta_private_api.model.tests.test_daklapack_order import \
     DUMMY_PROJ_ID_LIST, DUMMY_DAK_ARTICLE_CODE, DUMMY_ADDRESSES, \
     DUMMY_DAK_ORDER_DESC, DUMMY_HOLD_MSG, DUMMY_FEDEX_REFS
-from microsetta_private_api.api.tests.test_integration import \
-    _create_mock_kit, _remove_mock_kit
-from microsetta_private_api.repo.barcode_repo import BarcodeRepo
+
 
 DUMMY_PROJ_NAME = "test project"
 
