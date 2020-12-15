@@ -37,6 +37,9 @@ def _check_db_exists(db, cursor):
 
 
 def create_database(force=False):
+    import sys
+
+    print("pa"); sys.stdout.flush()
     # Connect to the postgres server
     try:
         conn = connect(dbname='postgres',
@@ -46,13 +49,16 @@ def create_database(force=False):
         raise OperationalError("Cannot connect to the server, error is %s" %
                                str(e))
 
+    print("pb"); sys.stdout.flush()
     # Set the isolation level to AUTOCOMMIT so we can execute a create database
     # sql query
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    print("pc"); sys.stdout.flush()
 
     # Get the cursor
     cur = conn.cursor()
     db_exists = _check_db_exists(AMGUT_CONFIG.database, cur)
+    print("pd"); sys.stdout.flush()
 
     # Check that the database does not already exist
     if db_exists and force:
@@ -61,11 +67,14 @@ def create_database(force=False):
         raise ValueError("Database '{}' already present on the system"
                          .format(AMGUT_CONFIG.database))
 
+    print("pe"); sys.stdout.flush()
     # Create the database
     cur.execute('CREATE DATABASE %s' % AMGUT_CONFIG.database)
+    print("pf"); sys.stdout.flush()
     cur.close()
     conn.close()
 
+    print("pg"); sys.stdout.flush()
 
 def build(verbose=False):
     conn = connect(user=AMGUT_CONFIG.user, password=AMGUT_CONFIG.password,
@@ -142,7 +151,9 @@ def populate_test_db():
     command = ['pg_restore', '-d', AMGUT_CONFIG.database, '--no-privileges',
                '-p', str(AMGUT_CONFIG.port), '-h', AMGUT_CONFIG.host,
                '--no-owner', '--role=%s' % AMGUT_CONFIG.user, POPULATE_FP]
-
+    import sys
+    print(' '.join(command))
+    sys.stdout.flush()
     proc = Popen(command, stdin=PIPE, stdout=PIPE)
     retcode = proc.wait()
     if retcode != 0:
