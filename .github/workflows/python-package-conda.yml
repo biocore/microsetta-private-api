@@ -56,6 +56,7 @@ jobs:
           echo "mark b"
           pip install -e . --no-deps 
           echo "mark c"
+          export PGPASSWORD=postgres
           python microsetta_private_api/LEGACY/build_db.py
 
       - name: Test
