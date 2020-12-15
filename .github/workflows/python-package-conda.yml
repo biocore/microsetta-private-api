@@ -10,7 +10,7 @@ jobs:
   postgres-runner-job:
     # You must use a Linux environment when using service containers or container jobs
     runs-on: ubuntu-latest
-
+      
     # Service containers to run with `runner-job`
     services:
       # Label used to access the service container
@@ -30,7 +30,7 @@ jobs:
           --health-retries 5
         ports:
           # Maps tcp port 5432 on service container to the host
-          - 5432:5432
+          - 5432/tcp
 
     steps:
       # Downloads a copy of the code in your repository before running CI tests
@@ -47,7 +47,7 @@ jobs:
       - name: Install dependencies
         shell: bash -l {0}
         run: |
-          pg_restore -d postgres --no-privileges --no-owner --role=postgres microsetta_private_api/db/ag_test_patch_39_20170321.dump -p ${{ job.services.postgres.ports[5432] }}
+          pg_restore -d postgres --no-privileges --no-owner --role=postgres microsetta_private_api/db/ag_test_patch_39_20170321.dump -p ${{ job.services.postgres.ports[5432] }} -h localhost
           conda create --yes -n test-microsetta-private python=3.7
           conda activate test-microsetta-private
           conda install --yes --file ci/conda_requirements.txt
