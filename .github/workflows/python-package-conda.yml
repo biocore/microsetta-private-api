@@ -44,8 +44,9 @@ jobs:
           python-version: 3.7 
       - name: Install and test
         shell: bash -l {0}
+        # the port number is apparently random, so grab it and update the configuration            
+        # actions would stall if I had this as a separate step, so doing all here
         run: |
-          # the port number is apparently random, so grab it and update the configuration            
           pgport=${{ job.services.postgres.ports[5432] }}
           sed -i "s/self.port = 5432/self.port = $pgport/" microsetta_private_api/config_manager.py
           conda create --yes -n test-microsetta-private python=3.7
@@ -53,7 +54,6 @@ jobs:
           conda install --yes --file ci/conda_requirements.txt
           pip install -r ci/pip_requirements.txt
           make install
-          # actions would stall if I had this as a separate step, so doing all here
           python microsetta_private_api/LEGACY/build_db.py
           make test
 
