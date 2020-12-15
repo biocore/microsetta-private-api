@@ -54,7 +54,7 @@ jobs:
           echo "mark a"
           pip install -r ci/pip_requirements.txt
           echo "mark b"
-          pip install -e --no-deps .
+          pip install -e . --no-deps 
           echo "mark c"
           python microsetta_private_api/LEGACY/build_db.py
 
