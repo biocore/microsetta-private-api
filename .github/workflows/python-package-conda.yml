@@ -42,7 +42,8 @@ jobs:
         with:        
           auto-update-conda: true
           python-version: 3.7 
-      - name: Install and test
+      
+      - name: Install
         shell: bash -l {0}
         run: |
           pgport=${{ job.services.postgres.ports[5432] }}
@@ -52,6 +53,11 @@ jobs:
           conda install --yes --file ci/conda_requirements.txt
           pip install -r ci/pip_requirements.txt
           make install
+
+      - name: Test
+        shell: bash -l {0}
+        run: |
+          conda activate test-microsetta-private
           python microsetta_private_api/LEGACY/build_db.py
           make test
 
