@@ -52,12 +52,11 @@ jobs:
           conda activate test-microsetta-private
           conda install --yes --file ci/conda_requirements.txt
           pip install -r ci/pip_requirements.txt
+          python microsetta_private_api/LEGACY/build_db.py
 
       - name: Test
-        shell: bash -l {0}
-        run: |
-          python microsetta_private_api/LEGACY/build_db.py
-          make test
+        shell: bash
+        run: conda activate test-microsetta-private; make test
 
   lint:
     runs-on: ubuntu-latest
