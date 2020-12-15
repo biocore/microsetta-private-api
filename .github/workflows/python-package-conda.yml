@@ -61,11 +61,7 @@ jobs:
           conda install --yes --file ci/conda_requirements.txt
           pip install -r ci/pip_requirements.txt
           make install
-      - name: Tests
-        shell: bash -l {0}
-        run: |
           echo "a"
-          conda activate test-microsetta-private
           echo "b"
           python microsetta_private_api/LEGACY/build_db.py
           echo "c"
