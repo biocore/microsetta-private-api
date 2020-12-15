@@ -38,6 +38,8 @@ def _check_db_exists(db, cursor):
 
 def create_database(force=False):
     # Connect to the postgres server
+    import sys
+    print("connectiong"); sys.stdout.flush()
     try:
         conn = connect(dbname='postgres',
                        user=AMGUT_CONFIG.user, password=AMGUT_CONFIG.password,
@@ -48,9 +50,11 @@ def create_database(force=False):
 
     # Set the isolation level to AUTOCOMMIT so we can execute a create database
     # sql query
+    print("isolation"); sys.stdout.flush()
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
     # Get the cursor
+    print("cursor"); sys.stdout.flush()
     cur = conn.cursor()
     db_exists = _check_db_exists(AMGUT_CONFIG.database, cur)
 
@@ -62,6 +66,7 @@ def create_database(force=False):
                          .format(AMGUT_CONFIG.database))
 
     # Create the database
+    print("creating db"); sys.stdout.flush()
     cur.execute('CREATE DATABASE %s' % AMGUT_CONFIG.database)
     cur.close()
     conn.close()
@@ -143,7 +148,8 @@ def populate_test_db():
                '-p', str(AMGUT_CONFIG.port), '-h', AMGUT_CONFIG.host,
                '--no-owner', '--role=%s' % AMGUT_CONFIG.user,
                '-U', AMGUT_CONFIG.user, POPULATE_FP]
-
+    import sys
+    print(" ".join(command)); sys.stdout.flush()
     proc = Popen(command, stdin=PIPE, stdout=PIPE)
     retcode = proc.wait()
     if retcode != 0:
