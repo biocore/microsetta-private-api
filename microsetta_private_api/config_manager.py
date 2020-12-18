@@ -15,7 +15,7 @@ import importlib.resources as pkg_resources
 class DBConfig(object):
     def __init__(self):
         self.user = 'postgres'
-        self.password = ''
+        self.password = 'postgres'
         self.database = 'ag_test'
         self.host = 'localhost'
         self.port = 5432
