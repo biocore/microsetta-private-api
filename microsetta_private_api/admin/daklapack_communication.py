@@ -30,7 +30,7 @@ def post_daklapack_order(payload):
     result = oauth_session.post(
         dak_order_post_url, json=payload,
         headers={SERVER_CONFIG["daklapack_subscription_key_name"]:
-                     SERVER_CONFIG["daklapack_subscription_key_val"]})
+                 SERVER_CONFIG["daklapack_subscription_key_val"]})
     return result
 
 
