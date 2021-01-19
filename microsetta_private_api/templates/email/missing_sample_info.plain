@@ -1,18 +1,18 @@
 Hello {{contact_name |e}},
-    Thank you for your interest and participation in The Microsetta Initiative. We are writing as we've encountered an issue processing your sample, and we would appreciate your assistance in helping to resolve this matter.
+    Thank you for your interest and participation in The Microsetta Initiative. We are writing as we've encountered an issue processing your microbiome collection, and we would appreciate your assistance in helping to resolve this matter.
 
-    Specifically, the following sample sent to the lab does not have a recorded sample type, date or time:
+    Specifically, the following collection sent to the lab does not have a recorded collection type, date or time:
         Barcode {{sample_barcode |e}}
 
-    Based on what we can see, we think the sample type is:
+    Based on what we can see, we think the collection is:
         Barcode {{sample_barcode |e}}: {{received_type |e}}
 
-    We require this information in order to process this sample in compliance with our human subjects research protocol. Sample editing by participants is locked for received samples, and updating this information requires the involvement of a team member with Microsetta. Could you please reply to this email, and provide the following information?
+    We require this information in order to process the collection in compliance with our human subjects research protocol. Editing by participants is locked for received collections, so updating this information requires the involvement of a team member with Microsetta. Could you please reply to this email, and provide the following information?
         - Collection date
         - Collection time
-        - Sample type 
+        - Collection type 
      
-    Once we have this detail, we will update the record so the sample can be processed appropriately.
+    Once we have this detail, we will update the record so the specimen can be processed appropriately.
 
     If you have any questions, please reply to us at microsetta@ucsd.edu
 
