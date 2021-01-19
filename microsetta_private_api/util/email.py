@@ -1,6 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formataddr
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
@@ -12,8 +13,10 @@ class SendEmail:
     password = SERVER_CONFIG.get('smtp_password')
     reconnect_attempts = SERVER_CONFIG.get('smtp_reconnect_attempts', 3)
 
-    from_ = 'no-reply@microsetta.ucsd.edu'
-    reply_to = 'microsetta@ucsd.edu'
+    from_ = formataddr(('The Microsetta Initiative',
+                        'no-reply@microsetta.ucsd.edu'))
+    reply_to = formataddr(('The Microsetta Initiative',
+                           'microsetta@ucsd.edu'))
     connection = None
 
     @classmethod
