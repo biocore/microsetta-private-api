@@ -61,9 +61,11 @@ class SampleRepo(BaseRepo):
             return None
 
         sample_barcode = sample_row[5]
+        scan_timestamp = sample_row[6]
         sample_projects = self._retrieve_projects(sample_barcode)
+        sample_status = self.get_sample_status(sample_barcode, scan_timestamp)
 
-        return Sample.from_db(*sample_row, sample_projects)
+        return Sample.from_db(*sample_row, sample_projects, sample_status)
 
     # TODO: I'm still not entirely happy with the linking between samples and
     #  sources.  The new source_id is direct (and required for environmental

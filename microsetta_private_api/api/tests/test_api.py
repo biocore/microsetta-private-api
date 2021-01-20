@@ -502,7 +502,8 @@ def create_dummy_sample_objects(filled=False):
                     None,
                     info_dict['source_id'],
                     info_dict['account_id'],
-                    info_dict["sample_projects"])
+                    info_dict["sample_projects"],
+                    None)
 
     return sample_info, sample
 # endregion help methods
