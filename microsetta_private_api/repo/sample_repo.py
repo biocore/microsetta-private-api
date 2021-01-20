@@ -234,7 +234,7 @@ class SampleRepo(BaseRepo):
     def get_sample_status(self, sample_barcode, scan_timestamp):
         if scan_timestamp is None:
             return None
-        
+
         with self._transaction.cursor() as cur:
             cur.execute(
                 "SELECT "
