@@ -397,7 +397,10 @@ def create_daklapack_order(body, token_info):
         post_response = post_daklapack_order(daklapack_order.order_structure)
         if post_response.status_code >= 400:
             # for now, very basic error handling--just pass on dak api error
-            return post_response
+            response_msg = {"daklapack_api_error_msg": post_response.text}
+            response = jsonify(response_msg)
+            response.status_code = post_response.status_code
+            return response
 
         # IFF submission is successful AND has fulfillment hold msg,
         # email hold fulfillment info and the order id to Daklapack contact
