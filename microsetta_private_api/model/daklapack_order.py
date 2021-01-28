@@ -90,19 +90,25 @@ class DaklapackOrder:
         curr_timestamp_str = curr_timestamp.isoformat()
         curr_timestamp_str = curr_timestamp_str.replace("+00:00", "Z")
 
+        str_addr_dicts_list = []
         for curr_addr_dict in address_dicts_list:
+            # Daklapack API expects that ALL aspects of an address are
+            # represented as strings, including, e.g. numeric zip codes
+            str_dict = {k: str(v) for k, v in curr_addr_dict.items()}
+            curr_addr_dict = str_dict
             curr_addr_dict["creationDate"] = curr_timestamp_str
             # "companyName" is actually the name of the submitter
             curr_addr_dict["companyName"] = f"{submitter_acct.first_name} " \
                                             f"{submitter_acct.last_name}"
+            str_addr_dicts_list.append(curr_addr_dict)
 
         # Generate daklapack-required order structure
         order_structure = {
             "orderId": order_id,
             "articles": [
                 {
-                    "articleCode": article_code,
-                    "addresses": address_dicts_list
+                    "articleCode": str(article_code),
+                    "addresses": str_addr_dicts_list
                 }
             ],
             "shippingProvider": "FedEx",
