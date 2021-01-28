@@ -26,7 +26,7 @@ def post_daklapack_order(payload):
     # to application/json, whereas if used data parameter, would have to set
     # content-type manually
     dak_order_post_url = f"{SERVER_CONFIG['daklapack_api_base_url']}" \
-                         f"/api/Orders"
+                         f"/api/orders"
     result = oauth_session.post(
         dak_order_post_url, json=payload,
         headers={SERVER_CONFIG["daklapack_subscription_key_name"]:
