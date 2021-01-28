@@ -10,14 +10,14 @@ DUMMY_DAK_ORDER_ID = '7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b'
 DUMMY_PROJ_ID_LIST = [1, 12]
 DUMMY_DAK_ORDER_DESC = "test daklapack order"
 DUMMY_HOLD_MSG = "hold this order"
-DUMMY_DAK_ARTICLE_CODE = 350100
+DUMMY_DAK_ARTICLE_CODE = '350102'
 DUMMY_ADDRESSES = [{
     'firstName': 'Jane',
     'lastName': 'Doe',
     'address1': '123 Main St',
     'insertion': 'Apt 2',
     'address2': '',
-    'postalCode': 92210,
+    'postalCode': '92210',
     'city': 'San Diego',
     'state': 'CA',
     'country': 'USA',
@@ -50,7 +50,7 @@ def make_dummies(include_fedex_refs=False):
         'orderId': DUMMY_DAK_ORDER_ID,
         'articles': [
             {
-                'articleCode': 350102,
+                'articleCode': '350102',
                 'addresses': [
                     {
                         'firstName': 'Jane',
@@ -58,7 +58,7 @@ def make_dummies(include_fedex_refs=False):
                         'address1': '123 Main St',
                         'insertion': 'Apt 2',
                         'address2': '',
-                        'postalCode': 92210,
+                        'postalCode': '92210',
                         'city': 'San Diego',
                         'state': 'CA',
                         'country': 'USA',

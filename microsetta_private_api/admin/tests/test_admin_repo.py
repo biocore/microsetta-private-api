@@ -743,7 +743,7 @@ class AdminRepoTests(AdminTests):
                 'orderId': '7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
                 'articles': [
                     {
-                        'articleCode': 350102,
+                        'articleCode': '350102',
                         'addresses': [
                             {
                                 'firstName': 'Jane',

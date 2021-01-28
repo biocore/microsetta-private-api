@@ -21,6 +21,10 @@ from microsetta_private_api.model.tests.test_daklapack_order import \
 
 
 DUMMY_PROJ_NAME = "test project"
+# although the article code is stored as a string in the json that we
+# send to daklapack, it is stored as an int in our db's daklapack_article table
+# so our private api expects it to be sent as an int
+DUMMY_INT_DAK_ARTICLE_CODE = int(DUMMY_DAK_ARTICLE_CODE)
 
 
 def teardown_test_data():
@@ -86,6 +90,7 @@ def delete_test_daklapack_order(new_order_id):
 def make_test_response(status_code):
     result = Response()
     result.status_code = status_code
+    result.text = f"Got {status_code}"
     return result
 
 
@@ -869,7 +874,7 @@ class AdminApiTests(TestCase):
         # create post input json with a nonsense date field
         order_info = {
             "project_ids": DUMMY_PROJ_ID_LIST,
-            "article_code": DUMMY_DAK_ARTICLE_CODE,
+            "article_code": DUMMY_INT_DAK_ARTICLE_CODE,
             "addresses": DUMMY_ADDRESSES,
             "description": DUMMY_DAK_ORDER_DESC,
             "fedex_ref_1": DUMMY_FEDEX_REFS[0],
@@ -896,7 +901,7 @@ class AdminApiTests(TestCase):
         # create post input json with a nonsense date field
         order_info = {
             "project_ids": DUMMY_PROJ_ID_LIST,
-            "article_code": DUMMY_DAK_ARTICLE_CODE,
+            "article_code": DUMMY_INT_DAK_ARTICLE_CODE,
             "addresses": DUMMY_ADDRESSES,
             "description": DUMMY_DAK_ORDER_DESC,
             "fedex_ref_1": DUMMY_FEDEX_REFS[0],
@@ -923,7 +928,7 @@ class AdminApiTests(TestCase):
         # create post input json with a nonsense date field
         order_info = {
             "project_ids": DUMMY_PROJ_ID_LIST,
-            "article_code": DUMMY_DAK_ARTICLE_CODE,
+            "article_code": DUMMY_INT_DAK_ARTICLE_CODE,
             "addresses": DUMMY_ADDRESSES,
             "description": None,
             "fedex_ref_1": None,
@@ -949,7 +954,7 @@ class AdminApiTests(TestCase):
         # create post input json with a nonsense date field
         order_info = {
             "project_ids": DUMMY_PROJ_ID_LIST,
-            "article_code": DUMMY_DAK_ARTICLE_CODE,
+            "article_code": DUMMY_INT_DAK_ARTICLE_CODE,
             "addresses": DUMMY_ADDRESSES,
             "description": DUMMY_DAK_ORDER_DESC,
             "fedex_ref_1": DUMMY_FEDEX_REFS[0],
