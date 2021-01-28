@@ -50,4 +50,5 @@ __all__ = [
     'associate_answered_survey',
     'submit_answered_survey',
     'verify_jwt',
+    'get_preparations'
 ]
