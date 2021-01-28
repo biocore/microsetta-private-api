@@ -1,5 +1,4 @@
 import base64
-import secrets
 import uuid
 from urllib.parse import urljoin
 
@@ -16,7 +15,7 @@ import requests
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
-def gen_survey_url(language_tag, survey_redirect_url):
+def gen_survey_url(user_id, language_tag, survey_redirect_url):
     if not survey_redirect_url:
         raise BadRequest("Food Frequency Questionnaire Requires "
                          "survey_redirect_url")
@@ -25,7 +24,7 @@ def gen_survey_url(language_tag, survey_redirect_url):
     url = SERVER_CONFIG["vioscreen_endpoint"] + "/remotelogin.aspx?%s" % \
         url_encode(
               {
-                  b"Key": encrypt_key(secrets.token_hex(8),
+                  b"Key": encrypt_key(user_id,
                                       language_tag,
                                       survey_redirect_url),
                   b"RegCode": regcode.encode()
