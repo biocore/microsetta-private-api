@@ -11,4 +11,4 @@ CREATE TABLE ag.vioscreen_registry
 );
 
 CREATE INDEX vio_reg_by_vio_id ON ag.vioscreen_registry (vio_id);
-CREATE UNIQUE INDEX vio_reg_by_sample ON ag.vioscreen_registry (account_id, source_id, sample_id);
+CREATE INDEX vio_reg_by_sample ON ag.vioscreen_registry (account_id, source_id, sample_id);
