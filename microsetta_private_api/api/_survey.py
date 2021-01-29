@@ -65,6 +65,9 @@ def read_survey_template(account_id, source_id, survey_template_id,
                 db_vioscreen_id = survey_template_repo.create_vioscreen_id(
                     account_id, source_id, vioscreen_ext_sample_id
                 )
+            else:
+                raise ValueError("Vioscreen Template requires "
+                                 "vioscreen_ext_sample_id parameter.")
             url = vioscreen.gen_survey_url(
                 db_vioscreen_id, language_tag, survey_redirect_url
             )
