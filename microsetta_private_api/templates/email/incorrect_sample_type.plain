@@ -1,9 +1,9 @@
 Hello {{contact_name |e}},
-    We recently received the following sample from you and noticed that the sample type may have been incorrectly assigned.
+    We recently received the following microbiome collection from you and noticed that it may have been incorrectly assigned.
 
         Barcode {{sample_barcode |e}} - Marked {{recorded_type |e}} but appears to be {{received_type |e}}
 
-    The sample type determines how the sample is handled in the lab, and ultimately how the sample results are assessed. We cannot process the sample until the sample type is verified. If you know the sample type then please communicate with us at microsetta@ucsd.edu by replying to this email. We will then update your information so the sample can be appropriately associated.
+    The collection type determines lab handling, and ultimately how the results are assessed. We cannot process the collection until the type is verified. If you know the type then please communicate with us at microsetta@ucsd.edu by replying to this email. We will then update your information so the collection can be appropriately associated.
 
     If you have any questions, please reply to us at microsetta@ucsd.edu.
 

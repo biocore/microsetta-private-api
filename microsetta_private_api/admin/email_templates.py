@@ -18,7 +18,7 @@ class EmailTemplate:
 
 class EmailMessage(Enum):
     incorrect_sample_type = (
-        "Incorrect Sample Type",
+        "Your Microsetta Initiative status update: attention needed",
         "email/incorrect_sample_type.jinja2",
         "email/incorrect_sample_type.plain",
         ("contact_name", "sample_barcode", "recorded_type", "received_type",
@@ -27,7 +27,7 @@ class EmailMessage(Enum):
         EventSubtype.EMAIL_INCORRECT_SAMPLE_TYPE
     )
     missing_sample_info = (
-        "Missing Sample Info",
+        "Your Microsetta Initiative status update: information needed",
         "email/missing_sample_info.jinja2",
         "email/missing_sample_info.plain",
         ("contact_name", "sample_barcode", "received_type", "resolution_url"),
@@ -35,7 +35,7 @@ class EmailMessage(Enum):
         EventSubtype.EMAIL_MISSING_SAMPLE_INFO
     )
     sample_is_valid = (
-        "Sample is valid",
+        "Your Microsetta Initiative status update and next steps",
         "email/sample_is_valid.jinja2",
         "email/sample_is_valid.plain",
         ("contact_name",),
@@ -43,7 +43,8 @@ class EmailMessage(Enum):
         EventSubtype.EMAIL_SAMPLE_IS_VALID
     )
     no_associated_source = (
-        "No associated source",
+        ("Your Microsetta Initiative status update: "
+         "critical information needed"),
         "email/no_associated_source.jinja2",
         "email/no_associated_source.plain",
         ("contact_name", "sample_barcode", "resolution_url"),
