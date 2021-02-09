@@ -732,6 +732,76 @@ class IntegrationTests(TestCase):
                            headers=MOCK_HEADERS
                            )
 
+    def test_delete_source(self):
+        """
+            Create a source, add a survey, delete the source
+        """
+        """To add a human source, we need to get consent"""
+        resp = self.client.get(
+            '/api/accounts/%s/consent?language_tag=en-US&consent_post_url=%s' %
+            (ACCT_ID, DUMMY_CONSENT_POST_URL),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+
+        # TODO: This should probably fail as it doesn't perfectly match one of
+        #  the four variants of consent that can be passed in.  Split it up?
+        resp = self.client.post(
+            '/api/accounts/%s/consent?language_tag=en-US' %
+            (ACCT_ID,),
+            content_type='application/json',
+            data=json.dumps(
+                {"age_range": "18-plus",
+                 "participant_name": "Joe Schmoe",
+                 "participant_email": "joe@schmoe.com",
+                 "parent_1_name": "Mr. Schmoe",
+                 "parent_2_name": "Mrs. Schmoe",
+                 "deceased_parent": 'false',
+                 "obtainer_name": "MojoJojo"
+                 }),
+            headers=MOCK_HEADERS
+
+        )
+        check_response(resp, 201)
+        loc = resp.headers.get("Location")
+        url = werkzeug.urls.url_parse(loc)
+        source_id_from_loc = url.path.split('/')[-1]
+        new_source = json.loads(resp.data)
+        source_id_from_obj = new_source['source_id']
+        self.assertIsNotNone(source_id_from_loc,
+                             "Couldn't parse source_id from loc header")
+
+        # Part 1: Submit a survey
+        chosen_survey = BOBO_FAVORITE_SURVEY_TEMPLATE
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/%s'
+            '?language_tag=en-US' %
+            (ACCT_ID, source_id_from_obj, chosen_survey),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+
+        model = fuzz_form(json.loads(resp.data)["survey_template_text"])
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en-US'
+            % (ACCT_ID, source_id_from_obj),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': chosen_survey,
+                    'survey_text': model
+                }),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp, 201)
+
+        # Delete the newly created source.
+        resp = self.client.delete(
+            loc + "?language_tag=en-US",
+            headers=MOCK_HEADERS
+        )
+        check_response(resp, 204)
+
     def test_associate_sample_and_survey(self):
         """
             Submit a survey for a source
