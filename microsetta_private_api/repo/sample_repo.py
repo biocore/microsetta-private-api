@@ -78,9 +78,9 @@ class SampleRepo(BaseRepo):
                                    override_locked=False):
         with self._transaction.cursor() as cur:
             existing_sample = self._get_sample_by_id(sample_id)
-            if existing_sample.is_locked and not override_locked:
+            if existing_sample.remove_locked and not override_locked:
                 raise RepoException(
-                    "Sample edits locked: Sample already received")
+                    "Sample association locked: Sample already received")
 
             cur.execute("UPDATE "
                         "ag_kit_barcodes "
@@ -152,8 +152,9 @@ class SampleRepo(BaseRepo):
             raise werkzeug.exceptions.NotFound("No sample ID: %s" %
                                                sample_info.id)
 
-        if existing_sample.is_locked and not override_locked:
-            raise RepoException("Sample edits locked: Sample already received")
+        if existing_sample.edit_locked and not override_locked:
+            raise RepoException("Sample edits locked: Sample already evaluated"
+                                " for processing")
 
         sample_date = None
         sample_time = None
@@ -218,14 +219,20 @@ class SampleRepo(BaseRepo):
         if existing_sample is None:
             raise werkzeug.exceptions.NotFound("No sample ID: %s" %
                                                sample_id)
-        if existing_sample.is_locked and not override_locked:
+
+        if existing_sample.edit_locked and not override_locked:
             raise RepoException(
-                "Sample edits locked: Sample already received")
+                "Sample information locked: Sample already evaluated for "
+                "processing")
 
         # Wipe any user entered fields from the sample:
         self.update_info(account_id, source_id,
                          SampleInfo(sample_id, None, None, None),
                          override_locked=override_locked)
+
+        if existing_sample.remove_locked and not override_locked:
+            raise RepoException(
+                "Sample association locked: Sample already received")
 
         # And detach the sample from the source
         self._update_sample_association(sample_id, None,

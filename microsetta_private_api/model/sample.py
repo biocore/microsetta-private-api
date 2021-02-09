@@ -23,10 +23,16 @@ class Sample(ModelBase):
         self.account_id = account_id
 
     @property
-    def is_locked(self):
+    def edit_locked(self):
         # If a sample has been scanned and is valid, it is locked.
         return self._latest_scan_timestamp is not None and \
                self._latest_scan_status == "sample-is-valid"
+
+    @property
+    def remove_locked(self):
+        # If a sample has been scanned (even if invalid), it cannot be removed
+        # from a source.
+        return self._latest_scan_timestamp is not None
 
     @classmethod
     def from_db(cls, sample_id, date_collected, time_collected,
@@ -47,7 +53,8 @@ class Sample(ModelBase):
             "sample_id": self.id,
             "sample_barcode": self.barcode,
             "sample_site": self.site,
-            "sample_locked": self.is_locked,
+            "sample_edit_locked": self.edit_locked,
+            "sample_remove_locked": self.remove_locked,
             "sample_datetime": self.datetime_collected,
             "sample_notes": self.notes,
             "source_id": self.source_id,
