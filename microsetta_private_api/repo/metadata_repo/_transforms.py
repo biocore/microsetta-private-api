@@ -22,6 +22,8 @@ POUNDS = 'pounds'
 KILOGRAMS = 'kilograms'
 ALCOHOL_CONSUMPTION = 'alcohol_consumption'
 ALCOHOL_FREQUENCY = 'alcohol_frequency'
+SEX = 'sex'
+GENDER = 'gender'
 
 
 class Transformer:
@@ -198,6 +200,34 @@ class AlcoholConsumption(Transformer):
         return series
 
 
+class Sex(Transformer):
+    # The existing pulldown code cast entries of GENDER to lowercase, and
+    # stored them within the SEX variable. Adding here for consistency
+    # with existing metadata in Qiita.
+    REQUIRED_COLUMNS = frozenset([GENDER, ])
+    COLUMN_NAME = SEX
+
+    @classmethod
+    def _transform(cls, df):
+        mapping = {'Female': 'female',
+                   'Male': 'male',
+                   'Other': 'other',
+
+                   # Lower case is not ideal here, however that's what is
+                   # presently in Qiita
+                   'Unspecified': 'unspecified',
+                   MISSING_VALUE: MISSING_VALUE}
+
+        observed_values = set(df[GENDER].value_counts().index)
+        if not observed_values.issubset(mapping):
+            raise KeyError("Unexpected values present in column %s: %s" %
+                           (GENDER, observed_values - set(mapping)))
+
+        series = df[GENDER].replace(mapping, inplace=False)
+        series.name = cls.COLUMN_NAME
+        return series
+
+
 def _normalizer(df, focus_col, units_col, units_value, factor):
     # get our columns
     focus = pd.to_numeric(df[focus_col], errors='coerce')
@@ -268,7 +298,7 @@ class NormalizeWeight(_Normalize):
 # transforms are order dependent as some entries (e.g., BMICat) depend
 # on the presence of a BMI column
 HUMAN_TRANSFORMS = (AgeYears, AgeCat, NormalizeWeight, NormalizeHeight,
-                    BMI, BMICat, AlcoholConsumption)
+                    BMI, BMICat, AlcoholConsumption, Sex)
 
 
 def apply_transforms(df, transforms):
