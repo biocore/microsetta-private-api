@@ -3,7 +3,7 @@ import pandas as pd
 import pandas.testing as pdt
 from microsetta_private_api.repo.metadata_repo._transforms import (
     apply_transforms, AgeYears, AgeCat, BMI, BMICat, AlcoholConsumption,
-    NormalizeHeight, NormalizeWeight)
+    NormalizeHeight, NormalizeWeight, Sex)
 from microsetta_private_api.repo.metadata_repo._constants import MISSING_VALUE
 
 
@@ -91,6 +91,18 @@ class TransformTests(unittest.TestCase):
                         index=list('abcdefghijklmnopqrstuv'),
                         name='age_cat')
         self._test_transformer(AgeCat, df, exp)
+
+    def test_Sex(self):
+        df = pd.DataFrame([['Male'],
+                           ['Female'],
+                           ['Unspecified'],
+                           [MISSING_VALUE],
+                           ['Other']],
+                          index=list('abcde'),
+                          columns=['gender', ])
+        exp = pd.Series(['male', 'female', 'unspecified', MISSING_VALUE,
+                         'other'], index=list('abcde'), name='sex')
+        self._test_transformer(Sex, df, exp)
 
     def test_BMI(self):
         df = pd.DataFrame([[180, 50],
