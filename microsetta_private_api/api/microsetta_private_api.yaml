@@ -1731,7 +1731,11 @@ components:
       enum: ["Blood (skin prick)", "Saliva", "Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
              "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", null]
       example: "Stool"
-    sample_locked:
+    sample_edit_locked:
+      type: boolean
+      readOnly: true # sent in GET, not in POST/PUT/PATCH
+      example: true
+    sample_remove_locked:
       type: boolean
       readOnly: true # sent in GET, not in POST/PUT/PATCH
       example: true
@@ -1757,8 +1761,10 @@ components:
           $ref: '#/components/schemas/sample_barcode'
         sample_site:
           $ref: '#/components/schemas/sample_site'
-        sample_locked:
-          $ref: '#/components/schemas/sample_locked'
+        sample_edit_locked:
+          $ref: '#/components/schemas/sample_edit_locked'
+        sample_remove_locked:
+          $ref: '#/components/schemas/sample_remove_locked'
         sample_datetime:
           $ref: '#/components/schemas/sample_datetime'
         sample_notes:

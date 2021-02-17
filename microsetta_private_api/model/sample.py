@@ -5,7 +5,7 @@ from microsetta_private_api.model.model_base import ModelBase
 class Sample(ModelBase):
     def __init__(self, sample_id, datetime_collected, site, notes, barcode,
                  latest_scan_timestamp, source_id, account_id,
-                 sample_projects):
+                 sample_projects, latest_scan_status):
         self.id = sample_id
         # NB: datetime_collected may be None if sample not yet used
         self.datetime_collected = datetime_collected
@@ -16,21 +16,28 @@ class Sample(ModelBase):
         self.site = site
         # NB: _latest_scan_timestamp may be None if not yet returned to lab
         self._latest_scan_timestamp = latest_scan_timestamp
+        self._latest_scan_status = latest_scan_status
         self.sample_projects = sample_projects
 
         self.source_id = source_id
         self.account_id = account_id
 
     @property
-    def is_locked(self):
-        # If a sample has been scanned into the system, that means its
-        # attributes can't be changed
+    def edit_locked(self):
+        # If a sample has been scanned and is valid, it is locked.
+        return self._latest_scan_timestamp is not None and \
+               self._latest_scan_status == "sample-is-valid"
+
+    @property
+    def remove_locked(self):
+        # If a sample has been scanned (even if invalid), it cannot be removed
+        # from a source.
         return self._latest_scan_timestamp is not None
 
     @classmethod
     def from_db(cls, sample_id, date_collected, time_collected,
                 site, notes, barcode, latest_scan_timestamp,
-                source_id, account_id, sample_projects):
+                source_id, account_id, sample_projects, latest_scan_status):
         datetime_collected = None
         # NB a sample may NOT have date and time collected if it has been sent
         # out but not yet used
@@ -38,15 +45,16 @@ class Sample(ModelBase):
             datetime_collected = datetime.combine(date_collected,
                                                   time_collected)
         return cls(sample_id, datetime_collected, site, notes, barcode,
-                   latest_scan_timestamp, source_id, account_id,
-                   sample_projects)
+                   latest_scan_timestamp, source_id,
+                   account_id, sample_projects, latest_scan_status)
 
     def to_api(self):
         return {
             "sample_id": self.id,
             "sample_barcode": self.barcode,
             "sample_site": self.site,
-            "sample_locked": self.is_locked,
+            "sample_edit_locked": self.edit_locked,
+            "sample_remove_locked": self.remove_locked,
             "sample_datetime": self.datetime_collected,
             "sample_notes": self.notes,
             "source_id": self.source_id,

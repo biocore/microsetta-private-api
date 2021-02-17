@@ -118,7 +118,8 @@ DUMMY_EMPTY_SAMPLE_INFO = {
     'sample_barcode': BARCODE,
     'sample_datetime': None,
     'sample_id': MOCK_SAMPLE_ID,
-    'sample_locked': False,
+    'sample_edit_locked': False,
+    'sample_remove_locked': False,
     'sample_notes': None,
     'sample_projects': ['American Gut Project'],
     'account_id': None,
@@ -129,7 +130,8 @@ DUMMY_FILLED_SAMPLE_INFO = {
     'sample_barcode': BARCODE,
     'sample_datetime': "2017-07-21T17:32:28Z",
     'sample_id': MOCK_SAMPLE_ID,
-    'sample_locked': False,
+    'sample_edit_locked': False,
+    'sample_remove_locked': False,
     'sample_notes': "Oops, I dropped it",
     'sample_projects': ['American Gut Project'],
     'account_id': 'foobar',
@@ -502,7 +504,8 @@ def create_dummy_sample_objects(filled=False):
                     None,
                     info_dict['source_id'],
                     info_dict['account_id'],
-                    info_dict["sample_projects"])
+                    info_dict["sample_projects"],
+                    None)
 
     return sample_info, sample
 # endregion help methods
@@ -1447,8 +1450,9 @@ class SampleTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
+        any_status = 'sample-has-inconsistencies'
         post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
-                                     json={'sample_status': 'sample-is-valid',
+                                     json={'sample_status': any_status,
                                            'technician_notes': "foobar"},
                                      headers=make_headers(FAKE_TOKEN_ADMIN))
         self.assertEqual(201, post_resp.status_code)
@@ -1480,6 +1484,88 @@ class SampleTests(ApiTests):
 
         # check response code
         self.assertEqual(201, post_resp.status_code)
+
+    def test_edit_sample_locked(self):
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        create_dummy_kit(dummy_acct_id, dummy_source_id,
+                         associate_sample=True)
+        _ = create_dummy_answered_survey(
+            dummy_acct_id, dummy_source_id)
+
+        base_url = '/api/accounts/{0}/sources/{1}/samples/{2}'.format(
+            dummy_acct_id, dummy_source_id, MOCK_SAMPLE_ID)
+
+        # "scan" the sample in, but in an invalid state
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        bad_status = 'sample-has-inconsistencies'
+        post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
+                                     json={'sample_status': bad_status,
+                                           'technician_notes': "foobar"},
+                                     headers=make_headers(FAKE_TOKEN_ADMIN))
+        self.assertEqual(201, post_resp.status_code)
+
+        # attempt to continue editing as a regular user, should succeed
+        post_resp = self.client.put(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_datetime": "2017-07-21T17:32:28Z",
+                    "sample_notes": "Woowooooooo",
+                    "sample_site": "Stool",
+                    "sample_project": "American Gut Project"
+                }),
+            headers=self.dummy_auth
+        )
+
+        # check response code
+        self.assertEqual(200, post_resp.status_code)
+
+        good_status = "sample-is-valid"
+        post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
+                                     json={'sample_status': good_status,
+                                           'technician_notes': "foobar"},
+                                     headers=make_headers(FAKE_TOKEN_ADMIN))
+        self.assertEqual(201, post_resp.status_code)
+
+        # attempt to continue editing as a regular user, should fail
+        post_resp = self.client.put(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_datetime": "2020-07-21T17:32:28Z",
+                    "sample_notes": "Woowooooooo2",
+                    "sample_site": "Stool",
+                    "sample_project": "American Gut Project"
+                }),
+            headers=self.dummy_auth
+        )
+        # check response code
+        self.assertEqual(422, post_resp.status_code)
+
+        # edit as admin user, should succeed
+        post_resp = self.client.put(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_datetime": "2020-07-21T17:32:28Z",
+                    "sample_notes": "Woowooooooo3",
+                    "sample_site": "Stool",
+                    "sample_project": "American Gut Project"
+                }),
+            headers=make_headers(FAKE_TOKEN_ADMIN)
+        )
+
+        # check response code
+        self.assertEqual(200, post_resp.status_code)
 
     def test_dissociate_sample_from_source_locked(self):
         dummy_acct_id, dummy_source_id = create_dummy_source(
