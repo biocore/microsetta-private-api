@@ -795,7 +795,46 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 201)
 
-        # Delete the newly created source.
+        # claim a sample
+        resp = self.client.get(
+            '/api/kits/?language_tag=en-US&kit_name=%s' % SUPPLIED_KIT_ID,
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+
+        unused_samples = json.loads(resp.data)
+        sample_id = unused_samples[0]['sample_id']
+
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/samples?language_tag=en-US' %
+            (ACCT_ID, source_id_from_obj),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_id": sample_id
+                }),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+
+        # Delete the newly created source. (Fail because sample associated)
+        resp = self.client.delete(
+            loc + "?language_tag=en-US",
+            headers=MOCK_HEADERS
+        )
+        check_response(resp, 422)
+        self.assertIn("sample", resp.json["message"],
+                      "Failure message should complain about samples")
+
+        # Remove the sample.
+        resp = self.client.delete(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            (ACCT_ID, source_id_from_obj, sample_id),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+
+        # Now delete the source (Hopefully successfully!
         resp = self.client.delete(
             loc + "?language_tag=en-US",
             headers=MOCK_HEADERS
