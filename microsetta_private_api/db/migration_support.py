@@ -335,9 +335,9 @@ class MigrationSupport:
 
         # 4: Update referencing tables entries
         for table_name in [
-            "survey_answers",
-            "survey_answers_other",
-            "external_survey_answers"]:
+                "survey_answers",
+                "survey_answers_other",
+                "external_survey_answers"]:
             TRN.add("UPDATE " + table_name + " SET survey_id=%s "
                                              "WHERE survey_id=%s",
                     (new_survey_id, old_survey_id))
@@ -433,7 +433,7 @@ class MigrationSupport:
             errors.append(' '.join([str(a) for a in args]))
 
         # flag for things that can go wrong
-        NOTHING_WRONG = 0
+        # NOTHING_WRONG = 0
         MISSING_SURVEY_ID = 1
         SURVEY_IS_PRIMARY_ID = 2
         NO_SAMPLE_FOUND = 4
@@ -442,7 +442,7 @@ class MigrationSupport:
 
         status_map = {
             "Finished": 3,
-            "Review": 2, # I have no idea what Review is supposed to map to.
+            "Review": 2,  # I have no idea what Review is supposed to map to.
             "Started": 1,
             "New": 0
         }
@@ -614,7 +614,6 @@ class MigrationSupport:
             print("SCROLL UP A BIT FOR SUMMARY!")
             print("ALL THE LOGS (-Uncomment me-)")
             # print(all_errors)
-
 
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
