@@ -75,14 +75,17 @@ class SurveyAnswersRepo(BaseRepo):
 
     def list_answered_surveys(self, account_id, source_id):
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT survey_id "
+            cur.execute("SELECT survey_id, vioscreen_status "
                         "FROM ag_login_surveys "
                         "WHERE ag_login_id = %s "
                         "AND source_id = %s",
                         (account_id, source_id))
 
             rows = cur.fetchall()
-            answered_surveys = [r[0] for r in rows]
+            # Surveys are answered if they are not vioscreen, or if they are
+            # vioscreen and their status is 3.
+            answered_surveys = [r[0] for r in rows
+                                if r[1] is None or r[1] == 3]
         return answered_surveys
 
     def list_answered_surveys_by_sample(

@@ -11,6 +11,7 @@ from microsetta_private_api.model.survey_template_question import \
 from microsetta_private_api.model.survey_template_trigger import \
         SurveyTemplateTrigger
 import copy
+import secrets
 
 
 class SurveyTemplateRepo(BaseRepo):
@@ -209,3 +210,23 @@ class SurveyTemplateRepo(BaseRepo):
 
             rows = cur.fetchall()
             return [SurveyTemplateTrigger(x[0], x[1]) for x in rows]
+
+    def create_vioscreen_id(self, account_id, source_id,
+                            vioscreen_ext_sample_id):
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT vio_id FROM vioscreen_registry WHERE "
+                        "account_id=%s AND "
+                        "source_id=%s AND "
+                        "sample_id=%s",
+                        (account_id, source_id, vioscreen_ext_sample_id))
+            rows = cur.fetchall()
+            if rows is None or len(rows) == 0:
+                vioscreen_id = secrets.token_hex(8)
+                cur.execute("INSERT INTO vioscreen_registry("
+                            "account_id, source_id, sample_id, vio_id) "
+                            "VALUES(%s, %s, %s, %s)",
+                            (account_id, source_id, vioscreen_ext_sample_id,
+                             vioscreen_id))
+            else:
+                vioscreen_id = rows[0][0]
+        return vioscreen_id

@@ -384,10 +384,32 @@ class MigrationSupport:
         if len(offending_ids) != 0:
             raise Exception("Couldn't resolve vioscreen/primary split :(")
 
+    @staticmethod
+    def migrate_74(TRN):
+        TRN.add("SELECT DISTINCT "
+                "ag_login_id, "
+                "ag_login_surveys.source_id, "
+                "ag_kit_barcode_id, "
+                "ag_login_surveys.survey_id "
+                "FROM "
+                "ag_login_surveys LEFT JOIN "
+                "source_barcodes_surveys USING (survey_id) LEFT JOIN "
+                "ag_kit_barcodes USING (barcode) "
+                "WHERE vioscreen_status is not null "
+                )
+        rows = TRN.execute()[-1]
+        for r in rows:
+            TRN.add("INSERT INTO vioscreen_registry("
+                    "account_id, source_id, sample_id, vio_id) "
+                    "VALUES(%s, %s, %s, %s)",
+                    (r[0], r[1], r[2], r[3]))
+        TRN.execute()
+
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
         "0050.sql": migrate_50.__func__,
-        "0070.sql": migrate_70.__func__
+        "0070.sql": migrate_70.__func__,
+        "0074.sql": migrate_74.__func__,
         # ...
     }
 

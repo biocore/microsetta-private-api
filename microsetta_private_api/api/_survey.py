@@ -44,7 +44,8 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
 
 
 def read_survey_template(account_id, source_id, survey_template_id,
-                         language_tag, token_info, survey_redirect_url=None):
+                         language_tag, token_info, survey_redirect_url=None,
+                         vioscreen_ext_sample_id=None):
     _validate_account_access(token_info, account_id)
 
     # TODO: can we get rid of source_id?  I don't have anything useful to do
@@ -58,14 +59,23 @@ def read_survey_template(account_id, source_id, survey_template_id,
 
         # For external surveys, we generate links pointing out
         if survey_template_id == SurveyTemplateRepo.VIOSCREEN_ID:
-
+            if vioscreen_ext_sample_id:
+                # User is about to start a vioscreen survey for this sample
+                # record this in the database.
+                db_vioscreen_id = survey_template_repo.create_vioscreen_id(
+                    account_id, source_id, vioscreen_ext_sample_id
+                )
+            else:
+                raise ValueError("Vioscreen Template requires "
+                                 "vioscreen_ext_sample_id parameter.")
             url = vioscreen.gen_survey_url(
-                language_tag, survey_redirect_url
+                db_vioscreen_id, language_tag, survey_redirect_url
             )
             # TODO FIXME HACK: This field's contents are not specified!
             info.survey_template_text = {
                 "url": url
             }
+            t.commit()
             return jsonify(info), 200
 
         # For local surveys, we generate the json representing the survey
