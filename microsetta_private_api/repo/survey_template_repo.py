@@ -231,7 +231,7 @@ class SurveyTemplateRepo(BaseRepo):
                 vioscreen_id = rows[0][0]
         return vioscreen_id
 
-    def fetch_user_birth_year_gender(self, account_id):
+    def fetch_user_birth_year_gender(self, account_id, source_id):
         """Given an account ID,
         returns a tuple of (birth_year->int|None and gender->str|None)"""
         birth_year = None
@@ -243,7 +243,8 @@ class SurveyTemplateRepo(BaseRepo):
                            JOIN survey_answers AS q
                              ON s.survey_id = q.survey_id
                            WHERE survey_question_id IN (112, 107)
-                             AND s.ag_login_id =%s""")
+                             AND s.ag_login_id = %s
+                             and s.source_id = %s""")
             for row in cur:
                 if row[0] == 107:
                     gender = row[1]
