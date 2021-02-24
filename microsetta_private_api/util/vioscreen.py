@@ -20,11 +20,8 @@ def gen_survey_url(user_id, language_tag, survey_redirect_url, birth_year=None, 
         raise BadRequest("Food Frequency Questionnaire Requires "
                          "survey_redirect_url")
 
-    gender_map = {'male': 1, 'female': 2}
-    if gender is None:
-        gender_id = 2 # default to female
-    else:
-        gender_id = gender_map.get(gender.lower(), 2)  # again, default female
+    gender_map = {'Male': 1, 'Female': 2}
+    gender_id = gender_map.get(gender, 2)  # default to female
 
     if birth_year is not None:
         dob = '0630{}'.format(birth_year)
