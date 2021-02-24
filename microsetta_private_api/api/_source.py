@@ -9,6 +9,7 @@ from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
 
 
@@ -108,6 +109,14 @@ def delete_source(account_id, source_id, token_info):
 
     with Transaction() as t:
         source_repo = SourceRepo(t)
+        survey_answers_repo = SurveyAnswersRepo(t)
+
+        answers = survey_answers_repo.list_answered_surveys(account_id,
+                                                            source_id)
+        for survey_id in answers:
+            survey_answers_repo.delete_answered_survey(account_id,
+                                                       survey_id)
+
         if not source_repo.delete_source(account_id, source_id):
             return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
         # TODO: 422?

@@ -297,6 +297,13 @@ class SurveyAnswersRepo(BaseRepo):
             cur.execute("DELETE FROM ag_login_surveys WHERE "
                         "ag_login_id = %s AND survey_id = %s",
                         (acct_id, survey_id))
+            # Also unlink any vioscreen external surveys.
+            cur.execute("UPDATE vioscreen_registry SET "
+                        "source_id = NULL, "
+                        "deleted = true "
+                        "WHERE "
+                        "account_id = %s AND vio_id = %s",
+                        (acct_id, survey_id))
         return True
 
     def associate_answered_survey_with_sample(self, account_id, source_id,
