@@ -230,3 +230,24 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 vioscreen_id = rows[0][0]
         return vioscreen_id
+
+    def fetch_user_birth_year_gender(self, account_id):
+        """Given an account ID, returns a tuple of (birth_year->int|None and gender->str|None)"""
+        birth_year = None
+        gender = None
+        with self._transaction.cursor() as cur:
+            # question IDs: 107 = gender, 112 = birth year
+            cur.execute("""SELECT q.survey_question_id, q.response 
+                           FROM ag_login_surveys AS s JOIN survey_answers AS q ON s.survey_id = q.survey_id
+                           WHERE survey_question_id IN (112, 107) AND s.ag_login_id =%s""")
+            for row in cur:
+                if row[0] == 107:
+                    gender = row[1]
+                    if gender == 'Unspecified':
+                        gender = None
+                elif row[0] == 112:
+                    try:
+                        birth_year = int(row[1])
+                    except ValueError:
+                        pass  # for 'Unspecified', stays None
+        return (birth_year, gender)
