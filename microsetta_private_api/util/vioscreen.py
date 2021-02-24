@@ -63,10 +63,10 @@ def pkcs7_unpad_message(in_message):
     return in_message
 
 
-def encrypt_key(survey_id, 
-                language_tag, 
-                survey_redirect_url, 
-                gender_id=2, 
+def encrypt_key(survey_id,
+                language_tag,
+                survey_redirect_url,
+                gender_id=2,
                 dob="01011970"
                 ):
     """Encode minimal required vioscreen information to AES key"""
