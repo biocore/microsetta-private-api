@@ -929,16 +929,16 @@ class AdminRepo(BaseRepo):
 
         answer_to_template_map = {}
         for answer_id in answer_ids:
-            template_id = survey_answers_repo.find_survey_template_id(
-                answer_id)
-            answer_to_template_map[answer_id] = template_id
+            template_id, status = survey_answers_repo.\
+                survey_template_id_and_status(answer_id)
+            answer_to_template_map[answer_id] = (template_id, status)
 
         # if a survey template is specified, filter the returned surveys
         if survey_template_id is not None:
             # TODO: This schema is so awkward for this type of query...
             answers = []
             for answer_id in answer_ids:
-                if answer_to_template_map[answer_id] == survey_template_id:
+                if answer_to_template_map[answer_id][0] == survey_template_id:
                     answers.append(answer_id)
 
             if len(answers) == 0:
@@ -969,7 +969,8 @@ class AdminRepo(BaseRepo):
 
             all_survey_answers.append(
                 {
-                    "template": answer_to_template_map[answer_id],
+                    "template": answer_to_template_map[answer_id][0],
+                    "survey_status": answer_to_template_map[answer_id][1],
                     "response": survey_answers
                 })
 

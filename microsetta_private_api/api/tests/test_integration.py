@@ -341,7 +341,8 @@ class IntegrationTests(TestCase):
             headers=MOCK_HEADERS
         )
         env_surveys = json.loads(resp.data)
-
+        # Survey status should not be in templates
+        self.assertNotIn("survey_status", bobo_surveys[0])
         self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
                              [1, 3, 4, 5, 6, 10001])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
@@ -405,6 +406,9 @@ class IntegrationTests(TestCase):
                                )
         check_response(resp)
         retrieved_survey = json.loads(resp.data)
+        # Retrieved surveys should have a survey_status field, though it is
+        # None for everything but vioscreen.
+        self.assertIn("survey_status", retrieved_survey)
         self.assertDictEqual(retrieved_survey["survey_text"], model)
 
         # Clean up after the new survey

@@ -602,6 +602,8 @@ paths:
                       properties:
                         survey_id:
                           $ref: '#/components/schemas/survey_id'
+                        survey_status:
+                          $ref: '#/components/schemas/survey_status'
                       required:
                         - survey_id
         '401':
@@ -668,6 +670,8 @@ paths:
                     properties:
                       survey_id:
                         $ref: '#/components/schemas/survey_id'
+                      survey_status:
+                        $ref: '#/components/schemas/survey_status'
                       survey_text:
                         $ref: '#/components/schemas/survey_text'
                     required:
@@ -886,6 +890,8 @@ paths:
                       properties:
                         survey_id:
                           $ref: '#/components/schemas/survey_id'
+                        survey_status:
+                          $ref: '#/components/schemas/survey_status'
                       required:
                         - survey_id
               example: # explicit examples hardcoded here because connexion can't seem to infer examples for lists
@@ -1971,6 +1977,10 @@ components:
     survey_id:
       type: string
       example: "69f697cb-8e52-4a4f-8db2-efffcfa186a5"
+    survey_status:
+      type: integer
+      example: 3
+      nullable: true
     survey_text:
       # The contents of this object ARE structured, but their structure is not specified in THIS api.
       type: object
