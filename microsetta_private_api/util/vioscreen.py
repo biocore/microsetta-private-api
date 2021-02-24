@@ -15,7 +15,12 @@ import requests
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
-def gen_survey_url(user_id, language_tag, survey_redirect_url, birth_year=None, gender=None):
+def gen_survey_url(user_id,
+                   language_tag,
+                   survey_redirect_url,
+                   birth_year=None,
+                   gender=None
+                   ):
     if not survey_redirect_url:
         raise BadRequest("Food Frequency Questionnaire Requires "
                          "survey_redirect_url")
@@ -26,10 +31,11 @@ def gen_survey_url(user_id, language_tag, survey_redirect_url, birth_year=None, 
     if birth_year is not None:
         dob = '0630{}'.format(birth_year)
     else:
-        dob = '01011970' # default to unix epoch
+        dob = '01011970'  # default to unix epoch
 
     regcode = SERVER_CONFIG["vioscreen_regcode"]
-    url = SERVER_CONFIG["vioscreen_endpoint"] + "/remotelogin.aspx?%s" % url_encode(
+    url = SERVER_CONFIG["vioscreen_endpoint"] +\
+        "/remotelogin.aspx?%s" % url_encode(
         {
             b"Key": encrypt_key(user_id,
                                 language_tag,
@@ -57,11 +63,16 @@ def pkcs7_unpad_message(in_message):
     return in_message
 
 
-def encrypt_key(survey_id, language_tag, survey_redirect_url, gender_id=2, dob="01011970"):
+def encrypt_key(survey_id, 
+                language_tag, 
+                survey_redirect_url, 
+                gender_id=2, 
+                dob="01011970"
+                ):
     """Encode minimal required vioscreen information to AES key"""
     firstname = "NOT"
     lastname = "IDENTIFIED"
-    
+
     regcode = SERVER_CONFIG["vioscreen_regcode"]
 
     returnurl = survey_redirect_url
