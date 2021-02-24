@@ -244,7 +244,8 @@ class SurveyTemplateRepo(BaseRepo):
                              ON s.survey_id = q.survey_id
                            WHERE survey_question_id IN (112, 107)
                              AND s.ag_login_id = %s
-                             and s.source_id = %s""")
+                             and s.source_id = %s""",
+                        (account_id, source_id))
             for row in cur:
                 if row[0] == 107:
                     gender = row[1]
