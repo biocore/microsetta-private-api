@@ -1510,6 +1510,7 @@ components:
       description: Project ID
       schema:
         $ref: '#/components/schemas/project_id'
+      required: true
 
     # query parameters
     kit_name:
