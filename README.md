@@ -52,7 +52,6 @@ Then we'll initiate a Celery worker (Example shown is with embedded Celery Beat 
 `celery -A microsetta_private_api.celery_worker.celery worker --loglevel=info` (Start 1 worker)
 `celery -A microsetta_private_api.celery_worker.celery beat --loglevel=info` (Start the Celery Beat scheduler)
 
-
 Next, start the microservice using flask's built-in server by running, e.g., 
 
 `python ./microsetta_private_api/server.py`
