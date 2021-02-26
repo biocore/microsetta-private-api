@@ -183,7 +183,7 @@ def _fetch_survey_template(template_id):
             template_id, 'en-US')
         survey_template_text = vue_adapter.to_vue_schema(survey_template)
 
-        info = info.to_api(None)
+        info = info.to_api(None, None)
         info['survey_template_text'] = survey_template_text
 
         return info, None

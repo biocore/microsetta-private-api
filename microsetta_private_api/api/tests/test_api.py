@@ -1250,6 +1250,7 @@ class SurveyTests(ApiTests):
 
         expected_output = {
             "survey_template_id": PRIMARY_SURVEY_TEMPLATE_ID,
+            "survey_status": None,
             "survey_template_title": "Primary",
             "survey_template_version": "1.0",
             "survey_template_type": "local",
@@ -1421,6 +1422,7 @@ class SampleTests(ApiTests):
         expected_output = [
             {'survey_id': dummy_answered_survey_id,
              'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
+             'survey_status': None,
              'survey_template_title': "Primary",
              'survey_template_version': '1.0',
              'survey_template_type': 'local'

@@ -123,11 +123,12 @@ def read_answered_surveys(account_id, source_id, language_tag, token_info):
                 source_id)
         api_objs = []
         for ans in answered_surveys:
-            template_id = survey_answers_repo.find_survey_template_id(ans)
+            template_id, status = survey_answers_repo.\
+                survey_template_id_and_status(ans)
             if template_id is None:
                 continue
             o = survey_template_repo.get_survey_template_link_info(template_id)
-            api_objs.append(o.to_api(ans))
+            api_objs.append(o.to_api(ans, status))
         return jsonify(api_objs), 200
 
 
@@ -145,13 +146,15 @@ def read_answered_survey(account_id, source_id, survey_id, language_tag,
         if not survey_answers:
             return jsonify(code=404, message="No survey answers found"), 404
 
-        template_id = survey_answers_repo.find_survey_template_id(survey_id)
+        template_id, status = survey_answers_repo.\
+            survey_template_id_and_status(survey_id)
         if template_id is None:
             return jsonify(code=422, message="No answers in survey"), 422
 
         template_repo = SurveyTemplateRepo(t)
         link_info = template_repo.get_survey_template_link_info(template_id)
         link_info.survey_id = survey_id
+        link_info.survey_status = status
         link_info.survey_text = survey_answers
         return jsonify(link_info), 200
 
@@ -202,11 +205,12 @@ def read_answered_survey_associations(account_id, source_id, sample_id,
 
         resp_obj = []
         for answered_survey in answered_surveys:
-            template_id = answers_repo.find_survey_template_id(answered_survey)
+            template_id, status = answers_repo.\
+                survey_template_id_and_status(answered_survey)
             if template_id is None:
                 continue
             info = template_repo.get_survey_template_link_info(template_id)
-            resp_obj.append(info.to_api(answered_survey))
+            resp_obj.append(info.to_api(answered_survey, status))
 
         t.commit()
         return jsonify(resp_obj), 200

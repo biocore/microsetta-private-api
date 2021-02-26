@@ -26,7 +26,7 @@ from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 
 class SurveyAnswersRepo(BaseRepo):
 
-    def find_survey_template_id(self, survey_answers_id):
+    def survey_template_id_and_status(self, survey_answers_id):
         # TODO FIXME HACK:  There has GOT TO BE an easier way!
         with self._transaction.cursor() as cur:
             cur.execute("SELECT survey_id, survey_question_id "
@@ -54,9 +54,9 @@ class SurveyAnswersRepo(BaseRepo):
                 status = vioscreen_repo._get_vioscreen_status(
                     survey_answers_id)
                 if status is not None:
-                    return SurveyTemplateRepo.VIOSCREEN_ID
+                    return SurveyTemplateRepo.VIOSCREEN_ID, status
                 else:
-                    return None
+                    return None, None
                     # TODO: Maybe this should throw an exception, but doing so
                     #  locks the end user out of the minimal implementation
                     #  if they submit an empty survey response.
@@ -71,7 +71,8 @@ class SurveyAnswersRepo(BaseRepo):
                         (arbitrary_question_id,))
 
             survey_template_id = cur.fetchone()[0]
-            return survey_template_id
+            # Can define statuses for our internal surveys later if we want
+            return survey_template_id, None
 
     def list_answered_surveys(self, account_id, source_id):
         with self._transaction.cursor() as cur:
