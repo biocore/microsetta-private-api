@@ -48,10 +48,6 @@ def read_survey_template(account_id, source_id, survey_template_id,
                          vioscreen_ext_sample_id=None):
     _validate_account_access(token_info, account_id)
 
-    # TODO: can we get rid of source_id?  I don't have anything useful to do
-    #  with it...  I guess I could check if the source is a dog before giving
-    #  out a pet information survey?
-
     with Transaction() as t:
         survey_template_repo = SurveyTemplateRepo(t)
         info = survey_template_repo.get_survey_template_link_info(
@@ -68,8 +64,15 @@ def read_survey_template(account_id, source_id, survey_template_id,
             else:
                 raise ValueError("Vioscreen Template requires "
                                  "vioscreen_ext_sample_id parameter.")
+            (birth_year, gender) = \
+                survey_template_repo.fetch_user_birth_year_gender(
+                account_id, source_id)
             url = vioscreen.gen_survey_url(
-                db_vioscreen_id, language_tag, survey_redirect_url
+                db_vioscreen_id,
+                language_tag,
+                survey_redirect_url,
+                birth_year=birth_year,
+                gender=gender
             )
             # TODO FIXME HACK: This field's contents are not specified!
             info.survey_template_text = {
