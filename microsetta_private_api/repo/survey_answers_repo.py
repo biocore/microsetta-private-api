@@ -83,10 +83,9 @@ class SurveyAnswersRepo(BaseRepo):
                         (account_id, source_id))
 
             rows = cur.fetchall()
-            # Surveys are answered if they are not vioscreen, or if they are
-            # vioscreen and their status is 3.
-            answered_surveys = [r[0] for r in rows
-                                if r[1] is None or r[1] == 3]
+            # Now that vioscreen_status is sent down to client, we can consider
+            # vioscreen surveys to be answered regardless of their status.
+            answered_surveys = [r[0] for r in rows]
         return answered_surveys
 
     def list_answered_surveys_by_sample(
