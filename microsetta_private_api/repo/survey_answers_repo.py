@@ -341,6 +341,15 @@ class SurveyAnswersRepo(BaseRepo):
                         "barcode = %s AND "
                         "survey_id = %s",
                         (s.barcode, survey_id))
+            # Also delete from vioscreen registry
+            cur.execute("UPDATE vioscreen_registry "
+                        "SET deleted=true "
+                        "WHERE "
+                        "account_id = %s AND "
+                        "source_id = %s AND "
+                        "sample_id = %s AND "
+                        "vio_id = %s",
+                        (account_id, source_id, sample_id, survey_id))
 
     def build_metadata_map(self):
         with self._transaction.cursor() as cur:
