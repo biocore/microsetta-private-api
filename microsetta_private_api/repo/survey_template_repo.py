@@ -13,6 +13,8 @@ from microsetta_private_api.model.survey_template_trigger import \
 import copy
 import secrets
 
+from microsetta_private_api.repo.sample_repo import SampleRepo
+
 
 class SurveyTemplateRepo(BaseRepo):
 
@@ -222,6 +224,25 @@ class SurveyTemplateRepo(BaseRepo):
             rows = cur.fetchall()
             if rows is None or len(rows) == 0:
                 vioscreen_id = secrets.token_hex(8)
+                # Put a survey with status -1 into ag_login_surveys
+                cur.execute("INSERT INTO ag_login_surveys("
+                            "ag_login_id, "
+                            "survey_id, "
+                            "vioscreen_status, "
+                            "source_id) "
+                            "VALUES(%s, %s, %s, %s)",
+                            (account_id, vioscreen_id, -1, source_id))
+                # Immediately attach that survey to the specified sample
+                sample_repo = SampleRepo(self._transaction)
+                s = sample_repo.get_sample(account_id,
+                                           source_id,
+                                           vioscreen_ext_sample_id)
+                cur.execute("INSERT INTO source_barcodes_surveys "
+                            "(barcode, survey_id) "
+                            "VALUES(%s, %s)", (s.barcode, vioscreen_id))
+
+                # And add it to the registry to keep track of the survey if
+                # user quits out then wants to resume the survey.
                 cur.execute("INSERT INTO vioscreen_registry("
                             "account_id, source_id, sample_id, vio_id) "
                             "VALUES(%s, %s, %s, %s)",

@@ -318,10 +318,16 @@ class SurveyAnswersRepo(BaseRepo):
         if s is None:
             raise werkzeug.exceptions.NotFound("No sample ID: %s" % sample_id)
 
+        # Switching to insert if not exists semantics since vioscreen IDs will
+        # be associated with samples prior to being filled out.
         with self._transaction.cursor() as cur:
-            cur.execute("INSERT INTO source_barcodes_surveys "
-                        "(barcode, survey_id) "
-                        "VALUES(%s, %s)", (s.barcode, survey_id))
+            cur.execute("SELECT * FROM source_barcodes_surveys "
+                        "WHERE barcode=%s AND survey_id=%s",
+                        (s.barcode, survey_id))
+            if cur.fetchone() is None:
+                cur.execute("INSERT INTO source_barcodes_surveys "
+                            "(barcode, survey_id) "
+                            "VALUES(%s, %s)", (s.barcode, survey_id))
 
     def dissociate_answered_survey_from_sample(self, account_id, source_id,
                                                sample_id, survey_id):
