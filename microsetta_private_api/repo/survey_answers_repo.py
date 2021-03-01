@@ -83,10 +83,9 @@ class SurveyAnswersRepo(BaseRepo):
                         (account_id, source_id))
 
             rows = cur.fetchall()
-            # Surveys are answered if they are not vioscreen, or if they are
-            # vioscreen and their status is 3.
-            answered_surveys = [r[0] for r in rows
-                                if r[1] is None or r[1] == 3]
+            # Now that vioscreen_status is sent down to client, we can consider
+            # vioscreen surveys to be answered regardless of their status.
+            answered_surveys = [r[0] for r in rows]
         return answered_surveys
 
     def list_answered_surveys_by_sample(
@@ -319,10 +318,16 @@ class SurveyAnswersRepo(BaseRepo):
         if s is None:
             raise werkzeug.exceptions.NotFound("No sample ID: %s" % sample_id)
 
+        # Switching to insert if not exists semantics since vioscreen IDs will
+        # be associated with samples prior to being filled out.
         with self._transaction.cursor() as cur:
-            cur.execute("INSERT INTO source_barcodes_surveys "
-                        "(barcode, survey_id) "
-                        "VALUES(%s, %s)", (s.barcode, survey_id))
+            cur.execute("SELECT * FROM source_barcodes_surveys "
+                        "WHERE barcode=%s AND survey_id=%s",
+                        (s.barcode, survey_id))
+            if cur.fetchone() is None:
+                cur.execute("INSERT INTO source_barcodes_surveys "
+                            "(barcode, survey_id) "
+                            "VALUES(%s, %s)", (s.barcode, survey_id))
 
     def dissociate_answered_survey_from_sample(self, account_id, source_id,
                                                sample_id, survey_id):
@@ -342,6 +347,15 @@ class SurveyAnswersRepo(BaseRepo):
                         "barcode = %s AND "
                         "survey_id = %s",
                         (s.barcode, survey_id))
+            # Also delete from vioscreen registry
+            cur.execute("UPDATE vioscreen_registry "
+                        "SET deleted=true "
+                        "WHERE "
+                        "account_id = %s AND "
+                        "source_id = %s AND "
+                        "sample_id = %s AND "
+                        "vio_id = %s",
+                        (account_id, source_id, sample_id, survey_id))
 
     def build_metadata_map(self):
         with self._transaction.cursor() as cur:
