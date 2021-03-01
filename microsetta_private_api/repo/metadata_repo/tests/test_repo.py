@@ -128,11 +128,13 @@ class MetadataUtilTests(unittest.TestCase):
 
     def test_fetch_observed_survey_templates(self):
         exp = {1: {'survey_id': None,
+                   'survey_status': None,
                    'survey_template_id': 1,
                    'survey_template_title': 'Primary',
                    'survey_template_type': 'local',
                    'survey_template_version': '1.0'},
                2: {'survey_id': None,
+                   'survey_status': None,
                    'survey_template_id': 2,
                    'survey_template_title': 'Pet Information',
                    'survey_template_type': 'local',
@@ -148,6 +150,7 @@ class MetadataUtilTests(unittest.TestCase):
 
     def test_fetch_survey_template(self):
         exp = {'survey_id': None,
+               'survey_status': None,
                'survey_template_id': 1,
                'survey_template_title': 'Primary',
                'survey_template_type': 'local',
