@@ -662,9 +662,17 @@ class AdminRepo(BaseRepo):
         project_ids : list of int
             Project ids the samples are to be associated with
         """
-        # int ids come in as strings ...
-        project_ids = [int(x) for x in project_ids]
 
+        kit_names = self._generate_novel_kit_names(number_of_kits, kit_prefix)
+        kit_name_and_barcode_tuples_list, new_barcodes = \
+            self._generate_novel_barcodes(
+                number_of_kits, number_of_samples, kit_names)
+
+        return self._create_kits(kit_names, new_barcodes,
+                                 kit_name_and_barcode_tuples_list,
+                                 number_of_samples, project_ids)
+
+    def _are_any_projects_tmi(self, project_ids):
         with self._transaction.cursor() as cur:
             # get existing projects
             query = f"""
@@ -684,19 +692,29 @@ class AdminRepo(BaseRepo):
                 if projects_tmi[input_proj_id]:
                     is_tmi = True
 
+        return is_tmi
+
+    def _generate_novel_kit_names(self, number_of_kits, kit_prefix):
+        kit_names = [self._generate_random_kit_name(8, kit_prefix)
+                     for i in range(number_of_kits)]
+
+        with self._transaction.cursor() as cur:
             # get existing kits to test for conflicts
             cur.execute("""SELECT kit_id FROM barcodes.kit""")
             existing = set(cur.fetchall())
-            names = [self._generate_random_kit_name(8, kit_prefix)
-                     for i in range(number_of_kits)]
 
             # if we observe ANY conflict, lets bail. This should be extremely
             # rare, from googling seemed a easier than having postgres
             # generate a unique identifier that was reasonably short, hard to
             # guess
-            if len(set(names) - existing) != number_of_kits:
+            if len(set(kit_names) - existing) != number_of_kits:
                 raise KeyError("Conflict in created names, kits not created")
 
+        return kit_names
+
+    def _generate_novel_barcodes(self, number_of_kits, number_of_samples,
+                                 kit_names):
+        with self._transaction.cursor() as cur:
             # get the maximum observed barcode.
             # historically, barcodes were of the format NNNNNNNNN where each
             # position was a digit. this has created many problems on
@@ -713,50 +731,65 @@ class AdminRepo(BaseRepo):
             new_barcodes = ['X%0.8d' % (start_bc + i)
                             for i in range(total_barcodes)]
 
-            # partition up barcodes and associate to kit names
-            kit_barcodes = []
+            kit_name_and_barcode_tuples_list = []
             barcode_offset = range(0, total_barcodes, number_of_samples)
-            for offset, name in zip(barcode_offset, names):
+            for offset, name in zip(barcode_offset, kit_names):
                 for i in range(number_of_samples):
-                    kit_barcodes.append((name, new_barcodes[offset + i]))
+                    kit_name_and_barcode_tuples_list.append(
+                        (name, new_barcodes[offset + i]))
 
+        return kit_name_and_barcode_tuples_list, new_barcodes
+
+    def _create_kits(self, kit_names, new_barcodes,
+                     kit_name_and_barcode_tuples_list,
+                     number_of_samples, project_ids):
+
+        # int ids come in as strings ...
+        project_ids = [int(x) for x in project_ids]
+
+        is_tmi = self._are_any_projects_tmi(project_ids)
+
+        with self._transaction.cursor() as cur:
             # create barcode project associations
             barcode_projects = []
             for barcode in new_barcodes:
                 for prj_id in project_ids:
                     barcode_projects.append((barcode, prj_id))
 
-            # create shipping IDs
+            # create kits in kit table
             cur.executemany("INSERT INTO barcodes.kit "
                             "(kit_id) "
-                            "VALUES (%s)", [(n, ) for n in names])
+                            "VALUES (%s)", [(n, ) for n in kit_names])
 
-            # add a new barcode to barcode table
+            # add new barcodes to barcode table
             barcode_insertions = [(n, b, 'unassigned')
-                                  for n, b in kit_barcodes]
+                                  for n, b in kit_name_and_barcode_tuples_list]
             cur.executemany("INSERT INTO barcode (kit_id, barcode, status) "
                             "VALUES (%s, %s, %s)",
                             barcode_insertions)
 
-            # add project information
+            # add project information to project_barcode table
             cur.executemany("INSERT INTO project_barcode "
                             "(barcode, project_id) "
                             "VALUES (%s, %s)", barcode_projects)
 
             if is_tmi:
-                # create a record for the new kit in ag_kit table
-                ag_kit_inserts = [(str(uuid.uuid4()), name, number_of_samples)
-                                  for name in names]
+                # create a record for each new kit in ag_kit table
+                ag_kit_inserts = [
+                    (str(uuid.uuid4()), kit_name, number_of_samples)
+                    for kit_name in kit_names]
                 cur.executemany("INSERT INTO ag.ag_kit "
                                 "(ag_kit_id, supplied_kit_id, swabs_per_kit) "
                                 "VALUES (%s, %s, %s)",
                                 ag_kit_inserts)
 
-                # associate the new barcode to a new sample id and
-                # to the new kit in the ag_kit_barcodes table
+                # for each new barcode, add a record to the ag_kit_barcodes
+                # table associating it to its ag kit, creating a new
+                # "sample_barcode"
                 kit_id_to_ag_kit_id = {k: u for u, k, _ in ag_kit_inserts}
                 kit_barcodes_insert = [(kit_id_to_ag_kit_id[i], b)
-                                       for i, b in kit_barcodes]
+                                       for i, b
+                                       in kit_name_and_barcode_tuples_list]
                 cur.executemany("INSERT INTO ag_kit_barcodes "
                                 "(ag_kit_id, barcode) "
                                 "VALUES (%s, %s)",
@@ -770,15 +803,38 @@ class AdminRepo(BaseRepo):
                         "      JOIN barcodes.barcode USING (kit_id) "
                         "      WHERE kit_id IN %s "
                         "      GROUP BY kit_id) i "
-                        "JOIN barcodes.kit o USING (kit_id)", (tuple(names), ))
+                        "JOIN barcodes.kit o USING (kit_id)",
+                        (tuple(kit_names), ))
 
             created = [{'kit_id': k, 'kit_uuid': u, 'sample_barcodes': b}
                        for k, u, b in cur.fetchall()]
 
-        if len(names) != len(created):
+        if len(kit_names) != len(created):
             raise KeyError("Not all created kits could be retrieved")
 
         return {'created': created}
+
+    def create_kit(self, kit_name, box_id, barcodes_list, project_ids):
+        """Create a single kit
+
+        Parameters
+        ----------
+        kit_name: str
+            Value inside the kit box (e.g., "DM24-A3CF9")
+        box_id: str
+            Value on outside of kit box (e.g., "DM89D-VW6Y")
+        barcodes_list: list of str
+            Tube/collection device barcode (e.g., "DMX00-0001")
+        project_ids : list of int
+            Project ids the samples are to be associated with
+        """
+        kit_names = [kit_name]
+        kit_name_and_barcode_tuples_list = \
+            [(kit_name, x) for x in barcodes_list]
+
+        return self._create_kits(kit_names, barcodes_list,
+                                 kit_name_and_barcode_tuples_list,
+                                 len(barcodes_list), project_ids)
 
     def retrieve_diagnostics_by_kit_id(self, supplied_kit_id):
         kit_repo = KitRepo(self._transaction)

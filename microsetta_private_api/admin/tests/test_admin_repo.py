@@ -451,6 +451,63 @@ class AdminRepoTests(AdminTests):
                 observed = cur.fetchall()
                 self.assertEqual(len(observed), 4)
 
+    def test_create_kit_success_is_microsetta(self):
+        input_kit_name = "DM24-A3CF9"
+        input_box_id = "DM89D-VW6Y"
+        input_barcodes = ["X00-0001", "X00-0002", "X00-0003"]
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            # kit belongs to two projects, one microsetta (1) and one not (33),
+            # which means it gets treated overall as microsetta
+            tmi = admin_repo.create_kit(input_kit_name, input_box_id,
+                                        input_barcodes, [1, 33])
+
+            self.assertEqual(['created', ], list(tmi.keys()))
+            self.assertEqual(len(tmi['created']), 1)
+            obj = tmi['created'][0]
+            self.assertEqual(obj['sample_barcodes'], input_barcodes)
+            self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
+                             set(obj))
+            self.assertEqual(input_kit_name, obj['kit_id'])
+
+            # should be present in the ag tables
+            tmi_kits = [k['kit_id'] for k in tmi['created']]
+            with t.cursor() as cur:
+                cur.execute("SELECT supplied_kit_id "
+                            "FROM ag.ag_kit "
+                            "WHERE supplied_kit_id IN %s",
+                            (tuple(tmi_kits),))
+                observed = cur.fetchall()
+                self.assertEqual(len(observed), 1)
+
+    def test_create_kit_success_not_microsetta(self):
+        input_kit_name = "DM24-A3CF9"
+        input_box_id = "DM89D-VW6Y"
+        input_barcodes = ["X00-0001", "X00-0002", "X00-0003"]
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            # kit belongs to one project, which is not microsetta
+            non_tmi = admin_repo.create_kit(input_kit_name, input_box_id,
+                                            input_barcodes, [33])
+
+            self.assertEqual(['created', ], list(non_tmi.keys()))
+            self.assertEqual(len(non_tmi['created']), 1)
+            obj = non_tmi['created'][0]
+            self.assertEqual(obj['sample_barcodes'], input_barcodes)
+            self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
+                             set(obj))
+            self.assertEqual(input_kit_name, obj['kit_id'])
+
+            # should not be present in the ag tables
+            non_tmi_kits = [k['kit_id'] for k in non_tmi['created']]
+            with t.cursor() as cur:
+                cur.execute("SELECT supplied_kit_id "
+                            "FROM ag.ag_kit "
+                            "WHERE supplied_kit_id IN %s",
+                            (tuple(non_tmi_kits),))
+                observed = cur.fetchall()
+                self.assertEqual(len(observed), 0)
+
     def test_search_kit_id(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
