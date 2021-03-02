@@ -415,8 +415,9 @@ class AdminRepoTests(AdminTests):
             self.assertEqual(len(non_tmi['created']), 5)
             for obj in non_tmi['created']:
                 self.assertEqual(len(obj['sample_barcodes']), 3)
-                self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
-                                 set(obj))
+                self.assertEqual({'kit_id', 'kit_uuid', 'box_id',
+                                  'sample_barcodes'}, set(obj))
+                self.assertEqual(obj['kit_uuid'], obj['box_id'])
 
             # should not be present in the ag tables
             non_tmi_kits = [k['kit_id'] for k in non_tmi['created']]
@@ -437,9 +438,10 @@ class AdminRepoTests(AdminTests):
             self.assertEqual(len(tmi['created']), 4)
             for obj in tmi['created']:
                 self.assertEqual(len(obj['sample_barcodes']), 2)
-                self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
-                                 set(obj))
+                self.assertEqual({'kit_id', 'kit_uuid', 'box_id',
+                                  'sample_barcodes'}, set(obj))
                 self.assertTrue(obj['kit_id'].startswith('foo_'))
+                self.assertEqual(obj['kit_uuid'], obj['box_id'])
 
             # should be present in the ag tables
             tmi_kits = [k['kit_id'] for k in tmi['created']]
@@ -466,9 +468,10 @@ class AdminRepoTests(AdminTests):
             self.assertEqual(len(tmi['created']), 1)
             obj = tmi['created'][0]
             self.assertEqual(obj['sample_barcodes'], input_barcodes)
-            self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
-                             set(obj))
+            self.assertEqual({'kit_id', 'kit_uuid', 'box_id',
+                              'sample_barcodes'}, set(obj))
             self.assertEqual(input_kit_name, obj['kit_id'])
+            self.assertEqual(input_box_id, obj['box_id'])
 
             # should be present in the ag tables
             tmi_kits = [k['kit_id'] for k in tmi['created']]
@@ -494,9 +497,10 @@ class AdminRepoTests(AdminTests):
             self.assertEqual(len(non_tmi['created']), 1)
             obj = non_tmi['created'][0]
             self.assertEqual(obj['sample_barcodes'], input_barcodes)
-            self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
-                             set(obj))
+            self.assertEqual({'kit_id', 'kit_uuid', 'box_id',
+                              'sample_barcodes'}, set(obj))
             self.assertEqual(input_kit_name, obj['kit_id'])
+            self.assertEqual(input_box_id, obj['box_id'])
 
             # should not be present in the ag tables
             non_tmi_kits = [k['kit_id'] for k in non_tmi['created']]

@@ -742,7 +742,7 @@ class AdminRepo(BaseRepo):
 
     def _create_kits(self, kit_names, new_barcodes,
                      kit_name_and_barcode_tuples_list,
-                     number_of_samples, project_ids):
+                     number_of_samples, project_ids, box_ids=None):
 
         # int ids come in as strings ...
         project_ids = [int(x) for x in project_ids]
@@ -757,9 +757,13 @@ class AdminRepo(BaseRepo):
                     barcode_projects.append((barcode, prj_id))
 
             # create kits in kit table
+            new_kit_uuids = [str(uuid.uuid4()) for x in kit_names]
+            if box_ids is None:
+                box_ids = new_kit_uuids
+            barcode_kit_inserts = list(zip(new_kit_uuids, kit_names, box_ids))
             cur.executemany("INSERT INTO barcodes.kit "
-                            "(kit_id) "
-                            "VALUES (%s)", [(n, ) for n in kit_names])
+                            "(kit_uuid, kit_id, box_id) "
+                            "VALUES (%s, %s, %s)", barcode_kit_inserts)
 
             # add new barcodes to barcode table
             barcode_insertions = [(n, b, 'unassigned')
@@ -796,7 +800,8 @@ class AdminRepo(BaseRepo):
                                 kit_barcodes_insert)
 
         with self._transaction.dict_cursor() as cur:
-            cur.execute("SELECT i.kit_id, o.kit_uuid, i.sample_barcodes "
+            cur.execute("SELECT i.kit_id, o.kit_uuid, o.box_id, "
+                        "i.sample_barcodes "
                         "FROM (SELECT kit_id, "
                         "             array_agg(barcode) as sample_barcodes "
                         "      FROM barcodes.kit "
@@ -806,8 +811,9 @@ class AdminRepo(BaseRepo):
                         "JOIN barcodes.kit o USING (kit_id)",
                         (tuple(kit_names), ))
 
-            created = [{'kit_id': k, 'kit_uuid': u, 'sample_barcodes': b}
-                       for k, u, b in cur.fetchall()]
+            created = [{'kit_id': k, 'kit_uuid': u, 'box_id': bx,
+                        'sample_barcodes': b}
+                       for k, u, bx, b in cur.fetchall()]
 
         if len(kit_names) != len(created):
             raise KeyError("Not all created kits could be retrieved")
@@ -829,12 +835,13 @@ class AdminRepo(BaseRepo):
             Project ids the samples are to be associated with
         """
         kit_names = [kit_name]
+        box_ids = [box_id]
         kit_name_and_barcode_tuples_list = \
             [(kit_name, x) for x in barcodes_list]
 
         return self._create_kits(kit_names, barcodes_list,
                                  kit_name_and_barcode_tuples_list,
-                                 len(barcodes_list), project_ids)
+                                 len(barcodes_list), project_ids, box_ids)
 
     def retrieve_diagnostics_by_kit_id(self, supplied_kit_id):
         kit_repo = KitRepo(self._transaction)
