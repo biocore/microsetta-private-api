@@ -216,10 +216,13 @@ class SurveyTemplateRepo(BaseRepo):
     def create_vioscreen_id(self, account_id, source_id,
                             vioscreen_ext_sample_id):
         with self._transaction.cursor() as cur:
+            # Find an active vioscreen survey for this account+source+sample
+            # (deleted surveys are not active)
             cur.execute("SELECT vio_id FROM vioscreen_registry WHERE "
                         "account_id=%s AND "
                         "source_id=%s AND "
-                        "sample_id=%s",
+                        "sample_id=%s AND "
+                        "deleted=false",
                         (account_id, source_id, vioscreen_ext_sample_id))
             rows = cur.fetchall()
             if rows is None or len(rows) == 0:
