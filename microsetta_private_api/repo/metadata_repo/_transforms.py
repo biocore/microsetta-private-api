@@ -176,17 +176,6 @@ class BMICat(Transformer):
         return bmi_cat
 
 
-class AnonymizedName(Transformer):
-    REQUIRED_COLUMNS = frozenset([SAMPLE_NAME, ])
-    COLUMN_NAME = ANONYMIZED_NAME
-
-    @classmethod
-    def _transform(cls, df):
-        names = list(df.index)
-        anon_name = pd.Series(names, index=names, name=cls.COLUMN_NAME)
-        return anon_name
-
-
 class AlcoholConsumption(Transformer):
     REQUIRED_COLUMNS = frozenset([ALCOHOL_FREQUENCY, ])
     COLUMN_NAME = ALCOHOL_CONSUMPTION
@@ -311,7 +300,7 @@ class NormalizeWeight(_Normalize):
 # transforms are order dependent as some entries (e.g., BMICat) depend
 # on the presence of a BMI column
 HUMAN_TRANSFORMS = (AgeYears, AgeCat, NormalizeWeight, NormalizeHeight,
-                    BMI, BMICat, AlcoholConsumption, Sex, AnonymizedName)
+                    BMI, BMICat, AlcoholConsumption, Sex)
 
 
 def apply_transforms(df, transforms):

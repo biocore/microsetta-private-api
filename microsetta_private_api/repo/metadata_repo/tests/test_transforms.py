@@ -3,7 +3,7 @@ import pandas as pd
 import pandas.testing as pdt
 from microsetta_private_api.repo.metadata_repo._transforms import (
     apply_transforms, AgeYears, AgeCat, BMI, BMICat, AlcoholConsumption,
-    NormalizeHeight, NormalizeWeight, Sex, AnonymizedName)
+    NormalizeHeight, NormalizeWeight, Sex)
 from microsetta_private_api.repo.metadata_repo._constants import (
     UNSPECIFIED)
 
@@ -46,14 +46,6 @@ class TransformTests(unittest.TestCase):
     def _test_transformer(self, transformer, df, exp):
         obs = transformer.apply(df)
         pdt.assert_series_equal(obs, exp)
-
-    def test_AnonymizedName(self):
-        df = pd.DataFrame([['1234', 'foo'],
-                           ['5678', 'bar']], columns=['sample_name', 'other'])
-        df.set_index('sample_name', inplace=True)
-        exp = pd.Series(['1234', '5678'], name='anonymized_name',
-                        index=['1234', '5678'])
-        self._test_transformer(AnonymizedName, df, exp)
 
     def test_AgeYears(self):
         df = pd.DataFrame([['1990', 'July', '2020-01-01T12:00:00'],
