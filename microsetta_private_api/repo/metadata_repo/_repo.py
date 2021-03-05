@@ -277,6 +277,9 @@ def _construct_multiselect_map(survey_templates):
 
                 multi_values = {}
                 for choice in choices:
+                    # if someone selects the "other", it's not interesting
+                    # metadata, and the actual interesting piece is the
+                    # free text they enter
                     if choice.lower() == 'other':
                         continue
 
@@ -356,6 +359,9 @@ def _to_pandas_series(metadata, multiselect_map):
                 # pull out the previously computed column names
                 specific_shortnames = multiselect_map[(template, qid)]
                 for selection in answer:
+                    # if someone selects the "other", it's not interesting
+                    # metadata, and the actual interesting piece is the
+                    # free text they enter
                     if selection.lower() == 'other':
                         continue
 
