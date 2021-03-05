@@ -243,7 +243,6 @@ class MetadataUtilTests(unittest.TestCase):
             exp[k] = v
 
         obs = _to_pandas_dataframe(data, templates)
-        print('diet_type' in obs.columns)
         pdt.assert_frame_equal(obs, exp, check_like=True)
 
     def test_to_pandas_series(self):
