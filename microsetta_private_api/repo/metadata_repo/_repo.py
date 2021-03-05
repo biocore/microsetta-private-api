@@ -1,4 +1,4 @@
-from ._constants import HUMAN_SITE_INVARIANTS, MISSING_VALUE
+from ._constants import HUMAN_SITE_INVARIANTS, MISSING_VALUE, UNSPECIFIED
 from ._transforms import HUMAN_TRANSFORMS, apply_transforms
 from ..admin_repo import AdminRepo
 from ..survey_template_repo import SurveyTemplateRepo
@@ -10,6 +10,7 @@ from werkzeug.exceptions import NotFound
 from collections import Counter
 import re
 import pandas as pd
+import numpy as np
 import json
 jsonify = json.dumps
 
@@ -228,17 +229,20 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     for column in all_multiselect_columns - set(df.columns):
         df[column] = 'false'
 
-    # fill in any other nulls that may be present in the frame
-    # as could happen if not all individuals took all surveys
-    df.fillna(MISSING_VALUE, inplace=True)
-
-    # The empty string can arise from free text entries that
-    # come from the private API as [""]
-    df.replace("", MISSING_VALUE, inplace=True)
-
     # force a consistent case
     df.rename(columns={c: c.lower() for c in df.columns},
               inplace=True)
+
+    # remap the empty string to null so it is picked up by
+    # fillna
+    df.replace("", np.nan, inplace=True)
+
+    # fill in any other nulls that may be present in the frame
+    # as could happen if not all individuals took all surveys.
+    # human samples get UNSPECIFIED. Everything else is missing.
+    human_mask = df['host_taxid'] == '9606'
+    df.loc[human_mask] = df.loc[human_mask].fillna(UNSPECIFIED)
+    df.fillna(MISSING_VALUE, inplace=True)
 
     return apply_transforms(df, HUMAN_TRANSFORMS)
 

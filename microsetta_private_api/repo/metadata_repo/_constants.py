@@ -1,4 +1,6 @@
 MISSING_VALUE = 'not applicable'
+UNSPECIFIED = 'Unspecified'
+
 
 # standard fields that are set based on sampling site
 ENV_LOOKUP = {
@@ -362,7 +364,6 @@ for site in HUMAN_SITE_INVARIANTS.values():
     site.update({
         'host_taxid': '9606',
         'title': 'American Gut Project',
-        'assigned_from_geo': 'Yes',
         'env_biome': 'dense settlement biome',
         'env_feature': 'human-associated habitat',
         'dna_extracted': 'Yes',

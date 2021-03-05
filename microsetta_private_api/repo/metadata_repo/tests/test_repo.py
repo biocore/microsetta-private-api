@@ -3,7 +3,7 @@ import pandas as pd
 import pandas.testing as pdt
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.metadata_repo._constants import (
-    HUMAN_SITE_INVARIANTS, MISSING_VALUE)
+    HUMAN_SITE_INVARIANTS, UNSPECIFIED)
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.metadata_repo._repo import (
     _build_col_name,
@@ -215,16 +215,16 @@ class MetadataUtilTests(unittest.TestCase):
         data = [self.raw_sample_1, self.raw_sample_2]
         templates = {1: self.fake_survey_template2}
 
-        exp = pd.DataFrame([['000004216', 'foo', MISSING_VALUE, 'No',
+        exp = pd.DataFrame([['000004216', 'foo', UNSPECIFIED, 'No',
                              'Unspecified', 'Unspecified', 'Unspecified', 'No',
                              'true', 'true', 'false', 'false',
-                             MISSING_VALUE,
+                             UNSPECIFIED,
                              'okay', 'No', "2013-10-15T09:30:00"],
                             ['XY0004216', 'bar', 'Vegan', 'Yes', 'Unspecified',
                              'Unspecified', 'Unspecified', 'No',
                              'false', 'true', 'true', 'false', 'foobar',
-                             MISSING_VALUE,
-                             MISSING_VALUE,
+                             UNSPECIFIED,
+                             UNSPECIFIED,
                              "2013-10-15T09:30:00"]],
                            columns=['sample_name', 'host_subject_id',
                                     'diet_type', 'multivitamin',
