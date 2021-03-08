@@ -219,13 +219,13 @@ class MetadataUtilTests(unittest.TestCase):
                              'Unspecified', 'Unspecified', 'Unspecified', 'No',
                              'true', 'true', 'false', 'false',
                              UNSPECIFIED,
-                             'okay', 'No', "2013-10-15T09:30:00"],
+                             'okay', 'No', "2013-10-15T09:30:00", '000004216'],
                             ['XY0004216', 'bar', 'Vegan', 'Yes', 'Unspecified',
                              'Unspecified', 'Unspecified', 'No',
                              'false', 'true', 'true', 'false', 'foobar',
                              UNSPECIFIED,
                              UNSPECIFIED,
-                             "2013-10-15T09:30:00"]],
+                             "2013-10-15T09:30:00", 'XY0004216']],
                            columns=['sample_name', 'host_subject_id',
                                     'diet_type', 'multivitamin',
                                     'probiotic_frequency',
@@ -236,7 +236,8 @@ class MetadataUtilTests(unittest.TestCase):
                                     'allergic_to_stuff', 'allergic_to_baz',
                                     'allergic_to_x',
                                     'sample2specific', 'abc', 'def',
-                                    'collection_timestamp']
+                                    'collection_timestamp',
+                                    'anonymized_name']
                            ).set_index('sample_name')
 
         for k, v in HUMAN_SITE_INVARIANTS['Stool'].items():

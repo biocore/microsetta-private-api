@@ -215,6 +215,7 @@ def _to_pandas_dataframe(metadatas, survey_templates):
 
     df = pd.DataFrame(transformed)
     df.index.name = 'sample_name'
+    df['anonymized_name'] = list(df.index)
     included_columns = set(df.columns)
 
     all_multiselect_columns = {v for ms in multiselect_map.values()
@@ -276,6 +277,12 @@ def _construct_multiselect_map(survey_templates):
 
                 multi_values = {}
                 for choice in choices:
+                    # if someone selects the "other", it's not interesting
+                    # metadata, and the actual interesting piece is the
+                    # free text they enter
+                    if choice.lower() == 'other':
+                        continue
+
                     new_shortname = _build_col_name(base, choice)
                     multi_values[choice] = new_shortname
 
@@ -352,6 +359,12 @@ def _to_pandas_series(metadata, multiselect_map):
                 # pull out the previously computed column names
                 specific_shortnames = multiselect_map[(template, qid)]
                 for selection in answer:
+                    # if someone selects the "other", it's not interesting
+                    # metadata, and the actual interesting piece is the
+                    # free text they enter
+                    if selection.lower() == 'other':
+                        continue
+
                     # determine the column name
                     specific_shortname = specific_shortnames[selection]
 
