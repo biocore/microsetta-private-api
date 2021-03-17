@@ -4,6 +4,7 @@
 A private microservice to support The Microsetta Initiative
 
 ## Installation
+# hi
 The private microservice depends on Postgres 9.5. For OSX users, we recommend installing [Postgres.app](https://postgresapp.com/). For Linux users, please consult documentation for the Linux distribution in use. 
 
 Create a new `conda` environment containing `flask` and other necessary packages: 
