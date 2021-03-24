@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def normalize_timestamp(timestamp, timezone, normalize_to='US/Pacific'):
     timezone_lookup = {'Eastern Standard Time': 'US/Eastern',
                        'Central Standard Time': 'US/Central',
@@ -35,6 +36,7 @@ class VioscreenSession:
         created = normalize_timestamp(sessions_data['created'], timeZone)
         modified = normalize_timestamp(sessions_data['modified'], timeZone)
         return cls(sessions_data['sessionId'], sessions_data['username'], sessions_data['protocolId'], sessions_data['status'], startDate, endDate, sessions_data['cultureCode'], created, modified)
+
 
 class VioscreenPercentEnergyComponent:
 
