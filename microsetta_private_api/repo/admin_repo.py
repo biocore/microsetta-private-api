@@ -414,6 +414,58 @@ class AdminRepo(BaseRepo):
 
             return diagnostic
 
+    def get_project_barcodes(self, project_id_or_name):
+        """Obtain the barcodes associated with a project
+
+        Parameters
+        ----------
+        project_id_or_name : str or int
+            If a str, the value is interpreted as the name of the project.
+            Otherwise, the value is interpreted as the project ID.
+
+        Returns
+        -------
+        list
+            The list of observed barcodes
+
+        Raises
+        ------
+        ValueError
+            The project name or ID could not be found
+        TypeError
+            The type of the project_id_or_name variable could not
+            be determined
+        """
+        if isinstance(project_id_or_name, int):
+            test = """SELECT EXISTS(
+                        SELECT 1
+                        FROM barcodes.project
+                        WHERE project_id=%s
+                      )"""
+            query = """SELECT barcode
+                       FROM barcodes.project_barcode
+                       WHERE project_id=%s"""
+        elif isinstance(project_id_or_name, str):
+            test = """SELECT EXISTS(
+                        SELECT 1
+                        FROM barcodes.project
+                        WHERE project=%s
+                      )"""
+            query = """SELECT barcode
+                       FROM barcodes.project_barcode
+                           JOIN barcodes.project USING (project_id)
+                       WHERE project=%s"""
+        else:
+            raise TypeError("Unknown type of project_id_or_name")
+
+        with self._transaction.cursor() as cur:
+            cur.execute(test, [project_id_or_name, ])
+            if not cur.fetchone()[0]:
+                raise ValueError(f"Project f'{project_id_or_name}' not found")
+            else:
+                cur.execute(query, [project_id_or_name, ])
+                return list([v[0] for v in cur.fetchall()])
+
     def create_project(self, project):
         """Create a project entry in the database
 
