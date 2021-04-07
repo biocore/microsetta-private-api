@@ -67,22 +67,10 @@ class VioscreenPercentEnergy:
 
 class VioscreenComposite:
 
-    def __init__(self, session, percent_energy, username, human_sourceID, accountID, sample_barcode, sample_barcodeUUID):
+    def __init__(self, session, percent_energy, username, source, account, sample):
         self.session = session
         self.percent_energy = percent_energy
         self.username = username
-        self.human_sourceID = human_sourceID
-        self.accountID = accountID
-        self.sample_barcode = sample_barcode
-        self.sample_barcodeUUID = sample_barcodeUUID
-    
-    @classmethod
-    def from_vioscreen(cls, sessions_data, users_data, pe_data, source_data, account_data, barcodes_data):
-        session = VioscreenSession.from_vioscreen(sessions_data, users_data)
-        percent_energy = VioscreenPercentEnergy.from_vioscreen(pe_data)
-        username = users_data['username']
-        human_sourceID = source_data['human_sourceID']
-        accountID = account_data['accountID']
-        sample_barcode = barcodes_data['sample_barcode']
-        sample_barcodeUUID = barcodes_data['sample_barcodeUUID']
-        return cls(session, percent_energy, username, human_sourceID, accountID, sample_barcode, sample_barcodeUUID)
+        self.source = source
+        self.account = account
+        self.sample = sample

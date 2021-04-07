@@ -218,7 +218,7 @@ sessions_data = {"id": 22352, "sessionId": "000ada854d4f45f5abda90ccade7f0a8", "
         "startDate": "2014-10-08T21:55:12.747", "endDate": "2014-10-08T21:57:07.503", "age": 214, "height": None, "weight": None, "gender": "Female", "plStatus": "NotSet", "activityLevel": "Unknown", "displayUnits": "Standard", "cultureCode": "en-US", "created": "2014-10-08T21:55:07.96", "modified": "2017-07-29T06:56:04.22"}
 users_data = {"id": 14129, "guid": "E4A6C3CA-6BDE-4497-B8CE-182E5EA2FAF3", "username": "80043f5209506497", "email": "", "subjectId": "", "firstname": "NOT", "middlename": "", "lastname": "IDENTIFIED",
         "dateOfBirth": "1/1/1800", "activityLevel": "Unknown", "gender": "Female", "height": None, "weight": None, "displayUnits": "Standard", "timeZone": "Eastern Standard Time", "created": "2014-10-08T21:55:07.687"}
-pe_data = {"sessionId": "0087da64cdcb41ad800c23531d1198f2", "calculations": [
+pe_data = {"sessionId": "000ada854d4f45f5abda90ccade7f0a8", "calculations": [
         {"code": "%protein", "description": "Percent of calories from Protein", "shortDescription": "Protein",
             "units": "%", "amount": 14.50362489752287, "precision": 0, "foodComponentType": 1, "foodDataDefinition": None},
         {"code": "%fat", "description": "Percent of calories from Fat", "shortDescription": "Fat", "units": "%",
@@ -235,9 +235,6 @@ pe_data = {"sessionId": "0087da64cdcb41ad800c23531d1198f2", "calculations": [
          "units": "%", "amount": 9.3864628707637, "precision": 0, "foodComponentType": 1, "foodDataDefinition": None},
         {"code": "%adsugtot", "description": "Percent of calories from Added Sugar", "shortDescription": "Added Sugar",
          "units": "%", "amount": 5.59094160186449, "precision": 0, "foodComponentType": 1, "foodDataDefinition": None}]}
-source_data = {"human_sourceID": "foo1"}
-account_data = {"accountID": "foo2"}
-barcodes_data = {"sample_barcode": "foo3", "sample_barcodeUUID": "foo4"}
 
 class CompositeTestCase(unittest.TestCase):
 
@@ -262,10 +259,9 @@ class CompositeTestCase(unittest.TestCase):
                                                 short_description="Polyunsaturated Fat", units="%", amount=9.3864628707637),
                 VioscreenPercentEnergyComponent(code="%adsugtot", description="Percent of calories from Added Sugar",
                                                 short_description="Added Sugar", units="%", amount=5.59094160186449)]),
-            username = "80043f5209506497", human_sourceID = "foo1", accountID = "foo2", sample_barcode = "foo3", sample_barcodeUUID = "foo4")
-        
-        obs = VioscreenComposite.from_vioscreen(sessions_data, users_data, pe_data, source_data, account_data, barcodes_data)
-        self.assertEqual(exp.accountID, obs.accountID)
+            username = "80043f5209506497", source = "foo1", account = "foo2", sample = "foo3")
+        obs = VioscreenComposite(session = VioscreenSession.from_vioscreen(sessions_data, users_data), percent_energy = VioscreenPercentEnergy.from_vioscreen(pe_data), username = users_data['username'], source = "foo1", account = "foo2", sample = "foo3")
+        self.assertEqual(exp.account, obs.account)
         self.assertEqual(exp.session.startDate, obs.session.startDate)
         
 
