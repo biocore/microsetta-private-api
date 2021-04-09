@@ -88,8 +88,9 @@ def register_account(body, token_info):
         acct_repo = AccountRepo(t)
         acct_repo.create_account(account_obj)
         new_acct = acct_repo.get_account(new_acct_id)
-
-        activation_repo.use_activation_code(body["email"], code)
+        
+        if code != "":
+            activation_repo.use_activation_code(body["email"], code)
         t.commit()
 
     response = jsonify(new_acct.to_api())
