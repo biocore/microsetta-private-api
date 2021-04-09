@@ -433,6 +433,10 @@ def query_barcode_stats(body, token_info):
                 "source-email": source_email,
                 "account-email": account_email,
                 "vioscreen_username": vio_id,
+
+                # NOTE: we *do not* have accurate visibility on these statuses
+                # yet so they are assumed false. This support is coming in
+                # a separate pull request
                 "ffq-taken": False,
                 "ffq-complete": False,
                 "sample-status": sample_status,
