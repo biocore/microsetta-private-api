@@ -6,6 +6,30 @@ class ActivationRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
 
+    @staticmethod
+    def to_api(row):
+        return {
+            "email": row[0],
+            "code": row[1],
+            "activated": row[2]
+        }
+
+    def search_email(self, email_query):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT email, code, activated FROM "
+                "activation WHERE email LIKE %s", (email_query + "%",)
+            )
+            return [ActivationRepo.to_api(r) for r in cur.fetchall()]
+
+    def search_code(self, code_query):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT email, code, activated FROM "
+                "activation WHERE code LIKE %s", (code_query + "%")
+            )
+            return [ActivationRepo.to_api(r) for r in cur.fetchall()]
+
     def get_activation_code(self, email):
         with self._transaction.cursor() as cur:
             cur.execute(

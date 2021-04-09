@@ -10,6 +10,7 @@ from microsetta_private_api.model.daklapack_order import DaklapackOrder, \
     ORDER_ID_KEY, SUBMITTER_ACCT_KEY
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.activation_repo import ActivationRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
@@ -425,3 +426,31 @@ def create_daklapack_order(body, token_info):
     # TODO: AB: Add this endpoint as part of support for polling dak orders
     response.headers['Location'] = f'/api/admin/daklapack_orders/{order_id}'
     return response
+
+
+def search_activation(token_info, email_query=None, code_query=None):
+    validate_admin_access(token_info)
+    with Transaction() as t:
+        activations = ActivationRepo(t)
+        if email_query is not None:
+            infos = activations.search_email(email_query)
+        elif code_query is not None:
+            infos = activations.search_code(code_query)
+        return jsonify(infos), 200
+
+
+def generate_activation_codes(body, token_info):
+    validate_admin_access(token_info)
+
+    email_list = body.get("emails", [])
+    with Transaction() as t:
+        activations = ActivationRepo(t)
+        map = activations.get_activation_codes(email_list)
+        results = []
+        for email in map:
+            results.append({
+                "email": email,
+                "code": map[email]
+            })
+        t.commit()
+    return jsonify(results), 200
