@@ -5,6 +5,7 @@ from flask import jsonify, Response
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
+from microsetta_private_api.model.source import Source
 from microsetta_private_api.model.project import Project
 from microsetta_private_api.model.daklapack_order import DaklapackOrder, \
     ORDER_ID_KEY, SUBMITTER_ACCT_KEY
@@ -16,6 +17,7 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.metadata_repo import (retrieve_metadata,
                                                        drop_private_columns)
 from microsetta_private_api.tasks import send_email as celery_send_email
@@ -375,6 +377,79 @@ def query_email_stats(body, token_info):
                 result['summary'] = 'May Require User Interaction'
 
     return jsonify(results), 200
+
+
+def query_barcode_stats(body, token_info):
+    validate_admin_access(token_info)
+
+    barcodes = body.get("sample_barcodes")
+    project = body["project"]
+
+    summaries = []
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        sample_repo = SampleRepo(t)
+        survey_template_repo = SurveyTemplateRepo(t)
+
+        try:
+            project_barcodes = admin_repo.get_project_barcodes(project)
+        except ValueError as e:
+            raise RepoException(e)
+
+        if barcodes is None:
+            barcodes = project_barcodes
+        else:
+            barcodes = [b for b in barcodes if b in set(project_barcodes)]
+
+        for barcode in barcodes:
+            diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
+            sample = diag['sample']
+            account = diag['account']
+            source = diag['source']
+
+            account_email = None if account is None else account.email
+            source_email = None
+            source_type = None if source is None else source.source_type
+            vio_id = None
+
+            if source is not None and source_type is Source.SOURCE_TYPE_HUMAN:
+                source_email = source.email
+
+                # NOTE: create_vioscreen_id is idempotent
+                vio_id = survey_template_repo.create_vioscreen_id(account.id,
+                                                                  source.id,
+                                                                  sample.id)
+
+            sample_status = sample_repo.get_sample_status(
+                sample.barcode,
+                sample._latest_scan_timestamp  # noqa
+            )
+
+            summary = {
+                "sampleid": barcode,
+                "project": project,
+                "source-type": source_type,
+                "site-sampled": sample.site,
+                "source-email": source_email,
+                "account-email": account_email,
+                "vioscreen_username": vio_id,
+                "ffq-taken": False,
+                "ffq-complete": False,
+                "sample-status": sample_status,
+                "sample-received": sample_status is not None
+            }
+
+            for status in ["sample-is-valid",
+                           "no-associated-source",
+                           "no-registered-account",
+                           "no-collection-info",
+                           "sample-has-inconsistencies",
+                           "received-unknown-validity"]:
+                summary[status] = sample_status == status
+
+            summaries.append(summary)
+
+    return jsonify(summaries), 200
 
 
 def create_daklapack_order(body, token_info):
