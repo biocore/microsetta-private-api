@@ -2,13 +2,32 @@ import pandas as pd
 
 
 def normalize_timestamp(timestamp, timezone, normalize_to='US/Pacific'):
+    """Normalize a timestamp to a specific timezone
+
+    Vioscreen timezone information is not encoded directly within the
+    timestamp, but separately.
+
+    Parameters
+    ----------
+    timestamp : str
+        The timestamp to normalize
+    timezone : str
+        The timezone information as provided by vioscreen
+    normalize_to : str
+        What timezone to normalize too, using Pandas timezone conventions
+
+    Returns
+    -------
+    pd.Timestamp
+        A normalized timestamp
+    """
     timezone_lookup = {'Eastern Standard Time': 'US/Eastern',
                        'Central Standard Time': 'US/Central',
                        'Pacific Standard Time': 'US/Pacific'}
 
     if timezone not in timezone_lookup:
         raise KeyError(f"Unexpected timezone '{timezone}' observed")
-    if timestamp == None:
+    if timestamp is None:
         return None
 
     timestamp = pd.to_datetime(timestamp)
@@ -17,7 +36,8 @@ def normalize_timestamp(timestamp, timezone, normalize_to='US/Pacific'):
 
 
 class VioscreenSession:
-    def __init__(self, sessionId, username, protocolId, status, startDate, endDate, cultureCode, created, modified):
+    def __init__(self, sessionId, username, protocolId, status, startDate,
+                 endDate, cultureCode, created, modified):
         self.sessionId = sessionId
         self.username = username
         self.protocolId = protocolId
@@ -35,11 +55,14 @@ class VioscreenSession:
         endDate = normalize_timestamp(sessions_data['endDate'], timeZone)
         created = normalize_timestamp(sessions_data['created'], timeZone)
         modified = normalize_timestamp(sessions_data['modified'], timeZone)
-        return cls(sessions_data['sessionId'], sessions_data['username'], sessions_data['protocolId'], sessions_data['status'], startDate, endDate, sessions_data['cultureCode'], created, modified)
+
+        return cls(sessions_data['sessionId'], sessions_data['username'],
+                   sessions_data['protocolId'], sessions_data['status'],
+                   startDate, endDate, sessions_data['cultureCode'],
+                   created, modified)
 
 
 class VioscreenPercentEnergyComponent:
-
     def __init__(self, code, description, short_description, units, amount):
         self.code = code
         self.description = description
@@ -49,11 +72,12 @@ class VioscreenPercentEnergyComponent:
 
     @classmethod
     def from_vioscreen(cls, component):
-        return cls(component['code'], component['description'], component['shortDescription'], component['units'], component['amount'])
+        return cls(component['code'], component['description'],
+                   component['shortDescription'], component['units'],
+                   component['amount'])
 
 
 class VioscreenPercentEnergy:
-
     def __init__(self, sessionId, energy_components):
         self.sessionId = sessionId
         self.energy_components = energy_components
@@ -61,16 +85,20 @@ class VioscreenPercentEnergy:
     @classmethod
     def from_vioscreen(cls, pe_data):
         sessionId = pe_data['sessionId']
-        energy_components = [VioscreenPercentEnergyComponent.from_vioscreen(
-            component) for component in pe_data['calculations']]
+
+        energy_components = [
+            VioscreenPercentEnergyComponent.from_vioscreen(component)
+            for component in pe_data['calculations']
+        ]
+
         return cls(sessionId, energy_components)
 
-class VioscreenComposite:
 
-    def __init__(self, session, percent_energy, username, source, account, sample):
+class VioscreenComposite:
+    def __init__(self, session, percent_energy):
         self.session = session
         self.percent_energy = percent_energy
-        self.username = username
-        self.source = source
-        self.account = account
-        self.sample = sample
+
+        # make first class as the vioscreen username is our internal
+        # survey identifier
+        self.vio_id = session.username
