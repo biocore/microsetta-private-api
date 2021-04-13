@@ -436,6 +436,9 @@ def search_activation(token_info, email_query=None, code_query=None):
             infos = activations.search_email(email_query)
         elif code_query is not None:
             infos = activations.search_code(code_query)
+        else:
+            raise Exception("Must specify an 'email_query' or 'code_query'")
+
         return jsonify(infos), 200
 
 
