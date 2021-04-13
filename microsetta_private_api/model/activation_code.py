@@ -8,8 +8,8 @@ CHARSET22 = "ACEFHJKLMNPRTUVWXY3479"
 
 
 class ActivationCode:
-    @classmethod
-    def generate(cls):
+    @staticmethod
+    def generate():
         prefix = "TMI"
         part1 = "".join([secrets.choice(CHARSET22) for i in range(5)])
         part2 = "".join([secrets.choice(CHARSET22) for i in range(5)])
