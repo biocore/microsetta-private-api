@@ -449,11 +449,6 @@ def generate_activation_codes(body, token_info):
     with Transaction() as t:
         activations = ActivationRepo(t)
         map = activations.get_activation_codes(email_list)
-        results = []
-        for email in map:
-            results.append({
-                "email": email,
-                "code": map[email]
-            })
+        results = [{"email": email, "code": map[email]} for email in map]
         t.commit()
     return jsonify(results), 200
