@@ -987,12 +987,7 @@ class AdminApiTests(TestCase):
         )
 
         # an empty string project should be unkown
-        self.assertEqual(422, response.status_code)
-
-    def test_query_barcode_stats_no_project_barcodes(self):
-        # project isn't nullable so this is qualitatively the same as
-        # test_query_barcode_stats_no_project_no_barcodes
-        pass
+        self.assertEqual(404, response.status_code)
 
     def test_query_barcode_stats_project_no_barcodes(self):
         input_json = json.dumps({'project': 7, 'sample_barcodes': None})
@@ -1004,7 +999,6 @@ class AdminApiTests(TestCase):
             headers=MOCK_HEADERS
         )
 
-        # an empty string project should be unkown
         self.assertEqual(200, response.status_code)
 
         response_obj = json.loads(response.data)
