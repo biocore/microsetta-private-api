@@ -64,7 +64,7 @@ class ActivationRepo(BaseRepo):
     def can_activate_with_cause(self, email, code):
         with self._transaction.cursor() as cur:
             cur.execute(
-                "SELECT email, code, activated "
+                "SELECT activated "
                 "FROM activation WHERE "
                 "email = %s AND "
                 "code = %s",
@@ -76,7 +76,7 @@ class ActivationRepo(BaseRepo):
             if row is None:
                 return False, "Invalid activation code"
             # AND the code is not yet activated.
-            if row[2]:
+            if row[0]:
                 return False, "Activation code in use"
             return True, None
 
