@@ -79,6 +79,9 @@ def register_account(body, token_info):
             )
             if not can_activate:
                 return jsonify(code=404, message=cause), 404
+            else:
+                activation_repo.use_activation_code(body["email"], code)
+
         if kit_name != "":
             kit_repo = KitRepo(t)
             kit = kit_repo.get_kit_all_samples(kit_name)
@@ -88,9 +91,6 @@ def register_account(body, token_info):
         acct_repo = AccountRepo(t)
         acct_repo.create_account(account_obj)
         new_acct = acct_repo.get_account(new_acct_id)
-        
-        if code != "":
-            activation_repo.use_activation_code(body["email"], code)
         t.commit()
 
     response = jsonify(new_acct.to_api())
