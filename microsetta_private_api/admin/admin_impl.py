@@ -390,17 +390,19 @@ def query_barcode_stats(body, token_info):
     with Transaction() as t:
         admin_repo = AdminRepo(t)
         sample_repo = SampleRepo(t)
-        survey_template_repo = SurveyTemplateRepo(t)
+        template_repo = SurveyTemplateRepo(t)
 
-        try:
-            project_barcodes = admin_repo.get_project_barcodes(project)
-        except ValueError as e:
-            raise RepoException(e)
+        project_barcodes = admin_repo.get_project_barcodes(project)
 
         if barcodes is None:
             barcodes = project_barcodes
         else:
             barcodes = [b for b in barcodes if b in set(project_barcodes)]
+            not_found = [b for b in barcodes if b not in set(project_barcodes)]
+            if len(not_found) > 0:
+                nf = ", ".join(not_found)
+                message = f"The following barcodes were not found: '[{nf}]'"
+                return jsonify(code=404, message=message), 404
 
         for barcode in barcodes:
             diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
@@ -416,8 +418,7 @@ def query_barcode_stats(body, token_info):
             if source is not None and source_type is Source.SOURCE_TYPE_HUMAN:
                 source_email = source.email
 
-                # NOTE: create_vioscreen_id is idempotent
-                vio_id = survey_template_repo.create_vioscreen_id(account.id,
+                vio_id = template_repo.get_vioscreen_id_if_exists(account.id,
                                                                   source.id,
                                                                   sample.id)
 

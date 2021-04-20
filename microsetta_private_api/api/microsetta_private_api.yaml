@@ -1559,6 +1559,12 @@ paths:
             application/json:
               schema:
                 type: array
+        '404':
+          description: Project not found, or requested barcodes not found
+          content:
+            application/json:
+              schema:
+                type: object
 
 components:
   parameters:
