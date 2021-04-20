@@ -206,7 +206,11 @@ CREATION_TIME_KEY = "creation_time"
 UPDATE_TIME_KEY = "update_time"
 
 
-def dictionary_mangler(a_dict, delete_fields=True, parent_dicts=None):
+def dictionary_mangler(
+        a_dict,
+        delete_fields=True,
+        parent_dicts=None,
+        skip_fields=None):
     """Generator to delete fields or add bogus fields in nested dictionary.
 
     Create a generator to travel recursively through the provided dictionary
@@ -220,6 +224,8 @@ def dictionary_mangler(a_dict, delete_fields=True, parent_dicts=None):
     curr_dicts = {}
 
     for curr_key, curr_val in a_dict.items():
+        if skip_fields is not None and curr_key in skip_fields:
+            continue
         curr_dicts = copy.deepcopy(parent_dicts)
         if isinstance(curr_val, dict):
             curr_dicts[curr_key] = curr_val
@@ -568,7 +574,8 @@ class ApiTests(TestCase):
 
     def run_query_and_content_required_field_test(self, url, action,
                                                   valid_query_dict,
-                                                  valid_content_dict=None):
+                                                  valid_content_dict=None,
+                                                  skip_fields=[]):
 
         if valid_content_dict is None:
             valid_content_dict = {}
@@ -581,7 +588,8 @@ class ApiTests(TestCase):
             curr_expected_msg = None
 
             field_deleter = dictionary_mangler(dict_to_test,
-                                               delete_fields=True)
+                                               delete_fields=True,
+                                               skip_fields=skip_fields)
 
             for curr_mangled_dict in field_deleter:
                 if curr_dict_type == QUERY_KEY:
@@ -693,7 +701,8 @@ class AccountsTests(ApiTests):
         self.run_query_and_content_required_field_test(
             "/api/accounts", "post",
             self.default_querystring_dict,
-            DUMMY_ACCT_INFO)
+            DUMMY_ACCT_INFO,
+            skip_fields=["kit_name"])
 
     def test_accounts_create_fail_404(self):
         """Return 404 if provided kit name is not found in db."""
