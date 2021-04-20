@@ -31,4 +31,3 @@ class ActivationCode:
     @classmethod
     def from_dict(cls, row):
         return cls(row["email"], row["code"], row["activated"])
-
