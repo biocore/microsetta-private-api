@@ -439,7 +439,7 @@ def search_activation(token_info, email_query=None, code_query=None):
         else:
             raise Exception("Must specify an 'email_query' or 'code_query'")
 
-        return jsonify(infos), 200
+        return jsonify([i.to_api() for i in infos]), 200
 
 
 def generate_activation_codes(body, token_info):
