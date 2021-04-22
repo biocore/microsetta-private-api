@@ -415,7 +415,6 @@ class MigrationSupport:
         project_ids = [69, 110, 72, 93, 97, 101, 102, 107, 75, 90, 92, 128]
 
         for project in project_ids:
-            print(project)
             # gather all kits for the project which are not
             # in the ag.ag_kit table
             TRN.add("""SELECT kit_id, array_agg(barcode)
@@ -429,7 +428,7 @@ class MigrationSupport:
                        GROUP BY kit_id""",
                     (project, ))
             kit_barcodes = TRN.execute()[-1]
-            print(len(kit_barcodes))
+
             # recreate the steps taken at kit creation
             # see https://github.com/biocore/microsetta-private-api/blob/2a6c5fd9a7c3aa925c45f9f6cc3a6626cee3ee8f/microsetta_private_api/repo/admin_repo.py#L746-L763  # noqa
             for kit, barcodes in kit_barcodes:
