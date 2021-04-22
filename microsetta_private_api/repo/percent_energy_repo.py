@@ -25,11 +25,62 @@ class PercentEnergyRepo(BaseRepo):
             else:
                 raise NotFound("No such session id: " + sessionId)
 
-    def _insert_code_info(self, codeinfo):
+    def _insert_code_info(self):
         # only needs to be run once to populate ag.vioscreen_percentenergy_code
         # to fetch data when running get_percent_energy -> _get_code_info
         with self._transaction.cursor() as cur:
-            cur.execute("")
+            inserts = [
+                (
+                    "%protein",
+                    "Percent of calories from Protein",
+                    "Protein",
+                    "%"
+                ),
+                (
+                    "%fat",
+                    "Percent of calories from Fat",
+                    "Fat",
+                    "%"
+                ),
+                (
+                    "%carbo",
+                    "Percent of calories from Carbohydrate",
+                    "Carbohydrate",
+                    "%"
+                ),
+                (
+                    "%alcohol",
+                    "Percent of calories from Alcohol",
+                    "Alcohol",
+                    "%"
+                ),
+                (
+                    "%sfatot",
+                    "Percent of calories from Saturated Fat",
+                    "Saturated Fat",
+                    "%"
+                ),
+                (
+                    "%mfatot",
+                    "Percent of calories from Monounsaturated Fat",
+                    "Monounsaturated Fat",
+                    "%"
+                ),
+                (
+                    "%pfatot",
+                    "Percent of calories from Polyunsaturated Fat",
+                    "Polyunsaturated Fat",
+                    "%"
+                ),
+                (
+                    "%adsugtot",
+                    "Percent of calories from Added Sugar",
+                    "Added Sugar",
+                    "%"
+                )
+            ]
+            cur.executemany(
+                "INSERT INTO ag.vioscreen_percentenergy_code (code, description, shortDescription, units) VALUES (%s, %s, %s, %s)", inserts)
 
     def _get_code_info(self, code):
         with self._transaction.cursor as cur:
