@@ -20,6 +20,10 @@ from ._sample import (
     dissociate_sample, read_kit, associate_answered_survey, get_preparations
 )
 
+from ._activation import (
+    check_activation
+)
+
 __all__ = [
     'find_accounts_for_login',
     'register_account',
@@ -50,5 +54,6 @@ __all__ = [
     'associate_answered_survey',
     'submit_answered_survey',
     'verify_jwt',
-    'get_preparations'
+    'get_preparations',
+    'check_activation'
 ]
