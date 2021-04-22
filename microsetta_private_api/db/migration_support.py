@@ -446,6 +446,12 @@ class MigrationSupport:
                                (ag_kit_id, barcode)
                                VALUES (%s, %s)""",
                             (kit_uuid, barcode))
+
+            # remark the project as TMI
+            TRN.add("""UPDATE barcodes.project
+                       SET is_microsetta=t
+                       WHERE project_id=%s""",
+                    (project, ))
             TRN.execute()
 
     MIGRATION_LOOKUP = {
