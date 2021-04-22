@@ -449,7 +449,7 @@ class MigrationSupport:
 
             # remark the project as TMI
             TRN.add("""UPDATE barcodes.project
-                       SET is_microsetta=t
+                       SET is_microsetta=true
                        WHERE project_id=%s""",
                     (project, ))
             TRN.execute()
