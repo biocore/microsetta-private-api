@@ -6,14 +6,14 @@ from psycopg2.errors import ForeignKeyViolation
 
 # test identifiers with a vio ID
 TEST1_ACCOUNT_ID = "80c327ca-a5c7-4c7f-b64b-b219d9ff0b47"
-TEST1_SOURCE_ID = "19f1550d-893f-48a1-81eb-3ecc70c8d86a"
+TEST1_SOURCE_ID = "9590d72f-e183-42ce-8689-6596d2044001"
 TEST1_SAMPLE_ID = "125a7cc5-41ae-44ef-983c-6f1a5213f668"
 TEST1_VIO_ID = "1c689634cea0d11b"
 
 # not in registry
-TEST2_ACCOUNT_ID = "5d120344-70e0-46a6-a98b-827a06c1a895"
-TEST2_SOURCE_ID = "cdb4255e-6e90-4c5b-9b80-ef750b61a318"
-TEST2_SAMPLE_ID = "dd633659-2924-4ee6-8771-3a156c7a74a5"
+TEST2_ACCOUNT_ID = "735e1689-6976-4d96-9a33-7a19f06602bf"
+TEST2_SOURCE_ID = "05c7140e-644f-4eea-b75f-d96ecc597d4f"
+TEST2_SAMPLE_ID = "7380bb81-7401-45bd-85a0-51001f5f5cf1"
 
 
 class SurveyTemplateTests(unittest.TestCase):
