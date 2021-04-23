@@ -23,7 +23,7 @@ CREATE TABLE ag.vioscreen_percentenergy_code (
     code varchar PRIMARY KEY,
     description varchar NOT NULL,
     shortDescription varchar NOT NULL,
-    units varchar NOT NULL
+    units varchar NOT NULL,
 );
 
 CREATE TABLE ag.vioscreen_percentenergy (
@@ -37,3 +37,27 @@ CREATE TABLE ag.vioscreen_percentenergy (
     FOREIGN KEY (code) REFERENCES ag.vioscreen_percentenergy_code (code)
 );
 
+INSERT INTO ag.vioscreen_percentenergy_code
+    (code, description, shortDescription, units)
+    VALUES ('%mfatot', 'Percent of calories from Monounsaturated Fat', 'Monounsaturated Fat', '%');
+INSERT INTO ag.vioscreen_percentenergy_code
+    (code, description, shortDescription, units)
+    VALUES ('%pfatot', 'Percent of calories from Polyunsaturated Fat', 'Polyunsaturated Fat', '%');
+INSERT INTO ag.vioscreen_percentenergy_code
+    (code, description, shortDescription, units)
+    VALUES ('%carbo', 'Percent of calories from Carbohydrate', 'Carbohydrate', '%');
+INSERT INTO ag.vioscreen_percentenergy_code
+    (code, description, shortDescription, units)
+    VALUES ('%sfatot', 'Percent of calories from Saturated Fat', 'Saturated Fat', '%');
+INSERT INTO ag.vioscreen_percentenergy_code
+    (code, description, shortDescription, units)
+    VALUES ('%alcohol', 'Percent of calories from Alcohol', 'Alcohol', '%');
+INSERT INTO ag.vioscreen_percentenergy_code
+    (code, description, shortDescription, units)
+    VALUES ('%protein', 'Percent of calories from Protein', 'Protein', '%');
+INSERT INTO ag.vioscreen_percentenergy_code
+    (code, description, shortDescription, units)
+    VALUES ('%adsugtot', 'Percent of calories from Added Sugar', 'Added Sugar', '%');
+INSERT INTO ag.vioscreen_percentenergy_code
+    (code, description, shortDescription, units)
+    VALUES ('%fat', 'Percent of calories from Fat', 'Fat', '%');
