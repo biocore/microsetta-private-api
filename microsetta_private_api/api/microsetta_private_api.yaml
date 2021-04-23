@@ -39,7 +39,7 @@ paths:
       requestBody:
         content:
           application/json:
-            # Send (non-readOnly) values of account schema PLUS kit name
+            # Send (non-readOnly) values of account schema PLUS kit name OR activation code
             schema:
               allOf:
                 - $ref: '#/components/schemas/account'
@@ -47,8 +47,8 @@ paths:
                   properties:
                     kit_name:
                       $ref: '#/components/schemas/kit_name'
-                  required:
-                    - kit_name
+                    code:
+                      $ref: '#/components/schemas/activation_code'
       responses:
         '201':
           description: Successfully registered new user account
@@ -998,6 +998,31 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/can_activate':
+    get:
+      operationId: microsetta_private_api.api.check_activation
+      tags:
+        - Activation
+      summary: Check if email, code pair can be activated
+      description: Check if email, code pair can be activated
+      parameters:
+        - $ref: '#/components/parameters/email'
+        - $ref: '#/components/parameters/activation_code'
+      responses:
+        '200':
+          description: can_activate T/F and error string if unable to activate
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  can_activate:
+                    type: boolean
+                  error:
+                    type: string
+                    nullable: true
+
+
   '/preparations/{sample_barcode}':
     get:
       operationId: microsetta_private_api.api.get_preparations
@@ -1086,6 +1111,34 @@ paths:
             application/json:
               schema:
                 type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/admin/search/activation':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.search_activation
+      tags:
+        - Admin
+      summary: Retrieve diagnostic information about activation codes by email or code
+      description: Retrieve diagnostic information about activation codes by email or code
+      parameters:
+        - in: query
+          name: email_query
+          schema:
+            type: string
+        - in: query
+          name: code_query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Object containing activation info with similar emails or codes (if any)
+          content:
+            application/json:
+              schema:
+                type: array
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -1456,6 +1509,29 @@ paths:
               schema:
                 type: array
 
+  '/admin/activation':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.generate_activation_codes
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emails:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/email'
+      responses:
+        '200':
+          description: Returns array of activation information
+          content:
+            application/json:
+              schema:
+                type: array
+
 
 components:
   parameters:
@@ -1518,6 +1594,20 @@ components:
         $ref: '#/components/schemas/project_id'
 
     # query parameters
+    activation_code:
+      name: code
+      in: query
+      description: Activation code
+      schema:
+        $ref: '#/components/schemas/activation_code'
+      required: true
+    email:
+      name: email
+      in: query
+      description: User's email
+      schema:
+        $ref: '#/components/schemas/email'
+      required: true
     kit_name:
       name: kit_name
       in: query
@@ -1710,6 +1800,10 @@ components:
         - post_code
         - country_code
 
+    # activation codes section
+    activation_code:
+      type: string
+      example: TMI-XXXXX-XXXXX-XXXXX
     # kit section
     kit_name:
       type: string
