@@ -1,4 +1,5 @@
 import pandas as pd
+from microsetta_private_api.model.model_base import ModelBase
 
 
 def normalize_timestamp(timestamp, timezone, normalize_to='US/Pacific'):
@@ -35,7 +36,7 @@ def normalize_timestamp(timestamp, timezone, normalize_to='US/Pacific'):
     return timestamp_tz.tz_convert(normalize_to)
 
 
-class VioscreenSession:
+class VioscreenSession(ModelBase):
     def __init__(self, sessionId, username, protocolId, status, startDate,
                  endDate, cultureCode, created, modified):
         self.sessionId = sessionId
@@ -62,7 +63,7 @@ class VioscreenSession:
                    created, modified)
 
 
-class VioscreenPercentEnergyComponent:
+class VioscreenPercentEnergyComponent(ModelBase):
     def __init__(self, code, description, short_description, units, amount):
         self.code = code
         self.description = description
@@ -77,7 +78,7 @@ class VioscreenPercentEnergyComponent:
                    component['amount'])
 
 
-class VioscreenPercentEnergy:
+class VioscreenPercentEnergy(ModelBase):
     def __init__(self, sessionId, energy_components):
         self.sessionId = sessionId
         self.energy_components = energy_components
