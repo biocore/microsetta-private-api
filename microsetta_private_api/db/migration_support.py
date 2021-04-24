@@ -429,9 +429,62 @@ class MigrationSupport:
                     (project, ))
             kit_barcodes = TRN.execute()[-1]
 
-            # recreate the steps taken at kit creation
+            # some barcodes don't have kits!? gather them, make kits. our old
+            # infrastructure allowed for creating sets of barcodes without
+            # kits, which further complicates this migration.
+            # gather unattached barcodes
+            TRN.add("""SELECT barcode
+                       FROM barcodes.barcode
+                           JOIN barcodes.project_barcode USING (barcode)
+                       WHERE project_id=%s
+                           AND kit_id IS NULL""",
+                    (project, ))
+            unattached_barcodes = TRN.execute()[-1]
+            unattached_barcodes = [r[0] for r in unattached_barcodes]
+
+            # gather a prefix if one had already been used with the
+            # project
+            TRN.add("""SELECT supplied_kit_id
+                       FROM ag.ag_kit
+                           JOIN ag.ag_kit_barcodes USING (ag_kit_id)
+                           JOIN barcodes.barcode
+                               ON barcode.barcode=ag_kit_barcodes.barcode
+                           JOIN barcodes.project_barcode
+                               ON barcode.barcode=project_barcode.barcode
+                       WHERE project_id=%s""",
+                    (project, ))
+            existing_kits = [r[0] for r in TRN.execute()[-1]]
+            prefix = 'm77'  # default to m77 -> migration 77
+            if len(existing_kits) > 0:
+                prefixes = [k.split('_', 1)[0]
+                            for k in existing_kits if '_' in k]
+                if len(prefixes) > 0:
+                    prefix = list(prefixes)[0]
+
+            # Create and assign kits. e're going to use the existing logic
+            # to create kits to be consistents, but it's a private
+            # member method of AdminRepo. It is "safe" to use this method
+            # as it does not have side effects.
+            from microsetta_private_api.repo.admin_repo import AdminRepo
+            careful_with_this = AdminRepo(None)
+
+            unattached_kit_barcodes = []
+            for barcode in unattached_barcodes:
+                kit = careful_with_this._generate_random_kit_name(8, prefix)
+                unattached_kit_barcodes.append((kit, (barcode, )))
+
+                # establish kit associations within the database
+                TRN.add("""INSERT INTO barcodes.kit
+                           (kit_id)
+                           VALUES (%s)""", (kit, ))
+                TRN.add("""UPDATE barcodes.barcode
+                           SET kit_id=%s
+                           WHERE barcode=%s""", (kit, barcode))
+
+            # recreate the steps taken at kit creation to place kit information
+            # into the TMI structures
             # see https://github.com/biocore/microsetta-private-api/blob/2a6c5fd9a7c3aa925c45f9f6cc3a6626cee3ee8f/microsetta_private_api/repo/admin_repo.py#L746-L763  # noqa
-            for kit, barcodes in kit_barcodes:
+            for kit, barcodes in kit_barcodes + unattached_kit_barcodes:
                 # add these kits to ag_kit
                 kit_uuid = str(uuid.uuid4())
                 TRN.add("""INSERT INTO ag.ag_kit
