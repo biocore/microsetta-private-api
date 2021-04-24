@@ -405,11 +405,60 @@ class MigrationSupport:
                     (r[0], r[1], r[2], r[3]))
         TRN.execute()
 
+    @staticmethod
+    def migrate_77(TRN):
+        # a few studies were remarked as not-TMI when they actually are. A
+        # retroactive update to these studies is necessary. In some cases
+        # the studies have samples which are both present in the TMI structures
+        # and some which are not, stemming from kits having been created
+        # after remarking the project as non-TMI.
+        project_ids = [69, 110, 72, 93, 97, 101, 102, 107, 75, 90, 92, 128]
+
+        for project in project_ids:
+            # gather all kits for the project which are not
+            # in the ag.ag_kit table
+            TRN.add("""SELECT kit_id, array_agg(barcode)
+                       FROM barcodes.barcode
+                           JOIN barcodes.project_barcode USING (barcode)
+                       WHERE project_id=%s
+                           AND kit_id NOT IN (
+                               SELECT supplied_kit_id
+                               FROM ag.ag_kit
+                               )
+                       GROUP BY kit_id""",
+                    (project, ))
+            kit_barcodes = TRN.execute()[-1]
+
+            # recreate the steps taken at kit creation
+            # see https://github.com/biocore/microsetta-private-api/blob/2a6c5fd9a7c3aa925c45f9f6cc3a6626cee3ee8f/microsetta_private_api/repo/admin_repo.py#L746-L763  # noqa
+            for kit, barcodes in kit_barcodes:
+                # add these kits to ag_kit
+                kit_uuid = str(uuid.uuid4())
+                TRN.add("""INSERT INTO ag.ag_kit
+                           (ag_kit_id, supplied_kit_id, swabs_per_kit)
+                           VALUES (%s, %s, %s)""",
+                        (kit_uuid, kit, len(barcodes)))
+
+                # add the associated barcodes to ag_kit_barcodes
+                for barcode in barcodes:
+                    TRN.add("""INSERT INTO ag.ag_kit_barcodes
+                               (ag_kit_id, barcode)
+                               VALUES (%s, %s)""",
+                            (kit_uuid, barcode))
+
+            # remark the project as TMI
+            TRN.add("""UPDATE barcodes.project
+                       SET is_microsetta=true
+                       WHERE project_id=%s""",
+                    (project, ))
+            TRN.execute()
+
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
         "0050.sql": migrate_50.__func__,
         "0070.sql": migrate_70.__func__,
         "0074.sql": migrate_74.__func__,
+        "0077.sql": migrate_77.__func__,
         # ...
     }
 
