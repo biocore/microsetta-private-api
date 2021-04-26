@@ -23,7 +23,7 @@ CREATE TABLE ag.vioscreen_percentenergy_code (
     code varchar PRIMARY KEY,
     description varchar NOT NULL,
     shortDescription varchar NOT NULL,
-    units varchar NOT NULL,
+    units varchar NOT NULL
 );
 
 CREATE TABLE ag.vioscreen_percentenergy (
