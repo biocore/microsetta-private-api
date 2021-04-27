@@ -17,6 +17,14 @@ class EmailTemplate:
 
 
 class EmailMessage(Enum):
+    send_activation_code = (
+        "Welcome to the Microsetta Initiative",
+        "email/activation_email.jinja2",
+        "email/activation_email.plain",
+        ("join_url", "new_account_email", "new_account_code"),
+        EventType.EMAIL,
+        EventSubtype.EMAIL_ACTIVATION
+    )
     incorrect_sample_type = (
         "Your Microsetta Initiative status update: attention needed",
         "email/incorrect_sample_type.jinja2",

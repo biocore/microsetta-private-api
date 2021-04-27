@@ -17,6 +17,9 @@ class EventType(Enum):
 class EventSubtype(Enum):
     # Email event subtypes refer to the various email templates we can send out
 
+    # The welcome to microsetta email containing an email and
+    # code to send to the new user for signup
+    EMAIL_ACTIVATION = "send_activation_code"
     # indicate a sample was received, and is good, but is being banked
     EMAIL_SAMPLE_RECEIVED_BANKED = "sample_received_banked"
     # indicate a sample was received, is good, and is being plated
