@@ -148,6 +148,36 @@ class VueSelectField(VueField):
         }
 
 
+class VueRadiosField(VueField):
+    def __init__(self, question_id, question_text, valid_responses,
+                 question_shortname=None):
+        super().__init__(
+            type_="radios",
+            label=question_text,
+            model=str(question_id),
+            id_=str(question_id),
+            input_name=str(question_id),
+            featured=False,
+            visible=True,
+            disabled=False,
+            required=False,
+            multi=False,
+            default=valid_responses[0],
+            hint=None,
+            help_=None,
+            validator=None,
+            validate_debounce_time=None,
+            style_classes=None,
+            buttons=None,
+            attributes=None,
+            shortname=question_shortname
+        )
+        self.values = valid_responses
+        self.radiosOptions = {
+            "value": valid_responses[0]
+        }
+
+
 class VueChecklistField(VueField):
     def __init__(self, question_id, question_text, valid_responses,
                  question_shortname=None):
