@@ -1509,6 +1509,36 @@ paths:
               schema:
                 type: array
 
+  '/admin/account_barcode_summary':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.query_barcode_stats
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'sample_barcodes':
+                  type: array
+                  items:
+                    # not using the defined schema for sample_barcode as it is 
+                    # readOnly
+                    type: string
+                  nullable: true
+                project:
+                  type: integer
+      responses:
+        '200':
+          description: Return list of dictionaries of sample status for requested accounts
+        '404':
+          description: Project not found, or requested barcodes not found
+          content:
+            application/json:
+              schema:
+                type: object
+
   '/admin/activation':
     post:
       operationId: microsetta_private_api.admin.admin_impl.generate_activation_codes
@@ -1531,7 +1561,6 @@ paths:
             application/json:
               schema:
                 type: array
-
 
 components:
   parameters:
