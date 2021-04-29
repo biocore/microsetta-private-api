@@ -95,6 +95,69 @@ class VioscreenPercentEnergy(ModelBase):
         return cls(sessionId, energy_components)
 
 
+class VioscreenDietaryScoreComponent(ModelBase):
+    def __init__(self, scoreType, name, score, lowerLimit, upperLimit):
+        self.scoreType = scoreType
+        self.name = name
+        self.score = score
+        self.lowerLimit = lowerLimit
+        self.upperLimit = upperLimit
+
+    @classmethod
+    def from_vioscreen(cls, component):
+        return cls(component['type'], component['name'], component['score'], 
+                   component['lowerLimit'], component['upperLimit'])
+
+
+class VioscreenDietaryScore(ModelBase):
+    def __init__(self, sessionId, scoresType, scores):
+        self.sessionId = sessionId
+        self.scoresType = scoresType
+        self.scores = scores
+    
+    @classmethod
+    def from_vioscreen(cls, ds_data):
+        sessionId = ds_data['sessionId']
+        scoresType = ds_data['dietaryScore']['type']
+
+        scores = [
+            VioscreenDietaryScoreComponent.from_vioscreen(component)
+            for component in ds_data['dietaryScore']['scores']
+        ]
+
+        return cls(sessionId, scoresType, scores)
+
+
+class VioscreenSupplementsComponent(ModelBase):
+    def __init__(self, supplement, frequency, amount, average):
+        self.supplement = supplement
+        self.frequency = frequency
+        self.amount = amount
+        self.average = average
+    
+    @classmethod
+    def from_vioscreen(cls, component):
+        return cls(component['supplement'], component['frequency'], 
+                   component['amount'], component['average'])
+
+
+class VioscreenSupplements(ModelBase):
+    def __init__(self, sessionId, supplements_components):
+        self.sessionId = sessionId
+        self.supplements_components = supplements_components
+
+    @classmethod
+    def from_vioscreen(cls, supplements_data):
+        sessionId = supplements_data['sessionId']
+
+        supplements_components = [
+            VioscreenSupplementsComponent.from_vioscreen(component)
+            for component in supplements_data['data']
+        ]
+
+        return cls(sessionId, supplements_components)
+
+
 class VioscreenComposite:
     def __init__(self, session, percent_energy):
         self.session = session
