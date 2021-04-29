@@ -300,6 +300,35 @@ class AdminRepoTests(AdminTests):
             self.assertGreater(len(diag['scans_info']), 0)
             self.assertGreater(len(diag['projects_info']), 0)
 
+    def test_get_project_barcodes_fail(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            with self.assertRaisesRegex(NotFound, "not found"):
+                admin_repo.get_project_barcodes(9999999)
+
+    def test_get_project_barcodes_by_id(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            # create a fake project
+            full_project_dict = self._FULL_PROJECT_DICT.copy()
+            full_project_dict[p.PROJ_NAME_KEY] = 'full_test_proj'
+            input = p.Project.from_dict(full_project_dict)
+            output_id = admin_repo.create_project(input)
+
+            # create some fake kits
+            created = admin_repo.create_kits(2, 3, 'foo', [output_id, ])
+
+            exp = []
+            for kit in created['created']:
+                exp.extend(kit['sample_barcodes'])
+
+            # the order of the return doesn't matter and may differ
+            # so assert over sets
+            obs = admin_repo.get_project_barcodes(output_id)
+            self.assertEqual(set(exp), set(obs))
+
     def test_create_project_success_full(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)

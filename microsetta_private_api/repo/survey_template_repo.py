@@ -216,16 +216,10 @@ class SurveyTemplateRepo(BaseRepo):
     def create_vioscreen_id(self, account_id, source_id,
                             vioscreen_ext_sample_id):
         with self._transaction.cursor() as cur:
-            # Find an active vioscreen survey for this account+source+sample
-            # (deleted surveys are not active)
-            cur.execute("SELECT vio_id FROM vioscreen_registry WHERE "
-                        "account_id=%s AND "
-                        "source_id=%s AND "
-                        "sample_id=%s AND "
-                        "deleted=false",
-                        (account_id, source_id, vioscreen_ext_sample_id))
-            rows = cur.fetchall()
-            if rows is None or len(rows) == 0:
+            # test if an existing ID is available
+            existing = self.get_vioscreen_id_if_exists(account_id, source_id,
+                                                       vioscreen_ext_sample_id)
+            if existing is None:
                 vioscreen_id = secrets.token_hex(8)
                 # Put a survey with status -1 into ag_login_surveys
                 cur.execute("INSERT INTO ag_login_surveys("
@@ -240,6 +234,10 @@ class SurveyTemplateRepo(BaseRepo):
                 s = sample_repo.get_sample(account_id,
                                            source_id,
                                            vioscreen_ext_sample_id)
+
+                if s is None:
+                    raise KeyError(f"{vioscreen_ext_sample_id} does not exist")
+
                 cur.execute("INSERT INTO source_barcodes_surveys "
                             "(barcode, survey_id) "
                             "VALUES(%s, %s)", (s.barcode, vioscreen_id))
@@ -252,8 +250,26 @@ class SurveyTemplateRepo(BaseRepo):
                             (account_id, source_id, vioscreen_ext_sample_id,
                              vioscreen_id))
             else:
-                vioscreen_id = rows[0][0]
+                vioscreen_id = existing
         return vioscreen_id
+
+    def get_vioscreen_id_if_exists(self, account_id, source_id,
+                                   vioscreen_ext_sample_id):
+        """Obtain a vioscreen ID if it exists"""
+        with self._transaction.cursor() as cur:
+            # Find an active vioscreen survey for this account+source+sample
+            # (deleted surveys are not active)
+            cur.execute("SELECT vio_id FROM vioscreen_registry WHERE "
+                        "account_id=%s AND "
+                        "source_id=%s AND "
+                        "sample_id=%s AND "
+                        "deleted=false",
+                        (account_id, source_id, vioscreen_ext_sample_id))
+            rows = cur.fetchall()
+            if rows is None or len(rows) == 0:
+                return None
+            else:
+                return rows[0][0]
 
     def fetch_user_birth_year_gender(self, account_id, source_id):
         """Given an account ID,

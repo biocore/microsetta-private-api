@@ -414,6 +414,41 @@ class AdminRepo(BaseRepo):
 
             return diagnostic
 
+    def get_project_barcodes(self, project_id):
+        """Obtain the barcodes associated with a project
+
+        Parameters
+        ----------
+        project_id : int
+            The project ID to obtain barcodes for
+
+        Returns
+        -------
+        list
+            The list of observed barcodes
+
+        Raises
+        ------
+        NotFound
+            The project ID could not be found
+        """
+        test = """SELECT EXISTS(
+                    SELECT 1
+                    FROM barcodes.project
+                    WHERE project_id=%s
+                  )"""
+        query = """SELECT barcode
+                   FROM barcodes.project_barcode
+                   WHERE project_id=%s"""
+
+        with self._transaction.cursor() as cur:
+            cur.execute(test, [project_id, ])
+            if not cur.fetchone()[0]:
+                raise NotFound(f"Project f'{project_id}' not found")
+            else:
+                cur.execute(query, [project_id, ])
+                return list([v[0] for v in cur.fetchall()])
+
     def create_project(self, project):
         """Create a project entry in the database
 

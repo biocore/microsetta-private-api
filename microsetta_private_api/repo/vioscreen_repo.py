@@ -1,3 +1,4 @@
+import pandas as pd
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.vioscreen import (
     VioscreenSession, VioscreenPercentEnergy, 
@@ -6,6 +7,14 @@ from werkzeug.exceptions import NotFound
 
 
 class VioscreenSessionRepo(BaseRepo):
+    COLS = ["sessionId", "username", "protocolId", "status",
+            "startDate", "endDate", "cultureCode", "created",
+            "modified"]
+
+    @property
+    def _sql_cols(self):
+        return ', '.join(self.COLS)
+
     def __init__(self, transaction):
         super().__init__(transaction)
 
@@ -24,20 +33,16 @@ class VioscreenSessionRepo(BaseRepo):
         """
         # upsert based off of https://stackoverflow.com/a/36799500/19741
         with self._transaction.cursor() as cur:
-            cur.execute("""INSERT INTO ag.vioscreen_sessions (
-                               sessionId, username, protocolId, status,
-                               startDate, endDate, cultureCode, created,
-                               modified)
+            cur.execute(f"""INSERT INTO ag.vioscreen_sessions (
+                               {self._sql_cols}
+                               )
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                            ON CONFLICT (sessionId)
                            DO UPDATE SET
                                status = EXCLUDED.status,
                                endDate = EXCLUDED.endDate,
                                modified = EXCLUDED.modified""",
-                        (session.sessionId, session.username,
-                         session.protocolId, session.status, session.startDate,
-                         session.endDate, session.cultureCode,
-                         session.created, session.modified))
+                        tuple([getattr(session, attr) for attr in self.COLS]))
             return cur.rowcount == 1
 
     def get_session(self, sessionId):
@@ -55,21 +60,94 @@ class VioscreenSessionRepo(BaseRepo):
             was not found
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT sessionId, username, protocolId, status,
-                                  startDate, endDate, cultureCode, created,
-                                  modified
-                           FROM ag.vioscreen_sessions
-                           WHERE sessionId = %s""",
+            cur.execute(f"""SELECT {self._sql_cols}
+                            FROM ag.vioscreen_sessions
+                            WHERE sessionId = %s""",
                         (sessionId, ))
             row = cur.fetchone()
             if row is None:
                 return None
             else:
-                return VioscreenSession(sessionId=row[0], username=row[1],
-                                        protocolId=row[2], status=row[3],
-                                        startDate=row[4], endDate=row[5],
-                                        cultureCode=row[6], created=row[7],
-                                        modified=row[8])
+                return VioscreenSession(*row)
+
+    def get_sessions_by_username(self, username):
+        """Obtain all sessions associated with a username
+
+        Parameters
+        ----------
+        username : str
+            The username to search for
+
+        Returns
+        -------
+        list of VioscreenSession, or None
+            Instances of the observed vioscreen sessions or None if the
+            username was not found
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute(f"""SELECT {self._sql_cols}
+                            FROM ag.vioscreen_sessions
+                            WHERE username = %s""",
+                        (username, ))
+            rows = cur.fetchall()
+            if len(rows) == 0:
+                return None
+            else:
+                return [VioscreenSession(*row) for row in rows]
+
+    def get_unfinished_sessions(self):
+        """Obtain the sessions for that appear incomplete
+
+        An incomplete session is one that meets any of the following criteria:
+
+        1) the ag.vioscreen_registry.vio_id does not exist in the
+           ag.vioscreen_sessions table
+        2) the ag.vioscreen_sessions.endDate is null
+        3) the ag.vioscreen_sessions.status is not "Finished"
+
+        In the event a user has multiple sessions:
+
+        * if ALL sessions are incomplete, all sessions will be returned
+        * if ANY session is complete, no sessions will be returned
+
+        The operating model for AG/TMI has been a single session per vioscreen
+        username (i.e., vio_id). As such, *if* a vioscreen vio_id has multiple
+        sessions associated with it, we do not actually know right now how to
+        appropriately handle a scenario where *multiple* sessions are finished.
+
+        Returns
+        -------
+        list of VioscreenSession
+            In the event of criteria (1) noted above, only the username
+            attribute of an instance will be not None
+        """
+        with self._transaction.cursor() as cur:
+            # criteria 1, vio_ids which are not in vioscreen_sessions
+            cur.execute("""SELECT vio_id
+                           FROM ag.vioscreen_registry
+                           WHERE vio_id NOT IN (
+                               SELECT distinct(username)
+                               FROM ag.vioscreen_sessions)""")
+            not_in_vioscreen_sessions = [VioscreenSession.not_present(u[0])
+                                         for u in cur.fetchall()]
+
+            # criteria 2 and 3
+            cur.execute(f"""SELECT {self._sql_cols}
+                            FROM ag.vioscreen_sessions""")
+
+            # array_agg doesn't work over these datatypes... ugh. this
+            # almost certainly could be done better directly within SQL
+            # but another problem for another day
+            records = pd.DataFrame(cur.fetchall(), columns=self.COLS)
+            incomplete_sessions = []
+            for user, rows in records.groupby('username'):
+                sessions = rows.apply(lambda row: VioscreenSession(*row),
+                                      axis=1)
+                are_incomplete = [not s.is_complete for s in sessions]
+                if all(are_incomplete):
+                    incomplete_sessions.extend(sessions)
+
+            return not_in_vioscreen_sessions + incomplete_sessions
 
 class VioscreenPercentEnergyRepo(BaseRepo):
     def __init__(self, transaction):

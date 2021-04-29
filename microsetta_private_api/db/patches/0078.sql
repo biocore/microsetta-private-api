@@ -16,8 +16,10 @@ CREATE TABLE ag.vioscreen_sessions (
     endDate timestamp,
     cultureCode varchar NOT NULL,
     created timestamp NOT NULL,
-    modified timestamp NOT NULL
+    modified timestamp NOT NULL,
+    FOREIGN KEY (username) REFERENCES ag.vioscreen_registry (vio_id)
 );
+CREATE INDEX vio_sess_by_username ON ag.vioscreen_sessions(username);
 
 CREATE TABLE ag.vioscreen_percentenergy_code (
     code varchar PRIMARY KEY,
