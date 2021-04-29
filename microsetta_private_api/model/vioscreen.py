@@ -49,6 +49,19 @@ class VioscreenSession(ModelBase):
         self.created = created
         self.modified = modified
 
+    @property
+    def is_complete(self):
+        return (self.endDate is not None) and (self.status == 'Finished')
+
+    @classmethod
+    def not_present(cls, username):
+        # Support the special case of a username existing in the
+        # vioscreen_registry but not yet existing in the vioscreen_sessions
+        # table
+        return cls(sessionId=None, username=username, protocolId=None,
+                   status=None, startDate=None, endDate=None, cultureCode=None,
+                   created=None, modified=None)
+
     @classmethod
     def from_vioscreen(cls, sessions_data, users_data):
         timeZone = users_data['timeZone']
