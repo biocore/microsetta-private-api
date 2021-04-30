@@ -16,8 +16,11 @@ CREATE TABLE ag.vioscreen_sessions (
     endDate timestamp,
     cultureCode varchar NOT NULL,
     created timestamp NOT NULL,
-    modified timestamp NOT NULL,
-    FOREIGN KEY (username) REFERENCES ag.vioscreen_registry (vio_id)
+    modified timestamp NOT NULL
+    -- no FK is set to ag.vioscreen_registry.vio_id <-> username
+    -- as ag.vioscreen_registry.vio_id is not assured to be UNIQUE.
+    -- this is due to the historical relationship of 1 FFQ to many 
+    -- samples. 
 );
 CREATE INDEX vio_sess_by_username ON ag.vioscreen_sessions(username);
 
@@ -38,6 +41,7 @@ CREATE TABLE ag.vioscreen_percentenergy (
     FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId),
     FOREIGN KEY (code) REFERENCES ag.vioscreen_percentenergy_code (code)
 );
+CREATE INDEX vio_peren_by_sessionid ON ag.vioscreen_percentenergy(sessionId);
 
 INSERT INTO ag.vioscreen_percentenergy_code
     (code, description, shortDescription, units)
