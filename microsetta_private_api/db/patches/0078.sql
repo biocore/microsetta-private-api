@@ -12,7 +12,7 @@ CREATE TABLE ag.vioscreen_sessions (
     username varchar NOT NULL,
     protocolId int NOT NULL,
     status varchar NOT NULL,
-    startDate timestamp NOT NULL,
+    startDate timestamp,  -- a startDate can be null when status is 'New'
     endDate timestamp,
     cultureCode varchar NOT NULL,
     created timestamp NOT NULL,
