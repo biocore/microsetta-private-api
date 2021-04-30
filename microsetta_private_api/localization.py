@@ -1,5 +1,5 @@
-from microsetta_private_api.LEGACY.locale_data import (american_gut,
-                                                       british_gut, spanish_gut)
+from microsetta_private_api.LEGACY.locale_data \
+    import (american_gut, british_gut, spanish_gut)
 
 EN_US = "en-US"
 EN_GB = "en-GB"
