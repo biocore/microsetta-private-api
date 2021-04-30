@@ -109,8 +109,8 @@ class VioscreenPercentEnergy(ModelBase):
 
 
 class VioscreenDietaryScoreComponent(ModelBase):
-    def __init__(self, scoreType, name, score, lowerLimit, upperLimit):
-        self.scoreType = scoreType
+    def __init__(self, code, name, score, lowerLimit, upperLimit):
+        self.code = code
         self.name = name
         self.score = score
         self.lowerLimit = lowerLimit

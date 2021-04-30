@@ -1109,7 +1109,7 @@ class DietaryScoreTestCase(unittest.TestCase):
         self.assertEqual(exp.scoresType, obs.scoresType)
         for exp_obj, obs_obj in zip(exp.scores,
                                     obs.scores):
-            self.assertEqual(exp_obj.scoreType, obs_obj.scoreType)
+            self.assertEqual(exp_obj.code, obs_obj.code)
 
 
 class SupplementsTestCase(unittest.TestCase):

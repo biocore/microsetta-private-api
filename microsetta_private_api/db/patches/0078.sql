@@ -39,6 +39,42 @@ CREATE TABLE ag.vioscreen_percentenergy (
     FOREIGN KEY (code) REFERENCES ag.vioscreen_percentenergy_code (code)
 );
 
+CREATE TABLE ag.vioscreen_dietaryscore_code (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    scoresType varchar NOT NULL,
+    code varchar NOT NULL,
+    name varchar NOT NULL,
+    lowerLimit float NOT NULL,
+    upperLimit float NOT NULL,
+    CONSTRAINT vioscreen_dietaryscore_code_pkey PRIMARY KEY ( id ),
+    UNIQUE (scoresType, code),
+    
+);
+
+CREATE TABLE ag.vioscreen_dietaryscore (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    sessionId varchar NOT NULL,
+    scoresType varchar NOT NULL,
+    code varchar NOT NULL,
+    score float NOT NULL
+    CONSTRAINT vioscreen_dietaryscore_pkey PRIMARY KEY ( id ),
+    UNIQUE (sessionId, scoresType, code),
+    FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId),
+    FOREIGN KEY (scoresType, code) REFERENCES ag.vioscreen_dietaryscore_code(scoresType, code)
+);
+
+CREATE TABLE ag.vioscreen_supplements (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    sessionId varchar NOT NULL,
+    supplement varchar NOT NULL,
+    frequency varchar NOT NULL,
+    amount varchar NOT NULL,
+    average varchar NOT NULL,
+    CONSTRAINT vioscreen_supplements_pkey PRIMARY KEY ( id ),
+    UNIQUE (sessionId, supplement),
+    FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId)
+);
+
 INSERT INTO ag.vioscreen_percentenergy_code
     (code, description, shortDescription, units)
     VALUES ('%mfatot', 'Percent of calories from Monounsaturated Fat', 'Monounsaturated Fat', '%');
@@ -63,3 +99,43 @@ INSERT INTO ag.vioscreen_percentenergy_code
 INSERT INTO ag.vioscreen_percentenergy_code
     (code, description, shortDescription, units)
     VALUES ('%fat', 'Percent of calories from Fat', 'Fat', '%');
+
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','TotalVegetables','Total Vegetables',0.0,5.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','GreensAndBeans','Greens and Beans',0.0,5.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','TotalFruit','Total Fruit',0.0,5.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','WholeFruit','Whole Fruit',0.0,5.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','WholeGrains','Whole Grains',0.0,10.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','Dairy','Dairy',0.0,10.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','TotalProteins','Total Protein Foods',0.0,5.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','SeafoodAndPlantProteins','Seafood and Plant Proteins',0.0,5.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','FattyAcids','Fatty Acids',0.0,10.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','RefinedGrains','Refined Grains',0.0,10.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','Sodium','Sodium',0.0,10.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','EmptyCalories','Empty Calories',0.0,20.0);
+INSERT INTO ag.vioscreen_dietaryscore_code
+    (scoresType, code, name, lowerLimit, upperLimit)
+    VALUES ('Hei2010','TotalScore','Total HEI Score',0.0,100.0);
