@@ -21,6 +21,7 @@ from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.metadata_repo import (retrieve_metadata,
                                                        drop_private_columns)
+from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from microsetta_private_api.tasks import send_email as celery_send_email
 from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
@@ -407,6 +408,7 @@ def query_barcode_stats(body, token_info):
         admin_repo = AdminRepo(t)
         sample_repo = SampleRepo(t)
         template_repo = SurveyTemplateRepo(t)
+        vs_repo = VioscreenSessionRepo(t)
 
         project_barcodes = admin_repo.get_project_barcodes(project)
 
@@ -440,7 +442,11 @@ def query_barcode_stats(body, token_info):
 
             sample_status = sample_repo.get_sample_status(
                 sample.barcode,
-                sample._latest_scan_timestamp  # noqa
+                sample._latest_scan_timestamp
+            )
+
+            ffq_complete, ffq_taken, _ = vs_repo.get_ffq_status_by_sample(
+                sample.id
             )
 
             summary = {
@@ -451,12 +457,8 @@ def query_barcode_stats(body, token_info):
                 "source-email": source_email,
                 "account-email": account_email,
                 "vioscreen_username": vio_id,
-
-                # NOTE: we *do not* have accurate visibility on these statuses
-                # yet so they are assumed false. This support is coming in
-                # a separate pull request
-                "ffq-taken": False,
-                "ffq-complete": False,
+                "ffq-taken": ffq_taken,
+                "ffq-complete": ffq_complete,
                 "sample-status": sample_status,
                 "sample-received": sample_status is not None
             }
