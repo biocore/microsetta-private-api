@@ -20,7 +20,7 @@ VIOSCREEN_SESSION = VioscreenSession(sessionId='0087da64cdcb41ad800c23531d1198f2
                                      created=_to_dt(1, 1, 1970),
                                      modified=_to_dt(1, 1, 1970))
 
-VIOSCREEN_SUPPLEMENTS = VioscreenSupplements(sessionId="005eae45652f4aef9880502a08139155",
+VIOSCREEN_SUPPLEMENTS = VioscreenSupplements(sessionId="0087da64cdcb41ad800c23531d1198f2",
                                    supplements_components=[VioscreenSupplementsComponent(supplement="MultiVitamin",
                                                                                          frequency="7",
                                                                                          amount="200",
@@ -47,7 +47,7 @@ class TestSupplementsRepo(unittest.TestCase):
             s.upsert_session(VIOSCREEN_SESSION)
             r = VioscreenSupplementsRepo(t)
             obs = r.insert_supplements(VIOSCREEN_SUPPLEMENTS)
-            self.assertEqual(obs, 8)
+            self.assertEqual(obs, 2)
 
     def test_get_supplements_exists(self):
         with Transaction() as t:
