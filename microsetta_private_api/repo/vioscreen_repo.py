@@ -149,6 +149,41 @@ class VioscreenSessionRepo(BaseRepo):
 
             return not_in_vioscreen_sessions + incomplete_sessions
 
+    def get_ffq_status_by_sample(self, sample_uuid):
+        """Obtain the FFQ status for a given sample
+
+        Parameters
+        ----------
+        sample_uuid : UUID4
+            The UUID to check the status of
+
+        Returns
+        -------
+        (bool, bool, str or None)
+            The first index if True indicates the FFQ is completed.
+            The second index if True indicates the FFQ has been started,
+                but may or may not be completed.
+            The third index is the exact status from Vioscreen, or None
+                if there is no FFQ associated with the sample.
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT status
+                           FROM ag.vioscreen_sessions vs
+                           JOIN ag.vioscreen_registry vr
+                               ON vs.username=vr.vio_id
+                           WHERE sample_id=%s""", (sample_uuid, ))
+            res = cur.fetchall()
+            if len(res) == 0:
+                return (False, False, None)
+            elif len(res) == 1:
+                status = res[0][0]
+                is_complete = status == 'Finished'
+                is_taken = status in ('Started', 'Review', 'Finished')
+                return (is_complete, is_taken, status)
+            else:
+                raise ValueError("A sample should not have multiple FFQs")
+
+
 class VioscreenPercentEnergyRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
@@ -170,12 +205,12 @@ class VioscreenPercentEnergyRepo(BaseRepo):
                            FROM ag.vioscreen_percentenergy
                            WHERE sessionId = %s""",
                         (vioscreen_percent_energy.sessionId,))
-            if(cur.rowcount==0):
+            if cur.rowcount == 0:
                 energy_components = vioscreen_percent_energy.energy_components
                 inserts = [(vioscreen_percent_energy.sessionId,
                             energy_component.code,
                             energy_component.amount)
-                            for energy_component in energy_components]
+                           for energy_component in energy_components]
 
                 cur.executemany("""INSERT INTO ag.vioscreen_percentenergy
                                     (sessionId, code, amount)
@@ -196,7 +231,8 @@ class VioscreenPercentEnergyRepo(BaseRepo):
         Returns
         -------
         VioscreenPercentEnergy or None
-            The observed percent energy data or None if the session ID is invalid
+            The observed percent energy data or None if the session ID is
+            invalid
         """
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT code, amount
@@ -250,6 +286,7 @@ class VioscreenPercentEnergyRepo(BaseRepo):
                 return row
             else:
                 raise NotFound("No such code: " + code)
+
 
 # This was ported from the american_gut_project's ag_data_access.py.
 class VioscreenRepo(BaseRepo):

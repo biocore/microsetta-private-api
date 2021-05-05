@@ -189,34 +189,36 @@ class VioscreenSessions(unittest.TestCase):
     def test_get_ffq_status_by_sample(self):
         with Transaction() as t:
             r = VioscreenSessionRepo(t)
-            session_modified = copy(VIOSCREEN_SESSION)
-            session_modified.status = 'Finished'
-            session_modified.endDate = _to_dt(2, 1, 1970)
-            r.upsert_session(VIOSCREEN_SESSION)
+            session = r.get_sessions_by_username(VIOSCREEN_USERNAME1)[0]
 
             obs = r.get_ffq_status_by_sample(BARCODE_UUID_NOTIN_REGISTRY)
             self.assertEqual(obs, (False, False, None))
+
+            session.status = 'Finished'
+            session.endDate = _to_dt(2, 1, 1970)
+            r.upsert_session(session)
 
             # enumerate the empirically observed states from vioscreen
             # (is_complete, has_taken, exact_status)
             obs = r.get_ffq_status_by_sample(BARCODE_UUID_FOR_VIOSESSION)
             self.assertEqual(obs, (True, True, 'Finished'))
 
-            session_modified.status = 'Started'
-            session_modified.endDate = None
-            r.upsert_session(VIOSCREEN_SESSION)
-            obs = r.get_ffq_status_by_sample(BARCODE_UUID_FOR_VIOSESSION)
-            self.assertEqual(obs, (True, False, 'Started'))
+            session.status = 'Started'
+            session.endDate = None
+            r.upsert_session(session)
 
-            session_modified.status = 'New'
-            r.upsert_session(VIOSCREEN_SESSION)
+            obs = r.get_ffq_status_by_sample(BARCODE_UUID_FOR_VIOSESSION)
+            self.assertEqual(obs, (False, True, 'Started'))
+
+            session.status = 'New'
+            r.upsert_session(session)
             obs = r.get_ffq_status_by_sample(BARCODE_UUID_FOR_VIOSESSION)
             self.assertEqual(obs, (False, False, 'New'))
 
-            session_modified.status = 'Review'
-            r.upsert_session(VIOSCREEN_SESSION)
+            session.status = 'Review'
+            r.upsert_session(session)
             obs = r.get_ffq_status_by_sample(BARCODE_UUID_FOR_VIOSESSION)
-            self.assertEqual(obs, (True, False, 'Review'))
+            self.assertEqual(obs, (False, True, 'Review'))
 
 
 if __name__ == '__main__':
