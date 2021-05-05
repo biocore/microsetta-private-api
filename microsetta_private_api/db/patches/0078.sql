@@ -51,8 +51,7 @@ CREATE TABLE ag.vioscreen_dietaryscore_code (
     lowerLimit float NOT NULL,
     upperLimit float NOT NULL,
     CONSTRAINT vioscreen_dietaryscore_code_pkey PRIMARY KEY ( id ),
-    UNIQUE (scoresType, code),
-    
+    UNIQUE (scoresType, code)
 );
 
 CREATE TABLE ag.vioscreen_dietaryscore (
@@ -60,7 +59,7 @@ CREATE TABLE ag.vioscreen_dietaryscore (
     sessionId varchar NOT NULL,
     scoresType varchar NOT NULL,
     code varchar NOT NULL,
-    score float NOT NULL
+    score float NOT NULL,
     CONSTRAINT vioscreen_dietaryscore_pkey PRIMARY KEY ( id ),
     UNIQUE (sessionId, scoresType, code),
     FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId),
