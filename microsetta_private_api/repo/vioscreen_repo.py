@@ -1,7 +1,7 @@
 import pandas as pd
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.vioscreen import (
-    VioscreenSession, VioscreenPercentEnergy, 
+    VioscreenSession, VioscreenPercentEnergy,
     VioscreenPercentEnergyComponent)
 from werkzeug.exceptions import NotFound
 
@@ -123,7 +123,7 @@ class VioscreenSessionRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             # criteria 1, vio_ids which are not in vioscreen_sessions
-            cur.execute("""SELECT vio_id
+            cur.execute("""SELECT distinct(vio_id)
                            FROM ag.vioscreen_registry
                            WHERE vio_id NOT IN (
                                SELECT distinct(username)

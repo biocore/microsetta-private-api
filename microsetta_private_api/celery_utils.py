@@ -28,7 +28,11 @@ def init_celery(celery, app):
         "refresh_vioscreen_token": {
             "task": "microsetta_private_api.util.vioscreen.refresh_headers",
             "schedule": 55 * 60
-        }
+        },
+        #"update_vioscreen_sessions": {
+        #    "task": "microsetta_private_api.util.vioscreen.update_session_detail",  # noqa
+        #    "schedule": 60 * 60 * 24  # every 24 hours
+        #}
     }
 
 

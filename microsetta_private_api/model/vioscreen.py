@@ -49,6 +49,13 @@ class VioscreenSession(ModelBase):
         self.created = created
         self.modified = modified
 
+    def update_from_vioscreen(self, update):
+        self.startDate = update['startDate']
+        self.endDate = update['endDate']
+        self.modified = update['modified']
+        self.status = update['status']
+        return self
+
     @property
     def is_complete(self):
         return (self.endDate is not None) and (self.status == 'Finished')
