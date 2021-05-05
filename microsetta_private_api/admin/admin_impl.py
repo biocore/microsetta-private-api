@@ -211,6 +211,7 @@ def send_email(body, token_info):
         email = None
         resolution_url = None
         contact_name = None
+        activation_code = None
 
         # Depending on issue type, determine what email to send to and
         # what account is involved, as well as what link to send user to
@@ -267,6 +268,17 @@ def send_email(body, token_info):
                 resolution_url = build_login_redirect(
                     endpoint + "/"
                 )
+        elif body["issue_type"] == "activation":
+            # If we are sending activation emails, we won't have
+            # anything in our database- no account id, no contact name
+            # no known email.  All we actually can do is read out the email
+            # and append an activation code to the set of arguments
+            if body["template"] == EmailMessage.send_activation_code.name:
+                email = body['template_args']['new_account_email']
+                activations = ActivationRepo(t)
+                activation_code = activations.get_activation_code(email)
+            else:
+                raise Exception("Support more activation subtypes")
         else:
             raise Exception("Update Admin Impl to support more issue types")
 
@@ -276,8 +288,12 @@ def send_email(body, token_info):
         template = EmailMessage[template_name]
 
         template_args = dict(body['template_args'])
-        template_args['resolution_url'] = resolution_url
-        template_args['contact_name'] = contact_name
+        if resolution_url is not None:
+            template_args['resolution_url'] = resolution_url
+        if contact_name is not None:
+            template_args['contact_name'] = contact_name
+        if activation_code is not None:
+            template_args['new_account_code'] = activation_code
         celery_send_email.apply_async(args=[email, template_name,
                                             template_args])
 

@@ -1409,13 +1409,14 @@ paths:
                 # issue type defines what resolution_url the user should go to
                 issue_type:
                   type: string
-                  enum: ["sample"]
+                  enum: ["sample", "activation"]
                 template:
                   type: string
                   enum: ["incorrect_sample_type",
                          "missing_sample_info",
                          "sample_is_valid",
-                         "no_associated_source"]
+                         "no_associated_source",
+                         "send_activation_code"]
                   example: "incorrect_sample_type"
                 template_args:
                   type: object
@@ -1508,6 +1509,36 @@ paths:
             application/json:
               schema:
                 type: array
+
+  '/admin/account_barcode_summary':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.query_barcode_stats
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'sample_barcodes':
+                  type: array
+                  items:
+                    # not using the defined schema for sample_barcode as it is 
+                    # readOnly
+                    type: string
+                  nullable: true
+                project:
+                  type: integer
+      responses:
+        '200':
+          description: Return list of dictionaries of sample status for requested accounts
+        '404':
+          description: Project not found, or requested barcodes not found
+          content:
+            application/json:
+              schema:
+                type: object
 
   '/admin/activation':
     post:
