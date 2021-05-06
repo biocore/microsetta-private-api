@@ -1,16 +1,18 @@
 import unittest
 from microsetta_private_api.model.vioscreen import (
-    VioscreenSession, VioscreenSupplements, 
+    VioscreenSession, VioscreenSupplements,
     VioscreenSupplementsComponent)
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import (
     VioscreenSessionRepo, VioscreenSupplementsRepo)
 from datetime import datetime
 
+
 def _to_dt(mon, day, year):
     return datetime(month=mon, day=day, year=year)
 
-VIOSCREEN_SESSION = VioscreenSession(sessionId='0087da64cdcb41ad800c23531d1198f2',
+
+VIOSCREEN_SESSION = VioscreenSession(sessionId='0087da64cdcb41ad800c23531d1198f2',  # noqa
                                      username='a user',
                                      protocolId=1234,
                                      status='something',
@@ -20,16 +22,20 @@ VIOSCREEN_SESSION = VioscreenSession(sessionId='0087da64cdcb41ad800c23531d1198f2
                                      created=_to_dt(1, 1, 1970),
                                      modified=_to_dt(1, 1, 1970))
 
-VIOSCREEN_SUPPLEMENTS = VioscreenSupplements(sessionId="0087da64cdcb41ad800c23531d1198f2",
-                                   supplements_components=[VioscreenSupplementsComponent(supplement="MultiVitamin",
-                                                                                         frequency="7",
-                                                                                         amount="200",
-                                                                                         average="200"),
-                                                           VioscreenSupplementsComponent(supplement="Calcium",
-                                                                                         frequency="",
-                                                                                         amount="",
-                                                                                         average="")
-                                    ])
+
+VIOSCREEN_SUPPLEMENTS = VioscreenSupplements(
+    sessionId="0087da64cdcb41ad800c23531d1198f2",
+    supplements_components=[VioscreenSupplementsComponent(supplement="MultiVitamin",  # noqa
+                                                          frequency="7",
+                                                          amount="200",
+                                                          average="200"),
+                            VioscreenSupplementsComponent(supplement="Calcium",
+                                                          frequency="",
+                                                          amount="",
+                                                          average="")
+                            ]
+)
+
 
 class TestSupplementsRepo(unittest.TestCase):
     def test_insert_supplements_exists(self):
@@ -65,6 +71,7 @@ class TestSupplementsRepo(unittest.TestCase):
             r = VioscreenSupplementsRepo(t)
             obs = r.get_supplements('does not exist')
             self.assertEqual(obs, None)
+
 
 if __name__ == '__main__':
     unittest.main()

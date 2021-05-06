@@ -125,7 +125,7 @@ class VioscreenDietaryScoreComponent(ModelBase):
 
     @classmethod
     def from_vioscreen(cls, component):
-        return cls(component['type'], component['name'], component['score'], 
+        return cls(component['type'], component['name'], component['score'],
                    component['lowerLimit'], component['upperLimit'])
 
 
@@ -134,7 +134,7 @@ class VioscreenDietaryScore(ModelBase):
         self.sessionId = sessionId
         self.scoresType = scoresType
         self.scores = scores
-    
+
     @classmethod
     def from_vioscreen(cls, ds_data):
         sessionId = ds_data['sessionId']
@@ -154,10 +154,10 @@ class VioscreenSupplementsComponent(ModelBase):
         self.frequency = frequency
         self.amount = amount
         self.average = average
-    
+
     @classmethod
     def from_vioscreen(cls, component):
-        return cls(component['supplement'], component['frequency'], 
+        return cls(component['supplement'], component['frequency'],
                    component['amount'], component['average'])
 
 

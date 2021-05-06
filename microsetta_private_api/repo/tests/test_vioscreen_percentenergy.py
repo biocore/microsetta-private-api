@@ -1,16 +1,18 @@
 import unittest
 from microsetta_private_api.model.vioscreen import (
-    VioscreenSession, VioscreenPercentEnergy, 
+    VioscreenSession, VioscreenPercentEnergy,
     VioscreenPercentEnergyComponent)
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import (
     VioscreenSessionRepo, VioscreenPercentEnergyRepo)
 from datetime import datetime
 
+
 def _to_dt(mon, day, year):
     return datetime(month=mon, day=day, year=year)
 
-VIOSCREEN_SESSION = VioscreenSession(sessionId='0087da64cdcb41ad800c23531d1198f2',
+
+VIOSCREEN_SESSION = VioscreenSession(sessionId='0087da64cdcb41ad800c23531d1198f2',  # noqa
                                      username='a user',
                                      protocolId=1234,
                                      status='something',
@@ -65,6 +67,7 @@ VIOSCREEN_PERCENT_ENERGY = VioscreenPercentEnergy(
                                                     amount=5.59094160186449)
                 ])
 
+
 class TestPercentEnergyRepo(unittest.TestCase):
     def test_insert_percent_energy_exists(self):
         with Transaction() as t:
@@ -99,6 +102,7 @@ class TestPercentEnergyRepo(unittest.TestCase):
             r = VioscreenPercentEnergyRepo(t)
             obs = r.get_percent_energy('does not exist')
             self.assertEqual(obs, None)
+
 
 if __name__ == '__main__':
     unittest.main()

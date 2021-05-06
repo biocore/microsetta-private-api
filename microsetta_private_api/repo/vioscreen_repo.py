@@ -1,7 +1,7 @@
 import pandas as pd
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.vioscreen import (
-    VioscreenSession, VioscreenPercentEnergy, 
+    VioscreenSession, VioscreenPercentEnergy,
     VioscreenPercentEnergyComponent,
     VioscreenDietaryScore,  VioscreenDietaryScoreComponent,
     VioscreenSupplements, VioscreenSupplementsComponent)
@@ -289,23 +289,36 @@ class VioscreenPercentEnergyRepo(BaseRepo):
             else:
                 raise NotFound("No such code: " + code)
 
+
 class VioscreenDietaryScoreRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
-    
+
     def insert_dietary_score(self, vioscreen_dietary_score):
+        """Add in dietary score results for a session
+
+        Parameters
+        ----------
+        vioscreen_dietary_score : VioscreenDietaryScore
+            An instance of a dietary score model
+
+        Returns
+        -------
+        int
+            The number of inserted rows
+        """
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT sessionId
                            FROM ag.vioscreen_dietaryscore
                            WHERE sessionId = %s""",
                         (vioscreen_dietary_score.sessionId,))
-            if(cur.rowcount==0):
+            if cur.rowcount == 0:
                 scores = vioscreen_dietary_score.scores
                 inserts = [(vioscreen_dietary_score.sessionId,
                             vioscreen_dietary_score.scoresType,
                             score.code,
                             score.score)
-                            for score in scores]
+                           for score in scores]
 
                 cur.executemany("""INSERT INTO ag.vioscreen_dietaryscore
                                     (sessionId, scoresType, code, score)
@@ -316,6 +329,18 @@ class VioscreenDietaryScoreRepo(BaseRepo):
                 return 0
 
     def get_dietary_score(self, sessionId):
+        """Obtain the dietary score detail for a particular session
+
+        Parameters
+        ----------
+        sessionId : str
+            The session ID to query
+
+        Returns
+        -------
+        VioscreenDietaryScore or None
+            The dietary score detail, or None if no record was found
+        """
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT scoresType, code, score
                            FROM ag.vioscreen_dietaryscore
@@ -328,7 +353,7 @@ class VioscreenDietaryScoreRepo(BaseRepo):
                 components = []
                 for scoresType, code, score in rows:
                     total_scoresType = scoresType
-                    codeInfo = self._get_code_info(scoresType,code)
+                    codeInfo = self._get_code_info(scoresType, code)
                     vdsc = VioscreenDietaryScoreComponent(code=code,
                                                           name=codeInfo[0],
                                                           score=score,
@@ -340,9 +365,30 @@ class VioscreenDietaryScoreRepo(BaseRepo):
                                              scores=components)
             else:
                 return None
-            
-    
+
     def _get_code_info(self, scoresType, code):
+        """Obtain the detail about a particular score type by its code
+
+        Parameters
+        ----------
+        scoresType : str
+            The score type (e.g. Hei2010) to obtain detail for
+        code : str
+            The code to obtain detail for
+
+        Returns
+        -------
+        tuple
+            The name, lower and upper limit for a particular code
+            and score type
+
+        Raises
+        ------
+        NotFound
+            A NotFound error is raised if the code or score type are
+            unrecognized
+        """
+
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT name, lowerLimit, upperLimit
                            FROM ag.vioscreen_dietaryscore_code
@@ -352,29 +398,44 @@ class VioscreenDietaryScoreRepo(BaseRepo):
             if row is not None:
                 return row
             else:
-                raise NotFound("No such scoreType + code combination found: " + scoresType + code)
+                raise NotFound("No such scoreType + code combination found: "
+                               + scoresType + code)
+
 
 class VioscreenSupplementsRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
 
     def insert_supplements(self, vioscreen_supplements):
+        """Add in supplement results for a session
+
+        Parameters
+        ----------
+        vioscreen_supplements : VioscreenSupplements
+            An instance of a supplements model
+
+        Returns
+        -------
+        int
+            The number of inserted rows
+        """
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT sessionId
                            FROM ag.vioscreen_supplements
                            WHERE sessionId = %s""",
                         (vioscreen_supplements.sessionId,))
-            if(cur.rowcount==0):
+            if cur.rowcount == 0:
                 components = vioscreen_supplements.supplements_components
                 inserts = [(vioscreen_supplements.sessionId,
                             component.supplement,
                             component.frequency,
                             component.amount,
                             component.average)
-                            for component in components]
+                           for component in components]
 
                 cur.executemany("""INSERT INTO ag.vioscreen_supplements
-                                    (sessionId, supplement, frequency, amount, average)
+                                    (sessionId, supplement, frequency,
+                                     amount, average)
                                     VALUES (%s, %s, %s, %s, %s)""",
                                 inserts)
                 return cur.rowcount
@@ -382,6 +443,18 @@ class VioscreenSupplementsRepo(BaseRepo):
                 return 0
 
     def get_supplements(self, sessionId):
+        """Obtain the supplement detail for a particular session
+
+        Parameters
+        ----------
+        sessionId : str
+            The session ID to query
+
+        Returns
+        -------
+        VioscreenSupplements or None
+            The supplements detail, or None if no record was found
+        """
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT supplement, frequency, amount, average
                            FROM ag.vioscreen_supplements
@@ -401,6 +474,7 @@ class VioscreenSupplementsRepo(BaseRepo):
                                             supplements_components=components)
             else:
                 return None
+
 
 # This was ported from the american_gut_project's ag_data_access.py.
 class VioscreenRepo(BaseRepo):
