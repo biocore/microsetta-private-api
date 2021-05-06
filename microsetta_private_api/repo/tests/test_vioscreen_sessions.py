@@ -14,7 +14,7 @@ VIOSCREEN_USERNAME1 = '3379e14164fac0ed'
 
 # in ag_test db, this uuid corresponds to VIOSCREEN_USERNAME1
 BARCODE_UUID_FOR_VIOSESSION = '66ec7d9a-400d-4d71-bce8-fdf79d2be554'
-BARCODE_UUID_NOTIN_REGISTRY = 'edee4af9-65b2-4ed1-ba66-5bf58383005e';
+BARCODE_UUID_NOTIN_REGISTRY = 'edee4af9-65b2-4ed1-ba66-5bf58383005e'
 
 VIOSCREEN_SESSION = VioscreenSession(sessionId='a session',
                                      username='a user',

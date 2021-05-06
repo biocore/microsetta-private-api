@@ -466,9 +466,9 @@ class VioscreenSupplementsRepo(BaseRepo):
                 components = []
                 for row in rows:
                     vsc = VioscreenSupplementsComponent(supplement=row[0],
-                                                       frequency=row[1],  # noqa
-                                                       amount=row[2],  # noqa
-                                                       average=row[3])
+                                                        frequency=row[1],
+                                                        amount=row[2],
+                                                        average=row[3])
                     components.append(vsc)
                 return VioscreenSupplements(sessionId=sessionId,
                                             supplements_components=components)
