@@ -1,10 +1,10 @@
 import unittest
 import pandas as pd
 from microsetta_private_api.model.vioscreen import (
-    VioscreenSession, 
+    VioscreenSession,
     VioscreenPercentEnergyComponent, VioscreenPercentEnergy,
-    VioscreenDietaryScoreComponent, VioscreenDietaryScore, 
-    VioscreenSupplementsComponent, VioscreenSupplements, 
+    VioscreenDietaryScoreComponent, VioscreenDietaryScore,
+    VioscreenSupplementsComponent, VioscreenSupplements,
     VioscreenComposite
 )
 
@@ -571,212 +571,391 @@ PE_DATA = [
 ]
 
 DS_DATA = [
-    {"sessionId": "0087da64cdcb41ad800c23531d1198f2", 
-        "dietaryScore": {"type": "Hei2010", 
+    {"sessionId": "0087da64cdcb41ad800c23531d1198f2",
+        "dietaryScore": {
+            "type": "Hei2010",
             "scores": [
-                {"type": "TotalVegetables", "name": "Total Vegetables", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "GreensAndBeans", "name": "Greens and Beans", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "TotalFruit", "name": "Total Fruit", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeFruit", "name": "Whole Fruit", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeGrains", "name": "Whole Grains", "score": 3.235287086290936, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Dairy", "name": "Dairy", "score": 1.5506188406057975, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "TotalProteins", "name": "Total Protein Foods", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "SeafoodAndPlantProteins", "name": "Seafood and Plant Proteins", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "FattyAcids", "name": "Fatty Acids", "score": 10.0, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "RefinedGrains", "name": "Refined Grains", "score": 10.0, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Sodium", "name": "Sodium", "score": 1.5957926627133845, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "EmptyCalories", "name": "Empty Calories", "score": 20.0, "lowerLimit": 0.0, "upperLimit": 20.0}, 
-                {"type": "TotalScore", "name": "Total HEI Score", "score": 76.38169858961012, "lowerLimit": 0.0, "upperLimit": 100.0}
-            ]
-        }
-    },
+                {"type": "TotalVegetables",
+                 "name": "Total Vegetables", "score": 5.0,
+                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                {"type": "GreensAndBeans", "name": "Greens and Beans",
+                 "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0},
+                {"type": "TotalFruit", "name": "Total Fruit",
+                 "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0},
+                {"type": "WholeFruit", "name": "Whole Fruit",
+                 "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0},
+                {"type": "WholeGrains", "name": "Whole Grains",
+                 "score": 3.235287086290936, "lowerLimit": 0.0,
+                 "upperLimit": 10.0},
+                {"type": "Dairy", "name": "Dairy",
+                 "score": 1.5506188406057975, "lowerLimit": 0.0,
+                 "upperLimit": 10.0},
+                {"type": "TotalProteins", "name": "Total Protein Foods",
+                 "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0},
+                {"type": "SeafoodAndPlantProteins",
+                 "name": "Seafood and Plant Proteins", "score": 5.0,
+                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                {"type": "FattyAcids", "name": "Fatty Acids",
+                 "score": 10.0, "lowerLimit": 0.0, "upperLimit": 10.0},
+                {"type": "RefinedGrains", "name": "Refined Grains",
+                 "score": 10.0, "lowerLimit": 0.0, "upperLimit": 10.0},
+                {"type": "Sodium", "name": "Sodium",
+                 "score": 1.5957926627133845, "lowerLimit": 0.0,
+                 "upperLimit": 10.0},
+                {"type": "EmptyCalories", "name": "Empty Calories",
+                 "score": 20.0, "lowerLimit": 0.0, "upperLimit": 20.0},
+                {"type": "TotalScore", "name": "Total HEI Score",
+                 "score": 76.38169858961012, "lowerLimit": 0.0,
+                 "upperLimit": 100.0}
+            ]}},
     {"sessionId": "00e381e946a04693bbc7ab8b830700e9",
-        "dietaryScore": {"type": "Hei2010", 
-            "scores": [
-                
-            ]
-        }
-    },
+        "dietaryScore": {"type": "Hei2010",
+                         "scores": []}},
     {"sessionId": "005eae45652f4aef9880502a08139155",
-        "dietaryScore": {"type": "Hei2010", 
+        "dietaryScore": {"type": "Hei2010",
+                         "scores": []}},
+    {"sessionId": "00d3616753e04a5bab52d972ad936251",
+        "dietaryScore": {
+            "type": "Hei2010",
             "scores": [
-
+                {"type": "TotalVegetables", "name": "Total Vegetables",
+                 "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0},
+                {"type": "GreensAndBeans", "name": "Greens and Beans",
+                 "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0},
+                {"type": "TotalFruit", "name": "Total Fruit",
+                 "score": 4.514409456498512, "lowerLimit": 0.0,
+                 "upperLimit": 5.0},
+                {"type": "WholeFruit", "name": "Whole Fruit",
+                 "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0},
+                {"type": "WholeGrains", "name": "Whole Grains",
+                 "score": 2.536107209734357, "lowerLimit": 0.0,
+                 "upperLimit": 10.0},
+                {"type": "Dairy", "name": "Dairy",
+                 "score": 8.324808489520159, "lowerLimit": 0.0,
+                 "upperLimit": 10.0},
+                {"type": "TotalProteins", "name": "Total Protein Foods",
+                 "score": 4.0614596268108425, "lowerLimit": 0.0,
+                 "upperLimit": 5.0},
+                {"type": "SeafoodAndPlantProteins",
+                 "name": "Seafood and Plant Proteins",
+                 "score": 3.823510929287682, "lowerLimit": 0.0,
+                 "upperLimit": 5.0},
+                {"type": "FattyAcids", "name": "Fatty Acids",
+                 "score": 0.0, "lowerLimit": 0.0, "upperLimit": 10.0},
+                {"type": "RefinedGrains", "name": "Refined Grains",
+                 "score": 10.0, "lowerLimit": 0.0, "upperLimit": 10.0},
+                {"type": "Sodium", "name": "Sodium",
+                 "score": 3.45530630018148, "lowerLimit": 0.0,
+                 "upperLimit": 10.0},
+                {"type": "EmptyCalories", "name": "Empty Calories",
+                 "score": 8.01530811516409, "lowerLimit": 0.0,
+                 "upperLimit": 20.0},
+                {"type": "TotalScore", "name": "Total HEI Score",
+                 "score": 59.73091012719712, "lowerLimit": 0.0,
+                 "upperLimit": 100.0}
             ]
         }
-    },
-    {"sessionId": "00d3616753e04a5bab52d972ad936251", 
-        "dietaryScore": {"type": "Hei2010", 
-            "scores": [
-                {"type": "TotalVegetables", "name": "Total Vegetables", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "GreensAndBeans", "name": "Greens and Beans", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "TotalFruit", "name": "Total Fruit", "score": 4.514409456498512, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeFruit", "name": "Whole Fruit", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeGrains", "name": "Whole Grains", "score": 2.536107209734357, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Dairy", "name": "Dairy", "score": 8.324808489520159, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "TotalProteins", "name": "Total Protein Foods", "score": 4.0614596268108425, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "SeafoodAndPlantProteins", "name": "Seafood and Plant Proteins", "score": 3.823510929287682, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "FattyAcids", "name": "Fatty Acids", "score": 0.0, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "RefinedGrains", "name": "Refined Grains", "score": 10.0, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Sodium", "name": "Sodium", "score": 3.45530630018148, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "EmptyCalories", "name": "Empty Calories", "score": 8.01530811516409, "lowerLimit": 0.0, "upperLimit": 20.0}, 
-                {"type": "TotalScore", "name": "Total HEI Score", "score": 59.73091012719712, "lowerLimit": 0.0, "upperLimit": 100.0}
-            ]
-        }
-    },
+     },
     {"sessionId": "004c7bec8c904a76bfc5c2f65a33637b",
-        "dietaryScore": {"type": "Hei2010", 
-            "scores": [
+        "dietaryScore": {"type": "Hei2010",
+                         "scores": [
 
-            ]
-        }
-    },
-    {"sessionId": "00c41c34403c4899a9e01d455403114b", 
-        "dietaryScore": {"type": "Hei2010", 
-            "scores": [
-                {"type": "TotalVegetables", "name": "Total Vegetables", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "GreensAndBeans", "name": "Greens and Beans", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "TotalFruit", "name": "Total Fruit", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeFruit", "name": "Whole Fruit", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeGrains", "name": "Whole Grains", "score": 2.6106043404217867, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Dairy", "name": "Dairy", "score": 0.8732242861213225, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "TotalProteins", "name": "Total Protein Foods", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "SeafoodAndPlantProteins", "name": "Seafood and Plant Proteins", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "FattyAcids", "name": "Fatty Acids", "score": 10.0, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "RefinedGrains", "name": "Refined Grains", "score": 10.0, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Sodium", "name": "Sodium", "score": 0.0, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "EmptyCalories", "name": "Empty Calories", "score": 20.0, "lowerLimit": 0.0, "upperLimit": 20.0}, 
-                {"type": "TotalScore", "name": "Total HEI Score", "score": 73.4838286265431, "lowerLimit": 0.0, "upperLimit": 100.0}
-            ]
-        }
-    },
-    {"sessionId": "0003765db07940849b2461b3a058ffba", 
-        "dietaryScore": {"type": "Hei2010", 
-            "scores": [
-                {"type": "TotalVegetables", "name": "Total Vegetables", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "GreensAndBeans", "name": "Greens and Beans", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "TotalFruit", "name": "Total Fruit", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeFruit", "name": "Whole Fruit", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeGrains", "name": "Whole Grains", "score": 10.0, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Dairy", "name": "Dairy", "score": 8.172197818970483, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "TotalProteins", "name": "Total Protein Foods", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "SeafoodAndPlantProteins", "name": "Seafood and Plant Proteins", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "FattyAcids", "name": "Fatty Acids", "score": 4.1785984635140165, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "RefinedGrains", "name": "Refined Grains", "score": 10.0, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Sodium", "name": "Sodium", "score": 2.1833892942459188, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "EmptyCalories", "name": "Empty Calories", "score": 18.281526358473315, "lowerLimit": 0.0, "upperLimit": 20.0}, 
-                {"type": "TotalScore", "name": "Total HEI Score", "score": 82.81571193520372, "lowerLimit": 0.0, "upperLimit": 100.0}
-            ]
-        }
-    },
-    {"sessionId": "005e14983cc646ca8707c2984ed88930", 
-        "dietaryScore": {"type": "Hei2010", 
-            "scores": [
-                {"type": "TotalVegetables", "name": "Total Vegetables", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "GreensAndBeans", "name": "Greens and Beans", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "TotalFruit", "name": "Total Fruit", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeFruit", "name": "Whole Fruit", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeGrains", "name": "Whole Grains", "score": 4.179046594884575, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Dairy", "name": "Dairy", "score": 9.087068693664271, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "TotalProteins", "name": "Total Protein Foods", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "SeafoodAndPlantProteins", "name": "Seafood and Plant Proteins", "score": 4.8355282284562, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "FattyAcids", "name": "Fatty Acids", "score": 0.17405159461471115, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "RefinedGrains", "name": "Refined Grains", "score": 9.375886827256924, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Sodium", "name": "Sodium", "score": 4.304162622077493, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "EmptyCalories", "name": "Empty Calories", "score": 16.48636959393508, "lowerLimit": 0.0, "upperLimit": 20.0}, 
-                {"type": "TotalScore", "name": "Total HEI Score", "score": 73.44211415488925, "lowerLimit": 0.0, "upperLimit": 100.0}
-            ]
-        }
-    },
+                         ]
+                         }
+     },
+    {"sessionId": "00c41c34403c4899a9e01d455403114b",
+        "dietaryScore": {"type": "Hei2010",
+                         "scores": [
+                             {"type": "TotalVegetables",
+                                 "name": "Total Vegetables", "score": 5.0,
+                              "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "GreensAndBeans",
+                                 "name": "Greens and Beans", "score": 5.0,
+                                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "TotalFruit", "name": "Total Fruit",
+                                 "score": 5.0, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "WholeFruit", "name": "Whole Fruit",
+                                 "score": 5.0, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "WholeGrains", "name": "Whole Grains",
+                                 "score": 2.6106043404217867,
+                                 "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "Dairy", "name": "Dairy",
+                                 "score": 0.8732242861213225,
+                                 "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "TotalProteins",
+                                 "name": "Total Protein Foods", "score": 5.0,
+                                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "SeafoodAndPlantProteins",
+                                 "name": "Seafood and Plant Proteins",
+                                 "score": 5.0, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "FattyAcids", "name": "Fatty Acids",
+                                 "score": 10.0, "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "RefinedGrains",
+                                 "name": "Refined Grains",
+                                 "score": 10.0, "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "Sodium", "name": "Sodium",
+                                 "score": 0.0, "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "EmptyCalories",
+                                 "name": "Empty Calories", "score": 20.0,
+                                 "lowerLimit": 0.0, "upperLimit": 20.0},
+                             {"type": "TotalScore",
+                                 "name": "Total HEI Score",
+                                 "score": 73.4838286265431, "lowerLimit": 0.0,
+                                 "upperLimit": 100.0}
+                         ]
+                         }
+     },
+    {"sessionId": "0003765db07940849b2461b3a058ffba",
+        "dietaryScore": {"type": "Hei2010",
+                         "scores": [
+                             {"type": "TotalVegetables",
+                                 "name": "Total Vegetables",
+                                 "score": 5.0, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "GreensAndBeans",
+                                 "name": "Greens and Beans",
+                                 "score": 5.0, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "TotalFruit", "name": "Total Fruit",
+                                 "score": 5.0, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "WholeFruit", "name": "Whole Fruit",
+                                 "score": 5.0, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "WholeGrains", "name": "Whole Grains",
+                                 "score": 10.0, "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "Dairy", "name": "Dairy",
+                                 "score": 8.172197818970483, "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "TotalProteins",
+                                 "name": "Total Protein Foods", "score": 5.0,
+                                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "SeafoodAndPlantProteins",
+                                 "name": "Seafood and Plant Proteins",
+                                 "score": 5.0, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "FattyAcids", "name": "Fatty Acids",
+                                 "score": 4.1785984635140165,
+                                 "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "RefinedGrains",
+                                 "name": "Refined Grains",
+                                 "score": 10.0, "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "Sodium", "name": "Sodium",
+                                 "score": 2.1833892942459188,
+                                 "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "EmptyCalories",
+                                 "name": "Empty Calories",
+                                 "score": 18.281526358473315,
+                                 "lowerLimit": 0.0,
+                                 "upperLimit": 20.0},
+                             {"type": "TotalScore", "name": "Total HEI Score",
+                                 "score": 82.81571193520372, "lowerLimit": 0.0,
+                                 "upperLimit": 100.0}
+                         ]
+                         }
+     },
+    {"sessionId": "005e14983cc646ca8707c2984ed88930",
+        "dietaryScore": {"type": "Hei2010",
+                         "scores": [
+                             {"type": "TotalVegetables",
+                                 "name": "Total Vegetables", "score": 5.0,
+                                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "GreensAndBeans",
+                                 "name": "Greens and Beans", "score": 5.0,
+                                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "TotalFruit", "name": "Total Fruit",
+                                 "score": 5.0, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "WholeFruit", "name": "Whole Fruit",
+                                 "score": 5.0, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "WholeGrains", "name": "Whole Grains",
+                                 "score": 4.179046594884575, "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "Dairy", "name": "Dairy",
+                                 "score": 9.087068693664271, "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "TotalProteins",
+                                 "name": "Total Protein Foods", "score": 5.0,
+                                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "SeafoodAndPlantProteins",
+                                 "name": "Seafood and Plant Proteins",
+                                 "score": 4.8355282284562, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "FattyAcids", "name": "Fatty Acids",
+                                 "score": 0.17405159461471115,
+                                 "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "RefinedGrains",
+                                 "name": "Refined Grains",
+                                 "score": 9.375886827256924, "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "Sodium", "name": "Sodium",
+                                 "score": 4.304162622077493, "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "EmptyCalories",
+                                 "name": "Empty Calories",
+                                 "score": 16.48636959393508, "lowerLimit": 0.0,
+                                 "upperLimit": 20.0},
+                             {"type": "TotalScore", "name": "Total HEI Score",
+                                 "score": 73.44211415488925, "lowerLimit": 0.0,
+                                 "upperLimit": 100.0}
+                         ]
+                         }
+     },
     {"sessionId": "00d5c51ef24e410286057f49bd3f36b2",
-        "dietaryScore": {"type": "Hei2010", 
-            "scores": [
+        "dietaryScore": {"type": "Hei2010",
+                         "scores": [
 
-            ]
-        }
-    },
-    {"sessionId": "006392a3ce1f419ebbaa12b6a5aaaf49", 
-        "dietaryScore": {"type": "Hei2010", 
-            "scores": [
-                {"type": "TotalVegetables", "name": "Total Vegetables", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "GreensAndBeans", "name": "Greens and Beans", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "TotalFruit", "name": "Total Fruit", "score": 1.4283556080637814, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeFruit", "name": "Whole Fruit", "score": 2.8067613352425202, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "WholeGrains", "name": "Whole Grains", "score": 1.8573401523909128, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Dairy", "name": "Dairy", "score": 7.27077857086018, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "TotalProteins", "name": "Total Protein Foods", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "SeafoodAndPlantProteins", "name": "Seafood and Plant Proteins", "score": 5.0, "lowerLimit": 0.0, "upperLimit": 5.0}, 
-                {"type": "FattyAcids", "name": "Fatty Acids", "score": 4.0905309501780875, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "RefinedGrains", "name": "Refined Grains", "score": 8.615641107012927, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "Sodium", "name": "Sodium", "score": 4.753580824270443, "lowerLimit": 0.0, "upperLimit": 10.0}, 
-                {"type": "EmptyCalories", "name": "Empty Calories", "score": 15.394915641340159, "lowerLimit": 0.0, "upperLimit": 20.0}, 
-                {"type": "TotalScore", "name": "Total HEI Score", "score": 66.217904189359, "lowerLimit": 0.0, "upperLimit": 100.0}
-            ]
-        }
-    }
+                         ]
+                         }
+     },
+    {"sessionId": "006392a3ce1f419ebbaa12b6a5aaaf49",
+        "dietaryScore": {"type": "Hei2010",
+                         "scores": [
+                             {"type": "TotalVegetables",
+                                 "name": "Total Vegetables", "score": 5.0,
+                                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "GreensAndBeans",
+                                 "name": "Greens and Beans", "score": 5.0,
+                                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "TotalFruit", "name": "Total Fruit",
+                                 "score": 1.4283556080637814,
+                                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "WholeFruit", "name": "Whole Fruit",
+                                 "score": 2.8067613352425202,
+                                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "WholeGrains", "name": "Whole Grains",
+                                 "score": 1.8573401523909128,
+                                 "lowerLimit": 0.0, "upperLimit": 10.0},
+                             {"type": "Dairy", "name": "Dairy",
+                                 "score": 7.27077857086018,
+                                 "lowerLimit": 0.0, "upperLimit": 10.0},
+                             {"type": "TotalProteins",
+                                 "name": "Total Protein Foods", "score": 5.0,
+                                 "lowerLimit": 0.0, "upperLimit": 5.0},
+                             {"type": "SeafoodAndPlantProteins",
+                                 "name": "Seafood and Plant Proteins",
+                                 "score": 5.0, "lowerLimit": 0.0,
+                                 "upperLimit": 5.0},
+                             {"type": "FattyAcids", "name": "Fatty Acids",
+                                 "score": 4.0905309501780875,
+                                 "lowerLimit": 0.0, "upperLimit": 10.0},
+                             {"type": "RefinedGrains",
+                                 "name": "Refined Grains",
+                                 "score": 8.615641107012927,
+                                 "lowerLimit": 0.0, "upperLimit": 10.0},
+                             {"type": "Sodium", "name": "Sodium",
+                                 "score": 4.753580824270443, "lowerLimit": 0.0,
+                                 "upperLimit": 10.0},
+                             {"type": "EmptyCalories",
+                                 "name": "Empty Calories",
+                                 "score": 15.394915641340159,
+                                 "lowerLimit": 0.0, "upperLimit": 20.0},
+                             {"type": "TotalScore", "name": "Total HEI Score",
+                                 "score": 66.217904189359, "lowerLimit": 0.0,
+                                 "upperLimit": 100.0}
+                         ]
+                         }
+     }
 ]
 
 SUPPLEMENTS_DATA = [
-    {"sessionId": "0087da64cdcb41ad800c23531d1198f2", 
+    {"sessionId": "0087da64cdcb41ad800c23531d1198f2",
         "data": [
-            {"supplement": "MultiVitamin", "frequency": "", "amount": "", "average": ""}, 
-            {"supplement": "Calcium", "frequency": "", "amount": "", "average": ""}
+            {"supplement": "MultiVitamin", "frequency": "", "amount": "",
+                "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
         ]
-    },
-    {"sessionId": "00e381e946a04693bbc7ab8b830700e9", 
+     },
+    {"sessionId": "00e381e946a04693bbc7ab8b830700e9",
         "data": [
-            {"supplement": "MultiVitamin", "frequency": "", "amount": "", "average": ""}, 
-            {"supplement": "Calcium", "frequency": "", "amount": "", "average": ""}
+            {"supplement": "MultiVitamin", "frequency": "", "amount": "",
+                "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
         ]
-    },
-    {"sessionId": "005eae45652f4aef9880502a08139155", 
+     },
+    {"sessionId": "005eae45652f4aef9880502a08139155",
         "data": [
-            {"supplement": "MultiVitamin", "frequency": "7", "amount": "200", "average": "200"}, 
-            {"supplement": "Calcium", "frequency": "", "amount": "", "average": ""}
+            {"supplement": "MultiVitamin", "frequency": "7",
+                "amount": "200", "average": "200"},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
         ]
-    },
-    {"sessionId": "00d3616753e04a5bab52d972ad936251", 
+     },
+    {"sessionId": "00d3616753e04a5bab52d972ad936251",
         "data": [
-            {"supplement": "MultiVitamin", "frequency": "7", "amount": "200", "average": "200"}, 
-            {"supplement": "Calcium", "frequency": "", "amount": "", "average": ""}
+            {"supplement": "MultiVitamin", "frequency": "7", "amount": "200",
+                "average": "200"},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
         ]
-    },
-    {"sessionId": "004c7bec8c904a76bfc5c2f65a33637b", 
+     },
+    {"sessionId": "004c7bec8c904a76bfc5c2f65a33637b",
         "data": [
-            {"supplement": "MultiVitamin", "frequency": "", "amount": "", "average": ""}, 
-            {"supplement": "Calcium", "frequency": "", "amount": "", "average": ""}
+            {"supplement": "MultiVitamin", "frequency": "", "amount": "",
+                "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
         ]
-    },
-    {"sessionId": "00c41c34403c4899a9e01d455403114b", 
+     },
+    {"sessionId": "00c41c34403c4899a9e01d455403114b",
         "data": [
-            {"supplement": "MultiVitamin", "frequency": "7", "amount": "200", "average": "200"}, 
-            {"supplement": "Calcium", "frequency": "", "amount": "", "average": ""}
+            {"supplement": "MultiVitamin", "frequency": "7", "amount": "200",
+                "average": "200"},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
         ]
-    },
-    {"sessionId": "0003765db07940849b2461b3a058ffba", 
+     },
+    {"sessionId": "0003765db07940849b2461b3a058ffba",
         "data": [
-            {"supplement": "MultiVitamin", "frequency": "Less than once per week", "amount": "200", "average": ""}, 
-            {"supplement": "Calcium", "frequency": "", "amount": "", "average": ""}
+            {"supplement": "MultiVitamin",
+                "frequency": "Less than once per week",
+                "amount": "200", "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
         ]
-    },
-    {"sessionId": "005e14983cc646ca8707c2984ed88930", 
+     },
+    {"sessionId": "005e14983cc646ca8707c2984ed88930",
         "data": [
-            {"supplement": "MultiVitamin", "frequency": "", "amount": "", "average": ""}, 
-            {"supplement": "Calcium", "frequency": "", "amount": "", "average": ""}
+            {"supplement": "MultiVitamin", "frequency": "", "amount": "",
+                "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
         ]
-    },
-    {"sessionId": "00d5c51ef24e410286057f49bd3f36b2", 
+     },
+    {"sessionId": "00d5c51ef24e410286057f49bd3f36b2",
         "data": [
-            {"supplement": "MultiVitamin", "frequency": "", "amount": "", "average": ""}, 
-            {"supplement": "Calcium", "frequency": "", "amount": "", "average": ""}
+            {"supplement": "MultiVitamin", "frequency": "", "amount": "",
+                "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
         ]
-    },
-    {"sessionId": "006392a3ce1f419ebbaa12b6a5aaaf49", 
+     },
+    {"sessionId": "006392a3ce1f419ebbaa12b6a5aaaf49",
         "data": [
-            {"supplement": "MultiVitamin", "frequency": "2", "amount": "200", "average": "57"}, 
-            {"supplement": "Calcium", "frequency": "", "amount": "", "average": ""}
+            {"supplement": "MultiVitamin", "frequency": "2", "amount": "200",
+                "average": "57"},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
         ]
-    }
+     }
 ]
+
 
 class SessionsTestCase(unittest.TestCase):
 
@@ -1034,6 +1213,7 @@ class PercentEnergyTestCase(unittest.TestCase):
 
 
 class DietaryScoreTestCase(unittest.TestCase):
+    # flake8: noqa: E501
     def test_from_vioscreen(self):
         exp = VioscreenDietaryScore(sessionId="0087da64cdcb41ad800c23531d1198f2",
                                     scoresType="Hei2010",
@@ -1103,7 +1283,7 @@ class DietaryScoreTestCase(unittest.TestCase):
                                                                            lowerLimit=0,
                                                                            upperLimit=0)
                                             ])
-        
+
         obs = VioscreenDietaryScore.from_vioscreen(DS_DATA[0])
         self.assertEqual(exp.sessionId, obs.sessionId)
         self.assertEqual(exp.scoresType, obs.scoresType)
@@ -1114,16 +1294,19 @@ class DietaryScoreTestCase(unittest.TestCase):
 
 class SupplementsTestCase(unittest.TestCase):
     def test_from_vioscreen(self):
-        exp = VioscreenSupplements(sessionId="005eae45652f4aef9880502a08139155",
-                                   supplements_components=[VioscreenSupplementsComponent(supplement="MultiVitamin",
-                                                                                         frequency="7",
-                                                                                         amount="200",
-                                                                                         average="200"),
-                                                           VioscreenSupplementsComponent(supplement="Calcium",
-                                                                                         frequency="",
-                                                                                         amount="",
-                                                                                         average="")
-                                    ])
+        exp = VioscreenSupplements(
+            sessionId="005eae45652f4aef9880502a08139155",
+            supplements_components=[
+                VioscreenSupplementsComponent(
+                    supplement="MultiVitamin",
+                    frequency="7",
+                    amount="200",
+                    average="200"),
+                VioscreenSupplementsComponent(
+                    supplement="Calcium",
+                    frequency="",
+                    amount="",
+                    average="")])
 
         obs = VioscreenSupplements.from_vioscreen(SUPPLEMENTS_DATA[2])
         self.assertEqual(exp.sessionId, obs.sessionId)
