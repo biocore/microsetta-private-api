@@ -69,6 +69,19 @@ VIOSCREEN_PERCENT_ENERGY = VioscreenPercentEnergy(
 
 
 class TestPercentEnergyRepo(unittest.TestCase):
+    def _assert_unordered_components(self, obs, exp):
+        self.assertEqual(obs.sessionId, exp.sessionId)
+        obs_comp = {c.code: c for c in obs.energy_components}
+        exp_comp = {c.code: c for c in exp.energy_components}
+
+        # make sure the keys (codes) are the same
+        self.assertEqual(set(obs_comp), set(exp_comp))
+
+        # there are small numeric differences going in/out of the database
+        for k in obs_comp:
+            self.assertAlmostEqual(obs_comp[k].amount,
+                                   exp_comp[k].amount)
+
     def test_insert_percent_energy_exists(self):
         with Transaction() as t:
             s = VioscreenSessionRepo(t)
@@ -93,7 +106,7 @@ class TestPercentEnergyRepo(unittest.TestCase):
             r = VioscreenPercentEnergyRepo(t)
             r.insert_percent_energy(VIOSCREEN_PERCENT_ENERGY)
             obs = r.get_percent_energy(VIOSCREEN_PERCENT_ENERGY.sessionId)
-            self.assertEqual(obs, VIOSCREEN_PERCENT_ENERGY)
+            self._assert_unordered_components(obs, VIOSCREEN_PERCENT_ENERGY)
 
     def test_get_percent_energy_does_not_exist(self):
         with Transaction() as t:
