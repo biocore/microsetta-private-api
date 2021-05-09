@@ -24,13 +24,6 @@ CREATE TABLE ag.vioscreen_sessions (
 );
 CREATE INDEX vio_sess_by_username ON ag.vioscreen_sessions(username);
 
-CREATE TABLE ag.vioscreen_percentenergy_code (
-    code varchar PRIMARY KEY,
-    description varchar NOT NULL,
-    shortDescription varchar NOT NULL,
-    units varchar NOT NULL
-);
-
 CREATE TABLE ag.vioscreen_percentenergy (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     sessionId varchar NOT NULL,
@@ -38,21 +31,9 @@ CREATE TABLE ag.vioscreen_percentenergy (
     amount float NOT NULL,
     CONSTRAINT vioscreen_percentenergy_pkey PRIMARY KEY ( id ),
     UNIQUE (sessionId, code),
-    FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId),
-    FOREIGN KEY (code) REFERENCES ag.vioscreen_percentenergy_code (code)
+    FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId)
 );
 CREATE INDEX vio_peren_by_sessionid ON ag.vioscreen_percentenergy(sessionId);
-
-CREATE TABLE ag.vioscreen_dietaryscore_code (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    scoresType varchar NOT NULL,
-    code varchar NOT NULL,
-    name varchar NOT NULL,
-    lowerLimit float NOT NULL,
-    upperLimit float NOT NULL,
-    CONSTRAINT vioscreen_dietaryscore_code_pkey PRIMARY KEY ( id ),
-    UNIQUE (scoresType, code)
-);
 
 CREATE TABLE ag.vioscreen_dietaryscore (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
@@ -62,9 +43,9 @@ CREATE TABLE ag.vioscreen_dietaryscore (
     score float NOT NULL,
     CONSTRAINT vioscreen_dietaryscore_pkey PRIMARY KEY ( id ),
     UNIQUE (sessionId, scoresType, code),
-    FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId),
-    FOREIGN KEY (scoresType, code) REFERENCES ag.vioscreen_dietaryscore_code(scoresType, code)
+    FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId)
 );
+CREATE INDEX vio_diet_by_sessionid ON ag.vioscreen_dietaryscore(sessionId);
 
 CREATE TABLE ag.vioscreen_supplements (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
@@ -77,68 +58,4 @@ CREATE TABLE ag.vioscreen_supplements (
     UNIQUE (sessionId, supplement),
     FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId)
 );
-
-INSERT INTO ag.vioscreen_percentenergy_code
-    (code, description, shortDescription, units)
-    VALUES ('%mfatot', 'Percent of calories from Monounsaturated Fat', 'Monounsaturated Fat', '%');
-INSERT INTO ag.vioscreen_percentenergy_code
-    (code, description, shortDescription, units)
-    VALUES ('%pfatot', 'Percent of calories from Polyunsaturated Fat', 'Polyunsaturated Fat', '%');
-INSERT INTO ag.vioscreen_percentenergy_code
-    (code, description, shortDescription, units)
-    VALUES ('%carbo', 'Percent of calories from Carbohydrate', 'Carbohydrate', '%');
-INSERT INTO ag.vioscreen_percentenergy_code
-    (code, description, shortDescription, units)
-    VALUES ('%sfatot', 'Percent of calories from Saturated Fat', 'Saturated Fat', '%');
-INSERT INTO ag.vioscreen_percentenergy_code
-    (code, description, shortDescription, units)
-    VALUES ('%alcohol', 'Percent of calories from Alcohol', 'Alcohol', '%');
-INSERT INTO ag.vioscreen_percentenergy_code
-    (code, description, shortDescription, units)
-    VALUES ('%protein', 'Percent of calories from Protein', 'Protein', '%');
-INSERT INTO ag.vioscreen_percentenergy_code
-    (code, description, shortDescription, units)
-    VALUES ('%adsugtot', 'Percent of calories from Added Sugar', 'Added Sugar', '%');
-INSERT INTO ag.vioscreen_percentenergy_code
-    (code, description, shortDescription, units)
-    VALUES ('%fat', 'Percent of calories from Fat', 'Fat', '%');
-
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','TotalVegetables','Total Vegetables',0.0,5.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','GreensAndBeans','Greens and Beans',0.0,5.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','TotalFruit','Total Fruit',0.0,5.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','WholeFruit','Whole Fruit',0.0,5.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','WholeGrains','Whole Grains',0.0,10.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','Dairy','Dairy',0.0,10.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','TotalProteins','Total Protein Foods',0.0,5.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','SeafoodAndPlantProteins','Seafood and Plant Proteins',0.0,5.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','FattyAcids','Fatty Acids',0.0,10.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','RefinedGrains','Refined Grains',0.0,10.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','Sodium','Sodium',0.0,10.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','EmptyCalories','Empty Calories',0.0,20.0);
-INSERT INTO ag.vioscreen_dietaryscore_code
-    (scoresType, code, name, lowerLimit, upperLimit)
-    VALUES ('Hei2010','TotalScore','Total HEI Score',0.0,100.0);
+CREATE INDEX vio_supp_by_sessionid ON ag.vioscreen_supplements(sessionId);

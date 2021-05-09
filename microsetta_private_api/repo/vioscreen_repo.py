@@ -244,14 +244,13 @@ class VioscreenPercentEnergyRepo(BaseRepo):
 
             rows = cur.fetchall()
             if len(rows) > 0:
-                codeInfos = [self._get_code_info(code) for code, _ in rows]
-
                 components = []
-                for (_, amount), codeInfo in zip(rows, codeInfos):
-                    vpec = VioscreenPercentEnergyComponent(code=codeInfo[0],
-                                                           description=codeInfo[1],  # noqa
-                                                           short_description=codeInfo[2],  # noqa
-                                                           units=codeInfo[3],
+                for code, amount in rows:
+                    codeInfo = self._get_code_info(code)
+                    vpec = VioscreenPercentEnergyComponent(code=code,
+                                                           description=codeInfo[0],  # noqa
+                                                           short_description=codeInfo[1],  # noqa
+                                                           units=codeInfo[2],
                                                            amount=amount)
                     components.append(vpec)
                 return VioscreenPercentEnergy(sessionId=sessionId,
@@ -270,7 +269,7 @@ class VioscreenPercentEnergyRepo(BaseRepo):
         Returns
         -------
         tuple
-            The code, description, short description and units for a
+            The description, short description and units for a
             particular code
 
         Raises
@@ -278,16 +277,20 @@ class VioscreenPercentEnergyRepo(BaseRepo):
         NotFound
             A NotFound error is raised if the code is unrecognized
         """
-        with self._transaction.cursor() as cur:
-            cur.execute("""SELECT code, description, shortDescription, units
-                           FROM ag.vioscreen_percentenergy_code
-                           WHERE code = %s""",
-                        (code,))
-            row = cur.fetchone()
-            if row is not None:
-                return row
-            else:
-                raise NotFound("No such code: " + code)
+        
+        code_lookup = {'%mfatot': ('Percent of calories from Monounsaturated Fat', 'Monounsaturated Fat', '%'),
+                       '%pfatot': ('Percent of calories from Polyunsaturated Fat', 'Polyunsaturated Fat', '%'),
+                       '%carbo': ('Percent of calories from Carbohydrate', 'Carbohydrate', '%'),
+                       '%sfatot': ('Percent of calories from Saturated Fat', 'Saturated Fat', '%'),
+                       '%alcohol': ('Percent of calories from Alcohol', 'Alcohol', '%'),
+                       '%protein': ('Percent of calories from Protein', 'Protein', '%'),
+                       '%adsugtot': ('Percent of calories from Added Sugar', 'Added Sugar', '%'),
+                       '%fat': ('Percent of calories from Fat', 'Fat', '%')}
+        
+        if code not in code_lookup:
+            raise NotFound("No such code: " + code)
+        
+        return code_lookup[code]
 
 
 class VioscreenDietaryScoreRepo(BaseRepo):
@@ -388,18 +391,31 @@ class VioscreenDietaryScoreRepo(BaseRepo):
             A NotFound error is raised if the code or score type are
             unrecognized
         """
+        
+        code_lookup = {'Hei2010':
+                        {'TotalVegetables': ('Total Vegetables',0.0,5.0),
+                         'GreensAndBeans': ('Greens and Beans',0.0,5.0),
+                         'TotalFruit': ('Total Fruit',0.0,5.0),
+                         'WholeFruit': ('Whole Fruit',0.0,5.0),
+                         'WholeGrains': ('Whole Grains',0.0,10.0),
+                         'Dairy': ('Dairy',0.0,10.0),
+                         'TotalProteins': ('Total Protein Foods',0.0,5.0),
+                         'SeafoodAndPlantProteins': ('Seafood and Plant Proteins',0.0,5.0),
+                         'FattyAcids': ('Fatty Acids',0.0,10.0),
+                         'RefinedGrains': ('Refined Grains',0.0,10.0),
+                         'Sodium': ('Sodium',0.0,10.0),
+                         'EmptyCalories': ('Empty Calories',0.0,20.0),
+                         'TotalScore': ('Total HEI Score',0.0,100.0)
+                        }
+                      }
 
-        with self._transaction.cursor() as cur:
-            cur.execute("""SELECT name, lowerLimit, upperLimit
-                           FROM ag.vioscreen_dietaryscore_code
-                           WHERE scoresType = %s AND code = %s""",
-                        (scoresType, code))
-            row = cur.fetchone()
-            if row is not None:
-                return row
-            else:
-                raise NotFound("No such scoreType + code combination found: "
-                               + scoresType + code)
+        if scoresType not in code_lookup:
+            raise NotFound("No such scoresType: " + scoresType)
+        
+        if code not in code_lookup[scoresType]:
+            raise NotFound("No such code: " + code)
+        
+        return code_lookup[scoresType][code]
 
 
 class VioscreenSupplementsRepo(BaseRepo):
