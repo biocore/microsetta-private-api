@@ -194,6 +194,7 @@ class VioscreenFoodComponentsComponent(ModelBase):
                    component['units'], component['amount'],
                    component['valueType'])
 
+
 class VioscreenFoodComponents(ModelBase):
     def __init__(self, sessionId, components):
         self.sessionId = sessionId

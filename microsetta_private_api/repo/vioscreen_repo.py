@@ -484,6 +484,100 @@ class VioscreenSupplementsRepo(BaseRepo):
                 return None
 
 
+class VioscreenFoodComponentsRepo(BaseRepo):
+    # code : (description, units, valueType)
+    _CODES = {'acesupot': ('Acesulfame Potassium', 'mg', 'Amount'),
+              'addsugar': ('Added Sugars (by Available Carbohydrate)', 'g', 'Amount')}
+    
+    def __init__(self, transaction):
+        super().__init__(transaction)
+
+    def insert_food_components(self, vioscreen_food_components):
+        """Add in food components results for a session
+
+        Parameters
+        ----------
+        vioscreen_food_components : VioscreenFoodComponents
+            An instance of a food components model
+
+        Returns
+        -------
+        int
+            The number of inserted rows
+        """
+        with self._transaction.cursor() as cur:
+            components = vioscreen_food_components.components
+            inserts = [(vioscreen_food_components.sessionId,
+                        component.code,
+                        component.amount)
+                       for component in components]
+
+            cur.executemany("""INSERT INTO ag.vioscreen_foodcomponents
+                                (sessionId, code, amount)
+                                VALUES (%s, %s, %s)""",
+                            inserts)
+            return cur.rowcount
+        
+    def get_food_components(self, sessionId):
+        """Obtain the food components detail for a particular session
+
+        Parameters
+        ----------
+        sessionId : str
+            The session ID to query
+
+        Returns
+        -------
+        VioscreenFoodComponents or None
+            The supplements detail, or None if no record was found
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT code, amount
+                           FROM ag.vioscreen_foodcomponents
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            rows = cur.fetchall()
+            if len(rows) > 0:
+                components = []
+                for code, amount in rows:
+                    codeInfo = self._get_code_info(code)
+                    vfcc = VioscreenFoodComponentsComponent(code=code,
+                                                            description=codeInfo[0],  # noqa
+                                                            units=codeInfo[1],  # noqa
+                                                            amount=amount,
+                                                            valueType=codeInfo[2])
+                    components.append(vfcc)
+                return VioscreenFoodComponent(sessionId=sessionId,
+                                              components=components)
+            else:
+                return None
+
+    def _get_code_info(self, code):
+        """Obtain the detail about a particular food component by its code
+
+        Parameters
+        ----------
+        code : str
+            The code to obtain detail for
+
+        Returns
+        -------
+        tuple
+            The description, units and valueType for a
+            particular code
+
+        Raises
+        ------
+        NotFound
+            A NotFound error is raised if the code is unrecognized
+        """
+        if code not in self._CODES:
+            raise NotFound("No such code: " + code)
+
+        return self._CODES[code]
+
+
 # This was ported from the american_gut_project's ag_data_access.py.
 class VioscreenRepo(BaseRepo):
     def __init__(self, transaction):
