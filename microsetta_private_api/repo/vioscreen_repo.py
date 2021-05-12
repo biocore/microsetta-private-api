@@ -35,15 +35,18 @@ class VioscreenSessionRepo(BaseRepo):
         """
         # upsert based off of https://stackoverflow.com/a/36799500/19741
         with self._transaction.cursor() as cur:
+            doupdateset = ["%s = EXCLUDED.%s" % (a, a) for a in self.COLS
+                           if a not in ('sessionId', 'username')]
+            doupdateset = ','.join(doupdateset)
+
             cur.execute(f"""INSERT INTO ag.vioscreen_sessions (
                                {self._sql_cols}
                                )
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                            ON CONFLICT (sessionId)
                            DO UPDATE SET
-                               status = EXCLUDED.status,
-                               endDate = EXCLUDED.endDate,
-                               modified = EXCLUDED.modified""",
+                               {doupdateset}
+                           """,
                         tuple([getattr(session, attr) for attr in self.COLS]))
             return cur.rowcount == 1
 
@@ -92,6 +95,9 @@ class VioscreenSessionRepo(BaseRepo):
                             WHERE username = %s""",
                         (username, ))
             rows = cur.fetchall()
+
+            # TODO: test if we can add a unique constraint
+            # on username
             if len(rows) == 0:
                 return None
             else:
@@ -130,7 +136,7 @@ class VioscreenSessionRepo(BaseRepo):
                            WHERE vio_id NOT IN (
                                SELECT distinct(username)
                                FROM ag.vioscreen_sessions)""")
-            not_in_vioscreen_sessions = [VioscreenSession.not_present(u[0])
+            not_in_vioscreen_sessions = [VioscreenSession.from_registry(u[0])
                                          for u in cur.fetchall()]
 
             # criteria 2 and 3
@@ -170,8 +176,8 @@ class VioscreenSessionRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT status
-                           FROM ag.vioscreen_sessions vs
-                           JOIN ag.vioscreen_registry vr
+                           FROM ag.vioscreen_sessions AS vs
+                           JOIN ag.vioscreen_registry AS vr
                                ON vs.username=vr.vio_id
                            WHERE sample_id=%s""", (sample_uuid, ))
             res = cur.fetchall()
@@ -187,6 +193,21 @@ class VioscreenSessionRepo(BaseRepo):
 
 
 class VioscreenPercentEnergyRepo(BaseRepo):
+    # code : (long description, short description, units)
+    _CODES = {'%mfatot': ('Percent of calories from Monounsaturated Fat',
+                          'Monounsaturated Fat', '%'),
+              '%pfatot': ('Percent of calories from Polyunsaturated Fat',
+                          'Polyunsaturated Fat', '%'),
+              '%carbo': ('Percent of calories from Carbohydrate',
+                         'Carbohydrate', '%'),
+              '%sfatot': ('Percent of calories from Saturated Fat',
+                          'Saturated Fat', '%'),
+              '%alcohol': ('Percent of calories from Alcohol', 'Alcohol', '%'),
+              '%protein': ('Percent of calories from Protein', 'Protein', '%'),
+              '%adsugtot': ('Percent of calories from Added Sugar',
+                            'Added Sugar', '%'),
+              '%fat': ('Percent of calories from Fat', 'Fat', '%')}
+
     def __init__(self, transaction):
         super().__init__(transaction)
 
@@ -203,24 +224,17 @@ class VioscreenPercentEnergyRepo(BaseRepo):
             Returns number of rows modified
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT sessionId
-                           FROM ag.vioscreen_percentenergy
-                           WHERE sessionId = %s""",
-                        (vioscreen_percent_energy.sessionId,))
-            if cur.rowcount == 0:
-                energy_components = vioscreen_percent_energy.energy_components
-                inserts = [(vioscreen_percent_energy.sessionId,
-                            energy_component.code,
-                            energy_component.amount)
-                           for energy_component in energy_components]
+            energy_components = vioscreen_percent_energy.energy_components
+            inserts = [(vioscreen_percent_energy.sessionId,
+                        energy_component.code,
+                        energy_component.amount)
+                       for energy_component in energy_components]
 
-                cur.executemany("""INSERT INTO ag.vioscreen_percentenergy
-                                    (sessionId, code, amount)
-                                    VALUES (%s, %s, %s)""",
-                                inserts)
-                return cur.rowcount
-            else:
-                return 0
+            cur.executemany("""INSERT INTO ag.vioscreen_percentenergy
+                                (sessionId, code, amount)
+                                VALUES (%s, %s, %s)""",
+                            inserts)
+            return cur.rowcount
 
     def get_percent_energy(self, sessionId):
         """Obtain the percent energy data for a sessionId
@@ -277,23 +291,31 @@ class VioscreenPercentEnergyRepo(BaseRepo):
         NotFound
             A NotFound error is raised if the code is unrecognized
         """
-        
-        code_lookup = {'%mfatot': ('Percent of calories from Monounsaturated Fat', 'Monounsaturated Fat', '%'),
-                       '%pfatot': ('Percent of calories from Polyunsaturated Fat', 'Polyunsaturated Fat', '%'),
-                       '%carbo': ('Percent of calories from Carbohydrate', 'Carbohydrate', '%'),
-                       '%sfatot': ('Percent of calories from Saturated Fat', 'Saturated Fat', '%'),
-                       '%alcohol': ('Percent of calories from Alcohol', 'Alcohol', '%'),
-                       '%protein': ('Percent of calories from Protein', 'Protein', '%'),
-                       '%adsugtot': ('Percent of calories from Added Sugar', 'Added Sugar', '%'),
-                       '%fat': ('Percent of calories from Fat', 'Fat', '%')}
-        
-        if code not in code_lookup:
+        if code not in self._CODES:
             raise NotFound("No such code: " + code)
-        
-        return code_lookup[code]
+
+        return self._CODES[code]
 
 
 class VioscreenDietaryScoreRepo(BaseRepo):
+    # scoresType : { code: (name, lower limit, upper limit) }
+    _CODES = {'Hei2010': {
+                  'TotalVegetables': ('Total Vegetables', 0.0, 5.0),
+                  'GreensAndBeans': ('Greens and Beans', 0.0, 5.0),
+                  'TotalFruit': ('Total Fruit', 0.0, 5.0),
+                  'WholeFruit': ('Whole Fruit', 0.0, 5.0),
+                  'WholeGrains': ('Whole Grains', 0.0, 10.0),
+                  'Dairy': ('Dairy', 0.0, 10.0),
+                  'TotalProteins': ('Total Protein Foods', 0.0, 5.0),
+                  'SeafoodAndPlantProteins': ('Seafood and Plant Proteins',
+                                              0.0, 5.0),
+                  'FattyAcids': ('Fatty Acids', 0.0, 10.0),
+                  'RefinedGrains': ('Refined Grains', 0.0, 10.0),
+                  'Sodium': ('Sodium', 0.0, 10.0),
+                  'EmptyCalories': ('Empty Calories', 0.0, 20.0),
+                  'TotalScore': ('Total HEI Score', 0.0, 100.0)
+                  }}
+
     def __init__(self, transaction):
         super().__init__(transaction)
 
@@ -311,25 +333,18 @@ class VioscreenDietaryScoreRepo(BaseRepo):
             The number of inserted rows
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT sessionId
-                           FROM ag.vioscreen_dietaryscore
-                           WHERE sessionId = %s""",
-                        (vioscreen_dietary_score.sessionId,))
-            if cur.rowcount == 0:
-                scores = vioscreen_dietary_score.scores
-                inserts = [(vioscreen_dietary_score.sessionId,
-                            vioscreen_dietary_score.scoresType,
-                            score.code,
-                            score.score)
-                           for score in scores]
+            scores = vioscreen_dietary_score.scores
+            inserts = [(vioscreen_dietary_score.sessionId,
+                        vioscreen_dietary_score.scoresType,
+                        score.code,
+                        score.score)
+                       for score in scores]
 
-                cur.executemany("""INSERT INTO ag.vioscreen_dietaryscore
-                                    (sessionId, scoresType, code, score)
-                                    VALUES (%s, %s, %s, %s)""",
-                                inserts)
-                return cur.rowcount
-            else:
-                return 0
+            cur.executemany("""INSERT INTO ag.vioscreen_dietaryscore
+                                (sessionId, scoresType, code, score)
+                                VALUES (%s, %s, %s, %s)""",
+                            inserts)
+            return cur.rowcount
 
     def get_dietary_score(self, sessionId):
         """Obtain the dietary score detail for a particular session
@@ -391,31 +406,14 @@ class VioscreenDietaryScoreRepo(BaseRepo):
             A NotFound error is raised if the code or score type are
             unrecognized
         """
-        
-        code_lookup = {'Hei2010':
-                        {'TotalVegetables': ('Total Vegetables',0.0,5.0),
-                         'GreensAndBeans': ('Greens and Beans',0.0,5.0),
-                         'TotalFruit': ('Total Fruit',0.0,5.0),
-                         'WholeFruit': ('Whole Fruit',0.0,5.0),
-                         'WholeGrains': ('Whole Grains',0.0,10.0),
-                         'Dairy': ('Dairy',0.0,10.0),
-                         'TotalProteins': ('Total Protein Foods',0.0,5.0),
-                         'SeafoodAndPlantProteins': ('Seafood and Plant Proteins',0.0,5.0),
-                         'FattyAcids': ('Fatty Acids',0.0,10.0),
-                         'RefinedGrains': ('Refined Grains',0.0,10.0),
-                         'Sodium': ('Sodium',0.0,10.0),
-                         'EmptyCalories': ('Empty Calories',0.0,20.0),
-                         'TotalScore': ('Total HEI Score',0.0,100.0)
-                        }
-                      }
-
-        if scoresType not in code_lookup:
+        if scoresType not in self._CODES:
             raise NotFound("No such scoresType: " + scoresType)
-        
-        if code not in code_lookup[scoresType]:
+
+        scores = self._CODES[scoresType]
+        if code not in scores:
             raise NotFound("No such code: " + code)
-        
-        return code_lookup[scoresType][code]
+
+        return scores[code]
 
 
 class VioscreenSupplementsRepo(BaseRepo):
@@ -436,27 +434,20 @@ class VioscreenSupplementsRepo(BaseRepo):
             The number of inserted rows
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT sessionId
-                           FROM ag.vioscreen_supplements
-                           WHERE sessionId = %s""",
-                        (vioscreen_supplements.sessionId,))
-            if cur.rowcount == 0:
-                components = vioscreen_supplements.supplements_components
-                inserts = [(vioscreen_supplements.sessionId,
-                            component.supplement,
-                            component.frequency,
-                            component.amount,
-                            component.average)
-                           for component in components]
+            components = vioscreen_supplements.supplements_components
+            inserts = [(vioscreen_supplements.sessionId,
+                        component.supplement,
+                        component.frequency,
+                        component.amount,
+                        component.average)
+                       for component in components]
 
-                cur.executemany("""INSERT INTO ag.vioscreen_supplements
-                                    (sessionId, supplement, frequency,
-                                     amount, average)
-                                    VALUES (%s, %s, %s, %s, %s)""",
-                                inserts)
-                return cur.rowcount
-            else:
-                return 0
+            cur.executemany("""INSERT INTO ag.vioscreen_supplements
+                                (sessionId, supplement, frequency,
+                                 amount, average)
+                                VALUES (%s, %s, %s, %s, %s)""",
+                            inserts)
+            return cur.rowcount
 
     def get_supplements(self, sessionId):
         """Obtain the supplement detail for a particular session

@@ -54,6 +54,9 @@ class VioscreenSession(ModelBase):
         self.endDate = update['endDate']
         self.modified = update['modified']
         self.status = update['status']
+        self.protocolId = update['protocolId']
+        self.cultureCode = update['cultureCode']
+        self.created = update['created']
         return self
 
     @property
@@ -61,7 +64,7 @@ class VioscreenSession(ModelBase):
         return (self.endDate is not None) and (self.status == 'Finished')
 
     @classmethod
-    def not_present(cls, username):
+    def from_registry(cls, username):
         # Support the special case of a username existing in the
         # vioscreen_registry but not yet existing in the vioscreen_sessions
         # table

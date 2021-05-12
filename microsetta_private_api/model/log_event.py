@@ -36,6 +36,8 @@ class EventSubtype(Enum):
     EMAIL_NO_SOURCE = "no_associated_source"
     # Fulfillment of a daklapack order must be held
     DAK_ORDER_HOLD = "daklapack_order_hold"
+    # Pester daniel if for what are expected to be unusual situations
+    PESTER_DANIEL = "pester_daniel"
 
 
 class LogEvent(ModelBase):

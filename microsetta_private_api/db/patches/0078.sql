@@ -25,36 +25,34 @@ CREATE TABLE ag.vioscreen_sessions (
 CREATE INDEX vio_sess_by_username ON ag.vioscreen_sessions(username);
 
 CREATE TABLE ag.vioscreen_percentenergy (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     sessionId varchar NOT NULL,
     code varchar NOT NULL,
     amount float NOT NULL,
     CONSTRAINT vioscreen_percentenergy_pkey PRIMARY KEY ( id ),
-    UNIQUE (sessionId, code),
     FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId)
 );
 CREATE INDEX vio_peren_by_sessionid ON ag.vioscreen_percentenergy(sessionId);
+CREATE UNIQUE INDEX vio_peren_sessionidcode ON ag.vioscreen_percentenergy(sessionId, code);
 
 CREATE TABLE ag.vioscreen_dietaryscore (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     sessionId varchar NOT NULL,
     scoresType varchar NOT NULL,
     code varchar NOT NULL,
     score float NOT NULL,
-    CONSTRAINT vioscreen_dietaryscore_pkey PRIMARY KEY ( id ),
     UNIQUE (sessionId, scoresType, code),
     FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId)
 );
 CREATE INDEX vio_diet_by_sessionid ON ag.vioscreen_dietaryscore(sessionId);
 
 CREATE TABLE ag.vioscreen_supplements (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     sessionId varchar NOT NULL,
     supplement varchar NOT NULL,
     frequency varchar NOT NULL,
     amount varchar NOT NULL,
     average varchar NOT NULL,
-    CONSTRAINT vioscreen_supplements_pkey PRIMARY KEY ( id ),
     UNIQUE (sessionId, supplement),
     FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId)
 );

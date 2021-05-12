@@ -7,6 +7,7 @@ from Crypto import Random
 from base64 import b64decode, b64encode
 
 from celery import Task, current_task
+from microsetta_private_api.tasks import send_email
 from microsetta_private_api.celery_utils import celery
 from werkzeug.exceptions import BadRequest
 from werkzeug.urls import url_encode
@@ -385,25 +386,33 @@ def update_session_detail():
         r = VioscreenSessionRepo(t)
         unfinished_sessions = r.get_unfinished_sessions()
 
+    failed_sessions = []
     n_to_get = len(unfinished_sessions)
     for idx, sess in enumerate(unfinished_sessions, 1):
         updated = []
-        if sess.sessionId is None:
-            # a session requires a mix of information from Vioscreen's
-            # representation of a user and a session
-            user_detail = vio_api.user(sess.username)
-            details = vio_api.sessions(sess.username)
 
-            # account for the possibility of a user having multiple
-            # sessions
-            updated.extend([VioscreenSession.from_vioscreen(detail,
-                                                            user_detail)
-                            for detail in details])
-        else:
-            # update our model inplace
-            update = vio_api.session_detail(sess.sessionId)
-            if update['status'] != sess.status:
-                updated.append(sess.update_from_vioscreen(update))
+        # Out of caution, we'll wrap the external resource interaction within
+        # a blanket try/except
+        try:
+            if sess.sessionId is None:
+                # a session requires a mix of information from Vioscreen's
+                # representation of a user and a session
+                user_detail = vio_api.user(sess.username)
+                details = vio_api.sessions(sess.username)
+
+                # account for the possibility of a user having multiple
+                # sessions
+                updated.extend([VioscreenSession.from_vioscreen(detail,
+                                                                user_detail)
+                                for detail in details])
+            else:
+                # update our model inplace
+                update = vio_api.session_detail(sess.sessionId)
+                if update['status'] != sess.status:
+                    updated.append(sess.update_from_vioscreen(update))
+        except Exception as e:  # noqa
+            failed_sessions.append((sess, str(e)))
+            continue
 
         # commit as we go along to avoid holding any individual transaction
         # open for a long period
@@ -426,3 +435,11 @@ def update_session_detail():
         meta={"completion": n_to_get,
               "status": "SUCCESS",
               "message": f"{n_to_get} sessions updated"})
+
+    if len(failed_sessions) > 0:
+        # ...and let's make Daniel feel bad about not having a better means to
+        # log what hopefully never occurs
+        payload = ''.join(['%s : %s\n' % (s, m) for s, m in failed_sessions])
+        send_email("danielmcdonald@ucsd.edu", "pester_daniel",
+                   {"what": "Vioscreen sessions failed",
+                    "content": payload})
