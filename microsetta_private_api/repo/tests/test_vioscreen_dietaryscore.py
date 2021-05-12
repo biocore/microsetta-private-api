@@ -95,15 +95,6 @@ VIOSCREEN_DIETARY_SCORE = VioscreenDietaryScore(
 
 
 class TestDietaryScoreRepo(unittest.TestCase):
-    def test_insert_dietary_score_exists(self):
-        with Transaction() as t:
-            s = VioscreenSessionRepo(t)
-            s.upsert_session(VIOSCREEN_SESSION)
-            r = VioscreenDietaryScoreRepo(t)
-            r.insert_dietary_score(VIOSCREEN_DIETARY_SCORE)
-            obs = r.insert_dietary_score(VIOSCREEN_DIETARY_SCORE)
-            self.assertEqual(obs, 0)
-
     def test_insert_dietary_score_does_not_exist(self):
         with Transaction() as t:
             s = VioscreenSessionRepo(t)

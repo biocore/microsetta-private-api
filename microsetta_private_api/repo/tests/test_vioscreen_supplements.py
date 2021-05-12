@@ -38,15 +38,6 @@ VIOSCREEN_SUPPLEMENTS = VioscreenSupplements(
 
 
 class TestSupplementsRepo(unittest.TestCase):
-    def test_insert_supplements_exists(self):
-        with Transaction() as t:
-            s = VioscreenSessionRepo(t)
-            s.upsert_session(VIOSCREEN_SESSION)
-            r = VioscreenSupplementsRepo(t)
-            r.insert_supplements(VIOSCREEN_SUPPLEMENTS)
-            obs = r.insert_supplements(VIOSCREEN_SUPPLEMENTS)
-            self.assertEqual(obs, 0)
-
     def test_insert_supplements_does_not_exist(self):
         with Transaction() as t:
             s = VioscreenSessionRepo(t)

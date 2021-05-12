@@ -63,9 +63,9 @@ class EmailMessage(Enum):
         "[PESTER] a thing happened",
         "email/pester_daniel.jinja2",
         "email/pester_daniel.plain",
-        "what", "content",
+        ("what", "content"),
         EventType.EMAIL,
-        EventType.PESTER_DANIEL
+        EventSubtype.PESTER_DANIEL
     )
 
     def __init__(self, subject, html, plain, required, event_type, event_sub):

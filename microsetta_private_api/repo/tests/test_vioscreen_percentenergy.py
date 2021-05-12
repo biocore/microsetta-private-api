@@ -82,15 +82,6 @@ class TestPercentEnergyRepo(unittest.TestCase):
             self.assertAlmostEqual(obs_comp[k].amount,
                                    exp_comp[k].amount)
 
-    def test_insert_percent_energy_exists(self):
-        with Transaction() as t:
-            s = VioscreenSessionRepo(t)
-            s.upsert_session(VIOSCREEN_SESSION)
-            r = VioscreenPercentEnergyRepo(t)
-            r.insert_percent_energy(VIOSCREEN_PERCENT_ENERGY)
-            obs = r.insert_percent_energy(VIOSCREEN_PERCENT_ENERGY)
-            self.assertEqual(obs, 0)
-
     def test_insert_percent_energy_does_not_exist(self):
         with Transaction() as t:
             s = VioscreenSessionRepo(t)
