@@ -29,7 +29,6 @@ CREATE TABLE ag.vioscreen_percentenergy (
     sessionId varchar NOT NULL,
     code varchar NOT NULL,
     amount float NOT NULL,
-    CONSTRAINT vioscreen_percentenergy_pkey PRIMARY KEY ( id ),
     FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId)
 );
 CREATE INDEX vio_peren_by_sessionid ON ag.vioscreen_percentenergy(sessionId);
