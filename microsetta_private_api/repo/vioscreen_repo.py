@@ -4,7 +4,8 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenSession, VioscreenPercentEnergy,
     VioscreenPercentEnergyComponent,
     VioscreenDietaryScore,  VioscreenDietaryScoreComponent,
-    VioscreenSupplements, VioscreenSupplementsComponent)
+    VioscreenSupplements, VioscreenSupplementsComponent,
+    VioscreenFoodComponents, VioscreenFoodComponentsComponent)
 from werkzeug.exceptions import NotFound
 
 
