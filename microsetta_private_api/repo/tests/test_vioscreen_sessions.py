@@ -187,8 +187,12 @@ class VioscreenSessions(unittest.TestCase):
                              exp - {VIOSCREEN_USERNAME1, })
 
     def test_get_ffq_status_by_sample(self):
+
+        session_copy = VIOSCREEN_SESSION.copy()
+        session_copy.username = VIOSCREEN_USERNAME1
         with Transaction() as t:
             r = VioscreenSessionRepo(t)
+            r.upsert_session(session_copy)
             session = r.get_sessions_by_username(VIOSCREEN_USERNAME1)[0]
 
             obs = r.get_ffq_status_by_sample(BARCODE_UUID_NOTIN_REGISTRY)
