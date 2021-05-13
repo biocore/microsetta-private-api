@@ -179,7 +179,7 @@ FC_DATA = {"sessionId": "0087da64cdcb41ad800c23531d1198f2",
                 {"code": "vitd_iu", "description": "Vitamin D", "units": "IU", "amount": 283.121060848004, "valueType": "Amount"}, 
                 {"code": "omega3_epadha", "description": "Omega-3 Fatty Acids [EPA + DHA]", "units": "g", "amount": 0.53549569623245, "valueType": "Amount"}, 
                 {"code": "omega6_la", "description": "pfa182 + pfa204, la = linoleic acid", "units": "g", "amount": 16.159581216928, "valueType": "Amount"}
-            ]
+        ]
 }
 
 VIOSCREEN_FOOD_COMPONENTS = VioscreenFoodComponents.from_vioscreen(FC_DATA)
