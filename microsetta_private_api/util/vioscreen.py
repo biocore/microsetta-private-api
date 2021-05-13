@@ -6,13 +6,17 @@ from Crypto.Cipher import AES
 from Crypto import Random
 from base64 import b64decode, b64encode
 
-from celery import Task
+from celery import Task, current_task
+from microsetta_private_api.tasks import send_email
 from microsetta_private_api.celery_utils import celery
 from werkzeug.exceptions import BadRequest
 from werkzeug.urls import url_encode
 import requests
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.repo.transaction import Transaction
+from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
+from microsetta_private_api.model.vioscreen import VioscreenSession
 
 
 def gen_survey_url(user_id,
@@ -245,17 +249,32 @@ def make_vioscreen_request(self, method, url, **kwargs):
 # This object provides a cleaner facade atop the RPC interface to celery
 # and lets you do all the standard vioscreen api operations we support
 class VioscreenAdminAPI:
+    def __init__(self, perform_async=True):
+        self.perform_async = perform_async
+
     def get(self, url, **kwargs):
-        return make_vioscreen_request.delay(
-            "GET",
-            url,
-            **kwargs)
+        if self.perform_async:
+            return make_vioscreen_request.delay(
+                "GET",
+                url,
+                **kwargs)
+        else:
+            return make_vioscreen_request(
+                "GET",
+                url,
+                **kwargs)
 
     def post(self, url, **kwargs):
-        return make_vioscreen_request.delay(
-            "POST",
-            url,
-            **kwargs)
+        if self.perform_async:
+            return make_vioscreen_request.delay(
+                "POST",
+                url,
+                **kwargs)
+        else:
+            return make_vioscreen_request(
+                "POST",
+                url,
+                **kwargs)
 
     def _get_session_data(self, id_, name):
         url = 'sessions/%s/%s' % (id_, name)
@@ -284,15 +303,21 @@ class VioscreenAdminAPI:
     def dietaryscore(self, id_):
         return self._get_session_data(id_, 'dietaryscore').get('dietaryScore')
 
+    def supplements(self, id_):
+        return self._get_session_data(id_, 'supplements').get('data')
+
     def users(self):
         return self.get('users')['users']
 
+    def user(self, username):
+        return self.get(f'users/{username}')
+
     def sessions(self, vioscreen_user):
         detail = self.get('users/%s/sessions' % vioscreen_user)
-
         # TODO: Can we push waiting for the async result out to flask to
         #  free up the flask worker for more requests?
-        detail = detail.get()  # Wait for async result
+        if self.perform_async:
+            detail = detail.get()  # Wait for async result
 
         if 'error' in detail:
             return []
@@ -322,7 +347,7 @@ class VioscreenAdminAPI:
         return errors, results
 
     def top_food_report(self, session_id):
-        async_result = self.post(
+        result = self.post(
             "report/topfoodreport",
             data={
                 "requestId": str(uuid.uuid4()),
@@ -333,4 +358,88 @@ class VioscreenAdminAPI:
 
         # TODO: Celery becomes a lot harder to use when you need to wait for
         #  answers and encode/decode things.  Blah.
-        return base64.b64decode(async_result.get().encode("utf-8"))
+        if self.perform_async:
+            return base64.b64decode(result.get().encode("utf-8"))
+        else:
+            return base64.b64decode(result.encode('utf-8'))
+
+
+@celery.task(ignore_result=False)
+def update_session_detail():
+    # The interaction with the API is occuring within a celery task
+    # and the recommendation from celery is to avoid depending on synchronous
+    # tasks from within a task. As such, we'll use non-async calls here. See
+    # http://docs.celeryq.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
+
+    # HOWEVER, we could implement a watch and monitor child tasks, but
+    # not sure if that would be a particular benefit here
+    vio_api = VioscreenAdminAPI(perform_async=False)
+
+    current_task.update_state(
+        state="PROGRESS",
+        meta={"completion": 0,
+              "status": "PROGRESS",
+              "message": "Gathering unfinished sessions..."})
+
+    # obtain our current unfinished sessions to check
+    with Transaction() as t:
+        r = VioscreenSessionRepo(t)
+        unfinished_sessions = r.get_unfinished_sessions()
+
+    failed_sessions = []
+    n_to_get = len(unfinished_sessions)
+    for idx, sess in enumerate(unfinished_sessions, 1):
+        updated = []
+
+        # Out of caution, we'll wrap the external resource interaction within
+        # a blanket try/except
+        try:
+            if sess.sessionId is None:
+                # a session requires a mix of information from Vioscreen's
+                # representation of a user and a session
+                user_detail = vio_api.user(sess.username)
+                details = vio_api.sessions(sess.username)
+
+                # account for the possibility of a user having multiple
+                # sessions
+                updated.extend([VioscreenSession.from_vioscreen(detail,
+                                                                user_detail)
+                                for detail in details])
+            else:
+                # update our model inplace
+                update = vio_api.session_detail(sess.sessionId)
+                if update['status'] != sess.status:
+                    updated.append(sess.update_from_vioscreen(update))
+        except Exception as e:  # noqa
+            failed_sessions.append((sess, str(e)))
+            continue
+
+        # commit as we go along to avoid holding any individual transaction
+        # open for a long period
+        if len(updated) > 0:
+            with Transaction() as t:
+                r = VioscreenSessionRepo(t)
+
+                for update in updated:
+                    r.upsert_session(update)
+                t.commit()
+
+        current_task.update_state(
+            state="PROGRESS",
+            meta={"completion": (idx / n_to_get) * 100,
+                  "status": "PROGRESS",
+                  "message": "Gathering session data..."})
+
+    current_task.update_state(
+        state="SUCCESS",
+        meta={"completion": n_to_get,
+              "status": "SUCCESS",
+              "message": f"{n_to_get} sessions updated"})
+
+    if len(failed_sessions) > 0:
+        # ...and let's make Daniel feel bad about not having a better means to
+        # log what hopefully never occurs
+        payload = ''.join(['%s : %s\n' % (s, m) for s, m in failed_sessions])
+        send_email("danielmcdonald@ucsd.edu", "pester_daniel",
+                   {"what": "Vioscreen sessions failed",
+                    "content": payload})

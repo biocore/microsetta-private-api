@@ -105,3 +105,4 @@ venv.bak/
 
 # IDE-related files and folders
 .idea/
+.vscode/settings.json

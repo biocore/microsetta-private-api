@@ -59,6 +59,14 @@ class EmailMessage(Enum):
         EventType.EMAIL,
         EventSubtype.EMAIL_NO_SOURCE
     )
+    pester_daniel = (
+        "[PESTER] a thing happened",
+        "email/pester_daniel.jinja2",
+        "email/pester_daniel.plain",
+        ("what", "content"),
+        EventType.EMAIL,
+        EventSubtype.PESTER_DANIEL
+    )
 
     def __init__(self, subject, html, plain, required, event_type, event_sub):
         self.subject = subject
