@@ -23,9 +23,7 @@ def per_sample(project, barcodes):
         if barcodes is None:
             barcodes = project_barcodes
 
-        #######
-        #########
-        for barcode in barcodes[:100]:
+        for barcode in barcodes:
             diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
             if diag is None:
                 raise NotFound(f"Barcode not found: {barcode}")

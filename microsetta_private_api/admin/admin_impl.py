@@ -406,9 +406,8 @@ def query_project_barcode_stats(body, token_info):
 
 def query_barcode_stats(body, token_info):
     validate_admin_access(token_info)
-    print(body)
     barcodes = body["sample_barcodes"]
-    if len(barcodes) > 100:
+    if len(barcodes) > 1000:
         return jsonify({"message": "Too manny barcodes requested"}), 429
     summary = per_sample(None, barcodes)
     return jsonify(summary), 200

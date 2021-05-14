@@ -976,51 +976,23 @@ class AdminApiTests(TestCase):
                 mock_email.side_effect = [True]
                 self._test_post_daklapack_orders(order_info, 401)
 
-    def test_query_barcode_stats_no_project_no_barcodes(self):
-        input_json = json.dumps({'project': 0, 'sample_barcodes': None})
+    def test_query_project_barcode_stats_project(self):
+        input_json = json.dumps({'project': 7, 'email': 'foobar'})
 
         response = self.client.post(
-            "api/admin/account_barcode_summary",
+            "api/admin/account_project_barcode_summary",
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
         )
 
-        # an empty string project should be unkown
-        self.assertEqual(404, response.status_code)
-
-    def test_query_barcode_stats_project_no_barcodes(self):
-        input_json = json.dumps({'project': 7, 'sample_barcodes': None})
-
-        response = self.client.post(
-            "api/admin/account_barcode_summary",
-            content_type='application/json',
-            data=input_json,
-            headers=MOCK_HEADERS
-        )
-
+        # ...we assume the system is processing to send an email
+        # so nothing specific to verify on the response data
         self.assertEqual(200, response.status_code)
-
-        response_obj = json.loads(response.data)
-
-        # there are 24 samples with project 7 in the test db
-        self.assertEqual(len(response_obj), 24)
-
-        # ...10 have been received
-        self.assertEqual(sum([v['sample-received']
-                              for v in response_obj]), 10)
-
-        # ...9 are valid
-        self.assertEqual(sum([v['sample-is-valid']
-                              for v in response_obj]), 9)
-
-        # ...1 is missing a source
-        self.assertEqual(sum([v['no-associated-source']
-                              for v in response_obj]), 1)
 
     def test_query_barcode_stats_project_barcodes(self):
         barcodes = ['000010307', '000023344', '000036855']
-        input_json = json.dumps({'project': 7, 'sample_barcodes': barcodes})
+        input_json = json.dumps({'sample_barcodes': barcodes})
 
         response = self.client.post(
             "api/admin/account_barcode_summary",
