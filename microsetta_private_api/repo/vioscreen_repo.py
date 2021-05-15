@@ -5,7 +5,8 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenPercentEnergyComponent,
     VioscreenDietaryScore,  VioscreenDietaryScoreComponent,
     VioscreenSupplements, VioscreenSupplementsComponent,
-    VioscreenFoodComponents, VioscreenFoodComponentsComponent)
+    VioscreenFoodComponents, VioscreenFoodComponentsComponent,
+    VioscreenEatingPatterns, VioscreenEatingPatternsComponent)
 from werkzeug.exceptions import NotFound
 
 
@@ -683,7 +684,7 @@ class VioscreenFoodComponentsRepo(BaseRepo):
         Returns
         -------
         VioscreenFoodComponents or None
-            The supplements detail, or None if no record was found
+            The food components detail, or None if no record was found
         """
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT code, amount
@@ -709,6 +710,115 @@ class VioscreenFoodComponentsRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular food component by its code
+
+        Parameters
+        ----------
+        code : str
+            The code to obtain detail for
+
+        Returns
+        -------
+        tuple
+            The description, units and valueType for a
+            particular code
+
+        Raises
+        ------
+        NotFound
+            A NotFound error is raised if the code is unrecognized
+        """
+        if code not in self._CODES:
+            raise NotFound("No such code: " + code)
+
+        return self._CODES[code]
+
+
+class VioscreenEatingPatternsRepo(BaseRepo):
+    # code : (description, units, valueType)
+    _CODES = {'ADDEDFATS': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'ALCOHOLSERV': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'ANIMALPROTEIN': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'CALCDAIRYSERV': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'CALCSERV': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'FISHSERV': ('Eating Pattern', 'PerWeek', 'Amount'), 
+              'FRIEDFISH': ('Eating Pattern', 'PerWeek', 'Amount'), 
+              'FRTSUMM': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'GRAINSERV': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'JUICESERV': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'LOWFATDAIRYSERV': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'NOFRYFISHSERV': ('Eating Pattern', 'PerWeek', 'Amount'), 
+              'NONFATDAIRY': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'PLANTPROTEIN': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'SALADSERV': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'SOYFOODS': ('Eating Pattern', 'PerDay', 'Amount'), 
+              'VEGSUMM': ('Eating Pattern', 'PerDay', 'Amount')}
+
+    def __init__(self, transaction):
+        super().__init__(transaction)
+
+    def insert_eating_patterns(self, vioscreen_eating_patterns):
+        """Add in eating patterns results for a session
+
+        Parameters
+        ----------
+        vioscreen_eating_patterns : VioscreenEatingPatterns
+            An instance of a eating patterns model
+
+        Returns
+        -------
+        int
+            The number of inserted rows
+        """
+        with self._transaction.cursor() as cur:
+            components = vioscreen_eating_patterns.components
+            inserts = [(vioscreen_eating_patterns.sessionId,
+                        component.code,
+                        component.amount)
+                       for component in components]
+
+            cur.executemany("""INSERT INTO ag.vioscreen_eatingpatterns
+                                (sessionId, code, amount)
+                                VALUES (%s, %s, %s)""",
+                            inserts)
+            return cur.rowcount
+        
+    def get_eating_patterns(self, sessionId):
+        """Obtain the eating patterns detail for a particular session
+
+        Parameters
+        ----------
+        sessionId : str
+            The session ID to query
+
+        Returns
+        -------
+        VioscreenEatingPatterns or None
+            The eating patterns detail, or None if no record was found
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT code, amount
+                           FROM ag.vioscreen_eatingpatterns
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            rows = cur.fetchall()
+            if len(rows) > 0:
+                components = []
+                for code, amount in rows:
+                    codeInfo = self._get_code_info(code)
+                    vepc = VioscreenEatingPatternsComponent(code=code,
+                                                            description=codeInfo[0],  # noqa
+                                                            units=codeInfo[1],  # noqa
+                                                            amount=amount,
+                                                            valueType=codeInfo[2])
+                    components.append(vepc)
+                return VioscreenEatingPatterns(sessionId=sessionId,
+                                               components=components)
+            else:
+                return None
+
+    def _get_code_info(self, code):
+        """Obtain the detail about a particular eating pattern by its code
 
         Parameters
         ----------

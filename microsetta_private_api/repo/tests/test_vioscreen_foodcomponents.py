@@ -21,6 +21,7 @@ VIOSCREEN_SESSION = VioscreenSession(sessionId='0087da64cdcb41ad800c23531d1198f2
                                      cultureCode='foo',
                                      created=_to_dt(1, 1, 1970),
                                      modified=_to_dt(1, 1, 1970))
+
 FC_DATA = {"sessionId": "0087da64cdcb41ad800c23531d1198f2", 
             "data": [
                 {"code": "acesupot", "description": "Acesulfame Potassium", "units": "mg", "amount": 0.0, "valueType": "Amount"}, 
@@ -188,7 +189,7 @@ VIOSCREEN_FOOD_COMPONENTS = VioscreenFoodComponents.from_vioscreen(FC_DATA)
 
 class TestFoodComponentsRepo(unittest.TestCase):
 
-    def test_insert_food_energy_does_not_exist(self):
+    def test_insert_food_components_does_not_exist(self):
         with Transaction() as t:
             s = VioscreenSessionRepo(t)
             s.upsert_session(VIOSCREEN_SESSION)

@@ -5,7 +5,8 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenPercentEnergyComponent, VioscreenPercentEnergy,
     VioscreenDietaryScoreComponent, VioscreenDietaryScore,
     VioscreenSupplementsComponent, VioscreenSupplements,
-    VioscreenFoodComponents, VioscreenFoodComponentsComponent,
+    VioscreenFoodComponentsComponent, VioscreenFoodComponents, 
+    VioscreenEatingPatternsComponent, VioscreenEatingPatterns,
     VioscreenComposite
 )
 
@@ -1280,6 +1281,51 @@ FC_DATA = [
     }
 ]
 
+EP_DATA = [
+    {"sessionId": "0087da64cdcb41ad800c23531d1198f2", 
+        "data": [
+            {"code": "ADDEDFATS", "description": "Eating Pattern", "units": "PerDay", "amount": 8.07030444201639, "valueType": "Amount"}, 
+            {"code": "ALCOHOLSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 1.30647563412786, "valueType": "Amount"}, 
+            {"code": "ANIMALPROTEIN", "description": "Eating Pattern", "units": "PerDay", "amount": 1.96556496716603, "valueType": "Amount"}, 
+            {"code": "CALCDAIRYSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 0.364432970091999, "valueType": "Amount"}, 
+            {"code": "CALCSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 2.62447202541388, "valueType": "Amount"}, 
+            {"code": "FISHSERV", "description": "Eating Pattern", "units": "PerWeek", "amount": 0.392841568548386, "valueType": "Amount"}, 
+            {"code": "FRIEDFISH", "description": "Eating Pattern", "units": "PerWeek", "amount": 0.0, "valueType": "Amount"}, 
+            {"code": "FRTSUMM", "description": "Eating Pattern", "units": "PerDay", "amount": 4.47806902432647, "valueType": "Amount"}, 
+            {"code": "GRAINSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 0.877350918337469, "valueType": "Amount"}, 
+            {"code": "JUICESERV", "description": "Eating Pattern", "units": "PerDay", "amount": 0.098804910215613, "valueType": "Amount"}, 
+            {"code": "LOWFATDAIRYSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 0.0, "valueType": "Amount"}, 
+            {"code": "NOFRYFISHSERV", "description": "Eating Pattern", "units": "PerWeek", "amount": 0.392841568548386, "valueType": "Amount"}, 
+            {"code": "NONFATDAIRY", "description": "Eating Pattern", "units": "PerDay", "amount": 0.0, "valueType": "Amount"}, 
+            {"code": "PLANTPROTEIN", "description": "Eating Pattern", "units": "PerDay", "amount": 0.200006679966025, "valueType": "Amount"}, 
+            {"code": "SALADSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 5.85226950661777, "valueType": "Amount"}, 
+            {"code": "SOYFOODS", "description": "Eating Pattern", "units": "PerDay", "amount": 0.205479452054794, "valueType": "Amount"}, 
+            {"code": "VEGSUMM", "description": "Eating Pattern", "units": "PerDay", "amount": 13.8556749715375, "valueType": "Amount"}
+        ]
+    },
+    {"sessionId": "005eae45652f4aef9880502a08139155", 
+        "data": [
+            {"code": "ADDEDFATS", "description": "Eating Pattern", "units": "PerDay", "amount": 5.41350079452055, "valueType": "Amount"}, 
+            {"code": "ALCOHOLSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 0.0038081095890411, "valueType": "Amount"}, 
+            {"code": "ANIMALPROTEIN", "description": "Eating Pattern", "units": "PerDay", "amount": 1.63842435552564, "valueType": "Amount"}, 
+            {"code": "CALCDAIRYSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 1.14563422013742, "valueType": "Amount"}, 
+            {"code": "CALCSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 2.75539030711016, "valueType": "Amount"}, 
+            {"code": "FISHSERV", "description": "Eating Pattern", "units": "PerWeek", "amount": 0.47322089900137, "valueType": "Amount"}, 
+            {"code": "FRIEDFISH", "description": "Eating Pattern", "units": "PerWeek", "amount": 0.0, "valueType": "Amount"}, 
+            {"code": "FRTSUMM", "description": "Eating Pattern", "units": "PerDay", "amount": 3.96102171214794, "valueType": "Amount"}, 
+            {"code": "GRAINSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 0.646737676712329, "valueType": "Amount"}, 
+            {"code": "JUICESERV", "description": "Eating Pattern", "units": "PerDay", "amount": 0.857739213517808, "valueType": "Amount"}, 
+            {"code": "LOWFATDAIRYSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 0.0, "valueType": "Amount"}, 
+            {"code": "NOFRYFISHSERV", "description": "Eating Pattern", "units": "PerWeek", "amount": 0.47322089900137, "valueType": "Amount"}, 
+            {"code": "NONFATDAIRY", "description": "Eating Pattern", "units": "PerDay", "amount": 0.0, "valueType": "Amount"}, 
+            {"code": "PLANTPROTEIN", "description": "Eating Pattern", "units": "PerDay", "amount": 0.268328734794521, "valueType": "Amount"}, 
+            {"code": "SALADSERV", "description": "Eating Pattern", "units": "PerDay", "amount": 0.0, "valueType": "Amount"}, 
+            {"code": "SOYFOODS", "description": "Eating Pattern", "units": "PerDay", "amount": 0.0657534246575342, "valueType": "Amount"}, 
+            {"code": "VEGSUMM", "description": "Eating Pattern", "units": "PerDay", "amount": 3.64908085541108, "valueType": "Amount"}
+        ]
+    }
+]
+
 class SessionsTestCase(unittest.TestCase):
 
     def test_from_vioscreen(self):
@@ -1652,6 +1698,26 @@ class FoodComponentsTestCase(unittest.TestCase):
         )
 
         obs = VioscreenFoodComponents.from_vioscreen(FC_DATA[0])
+        self.assertEqual(exp.sessionId, obs.sessionId)
+        exp_obj = exp.components[0]
+        obs_obj = obs.components[0]
+        self.assertEqual(exp_obj.__dict__, obs_obj.__dict__)
+
+
+class EatingPatternsTestCase(unittest.TestCase):
+    def test_from_vioscreen(self):
+        exp = VioscreenEatingPatterns(
+            sessionId="0087da64cdcb41ad800c23531d1198f2",
+            components=[
+                VioscreenEatingPatternsComponent(code="ADDEDFATS", 
+                                                 description="Eating Pattern", 
+                                                 units="PerDay", 
+                                                 amount=8.07030444201639, 
+                                                 valueType="Amount")
+            ]
+        )
+
+        obs = VioscreenEatingPatterns.from_vioscreen(EP_DATA[0])
         self.assertEqual(exp.sessionId, obs.sessionId)
         exp_obj = exp.components[0]
         obs_obj = obs.components[0]

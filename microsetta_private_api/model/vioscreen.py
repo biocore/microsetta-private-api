@@ -180,6 +180,7 @@ class VioscreenSupplements(ModelBase):
 
         return cls(sessionId, supplements_components)
 
+
 class VioscreenFoodComponentsComponent(ModelBase):
     def __init__(self, code, description, units, amount, valueType):
         self.code = code
@@ -210,6 +211,38 @@ class VioscreenFoodComponents(ModelBase):
         ]
 
         return cls(sessionId, food_components)
+
+
+class VioscreenEatingPatternsComponent(ModelBase):
+    def __init__(self, code, description, units, amount, valueType):
+        self.code = code
+        self.description = description
+        self.units = units
+        self.amount = amount
+        self.valueType = valueType
+
+    @classmethod
+    def from_vioscreen(cls, component):
+        return cls(component['code'], component['description'],
+                   component['units'], component['amount'],
+                   component['valueType'])
+
+
+class VioscreenEatingPatterns(ModelBase):
+    def __init__(self, sessionId, components):
+        self.sessionId = sessionId
+        self.components = components
+    
+    @classmethod
+    def from_vioscreen(cls, ep_data):
+        sessionId = ep_data['sessionId']
+
+        ep_components = [
+            VioscreenEatingPatternsComponent.from_vioscreen(component)
+            for component in ep_data['data']
+        ]
+
+        return cls(sessionId, ep_components)
 
 
 class VioscreenComposite:
