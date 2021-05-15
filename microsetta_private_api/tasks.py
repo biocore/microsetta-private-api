@@ -38,7 +38,7 @@ def per_sample_summary(email, project):
 
     # NOTE: we are not using .delay so this action remains
     # within the current celery task
-    template_args = {'date': date, 'project': project},
+    template_args = {'date': date, 'project': project}
     send_basic_email(email,
                      f"[TMI-summary] Project {project}",
                      'email/sample_summary',
