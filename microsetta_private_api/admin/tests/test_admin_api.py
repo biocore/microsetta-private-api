@@ -4,7 +4,6 @@ from unittest.mock import patch
 from flask import Response
 import json
 import microsetta_private_api.server
-from microsetta_private_api.celery_utils import celery
 from microsetta_private_api.model.account import Account, Address
 from microsetta_private_api.model.project import Project
 from microsetta_private_api.repo.transaction import Transaction
@@ -26,10 +25,6 @@ DUMMY_PROJ_NAME = "test project"
 # send to daklapack, it is stored as an int in our db's daklapack_article table
 # so our private api expects it to be sent as an int
 DUMMY_INT_DAK_ARTICLE_CODE = int(DUMMY_DAK_ARTICLE_CODE)
-
-# force celery tasks to run locally rather than dispatch
-# see https://docs.celeryproject.org/en/latest/userguide/configuration.html#std-setting-task_always_eager  # noqa
-celery.task_always_eager = False
 
 
 def teardown_test_data():
@@ -984,12 +979,16 @@ class AdminApiTests(TestCase):
     def test_query_project_barcode_stats_project_without_strip(self):
         input_json = json.dumps({'project': 7, 'email': 'foobar'})
 
-        response = self.client.post(
-            "api/admin/account_project_barcode_summary?strip_sampleid=false",
-            content_type='application/json',
-            data=input_json,
-            headers=MOCK_HEADERS
-        )
+        with patch("microsetta_private_api.tasks."
+                   "per_sample_summary.delay") as mock_delay:
+            mock_delay.return_value = None
+            response = self.client.post(
+                "api/admin/account_project_barcode_summary?"
+                "strip_sampleid=false",
+                content_type='application/json',
+                data=input_json,
+                headers=MOCK_HEADERS
+            )
 
         # ...we assume the system is processing to send an email
         # so nothing specific to verify on the response data
@@ -998,12 +997,16 @@ class AdminApiTests(TestCase):
     def test_query_project_barcode_stats_project_with_strip(self):
         input_json = json.dumps({'project': 7, 'email': 'foobar'})
 
-        response = self.client.post(
-            "api/admin/account_project_barcode_summary?strip_sampleid=True",
-            content_type='application/json',
-            data=input_json,
-            headers=MOCK_HEADERS
-        )
+        with patch("microsetta_private_api.tasks."
+                   "per_sample_summary.delay") as mock_delay:
+            mock_delay.return_value = None
+            response = self.client.post(
+                "api/admin/account_project_barcode_summary?"
+                "strip_sampleid=True",
+                content_type='application/json',
+                data=input_json,
+                headers=MOCK_HEADERS
+            )
 
         # ...we assume the system is processing to send an email
         # so nothing specific to verify on the response data
