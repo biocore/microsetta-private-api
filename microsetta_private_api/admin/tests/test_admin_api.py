@@ -4,6 +4,7 @@ from unittest.mock import patch
 from flask import Response
 import json
 import microsetta_private_api.server
+from microsetta_private_api.celery_utils import celery
 from microsetta_private_api.model.account import Account, Address
 from microsetta_private_api.model.project import Project
 from microsetta_private_api.repo.transaction import Transaction
@@ -25,6 +26,10 @@ DUMMY_PROJ_NAME = "test project"
 # send to daklapack, it is stored as an int in our db's daklapack_article table
 # so our private api expects it to be sent as an int
 DUMMY_INT_DAK_ARTICLE_CODE = int(DUMMY_DAK_ARTICLE_CODE)
+
+# force celery tasks to run locally rather than dispatch
+# see https://docs.celeryproject.org/en/latest/userguide/configuration.html#std-setting-task_always_eager  # noqa
+celery.task_always_eager = False
 
 
 def teardown_test_data():
