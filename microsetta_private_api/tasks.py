@@ -28,8 +28,9 @@ def send_basic_email(to_email, subject, template_base_fp, req_template_keys,
 
 
 @celery.task(ignore_result=True)
-def per_sample_summary(email, project):
-    summaries = per_sample(project, barcodes=None)
+def per_sample_summary(email, project, strip_sampleid):
+    summaries = per_sample(project, barcodes=None,
+                           strip_sampleid=strip_sampleid)
     df = pd.DataFrame(summaries)
     _, path = tempfile.mkstemp()
     df.to_csv(path)

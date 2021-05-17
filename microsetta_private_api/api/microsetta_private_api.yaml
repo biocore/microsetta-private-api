@@ -1513,6 +1513,8 @@ paths:
   '/admin/account_project_barcode_summary':
     post:
       operationId: microsetta_private_api.admin.admin_impl.query_project_barcode_stats
+      parameters:
+        - $ref: '#/components/parameters/strip_sampleid'
       tags:
         - Admin
       requestBody:
@@ -1531,12 +1533,14 @@ paths:
           description: Successfully triggered the summary job
         '404':
           description: Requested project not found
-        '429':
+        '400':
           description: Too many barcodes requested
 
   '/admin/account_barcode_summary':
     post:
       operationId: microsetta_private_api.admin.admin_impl.query_barcode_stats
+      parameters:
+        - $ref: '#/components/parameters/strip_sampleid'
       tags:
         - Admin
       requestBody:
@@ -1595,6 +1599,13 @@ components:
       description: Unique id specifying a user account
       schema:
         $ref: '#/components/schemas/account_id'
+      required: true
+    strip_sampleid:
+      name: strip_sampleid
+      in: query
+      description: Whether to strip barcode information
+      schema:
+        type: boolean
       required: true
     kit_id:
       name: kit_id

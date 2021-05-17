@@ -7,7 +7,7 @@ from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from werkzeug.exceptions import NotFound
 
 
-def per_sample(project, barcodes):
+def per_sample(project, barcodes, strip_sampleid):
     summaries = []
     with Transaction() as t:
         admin_repo = AdminRepo(t)
@@ -37,8 +37,8 @@ def per_sample(project, barcodes):
             source_type = None if source is None else source.source_type
             vio_id = None
 
-            if source is not None and source_type is Source.SOURCE_TYPE_HUMAN:
-                source_email = source.email
+            if source is not None and source_type == Source.SOURCE_TYPE_HUMAN:
+                source_email = source.source_data.email
 
                 vio_id = template_repo.get_vioscreen_id_if_exists(account.id,
                                                                   source.id,
@@ -63,7 +63,7 @@ def per_sample(project, barcodes):
                 )
 
             summary = {
-                "sampleid": barcode,
+                "sampleid": None if strip_sampleid else barcode,
                 "project": project,
                 "source-type": source_type,
                 "site-sampled": sample_site,

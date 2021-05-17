@@ -396,20 +396,20 @@ def query_email_stats(body, token_info):
     return jsonify(results), 200
 
 
-def query_project_barcode_stats(body, token_info):
+def query_project_barcode_stats(body, token_info, strip_sampleid):
     validate_admin_access(token_info)
     email = body.get("email")
     project = body["project"]
-    celery_per_sample_summary.delay(email, project)
+    celery_per_sample_summary.delay(email, project, strip_sampleid)
     return None, 200
 
 
-def query_barcode_stats(body, token_info):
+def query_barcode_stats(body, token_info, strip_sampleid):
     validate_admin_access(token_info)
     barcodes = body["sample_barcodes"]
     if len(barcodes) > 1000:
-        return jsonify({"message": "Too manny barcodes requested"}), 429
-    summary = per_sample(None, barcodes)
+        return jsonify({"message": "Too manny barcodes requested"}), 400
+    summary = per_sample(None, barcodes, strip_sampleid)
     return jsonify(summary), 200
 
 
