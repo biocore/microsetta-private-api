@@ -30,7 +30,8 @@ class Account(ModelBase):
                 input_dict['address']['post_code'],
                 input_dict['address']['country_code']
             ),
-            input_dict['kit_name']
+            input_dict['kit_name'],
+            input_dict['language']
         )
         return result
 
@@ -38,6 +39,7 @@ class Account(ModelBase):
                  account_type, auth_issuer, auth_sub,
                  first_name, last_name,
                  address, created_with_kit_id,
+                 language,
                  creation_time=None, update_time=None):
         self.id = account_id
         self.email = email
@@ -50,6 +52,7 @@ class Account(ModelBase):
         self.created_with_kit_id = created_with_kit_id
         self.creation_time = creation_time
         self.update_time = update_time
+        self.language = language
 
     def to_api(self):
         # api is not given the auth_issuer or auth_sub
@@ -60,6 +63,7 @@ class Account(ModelBase):
             "email": self.email,
             "address": self.address.to_api(),
             "account_type": self.account_type,
+            "language": self.language,
             "creation_time": self.creation_time,
             "update_time": self.update_time,
             "kit_name": self.created_with_kit_id

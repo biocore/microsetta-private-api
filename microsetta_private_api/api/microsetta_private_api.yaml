@@ -1742,6 +1742,11 @@ components:
       readOnly: true
       enum: ["standard", "admin"]
       example: "standard"
+    language:
+      type: string
+      readOnly: true
+      enum: ["en-US", "es-MX"]
+      example: "en-US"
     creation_time:
       type: string
       readOnly: true
@@ -1780,6 +1785,8 @@ components:
           $ref: '#/components/schemas/address'
         account_type:
           $ref: '#/components/schemas/account_type'
+        language:
+          $ref: '#/components/schemas/language'
         creation_time:
           $ref: '#/components/schemas/creation_time'
         update_time:

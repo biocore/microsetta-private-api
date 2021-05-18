@@ -57,6 +57,7 @@ DUMMY_ACCT_INFO = {
     "email": TEST_EMAIL,
     "first_name": "Jane",
     "last_name": "Doe",
+    "language": "en-US",
     KIT_NAME_KEY: EXISTING_KIT_NAME
 }
 DUMMY_ACCT_INFO_2 = {
@@ -70,6 +71,7 @@ DUMMY_ACCT_INFO_2 = {
     "email": TEST_EMAIL_2,
     "first_name": "Obie",
     "last_name": "Dobie",
+    "language": "en-US",
     KIT_NAME_KEY: EXISTING_KIT_NAME_2
 }
 DUMMY_ACCT_ADMIN = {
@@ -432,7 +434,8 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['post_code'],
                 input_obj['address']['country_code']
             ),
-            input_obj['kit_name']
+            input_obj['kit_name'],
+            input_obj['language']
         )
     else:
         acct = Account.from_dict(input_obj, iss, sub)

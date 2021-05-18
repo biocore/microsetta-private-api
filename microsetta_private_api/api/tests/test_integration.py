@@ -164,7 +164,8 @@ class IntegrationTests(TestCase):
                               12345,
                               "US"
                           ),
-                          "fakekit")
+                          "fakekit",
+                          "en-US")
             acct_repo.create_account(acc)
 
             source_repo.create_source(Source(
