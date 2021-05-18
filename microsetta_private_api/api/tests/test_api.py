@@ -604,6 +604,8 @@ class ApiTests(TestCase):
 
                 curr_query_str = urlencode(curr_query_dict)
                 curr_content_json = json.dumps(curr_content_dict)
+
+                print(curr_content_json)
                 curr_url = url if not curr_query_str else \
                     '{0}?{1}'.format(url, curr_query_str)
                 if action == "get":

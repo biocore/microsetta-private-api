@@ -1744,7 +1744,6 @@ components:
       example: "standard"
     language:
       type: string
-      readOnly: true
       enum: ["en-US", "es-MX"]
       example: "en-US"
     creation_time:
@@ -1796,6 +1795,7 @@ components:
         - last_name
         - email
         - address
+        - language
 
     address:   # taken from https://opensource.zalando.com/restful-api-guidelines/#address-fields
       description:
