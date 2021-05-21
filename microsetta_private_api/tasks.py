@@ -4,6 +4,8 @@ from microsetta_private_api.model.log_event import EventType, EventSubtype
 from microsetta_private_api.admin.email_templates import EmailMessage, \
     BasicEmailMessage
 from microsetta_private_api.admin.sample_summary import per_sample
+from microsetta_private_api.repo.transaction import Transaction
+from microsetta_private_api.repo.admin_repo import AdminRepo
 import pandas as pd
 import tempfile
 import os
@@ -29,17 +31,21 @@ def send_basic_email(to_email, subject, template_base_fp, req_template_keys,
 
 @celery.task(ignore_result=True)
 def per_sample_summary(email, project, strip_sampleid):
+    with Transaction() as t:
+        admin = AdminRepo(t)
+        project_name = admin.get_project_name(project)
+
     summaries = per_sample(project, barcodes=None,
                            strip_sampleid=strip_sampleid)
     df = pd.DataFrame(summaries)
     _, path = tempfile.mkstemp()
     df.to_csv(path)
     date = datetime.datetime.now().strftime("%d%b%Y")
-    filename = f'project-{project}-summary-{date}.csv'
+    filename = f'project-{project_name}-summary-{date}.csv'
 
     # NOTE: we are not using .delay so this action remains
     # within the current celery task
-    template_args = {'date': date, 'project': project}
+    template_args = {'date': date, 'project': project_name}
     send_basic_email(email,
                      f"[TMI-summary] Project {project}",
                      'email/sample_summary',
