@@ -300,6 +300,19 @@ class AdminRepoTests(AdminTests):
             self.assertGreater(len(diag['scans_info']), 0)
             self.assertGreater(len(diag['projects_info']), 0)
 
+    def test_get_project_name_fail(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            with self.assertRaisesRegex(NotFound, "not found"):
+                admin_repo.get_project_name(9999999)
+
+    def test_get_project_name(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            obs = admin_repo.get_project_name(1)
+            self.assertEqual(obs, 'American Gut Project')
+
     def test_get_project_barcodes_fail(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
