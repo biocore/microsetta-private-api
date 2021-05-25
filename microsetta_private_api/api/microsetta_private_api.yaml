@@ -1744,8 +1744,8 @@ components:
       example: "standard"
     language:
       type: string
-      enum: ["en-US", "es-MX"]
-      example: "en-US"
+      enum: ["en_US", "es_MX"]
+      example: "en_US"
     creation_time:
       type: string
       readOnly: true
