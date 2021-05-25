@@ -256,7 +256,7 @@ class IntegrationTests(TestCase):
     def test_get_sources(self):
 
         resp = self.client.get(
-            '/api/accounts/%s/sources?language_tag=en-US' % ACCT_ID,
+            '/api/accounts/%s/sources?language_tag=en_US' % ACCT_ID,
             headers=MOCK_HEADERS)
         check_response(resp)
         sources = json.loads(resp.data)
@@ -275,7 +275,7 @@ class IntegrationTests(TestCase):
 
     def test_put_source(self):
         resp = self.client.get(
-            '/api/accounts/%s/sources?language_tag=en-US' % ACCT_ID,
+            '/api/accounts/%s/sources?language_tag=en_US' % ACCT_ID,
             headers=MOCK_HEADERS
         )
         check_response(resp)
@@ -287,7 +287,7 @@ class IntegrationTests(TestCase):
         fuzzy["source_type"] = to_edit["source_type"]
         fuzzy.pop("source_id")
         resp = self.client.put(
-            '/api/accounts/%s/sources/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s?language_tag=en_US' %
             (ACCT_ID, source_id),
             content_type='application/json',
             data=json.dumps(fuzzy),
@@ -300,7 +300,7 @@ class IntegrationTests(TestCase):
                          fuzzy_resp["source_description"])
         to_edit.pop("source_id")
         resp = self.client.put(
-            '/api/accounts/%s/sources/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s?language_tag=en_US' %
             (ACCT_ID, source_id),
             content_type='application/json',
             data=json.dumps(to_edit),
@@ -314,7 +314,7 @@ class IntegrationTests(TestCase):
 
     def test_surveys(self):
         resp = self.client.get(
-            '/api/accounts/%s/sources?language_tag=en-US' % ACCT_ID,
+            '/api/accounts/%s/sources?language_tag=en_US' % ACCT_ID,
             headers=MOCK_HEADERS
         )
         check_response(resp)
@@ -325,19 +325,19 @@ class IntegrationTests(TestCase):
         env = [x for x in sources if x['source_name'] == 'Planty'][0]
 
         resp = self.client.get(
-            '/api/accounts/%s/sources/%s/survey_templates?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/survey_templates?language_tag=en_US' %
             (ACCT_ID, bobo['source_id']),
             headers=MOCK_HEADERS
         )
         bobo_surveys = json.loads(resp.data)
         resp = self.client.get(
-            '/api/accounts/%s/sources/%s/survey_templates?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/survey_templates?language_tag=en_US' %
             (ACCT_ID, doggy['source_id']),
             headers=MOCK_HEADERS
         )
         doggy_surveys = json.loads(resp.data)
         resp = self.client.get(
-            '/api/accounts/%s/sources/%s/survey_templates?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/survey_templates?language_tag=en_US' %
             (ACCT_ID, env['source_id']),
             headers=MOCK_HEADERS
         )
@@ -362,14 +362,14 @@ class IntegrationTests(TestCase):
            submit answers to that survey
         """
         resp = self.client.get(
-            '/api/accounts/%s/sources?language_tag=en-US' % ACCT_ID,
+            '/api/accounts/%s/sources?language_tag=en_US' % ACCT_ID,
             headers=MOCK_HEADERS
         )
         check_response(resp)
         sources = json.loads(resp.data)
         bobo = [x for x in sources if x['source_name'] == 'Bo'][0]
         resp = self.client.get(
-            '/api/accounts/%s/sources/%s/survey_templates?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/survey_templates?language_tag=en_US' %
             (ACCT_ID, bobo['source_id']),
             headers=MOCK_HEADERS
         )
@@ -377,7 +377,7 @@ class IntegrationTests(TestCase):
         chosen_survey = bobo_surveys[0]["survey_template_id"]
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
-            '?language_tag=en-US' %
+            '?language_tag=en_US' %
             (ACCT_ID, bobo['source_id'], chosen_survey),
             headers=MOCK_HEADERS
         )
@@ -385,7 +385,7 @@ class IntegrationTests(TestCase):
 
         model = fuzz_form(json.loads(resp.data)["survey_template_text"])
         resp = self.client.post(
-            '/api/accounts/%s/sources/%s/surveys?language_tag=en-US'
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_US'
             % (ACCT_ID, bobo['source_id']),
             content_type='application/json',
             data=json.dumps(
@@ -402,7 +402,7 @@ class IntegrationTests(TestCase):
 
         # TODO: Need a sanity check, is returned Location supposed to specify
         #  query parameters?
-        resp = self.client.get(loc + "?language_tag=en-US",
+        resp = self.client.get(loc + "?language_tag=en_US",
                                headers=MOCK_HEADERS
                                )
         check_response(resp)
@@ -445,7 +445,7 @@ class IntegrationTests(TestCase):
         # Registering with the authrocket associated with the mock account
         # should fail
         response = self.client.post(
-            '/api/accounts?language_tag=en-US',
+            '/api/accounts?language_tag=en_US',
             content_type='application/json',
             data=acct_json,
             headers=MOCK_HEADERS
@@ -454,7 +454,7 @@ class IntegrationTests(TestCase):
 
         # Registering with a different authrocket should succeed
         response = self.client.post(
-            '/api/accounts?language_tag=en-US',
+            '/api/accounts?language_tag=en_US',
             content_type='application/json',
             data=acct_json,
             headers=MOCK_HEADERS_2
@@ -477,7 +477,7 @@ class IntegrationTests(TestCase):
 
         # Registering again should fail with duplicate email 422
         response = self.client.post(
-            '/api/accounts?language_tag=en-US',
+            '/api/accounts?language_tag=en_US',
             content_type='application/json',
             data=acct_json,
             headers=MOCK_HEADERS_2
@@ -492,7 +492,7 @@ class IntegrationTests(TestCase):
     def test_edit_account_info(self):
         """ Test: Can we edit account information """
         response = self.client.get(
-            '/api/accounts/%s?language_tag=en-US' % (ACCT_ID,),
+            '/api/accounts/%s?language_tag=en_US' % (ACCT_ID,),
             headers=MOCK_HEADERS)
         check_response(response)
 
@@ -537,7 +537,7 @@ class IntegrationTests(TestCase):
         fuzzy_data['account_type'] = "Voldemort"
         print("---\nYou should see a validation error in unittest:")
         response = self.client.put(
-            '/api/accounts/%s?language_tag=en-US' % (ACCT_ID,),
+            '/api/accounts/%s?language_tag=en_US' % (ACCT_ID,),
             content_type='application/json',
             data=json.dumps(fuzzy_data),
             headers=MOCK_HEADERS
@@ -549,7 +549,7 @@ class IntegrationTests(TestCase):
         # Check that data can be written once request is not malformed
         fuzzy_data.pop('account_type')
         response = self.client.put(
-            '/api/accounts/%s?language_tag=en-US' % (ACCT_ID,),
+            '/api/accounts/%s?language_tag=en_US' % (ACCT_ID,),
             content_type='application/json',
             data=json.dumps(fuzzy_data),
             headers=MOCK_HEADERS
@@ -567,7 +567,7 @@ class IntegrationTests(TestCase):
         # Attempt to restore back to old data.
         regular_data.pop('account_type')
         response = self.client.put(
-            '/api/accounts/%s?language_tag=en-US' % (ACCT_ID,),
+            '/api/accounts/%s?language_tag=en_US' % (ACCT_ID,),
             content_type='application/json',
             data=json.dumps(regular_data),
             headers=MOCK_HEADERS
@@ -588,7 +588,7 @@ class IntegrationTests(TestCase):
             and then associate that sample with our account
         """
         response = self.client.get(
-            '/api/kits/?language_tag=en-US&kit_name=%s' % SUPPLIED_KIT_ID,
+            '/api/kits/?language_tag=en_US&kit_name=%s' % SUPPLIED_KIT_ID,
             headers=MOCK_HEADERS)
         check_response(response)
 
@@ -596,7 +596,7 @@ class IntegrationTests(TestCase):
         sample_id = unused_samples[0]['sample_id']
 
         response = self.client.post(
-            '/api/accounts/%s/sources/%s/samples?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples?language_tag=en_US' %
             (ACCT_ID, DOGGY_ID),
             content_type='application/json',
             data=json.dumps(
@@ -609,7 +609,7 @@ class IntegrationTests(TestCase):
 
         # Check that we can now see this sample in the list
         response = self.client.get(
-            '/api/accounts/%s/sources/%s/samples?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples?language_tag=en_US' %
             (ACCT_ID, DOGGY_ID),
             headers=MOCK_HEADERS
         )
@@ -619,7 +619,7 @@ class IntegrationTests(TestCase):
 
         # Check that we can now see this sample individually
         response = self.client.get(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, DOGGY_ID, sample_id),
             headers=MOCK_HEADERS
         )
@@ -627,14 +627,14 @@ class IntegrationTests(TestCase):
 
         # Check that we can't see this sample from outside the account/source
         response = self.client.get(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (NOT_ACCT_ID, DOGGY_ID, sample_id),
             headers=MOCK_HEADERS
         )
         check_response(response, 404)
 
         response = self.client.get(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, HUMAN_ID, sample_id),
             headers=MOCK_HEADERS
         )
@@ -660,7 +660,7 @@ class IntegrationTests(TestCase):
 
         for new_source in [kitty, desky]:
             resp = self.client.post(
-                '/api/accounts/%s/sources?language_tag=en-US' % (ACCT_ID,),
+                '/api/accounts/%s/sources?language_tag=en_US' % (ACCT_ID,),
                 content_type='application/json',
                 data=json.dumps(new_source),
                 headers=MOCK_HEADERS
@@ -694,12 +694,12 @@ class IntegrationTests(TestCase):
 
             # Clean Up by deleting the new sources
             # TODO: Do I -really- need to specify a language_tag to delete???
-            self.client.delete(loc + "?language_tag=en-US")
+            self.client.delete(loc + "?language_tag=en_US")
 
     def test_create_human_source(self):
         """To add a human source, we need to get consent"""
         resp = self.client.get(
-            '/api/accounts/%s/consent?language_tag=en-US&consent_post_url=%s' %
+            '/api/accounts/%s/consent?language_tag=en_US&consent_post_url=%s' %
             (ACCT_ID, DUMMY_CONSENT_POST_URL),
             headers=MOCK_HEADERS
         )
@@ -708,7 +708,7 @@ class IntegrationTests(TestCase):
         # TODO: This should probably fail as it doesn't perfectly match one of
         #  the four variants of consent that can be passed in.  Split it up?
         resp = self.client.post(
-            '/api/accounts/%s/consent?language_tag=en-US' %
+            '/api/accounts/%s/consent?language_tag=en_US' %
             (ACCT_ID,),
             content_type='application/json',
             data=json.dumps(
@@ -736,7 +736,7 @@ class IntegrationTests(TestCase):
         self.assertEqual(source_id_from_obj, source_id_from_obj,
                          "Different source id from loc header and json resp")
 
-        self.client.delete(loc + "?language_tag=en-US",
+        self.client.delete(loc + "?language_tag=en_US",
                            headers=MOCK_HEADERS
                            )
 
@@ -746,7 +746,7 @@ class IntegrationTests(TestCase):
         """
         """To add a human source, we need to get consent"""
         resp = self.client.get(
-            '/api/accounts/%s/consent?language_tag=en-US&consent_post_url=%s' %
+            '/api/accounts/%s/consent?language_tag=en_US&consent_post_url=%s' %
             (ACCT_ID, DUMMY_CONSENT_POST_URL),
             headers=MOCK_HEADERS
         )
@@ -755,7 +755,7 @@ class IntegrationTests(TestCase):
         # TODO: This should probably fail as it doesn't perfectly match one of
         #  the four variants of consent that can be passed in.  Split it up?
         resp = self.client.post(
-            '/api/accounts/%s/consent?language_tag=en-US' %
+            '/api/accounts/%s/consent?language_tag=en_US' %
             (ACCT_ID,),
             content_type='application/json',
             data=json.dumps(
@@ -783,7 +783,7 @@ class IntegrationTests(TestCase):
         chosen_survey = BOBO_FAVORITE_SURVEY_TEMPLATE
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
-            '?language_tag=en-US' %
+            '?language_tag=en_US' %
             (ACCT_ID, source_id_from_obj, chosen_survey),
             headers=MOCK_HEADERS
         )
@@ -791,7 +791,7 @@ class IntegrationTests(TestCase):
 
         model = fuzz_form(json.loads(resp.data)["survey_template_text"])
         resp = self.client.post(
-            '/api/accounts/%s/sources/%s/surveys?language_tag=en-US'
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_US'
             % (ACCT_ID, source_id_from_obj),
             content_type='application/json',
             data=json.dumps(
@@ -805,7 +805,7 @@ class IntegrationTests(TestCase):
 
         # claim a sample
         resp = self.client.get(
-            '/api/kits/?language_tag=en-US&kit_name=%s' % SUPPLIED_KIT_ID,
+            '/api/kits/?language_tag=en_US&kit_name=%s' % SUPPLIED_KIT_ID,
             headers=MOCK_HEADERS
         )
         check_response(resp)
@@ -814,7 +814,7 @@ class IntegrationTests(TestCase):
         sample_id = unused_samples[0]['sample_id']
 
         resp = self.client.post(
-            '/api/accounts/%s/sources/%s/samples?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples?language_tag=en_US' %
             (ACCT_ID, source_id_from_obj),
             content_type='application/json',
             data=json.dumps(
@@ -827,7 +827,7 @@ class IntegrationTests(TestCase):
 
         # Delete the newly created source. (Fail because sample associated)
         resp = self.client.delete(
-            loc + "?language_tag=en-US",
+            loc + "?language_tag=en_US",
             headers=MOCK_HEADERS
         )
         check_response(resp, 422)
@@ -836,7 +836,7 @@ class IntegrationTests(TestCase):
 
         # Remove the sample.
         resp = self.client.delete(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, source_id_from_obj, sample_id),
             headers=MOCK_HEADERS
         )
@@ -844,7 +844,7 @@ class IntegrationTests(TestCase):
 
         # Now delete the source (Hopefully successfully!
         resp = self.client.delete(
-            loc + "?language_tag=en-US",
+            loc + "?language_tag=en_US",
             headers=MOCK_HEADERS
         )
         check_response(resp, 204)
@@ -860,7 +860,7 @@ class IntegrationTests(TestCase):
         chosen_survey = BOBO_FAVORITE_SURVEY_TEMPLATE
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
-            '?language_tag=en-US' %
+            '?language_tag=en_US' %
             (ACCT_ID, HUMAN_ID, chosen_survey),
             headers=MOCK_HEADERS
         )
@@ -868,7 +868,7 @@ class IntegrationTests(TestCase):
 
         model = fuzz_form(json.loads(resp.data)["survey_template_text"])
         resp = self.client.post(
-            '/api/accounts/%s/sources/%s/surveys?language_tag=en-US'
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_US'
             % (ACCT_ID, HUMAN_ID),
             content_type='application/json',
             data=json.dumps(
@@ -885,7 +885,7 @@ class IntegrationTests(TestCase):
 
         # Part 2: Claim a sample
         resp = self.client.get(
-            '/api/kits/?language_tag=en-US&kit_name=%s' % SUPPLIED_KIT_ID,
+            '/api/kits/?language_tag=en_US&kit_name=%s' % SUPPLIED_KIT_ID,
             headers=MOCK_HEADERS
         )
         check_response(resp)
@@ -894,7 +894,7 @@ class IntegrationTests(TestCase):
         sample_id = unused_samples[0]['sample_id']
 
         resp = self.client.post(
-            '/api/accounts/%s/sources/%s/samples?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples?language_tag=en_US' %
             (ACCT_ID, HUMAN_ID),
             content_type='application/json',
             data=json.dumps(
@@ -907,7 +907,7 @@ class IntegrationTests(TestCase):
 
         # Part 3: Link the sample with the survey
         resp = self.client.post(
-            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en-US'
+            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en_US'
             % (ACCT_ID, HUMAN_ID, sample_id),
             content_type='application/json',
             data=json.dumps(
@@ -920,7 +920,7 @@ class IntegrationTests(TestCase):
 
         # Check that we can see the association
         resp = self.client.get(
-            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en-US'
+            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en_US'
             % (ACCT_ID, HUMAN_ID, sample_id),
             headers=MOCK_HEADERS
         )
@@ -933,7 +933,7 @@ class IntegrationTests(TestCase):
         # Check that we can delete the association
         resp = self.client.delete(
             '/api/accounts/%s/sources/%s/samples/%s/surveys/%s'
-            '?language_tag=en-US'
+            '?language_tag=en_US'
             % (ACCT_ID, HUMAN_ID, sample_id, survey_id),
             headers=MOCK_HEADERS
         )
@@ -941,7 +941,7 @@ class IntegrationTests(TestCase):
 
         # Check that we no longer see the association
         resp = self.client.get(
-            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en-US'
+            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en_US'
             % (ACCT_ID, HUMAN_ID, sample_id),
             headers=MOCK_HEADERS
         )
@@ -955,7 +955,7 @@ class IntegrationTests(TestCase):
         #  other than the source which is associated with the sample
         #  ie - bobo's sample can't associate a survey from bobo's dog
         resp = self.client.post(
-            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en-US'
+            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en_US'
             % (ACCT_ID, DOGGY_ID, sample_id),
             content_type='application/json',
             data=json.dumps(
@@ -968,7 +968,7 @@ class IntegrationTests(TestCase):
 
         # Check that we can't assign a sample to a survey in another account
         resp = self.client.post(
-            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en-US'
+            '/api/accounts/%s/sources/%s/samples/%s/surveys?language_tag=en_US'
             % (NOT_ACCT_ID, HUMAN_ID, sample_id),
             content_type='application/json',
             data=json.dumps(
@@ -1015,7 +1015,7 @@ class IntegrationTests(TestCase):
 
         # Claim a sample
         response = self.client.get(
-            '/api/kits/?language_tag=en-US&kit_name=%s' % SUPPLIED_KIT_ID,
+            '/api/kits/?language_tag=en_US&kit_name=%s' % SUPPLIED_KIT_ID,
             headers=MOCK_HEADERS
         )
         check_response(response)
@@ -1024,7 +1024,7 @@ class IntegrationTests(TestCase):
         sample_id = unused_samples[0]['sample_id']
 
         response = self.client.post(
-            '/api/accounts/%s/sources/%s/samples?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples?language_tag=en_US' %
             (ACCT_ID, source_id),
             content_type='application/json',
             data=json.dumps(
@@ -1036,7 +1036,7 @@ class IntegrationTests(TestCase):
         check_response(response)
 
         response = self.client.get(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, source_id, sample_id),
             headers=MOCK_HEADERS
         )
@@ -1064,7 +1064,7 @@ class IntegrationTests(TestCase):
             print("---\nYou should see a validation error in unittest:")
             fuzzy_info[readonly_field] = "Voldemort"
             response = self.client.put(
-                '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+                '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
                 (ACCT_ID, source_id, sample_id),
                 content_type='application/json',
                 data=json.dumps(fuzzy_info, default=json_converter),
@@ -1076,7 +1076,7 @@ class IntegrationTests(TestCase):
 
         # But after removing all these fields, we should be able to edit.
         response = self.client.put(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, source_id, sample_id),
             content_type='application/json',
             data=json.dumps(fuzzy_info, default=json_converter),
@@ -1091,7 +1091,7 @@ class IntegrationTests(TestCase):
         fuzzy_info['sample_datetime'] = datetime.datetime.now()
 
         response = self.client.put(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, source_id, sample_id),
             content_type='application/json',
             data=json.dumps(fuzzy_info, default=json_converter),
@@ -1102,7 +1102,7 @@ class IntegrationTests(TestCase):
         invalid_date_fuzzy_info = copy.copy(fuzzy_info)
         invalid_date_fuzzy_info['sample_datetime'] = "1-800-BAD-DATE"
         response = self.client.put(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, source_id, sample_id),
             content_type='application/json',
             data=json.dumps(invalid_date_fuzzy_info, default=json_converter),
@@ -1111,7 +1111,7 @@ class IntegrationTests(TestCase):
         check_response(response, 400)
 
         response = self.client.get(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, source_id, sample_id),
             headers=MOCK_HEADERS
         )
@@ -1131,7 +1131,7 @@ class IntegrationTests(TestCase):
 
         # Now dissociate the sample from source_id
         response = self.client.delete(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, source_id, sample_id),
             headers=MOCK_HEADERS
         )
@@ -1139,7 +1139,7 @@ class IntegrationTests(TestCase):
 
         # All of those fields should be gone when we claim it again
         response = self.client.post(
-            '/api/accounts/%s/sources/%s/samples?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples?language_tag=en_US' %
             (ACCT_ID, PLANTY_ID),  # This sample now belong to nature.
             content_type='application/json',
             data=json.dumps(
@@ -1151,7 +1151,7 @@ class IntegrationTests(TestCase):
         check_response(response)
 
         response = self.client.get(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, PLANTY_ID, sample_id),
             headers=MOCK_HEADERS
         )
@@ -1175,7 +1175,7 @@ class IntegrationTests(TestCase):
             data['sample_site'] = None
 
         response = self.client.put(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, PLANTY_ID, sample_id),
             content_type='application/json',
             data=json.dumps(data, default=json_converter),
@@ -1199,7 +1199,7 @@ class IntegrationTests(TestCase):
             data['sample_site'] = None
 
         response = self.client.put(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en-US' %
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
             (ACCT_ID, PLANTY_ID, sample_id),
             content_type='application/json',
             data=json.dumps(data, default=json_converter),
@@ -1227,10 +1227,10 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 404)
 
-        # Should work for en-US
+        # Should work for en_US
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
-            '?language_tag=en-US' %
+            '?language_tag=en_US' %
             (ACCT_ID, HUMAN_ID, BOBO_FAVORITE_SURVEY_TEMPLATE),
             headers=MOCK_HEADERS
         )
@@ -1253,7 +1253,7 @@ class IntegrationTests(TestCase):
         self.assertEqual(form_us['groups'][0]['fields'][0]['id'], '107',
                          "Survey question 107 moved, update the test!")
         self.assertEqual(form_us['groups'][0]['fields'][0]['label'], 'Gender:',
-                         "Survey question 107 should say 'Gender:' in en-US")
+                         "Survey question 107 should say 'Gender:' in en_US")
         self.assertEqual(form_gb['groups'][0]['fields'][0]['id'], '107',
                          "Survey question 107 moved, update the test!")
         self.assertEqual(
@@ -1262,10 +1262,10 @@ class IntegrationTests(TestCase):
             "Survey question 107 should say 'Gandalf:' (test setup for en-GB)")
 
         self.assertIn('Male', form_us['groups'][0]['fields'][0]['values'],
-                      "One choice for 107 should be 'Male' in en-US")
+                      "One choice for 107 should be 'Male' in en_US")
         self.assertIn('Wizard', form_gb['groups'][0]['fields'][0]['values'],
-                      "One choice for 107 should be 'Wizard' in en-GB"
-                      "(After test setup for en-GB)")
+                      "One choice for 107 should be 'Wizard' in en_GB"
+                      "(After test setup for en_GB)")
 
         model_gb = fuzz_form(form_gb)
         model_gb['107'] = 'Wizard'  # British for 'Male' per test setup.
@@ -1302,10 +1302,10 @@ class IntegrationTests(TestCase):
         url = werkzeug.urls.url_parse(loc)
         survey_id = url.path.split('/')[-1]
 
-        # Also, posting an en-GB model as en-US should explode as Wizard is
+        # Also, posting an en-GB model as en_US should explode as Wizard is
         # invalid in american
         resp = self.client.post(
-            '/api/accounts/%s/sources/%s/surveys?language_tag=en-US'
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_US'
             % (ACCT_ID, HUMAN_ID),
             content_type='application/json',
             data=json.dumps(
@@ -1336,16 +1336,16 @@ class IntegrationTests(TestCase):
 
         with Transaction() as t:
             repo = SurveyAnswersRepo(t)
-            # Though we passed up an en-GB model, answers stored should be
-            # in en-US and converted to either locale
+            # Though we passed up an en_GB model, answers stored should be
+            # in en_US and converted to either locale
             result = repo.get_answered_survey(ACCT_ID, HUMAN_ID,
-                                              survey_id, 'en-US')
+                                              survey_id, 'en_US')
             self.assertEqual(result['107'], 'Male',
-                             "Couldn't read answer from db in en-US")
+                             "Couldn't read answer from db in en_US")
             result = repo.get_answered_survey(ACCT_ID, HUMAN_ID,
-                                              survey_id, 'en-GB')
+                                              survey_id, 'en_GB')
             self.assertEqual(result['107'], 'Wizard',
-                             "Couldn't read answer from db in en-GB")
+                             "Couldn't read answer from db in en_GB")
 
             # Clean up after the new survey
             found = repo.delete_answered_survey(ACCT_ID, survey_id)
@@ -1354,27 +1354,27 @@ class IntegrationTests(TestCase):
 
     def test_consent_localization(self):
         resp_us = self.client.get(
-            '/api/accounts/%s/consent?language_tag=en-US&consent_post_url=%s' %
+            '/api/accounts/%s/consent?language_tag=en_US&consent_post_url=%s' %
             (ACCT_ID, DUMMY_CONSENT_POST_URL),
             headers=MOCK_HEADERS
         )
         check_response(resp_us)
         resp_gb = self.client.get(
-            '/api/accounts/%s/consent?language_tag=en-GB&consent_post_url=%s' %
+            '/api/accounts/%s/consent?language_tag=en_GB&consent_post_url=%s' %
             (ACCT_ID, DUMMY_CONSENT_POST_URL),
             headers=MOCK_HEADERS
         )
         check_response(resp_gb)
 
         self.assertNotEqual(resp_us.data, resp_gb.data,
-                            "en-US and en-GB consent shouldn't be equal "
+                            "en_US and en_GB consent shouldn't be equal "
                             "(after test setup)")
         self.assertIn("Murica!", str(resp_us.data),
                       "String inserted into consent doc during test setup"
-                      "not found (en-US)")
+                      "not found (en_US)")
         self.assertIn("QQBritannia", str(resp_gb.data),
                       "String inserted into consent doc during test setup"
-                      "not found (en-GB)")
+                      "not found (en_GB)")
 
 
 def _create_mock_kit(transaction, barcodes=None, mock_sample_ids=None,

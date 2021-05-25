@@ -88,7 +88,7 @@ class AdminTests(TestCase):
                               "US"
                           ),
                           "fakekit",
-                          "en-US")
+                          "en_US")
             acct_repo.create_account(acc)
 
             acc = Account(ADMIN_ACCT_ID,
@@ -106,7 +106,7 @@ class AdminTests(TestCase):
                               "US"
                           ),
                           "fakekit",
-                          "en-US")
+                          "en_US")
             acct_repo.create_account(acc)
             t.commit()
 

@@ -181,7 +181,7 @@ def _fetch_survey_template(template_id):
 
         # For local surveys, we generate the json representing the survey
         survey_template = survey_template_repo.get_survey_template(
-            template_id, 'en-US')
+            template_id, "en_US")
         survey_template_text = vue_adapter.to_vue_schema(survey_template)
 
         info = info.to_api(None, None)
