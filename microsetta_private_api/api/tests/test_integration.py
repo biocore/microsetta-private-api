@@ -164,7 +164,8 @@ class IntegrationTests(TestCase):
                               12345,
                               "US"
                           ),
-                          "fakekit")
+                          "fakekit",
+                          "en_US")
             acct_repo.create_account(acc)
 
             source_repo.create_source(Source(
@@ -437,7 +438,8 @@ class IntegrationTests(TestCase):
                 "email": FAKE_EMAIL,
                 "first_name": "Jane",
                 "last_name": "Doe",
-                "kit_name": "jb_qhxqe"
+                "kit_name": "jb_qhxqe",
+                "language": "en_US"
             })
 
         # Registering with the authrocket associated with the mock account
@@ -510,7 +512,8 @@ class IntegrationTests(TestCase):
                 "email": "foo@baz.com",
                 "first_name": "Dan",
                 "last_name": "H",
-                "kit_name": "fakekit"
+                "kit_name": "fakekit",
+                "language": "en_US"
             }
 
         # Hard to guess these two, so let's pop em out
@@ -528,6 +531,7 @@ class IntegrationTests(TestCase):
         fuzzy_data = fuzz(regular_data)
         fuzzy_data['email'] = the_email
         fuzzy_data['kit_name'] = kit_name
+        fuzzy_data['language'] = regular_data["language"]
 
         # submit an invalid account type
         fuzzy_data['account_type'] = "Voldemort"

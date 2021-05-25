@@ -1742,6 +1742,10 @@ components:
       readOnly: true
       enum: ["standard", "admin"]
       example: "standard"
+    language:
+      type: string
+      enum: ["en_US", "es_MX"]
+      example: "en_US"
     creation_time:
       type: string
       readOnly: true
@@ -1780,6 +1784,8 @@ components:
           $ref: '#/components/schemas/address'
         account_type:
           $ref: '#/components/schemas/account_type'
+        language:
+          $ref: '#/components/schemas/language'
         creation_time:
           $ref: '#/components/schemas/creation_time'
         update_time:
@@ -1789,6 +1795,7 @@ components:
         - last_name
         - email
         - address
+        - language
 
     address:   # taken from https://opensource.zalando.com/restful-api-guidelines/#address-fields
       description:
