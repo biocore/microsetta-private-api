@@ -80,7 +80,8 @@ class SurveyTemplateRepo(BaseRepo):
     def get_survey_template(self, survey_id, language_tag):
         tag_to_col = {
             localization.EN_US: "survey_question.american",
-            localization.EN_GB: "survey_question.british"
+            localization.EN_GB: "survey_question.british",
+            localization.ES_MX: "survey_question.spanish"
         }
 
         if language_tag not in tag_to_col:
@@ -167,7 +168,8 @@ class SurveyTemplateRepo(BaseRepo):
     def _get_group_localized_text(self, group_id, language_tag):
         tag_to_col = {
             localization.EN_US: "american",
-            localization.EN_GB: "british"
+            localization.EN_GB: "british",
+            localization.ES_MX: "american"
         }
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
@@ -182,8 +184,9 @@ class SurveyTemplateRepo(BaseRepo):
 
     def _get_question_valid_responses(self, survey_question_id, language_tag):
         tag_to_col = {
-            localization.EN_US: "survey_response.american",
-            localization.EN_GB: "survey_response.british"
+            localization.EN_US: "survey_question_response.response",
+            localization.EN_GB: "survey_question_response.british",
+            localization.ES_MX: "survey_question_response.spanish",
         }
 
         with self._transaction.cursor() as cur:
