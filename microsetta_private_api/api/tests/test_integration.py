@@ -165,7 +165,7 @@ class IntegrationTests(TestCase):
                               "US"
                           ),
                           "fakekit",
-                          "en-US")
+                          "en_US")
             acct_repo.create_account(acc)
 
             source_repo.create_source(Source(
@@ -439,7 +439,7 @@ class IntegrationTests(TestCase):
                 "first_name": "Jane",
                 "last_name": "Doe",
                 "kit_name": "jb_qhxqe",
-                "language": "en-US"
+                "language": "en_US"
             })
 
         # Registering with the authrocket associated with the mock account
@@ -513,7 +513,7 @@ class IntegrationTests(TestCase):
                 "first_name": "Dan",
                 "last_name": "H",
                 "kit_name": "fakekit",
-                "language": "en-US"
+                "language": "en_US"
             }
 
         # Hard to guess these two, so let's pop em out
