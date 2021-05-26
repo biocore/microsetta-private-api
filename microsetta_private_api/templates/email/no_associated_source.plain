@@ -5,7 +5,7 @@ Hello {{contact_name |e}},
         Barcode {{sample_barcode |e}}
 
     We require this information in order to process this specimen in compliance with our human subjects research protocol. Please log back into the participant website by clicking or copying on the following URL:
-        {{ account_url}}
+        {{ resolution_url }}
 
     After accessing your account using the above URL, you will need to create a source by clicking on one of the buttons under the "Sources" section. 
     
