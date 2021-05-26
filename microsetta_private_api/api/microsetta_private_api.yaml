@@ -1763,7 +1763,7 @@ components:
       example: "Doe"
     language_tag:
       type: string
-      example: "en-US"
+      example: "en_US"
     update_time:
       type: string
       readOnly: true
