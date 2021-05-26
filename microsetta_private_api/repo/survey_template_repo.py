@@ -184,9 +184,9 @@ class SurveyTemplateRepo(BaseRepo):
 
     def _get_question_valid_responses(self, survey_question_id, language_tag):
         tag_to_col = {
-            localization.EN_US: "survey_question_response.response",
-            localization.EN_GB: "survey_question_response.british",
-            localization.ES_MX: "survey_question_response.spanish",
+            localization.EN_US: "survey_response.american",
+            localization.EN_GB: "survey_response.british",
+            localization.ES_MX: "survey_response.spanish",
         }
 
         with self._transaction.cursor() as cur:
