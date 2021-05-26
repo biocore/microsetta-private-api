@@ -5,7 +5,7 @@ Hello {{contact_name |e}},
         Barcode {{sample_barcode |e}}
 
     Our lab noted that this sample appears to be a human associated sample. We need your help to ensure the sample is properly associated so it can be safely handled and processed correctly by our lab.   Please log back into the participant website by clicking or copying the following URL:
-    {{ account_url}}
+    {{ resolution_url }}
     
     Check that you have a human source type set up in the "Sources" table.  
     * If there is a human source set up, please reply to this email (microsetta@ucsd.edu), indicating who the sample belongs to, and verify the sample type (e.g. stool, saliva, etc.).
