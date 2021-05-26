@@ -23,7 +23,9 @@ def gen_survey_url(user_id,
                    language_tag,
                    survey_redirect_url,
                    birth_year=None,
-                   gender=None
+                   gender=None,
+                   height=None,
+                   weight=None
                    ):
     if not survey_redirect_url:
         raise BadRequest("Food Frequency Questionnaire Requires "
@@ -45,7 +47,9 @@ def gen_survey_url(user_id,
                                 language_tag,
                                 survey_redirect_url,
                                 gender_id,
-                                dob),
+                                dob,
+                                height,
+                                weight),
             b"RegCode": regcode.encode(),
         }, charset='utf-16',
     )
@@ -71,7 +75,9 @@ def encrypt_key(survey_id,
                 language_tag,
                 survey_redirect_url,
                 gender_id,
-                dob
+                dob,
+                height,
+                weight
                 ):
     """Encode minimal required vioscreen information to AES key"""
     firstname = "NOT"
@@ -85,9 +91,12 @@ def encrypt_key(survey_id,
                     "&Username=%s"
                     "&DOB=%s"
                     "&Gender=%d"
+                    "&CultureCode=%s"
+                    "&Height=%s"
+                    "&Weight=%s"
                     "&AppId=1&Visit=1&EncryptQuery=True&ReturnUrl={%s}" %
                     (firstname, lastname, regcode, survey_id, dob, gender_id,
-                     returnurl))
+                     language_tag, height, weight, returnurl))
 
     # PKCS7 add bytes equal length of padding
     pkcs7_query = pkcs7_pad_message(assess_query)
