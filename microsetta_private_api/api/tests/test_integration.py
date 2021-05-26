@@ -1237,10 +1237,10 @@ class IntegrationTests(TestCase):
         check_response(resp)
         form_us = json.loads(resp.data)
 
-        # Should work for en-GB
+        # Should work for en_GB
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
-            '?language_tag=en-GB' %
+            '?language_tag=en_GB' %
             (ACCT_ID, HUMAN_ID, BOBO_FAVORITE_SURVEY_TEMPLATE),
             headers=MOCK_HEADERS
         )
@@ -1259,7 +1259,7 @@ class IntegrationTests(TestCase):
         self.assertEqual(
             form_gb['groups'][0]['fields'][0]['label'],
             'Gandalf:',
-            "Survey question 107 should say 'Gandalf:' (test setup for en-GB)")
+            "Survey question 107 should say 'Gandalf:' (test setup for en_GB)")
 
         self.assertIn('Male', form_us['groups'][0]['fields'][0]['values'],
                       "One choice for 107 should be 'Male' in en_US")
@@ -1285,9 +1285,9 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 404)
 
-        # But should work for en-GB
+        # But should work for en_GB
         resp = self.client.post(
-            '/api/accounts/%s/sources/%s/surveys?language_tag=en-GB'
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_GB'
             % (ACCT_ID, HUMAN_ID),
             content_type='application/json',
             data=json.dumps(
@@ -1302,7 +1302,7 @@ class IntegrationTests(TestCase):
         url = werkzeug.urls.url_parse(loc)
         survey_id = url.path.split('/')[-1]
 
-        # Also, posting an en-GB model as en_US should explode as Wizard is
+        # Also, posting an en_GB model as en_US should explode as Wizard is
         # invalid in american
         resp = self.client.post(
             '/api/accounts/%s/sources/%s/surveys?language_tag=en_US'
@@ -1322,7 +1322,7 @@ class IntegrationTests(TestCase):
         # British for 'Large Mammal', an invalid choice for Gender
         model_gb['107'] = 'Large Mammal'
         resp = self.client.post(
-            '/api/accounts/%s/sources/%s/surveys?language_tag=en-GB'
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_GB'
             % (ACCT_ID, HUMAN_ID),
             content_type='application/json',
             data=json.dumps(
