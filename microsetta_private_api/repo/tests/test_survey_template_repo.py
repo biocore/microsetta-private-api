@@ -7,14 +7,15 @@ from psycopg2.errors import ForeignKeyViolation
 
 # test identifiers with a vio ID
 TEST1_ACCOUNT_ID = "80c327ca-a5c7-4c7f-b64b-b219d9ff0b47"
-TEST1_SOURCE_ID = "bea49e50-f98f-4cdc-9358-65752de6abbf"
+TEST1_SOURCE_ID = None
 TEST1_SAMPLE_ID = "125a7cc5-41ae-44ef-983c-6f1a5213f668"
-TEST1_SURVEY_ID = "7ef4abf7-554a-4708-9aae-437566ebdcd5"
+TEST1_SURVEY_ID = None
 TEST1_VIO_ID = "1c689634cea0d11b"
 
 
 # not in registry
 TEST2_ACCOUNT_ID = "735e1689-6976-4d96-9a33-7a19f06602bf"
+TEST2_SOURCE_ID = None
 TEST2_SAMPLE_ID = "7380bb81-7401-45bd-85a0-51001f5f5cf1"
 
 
@@ -34,6 +35,14 @@ with Transaction() as t:
                     (TEST2_SAMPLE_ID, ))
         TEST2_SOURCE_ID = cur.fetchone()
 
+        cur.execute("""SELECT survey_id
+                       FROM ag.ag_login_surveys
+                       WHERE ag_login_id=%s
+                           AND source_id=%s
+                           AND vioscreen_status IS NULL""",
+                    (TEST1_ACCOUNT_ID, TEST1_SOURCE_ID))
+        TEST1_SURVEY_ID = cur.fetchone()
+
 
 class SurveyTemplateTests(unittest.TestCase):
     def test_fetch_user_basic_physiology(self):
@@ -52,55 +61,53 @@ class SurveyTemplateTests(unittest.TestCase):
                                SET response='["100"]'
                                WHERE survey_id=%s AND survey_question_id=%s""",
                             (TEST1_SURVEY_ID, 113))  # weight_kg
-            t.commit()
 
-        with Transaction() as t:
-            tr = SurveyTemplateRepo(t)
+                tr = SurveyTemplateRepo(t)
 
-            obs = tr.fetch_user_basic_physiology(TEST1_ACCOUNT_ID,
-                                                 TEST1_SOURCE_ID)
-            exp = (1973, 'Male', 100, 220.462)
-            self.assertEqual(obs, exp)
+                obs = tr.fetch_user_basic_physiology(TEST1_ACCOUNT_ID,
+                                                     TEST1_SOURCE_ID)
+                exp = (1973, 'Male', 100, 220.462)
+                self.assertEqual(obs, exp)
 
-       #         cur.execute("""UPDATE ag.survey_answers_other
-       #                        SET response='["100"]'
-       #                        WHERE survey_id=%s AND survey_question_id=%s""",
-       #                     (TEST1_SURVEY_ID, 108))  # height_cm
-       #         cur.execute("""UPDATE ag.survey_answers
-       #                        SET response='inches'
-       #                        WHERE survey_id=%s AND survey_question_id=%s""",
-       #                     (TEST1_SURVEY_ID, 109))  # height_units
-       #         cur.execute("""UPDATE ag.survey_answers
-       #                        SET response='pounds'
-       #                        WHERE survey_id=%s AND survey_question_id=%s""",
-       #                     (TEST1_SURVEY_ID, 114))  # weight_units
+                cur.execute("""UPDATE ag.survey_answers_other
+                               SET response='["100"]'
+                               WHERE survey_id=%s AND survey_question_id=%s""",
+                            (TEST1_SURVEY_ID, 108))  # height_cm
+                cur.execute("""UPDATE ag.survey_answers
+                               SET response='inches'
+                               WHERE survey_id=%s AND survey_question_id=%s""",
+                            (TEST1_SURVEY_ID, 109))  # height_units
+                cur.execute("""UPDATE ag.survey_answers
+                               SET response='pounds'
+                               WHERE survey_id=%s AND survey_question_id=%s""",
+                            (TEST1_SURVEY_ID, 114))  # weight_units
 
-       #         obs = tr.fetch_user_basic_physiology(TEST1_ACCOUNT_ID,
-       #                                              TEST1_SOURCE_ID)
-       #         exp = (1973, 'Male', 100, 100)
-       #         self.assertEqual(obs, exp)
+                obs = tr.fetch_user_basic_physiology(TEST1_ACCOUNT_ID,
+                                                     TEST1_SOURCE_ID)
+                exp = (1973, 'Male', 100, 100)
+                self.assertEqual(obs, exp)
 
-       #         # equiv of Unspecified for height
-       #         cur.execute("""UPDATE ag.survey_answers_other
-       #                        SET response='[""]'
-       #                        WHERE survey_id=%s AND survey_question_id=%s""",
-       #                     (TEST1_SURVEY_ID, 108))  # height_cm
+                # equiv of Unspecified for height
+                cur.execute("""UPDATE ag.survey_answers_other
+                               SET response='[""]'
+                               WHERE survey_id=%s AND survey_question_id=%s""",
+                            (TEST1_SURVEY_ID, 108))  # height_cm
 
-       #         obs = tr.fetch_user_basic_physiology(TEST1_ACCOUNT_ID,
-       #                                              TEST1_SOURCE_ID)
-       #         exp = (1973, 'Male', None, 100)
-       #         self.assertEqual(obs, exp)
+                obs = tr.fetch_user_basic_physiology(TEST1_ACCOUNT_ID,
+                                                     TEST1_SOURCE_ID)
+                exp = (1973, 'Male', None, 100)
+                self.assertEqual(obs, exp)
 
-       #         # equiv of Unspecified for weight
-       #         cur.execute("""UPDATE ag.survey_answers_other
-       #                        SET response='[""]'
-       #                        WHERE survey_id=%s AND survey_question_id=%s""",
-       #                     (TEST1_SURVEY_ID, 113))  # weight_kg
+                # equiv of Unspecified for weight
+                cur.execute("""UPDATE ag.survey_answers_other
+                               SET response='[""]'
+                               WHERE survey_id=%s AND survey_question_id=%s""",
+                            (TEST1_SURVEY_ID, 113))  # weight_kg
 
-       #         obs = tr.fetch_user_basic_physiology(TEST1_ACCOUNT_ID,
-       #                                              TEST1_SOURCE_ID)
-       #         exp = (1973, 'Male', None, None)
-       #         self.assertEqual(obs, exp)
+                obs = tr.fetch_user_basic_physiology(TEST1_ACCOUNT_ID,
+                                                     TEST1_SOURCE_ID)
+                exp = (1973, 'Male', None, None)
+                self.assertEqual(obs, exp)
 
     def test_create_vioscreen_id_valid(self):
         with Transaction() as t:
