@@ -6,7 +6,8 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenDietaryScore,  VioscreenDietaryScoreComponent,
     VioscreenSupplements, VioscreenSupplementsComponent,
     VioscreenFoodComponents, VioscreenFoodComponentsComponent,
-    VioscreenEatingPatterns, VioscreenEatingPatternsComponent)
+    VioscreenEatingPatterns, VioscreenEatingPatternsComponent,
+    VioscreenMPeds, VioscreenMPedsComponent)
 from werkzeug.exceptions import NotFound
 
 
@@ -819,6 +820,138 @@ class VioscreenEatingPatternsRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular eating pattern by its code
+
+        Parameters
+        ----------
+        code : str
+            The code to obtain detail for
+
+        Returns
+        -------
+        tuple
+            The description, units and valueType for a
+            particular code
+
+        Raises
+        ------
+        NotFound
+            A NotFound error is raised if the code is unrecognized
+        """
+        if code not in self._CODES:
+            raise NotFound("No such code: " + code)
+
+        return self._CODES[code]
+
+
+class VioscreenMPedsRepo(BaseRepo):
+    # code : (description, units, valueType)
+    _CODES = {'A_BEV': ('MPED: Total drinks of alcohol', 'alc_drinks', 'Amount'), 
+              'A_CAL': ('MPED: Calories from alcoholic beverages', 'kcal', 'Amount'), 
+              'ADD_SUG': ('MPED: Teaspoon equivalents of added sugars', 'tsp_eq', 'Amount'), 
+              'D_CHEESE': ('MPED: Number of cheese cup equivalents', 'cup_eq', 'Amount'), 
+              'D_MILK': ('MPED: Number of milk cup equivalents', 'cup_eq', 'Amount'), 
+              'D_TOT_SOYM': ('MPED: Total number of milk group (milk, yogurt & cheese) cup equivalents PLUS soy milk', 'cup_eq', 'Amount'), 
+              'D_TOTAL': ('MPED: Total number of milk group (milk, yogurt & cheese) cup equivalents', 'cup_eq', 'Amount'), 
+              'D_YOGURT': ('MPED: Number of yogurt cup equivalents', 'cup_eq', 'Amount'), 
+              'DISCFAT_OIL': ('MPED: Grams of discretionary Oil', 'g', 'Amount'), 
+              'DISCFAT_SOL': ('MPED: Grams of discretionary Solid fat', 'g', 'Amount'), 
+              'F_CITMLB': ('MPED: Number of citrus, melon, berry cup equivalents', 'cup_eq', 'Amount'), 
+              'F_NJ_CITMLB': ('MPED: Number of non-juice citrus, melon, berry cup equivalents', 'cup_eq', 'Amount'), 
+              'F_NJ_OTHER': ('MPED: Number of other non-juice fruit cup equivalents', 'cup_eq', 'Amount'), 
+              'F_NJ_TOTAL': ('MPED: Total number of non-juice fruit cup equivalents', 'cup_eq', 'Amount'), 
+              'F_OTHER': ('MPED: Number of other fruit cup equivalents', 'cup_eq', 'Amount'), 
+              'F_TOTAL': ('MPED: Total number of fruit cup equivalents', 'cup_eq', 'Amount'), 
+              'G_NWHL': ('MPED: Number of non-whole grain ounce equivalents', 'oz_eq', 'Amount'), 
+              'G_TOTAL': ('MPED: Total number of grain ounce equivalents', 'oz_eq', 'Amount'), 
+              'G_WHL': ('MPED: Number of whole grain ounce equivalents', 'oz_eq', 'Amount'), 
+              'LEGUMES': ('MPED: Number of cooked dry beans and peas cup equivalents', 'cup_eq', 'Amount'), 
+              'M_EGG': ('MPED: Oz equivalents of lean meat from eggs', 'oz_eq', 'Amount'), 
+              'M_FISH_HI': ('MPED: Oz cooked lean meat from fish, other seafood high in Omega-3', 'oz_eq', 'Amount'), 
+              'M_FISH_LO': ('MPED: Oz cooked lean meat from fish, other seafood low in Omega-3', 'oz_eq', 'Amount'), 
+              'M_FRANK': ('MPED: Oz cooked lean meat from franks, sausages, luncheon meats', 'oz_eq', 'Amount'), 
+              'M_MEAT': ('MPED: Oz cooked lean meat from beef, pork, veal, lamb, and game', 'oz_eq', 'Amount'), 
+              'M_MPF': ('MPED: Oz cooked lean meat from meat, poultry, fish', 'oz_eq', 'Amount'), 
+              'M_NUTSD': ('MPED: Oz equivalents of lean meat from nuts and seeds', 'oz_eq', 'Amount'), 
+              'M_ORGAN': ('MPED: Oz cooked lean meat from organ meats', 'oz_eq', 'Amount'), 
+              'M_POULT': ('MPED: Oz cooked lean meat from chicken, poultry, and other poultry', 'oz_eq', 'Amount'), 
+              'M_SOY': ('MPED: Oz equivalents of lean meat from soy product', 'oz_eq', 'Amount'), 
+              'rgrain': ('Refined Grains (ounce equivalents)', 'oz_eq', 'Amount'), 
+              'tgrain': ('Total Grains (ounce equivalents)', 'oz_eq', 'Amount'), 
+              'V_DRKGR': ('MPED: Number of dark-green vegetable cup equivalents', 'cup_eq', 'Amount'), 
+              'V_ORANGE': ('MPED: Number of orange vegetable cup equivalents', 'cup_eq', 'Amount'), 
+              'V_OTHER': ('MPED: Number of other vegetable cup equivalents', 'cup_eq', 'Amount'), 
+              'V_POTATO': ('MPED: Number of white potato cup equivalents', 'cup_eq', 'Amount'), 
+              'V_STARCY': ('MPED: Number of other starchy vegetable cup equivalents', 'cup_eq', 'Amount'), 
+              'V_TOMATO': ('MPED: Number of tomato cup equivalents', 'cup_eq', 'Amount'), 
+              'V_TOTAL': ('MPED: Total number of vegetable cup equivalents, excl legumes', 'cup_eq', 'Amount'), 
+              'wgrain': ('Whole Grains (ounce equivalents)', 'oz_eq', 'Amount')}
+
+    def __init__(self, transaction):
+        super().__init__(transaction)
+
+    def insert_mpeds(self, vioscreen_mpeds):
+        """Add in mpeds results for a session
+
+        Parameters
+        ----------
+        vioscreen_mpeds : VioscreenMPeds
+            An instance of a mpeds model
+
+        Returns
+        -------
+        int
+            The number of inserted rows
+        """
+        with self._transaction.cursor() as cur:
+            components = vioscreen_mpeds.components
+            inserts = [(vioscreen_mpeds.sessionId,
+                        component.code,
+                        component.amount)
+                       for component in components]
+
+            cur.executemany("""INSERT INTO ag.vioscreen_mpeds
+                                (sessionId, code, amount)
+                                VALUES (%s, %s, %s)""",
+                            inserts)
+            return cur.rowcount
+        
+    def get_mpeds(self, sessionId):
+        """Obtain the mpeds detail for a particular session
+
+        Parameters
+        ----------
+        sessionId : str
+            The session ID to query
+
+        Returns
+        -------
+        VioscreenMPeds or None
+            The mpeds detail, or None if no record was found
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT code, amount
+                           FROM ag.vioscreen_mpeds
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            rows = cur.fetchall()
+            if len(rows) > 0:
+                components = []
+                for code, amount in rows:
+                    codeInfo = self._get_code_info(code)
+                    vmpc = VioscreenMPedsComponent(code=code,
+                                                   description=codeInfo[0],  # noqa
+                                                   units=codeInfo[1],  # noqa
+                                                   amount=amount,
+                                                   valueType=codeInfo[2])
+                    components.append(vmpc)
+                return VioscreenMPeds(sessionId=sessionId,
+                                      components=components)
+            else:
+                return None
+
+    def _get_code_info(self, code):
+        """Obtain the detail about a particular mped by its code
 
         Parameters
         ----------

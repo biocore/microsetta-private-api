@@ -18,4 +18,15 @@ CREATE TABLE ag.vioscreen_eatingpatterns (
     FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId)
 );
 CREATE INDEX vio_eatpa_by_sessionid ON ag.vioscreen_eatingpatterns(sessionId);
-CREATE UNIQUE INDEX vio_eatpa_by_sessionidcode ON ag.vioscreen_eatingpatterns(sessionId,code)
+CREATE UNIQUE INDEX vio_eatpa_by_sessionidcode ON ag.vioscreen_eatingpatterns(sessionId,code);
+
+CREATE TABLE ag.vioscreen_mpeds (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sessionId varchar NOT NULL,
+    code varchar NOT NULL,
+    amount float NOT NULL,
+    UNIQUE (sessionId, code),
+    FOREIGN KEY (sessionId) REFERENCES ag.vioscreen_sessions (sessionId)
+);
+CREATE INDEX vio_mpeds_by_sessionid ON ag.vioscreen_mpeds(sessionId);
+CREATE UNIQUE INDEX vio_mpeds_by_sessionidcode ON ag.vioscreen_mpeds(sessionId,code);

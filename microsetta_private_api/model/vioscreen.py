@@ -245,6 +245,38 @@ class VioscreenEatingPatterns(ModelBase):
         return cls(sessionId, ep_components)
 
 
+class VioscreenMPedsComponent(ModelBase):
+    def __init__(self, code, description, units, amount, valueType):
+        self.code = code
+        self.description = description
+        self.units = units
+        self.amount = amount
+        self.valueType = valueType
+
+    @classmethod
+    def from_vioscreen(cls, component):
+        return cls(component['code'], component['description'],
+                   component['units'], component['amount'],
+                   component['valueType'])
+
+
+class VioscreenMPeds(ModelBase):
+    def __init__(self, sessionId, components):
+        self.sessionId = sessionId
+        self.components = components
+    
+    @classmethod
+    def from_vioscreen(cls, mp_data):
+        sessionId = mp_data['sessionId']
+
+        mp_components = [
+            VioscreenMPedsComponent.from_vioscreen(component)
+            for component in mp_data['data']
+        ]
+
+        return cls(sessionId, mp_components)
+
+
 class VioscreenComposite:
     def __init__(self, session, percent_energy):
         self.session = session
