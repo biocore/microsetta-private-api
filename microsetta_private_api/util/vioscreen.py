@@ -209,6 +209,10 @@ def make_vioscreen_request(self, method, url, **kwargs):
             if code == 1016:
                 # need a new token
                 return None, True
+            if code == 1005:
+                # From David Blankenship on 5.26.21, we should issue a retry
+                # if this code is observed
+                return None, True
             elif code == 1002:
                 # unknown user
                 return {'error': 'unknown user'}, False
@@ -247,8 +251,7 @@ def make_vioscreen_request(self, method, url, **kwargs):
         result, auth_failure = handle_response(req)
 
     if auth_failure:
-        # Got code 1016 (unauthenticated), then logged in, then got code 1016
-        # again!
+        # Implies something weird occured
         exc = ValueError(str(req.status_code) + " ::: " + str(req.content))
         raise self.retry(exc=exc)
 
@@ -420,7 +423,7 @@ def update_session_detail():
                 if update['status'] != sess.status:
                     updated.append(sess.update_from_vioscreen(update))
         except Exception as e:  # noqa
-            failed_sessions.append((sess, str(e)))
+            failed_sessions.append((sess.sessionId, str(e)))
             continue
 
         # commit as we go along to avoid holding any individual transaction
