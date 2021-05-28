@@ -295,8 +295,6 @@ def send_email(body, token_info):
             template_args['contact_name'] = contact_name
         if activation_code is not None:
             template_args['new_account_code'] = activation_code
-        if account_id is not None:
-            template_args['account_id'] = account_id
         celery_send_email.apply_async(args=[email, template_name,
                                             template_args])
 
