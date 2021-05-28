@@ -187,7 +187,7 @@ class SurveyTemplateRepo(BaseRepo):
             # TODO: the table *currently* uses the field "response" for an
             # english response, but we should do something better w/
             # i18n labels
-            localization.EN_US: "american",
+            localization.EN_US: "response",
             localization.EN_GB: "british",
             localization.ES_MX: "spanish",
         }
