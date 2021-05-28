@@ -17,4 +17,4 @@ UPDATE ag.survey_group SET spanish='Comidas fermentadas' WHERE group_order=-3;
 UPDATE ag.survey_group SET spanish='Surfistas' WHERE group_order=-4;
 UPDATE ag.survey_group SET spanish='Microbioma personal' WHERE group_order=-5;
 UPDATE ag.survey_group SET spanish='Cuestionario COVID19' WHERE group_order=-6;
-UPDATE ag.survey_group SET spanish='Iniciativa Microsetta / Proyecto Microbioma Mexicano' WHERE group_order=-1;
+UPDATE ag.survey_group SET spanish='Iniciativa Microsetta' WHERE group_order=-1;
