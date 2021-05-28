@@ -455,7 +455,8 @@ def update_session_detail():
     if len(failed_sessions) > 0:
         # ...and let's make Daniel feel bad about not having a better means to
         # log what hopefully never occurs
-        payload = ''.join(['%s : %s\n' % (s, m) for s, m in failed_sessions])
+        payload = ''.join(['%s : %s\n' % (repr(s), m)
+                           for s, m in failed_sessions])
         send_email("danielmcdonald@ucsd.edu", "pester_daniel",
                    {"what": "Vioscreen sessions failed",
                     "content": payload})
