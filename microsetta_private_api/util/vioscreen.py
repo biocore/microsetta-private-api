@@ -39,6 +39,10 @@ def gen_survey_url(user_id,
     else:
         dob = '01011970'  # default to unix epoch
 
+    # per clarification with Vioscreen, they interpret es_MX as es_ES
+    if language_tag == 'es_MX':
+        language_tag = 'es_ES'
+
     regcode = SERVER_CONFIG["vioscreen_regcode"]
     url = SERVER_CONFIG["vioscreen_endpoint"] +\
         "/remotelogin.aspx?%s" % url_encode(
