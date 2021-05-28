@@ -17,6 +17,7 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from microsetta_private_api.model.vioscreen import VioscreenSession
+from microsetta.localization import ES_MX
 
 
 def gen_survey_url(user_id,
@@ -40,7 +41,7 @@ def gen_survey_url(user_id,
         dob = '01011970'  # default to unix epoch
 
     # per clarification with Vioscreen, they interpret es_MX as es_ES
-    if language_tag == 'es_MX':
+    if language_tag == ES_MX:
         language_tag = 'es_ES'
 
     regcode = SERVER_CONFIG["vioscreen_regcode"]
