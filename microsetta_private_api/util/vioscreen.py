@@ -17,7 +17,7 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from microsetta_private_api.model.vioscreen import VioscreenSession
-from microsetta.localization import ES_MX
+from microsetta_private_api.localization import ES_MX
 
 
 def gen_survey_url(user_id,
