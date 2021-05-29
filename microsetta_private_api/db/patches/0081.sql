@@ -30,6 +30,15 @@ chinese = '描述您的排便质量。使用下面的图表作为参考：<br/><
 WHERE
 survey_question_id = 38;
 
+-- add in missing questions (note: the responses are already covered as they're standard frequency)
+UPDATE ag.survey_question
+SET spanish='En una semana promedio, ¿con qué frecuencia consume betabel (incluyendo cruda, enlatada, en escabeche o asada)? (1 porción = 1 taza cruda o cocida)'
+WHERE survey_question_id=236;
+
+UPDATE ag.survey_question
+SET spanish='En una semana promedio, ¿con qué frecuencia come varias fuentes vegetales de proteínas, como tofu, tempeh, edamame, lentejas, garbanzos, maní, almendras, nueces o quinoa?'
+WHERE survey_question_id=237;
+
 -- responses went into the wrong table... ugh. Migrate them
 ALTER TABLE ag.survey_response 
     ADD COLUMN spanish VARCHAR;
