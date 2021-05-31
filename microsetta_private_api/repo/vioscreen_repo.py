@@ -228,10 +228,13 @@ class VioscreenPercentEnergyRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             energy_components = vioscreen_percent_energy.energy_components
-            inserts = [(vioscreen_percent_energy.sessionId,
-                        energy_component.code,
-                        energy_component.amount)
-                       for energy_component in energy_components]
+            inserts = []
+            for energy_component in energy_components:
+                #checking if code exists in lookup
+                self._get_code_info(energy_component.code)
+                inserts.append((vioscreen_percent_energy.sessionId,
+                                energy_component.code,
+                                energy_component.amount))
 
             cur.executemany("""INSERT INTO ag.vioscreen_percentenergy
                                 (sessionId, code, amount)
@@ -337,11 +340,14 @@ class VioscreenDietaryScoreRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             scores = vioscreen_dietary_score.scores
-            inserts = [(vioscreen_dietary_score.sessionId,
-                        vioscreen_dietary_score.scoresType,
-                        score.code,
-                        score.score)
-                       for score in scores]
+            inserts = []
+            for score in scores:
+                #checking if code exists in lookup
+                self._get_code_info(vioscreen_dietary_score.scoresType, score.code)
+                inserts.append((vioscreen_dietary_score.sessionId,
+                                vioscreen_dietary_score.scoresType,
+                                score.code,
+                                score.score))
 
             cur.executemany("""INSERT INTO ag.vioscreen_dietaryscore
                                 (sessionId, scoresType, code, score)
@@ -663,10 +669,13 @@ class VioscreenFoodComponentsRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             components = vioscreen_food_components.components
-            inserts = [(vioscreen_food_components.sessionId,
-                        component.code,
-                        component.amount)
-                       for component in components]
+            inserts = []
+            for component in components:
+                #checking if code exists in lookup
+                self._get_code_info(component.code)
+                inserts.append((vioscreen_food_components.sessionId,
+                                component.code,
+                                component.amount))
 
             cur.executemany("""INSERT INTO ag.vioscreen_foodcomponents
                                 (sessionId, code, amount)
@@ -772,10 +781,13 @@ class VioscreenEatingPatternsRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             components = vioscreen_eating_patterns.components
-            inserts = [(vioscreen_eating_patterns.sessionId,
-                        component.code,
-                        component.amount)
-                       for component in components]
+            inserts = []
+            for component in components:
+                #checking if code exists in lookup
+                self._get_code_info(component.code)
+                inserts.append((vioscreen_eating_patterns.sessionId,
+                                component.code,
+                                component.amount))
 
             cur.executemany("""INSERT INTO ag.vioscreen_eatingpatterns
                                 (sessionId, code, amount)
@@ -904,10 +916,13 @@ class VioscreenMPedsRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             components = vioscreen_mpeds.components
-            inserts = [(vioscreen_mpeds.sessionId,
-                        component.code,
-                        component.amount)
-                       for component in components]
+            inserts = []
+            for component in components:
+                #checking if code exists in lookup
+                self._get_code_info(component.code)
+                inserts.append((vioscreen_mpeds.sessionId,
+                                component.code,
+                                component.amount))
 
             cur.executemany("""INSERT INTO ag.vioscreen_mpeds
                                 (sessionId, code, amount)

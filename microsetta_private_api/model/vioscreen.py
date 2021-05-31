@@ -85,6 +85,19 @@ class VioscreenSession(ModelBase):
                    startDate, endDate, sessions_data['cultureCode'],
                    created, modified)
 
+    def to_api(self):
+        return {
+            'sessionId': self.sessionId,
+            'username': self.username,
+            'protocolId': self.protocolId,
+            'status': self.status,
+            'startDate': self.startDate,
+            'endDate': self.endDate,
+            'cultureCode': self.cultureCode,
+            'created': self.created,
+            'modified': self.modified
+        }
+
 
 class VioscreenPercentEnergyComponent(ModelBase):
     def __init__(self, code, description, short_description, units, amount):
@@ -116,6 +129,18 @@ class VioscreenPercentEnergy(ModelBase):
         ]
 
         return cls(sessionId, energy_components)
+
+    def to_api(self):
+        return {
+            'sessionId': self.sessionId,
+            'calculations': [
+                {'code': component.code, 
+                 'description': component.description, 
+                 'shortDescription': component.short_description, 
+                 'units': component.units, 
+                 'amount': component.units} 
+                for component in self.energy_components]
+        }
 
 
 class VioscreenDietaryScoreComponent(ModelBase):
@@ -150,6 +175,20 @@ class VioscreenDietaryScore(ModelBase):
 
         return cls(sessionId, scoresType, scores)
 
+    def to_api(self):
+        return {
+            'sessionId': self.sessionId,
+            'type': self.scoresType,
+            'scores': [
+                {'type': component.code, 
+                 'name': component.name, 
+                 'score': component.score, 
+                 'lowerLimit': component.lowerLimit, 
+                 'upperLimit': component.upperLimit}
+                for component in self.scores
+            ]
+        }
+
 
 class VioscreenSupplementsComponent(ModelBase):
     def __init__(self, supplement, frequency, amount, average):
@@ -179,6 +218,18 @@ class VioscreenSupplements(ModelBase):
         ]
 
         return cls(sessionId, supplements_components)
+
+    def to_api(self):
+        return {
+            'sessionId': self.sessionId,
+            'data': [
+                {'supplement': component.supplement,
+                 'frequency': component.frequency,
+                 'amount': component.amount,
+                 'average': component.average}
+                for component in self.supplements_components
+            ]
+        }
 
 
 class VioscreenFoodComponentsComponent(ModelBase):
@@ -212,6 +263,19 @@ class VioscreenFoodComponents(ModelBase):
 
         return cls(sessionId, food_components)
 
+    def to_api(self):
+        return {
+            'sessionId': self.sessionId,
+            'data': [
+                {'code': component.code,
+                 'description': component.description,
+                 'units': component.units,
+                 'amount': component.amount,
+                 'valueType': component.valueType}
+                for component in self.components
+            ]
+        }
+
 
 class VioscreenEatingPatternsComponent(ModelBase):
     def __init__(self, code, description, units, amount, valueType):
@@ -244,6 +308,19 @@ class VioscreenEatingPatterns(ModelBase):
 
         return cls(sessionId, ep_components)
 
+    def to_api(self):
+        return {
+            'sessionId': self.sessionId,
+            'data': [
+                {'code': component.code,
+                 'description': component.description,
+                 'units': component.units,
+                 'amount': component.amount,
+                 'valueType': component.valueType}
+                for component in self.components
+            ]
+        }
+
 
 class VioscreenMPedsComponent(ModelBase):
     def __init__(self, code, description, units, amount, valueType):
@@ -275,6 +352,19 @@ class VioscreenMPeds(ModelBase):
         ]
 
         return cls(sessionId, mp_components)
+
+    def to_api(self):
+        return {
+            'sessionId': self.sessionId,
+            'data': [
+                {'code': component.code,
+                 'description': component.description,
+                 'units': component.units,
+                 'amount': component.amount,
+                 'valueType': component.valueType}
+                for component in self.components
+            ]
+        }
 
 
 class VioscreenComposite:
