@@ -184,16 +184,13 @@ class SurveyTemplateRepo(BaseRepo):
 
     def _get_question_valid_responses(self, survey_question_id, language_tag):
         tag_to_col = {
-            # TODO: the table *currently* uses the field "response" for an
-            # english response, but we should do something better w/
-            # i18n labels
-            localization.EN_US: "american",
-            localization.EN_GB: "british",
-            localization.ES_MX: "spanish",
+            localization.EN_US: "survey_response.american",
+            localization.EN_GB: "survey_response.british",
+            localization.ES_MX: "survey_response.spanish",
         }
 
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT " + "survey_response." +
+            cur.execute("SELECT " +
                         tag_to_col[language_tag] + " "
                         "FROM "
                         "survey_question_response "
