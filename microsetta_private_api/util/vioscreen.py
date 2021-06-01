@@ -91,19 +91,24 @@ def encrypt_key(survey_id,
     regcode = SERVER_CONFIG["vioscreen_regcode"]
 
     returnurl = survey_redirect_url
-    assess_query = ("FirstName=%s&LastName=%s"
-                    "&RegCode=%s"
-                    "&Username=%s"
-                    "&DOB=%s"
-                    "&Gender=%d"
-                    "&CultureCode=%s"
-                    "&Height=%s"
-                    "&Weight=%s"
-                    "&AppId=1&Visit=1&EncryptQuery=True&ReturnUrl={%s}" %
-                    (firstname, lastname, regcode, survey_id, dob, gender_id,
-                     language_tag, height, weight, returnurl))
+    parts = ["FirstName=%s" % firstname,
+             "LastName=%s" % lastname,
+             "RegCode=%s" % regcode,
+             "Username=%s" % survey_id,
+             "DOB=%s" % dob,
+             "Gender=%d" % gender_id,
+             "CultureCode=%s" % language_tag,
+             "AppId=1",
+             "Visit=1",
+             "EncryptQuery=True",
+             "ReturnUrl={%s}" % returnurl]
+
+    if height is not None and weight is not None:
+        parts.append("Height=%s" % height)
+        parts.append("Weight=%s" % weight)
 
     # PKCS7 add bytes equal length of padding
+    assess_query = "&".join(parts)
     pkcs7_query = pkcs7_pad_message(assess_query)
 
     # Generate AES encrypted information string
