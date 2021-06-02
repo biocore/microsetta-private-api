@@ -1032,6 +1032,12 @@ class AdminRepo(BaseRepo):
                 "en-US"
             )
 
+            if answer_model is None:
+                # if answers are requested for a vioscreen survey
+                # the answers model will comeback empty so let's
+                # gracefully handle this
+                continue
+
             survey_answers = {}
             for k in answer_model:
                 new_k = metadata_map[int(k)]
