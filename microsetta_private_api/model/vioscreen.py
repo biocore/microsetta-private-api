@@ -367,6 +367,74 @@ class VioscreenMPeds(ModelBase):
         }
 
 
+class VioscreenFoodConsumptionComponent:
+    def __init__(self, foodCode, description, foodGroup, amount, frequency, consumptionAdjustment, 
+                 servingSizeText, servingFrequencyText, created, data):
+        self.foodCode = foodCode
+        self.description = description
+        self.foodGroup = foodGroup
+        self.amount = amount
+        self.frequency = frequency
+        self.consumptionAdjustment = consumptionAdjustment
+        self.servingSizeText = servingSizeText
+        self.servingFrequencyText = servingFrequencyText
+        self.created = created
+        self.data = data
+
+    @classmethod
+    def from_vioscreen(cls, component):
+        data = [
+            VioscreenFoodComponentsComponent.from_vioscreen(component2)
+            for component2 in component['data']
+        ]
+
+        return cls(component['foodCode'], component['description'], component['foodGroup'], component['amount'], 
+                   component['frequency'], component['consumptionAdjustment'], component['servingSizeText'], 
+                   component['servingFrequencyText'], component['created'], data)
+
+
+class VioscreenFoodConsumption:
+    def __init__(self, sessionId, components):
+        self.sessionId = sessionId
+        self.components = components
+    
+    @classmethod
+    def from_vioscreen(cls, cons_data):
+        sessionId = cons_data['sessionId']
+
+        cons_components = [
+            VioscreenFoodConsumptionComponent.from_vioscreen(component)
+            for component in cons_data['foodConsumption']
+        ]
+
+        return cls(sessionId, cons_components)
+    
+    def to_api(self):
+        return {
+            'sessionId': self.sessionId,
+            'foodConsumption': [
+                {'foodCode': component.foodCode,
+                 'description': component.description,
+                 'foodGroup': component.foodGroup,
+                 'amount': component.amount,
+                 'frequency': component.frequency,
+                 'consumptionAdjustment': component.consumptionAdjustment,
+                 'servingSizeText': component.servingSizeText,
+                 'servingFrequencyText': component.servingFrequencyText,
+                 'created': component.created,
+                 'data': [
+                     {'code': component2.code,
+                      'description': component2.description,
+                      'units': component2.units,
+                      'amount': component2.amount,
+                      'valueType': component2.valueType}
+                     for component2 in component.data
+                 ]}
+                for component in self.components
+            ]
+        }
+
+
 class VioscreenComposite:
     def __init__(self, session, percent_energy):
         self.session = session

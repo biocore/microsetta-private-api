@@ -8,6 +8,7 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenFoodComponentsComponent, VioscreenFoodComponents, 
     VioscreenEatingPatternsComponent, VioscreenEatingPatterns,
     VioscreenMPedsComponent, VioscreenMPeds,
+    VioscreenFoodConsumptionComponent, VioscreenFoodConsumption,
     VioscreenComposite
 )
 
@@ -1418,6 +1419,41 @@ MPEDS_DATA = [
     }
 ]
 
+CONS_DATA = {"sessionId": "0087da64cdcb41ad800c23531d1198f2", 
+                "foodConsumption": [
+                    {"foodCode": "20001", 
+                     "description": "Apples, applesauce and pears", 
+                     "foodGroup": "Fruits", 
+                     "amount": 1.0, 
+                     "frequency": 28, 
+                     "consumptionAdjustment": 1.58695652173913, 
+                     "servingSizeText": "1 apple or pear, 1/2 cup", 
+                     "servingFrequencyText": "2-3 per month", 
+                     "created": "2017-07-29T02:02:54.72", 
+                        "data": [
+                            {"code": "acesupot", "description": "Acesulfame Potassium", "units": "mg", "amount": 0.0, "valueType": "Amount"}, 
+                            {"code": "addsugar", "description": "Added Sugar", "units": "g", "amount": 0.37180348271909, "valueType": "Amount"}, 
+                            {"code": "adsugtot", "description": "Added Sugars (by Total Sugars)", "units": "g", "amount": 0.258159998188848, "valueType": "Amount"}
+                        ]
+                    }, 
+                    {"foodCode": "20018", 
+                     "description": "Apricots - dried", 
+                     "foodGroup": "Fruits", 
+                     "amount": 1.5, 
+                     "frequency": 12, 
+                     "consumptionAdjustment": 1.58695652173913, 
+                     "servingSizeText": "6 dried halves", 
+                     "servingFrequencyText": "1 per month", 
+                     "created": "2017-07-29T02:02:54.72", 
+                        "data": [
+                            {"code": "acesupot", "description": "Acesulfame Potassium", "units": "mg", "amount": 0.0, "valueType": "Amount"}, 
+                            {"code": "addsugar", "description": "Added Sugar", "units": "g", "amount": 0.0, "valueType": "Amount"}, 
+                            {"code": "adsugtot", "description": "Added Sugars (by Total Sugars)", "units": "g", "amount": 0.0, "valueType": "Amount"}
+                        ]
+                    }
+                ]
+            }
+
 class SessionsTestCase(unittest.TestCase):
 
     def test_from_vioscreen(self):
@@ -1833,6 +1869,39 @@ class MPedsTestCase(unittest.TestCase):
         self.assertEqual(exp.sessionId, obs.sessionId)
         exp_obj = exp.components[0]
         obs_obj = obs.components[0]
+        self.assertEqual(exp_obj.__dict__, obs_obj.__dict__)
+
+
+class FoodConsumptionTestCase(unittest.TestCase):
+    def test_from_vioscreen(self):
+        exp = VioscreenFoodConsumption(
+            sessionId="0087da64cdcb41ad800c23531d1198f2",
+            components=[
+                VioscreenFoodConsumptionComponent(
+                    foodCode="20001", 
+                    description="Apples, applesauce and pears", 
+                    foodGroup="Fruits", 
+                    amount=1.0, 
+                    frequency=28, 
+                    consumptionAdjustment=1.58695652173913, 
+                    servingSizeText="1 apple or pear, 1/2 cup", 
+                    servingFrequencyText="2-3 per month", 
+                    created="2017-07-29T02:02:54.72", 
+                    data=[
+                        VioscreenFoodComponentsComponent(code="acesupot",
+                                                         description="Acesulfame Potassium", 
+                                                         units="mg", 
+                                                         amount=0.0, 
+                                                         valueType="Amount")
+                    ]
+                )
+            ]
+        )
+
+        obs = VioscreenFoodConsumption.from_vioscreen(CONS_DATA)
+        self.assertEqual(exp.sessionId, obs.sessionId)
+        exp_obj = exp.components[0].data[0]
+        obs_obj = obs.components[0].data[0]
         self.assertEqual(exp_obj.__dict__, obs_obj.__dict__)
 
 
