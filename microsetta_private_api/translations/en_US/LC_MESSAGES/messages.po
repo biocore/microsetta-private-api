@@ -1,0 +1,208 @@
+# English (United States) translations for PROJECT.
+# Copyright (C) 2021 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2021-06-03 17:28-0700\n"
+"PO-Revision-Date: 2021-06-03 17:28-0700\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en_US\n"
+"Language-Team: en_US <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.6.0\n"
+
+#: templates/email/activation_email.jinja2:221
+msgid ""
+"Thank you for your interest and participation in The Microsetta "
+"Initiative. We will be shipping out your sample collection kit(s) soon."
+msgstr ""
+
+#: templates/email/activation_email.jinja2:225
+msgid ""
+"The kit(s) may still be en route, but you don't have to pause your "
+"journey just yet.  You can sign up right now to get started at "
+msgstr ""
+
+#: templates/email/activation_email.jinja2:225
+msgid "using the following info:"
+msgstr ""
+
+#: templates/email/activation_email.jinja2:228
+msgid "Email:"
+msgstr ""
+
+#: templates/email/activation_email.jinja2:229
+msgid "Activation Code:"
+msgstr ""
+
+#: templates/email/activation_email.jinja2:234
+msgid ""
+"Not your first foray into the microbiome?  No problem, you don't need to "
+"sign up again, your kit(s) can be added to your existing account when the"
+" order arrives."
+msgstr ""
+
+#: templates/email/activation_email.jinja2:238
+#: templates/email/incorrect_sample_type.jinja2:239
+#: templates/email/missing_sample_info.jinja2:269
+#: templates/email/no_associated_source.jinja2:272
+#: templates/email/sample_is_valid.jinja2:228
+msgid "If you have any questions, please reply to us at "
+msgstr ""
+
+#: templates/email/activation_email.jinja2:238
+#: templates/email/incorrect_sample_type.jinja2:239
+#: templates/email/sample_is_valid.jinja2:228
+msgid "Thank you for supporting our project."
+msgstr ""
+
+#: templates/email/activation_email.jinja2:242
+#: templates/email/incorrect_sample_type.jinja2:243
+#: templates/email/sample_is_valid.jinja2:232
+msgid "Sincerely,"
+msgstr ""
+
+#: templates/email/activation_email.jinja2:245
+#: templates/email/incorrect_sample_type.jinja2:246
+#: templates/email/missing_sample_info.jinja2:273
+#: templates/email/no_associated_source.jinja2:276
+#: templates/email/sample_is_valid.jinja2:235
+msgid "The Microsetta Team"
+msgstr ""
+
+#: templates/email/incorrect_sample_type.jinja2:220
+#: templates/email/missing_sample_info.jinja2:220
+#: templates/email/no_associated_source.jinja2:220
+#: templates/email/sample_is_valid.jinja2:220
+msgid "Hello"
+msgstr ""
+
+#: templates/email/incorrect_sample_type.jinja2:224
+msgid ""
+"We recently received the following microbiome collection from you and "
+"noticed that it may have been incorrectly assigned."
+msgstr ""
+
+#: templates/email/incorrect_sample_type.jinja2:229
+msgid "Marked"
+msgstr ""
+
+#: templates/email/incorrect_sample_type.jinja2:229
+msgid "but appears to be"
+msgstr ""
+
+#: templates/email/incorrect_sample_type.jinja2:236
+msgid ""
+"The collection type determines lab handling, and ultimately how the "
+"results are assessed. We cannot process the collection until the type is "
+"verified. If you know the type then please communicate with us at "
+msgstr ""
+
+#: templates/email/incorrect_sample_type.jinja2:236
+msgid ""
+"by replying to this email. We will then update your information so the "
+"collection can be appropriately associated."
+msgstr ""
+
+#: templates/email/missing_sample_info.jinja2:224
+msgid ""
+"Thank you for your interest and participation in The Microsetta "
+"Initiative. We are writing as we've encountered an issue processing your "
+"microbiome collection, and we would appreciate your assistance in helping"
+" to resolve this matter. Specifically, the following collection sent to "
+"the lab does not have a recorded collection type, date or time. Please "
+"click on the URL below to view the collection information."
+msgstr ""
+
+#: templates/email/missing_sample_info.jinja2:236
+msgid "Based on what we can see, we think the collection type is:"
+msgstr ""
+
+#: templates/email/missing_sample_info.jinja2:250
+msgid ""
+"We require this information in order to process the collection in "
+"compliance with our human subjects research protocol. Editing by "
+"participants is locked for received collections, so updating this "
+"information requires the involvement of a team member with Microsetta. "
+"Could you please reply to this email, and provide the following "
+"information?"
+msgstr ""
+
+#: templates/email/missing_sample_info.jinja2:254
+#: templates/email/no_associated_source.jinja2:263
+msgid "Collection date"
+msgstr ""
+
+#: templates/email/missing_sample_info.jinja2:255
+#: templates/email/no_associated_source.jinja2:264
+msgid "Collection time"
+msgstr ""
+
+#: templates/email/missing_sample_info.jinja2:256
+#: templates/email/no_associated_source.jinja2:265
+msgid "Collection type"
+msgstr ""
+
+#: templates/email/missing_sample_info.jinja2:263
+msgid ""
+"Once we have this detail, we will update the record so the specimen can "
+"be processed appropriately."
+msgstr ""
+
+#: templates/email/missing_sample_info.jinja2:272
+#: templates/email/no_associated_source.jinja2:275
+msgid "Thank you,"
+msgstr ""
+
+#: templates/email/no_associated_source.jinja2:224
+msgid ""
+"Thank you for your interest and participation in The Microsetta "
+"Initiative. We are writing as we've encountered an issue processing your "
+"collection, and we would appreciate your assistance in helping to resolve"
+" this matter."
+msgstr ""
+
+#: templates/email/no_associated_source.jinja2:226
+msgid ""
+">Specifically, the following collection sent to the lab is not associated"
+" with a source:"
+msgstr ""
+
+#: templates/email/no_associated_source.jinja2:238
+msgid ""
+"We require this information in order to process this specimen in "
+"compliance with our human subjects research protocol. Please log back "
+"into the participant website by clicking or copying on the following URL:"
+msgstr ""
+
+#: templates/email/no_associated_source.jinja2:245
+msgid "Your account"
+msgstr ""
+
+#: templates/email/no_associated_source.jinja2:252
+msgid ""
+"After accessing your account using the above URL, you will need to create"
+" a source by clicking on one of the buttons under the \"Sources\" "
+"section."
+msgstr ""
+
+#: templates/email/no_associated_source.jinja2:258
+msgid ""
+"Once a source has been created, please reply to this email with the "
+"following information so that we can link the collection to your source:"
+msgstr ""
+
+#: templates/email/sample_is_valid.jinja2:224
+msgid ""
+"Thank you for your interest and participation in The Microsetta "
+"Initiative. We have received your microbiome collection, and it is now in"
+" the processing queue."
+msgstr ""
+
