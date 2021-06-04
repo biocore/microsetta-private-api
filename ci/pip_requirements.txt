@@ -11,3 +11,4 @@ redis
 requests
 requests_oauthlib
 flask-babel
+html2text
