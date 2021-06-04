@@ -217,33 +217,33 @@
 <body class="c10">
 
 <p class="c1">
-    <span class="c0">Hello {{contact_name |e}},</span>
+    <span class="c0">{{ _("Hello") }} {{contact_name |e}},</span>
 </p>
 <p class="c1"><span class="c0">&nbsp;</span></p>
 <p class="c8 c9">
-    <span class="c0">We recently received the following microbiome collection from you and noticed that it may have been incorrectly assigned.</span>
+    <span class="c0">{{ _("We recently received the following microbiome collection from you and noticed that it may have been incorrectly assigned.") }}</span>
 </p>
 <p class="c2"><span class="c0"></span></p>
 <p class="c8 c9">
     <ul class="c8 c9">
-        <li><span class="c0"> <a href={{resolution_url}} target="_blank">{{sample_barcode |e}}</a> - Marked {{recorded_type |e}} but appears to be {{received_type |e}}</span></li>
+        <li><span class="c0"> <a href={{resolution_url}} target="_blank">{{sample_barcode |e}}</a> - {{ _("Marked") }} {{recorded_type |e}} {{ _("but appears to be") }} {{received_type |e}}</span></li>
     </ul>
 </p>
 <p class="c2">
     <span class="c0"></span>
 </p>
 <p class="c8 c9">
-    <span class="c0">The collection type determines lab handling, and ultimately how the results are assessed. We cannot process the collection until the type is verified. If you know the type then please communicate with us at <a href = "mailto: microsetta@ucsd.edu">microsetta@ucsd.edu</a> by replying to this email. We will then update your information so the collection can be appropriately associated.</span>
+    <span class="c0">{{ _("The collection type determines lab handling, and ultimately how the results are assessed. We cannot process the collection until the type is verified. If you know the type then please communicate with us at ") }}<a href = "mailto: microsetta@ucsd.edu">microsetta@ucsd.edu</a> {{ _("by replying to this email. We will then update your information so the collection can be appropriately associated.") }}</span>
 <p class="c1 c5"><span class="c0"></span></p>
 <p class="c1">
-    <span class="c0">If you have any questions, please reply to us at <a href = "mailto: microsetta@ucsd.edu">microsetta@ucsd.edu</a>. Thank you for supporting our project.</span>
+    <span class="c0">{{ _("If you have any questions, please reply to us at ") }}<a href = "mailto: microsetta@ucsd.edu">microsetta@ucsd.edu</a>. {{ _("Thank you for supporting our project.") }}</span>
 </p>
 <p class="c1"><span class="c0">&nbsp;</span></p>
 <p class="c1">
-    <span class="c0">Sincerely,</span>
+    <span class="c0">{{ _("Sincerely,") }}</span>
 </p>
 <p class="c1">
-    <span class="c0">The Microsetta Team</span>
+    <span class="c0">{{ _("The Microsetta Team") }}</span>
 </p>
 </body>
 </html>
