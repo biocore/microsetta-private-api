@@ -113,6 +113,15 @@ class VioscreenPercentEnergyComponent(ModelBase):
                    component['shortDescription'], component['units'],
                    component['amount'])
 
+    def to_api(self):
+        return {
+            'code': self.code,
+            'description': self.description,
+            'shortDescription': self.short_description,
+            'units': self.units,
+            'amount': self.amount
+        }
+
 
 class VioscreenPercentEnergy(ModelBase):
     def __init__(self, sessionId, energy_components):
@@ -133,13 +142,8 @@ class VioscreenPercentEnergy(ModelBase):
     def to_api(self):
         return {
             'sessionId': self.sessionId,
-            'calculations': [
-                {'code': component.code, 
-                 'description': component.description, 
-                 'shortDescription': component.short_description, 
-                 'units': component.units, 
-                 'amount': component.units} 
-                for component in self.energy_components]
+            'calculations': [component.to_api() 
+                             for component in self.energy_components]
         }
 
 
@@ -155,6 +159,15 @@ class VioscreenDietaryScoreComponent(ModelBase):
     def from_vioscreen(cls, component):
         return cls(component['type'], component['name'], component['score'],
                    component['lowerLimit'], component['upperLimit'])
+
+    def to_api(self):
+        return {
+            'type': self.code,
+            'name': self.name,
+            'score': self.name,
+            'lowerLimit': self.lowerLimit,
+            'upperLimit': self.upperLimit
+        }
 
 
 class VioscreenDietaryScore(ModelBase):
@@ -179,14 +192,8 @@ class VioscreenDietaryScore(ModelBase):
         return {
             'sessionId': self.sessionId,
             'type': self.scoresType,
-            'scores': [
-                {'type': component.code, 
-                 'name': component.name, 
-                 'score': component.score, 
-                 'lowerLimit': component.lowerLimit, 
-                 'upperLimit': component.upperLimit}
-                for component in self.scores
-            ]
+            'scores': [component.to_api() 
+                       for component in self.scores]
         }
 
 
@@ -201,6 +208,14 @@ class VioscreenSupplementsComponent(ModelBase):
     def from_vioscreen(cls, component):
         return cls(component['supplement'], component['frequency'],
                    component['amount'], component['average'])
+
+    def to_api(self):
+        return {
+            'supplement': self.supplement,
+            'frequency': self.frequency,
+            'amount': self.amount,
+            'average': self.average
+        }
 
 
 class VioscreenSupplements(ModelBase):
@@ -222,13 +237,8 @@ class VioscreenSupplements(ModelBase):
     def to_api(self):
         return {
             'sessionId': self.sessionId,
-            'data': [
-                {'supplement': component.supplement,
-                 'frequency': component.frequency,
-                 'amount': component.amount,
-                 'average': component.average}
-                for component in self.supplements_components
-            ]
+            'data': [component.to_api()
+                     for component in self.supplements_components]
         }
 
 
@@ -245,6 +255,15 @@ class VioscreenFoodComponentsComponent(ModelBase):
         return cls(component['code'], component['description'],
                    component['units'], component['amount'],
                    component['valueType'])
+
+    def to_api(self):
+        return {
+            'code': self.code,
+            'description': self.description,
+            'units': self.units,
+            'amount': self.amount,
+            'valueType': self.valueType
+        }
 
 
 class VioscreenFoodComponents(ModelBase):
@@ -266,14 +285,8 @@ class VioscreenFoodComponents(ModelBase):
     def to_api(self):
         return {
             'sessionId': self.sessionId,
-            'data': [
-                {'code': component.code,
-                 'description': component.description,
-                 'units': component.units,
-                 'amount': component.amount,
-                 'valueType': component.valueType}
-                for component in self.components
-            ]
+            'data': [component.to_api()
+                     for component in self.components]
         }
 
 
@@ -290,6 +303,15 @@ class VioscreenEatingPatternsComponent(ModelBase):
         return cls(component['code'], component['description'],
                    component['units'], component['amount'],
                    component['valueType'])
+
+    def to_api(self):
+        return {
+            'code': self.code,
+            'description': self.description,
+            'units': self.units,
+            'amount': self.amount,
+            'valueType': self.valueType
+        }
 
 
 class VioscreenEatingPatterns(ModelBase):
@@ -311,14 +333,8 @@ class VioscreenEatingPatterns(ModelBase):
     def to_api(self):
         return {
             'sessionId': self.sessionId,
-            'data': [
-                {'code': component.code,
-                 'description': component.description,
-                 'units': component.units,
-                 'amount': component.amount,
-                 'valueType': component.valueType}
-                for component in self.components
-            ]
+            'data': [component.to_api()
+                     for component in self.components]
         }
 
 
@@ -335,6 +351,15 @@ class VioscreenMPedsComponent(ModelBase):
         return cls(component['code'], component['description'],
                    component['units'], component['amount'],
                    component['valueType'])
+
+    def to_api(self):
+        return {
+            'code': self.code,
+            'description': self.description,
+            'units': self.units,
+            'amount': self.amount,
+            'valueType': self.valueType
+        }
 
 
 class VioscreenMPeds(ModelBase):
@@ -356,14 +381,8 @@ class VioscreenMPeds(ModelBase):
     def to_api(self):
         return {
             'sessionId': self.sessionId,
-            'data': [
-                {'code': component.code,
-                 'description': component.description,
-                 'units': component.units,
-                 'amount': component.amount,
-                 'valueType': component.valueType}
-                for component in self.components
-            ]
+            'data': [component.to_api()
+                     for component in self.components]
         }
 
 
@@ -393,6 +412,21 @@ class VioscreenFoodConsumptionComponent(ModelBase):
                    component['frequency'], component['consumptionAdjustment'], component['servingSizeText'], 
                    component['servingFrequencyText'], component['created'], data)
 
+    def to_api(self):
+        return {
+            'foodCode': self.foodCode,
+            'description': self.description,
+            'foodGroup': self.foodGroup,
+            'amount': self.amount,
+            'frequency': self.frequency,
+            'consumptionAdjustment': self.consumptionAdjustment,
+            'servingSizeText': self.servingSizeText,
+            'servingFrequencyText': self.servingFrequencyText,
+            'created': self.created,
+            'data': [component.to_api()
+                     for component in self.data]
+        }
+
 
 class VioscreenFoodConsumption(ModelBase):
     def __init__(self, sessionId, components):
@@ -413,26 +447,8 @@ class VioscreenFoodConsumption(ModelBase):
     def to_api(self):
         return {
             'sessionId': self.sessionId,
-            'foodConsumption': [
-                {'foodCode': component.foodCode,
-                 'description': component.description,
-                 'foodGroup': component.foodGroup,
-                 'amount': component.amount,
-                 'frequency': component.frequency,
-                 'consumptionAdjustment': component.consumptionAdjustment,
-                 'servingSizeText': component.servingSizeText,
-                 'servingFrequencyText': component.servingFrequencyText,
-                 'created': component.created,
-                 'data': [
-                     {'code': component2.code,
-                      'description': component2.description,
-                      'units': component2.units,
-                      'amount': component2.amount,
-                      'valueType': component2.valueType}
-                     for component2 in component.data
-                 ]}
-                for component in self.components
-            ]
+            'foodConsumption': [component.to_api() 
+                                for component in self.components]
         }
 
 
