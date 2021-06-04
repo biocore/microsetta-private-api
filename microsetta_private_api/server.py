@@ -4,6 +4,7 @@ import logging
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from flask import jsonify
+from flask_babel import Babel
 
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.celery_utils import celery, init_celery
@@ -70,6 +71,9 @@ def build_app():
         app.app.logger.handlers = gunicorn_logger.handlers
         app.app.logger.setLevel(gunicorn_logger.level)
 
+    global babel
+    babel = Babel(app.app)
+
     init_celery(celery, app.app)
 
     return app
@@ -90,6 +94,7 @@ def run(app):
     )
 
 
+babel = None
 app = build_app()
 
 
