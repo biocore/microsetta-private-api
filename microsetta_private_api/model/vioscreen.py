@@ -367,7 +367,7 @@ class VioscreenMPeds(ModelBase):
         }
 
 
-class VioscreenFoodConsumptionComponent:
+class VioscreenFoodConsumptionComponent(ModelBase):
     def __init__(self, foodCode, description, foodGroup, amount, frequency, consumptionAdjustment, 
                  servingSizeText, servingFrequencyText, created, data):
         self.foodCode = foodCode
@@ -379,6 +379,7 @@ class VioscreenFoodConsumptionComponent:
         self.servingSizeText = servingSizeText
         self.servingFrequencyText = servingFrequencyText
         self.created = created
+        #data is a list of individual VioscreenFoodComponentsComponent objects
         self.data = data
 
     @classmethod
@@ -393,7 +394,7 @@ class VioscreenFoodConsumptionComponent:
                    component['servingFrequencyText'], component['created'], data)
 
 
-class VioscreenFoodConsumption:
+class VioscreenFoodConsumption(ModelBase):
     def __init__(self, sessionId, components):
         self.sessionId = sessionId
         self.components = components
@@ -435,7 +436,7 @@ class VioscreenFoodConsumption:
         }
 
 
-class VioscreenComposite:
+class VioscreenComposite(ModelBase):
     def __init__(self, session, percent_energy):
         self.session = session
         self.percent_energy = percent_energy
