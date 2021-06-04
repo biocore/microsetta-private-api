@@ -3,11 +3,13 @@ import secrets
 import logging
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
-from flask import jsonify
+import flask
+from flask import jsonify, request
 from flask_babel import Babel
 
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.celery_utils import celery, init_celery
+from microsetta_private_api.localization import EN_US, ES_MX
 
 
 """
@@ -73,6 +75,14 @@ def build_app():
 
     global babel
     babel = Babel(app.app)
+
+    @babel.localeselector
+    def get_locale():
+        # for unit test support
+        if not flask.has_request_context():
+            return EN_US
+
+        return request.accept_languages.best_match([EN_US, ES_MX])
 
     init_celery(celery, app.app)
 
