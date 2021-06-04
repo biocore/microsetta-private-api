@@ -10,3 +10,4 @@ celery[redis]
 redis
 requests
 requests_oauthlib
+flask-babel
