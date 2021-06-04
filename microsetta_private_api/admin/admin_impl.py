@@ -27,6 +27,8 @@ from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
 from microsetta_private_api.admin.daklapack_communication import \
     post_daklapack_order, send_daklapack_hold_email
+from microsetta_private_api import localization
+
 from werkzeug.exceptions import Unauthorized
 
 
@@ -213,6 +215,7 @@ def send_email(body, token_info):
         resolution_url = None
         contact_name = None
         activation_code = None
+        language = localization.EN_US
 
         # Depending on issue type, determine what email to send to and
         # what account is involved, as well as what link to send user to
@@ -233,6 +236,7 @@ def send_email(body, token_info):
             account_id = None
             email = None
             contact_name = None
+
             if diag["account"] is not None:
                 account_id = diag["account"].id
                 email = diag["account"].email
@@ -248,6 +252,9 @@ def send_email(body, token_info):
             if diag["sample"] is not None:
                 sample_id = diag["sample"].id
             endpoint = SERVER_CONFIG["endpoint"]
+
+            if account_id is not None:
+                language = diag['account'].preferred_language
 
             if sample_id is not None and \
                source_id is not None and \
@@ -296,7 +303,7 @@ def send_email(body, token_info):
         if activation_code is not None:
             template_args['new_account_code'] = activation_code
         celery_send_email.apply_async(args=[email, template_name,
-                                            template_args])
+                                            template_args, language])
 
         # Add an event to the log that we sent this email successfully
         event = LogEvent(
