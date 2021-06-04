@@ -149,7 +149,7 @@ class SurveyTemplateRepo(BaseRepo):
 
                 # Quick  fix to correctly sort country names in Spanish
                 if language_tag == localization.ES_MX and \
-                    (question_id == 110 or question_id == 148):
+                        (question_id == 110 or question_id == 148):
                     responses[1:len(responses)] = \
                         sorted(responses[1:len(responses)])
 
