@@ -42,7 +42,7 @@ def gen_survey_url(user_id,
 
     # per clarification with Vioscreen, they interpret es_MX as es_ES
     if language_tag == ES_MX:
-        language_tag = 'es_ES'
+        language_tag = 'es-ES'
 
     regcode = SERVER_CONFIG["vioscreen_regcode"]
     url = SERVER_CONFIG["vioscreen_endpoint"] +\

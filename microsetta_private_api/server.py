@@ -55,6 +55,9 @@ def build_app():
         flask_secret = secrets.token_urlsafe(16)
     app.app.secret_key = flask_secret
     app.app.config['SESSION_TYPE'] = 'memcached'
+    app.app.config['BABEL_DEFAULT_TIMEZONE'] = 'UTC'
+    app.app.config['BABEL_TRANSLATION_DIRECTORIES'] = './translations'
+
     # ---
 
     # Set default json encoder

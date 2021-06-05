@@ -22,7 +22,7 @@ class SurveyTemplateRepo(BaseRepo):
     SURVEY_INFO = {
         1: SurveyTemplateLinkInfo(
             1,
-            "Primary",
+            "Primary Questionnaire",
             "1.0",
             "local"
         ),

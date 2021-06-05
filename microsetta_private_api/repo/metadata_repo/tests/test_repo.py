@@ -130,7 +130,7 @@ class MetadataUtilTests(unittest.TestCase):
         exp = {1: {'survey_id': None,
                    'survey_status': None,
                    'survey_template_id': 1,
-                   'survey_template_title': 'Primary',
+                   'survey_template_title': 'Primary Questionnaire',
                    'survey_template_type': 'local',
                    'survey_template_version': '1.0'},
                2: {'survey_id': None,
@@ -152,7 +152,7 @@ class MetadataUtilTests(unittest.TestCase):
         exp = {'survey_id': None,
                'survey_status': None,
                'survey_template_id': 1,
-               'survey_template_title': 'Primary',
+               'survey_template_title': 'Primary Questionnaire',
                'survey_template_type': 'local',
                'survey_template_version': '1.0'}
         survey, errors = _fetch_survey_template(1)
