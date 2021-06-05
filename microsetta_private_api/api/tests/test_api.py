@@ -1264,7 +1264,7 @@ class SurveyTests(ApiTests):
         expected_output = {
             "survey_template_id": PRIMARY_SURVEY_TEMPLATE_ID,
             "survey_status": None,
-            "survey_template_title": "Primary",
+            "survey_template_title": "Primary Questionnaire",
             "survey_template_version": "1.0",
             "survey_template_type": "local",
             "survey_id": real_id_from_loc,
@@ -1436,7 +1436,7 @@ class SampleTests(ApiTests):
             {'survey_id': dummy_answered_survey_id,
              'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
              'survey_status': None,
-             'survey_template_title': "Primary",
+             'survey_template_title': "Primary Questionnaire",
              'survey_template_version': '1.0',
              'survey_template_type': 'local'
              }]
