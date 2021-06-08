@@ -30,6 +30,31 @@ class SampleRepo(BaseRepo):
         LEFT JOIN ag.source
         ON ag.ag_kit_barcodes.source_id = ag.source.id"""
 
+    # the nested query requires a full scan of the barcode_scans
+    # table, which is not necessary if limited to a specific sample.
+    # this query is approximately 200x faster than the above
+    # Note the WHERE in the nested query
+    PARTIAL_SQL_BARCODE_SPECIFIC = """SELECT
+        ag_kit_barcodes.ag_kit_barcode_id,
+        ag.ag_kit_barcodes.sample_date,
+        ag.ag_kit_barcodes.sample_time,
+        ag.ag_kit_barcodes.site_sampled,
+        ag.ag_kit_barcodes.notes,
+        ag.ag_kit_barcodes.barcode,
+        latest_scan.scan_timestamp,
+        ag.source.id,
+        ag.source.account_id
+        FROM ag.ag_kit_barcodes
+        LEFT JOIN (
+            SELECT barcode, max(scan_timestamp) AS scan_timestamp
+            FROM barcodes.barcode_scans
+            WHERE barcode = %s
+            GROUP BY barcode
+        ) latest_scan
+        ON ag.ag_kit_barcodes.barcode = latest_scan.barcode
+        LEFT JOIN ag.source
+        ON ag.ag_kit_barcodes.source_id = ag.source.id"""
+
     def __init__(self, transaction):
         super().__init__(transaction)
 
@@ -90,16 +115,30 @@ class SampleRepo(BaseRepo):
                         "ag_kit_barcode_id = %s",
                         (source_id, sample_id))
 
+    def _get_sample_barcode_from_id(self, sample_id):
+        """Obtain a barcode from a ag.ag_kit_barcode_id"""
+        sql = """SELECT barcode
+                 FROM ag.ag_kit_barcodes
+                 WHERE ag_kit_barcode_id = %s"""
+        with self._transaction.cursor() as cur:
+            cur.execute(sql, (sample_id,))
+            sample_row = cur.fetchone()
+            if sample_row is None:
+                return None
+            else:
+                return sample_row[0]
+
     def _get_sample_by_id(self, sample_id):
         """ Do not use from api layer, you must validate account and source."""
 
         sql = "{0}{1}".format(
-            self.PARTIAL_SQL,
+            self.PARTIAL_SQL_BARCODE_SPECIFIC,
             " WHERE"
             " ag_kit_barcodes.ag_kit_barcode_id = %s")
 
         with self._transaction.cursor() as cur:
-            cur.execute(sql, (sample_id,))
+            barcode = self._get_sample_barcode_from_id(sample_id)
+            cur.execute(sql, (barcode, sample_id,))
             sample_row = cur.fetchone()
             return self._create_sample_obj(sample_row)
 
@@ -129,14 +168,15 @@ class SampleRepo(BaseRepo):
 
     def get_sample(self, account_id, source_id, sample_id):
         sql = "{0}{1}".format(
-            self.PARTIAL_SQL,
+            self.PARTIAL_SQL_BARCODE_SPECIFIC,
             " WHERE"
             " source.account_id = %s"
             " AND source.id = %s"
             " AND ag_kit_barcodes.ag_kit_barcode_id = %s ")
 
         with self._transaction.cursor() as cur:
-            cur.execute(sql, (account_id, source_id, sample_id))
+            barcode = self._get_sample_barcode_from_id(sample_id)
+            cur.execute(sql, (barcode, account_id, source_id, sample_id))
             sample_row = cur.fetchone()
             return self._create_sample_obj(sample_row)
 

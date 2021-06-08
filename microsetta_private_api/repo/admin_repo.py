@@ -414,6 +414,41 @@ class AdminRepo(BaseRepo):
 
             return diagnostic
 
+    def get_project_name(self, project_id):
+        """Obtain the name of a project using the project_id
+
+        Parameters
+        ----------
+        project_id : int
+            The project ID to obtain barcodes for
+
+        Returns
+        -------
+        str
+            The name of the project
+
+        Raises
+        ------
+        NotFound
+            The project ID could not be found
+        """
+        test = """SELECT EXISTS(
+                    SELECT 1
+                    FROM barcodes.project
+                    WHERE project_id=%s
+                  )"""
+        query = """SELECT project
+                   FROM barcodes.project
+                   WHERE project_id=%s"""
+
+        with self._transaction.cursor() as cur:
+            cur.execute(test, [project_id, ])
+            if not cur.fetchone()[0]:
+                raise NotFound(f"Project f'{project_id}' not found")
+            else:
+                cur.execute(query, [project_id, ])
+                return cur.fetchone()[0]
+
     def get_project_barcodes(self, project_id):
         """Obtain the barcodes associated with a project
 
@@ -996,6 +1031,12 @@ class AdminRepo(BaseRepo):
                 answer_id,
                 "en_US"
             )
+
+            if answer_model is None:
+                # if answers are requested for a vioscreen survey
+                # the answers model will comeback empty so let's
+                # gracefully handle this
+                continue
 
             survey_answers = {}
             for k in answer_model:

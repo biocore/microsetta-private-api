@@ -38,6 +38,8 @@ class EventSubtype(Enum):
     DAK_ORDER_HOLD = "daklapack_order_hold"
     # Pester daniel if for what are expected to be unusual situations
     PESTER_DANIEL = "pester_daniel"
+    # for project per-sample summaries
+    EMAIL_PER_PROJECT_SUMMARY = "per_project_summary"
 
 
 class LogEvent(ModelBase):

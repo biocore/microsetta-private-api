@@ -977,54 +977,48 @@ class AdminApiTests(TestCase):
                 mock_email.side_effect = [True]
                 self._test_post_daklapack_orders(order_info, 401)
 
-    def test_query_barcode_stats_no_project_no_barcodes(self):
-        input_json = json.dumps({'project': 0, 'sample_barcodes': None})
+    def test_query_project_barcode_stats_project_without_strip(self):
+        input_json = json.dumps({'project': 7, 'email': 'foobar'})
 
-        response = self.client.post(
-            "api/admin/account_barcode_summary",
-            content_type='application/json',
-            data=input_json,
-            headers=MOCK_HEADERS
-        )
+        with patch("microsetta_private_api.tasks."
+                   "per_sample_summary.delay") as mock_delay:
+            mock_delay.return_value = None
+            response = self.client.post(
+                "api/admin/account_project_barcode_summary?"
+                "strip_sampleid=false",
+                content_type='application/json',
+                data=input_json,
+                headers=MOCK_HEADERS
+            )
 
-        # an empty string project should be unkown
-        self.assertEqual(404, response.status_code)
-
-    def test_query_barcode_stats_project_no_barcodes(self):
-        input_json = json.dumps({'project': 7, 'sample_barcodes': None})
-
-        response = self.client.post(
-            "api/admin/account_barcode_summary",
-            content_type='application/json',
-            data=input_json,
-            headers=MOCK_HEADERS
-        )
-
+        # ...we assume the system is processing to send an email
+        # so nothing specific to verify on the response data
         self.assertEqual(200, response.status_code)
 
-        response_obj = json.loads(response.data)
+    def test_query_project_barcode_stats_project_with_strip(self):
+        input_json = json.dumps({'project': 7, 'email': 'foobar'})
 
-        # there are 24 samples with project 7 in the test db
-        self.assertEqual(len(response_obj), 24)
+        with patch("microsetta_private_api.tasks."
+                   "per_sample_summary.delay") as mock_delay:
+            mock_delay.return_value = None
+            response = self.client.post(
+                "api/admin/account_project_barcode_summary?"
+                "strip_sampleid=True",
+                content_type='application/json',
+                data=input_json,
+                headers=MOCK_HEADERS
+            )
 
-        # ...10 have been received
-        self.assertEqual(sum([v['sample-received']
-                              for v in response_obj]), 10)
+        # ...we assume the system is processing to send an email
+        # so nothing specific to verify on the response data
+        self.assertEqual(200, response.status_code)
 
-        # ...9 are valid
-        self.assertEqual(sum([v['sample-is-valid']
-                              for v in response_obj]), 9)
-
-        # ...1 is missing a source
-        self.assertEqual(sum([v['no-associated-source']
-                              for v in response_obj]), 1)
-
-    def test_query_barcode_stats_project_barcodes(self):
+    def test_query_barcode_stats_project_barcodes_without_strip(self):
         barcodes = ['000010307', '000023344', '000036855']
-        input_json = json.dumps({'project': 7, 'sample_barcodes': barcodes})
+        input_json = json.dumps({'sample_barcodes': barcodes})
 
         response = self.client.post(
-            "api/admin/account_barcode_summary",
+            "api/admin/account_barcode_summary?strip_sampleid=False",
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
@@ -1040,3 +1034,29 @@ class AdminApiTests(TestCase):
         exp_status = [None, 'no-associated-source', 'sample-is-valid']
         self.assertEqual([v['sample-status'] for v in response_obj],
                          exp_status)
+        n_src = sum([v['source-email'] is not None for v in response_obj])
+        self.assertEqual(n_src, 1)
+
+    def test_query_barcode_stats_project_barcodes_with_strip(self):
+        barcodes = ['000010307', '000023344', '000036855']
+        input_json = json.dumps({'sample_barcodes': barcodes})
+
+        response = self.client.post(
+            "api/admin/account_barcode_summary?strip_sampleid=True",
+            content_type='application/json',
+            data=input_json,
+            headers=MOCK_HEADERS
+        )
+        # an empty string project should be unkown
+        self.assertEqual(200, response.status_code)
+
+        response_obj = json.loads(response.data)
+        self.assertEqual(len(response_obj), 3)
+
+        self.assertEqual([v['sampleid'] for v in response_obj],
+                         [None] * len(barcodes))
+        exp_status = [None, 'no-associated-source', 'sample-is-valid']
+        self.assertEqual([v['sample-status'] for v in response_obj],
+                         exp_status)
+        n_src = sum([v['source-email'] is not None for v in response_obj])
+        self.assertEqual(n_src, 1)
