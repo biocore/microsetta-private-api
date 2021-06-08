@@ -645,7 +645,7 @@ class MigrationSupport:
                     # It should already be marked as a mismatched status, which
                     # will then cause it to have status updated later on.
                     assert (wrong_flags & MISMATCHED_VIO_STATUS) == \
-                           MISMATCHED_VIO_STATUS
+                        MISMATCHED_VIO_STATUS
                 if (wrong_flags & NO_SAMPLE_FOUND) == NO_SAMPLE_FOUND:
                     # No idea what to associate this with.
                     # If there's only one sample, maybe we can do it?
