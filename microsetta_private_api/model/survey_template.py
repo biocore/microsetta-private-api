@@ -13,9 +13,10 @@ class SurveyTemplateLinkInfo:
         self.survey_template_version = survey_template_version
         self.survey_template_type = survey_template_type
 
-    def to_api(self, survey_answers_id):
+    def to_api(self, survey_answers_id, survey_status):
         return {
             "survey_id": survey_answers_id,
+            "survey_status": survey_status,
             "survey_template_id": self.survey_template_id,
             "survey_template_title": self.survey_template_title,
             "survey_template_version": self.survey_template_version,

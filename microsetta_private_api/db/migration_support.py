@@ -426,8 +426,108 @@ class MigrationSupport:
                     (r[0], r[1], r[2], r[3]))
         TRN.execute()
 
+    def migrate_77(TRN):
+        # a few studies were remarked as not-TMI when they actually are. A
+        # retroactive update to these studies is necessary. In some cases
+        # the studies have samples which are both present in the TMI structures
+        # and some which are not, stemming from kits having been created
+        # after remarking the project as non-TMI.
+        project_ids = [69, 110, 72, 93, 97, 101, 102, 107, 75, 90, 92, 128]
+
+        for project in project_ids:
+            # gather all kits for the project which are not
+            # in the ag.ag_kit table
+            TRN.add("""SELECT kit_id, array_agg(barcode)
+                       FROM barcodes.barcode
+                           JOIN barcodes.project_barcode USING (barcode)
+                       WHERE project_id=%s
+                           AND kit_id NOT IN (
+                               SELECT supplied_kit_id
+                               FROM ag.ag_kit
+                               )
+                       GROUP BY kit_id""",
+                    (project, ))
+            kit_barcodes = TRN.execute()[-1]
+
+            # some barcodes don't have kits!? gather them, make kits. our old
+            # infrastructure allowed for creating sets of barcodes without
+            # kits, which further complicates this migration.
+            # gather unattached barcodes
+            TRN.add("""SELECT barcode
+                       FROM barcodes.barcode
+                           JOIN barcodes.project_barcode USING (barcode)
+                       WHERE project_id=%s
+                           AND kit_id IS NULL""",
+                    (project, ))
+            unattached_barcodes = TRN.execute()[-1]
+            unattached_barcodes = [r[0] for r in unattached_barcodes]
+
+            # gather a prefix if one had already been used with the
+            # project
+            TRN.add("""SELECT supplied_kit_id
+                       FROM ag.ag_kit
+                           JOIN ag.ag_kit_barcodes USING (ag_kit_id)
+                           JOIN barcodes.barcode
+                               ON barcode.barcode=ag_kit_barcodes.barcode
+                           JOIN barcodes.project_barcode
+                               ON barcode.barcode=project_barcode.barcode
+                       WHERE project_id=%s""",
+                    (project, ))
+            existing_kits = [r[0] for r in TRN.execute()[-1]]
+            prefix = 'm77'  # default to m77 -> migration 77
+            if len(existing_kits) > 0:
+                prefixes = [k.split('_', 1)[0]
+                            for k in existing_kits if '_' in k]
+                if len(prefixes) > 0:
+                    prefix = list(prefixes)[0]
+
+            # Create and assign kits. e're going to use the existing logic
+            # to create kits to be consistents, but it's a private
+            # member method of AdminRepo. It is "safe" to use this method
+            # as it does not have side effects.
+            from microsetta_private_api.repo.admin_repo import AdminRepo
+            careful_with_this = AdminRepo(None)
+
+            unattached_kit_barcodes = []
+            for barcode in unattached_barcodes:
+                kit = careful_with_this._generate_random_kit_name(8, prefix)
+                unattached_kit_barcodes.append((kit, (barcode, )))
+
+                # establish kit associations within the database
+                TRN.add("""INSERT INTO barcodes.kit
+                           (kit_id)
+                           VALUES (%s)""", (kit, ))
+                TRN.add("""UPDATE barcodes.barcode
+                           SET kit_id=%s
+                           WHERE barcode=%s""", (kit, barcode))
+
+            # recreate the steps taken at kit creation to place kit information
+            # into the TMI structures
+            # see https://github.com/biocore/microsetta-private-api/blob/2a6c5fd9a7c3aa925c45f9f6cc3a6626cee3ee8f/microsetta_private_api/repo/admin_repo.py#L746-L763  # noqa
+            for kit, barcodes in kit_barcodes + unattached_kit_barcodes:
+                # add these kits to ag_kit
+                kit_uuid = str(uuid.uuid4())
+                TRN.add("""INSERT INTO ag.ag_kit
+                           (ag_kit_id, supplied_kit_id, swabs_per_kit)
+                           VALUES (%s, %s, %s)""",
+                        (kit_uuid, kit, len(barcodes)))
+
+                # add the associated barcodes to ag_kit_barcodes
+                for barcode in barcodes:
+                    TRN.add("""INSERT INTO ag.ag_kit_barcodes
+                               (ag_kit_id, barcode)
+                               VALUES (%s, %s)""",
+                            (kit_uuid, barcode))
+
+            # remark the project as TMI
+            TRN.add("""UPDATE barcodes.project
+                       SET is_microsetta=true
+                       WHERE project_id=%s""",
+                    (project, ))
+            TRN.execute()
+
     @staticmethod
-    def migrate_76(TRN):
+    def migrate_82(TRN):
         def log(*args):
             print(*args)
             errors.append(' '.join([str(a) for a in args]))
@@ -545,7 +645,7 @@ class MigrationSupport:
                     # It should already be marked as a mismatched status, which
                     # will then cause it to have status updated later on.
                     assert (wrong_flags & MISMATCHED_VIO_STATUS) == \
-                        MISMATCHED_VIO_STATUS
+                           MISMATCHED_VIO_STATUS
                 if (wrong_flags & NO_SAMPLE_FOUND) == NO_SAMPLE_FOUND:
                     # No idea what to associate this with.
                     # If there's only one sample, maybe we can do it?
@@ -619,9 +719,9 @@ class MigrationSupport:
         "0048.sql": migrate_48.__func__,
         "0050.sql": migrate_50.__func__,
         "0070.sql": migrate_70.__func__,
-        "0074.sql": migrate_74.__func__
-        # Let's not run this one until we're sure it's okay.
-        # "0076.sql": migrate_76.__func__
+        "0074.sql": migrate_74.__func__,
+        "0077.sql": migrate_77.__func__,
+        # "0082.sql": migrate_82.__func__
         # ...
     }
 

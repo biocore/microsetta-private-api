@@ -1,4 +1,4 @@
-from ._constants import MISSING_VALUE
+from ._constants import MISSING_VALUE, UNSPECIFIED
 from functools import reduce
 from operator import or_
 import pandas as pd
@@ -24,6 +24,8 @@ ALCOHOL_CONSUMPTION = 'alcohol_consumption'
 ALCOHOL_FREQUENCY = 'alcohol_frequency'
 SEX = 'sex'
 GENDER = 'gender'
+ANONYMIZED_NAME = 'anonymized_name'
+SAMPLE_NAME = 'sample_name'
 
 
 class Transformer:
@@ -37,7 +39,7 @@ class Transformer:
 
     @classmethod
     def apply(cls, df):
-        return cls._transform(df).fillna(MISSING_VALUE)
+        return cls._transform(df).fillna(UNSPECIFIED)
 
     @classmethod
     def _transform(cls, df):
@@ -185,7 +187,7 @@ class AlcoholConsumption(Transformer):
                    'Regularly (3-5 times/week)': 'Yes',
                    'Daily': 'Yes',
                    'Never': 'No',
-                   'Unspecified': MISSING_VALUE,
+                   'Unspecified': UNSPECIFIED,
                    MISSING_VALUE: MISSING_VALUE}
 
         # using value_counts() here as it drops NA by default whereas

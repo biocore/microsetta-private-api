@@ -5,24 +5,30 @@ from flask import jsonify, Response
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
+from microsetta_private_api.model.source import Source
 from microsetta_private_api.model.project import Project
 from microsetta_private_api.model.daklapack_order import DaklapackOrder, \
     ORDER_ID_KEY, SUBMITTER_ACCT_KEY
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.activation_repo import ActivationRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.metadata_repo import (retrieve_metadata,
                                                        drop_private_columns)
+from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from microsetta_private_api.tasks import send_email as celery_send_email
 from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
 from microsetta_private_api.admin.daklapack_communication import \
     post_daklapack_order, send_daklapack_hold_email
+from microsetta_private_api import localization
+
 from werkzeug.exceptions import Unauthorized
 
 
@@ -208,6 +214,8 @@ def send_email(body, token_info):
         email = None
         resolution_url = None
         contact_name = None
+        activation_code = None
+        language = localization.EN_US
 
         # Depending on issue type, determine what email to send to and
         # what account is involved, as well as what link to send user to
@@ -228,6 +236,7 @@ def send_email(body, token_info):
             account_id = None
             email = None
             contact_name = None
+
             if diag["account"] is not None:
                 account_id = diag["account"].id
                 email = diag["account"].email
@@ -243,6 +252,9 @@ def send_email(body, token_info):
             if diag["sample"] is not None:
                 sample_id = diag["sample"].id
             endpoint = SERVER_CONFIG["endpoint"]
+
+            if account_id is not None:
+                language = diag['account'].preferred_language
 
             if sample_id is not None and \
                source_id is not None and \
@@ -264,6 +276,17 @@ def send_email(body, token_info):
                 resolution_url = build_login_redirect(
                     endpoint + "/"
                 )
+        elif body["issue_type"] == "activation":
+            # If we are sending activation emails, we won't have
+            # anything in our database- no account id, no contact name
+            # no known email.  All we actually can do is read out the email
+            # and append an activation code to the set of arguments
+            if body["template"] == EmailMessage.send_activation_code.name:
+                email = body['template_args']['new_account_email']
+                activations = ActivationRepo(t)
+                activation_code = activations.get_activation_code(email)
+            else:
+                raise Exception("Support more activation subtypes")
         else:
             raise Exception("Update Admin Impl to support more issue types")
 
@@ -273,10 +296,14 @@ def send_email(body, token_info):
         template = EmailMessage[template_name]
 
         template_args = dict(body['template_args'])
-        template_args['resolution_url'] = resolution_url
-        template_args['contact_name'] = contact_name
+        if resolution_url is not None:
+            template_args['resolution_url'] = resolution_url
+        if contact_name is not None:
+            template_args['contact_name'] = contact_name
+        if activation_code is not None:
+            template_args['new_account_code'] = activation_code
         celery_send_email.apply_async(args=[email, template_name,
-                                            template_args])
+                                            template_args, language])
 
         # Add an event to the log that we sent this email successfully
         event = LogEvent(
@@ -377,6 +404,85 @@ def query_email_stats(body, token_info):
     return jsonify(results), 200
 
 
+def query_barcode_stats(body, token_info):
+    validate_admin_access(token_info)
+
+    barcodes = body.get("sample_barcodes")
+    project = body["project"]
+
+    summaries = []
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        sample_repo = SampleRepo(t)
+        template_repo = SurveyTemplateRepo(t)
+        vs_repo = VioscreenSessionRepo(t)
+
+        project_barcodes = admin_repo.get_project_barcodes(project)
+
+        if barcodes is None:
+            barcodes = project_barcodes
+        else:
+            barcodes = [b for b in barcodes if b in set(project_barcodes)]
+            not_found = [b for b in barcodes if b not in set(project_barcodes)]
+            if len(not_found) > 0:
+                nf = ", ".join(not_found)
+                message = f"The following barcodes were not found: '[{nf}]'"
+                return jsonify(code=404, message=message), 404
+
+        for barcode in barcodes:
+            diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
+            sample = diag['sample']
+            account = diag['account']
+            source = diag['source']
+
+            account_email = None if account is None else account.email
+            source_email = None
+            source_type = None if source is None else source.source_type
+            vio_id = None
+
+            if source is not None and source_type is Source.SOURCE_TYPE_HUMAN:
+                source_email = source.email
+
+                vio_id = template_repo.get_vioscreen_id_if_exists(account.id,
+                                                                  source.id,
+                                                                  sample.id)
+
+            sample_status = sample_repo.get_sample_status(
+                sample.barcode,
+                sample._latest_scan_timestamp
+            )
+
+            ffq_complete, ffq_taken, _ = vs_repo.get_ffq_status_by_sample(
+                sample.id
+            )
+
+            summary = {
+                "sampleid": barcode,
+                "project": project,
+                "source-type": source_type,
+                "site-sampled": sample.site,
+                "source-email": source_email,
+                "account-email": account_email,
+                "vioscreen_username": vio_id,
+                "ffq-taken": ffq_taken,
+                "ffq-complete": ffq_complete,
+                "sample-status": sample_status,
+                "sample-received": sample_status is not None
+            }
+
+            for status in ["sample-is-valid",
+                           "no-associated-source",
+                           "no-registered-account",
+                           "no-collection-info",
+                           "sample-has-inconsistencies",
+                           "received-unknown-validity"]:
+                summary[status] = sample_status == status
+
+            summaries.append(summary)
+
+    return jsonify(summaries), 200
+
+
 def create_daklapack_order(body, token_info):
     validate_admin_access(token_info)
 
@@ -425,3 +531,29 @@ def create_daklapack_order(body, token_info):
     # TODO: AB: Add this endpoint as part of support for polling dak orders
     response.headers['Location'] = f'/api/admin/daklapack_orders/{order_id}'
     return response
+
+
+def search_activation(token_info, email_query=None, code_query=None):
+    validate_admin_access(token_info)
+    with Transaction() as t:
+        activations = ActivationRepo(t)
+        if email_query is not None:
+            infos = activations.search_email(email_query)
+        elif code_query is not None:
+            infos = activations.search_code(code_query)
+        else:
+            raise Exception("Must specify an 'email_query' or 'code_query'")
+
+        return jsonify([i.to_api() for i in infos]), 200
+
+
+def generate_activation_codes(body, token_info):
+    validate_admin_access(token_info)
+
+    email_list = body.get("emails", [])
+    with Transaction() as t:
+        activations = ActivationRepo(t)
+        map = activations.get_activation_codes(email_list)
+        results = [{"email": email, "code": map[email]} for email in map]
+        t.commit()
+    return jsonify(results), 200

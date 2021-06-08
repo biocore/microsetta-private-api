@@ -3,7 +3,7 @@ import pandas as pd
 import pandas.testing as pdt
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.metadata_repo._constants import (
-    HUMAN_SITE_INVARIANTS, MISSING_VALUE)
+    HUMAN_SITE_INVARIANTS, UNSPECIFIED)
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.metadata_repo._repo import (
     _build_col_name,
@@ -128,11 +128,13 @@ class MetadataUtilTests(unittest.TestCase):
 
     def test_fetch_observed_survey_templates(self):
         exp = {1: {'survey_id': None,
+                   'survey_status': None,
                    'survey_template_id': 1,
-                   'survey_template_title': 'Primary',
+                   'survey_template_title': 'Primary Questionnaire',
                    'survey_template_type': 'local',
                    'survey_template_version': '1.0'},
                2: {'survey_id': None,
+                   'survey_status': None,
                    'survey_template_id': 2,
                    'survey_template_title': 'Pet Information',
                    'survey_template_type': 'local',
@@ -148,8 +150,9 @@ class MetadataUtilTests(unittest.TestCase):
 
     def test_fetch_survey_template(self):
         exp = {'survey_id': None,
+               'survey_status': None,
                'survey_template_id': 1,
-               'survey_template_title': 'Primary',
+               'survey_template_title': 'Primary Questionnaire',
                'survey_template_type': 'local',
                'survey_template_version': '1.0'}
         survey, errors = _fetch_survey_template(1)
@@ -212,17 +215,17 @@ class MetadataUtilTests(unittest.TestCase):
         data = [self.raw_sample_1, self.raw_sample_2]
         templates = {1: self.fake_survey_template2}
 
-        exp = pd.DataFrame([['000004216', 'foo', MISSING_VALUE, 'No',
+        exp = pd.DataFrame([['000004216', 'foo', UNSPECIFIED, 'No',
                              'Unspecified', 'Unspecified', 'Unspecified', 'No',
                              'true', 'true', 'false', 'false',
-                             MISSING_VALUE,
-                             'okay', 'No', "2013-10-15T09:30:00"],
+                             UNSPECIFIED,
+                             'okay', 'No', "2013-10-15T09:30:00", '000004216'],
                             ['XY0004216', 'bar', 'Vegan', 'Yes', 'Unspecified',
                              'Unspecified', 'Unspecified', 'No',
                              'false', 'true', 'true', 'false', 'foobar',
-                             MISSING_VALUE,
-                             MISSING_VALUE,
-                             "2013-10-15T09:30:00"]],
+                             UNSPECIFIED,
+                             UNSPECIFIED,
+                             "2013-10-15T09:30:00", 'XY0004216']],
                            columns=['sample_name', 'host_subject_id',
                                     'diet_type', 'multivitamin',
                                     'probiotic_frequency',
@@ -233,7 +236,8 @@ class MetadataUtilTests(unittest.TestCase):
                                     'allergic_to_stuff', 'allergic_to_baz',
                                     'allergic_to_x',
                                     'sample2specific', 'abc', 'def',
-                                    'collection_timestamp']
+                                    'collection_timestamp',
+                                    'anonymized_name']
                            ).set_index('sample_name')
 
         for k, v in HUMAN_SITE_INVARIANTS['Stool'].items():

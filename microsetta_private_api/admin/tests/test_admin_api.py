@@ -61,7 +61,8 @@ def setup_test_data():
                           12345,
                           "US"
                       ),
-                      "fakekit")
+                      "fakekit",
+                      "en_US")
         acct_repo.create_account(acc)
 
         with t.cursor() as cur:
@@ -975,3 +976,67 @@ class AdminApiTests(TestCase):
                        "send_daklapack_hold_email") as mock_email:
                 mock_email.side_effect = [True]
                 self._test_post_daklapack_orders(order_info, 401)
+
+    def test_query_barcode_stats_no_project_no_barcodes(self):
+        input_json = json.dumps({'project': 0, 'sample_barcodes': None})
+
+        response = self.client.post(
+            "api/admin/account_barcode_summary",
+            content_type='application/json',
+            data=input_json,
+            headers=MOCK_HEADERS
+        )
+
+        # an empty string project should be unkown
+        self.assertEqual(404, response.status_code)
+
+    def test_query_barcode_stats_project_no_barcodes(self):
+        input_json = json.dumps({'project': 7, 'sample_barcodes': None})
+
+        response = self.client.post(
+            "api/admin/account_barcode_summary",
+            content_type='application/json',
+            data=input_json,
+            headers=MOCK_HEADERS
+        )
+
+        self.assertEqual(200, response.status_code)
+
+        response_obj = json.loads(response.data)
+
+        # there are 24 samples with project 7 in the test db
+        self.assertEqual(len(response_obj), 24)
+
+        # ...10 have been received
+        self.assertEqual(sum([v['sample-received']
+                              for v in response_obj]), 10)
+
+        # ...9 are valid
+        self.assertEqual(sum([v['sample-is-valid']
+                              for v in response_obj]), 9)
+
+        # ...1 is missing a source
+        self.assertEqual(sum([v['no-associated-source']
+                              for v in response_obj]), 1)
+
+    def test_query_barcode_stats_project_barcodes(self):
+        barcodes = ['000010307', '000023344', '000036855']
+        input_json = json.dumps({'project': 7, 'sample_barcodes': barcodes})
+
+        response = self.client.post(
+            "api/admin/account_barcode_summary",
+            content_type='application/json',
+            data=input_json,
+            headers=MOCK_HEADERS
+        )
+        # an empty string project should be unkown
+        self.assertEqual(200, response.status_code)
+
+        response_obj = json.loads(response.data)
+        self.assertEqual(len(response_obj), 3)
+
+        self.assertEqual([v['sampleid'] for v in response_obj],
+                         barcodes)
+        exp_status = [None, 'no-associated-source', 'sample-is-valid']
+        self.assertEqual([v['sample-status'] for v in response_obj],
+                         exp_status)

@@ -57,6 +57,7 @@ DUMMY_ACCT_INFO = {
     "email": TEST_EMAIL,
     "first_name": "Jane",
     "last_name": "Doe",
+    "language": "en_US",
     KIT_NAME_KEY: EXISTING_KIT_NAME
 }
 DUMMY_ACCT_INFO_2 = {
@@ -70,6 +71,7 @@ DUMMY_ACCT_INFO_2 = {
     "email": TEST_EMAIL_2,
     "first_name": "Obie",
     "last_name": "Dobie",
+    "language": "en_US",
     KIT_NAME_KEY: EXISTING_KIT_NAME_2
 }
 DUMMY_ACCT_ADMIN = {
@@ -206,7 +208,11 @@ CREATION_TIME_KEY = "creation_time"
 UPDATE_TIME_KEY = "update_time"
 
 
-def dictionary_mangler(a_dict, delete_fields=True, parent_dicts=None):
+def dictionary_mangler(
+        a_dict,
+        delete_fields=True,
+        parent_dicts=None,
+        skip_fields=None):
     """Generator to delete fields or add bogus fields in nested dictionary.
 
     Create a generator to travel recursively through the provided dictionary
@@ -220,6 +226,8 @@ def dictionary_mangler(a_dict, delete_fields=True, parent_dicts=None):
     curr_dicts = {}
 
     for curr_key, curr_val in a_dict.items():
+        if skip_fields is not None and curr_key in skip_fields:
+            continue
         curr_dicts = copy.deepcopy(parent_dicts)
         if isinstance(curr_val, dict):
             curr_dicts[curr_key] = curr_val
@@ -426,7 +434,8 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['post_code'],
                 input_obj['address']['country_code']
             ),
-            input_obj['kit_name']
+            input_obj['kit_name'],
+            input_obj['language']
         )
     else:
         acct = Account.from_dict(input_obj, iss, sub)
@@ -568,7 +577,8 @@ class ApiTests(TestCase):
 
     def run_query_and_content_required_field_test(self, url, action,
                                                   valid_query_dict,
-                                                  valid_content_dict=None):
+                                                  valid_content_dict=None,
+                                                  skip_fields=[]):
 
         if valid_content_dict is None:
             valid_content_dict = {}
@@ -581,7 +591,8 @@ class ApiTests(TestCase):
             curr_expected_msg = None
 
             field_deleter = dictionary_mangler(dict_to_test,
-                                               delete_fields=True)
+                                               delete_fields=True,
+                                               skip_fields=skip_fields)
 
             for curr_mangled_dict in field_deleter:
                 if curr_dict_type == QUERY_KEY:
@@ -593,6 +604,7 @@ class ApiTests(TestCase):
 
                 curr_query_str = urlencode(curr_query_dict)
                 curr_content_json = json.dumps(curr_content_dict)
+
                 curr_url = url if not curr_query_str else \
                     '{0}?{1}'.format(url, curr_query_str)
                 if action == "get":
@@ -693,7 +705,8 @@ class AccountsTests(ApiTests):
         self.run_query_and_content_required_field_test(
             "/api/accounts", "post",
             self.default_querystring_dict,
-            DUMMY_ACCT_INFO)
+            DUMMY_ACCT_INFO,
+            skip_fields=["kit_name"])
 
     def test_accounts_create_fail_404(self):
         """Return 404 if provided kit name is not found in db."""
@@ -1250,7 +1263,8 @@ class SurveyTests(ApiTests):
 
         expected_output = {
             "survey_template_id": PRIMARY_SURVEY_TEMPLATE_ID,
-            "survey_template_title": "Primary",
+            "survey_status": None,
+            "survey_template_title": "Primary Questionnaire",
             "survey_template_version": "1.0",
             "survey_template_type": "local",
             "survey_id": real_id_from_loc,
@@ -1421,7 +1435,8 @@ class SampleTests(ApiTests):
         expected_output = [
             {'survey_id': dummy_answered_survey_id,
              'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
-             'survey_template_title': "Primary",
+             'survey_status': None,
+             'survey_template_title': "Primary Questionnaire",
              'survey_template_version': '1.0',
              'survey_template_type': 'local'
              }]

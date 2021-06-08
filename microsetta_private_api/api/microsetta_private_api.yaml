@@ -39,7 +39,7 @@ paths:
       requestBody:
         content:
           application/json:
-            # Send (non-readOnly) values of account schema PLUS kit name
+            # Send (non-readOnly) values of account schema PLUS kit name OR activation code
             schema:
               allOf:
                 - $ref: '#/components/schemas/account'
@@ -47,8 +47,8 @@ paths:
                   properties:
                     kit_name:
                       $ref: '#/components/schemas/kit_name'
-                  required:
-                    - kit_name
+                    code:
+                      $ref: '#/components/schemas/activation_code'
       responses:
         '201':
           description: Successfully registered new user account
@@ -602,6 +602,8 @@ paths:
                       properties:
                         survey_id:
                           $ref: '#/components/schemas/survey_id'
+                        survey_status:
+                          $ref: '#/components/schemas/survey_status'
                       required:
                         - survey_id
         '401':
@@ -668,6 +670,8 @@ paths:
                     properties:
                       survey_id:
                         $ref: '#/components/schemas/survey_id'
+                      survey_status:
+                        $ref: '#/components/schemas/survey_status'
                       survey_text:
                         $ref: '#/components/schemas/survey_text'
                     required:
@@ -886,6 +890,8 @@ paths:
                       properties:
                         survey_id:
                           $ref: '#/components/schemas/survey_id'
+                        survey_status:
+                          $ref: '#/components/schemas/survey_status'
                       required:
                         - survey_id
               example: # explicit examples hardcoded here because connexion can't seem to infer examples for lists
@@ -992,6 +998,31 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/can_activate':
+    get:
+      operationId: microsetta_private_api.api.check_activation
+      tags:
+        - Activation
+      summary: Check if email, code pair can be activated
+      description: Check if email, code pair can be activated
+      parameters:
+        - $ref: '#/components/parameters/email'
+        - $ref: '#/components/parameters/activation_code'
+      responses:
+        '200':
+          description: can_activate T/F and error string if unable to activate
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  can_activate:
+                    type: boolean
+                  error:
+                    type: string
+                    nullable: true
+
+
   '/preparations/{sample_barcode}':
     get:
       operationId: microsetta_private_api.api.get_preparations
@@ -1080,6 +1111,34 @@ paths:
             application/json:
               schema:
                 type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/admin/search/activation':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.search_activation
+      tags:
+        - Admin
+      summary: Retrieve diagnostic information about activation codes by email or code
+      description: Retrieve diagnostic information about activation codes by email or code
+      parameters:
+        - in: query
+          name: email_query
+          schema:
+            type: string
+        - in: query
+          name: code_query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Object containing activation info with similar emails or codes (if any)
+          content:
+            application/json:
+              schema:
+                type: array
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '404':
@@ -1350,13 +1409,14 @@ paths:
                 # issue type defines what resolution_url the user should go to
                 issue_type:
                   type: string
-                  enum: ["sample"]
+                  enum: ["sample", "activation"]
                 template:
                   type: string
                   enum: ["incorrect_sample_type",
                          "missing_sample_info",
                          "sample_is_valid",
-                         "no_associated_source"]
+                         "no_associated_source",
+                         "send_activation_code"]
                   example: "incorrect_sample_type"
                 template_args:
                   type: object
@@ -1450,6 +1510,58 @@ paths:
               schema:
                 type: array
 
+  '/admin/account_barcode_summary':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.query_barcode_stats
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'sample_barcodes':
+                  type: array
+                  items:
+                    # not using the defined schema for sample_barcode as it is 
+                    # readOnly
+                    type: string
+                  nullable: true
+                project:
+                  type: integer
+      responses:
+        '200':
+          description: Return list of dictionaries of sample status for requested accounts
+        '404':
+          description: Project not found, or requested barcodes not found
+          content:
+            application/json:
+              schema:
+                type: object
+
+  '/admin/activation':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.generate_activation_codes
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emails:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/email'
+      responses:
+        '200':
+          description: Returns array of activation information
+          content:
+            application/json:
+              schema:
+                type: array
 
 components:
   parameters:
@@ -1512,6 +1624,20 @@ components:
         $ref: '#/components/schemas/project_id'
 
     # query parameters
+    activation_code:
+      name: code
+      in: query
+      description: Activation code
+      schema:
+        $ref: '#/components/schemas/activation_code'
+      required: true
+    email:
+      name: email
+      in: query
+      description: User's email
+      schema:
+        $ref: '#/components/schemas/email'
+      required: true
     kit_name:
       name: kit_name
       in: query
@@ -1616,6 +1742,10 @@ components:
       readOnly: true
       enum: ["standard", "admin"]
       example: "standard"
+    language:
+      type: string
+      enum: ["en_US", "es_MX"]
+      example: "en_US"
     creation_time:
       type: string
       readOnly: true
@@ -1633,7 +1763,7 @@ components:
       example: "Doe"
     language_tag:
       type: string
-      example: "en-US"
+      example: "en_US"
     update_time:
       type: string
       readOnly: true
@@ -1654,6 +1784,8 @@ components:
           $ref: '#/components/schemas/address'
         account_type:
           $ref: '#/components/schemas/account_type'
+        language:
+          $ref: '#/components/schemas/language'
         creation_time:
           $ref: '#/components/schemas/creation_time'
         update_time:
@@ -1663,6 +1795,7 @@ components:
         - last_name
         - email
         - address
+        - language
 
     address:   # taken from https://opensource.zalando.com/restful-api-guidelines/#address-fields
       description:
@@ -1704,6 +1837,10 @@ components:
         - post_code
         - country_code
 
+    # activation codes section
+    activation_code:
+      type: string
+      example: TMI-XXXXX-XXXXX-XXXXX
     # kit section
     kit_name:
       type: string
@@ -1971,6 +2108,10 @@ components:
     survey_id:
       type: string
       example: "69f697cb-8e52-4a4f-8db2-efffcfa186a5"
+    survey_status:
+      type: integer
+      example: 3
+      nullable: true
     survey_text:
       # The contents of this object ARE structured, but their structure is not specified in THIS api.
       type: object

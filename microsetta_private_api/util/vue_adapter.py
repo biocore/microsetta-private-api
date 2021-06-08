@@ -1,6 +1,7 @@
 from microsetta_private_api.model.vue.vue_field import (VueInputField,
                                                         VueTextAreaField,
                                                         VueSelectField,
+                                                        VueRadiosField,
                                                         VueChecklistField)
 from microsetta_private_api.model.vue.vue_group import VueGroup
 from microsetta_private_api.model.vue.vue_schema import VueSchema
@@ -9,10 +10,16 @@ from collections import defaultdict
 
 def to_vue_field(question, triggered_by=None):
     if question.response_type == "SINGLE":
-        vue_field = VueSelectField(question.id,
-                                   question.localized_text,
-                                   question.valid_responses,
-                                   question.short_name)
+        if len(question.valid_responses) < 7:
+            vue_field = VueRadiosField(question.id,
+                                       question.localized_text,
+                                       question.valid_responses,
+                                       question.short_name)
+        else:
+            vue_field = VueSelectField(question.id,
+                                       question.localized_text,
+                                       question.valid_responses,
+                                       question.short_name)
     elif question.response_type == "MULTIPLE":
         vue_field = VueChecklistField(question.id,
                                       question.localized_text,

@@ -12,6 +12,7 @@ from microsetta_private_api.api.literals import AUTHROCKET_PUB_KEY, \
 from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.activation_repo import ActivationRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.transaction import Transaction
 
@@ -58,14 +59,38 @@ def register_account(body, token_info):
     # First register with AuthRocket, then come here to make the account
     new_acct_id = str(uuid.uuid4())
     body["id"] = new_acct_id
+    # Account.from_dict requires a kit_name, even if blank
+    kit_name = body.get("kit_name", "")
+    body["kit_name"] = kit_name
+    code = body.get("code", "")
+    body["code"] = code
+
     account_obj = Account.from_dict(body, token_info[JWT_ISS_CLAIM_KEY],
                                     token_info[JWT_SUB_CLAIM_KEY])
 
+    if kit_name == "" and code == "":
+        return jsonify(
+            code=400,
+            message="Account registration requires "
+                    "valid kit ID or activation code"), 400
+
     with Transaction() as t:
-        kit_repo = KitRepo(t)
-        kit = kit_repo.get_kit_all_samples(body['kit_name'])
-        if kit is None:
-            return jsonify(code=404, message="Kit name not found"), 404
+        activation_repo = ActivationRepo(t)
+        if code != "":
+            can_activate, cause = activation_repo.can_activate_with_cause(
+                body["email"],
+                code
+            )
+            if not can_activate:
+                return jsonify(code=404, message=cause), 404
+            else:
+                activation_repo.use_activation_code(body["email"], code)
+
+        if kit_name != "":
+            kit_repo = KitRepo(t)
+            kit = kit_repo.get_kit_all_samples(kit_name)
+            if kit is None:
+                return jsonify(code=404, message="Kit name not found"), 404
 
         acct_repo = AccountRepo(t)
         acct_repo.create_account(account_obj)
@@ -115,6 +140,7 @@ def update_account(account_id, body, token_info):
             body['address']['post_code'],
             body['address']['country_code']
         )
+        acc.language = body['language']
 
         # 422 handling is done inside acct_repo
         acct_repo.update_account(acc)

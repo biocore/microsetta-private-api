@@ -1,3 +1,6 @@
+import psycopg2
+
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
@@ -150,8 +153,14 @@ class SourceRepo(BaseRepo):
             return cur.rowcount == 1
 
     def delete_source(self, account_id, source_id):
-        with self._transaction.cursor() as cur:
-            cur.execute("DELETE FROM source WHERE source.id = %s AND "
-                        "source.account_id = %s",
-                        (source_id, account_id))
-            return cur.rowcount == 1
+        try:
+            with self._transaction.cursor() as cur:
+                cur.execute("DELETE FROM source WHERE source.id = %s AND "
+                            "source.account_id = %s",
+                            (source_id, account_id))
+                return cur.rowcount == 1
+        except psycopg2.errors.ForeignKeyViolation as e:
+            if e.diag.constraint_name == "fk_ag_kit_barcodes_sources":
+                raise RepoException("A source cannot be deleted while samples "
+                                    "are associated with it") from e
+            raise RepoException("Error deleting source") from e

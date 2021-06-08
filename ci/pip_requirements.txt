@@ -1,6 +1,7 @@
+openapi-spec-validator < 0.2.10
 connexion[swagger-ui]
 pyjwt[crypto]
-pytest < 5.3.4
+pytest
 pytest-cov
 coveralls
 pycountry
@@ -9,3 +10,5 @@ celery[redis]
 redis
 requests
 requests_oauthlib
+flask-babel
+html2text

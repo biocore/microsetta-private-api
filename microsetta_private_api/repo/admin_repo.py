@@ -414,6 +414,41 @@ class AdminRepo(BaseRepo):
 
             return diagnostic
 
+    def get_project_barcodes(self, project_id):
+        """Obtain the barcodes associated with a project
+
+        Parameters
+        ----------
+        project_id : int
+            The project ID to obtain barcodes for
+
+        Returns
+        -------
+        list
+            The list of observed barcodes
+
+        Raises
+        ------
+        NotFound
+            The project ID could not be found
+        """
+        test = """SELECT EXISTS(
+                    SELECT 1
+                    FROM barcodes.project
+                    WHERE project_id=%s
+                  )"""
+        query = """SELECT barcode
+                   FROM barcodes.project_barcode
+                   WHERE project_id=%s"""
+
+        with self._transaction.cursor() as cur:
+            cur.execute(test, [project_id, ])
+            if not cur.fetchone()[0]:
+                raise NotFound(f"Project f'{project_id}' not found")
+            else:
+                cur.execute(query, [project_id, ])
+                return list([v[0] for v in cur.fetchall()])
+
     def create_project(self, project):
         """Create a project entry in the database
 
@@ -929,16 +964,16 @@ class AdminRepo(BaseRepo):
 
         answer_to_template_map = {}
         for answer_id in answer_ids:
-            template_id = survey_answers_repo.find_survey_template_id(
-                answer_id)
-            answer_to_template_map[answer_id] = template_id
+            template_id, status = survey_answers_repo.\
+                survey_template_id_and_status(answer_id)
+            answer_to_template_map[answer_id] = (template_id, status)
 
         # if a survey template is specified, filter the returned surveys
         if survey_template_id is not None:
             # TODO: This schema is so awkward for this type of query...
             answers = []
             for answer_id in answer_ids:
-                if answer_to_template_map[answer_id] == survey_template_id:
+                if answer_to_template_map[answer_id][0] == survey_template_id:
                     answers.append(answer_id)
 
             if len(answers) == 0:
@@ -959,7 +994,7 @@ class AdminRepo(BaseRepo):
                 account_id,
                 source_id,
                 answer_id,
-                "en-US"
+                "en_US"
             )
 
             survey_answers = {}
@@ -969,7 +1004,8 @@ class AdminRepo(BaseRepo):
 
             all_survey_answers.append(
                 {
-                    "template": answer_to_template_map[answer_id],
+                    "template": answer_to_template_map[answer_id][0],
+                    "survey_status": answer_to_template_map[answer_id][1],
                     "response": survey_answers
                 })
 
