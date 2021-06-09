@@ -231,7 +231,7 @@ class VioscreenPercentEnergyRepo(BaseRepo):
             energy_components = vioscreen_percent_energy.energy_components
             inserts = []
             for energy_component in energy_components:
-                #checking if code exists in lookup
+                # checking if code exists in lookup
                 self._get_code_info(energy_component.code)
                 inserts.append((vioscreen_percent_energy.sessionId,
                                 energy_component.code,
@@ -307,21 +307,21 @@ class VioscreenPercentEnergyRepo(BaseRepo):
 class VioscreenDietaryScoreRepo(BaseRepo):
     # scoresType : { code: (name, lower limit, upper limit) }
     _CODES = {'Hei2010': {
-                  'TotalVegetables': ('Total Vegetables', 0.0, 5.0),
-                  'GreensAndBeans': ('Greens and Beans', 0.0, 5.0),
-                  'TotalFruit': ('Total Fruit', 0.0, 5.0),
-                  'WholeFruit': ('Whole Fruit', 0.0, 5.0),
-                  'WholeGrains': ('Whole Grains', 0.0, 10.0),
-                  'Dairy': ('Dairy', 0.0, 10.0),
-                  'TotalProteins': ('Total Protein Foods', 0.0, 5.0),
-                  'SeafoodAndPlantProteins': ('Seafood and Plant Proteins',
-                                              0.0, 5.0),
-                  'FattyAcids': ('Fatty Acids', 0.0, 10.0),
-                  'RefinedGrains': ('Refined Grains', 0.0, 10.0),
-                  'Sodium': ('Sodium', 0.0, 10.0),
-                  'EmptyCalories': ('Empty Calories', 0.0, 20.0),
-                  'TotalScore': ('Total HEI Score', 0.0, 100.0)
-                  }}
+        'TotalVegetables': ('Total Vegetables', 0.0, 5.0),
+        'GreensAndBeans': ('Greens and Beans', 0.0, 5.0),
+        'TotalFruit': ('Total Fruit', 0.0, 5.0),
+        'WholeFruit': ('Whole Fruit', 0.0, 5.0),
+        'WholeGrains': ('Whole Grains', 0.0, 10.0),
+        'Dairy': ('Dairy', 0.0, 10.0),
+        'TotalProteins': ('Total Protein Foods', 0.0, 5.0),
+        'SeafoodAndPlantProteins': ('Seafood and Plant Proteins',
+                                    0.0, 5.0),
+        'FattyAcids': ('Fatty Acids', 0.0, 10.0),
+        'RefinedGrains': ('Refined Grains', 0.0, 10.0),
+        'Sodium': ('Sodium', 0.0, 10.0),
+        'EmptyCalories': ('Empty Calories', 0.0, 20.0),
+        'TotalScore': ('Total HEI Score', 0.0, 100.0)
+    }}
 
     def __init__(self, transaction):
         super().__init__(transaction)
@@ -343,8 +343,9 @@ class VioscreenDietaryScoreRepo(BaseRepo):
             scores = vioscreen_dietary_score.scores
             inserts = []
             for score in scores:
-                #checking if code exists in lookup
-                self._get_code_info(vioscreen_dietary_score.scoresType, score.code)
+                # checking if code exists in lookup
+                self._get_code_info(
+                    vioscreen_dietary_score.scoresType, score.code)
                 inserts.append((vioscreen_dietary_score.sessionId,
                                 vioscreen_dietary_score.scoresType,
                                 score.code,
@@ -508,8 +509,10 @@ class VioscreenFoodComponentsRepo(BaseRepo):
               'aspartam': ('Aspartame', 'mg', 'Amount'),
               'aspartic': ('Aspartic Acid', 'g', 'Amount'),
               'avcarb': ('Available Carbohydrate', 'g', 'Amount'),
-              'betacar': ('Beta-Carotene (provitamin A carotenoid)', 'mcg', 'Amount'),
-              'betacryp': ('Beta-Cryptoxanthin (provitamin A carotenoid)', 'mcg', 'Amount'),
+              'betacar': ('Beta-Carotene (provitamin A carotenoid)', 'mcg',
+                          'Amount'),
+              'betacryp': ('Beta-Cryptoxanthin (provitamin A carotenoid)',
+                           'mcg', 'Amount'),
               'betaine': ('Betaine', 'mg', 'Amount'),
               'betatoco': ('Beta-Tocopherol', 'mg', 'Amount'),
               'biochana': ('Biochanin A', 'mg', 'Amount'),
@@ -568,8 +571,10 @@ class VioscreenFoodComponentsRepo(BaseRepo):
               'mfa181': ('MUFA 18:1 (oleic acid)', 'g', 'Amount'),
               'mfa201': ('MUFA 20:1 (gadoleic acid)', 'g', 'Amount'),
               'mfa221': ('MUFA 22:1 (erucic acid)', 'g', 'Amount'),
-              'mfatot': ('Total Monounsaturated Fatty Acids (MUFA)', 'g', 'Amount'),
-              'natoco': ('Natural Alpha-Tocopherol (RRR-alpha-tocopherol or d-alpha-tocopherol)', 'mg', 'Amount'),
+              'mfatot': ('Total Monounsaturated Fatty Acids (MUFA)', 'g',
+                         'Amount'),
+              'natoco': ('Natural Alpha-Tocopherol (RRR-alpha-tocopherol or d-alpha-tocopherol)',  # noqa
+                         'mg', 'Amount'),
               'niacin': ('Niacin (vitamin B3)', 'mg', 'Amount'),
               'niacineq': ('Niacin Equivalents', 'mg', 'Amount'),
               'nitrogen': ('Nitrogen', 'g', 'Amount'),
@@ -579,13 +584,18 @@ class VioscreenFoodComponentsRepo(BaseRepo):
               'pectins': ('Pectins', 'g', 'Amount'),
               'pfa182': ('PUFA 18:2 (linoleic acid)', 'g', 'Amount'),
               'pfa183': ('PUFA 18:3 (linolenic acid)', 'g', 'Amount'),
-              'pfa183n3': ('PUFA 18:3 n-3 (alpha-linolenic acid [ALA])', 'g', 'Amount'),
+              'pfa183n3': ('PUFA 18:3 n-3 (alpha-linolenic acid [ALA])', 'g',
+                           'Amount'),
               'pfa184': ('PUFA 18:4 (parinaric acid)', 'g', 'Amount'),
               'pfa204': ('PUFA 20:4 (arachidonic acid)', 'g', 'Amount'),
-              'pfa205': ('PUFA 20:5 (eicosapentaenoic acid [EPA])', 'g', 'Amount'),
-              'pfa225': ('PUFA 22:5 (docosapentaenoic acid [DPA])', 'g', 'Amount'),
-              'pfa226': ('PUFA 22:6 (docosahexaenoic acid [DHA])', 'g', 'Amount'),
-              'pfatot': ('Total Polyunsaturated Fatty Acids (PUFA)', 'g', 'Amount'),
+              'pfa205': ('PUFA 20:5 (eicosapentaenoic acid [EPA])', 'g',
+                         'Amount'),
+              'pfa225': ('PUFA 22:5 (docosapentaenoic acid [DPA])', 'g',
+                         'Amount'),
+              'pfa226': ('PUFA 22:6 (docosahexaenoic acid [DHA])', 'g',
+                         'Amount'),
+              'pfatot': ('Total Polyunsaturated Fatty Acids (PUFA)', 'g',
+                         'Amount'),
               'phenylal': ('Phenylalanine', 'g', 'Amount'),
               'phosphor': ('Phosphorus', 'mg', 'Amount'),
               'phytic': ('Phytic Acid', 'mg', 'Amount'),
@@ -621,9 +631,12 @@ class VioscreenFoodComponentsRepo(BaseRepo):
               'sucrlose': ('Sucralose', 'mg', 'Amount'),
               'sucrose': ('Sucrose', 'g', 'Amount'),
               'tagatose': ('Tagatose', 'mg', 'Amount'),
-              'tfa161t': ('TRANS 16:1 (trans-hexadecenoic acid)', 'g', 'Amount'),
-              'tfa181t': ('TRANS 18:1 (trans-octadecenoic acid [elaidic acid])', 'g', 'Amount'),
-              'tfa182t': ('TRANS 18:2 (trans-octadecadienoic acid [linolelaidic acid]; incl. c-t, t-c, t-t)', 'g', 'Amount'),
+              'tfa161t': ('TRANS 16:1 (trans-hexadecenoic acid)', 'g',
+                          'Amount'),
+              'tfa181t': ('TRANS 18:1 (trans-octadecenoic acid [elaidic acid])',  # noqa
+                          'g', 'Amount'),
+              'tfa182t': ('TRANS 18:2 (trans-octadecadienoic acid [linolelaidic acid]; incl. c-t, t-c, t-t)',  # noqa
+                          'g', 'Amount'),
               'thiamin': ('Thiamin (vitamin B1)', 'mg', 'Amount'),
               'threonin': ('Threonine', 'g', 'Amount'),
               'totaltfa': ('Total Trans-Fatty Acids (TRANS)', 'g', 'Amount'),
@@ -672,7 +685,7 @@ class VioscreenFoodComponentsRepo(BaseRepo):
             components = vioscreen_food_components.components
             inserts = []
             for component in components:
-                #checking if code exists in lookup
+                # checking if code exists in lookup
                 self._get_code_info(component.code)
                 inserts.append((vioscreen_food_components.sessionId,
                                 component.code,
@@ -715,7 +728,7 @@ class VioscreenFoodComponentsRepo(BaseRepo):
                                                             valueType=codeInfo[2])
                     components.append(vfcc)
                 return VioscreenFoodComponents(sessionId=sessionId,
-                                              components=components)
+                                               components=components)
             else:
                 return None
 
@@ -784,7 +797,7 @@ class VioscreenEatingPatternsRepo(BaseRepo):
             components = vioscreen_eating_patterns.components
             inserts = []
             for component in components:
-                #checking if code exists in lookup
+                # checking if code exists in lookup
                 self._get_code_info(component.code)
                 inserts.append((vioscreen_eating_patterns.sessionId,
                                 component.code,
@@ -919,7 +932,7 @@ class VioscreenMPedsRepo(BaseRepo):
             components = vioscreen_mpeds.components
             inserts = []
             for component in components:
-                #checking if code exists in lookup
+                # checking if code exists in lookup
                 self._get_code_info(component.code)
                 inserts.append((vioscreen_mpeds.sessionId,
                                 component.code,
@@ -1188,7 +1201,7 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
 
                 inserts2 = []
                 for component2 in component.data:
-                    #checking if code exists in lookup
+                    # checking if code exists in lookup
                     self._get_code_info(component2.code)
                     inserts2.append((vioscreen_food_consumption.sessionId,
                                      component.description,
@@ -1227,7 +1240,7 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
             if len(rows) > 0:
                 components = []
                 for foodCode, description, foodGroup, amount, frequency, consumptionAdjustment, \
-                    servingSizeText, servingFrequencyText, created in rows:
+                        servingSizeText, servingFrequencyText, created in rows:
                     cur.execute("""SELECT code, amount
                                    FROM ag.vioscreen_foodconsumptioncomponents
                                    WHERE sessionId = %s AND description = %s""",
@@ -1260,7 +1273,6 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
                                                 components=components)
             else:
                 return None
-
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular food consumption component by its code
