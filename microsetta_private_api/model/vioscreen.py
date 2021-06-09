@@ -142,7 +142,7 @@ class VioscreenPercentEnergy(ModelBase):
     def to_api(self):
         return {
             'sessionId': self.sessionId,
-            'calculations': [component.to_api() 
+            'calculations': [component.to_api()
                              for component in self.energy_components]
         }
 
@@ -192,7 +192,7 @@ class VioscreenDietaryScore(ModelBase):
         return {
             'sessionId': self.sessionId,
             'type': self.scoresType,
-            'scores': [component.to_api() 
+            'scores': [component.to_api()
                        for component in self.scores]
         }
 
@@ -270,7 +270,7 @@ class VioscreenFoodComponents(ModelBase):
     def __init__(self, sessionId, components):
         self.sessionId = sessionId
         self.components = components
-    
+
     @classmethod
     def from_vioscreen(cls, fc_data):
         sessionId = fc_data['sessionId']
@@ -318,7 +318,7 @@ class VioscreenEatingPatterns(ModelBase):
     def __init__(self, sessionId, components):
         self.sessionId = sessionId
         self.components = components
-    
+
     @classmethod
     def from_vioscreen(cls, ep_data):
         sessionId = ep_data['sessionId']
@@ -366,7 +366,7 @@ class VioscreenMPeds(ModelBase):
     def __init__(self, sessionId, components):
         self.sessionId = sessionId
         self.components = components
-    
+
     @classmethod
     def from_vioscreen(cls, mp_data):
         sessionId = mp_data['sessionId']
@@ -387,7 +387,7 @@ class VioscreenMPeds(ModelBase):
 
 
 class VioscreenFoodConsumptionComponent(ModelBase):
-    def __init__(self, foodCode, description, foodGroup, amount, frequency, consumptionAdjustment, 
+    def __init__(self, foodCode, description, foodGroup, amount, frequency, consumptionAdjustment,
                  servingSizeText, servingFrequencyText, created, data):
         self.foodCode = foodCode
         self.description = description
@@ -408,8 +408,8 @@ class VioscreenFoodConsumptionComponent(ModelBase):
             for component2 in component['data']
         ]
 
-        return cls(component['foodCode'], component['description'], component['foodGroup'], component['amount'], 
-                   component['frequency'], component['consumptionAdjustment'], component['servingSizeText'], 
+        return cls(component['foodCode'], component['description'], component['foodGroup'], component['amount'],
+                   component['frequency'], component['consumptionAdjustment'], component['servingSizeText'],
                    component['servingFrequencyText'], component['created'], data)
 
     def to_api(self):
@@ -432,7 +432,7 @@ class VioscreenFoodConsumption(ModelBase):
     def __init__(self, sessionId, components):
         self.sessionId = sessionId
         self.components = components
-    
+
     @classmethod
     def from_vioscreen(cls, cons_data):
         sessionId = cons_data['sessionId']
@@ -443,11 +443,11 @@ class VioscreenFoodConsumption(ModelBase):
         ]
 
         return cls(sessionId, cons_components)
-    
+
     def to_api(self):
         return {
             'sessionId': self.sessionId,
-            'foodConsumption': [component.to_api() 
+            'foodConsumption': [component.to_api()
                                 for component in self.components]
         }
 

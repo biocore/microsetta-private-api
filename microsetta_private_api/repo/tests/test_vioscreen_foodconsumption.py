@@ -25,35 +25,35 @@ VIOSCREEN_SESSION = VioscreenSession(sessionId='0087da64cdcb41ad800c23531d1198f2
                                      created=_to_dt(1, 1, 1970),
                                      modified=_to_dt(1, 1, 1970))
 
-CONS_DATA = {"sessionId": "0087da64cdcb41ad800c23531d1198f2", 
+CONS_DATA = {"sessionId": "0087da64cdcb41ad800c23531d1198f2",
                 "foodConsumption": [
-                    {"foodCode": "20001", 
-                     "description": "Apples, applesauce and pears", 
-                     "foodGroup": "Fruits", 
-                     "amount": 1.0, 
-                     "frequency": 28, 
-                     "consumptionAdjustment": 1.58695652173913, 
-                     "servingSizeText": "1 apple or pear, 1/2 cup", 
-                     "servingFrequencyText": "2-3 per month", 
-                     "created": "2017-07-29T02:02:54.72", 
+                    {"foodCode": "20001",
+                     "description": "Apples, applesauce and pears",
+                     "foodGroup": "Fruits",
+                     "amount": 1.0,
+                     "frequency": 28,
+                     "consumptionAdjustment": 1.58695652173913,
+                     "servingSizeText": "1 apple or pear, 1/2 cup",
+                     "servingFrequencyText": "2-3 per month",
+                     "created": "2017-07-29T02:02:54.72",
                         "data": [
-                            {"code": "acesupot", "description": "Acesulfame Potassium", "units": "mg", "amount": 0.0, "valueType": "Amount"}, 
-                            {"code": "addsugar", "description": "Added Sugar", "units": "g", "amount": 0.37180348271909, "valueType": "Amount"}, 
+                            {"code": "acesupot", "description": "Acesulfame Potassium", "units": "mg", "amount": 0.0, "valueType": "Amount"},
+                            {"code": "addsugar", "description": "Added Sugar", "units": "g", "amount": 0.37180348271909, "valueType": "Amount"},
                             {"code": "adsugtot", "description": "Added Sugars (by Total Sugars)", "units": "g", "amount": 0.258159998188848, "valueType": "Amount"}
                         ]
-                    }, 
-                    {"foodCode": "20018", 
-                     "description": "Apricots - dried", 
-                     "foodGroup": "Fruits", 
-                     "amount": 1.5, 
-                     "frequency": 12, 
-                     "consumptionAdjustment": 1.58695652173913, 
-                     "servingSizeText": "6 dried halves", 
-                     "servingFrequencyText": "1 per month", 
-                     "created": "2017-07-29T02:02:54.72", 
+                    },
+                    {"foodCode": "20018",
+                     "description": "Apricots - dried",
+                     "foodGroup": "Fruits",
+                     "amount": 1.5,
+                     "frequency": 12,
+                     "consumptionAdjustment": 1.58695652173913,
+                     "servingSizeText": "6 dried halves",
+                     "servingFrequencyText": "1 per month",
+                     "created": "2017-07-29T02:02:54.72",
                         "data": [
-                            {"code": "acesupot", "description": "Acesulfame Potassium", "units": "mg", "amount": 0.0, "valueType": "Amount"}, 
-                            {"code": "addsugar", "description": "Added Sugar", "units": "g", "amount": 0.0, "valueType": "Amount"}, 
+                            {"code": "acesupot", "description": "Acesulfame Potassium", "units": "mg", "amount": 0.0, "valueType": "Amount"},
+                            {"code": "addsugar", "description": "Added Sugar", "units": "g", "amount": 0.0, "valueType": "Amount"},
                             {"code": "adsugtot", "description": "Added Sugars (by Total Sugars)", "units": "g", "amount": 0.0, "valueType": "Amount"}
                         ]
                     }
@@ -90,7 +90,7 @@ class TestFoodConsumptionRepo(unittest.TestCase):
             r = VioscreenFoodConsumptionRepo(t)
             r.insert_food_consumption(VIOSCREEN_FOOD_CONSUMPTION)
             obs = r.get_food_consumption(VIOSCREEN_FOOD_CONSUMPTION.sessionId)
-            self.assertEqual(obs.sessionId, VIOSCREEN_FOOD_CONSUMPTION.sessionId)          
+            self.assertEqual(obs.sessionId, VIOSCREEN_FOOD_CONSUMPTION.sessionId)
             obs_comps = sorted(obs.components, key=lambda x: x.description)
             exp_comps = sorted(VIOSCREEN_FOOD_CONSUMPTION.components, key=lambda x: x.description)
             for obs_comp, exp_comp in zip(obs_comps, exp_comps):
