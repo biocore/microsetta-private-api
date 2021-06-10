@@ -387,8 +387,9 @@ class VioscreenMPeds(ModelBase):
 
 
 class VioscreenFoodConsumptionComponent(ModelBase):
-    def __init__(self, foodCode, description, foodGroup, amount, frequency, consumptionAdjustment,
-                 servingSizeText, servingFrequencyText, created, data):
+    def __init__(self, foodCode, description, foodGroup, amount, frequency,
+                 consumptionAdjustment, servingSizeText, servingFrequencyText,
+                 created, data):
         self.foodCode = foodCode
         self.description = description
         self.foodGroup = foodGroup
@@ -398,7 +399,7 @@ class VioscreenFoodConsumptionComponent(ModelBase):
         self.servingSizeText = servingSizeText
         self.servingFrequencyText = servingFrequencyText
         self.created = created
-        #data is a list of individual VioscreenFoodComponentsComponent objects
+        # data is a list of individual VioscreenFoodComponentsComponent objects
         self.data = data
 
     @classmethod
@@ -408,9 +409,12 @@ class VioscreenFoodConsumptionComponent(ModelBase):
             for component2 in component['data']
         ]
 
-        return cls(component['foodCode'], component['description'], component['foodGroup'], component['amount'],
-                   component['frequency'], component['consumptionAdjustment'], component['servingSizeText'],
-                   component['servingFrequencyText'], component['created'], data)
+        return cls(component['foodCode'], component['description'],
+                   component['foodGroup'], component['amount'],
+                   component['frequency'], component['consumptionAdjustment'],
+                   component['servingSizeText'],
+                   component['servingFrequencyText'], component['created'],
+                   data)
 
     def to_api(self):
         return {
