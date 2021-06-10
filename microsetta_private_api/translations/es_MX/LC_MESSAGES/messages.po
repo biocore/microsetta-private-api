@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-06-03 17:28-0700\n"
+"POT-Creation-Date: 2021-06-10 13:58-0700\n"
 "PO-Revision-Date: 2021-06-03 17:28-0700\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: es_MX <LL@li.org>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"Generated-By: Babel 2.6.0\n"
+"Generated-By: Babel 2.9.1\n"
 
 #: templates/email/activation_email.jinja2:221
 #, fuzzy
@@ -65,7 +65,6 @@ msgstr ""
 #: templates/email/activation_email.jinja2:238
 #: templates/email/incorrect_sample_type.jinja2:239
 #: templates/email/missing_sample_info.jinja2:269
-#: templates/email/no_associated_source.jinja2:272
 #: templates/email/sample_is_valid.jinja2:228
 #, fuzzy
 msgid "If you have any questions, please reply to us at "
@@ -80,7 +79,6 @@ msgstr "Gracias por apoyar nuestro proyecto."
 
 #: templates/email/activation_email.jinja2:242
 #: templates/email/incorrect_sample_type.jinja2:243
-#: templates/email/sample_is_valid.jinja2:232
 #, fuzzy
 msgid "Sincerely,"
 msgstr "Atentamente,"
@@ -105,8 +103,8 @@ msgstr "Hola"
 #: templates/email/incorrect_sample_type.jinja2:224
 #, fuzzy
 msgid ""
-"We recently received the following microbiome collection from you and "
-"noticed that it may have been incorrectly assigned."
+"We recently received the following microbiome sample from you and noticed "
+"that it might have been incorrectly labeled."
 msgstr ""
 "Recientemente recibimos la siguiente colección de microbiomas de su parte y "
 "notamos que puede haber sido asignada incorrectamente."
@@ -124,20 +122,20 @@ msgstr "pero parece ser"
 #: templates/email/incorrect_sample_type.jinja2:236
 #, fuzzy
 msgid ""
-"The collection type determines lab handling, and ultimately how the results "
-"are assessed. We cannot process the collection until the type is verified. "
-"If you know the type then please communicate with us at "
+"Our lab will need verification of the type of sample you sent in before they"
+" can begin processing it to ensure that your sample is sequenced correctly. "
+"If you know the sample type then please reply to this email"
 msgstr ""
-"El tipo de recolección determina el manejo del laboratorio y, en última "
-"instancia, cómo se evalúan los resultados. No podemos procesar la colección "
-"hasta que se verifique el tipo. Si conoce el tipo, comuníquese con nosotros "
-"a"
+"Nuestro laboratorio necesitará verificar el tipo de muestra que envió antes "
+"de que puedan comenzar a procesarlo para garantizar que su muestra esté "
+"secuenciada correctamente. Si conoce el tipo de muestra, responda a este "
+"correo electrónico"
 
 #: templates/email/incorrect_sample_type.jinja2:236
 #, fuzzy
 msgid ""
-"by replying to this email. We will then update your information so the "
-"collection can be appropriately associated."
+"with this information. We will then update your profile so the collection "
+"can be appropriately associated."
 msgstr ""
 "respondiendo a este correo electrónico. Luego, actualizaremos su información"
 " para que la recopilación se pueda asociar adecuadamente."
@@ -146,18 +144,19 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Thank you for your interest and participation in The Microsetta Initiative. "
-"We are writing as we've encountered an issue processing your microbiome "
-"collection, and we would appreciate your assistance in helping to resolve "
-"this matter. Specifically, the following collection sent to the lab does not"
-" have a recorded collection type, date or time. Please click on the URL "
-"below to view the collection information."
+"We are writing as we've encountered an issue processing your sample, and we "
+"would appreciate your assistance in helping to resolve this matter. To make "
+"sure we have the correct information, we require you to confirm the type of "
+"sample you sent and the collection date and time with our team. Please click"
+" on the URL below to view the collection information."
 msgstr ""
 "Gracias por su interés y participación en la Iniciativa Microsetta. Le "
-"escribimos porque hemos encontrado un problema al procesar su colección de "
-"microbiomas, y agradeceríamos su ayuda para ayudar a resolver este problema."
-" Específicamente, la siguiente colección enviada al laboratorio no tiene un "
-"tipo, fecha u hora de colección registrada. Haga clic en la URL a "
-"continuación para ver la información de la colección."
+"escribimos porque encontramos un problema al procesar su muestra, y "
+"agradeceríamos su ayuda para ayudar a resolver este problema. Para "
+"asegurarnos de que tenemos la información correcta, le pedimos que confirme "
+"el tipo de muestra que envió y la fecha y hora de recolección con nuestro "
+"equipo. Haga clic en la URL a continuación para ver la información de la "
+"colección."
 
 #: templates/email/missing_sample_info.jinja2:236
 #, fuzzy
@@ -168,17 +167,17 @@ msgstr "Según lo que podemos ver, creemos que el tipo de colección es:"
 #, fuzzy
 msgid ""
 "We require this information in order to process the collection in compliance"
-" with our human subjects research protocol. Editing by participants is "
-"locked for received collections, so updating this information requires the "
-"involvement of a team member with Microsetta. Could you please reply to this"
-" email, and provide the following information?"
+" with our human subjects research protocol. Therefore, editing online "
+"account information is currently locked as a preventative measure to ensure "
+"we meet regulations. Not to worry - by replying to this email our team is "
+"ready to assist you with updating the following information."
 msgstr ""
 "Requerimos esta información para procesar la colección de acuerdo con "
-"nuestro protocolo de investigación en seres humanos. La edición por parte de"
-" los participantes está bloqueada para las colecciones recibidas, por lo que"
-" la actualización de esta información requiere la participación de un "
-"miembro del equipo con Microsetta. ¿Podría responder a este correo "
-"electrónico y proporcionar la siguiente información?"
+"nuestro protocolo de investigación en seres humanos. Por lo tanto, la "
+"edición de la información de la cuenta en línea está actualmente bloqueada "
+"como medida preventiva para garantizar que cumplamos con las regulaciones. "
+"No se preocupe: al responder a este correo electrónico, nuestro equipo está "
+"listo para ayudarlo a actualizar la siguiente información."
 
 #: templates/email/missing_sample_info.jinja2:254
 #: templates/email/no_associated_source.jinja2:263
@@ -201,8 +200,8 @@ msgstr "Tipo de colección"
 #: templates/email/missing_sample_info.jinja2:263
 #, fuzzy
 msgid ""
-"Once we have this detail, we will update the record so the specimen can be "
-"processed appropriately."
+"Once we have these details, we will update the record so the specimen can be"
+" processed appropriately."
 msgstr ""
 "Una vez que tengamos este detalle, actualizaremos el registro para que la "
 "muestra se pueda procesar adecuadamente."
@@ -227,8 +226,8 @@ msgstr ""
 #: templates/email/no_associated_source.jinja2:226
 #, fuzzy
 msgid ""
-">Specifically, the following collection sent to the lab is not associated "
-"with a source:"
+">Specifically, the following sample sent to the lab needs more information "
+"to be included before it can be processed:"
 msgstr ""
 "> Específicamente, la siguiente colección enviada al laboratorio no está "
 "asociada con una fuente:"
@@ -236,9 +235,9 @@ msgstr ""
 #: templates/email/no_associated_source.jinja2:238
 #, fuzzy
 msgid ""
-"We require this information in order to process this specimen in compliance "
-"with our human subjects research protocol. Please log back into the "
-"participant website by clicking or copying on the following URL:"
+"We require this information to process this specimen in compliance with our "
+"human subjects research protocol. Please log back into the participant "
+"website by clicking or copying the following URL:"
 msgstr ""
 "Requerimos esta información para procesar esta muestra de acuerdo con "
 "nuestro protocolo de investigación en seres humanos. Vuelva a iniciar sesión"
@@ -268,13 +267,63 @@ msgstr ""
 "con la siguiente información para que podamos vincular la colección a su "
 "fuente:"
 
+#: templates/email/no_associated_source.jinja2:272
+#, fuzzy
+msgid "If you have any questions, please reply to us at"
+msgstr "Si tiene alguna pregunta, por favor contáctenos a"
+
 #: templates/email/sample_is_valid.jinja2:224
 #, fuzzy
 msgid ""
 "Thank you for your interest and participation in The Microsetta Initiative. "
 "We have received your microbiome collection, and it is now in the processing"
-" queue."
+" queue. Samples are processed within 1 – 3 months. Once sequenced, you will "
+"receive an update with a link to your results."
 msgstr ""
 "Gracias por su interés y participación en la Iniciativa Microsetta. Hemos "
 "recibido su colección de microbiomas y ahora está en la cola de "
 "procesamiento."
+
+#: templates/email/sample_is_valid.jinja2:232
+#, fuzzy
+msgid "Kind regards,"
+msgstr "Saludos cordiales,"
+
+#~ msgid ""
+#~ "The collection type determines lab handling, and ultimately how the results "
+#~ "are assessed. We cannot process the collection until the type is verified. "
+#~ "If you know the type then please communicate with us at \n"
+#~ msgstr ""
+#~ "El tipo de recolección determina el manejo del laboratorio y, en última "
+#~ "instancia, cómo se evalúan los resultados. No podemos procesar la colección "
+#~ "hasta que se verifique el tipo. Si conoce el tipo, comuníquese con nosotros "
+#~ "a"
+
+#~ msgid ""
+#~ "Thank you for your interest and participation in The Microsetta Initiative. "
+#~ "We are writing as we've encountered an issue processing your microbiome "
+#~ "collection, and we would appreciate your assistance in helping to resolve "
+#~ "this matter. Specifically, the following collection sent to the lab does not"
+#~ " have a recorded collection type, date or time. Please click on the URL "
+#~ "below to view the collection information."
+#~ msgstr ""
+#~ "Gracias por su interés y participación en la Iniciativa Microsetta. Le "
+#~ "escribimos porque hemos encontrado un problema al procesar su colección de "
+#~ "microbiomas, y agradeceríamos su ayuda para ayudar a resolver este problema."
+#~ " Específicamente, la siguiente colección enviada al laboratorio no tiene un "
+#~ "tipo, fecha u hora de colección registrada. Haga clic en la URL a "
+#~ "continuación para ver la información de la colección."
+
+#~ msgid ""
+#~ "We require this information in order to process the collection in compliance"
+#~ " with our human subjects research protocol. Editing by participants is "
+#~ "locked for received collections, so updating this information requires the "
+#~ "involvement of a team member with Microsetta. Could you please reply to this"
+#~ " email, and provide the following information?"
+#~ msgstr ""
+#~ "Requerimos esta información para procesar la colección de acuerdo con "
+#~ "nuestro protocolo de investigación en seres humanos. La edición por parte de"
+#~ " los participantes está bloqueada para las colecciones recibidas, por lo que"
+#~ " la actualización de esta información requiere la participación de un "
+#~ "miembro del equipo con Microsetta. ¿Podría responder a este correo "
+#~ "electrónico y proporcionar la siguiente información?"
