@@ -17,13 +17,16 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from microsetta_private_api.model.vioscreen import VioscreenSession
+from microsetta_private_api.localization import ES_MX
 
 
 def gen_survey_url(user_id,
                    language_tag,
                    survey_redirect_url,
                    birth_year=None,
-                   gender=None
+                   gender=None,
+                   height=None,
+                   weight=None
                    ):
     if not survey_redirect_url:
         raise BadRequest("Food Frequency Questionnaire Requires "
@@ -37,6 +40,10 @@ def gen_survey_url(user_id,
     else:
         dob = '01011970'  # default to unix epoch
 
+    # per clarification with Vioscreen, they interpret es_MX as es_ES
+    if language_tag == ES_MX:
+        language_tag = 'es-ES'
+
     regcode = SERVER_CONFIG["vioscreen_regcode"]
     url = SERVER_CONFIG["vioscreen_endpoint"] +\
         "/remotelogin.aspx?%s" % url_encode(
@@ -45,7 +52,9 @@ def gen_survey_url(user_id,
                                 language_tag,
                                 survey_redirect_url,
                                 gender_id,
-                                dob),
+                                dob,
+                                height,
+                                weight),
             b"RegCode": regcode.encode(),
         }, charset='utf-16',
     )
@@ -71,7 +80,9 @@ def encrypt_key(survey_id,
                 language_tag,
                 survey_redirect_url,
                 gender_id,
-                dob
+                dob,
+                height,
+                weight
                 ):
     """Encode minimal required vioscreen information to AES key"""
     firstname = "NOT"
@@ -80,16 +91,24 @@ def encrypt_key(survey_id,
     regcode = SERVER_CONFIG["vioscreen_regcode"]
 
     returnurl = survey_redirect_url
-    assess_query = ("FirstName=%s&LastName=%s"
-                    "&RegCode=%s"
-                    "&Username=%s"
-                    "&DOB=%s"
-                    "&Gender=%d"
-                    "&AppId=1&Visit=1&EncryptQuery=True&ReturnUrl={%s}" %
-                    (firstname, lastname, regcode, survey_id, dob, gender_id,
-                     returnurl))
+    parts = ["FirstName=%s" % firstname,
+             "LastName=%s" % lastname,
+             "RegCode=%s" % regcode,
+             "Username=%s" % survey_id,
+             "DOB=%s" % dob,
+             "Gender=%d" % gender_id,
+             "CultureCode=%s" % language_tag,
+             "AppId=1",
+             "Visit=1",
+             "EncryptQuery=True",
+             "ReturnUrl={%s}" % returnurl]
+
+    if height is not None and weight is not None:
+        parts.append("Height=%s" % height)
+        parts.append("Weight=%s" % weight)
 
     # PKCS7 add bytes equal length of padding
+    assess_query = "&".join(parts)
     pkcs7_query = pkcs7_pad_message(assess_query)
 
     # Generate AES encrypted information string
@@ -200,6 +219,10 @@ def make_vioscreen_request(self, method, url, **kwargs):
             if code == 1016:
                 # need a new token
                 return None, True
+            if code == 1005:
+                # From David Blankenship on 5.26.21, we should issue a retry
+                # if this code is observed
+                return None, True
             elif code == 1002:
                 # unknown user
                 return {'error': 'unknown user'}, False
@@ -238,8 +261,7 @@ def make_vioscreen_request(self, method, url, **kwargs):
         result, auth_failure = handle_response(req)
 
     if auth_failure:
-        # Got code 1016 (unauthenticated), then logged in, then got code 1016
-        # again!
+        # Implies something weird occured
         exc = ValueError(str(req.status_code) + " ::: " + str(req.content))
         raise self.retry(exc=exc)
 
@@ -411,7 +433,7 @@ def update_session_detail():
                 if update['status'] != sess.status:
                     updated.append(sess.update_from_vioscreen(update))
         except Exception as e:  # noqa
-            failed_sessions.append((sess, str(e)))
+            failed_sessions.append((sess.sessionId, str(e)))
             continue
 
         # commit as we go along to avoid holding any individual transaction
@@ -439,7 +461,8 @@ def update_session_detail():
     if len(failed_sessions) > 0:
         # ...and let's make Daniel feel bad about not having a better means to
         # log what hopefully never occurs
-        payload = ''.join(['%s : %s\n' % (s, m) for s, m in failed_sessions])
+        payload = ''.join(['%s : %s\n' % (repr(s), m)
+                           for s, m in failed_sessions])
         send_email("danielmcdonald@ucsd.edu", "pester_daniel",
                    {"what": "Vioscreen sessions failed",
                     "content": payload})

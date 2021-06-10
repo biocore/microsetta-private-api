@@ -3,6 +3,7 @@ from microsetta_private_api.util.email import SendEmail
 from microsetta_private_api.model.log_event import EventType, EventSubtype
 from microsetta_private_api.admin.email_templates import EmailMessage, \
     BasicEmailMessage
+import flask_babel
 from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -13,9 +14,11 @@ import datetime
 
 
 @celery.task(ignore_result=True)
-def send_email(email, template_name, template_args):
+def send_email(email, template_name, template_args, language):
     template = EmailMessage[template_name]
-    SendEmail.send(email, template, template_args)
+
+    with flask_babel.force_locale(language):
+        SendEmail.send(email, template, template_args)
 
 
 @celery.task(ignore_result=True)

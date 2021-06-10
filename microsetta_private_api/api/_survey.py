@@ -64,15 +64,19 @@ def read_survey_template(account_id, source_id, survey_template_id,
             else:
                 raise ValueError("Vioscreen Template requires "
                                  "vioscreen_ext_sample_id parameter.")
-            (birth_year, gender) = \
-                survey_template_repo.fetch_user_birth_year_gender(
+
+            (birth_year, gender, height, weight) = \
+                survey_template_repo.fetch_user_basic_physiology(
                 account_id, source_id)
+
             url = vioscreen.gen_survey_url(
                 db_vioscreen_id,
                 language_tag,
                 survey_redirect_url,
                 birth_year=birth_year,
-                gender=gender
+                gender=gender,
+                height=height,
+                weight=weight
             )
             # TODO FIXME HACK: This field's contents are not specified!
             info.survey_template_text = {

@@ -140,6 +140,7 @@ def update_account(account_id, body, token_info):
             body['address']['post_code'],
             body['address']['country_code']
         )
+        acc.language = body['language']
 
         # 422 handling is done inside acct_repo
         acct_repo.update_account(acc)

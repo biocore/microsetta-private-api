@@ -22,7 +22,7 @@ class SurveyTemplateRepo(BaseRepo):
     SURVEY_INFO = {
         1: SurveyTemplateLinkInfo(
             1,
-            "Primary",
+            "Primary Questionnaire",
             "1.0",
             "local"
         ),
@@ -80,7 +80,8 @@ class SurveyTemplateRepo(BaseRepo):
     def get_survey_template(self, survey_id, language_tag):
         tag_to_col = {
             localization.EN_US: "survey_question.american",
-            localization.EN_GB: "survey_question.british"
+            localization.EN_GB: "survey_question.british",
+            localization.ES_MX: "survey_question.spanish"
         }
 
         if language_tag not in tag_to_col:
@@ -146,6 +147,12 @@ class SurveyTemplateRepo(BaseRepo):
                                                                language_tag)
                 triggers = self._get_question_triggers(question_id)
 
+                # Quick  fix to correctly sort country names in Spanish
+                if language_tag == localization.ES_MX and \
+                        (question_id == 110 or question_id == 148):
+                    responses[1:len(responses)] = \
+                        sorted(responses[1:len(responses)])
+
                 question = SurveyTemplateQuestion(question_id,
                                                   localized_text,
                                                   short_name,
@@ -167,7 +174,8 @@ class SurveyTemplateRepo(BaseRepo):
     def _get_group_localized_text(self, group_id, language_tag):
         tag_to_col = {
             localization.EN_US: "american",
-            localization.EN_GB: "british"
+            localization.EN_GB: "british",
+            localization.ES_MX: "spanish"
         }
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
@@ -183,7 +191,8 @@ class SurveyTemplateRepo(BaseRepo):
     def _get_question_valid_responses(self, survey_question_id, language_tag):
         tag_to_col = {
             localization.EN_US: "survey_response.american",
-            localization.EN_GB: "survey_response.british"
+            localization.EN_GB: "survey_response.british",
+            localization.ES_MX: "survey_response.spanish",
         }
 
         with self._transaction.cursor() as cur:
@@ -271,29 +280,112 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return rows[0][0]
 
-    def fetch_user_birth_year_gender(self, account_id, source_id):
-        """Given an account ID,
-        returns a tuple of (birth_year->int|None and gender->str|None)"""
-        birth_year = None
-        gender = None
+    def fetch_user_basic_physiology(self, account_id, source_id):
+        """Given an account and source ID, obtain basic physiology properties
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Notes
+        -----
+        The original intention with this method was to provide basic host
+        detail to Viocare for the reports they produce. By default,
+        Viocare interprets height and weight as standard.
+
+        Returns
+        -------
+            tuple, (int or None, int or None, float or None, float or None)
+            The tuple contents are (birth year, gender, height, weight).
+        """
+        UNSPECIFIED = 'Unspecified'
+
         with self._transaction.cursor() as cur:
-            # question IDs: 107 = gender, 112 = birth year
-            cur.execute("""SELECT q.survey_question_id, q.response
+            # from survey_answers for non-free text fields
+            cur.execute("""SELECT question_shortname, q.response
                            FROM ag_login_surveys AS s
                            JOIN survey_answers AS q
                              ON s.survey_id = q.survey_id
-                           WHERE survey_question_id IN (112, 107)
+                           JOIN survey_question
+                             USING (survey_question_id)
+                           WHERE question_shortname IN (
+                                 'HEIGHT_UNITS',
+                                 'WEIGHT_UNITS',
+                                 'BIRTH_YEAR',
+                                 'GENDER')
                              AND s.ag_login_id = %s
                              and s.source_id = %s""",
                         (account_id, source_id))
-            for row in cur:
-                if row[0] == 107:
-                    gender = row[1]
-                    if gender == 'Unspecified':
-                        gender = None
-                elif row[0] == 112:
-                    try:
-                        birth_year = int(row[1])
-                    except ValueError:
-                        pass  # for 'Unspecified', stays None
-        return (birth_year, gender)
+
+            results = {name: value for name, value in cur.fetchall()}
+            birth_year = results.get('BIRTH_YEAR')
+            gender = results.get('GENDER')
+            height_units = results.get('HEIGHT_UNITS')
+            weight_units = results.get('WEIGHT_UNITS')
+
+            # from survey_answers_other for height/weight
+            cur.execute("""SELECT question_shortname, q.response
+                           FROM ag_login_surveys AS s
+                           JOIN survey_answers_other AS q
+                             ON s.survey_id = q.survey_id
+                           JOIN survey_question
+                             USING (survey_question_id)
+                           WHERE question_shortname IN (
+                                 'HEIGHT_CM',
+                                 'WEIGHT_KG')
+                             AND s.ag_login_id = %s
+                             and s.source_id = %s""",
+                        (account_id, source_id))
+
+            results = {name: value for name, value in cur.fetchall()}
+            height = results.get('HEIGHT_CM')
+            weight = results.get('WEIGHT_KG')
+
+            # normalize the return values
+            if birth_year is not None and birth_year.isdigit():
+                birth_year = int(birth_year)
+            else:
+                birth_year = None
+
+            if gender is not None and gender == UNSPECIFIED:
+                gender = None
+
+            # This sucks.
+            if height == UNSPECIFIED or weight_units == UNSPECIFIED:
+                height = None
+            elif height is not None:
+                # all survey_answers_other responses are of the form
+                # '["foo"]' :/
+                height = height[2:-2]
+                if height == "":
+                    height = None
+                else:
+                    height = int(height)
+                    if height_units == 'centimeters':
+                        # to inches
+                        height = height / 2.54
+            else:
+                # should not occur but just in case
+                height = None
+
+            if weight == UNSPECIFIED or weight_units == UNSPECIFIED:
+                weight = None
+            elif weight is not None:
+                # all survey_answers_other responses are of the form
+                # '["foo"]' :/
+                weight = weight[2:-2]
+                if weight == "":
+                    weight = None
+                else:
+                    weight = int(weight)
+                    if weight_units == 'kilograms':
+                        # to pounds
+                        weight = weight * 2.20462
+            else:
+                # should not occur but just in case
+                weight = None
+
+        return (birth_year, gender, height, weight)

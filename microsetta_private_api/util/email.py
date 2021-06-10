@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from email.utils import formataddr
+import html2text
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
@@ -58,7 +59,7 @@ class SendEmail:
         to : str
             The email address to send a message too
         email_template : EmailTemplate
-            An object that contains a .plain and .html jinja2
+            An object that contains a .html jinja2
             template for rendering
         email_template_args : dict, optional
             Arguments to provide for rendering.
@@ -84,8 +85,8 @@ class SendEmail:
         message['Reply-To'] = cls.reply_to
         message['Subject'] = email_template.subject
 
-        plain = email_template.plain.render(email_template_args or {})
         html = email_template.html.render(email_template_args or {})
+        plain = html2text.html2text(html)
 
         first = MIMEText(plain, "plain")
         second = MIMEText(html, "html")

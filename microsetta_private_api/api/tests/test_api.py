@@ -57,6 +57,7 @@ DUMMY_ACCT_INFO = {
     "email": TEST_EMAIL,
     "first_name": "Jane",
     "last_name": "Doe",
+    "language": "en_US",
     KIT_NAME_KEY: EXISTING_KIT_NAME
 }
 DUMMY_ACCT_INFO_2 = {
@@ -70,6 +71,7 @@ DUMMY_ACCT_INFO_2 = {
     "email": TEST_EMAIL_2,
     "first_name": "Obie",
     "last_name": "Dobie",
+    "language": "en_US",
     KIT_NAME_KEY: EXISTING_KIT_NAME_2
 }
 DUMMY_ACCT_ADMIN = {
@@ -432,7 +434,8 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['post_code'],
                 input_obj['address']['country_code']
             ),
-            input_obj['kit_name']
+            input_obj['kit_name'],
+            input_obj['language']
         )
     else:
         acct = Account.from_dict(input_obj, iss, sub)
@@ -601,6 +604,7 @@ class ApiTests(TestCase):
 
                 curr_query_str = urlencode(curr_query_dict)
                 curr_content_json = json.dumps(curr_content_dict)
+
                 curr_url = url if not curr_query_str else \
                     '{0}?{1}'.format(url, curr_query_str)
                 if action == "get":
@@ -1260,7 +1264,7 @@ class SurveyTests(ApiTests):
         expected_output = {
             "survey_template_id": PRIMARY_SURVEY_TEMPLATE_ID,
             "survey_status": None,
-            "survey_template_title": "Primary",
+            "survey_template_title": "Primary Questionnaire",
             "survey_template_version": "1.0",
             "survey_template_type": "local",
             "survey_id": real_id_from_loc,
@@ -1432,7 +1436,7 @@ class SampleTests(ApiTests):
             {'survey_id': dummy_answered_survey_id,
              'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
              'survey_status': None,
-             'survey_template_title': "Primary",
+             'survey_template_title': "Primary Questionnaire",
              'survey_template_version': '1.0',
              'survey_template_type': 'local'
              }]

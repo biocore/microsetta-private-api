@@ -1029,7 +1029,7 @@ class AdminRepo(BaseRepo):
                 account_id,
                 source_id,
                 answer_id,
-                "en-US"
+                "en_US"
             )
 
             if answer_model is None:
