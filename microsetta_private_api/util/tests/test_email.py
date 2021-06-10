@@ -92,7 +92,7 @@ class EmailTests(unittest.TestCase):
         self.assertRegex(obs, 'Content-Type: text/plain')
         self.assertRegex(obs, ('Content-Disposition: attachment; '
                                'filename="testfile"'))
-        self.assertRegex(obs, 'a plain message')
+        self.assertRegex(obs, 'a html message|')
         self.assertRegex(obs, "<html>a html message</html>")
 
     def test_send_valid_message_badattachments(self):
