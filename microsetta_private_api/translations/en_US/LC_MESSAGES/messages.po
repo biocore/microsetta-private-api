@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-06-03 17:28-0700\n"
+"POT-Creation-Date: 2021-06-10 13:58-0700\n"
 "PO-Revision-Date: 2021-06-03 17:28-0700\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en_US\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.6.0\n"
+"Generated-By: Babel 2.9.1\n"
 
 #: templates/email/activation_email.jinja2:221
 msgid ""
@@ -52,7 +52,6 @@ msgstr ""
 #: templates/email/activation_email.jinja2:238
 #: templates/email/incorrect_sample_type.jinja2:239
 #: templates/email/missing_sample_info.jinja2:269
-#: templates/email/no_associated_source.jinja2:272
 #: templates/email/sample_is_valid.jinja2:228
 msgid "If you have any questions, please reply to us at "
 msgstr ""
@@ -65,7 +64,6 @@ msgstr ""
 
 #: templates/email/activation_email.jinja2:242
 #: templates/email/incorrect_sample_type.jinja2:243
-#: templates/email/sample_is_valid.jinja2:232
 msgid "Sincerely,"
 msgstr ""
 
@@ -86,8 +84,8 @@ msgstr ""
 
 #: templates/email/incorrect_sample_type.jinja2:224
 msgid ""
-"We recently received the following microbiome collection from you and "
-"noticed that it may have been incorrectly assigned."
+"We recently received the following microbiome sample from you and noticed"
+" that it might have been incorrectly labeled."
 msgstr ""
 
 #: templates/email/incorrect_sample_type.jinja2:229
@@ -100,25 +98,26 @@ msgstr ""
 
 #: templates/email/incorrect_sample_type.jinja2:236
 msgid ""
-"The collection type determines lab handling, and ultimately how the "
-"results are assessed. We cannot process the collection until the type is "
-"verified. If you know the type then please communicate with us at "
+"Our lab will need verification of the type of sample you sent in before "
+"they can begin processing it to ensure that your sample is sequenced "
+"correctly. If you know the sample type then please reply to this email"
 msgstr ""
 
 #: templates/email/incorrect_sample_type.jinja2:236
 msgid ""
-"by replying to this email. We will then update your information so the "
-"collection can be appropriately associated."
+"with this information. We will then update your profile so the collection"
+" can be appropriately associated."
 msgstr ""
 
 #: templates/email/missing_sample_info.jinja2:224
 msgid ""
 "Thank you for your interest and participation in The Microsetta "
 "Initiative. We are writing as we've encountered an issue processing your "
-"microbiome collection, and we would appreciate your assistance in helping"
-" to resolve this matter. Specifically, the following collection sent to "
-"the lab does not have a recorded collection type, date or time. Please "
-"click on the URL below to view the collection information."
+"sample, and we would appreciate your assistance in helping to resolve "
+"this matter. To make sure we have the correct information, we require you"
+" to confirm the type of sample you sent and the collection date and time "
+"with our team. Please click on the URL below to view the collection "
+"information."
 msgstr ""
 
 #: templates/email/missing_sample_info.jinja2:236
@@ -128,11 +127,10 @@ msgstr ""
 #: templates/email/missing_sample_info.jinja2:250
 msgid ""
 "We require this information in order to process the collection in "
-"compliance with our human subjects research protocol. Editing by "
-"participants is locked for received collections, so updating this "
-"information requires the involvement of a team member with Microsetta. "
-"Could you please reply to this email, and provide the following "
-"information?"
+"compliance with our human subjects research protocol. Therefore, editing "
+"online account information is currently locked as a preventative measure "
+"to ensure we meet regulations. Not to worry - by replying to this email "
+"our team is ready to assist you with updating the following information."
 msgstr ""
 
 #: templates/email/missing_sample_info.jinja2:254
@@ -152,8 +150,8 @@ msgstr ""
 
 #: templates/email/missing_sample_info.jinja2:263
 msgid ""
-"Once we have this detail, we will update the record so the specimen can "
-"be processed appropriately."
+"Once we have these details, we will update the record so the specimen can"
+" be processed appropriately."
 msgstr ""
 
 #: templates/email/missing_sample_info.jinja2:272
@@ -171,15 +169,15 @@ msgstr ""
 
 #: templates/email/no_associated_source.jinja2:226
 msgid ""
-">Specifically, the following collection sent to the lab is not associated"
-" with a source:"
+">Specifically, the following sample sent to the lab needs more "
+"information to be included before it can be processed:"
 msgstr ""
 
 #: templates/email/no_associated_source.jinja2:238
 msgid ""
-"We require this information in order to process this specimen in "
-"compliance with our human subjects research protocol. Please log back "
-"into the participant website by clicking or copying on the following URL:"
+"We require this information to process this specimen in compliance with "
+"our human subjects research protocol. Please log back into the "
+"participant website by clicking or copying the following URL:"
 msgstr ""
 
 #: templates/email/no_associated_source.jinja2:245
@@ -199,10 +197,99 @@ msgid ""
 "following information so that we can link the collection to your source:"
 msgstr ""
 
+#: templates/email/no_associated_source.jinja2:272
+msgid "If you have any questions, please reply to us at"
+msgstr ""
+
 #: templates/email/sample_is_valid.jinja2:224
 msgid ""
 "Thank you for your interest and participation in The Microsetta "
 "Initiative. We have received your microbiome collection, and it is now in"
-" the processing queue."
+" the processing queue. Samples are processed within 1 – 3 months. Once "
+"sequenced, you will receive an update with a link to your results."
 msgstr ""
+
+#: templates/email/sample_is_valid.jinja2:232
+msgid "Kind regards,"
+msgstr ""
+
+#~ msgid ""
+#~ "We recently received the following "
+#~ "microbiome collection from you and "
+#~ "noticed that it may have been "
+#~ "incorrectly assigned."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The collection type determines lab "
+#~ "handling, and ultimately how the results"
+#~ " are assessed. We cannot process the"
+#~ " collection until the type is "
+#~ "verified. If you know the type "
+#~ "then please communicate with us at \n"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "by replying to this email. We will"
+#~ " then update your information so the"
+#~ " collection can be appropriately "
+#~ "associated."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Thank you for your interest and "
+#~ "participation in The Microsetta Initiative."
+#~ " We are writing as we've encountered"
+#~ " an issue processing your microbiome "
+#~ "collection, and we would appreciate your"
+#~ " assistance in helping to resolve "
+#~ "this matter. Specifically, the following "
+#~ "collection sent to the lab does "
+#~ "not have a recorded collection type, "
+#~ "date or time. Please click on the"
+#~ " URL below to view the collection "
+#~ "information."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "We require this information in order "
+#~ "to process the collection in compliance"
+#~ " with our human subjects research "
+#~ "protocol. Editing by participants is "
+#~ "locked for received collections, so "
+#~ "updating this information requires the "
+#~ "involvement of a team member with "
+#~ "Microsetta. Could you please reply to"
+#~ " this email, and provide the "
+#~ "following information?"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Once we have this detail, we will"
+#~ " update the record so the specimen"
+#~ " can be processed appropriately."
+#~ msgstr ""
+
+#~ msgid ""
+#~ ">Specifically, the following collection sent"
+#~ " to the lab is not associated "
+#~ "with a source:"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "We require this information in order "
+#~ "to process this specimen in compliance"
+#~ " with our human subjects research "
+#~ "protocol. Please log back into the "
+#~ "participant website by clicking or "
+#~ "copying on the following URL:"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Thank you for your interest and "
+#~ "participation in The Microsetta Initiative."
+#~ " We have received your microbiome "
+#~ "collection, and it is now in the"
+#~ " processing queue."
+#~ msgstr ""
 
