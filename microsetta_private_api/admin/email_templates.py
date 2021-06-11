@@ -17,10 +17,16 @@ class EmailTemplate:
 
 
 class EmailMessage(Enum):
+    send_activation_code = (
+        "Welcome to The Microsetta Initiative",
+        "email/activation_email.jinja2",
+        ("join_url", "new_account_email", "new_account_code"),
+        EventType.EMAIL,
+        EventSubtype.EMAIL_ACTIVATION
+    )
     incorrect_sample_type = (
         "Your Microsetta Initiative status update: attention needed",
         "email/incorrect_sample_type.jinja2",
-        "email/incorrect_sample_type.plain",
         ("contact_name", "sample_barcode", "recorded_type", "received_type",
          "resolution_url"),
         EventType.EMAIL,
@@ -29,7 +35,6 @@ class EmailMessage(Enum):
     missing_sample_info = (
         "Your Microsetta Initiative status update: information needed",
         "email/missing_sample_info.jinja2",
-        "email/missing_sample_info.plain",
         ("contact_name", "sample_barcode", "received_type", "resolution_url"),
         EventType.EMAIL,
         EventSubtype.EMAIL_MISSING_SAMPLE_INFO
@@ -37,7 +42,6 @@ class EmailMessage(Enum):
     sample_is_valid = (
         "Your Microsetta Initiative status update and next steps",
         "email/sample_is_valid.jinja2",
-        "email/sample_is_valid.plain",
         ("contact_name",),
         EventType.EMAIL,
         EventSubtype.EMAIL_SAMPLE_IS_VALID
@@ -46,16 +50,21 @@ class EmailMessage(Enum):
         ("Your Microsetta Initiative status update: "
          "critical information needed"),
         "email/no_associated_source.jinja2",
-        "email/no_associated_source.plain",
         ("contact_name", "sample_barcode", "resolution_url"),
         EventType.EMAIL,
         EventSubtype.EMAIL_NO_SOURCE
     )
+    pester_daniel = (
+        "[PESTER] a thing happened",
+        "email/pester_daniel.jinja2",
+        ("what", "content"),
+        EventType.EMAIL,
+        EventSubtype.PESTER_DANIEL
+    )
 
-    def __init__(self, subject, html, plain, required, event_type, event_sub):
+    def __init__(self, subject, html, required, event_type, event_sub):
         self.subject = subject
         self.html = EmailTemplate(html, required)
-        self.plain = EmailTemplate(plain, required)
         self.event_type = event_type
         self.event_subtype = event_sub
 
@@ -66,7 +75,5 @@ class BasicEmailMessage:
         self.subject = subject
         self.html = EmailTemplate(f"{template_base_fp}.jinja2",
                                   req_template_keys)
-        self.plain = EmailTemplate(f"{template_base_fp}.plain",
-                                   req_template_keys)
         self.event_type = event_type
         self.event_subtype = event_sub

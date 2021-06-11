@@ -4,15 +4,16 @@ import pandas.testing as pdt
 from microsetta_private_api.repo.metadata_repo._transforms import (
     apply_transforms, AgeYears, AgeCat, BMI, BMICat, AlcoholConsumption,
     NormalizeHeight, NormalizeWeight, Sex)
-from microsetta_private_api.repo.metadata_repo._constants import MISSING_VALUE
+from microsetta_private_api.repo.metadata_repo._constants import (
+    UNSPECIFIED)
 
 
 class TransformTests(unittest.TestCase):
     def _apply_transforms_helper(self, transforms):
         df = pd.DataFrame([['1990', 'July', '2020-01-01T12:00:00'],
-                           ['1995', MISSING_VALUE, '2019-01-23T12:00:00'],
-                           [MISSING_VALUE, 'May', '2018-01-23T12:00:00'],
-                           [MISSING_VALUE, MISSING_VALUE,
+                           ['1995', UNSPECIFIED, '2019-01-23T12:00:00'],
+                           [UNSPECIFIED, 'May', '2018-01-23T12:00:00'],
+                           [UNSPECIFIED, UNSPECIFIED,
                             '2017-01-23T12:00:00']],
                           index=list('abcd'),
                           columns=['birth_year', 'birth_month',
@@ -20,13 +21,13 @@ class TransformTests(unittest.TestCase):
 
         exp = pd.DataFrame([['1990', 'July', '2020-01-01T12:00:00',
                              '29.5', '20s'],
-                            ['1995', MISSING_VALUE, '2019-01-23T12:00:00',
-                             MISSING_VALUE, MISSING_VALUE],
-                            [MISSING_VALUE, 'May', '2018-01-23T12:00:00',
-                             MISSING_VALUE, MISSING_VALUE],
-                            [MISSING_VALUE, MISSING_VALUE,
-                             '2017-01-23T12:00:00', MISSING_VALUE,
-                             MISSING_VALUE]],
+                            ['1995', UNSPECIFIED, '2019-01-23T12:00:00',
+                             UNSPECIFIED, UNSPECIFIED],
+                            [UNSPECIFIED, 'May', '2018-01-23T12:00:00',
+                             UNSPECIFIED, UNSPECIFIED],
+                            [UNSPECIFIED, UNSPECIFIED,
+                             '2017-01-23T12:00:00', UNSPECIFIED,
+                             UNSPECIFIED]],
                            index=list('abcd'),
                            columns=['birth_year', 'birth_month',
                                     'collection_timestamp', 'age_years',
@@ -48,15 +49,15 @@ class TransformTests(unittest.TestCase):
 
     def test_AgeYears(self):
         df = pd.DataFrame([['1990', 'July', '2020-01-01T12:00:00'],
-                           ['1995', MISSING_VALUE, '2019-01-23T12:00:00'],
-                           [MISSING_VALUE, 'May', '2018-01-23T12:00:00'],
-                           [MISSING_VALUE, MISSING_VALUE,
+                           ['1995', UNSPECIFIED, '2019-01-23T12:00:00'],
+                           [UNSPECIFIED, 'May', '2018-01-23T12:00:00'],
+                           [UNSPECIFIED, UNSPECIFIED,
                             '2017-01-23T12:00:00']],
                           index=list('abcd'),
                           columns=['birth_year', 'birth_month',
                                    'collection_timestamp'])
-        exp = pd.Series([29.5, MISSING_VALUE, MISSING_VALUE,
-                        MISSING_VALUE], index=list('abcd'), name='age_years')
+        exp = pd.Series([29.5, UNSPECIFIED, UNSPECIFIED,
+                        UNSPECIFIED], index=list('abcd'), name='age_years')
         self._test_transformer(AgeYears, df, exp)
 
     def test_AgeCat(self):
@@ -81,13 +82,13 @@ class TransformTests(unittest.TestCase):
                            [122],
                            [123],
                            [12345],
-                           [MISSING_VALUE]],
+                           [UNSPECIFIED]],
                           columns=['age_years'],
                           index=list('abcdefghijklmnopqrstuv'))
-        exp = pd.Series([MISSING_VALUE, 'baby', 'baby', 'child', 'child',
+        exp = pd.Series([UNSPECIFIED, 'baby', 'baby', 'child', 'child',
                          'teen', 'teen', '20s', '20s', '30s', '30s', '40s',
                          '40s', '50s', '50s', '60s', '60s', '70+', '70+',
-                         MISSING_VALUE, MISSING_VALUE, MISSING_VALUE],
+                         UNSPECIFIED, UNSPECIFIED, UNSPECIFIED],
                         index=list('abcdefghijklmnopqrstuv'),
                         name='age_cat')
         self._test_transformer(AgeCat, df, exp)
@@ -96,11 +97,11 @@ class TransformTests(unittest.TestCase):
         df = pd.DataFrame([['Male'],
                            ['Female'],
                            ['Unspecified'],
-                           [MISSING_VALUE],
+                           [UNSPECIFIED],
                            ['Other']],
                           index=list('abcde'),
                           columns=['gender', ])
-        exp = pd.Series(['male', 'female', 'unspecified', MISSING_VALUE,
+        exp = pd.Series(['male', 'female', 'unspecified', UNSPECIFIED.lower(),
                          'other'], index=list('abcde'), name='sex')
         self._test_transformer(Sex, df, exp)
 
@@ -108,13 +109,13 @@ class TransformTests(unittest.TestCase):
         df = pd.DataFrame([[180, 50],
                            [180, 60],
                            [170, 70],
-                           [MISSING_VALUE, 60],
-                           [150, MISSING_VALUE],
-                           [MISSING_VALUE, MISSING_VALUE]],
+                           [UNSPECIFIED, 60],
+                           [150, UNSPECIFIED],
+                           [UNSPECIFIED, UNSPECIFIED]],
                           index=list('abcdef'),
                           columns=['height_cm', 'weight_kg'])
-        exp = pd.Series([15.4, 18.5, 24.2, MISSING_VALUE, MISSING_VALUE,
-                        MISSING_VALUE], index=list('abcdef'), name='bmi')
+        exp = pd.Series([15.4, 18.5, 24.2, UNSPECIFIED, UNSPECIFIED,
+                        UNSPECIFIED], index=list('abcdef'), name='bmi')
         self._test_transformer(BMI, df, exp)
 
     def test_BMICat(self):
@@ -130,13 +131,13 @@ class TransformTests(unittest.TestCase):
                            [79.9],
                            [80],
                            [210],
-                           [MISSING_VALUE]],
+                           [UNSPECIFIED]],
                           index=list('abcdefghijklm'),
                           columns=['bmi'])
-        exp = pd.Series([MISSING_VALUE, MISSING_VALUE, 'Underweight',
+        exp = pd.Series([UNSPECIFIED, UNSPECIFIED, 'Underweight',
                          'Underweight', 'Normal',
                          'Normal', 'Overweight', 'Overweight', 'Obese',
-                         'Obese', MISSING_VALUE, MISSING_VALUE, MISSING_VALUE],
+                         'Obese', UNSPECIFIED, UNSPECIFIED, UNSPECIFIED],
                         index=list('abcdefghijklm'), name='bmi_cat')
         self._test_transformer(BMICat, df, exp)
 
@@ -147,8 +148,8 @@ class TransformTests(unittest.TestCase):
                            [None, 'pounds'],
                            [180, None]], index=list('abcde'),
                           columns=['weight_kg', 'weight_units'])
-        exp = pd.Series([180 / 2.20462, 180, MISSING_VALUE, MISSING_VALUE,
-                        MISSING_VALUE],
+        exp = pd.Series([180 / 2.20462, 180, UNSPECIFIED, UNSPECIFIED,
+                        UNSPECIFIED],
                         index=list('abcde'), name='weight_kg')
         self._test_transformer(NormalizeWeight, df, exp)
 
@@ -159,8 +160,8 @@ class TransformTests(unittest.TestCase):
                            [None, 'inches'],
                            [180, None]], index=list('abcde'),
                           columns=['height_cm', 'height_units'])
-        exp = pd.Series([180 * 2.54, 180, MISSING_VALUE, MISSING_VALUE,
-                        MISSING_VALUE],
+        exp = pd.Series([180 * 2.54, 180, UNSPECIFIED, UNSPECIFIED,
+                        UNSPECIFIED],
                         index=list('abcde'), name='height_cm')
         self._test_transformer(NormalizeHeight, df, exp)
 
@@ -170,10 +171,10 @@ class TransformTests(unittest.TestCase):
                            ['Regularly (3-5 times/week)'],
                            ['Daily'],
                            ['Never'],
-                           [MISSING_VALUE]],
+                           [UNSPECIFIED]],
                           index=list('abcdef'),
                           columns=['alcohol_frequency'])
-        exp = pd.Series(['Yes', 'Yes', 'Yes', 'Yes', 'No', MISSING_VALUE],
+        exp = pd.Series(['Yes', 'Yes', 'Yes', 'Yes', 'No', UNSPECIFIED],
                         index=list('abcdef'),
                         name='alcohol_consumption')
         self._test_transformer(AlcoholConsumption, df, exp)
@@ -184,7 +185,7 @@ class TransformTests(unittest.TestCase):
                            ['Regularly (3-5 times/week)'],
                            ['Dailybadbadbad'],
                            ['Never'],
-                           [MISSING_VALUE]],
+                           [UNSPECIFIED]],
                           index=list('abcdef'),
                           columns=['alcohol_frequency'])
         with self.assertRaisesRegex(KeyError, "Unexpected"):

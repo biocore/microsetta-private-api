@@ -1,7 +1,9 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 from email.utils import formataddr
+import html2text
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
@@ -48,7 +50,8 @@ class SendEmail:
             raise smtplib.SMTPException("Unable to connect")
 
     @classmethod
-    def send(cls, to, email_template, email_template_args=None, from_=None):
+    def send(cls, to, email_template, email_template_args=None, from_=None,
+             attachment_filepath=None, attachment_filename=None):
         """Send a message
 
         Parameters
@@ -56,28 +59,48 @@ class SendEmail:
         to : str
             The email address to send a message too
         email_template : EmailTemplate
-            An object that contains a .plain and .html jinja2
+            An object that contains a .html jinja2
             template for rendering
         email_template_args : dict, optional
             Arguments to provide for rendering.
         from_ : str, optional
             A from email address. This is optional, and if not provided
             the default defined by this class is used.
+        attachment_filepath : str, optional
+            A path to a file to attach. If specified, it is necessary for the
+            file to exist, and it is also necessary to provide a
+            "attachment_filename"
+        attachment_filename : str, optional
+            The name of the attachment within the email. If
+            "attachment_filepath" is specified, it is necessary to also include
+            a value here.
         """
+        if attachment_filepath is not None or attachment_filename is not None:
+            assert attachment_filepath is not None and \
+                    attachment_filename is not None
+
         message = MIMEMultipart("alternative")
         message['To'] = to
         message['From'] = from_ or cls.from_
         message['Reply-To'] = cls.reply_to
         message['Subject'] = email_template.subject
 
-        plain = email_template.plain.render(email_template_args or {})
         html = email_template.html.render(email_template_args or {})
+        plain = html2text.html2text(html)
 
         first = MIMEText(plain, "plain")
         second = MIMEText(html, "html")
 
         message.attach(first)
         message.attach(second)
+
+        if attachment_filepath:
+            with open(attachment_filepath, 'rb') as f:
+                data = f.read()
+                attachment = MIMEApplication(data, Name=attachment_filename)
+            disposition = f'attachment; filename="{attachment_filename}"'
+            attachment['Content-Disposition'] = disposition
+            message.attach(attachment)
 
         cls.connect()
         cls.connection.send_message(message)

@@ -61,7 +61,8 @@ def setup_test_data():
                           12345,
                           "US"
                       ),
-                      "fakekit")
+                      "fakekit",
+                      "en_US")
         acct_repo.create_account(acc)
 
         with t.cursor() as cur:
@@ -975,3 +976,87 @@ class AdminApiTests(TestCase):
                        "send_daklapack_hold_email") as mock_email:
                 mock_email.side_effect = [True]
                 self._test_post_daklapack_orders(order_info, 401)
+
+    def test_query_project_barcode_stats_project_without_strip(self):
+        input_json = json.dumps({'project': 7, 'email': 'foobar'})
+
+        with patch("microsetta_private_api.tasks."
+                   "per_sample_summary.delay") as mock_delay:
+            mock_delay.return_value = None
+            response = self.client.post(
+                "api/admin/account_project_barcode_summary?"
+                "strip_sampleid=false",
+                content_type='application/json',
+                data=input_json,
+                headers=MOCK_HEADERS
+            )
+
+        # ...we assume the system is processing to send an email
+        # so nothing specific to verify on the response data
+        self.assertEqual(200, response.status_code)
+
+    def test_query_project_barcode_stats_project_with_strip(self):
+        input_json = json.dumps({'project': 7, 'email': 'foobar'})
+
+        with patch("microsetta_private_api.tasks."
+                   "per_sample_summary.delay") as mock_delay:
+            mock_delay.return_value = None
+            response = self.client.post(
+                "api/admin/account_project_barcode_summary?"
+                "strip_sampleid=True",
+                content_type='application/json',
+                data=input_json,
+                headers=MOCK_HEADERS
+            )
+
+        # ...we assume the system is processing to send an email
+        # so nothing specific to verify on the response data
+        self.assertEqual(200, response.status_code)
+
+    def test_query_barcode_stats_project_barcodes_without_strip(self):
+        barcodes = ['000010307', '000023344', '000036855']
+        input_json = json.dumps({'sample_barcodes': barcodes})
+
+        response = self.client.post(
+            "api/admin/account_barcode_summary?strip_sampleid=False",
+            content_type='application/json',
+            data=input_json,
+            headers=MOCK_HEADERS
+        )
+        # an empty string project should be unkown
+        self.assertEqual(200, response.status_code)
+
+        response_obj = json.loads(response.data)
+        self.assertEqual(len(response_obj), 3)
+
+        self.assertEqual([v['sampleid'] for v in response_obj],
+                         barcodes)
+        exp_status = [None, 'no-associated-source', 'sample-is-valid']
+        self.assertEqual([v['sample-status'] for v in response_obj],
+                         exp_status)
+        n_src = sum([v['source-email'] is not None for v in response_obj])
+        self.assertEqual(n_src, 1)
+
+    def test_query_barcode_stats_project_barcodes_with_strip(self):
+        barcodes = ['000010307', '000023344', '000036855']
+        input_json = json.dumps({'sample_barcodes': barcodes})
+
+        response = self.client.post(
+            "api/admin/account_barcode_summary?strip_sampleid=True",
+            content_type='application/json',
+            data=input_json,
+            headers=MOCK_HEADERS
+        )
+        # an empty string project should be unkown
+        self.assertEqual(200, response.status_code)
+
+        response_obj = json.loads(response.data)
+        self.assertEqual(len(response_obj), 3)
+
+        self.assertEqual([v['sampleid'] for v in response_obj],
+                         [None] * len(barcodes))
+        exp_status = [None, 'no-associated-source', 'sample-is-valid']
+        self.assertEqual([v['sample-status'] for v in response_obj],
+                         exp_status)
+        n_src = sum([v['source-email'] is not None for v in response_obj])
+        self.assertEqual(n_src, 1)
