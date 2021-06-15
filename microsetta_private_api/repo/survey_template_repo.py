@@ -357,9 +357,12 @@ class SurveyTemplateRepo(BaseRepo):
             if height == UNSPECIFIED or weight_units == UNSPECIFIED:
                 height = None
             elif height is not None:
-                # all survey_answers_other responses are of the form
-                # '["foo"]' :/
-                height = height[2:-2]
+                if height.startswith('['):
+                    # old survey_answers_other responses are of the form
+                    # '["foo"]' :/
+                    # TODO: patch all old answers to remove extraneous [""]?
+                    height = height[2:-2]
+
                 if height == "":
                     height = None
                 else:
@@ -374,9 +377,10 @@ class SurveyTemplateRepo(BaseRepo):
             if weight == UNSPECIFIED or weight_units == UNSPECIFIED:
                 weight = None
             elif weight is not None:
-                # all survey_answers_other responses are of the form
-                # '["foo"]' :/
-                weight = weight[2:-2]
+                if weight.startswith('['):
+                    # old survey_answers_other responses are of the form
+                    # '["foo"]' :/
+                    weight = weight[2:-2]
                 if weight == "":
                     weight = None
                 else:
