@@ -890,29 +890,6 @@ class AdminRepo(BaseRepo):
 
         return {'created': created}
 
-    def create_kit(self, kit_name, box_id, barcodes_list, project_ids):
-        """Create a single kit
-
-        Parameters
-        ----------
-        kit_name: str
-            Value inside the kit box (e.g., "DM24-A3CF9")
-        box_id: str
-            Value on outside of kit box (e.g., "DM89D-VW6Y")
-        barcodes_list: list of str
-            Tube/collection device barcode (e.g., "DMX00-0001")
-        project_ids : list of int
-            Project ids the samples are to be associated with
-        """
-        kit_names = [kit_name]
-        box_ids = [box_id]
-        kit_name_and_barcode_tuples_list = \
-            [(kit_name, x) for x in barcodes_list]
-
-        return self._create_kits(kit_names, barcodes_list,
-                                 kit_name_and_barcode_tuples_list,
-                                 len(barcodes_list), project_ids, box_ids)
-
     def retrieve_diagnostics_by_kit_id(self, supplied_kit_id):
         kit_repo = KitRepo(self._transaction)
         kit = kit_repo.get_kit_all_samples(supplied_kit_id)
