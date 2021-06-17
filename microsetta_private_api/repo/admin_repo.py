@@ -1140,7 +1140,7 @@ class AdminRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             cur.execute(
                 "UPDATE barcodes.daklapack_order "
-                "SET " 
+                "SET "
                 "last_polling_timestamp = %s, "
                 "last_polling_status = %s "
                 "WHERE dak_order_id = %s",
