@@ -885,3 +885,113 @@ class AdminRepoTests(AdminTests):
 
         # NB: all the above happens within a transaction that we then DO NOT
         # commit so the db changes are not permanent
+
+    def make_dummy_dak_orders(self, t):
+        # create some orders;
+        # need a valid submitter id from the account table to input
+        with t.dict_cursor() as cur:
+            cur.execute("SELECT id, first_name, last_name "
+                        "FROM ag.account "
+                        "WHERE account_type = 'admin' "
+                        "ORDER BY id "
+                        "LIMIT 1;")
+            submitter_record = cur.fetchone()
+            submitter_id = submitter_record[0]
+
+            dummy_orders = [('7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                             submitter_id, 'dummy 1', None,
+                             '{"orderId": '
+                             '"7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                             dateutil.parser.isoparse(
+                                 "2020-10-09T22:43:52.219328Z"),
+                             None, "Sent"),
+                            ('8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                             submitter_id, 'dummy 2', None,
+                             '{"orderId": '
+                             '"8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                             dateutil.parser.isoparse(
+                                 "2021-10-09T22:43:52.219328Z"),
+                             None, "Pending"),
+                            ('9ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                             submitter_id, 'dummy 3', None,
+                             '{"orderId": '
+                             '"9ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                             dateutil.parser.isoparse(
+                                 "2020-10-09T22:43:52.219328Z"),
+                             None, "Error"),
+                            ('0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                             submitter_id, 'dummy 4', None,
+                             '{"orderId": '
+                             '"0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                             dateutil.parser.isoparse(
+                                 "2021-10-09T22:43:52.219328Z"),
+                             None, None)]
+            cur.executemany("INSERT INTO barcodes.daklapack_order "
+                            "(dak_order_id, submitter_acct_id, "
+                            "description, fulfillment_hold_msg, "
+                            "order_json, creation_timestamp, "
+                            "last_polling_timestamp, last_polling_status) "
+                            "VALUES (%s, %s, %s, %s,%s, %s, %s, %s)",
+                            dummy_orders)
+
+            return dummy_orders
+
+    def test_get_unfinished_daklapack_order_ids(self):
+        with Transaction() as t:
+            self.make_dummy_dak_orders(t)
+
+            expected_out = ['8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                            '0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b']
+
+            admin_repo = AdminRepo(t)
+            real_out = admin_repo.get_unfinished_daklapack_order_ids()
+            self.assertEqual(expected_out, real_out)
+
+    def test_get_projects_for_dak_order(self):
+        with Transaction() as t:
+            self.make_dummy_dak_orders(t)
+
+            # create some records
+            an_order_id = '8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b'
+            dummy_associations = [
+                (an_order_id, 3),
+                (an_order_id, 1),
+                ('0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b', 4)
+            ]
+
+            insert_sql = 'insert into barcodes.daklapack_order_to_project' \
+                         ' (dak_order_id, project_id) values %s'
+
+            with t.dict_cursor() as cur:
+                psycopg2.extras.execute_values(
+                    cur, insert_sql, dummy_associations,
+                    template=None, page_size=100)
+
+                admin_repo = AdminRepo(t)
+                real_out = admin_repo.get_projects_for_dak_order(an_order_id)
+                self.assertEqual([1, 3], real_out)
+
+    def test_set_daklapack_order_poll_info(self):
+        an_order_id = '8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b'
+        a_date = dateutil.parser.isoparse("2021-06-09T22:43:52.219328Z")
+        a_status = "Error"
+
+        with Transaction() as t:
+            dummy_orders = self.make_dummy_dak_orders(t)
+            expected_record = list(dummy_orders[1])
+            expected_record[4] = {"orderId": an_order_id}
+            expected_record[6] = a_date
+            expected_record[7] = a_status
+
+            admin_repo = AdminRepo(t)
+            admin_repo.set_daklapack_order_poll_info(
+                an_order_id, a_date, a_status)
+
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT * "
+                            "FROM barcodes.daklapack_order "
+                            "WHERE dak_order_id =  %s",
+                            (an_order_id,))
+                curr_records = cur.fetchall()
+                self.assertEqual(len(curr_records), 1)
+                self.assertEqual(expected_record, curr_records[0])

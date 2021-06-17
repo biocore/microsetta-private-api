@@ -1108,3 +1108,41 @@ class AdminRepo(BaseRepo):
                                            template=None, page_size=100)
 
         return order_id
+
+    def get_unfinished_daklapack_order_ids(self):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT dak_order_id "
+                "FROM "
+                "barcodes.daklapack_order "
+                "WHERE last_polling_status NOT IN (%s, %s) "
+                "OR last_polling_status IS NULL "
+                "ORDER BY last_polling_timestamp DESC;",
+                ("Sent", "Error"))
+            rows = cur.fetchall()
+            return [x[0] for x in rows]
+
+    def get_projects_for_dak_order(self, dak_order_id):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT project_id "
+                "FROM "
+                "barcodes.daklapack_order_to_project "
+                "WHERE dak_order_id = %s "
+                "ORDER BY project_id ASC;",
+                (dak_order_id,))
+            rows = cur.fetchall()
+            return [x[0] for x in rows]
+
+    def set_daklapack_order_poll_info(
+            self, dak_order_id, last_polling_timestamp, last_polling_status):
+
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "UPDATE barcodes.daklapack_order "
+                "SET " 
+                "last_polling_timestamp = %s, "
+                "last_polling_status = %s "
+                "WHERE dak_order_id = %s",
+                (last_polling_timestamp, last_polling_status, dak_order_id)
+            )
