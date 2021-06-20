@@ -3,7 +3,7 @@ from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.vioscreen import (
     VioscreenSession, VioscreenPercentEnergy,
     VioscreenPercentEnergyComponent,
-    VioscreenDietaryScore,  VioscreenDietaryScoreComponent,
+    VioscreenDietaryScore, VioscreenDietaryScoreComponent,
     VioscreenSupplements, VioscreenSupplementsComponent,
     VioscreenFoodComponents, VioscreenFoodComponentsComponent,
     VioscreenEatingPatterns, VioscreenEatingPatternsComponent,
@@ -497,12 +497,15 @@ class VioscreenSupplementsRepo(BaseRepo):
 class VioscreenFoodComponentsRepo(BaseRepo):
     # code : (description, units, valueType)
     _CODES = {'acesupot': ('Acesulfame Potassium', 'mg', 'Amount'),
-              'addsugar': ('Added Sugars (by Available Carbohydrate)', 'g', 'Amount'),
+              'addsugar': ('Added Sugars (by Available Carbohydrate)',
+                           'g', 'Amount'),
               'adsugtot': ('Added Sugars (by Total Sugars)', 'g', 'Amount'),
               'alanine': ('Alanine', 'g', 'Amount'),
               'alcohol': ('Alcohol', 'g', 'Amount'),
-              'alphacar': ('Alpha-Carotene (provitamin A carotenoid)', 'mcg', 'Amount'),
-              'alphtoce': ('Total Vitamin E Activity (total alpha-tocopherol equivalents)', 'mg', 'Amount'),
+              'alphacar': ('Alpha-Carotene (provitamin A carotenoid)', 'mcg',
+                           'Amount'),
+              'alphtoce': ('Total Vitamin E Activity (total alpha-tocopherol equivalents)',  # noqa
+                           'mg', 'Amount'),
               'alphtoco': ('Alpha-Tocopherol', 'mg', 'Amount'),
               'arginine': ('Arginine', 'g', 'Amount'),
               'ash': ('Ash', 'g', 'Amount'),
@@ -608,7 +611,8 @@ class VioscreenFoodComponentsRepo(BaseRepo):
               'retinol': ('Retinol', 'mcg', 'Amount'),
               'ribofla': ('Riboflavin (vitamin B2)', 'mg', 'Amount'),
               'sacchar': ('Saccharin', 'mg', 'Amount'),
-              'satoco': ('Synthetic Alpha-Tocopherol (all rac-alpha-tocopherol or dl-alpha-tocopherol)', 'mg', 'Amount'),
+              'satoco': ('Synthetic Alpha-Tocopherol (all rac-alpha-tocopherol or dl-alpha-tocopherol)',  # noqa
+                         'mg', 'Amount'),
               'selenium': ('Selenium', 'mcg', 'Amount'),
               'serine': ('Serine', 'g', 'Amount'),
               'sfa100': ('SFA 10:0 (capric acid)', 'g', 'Amount'),
@@ -640,17 +644,21 @@ class VioscreenFoodComponentsRepo(BaseRepo):
               'thiamin': ('Thiamin (vitamin B1)', 'mg', 'Amount'),
               'threonin': ('Threonine', 'g', 'Amount'),
               'totaltfa': ('Total Trans-Fatty Acids (TRANS)', 'g', 'Amount'),
-              'totcla': ('Total Conjugated Linoleic Acid (CLA 18:2)', 'g', 'Amount'),
+              'totcla': ('Total Conjugated Linoleic Acid (CLA 18:2)', 'g',
+                         'Amount'),
               'totfolat': ('Total Folate', 'mcg', 'Amount'),
               'totsugar': ('Total Sugars', 'g', 'Amount'),
               'tryptoph': ('Tryptophan', 'g', 'Amount'),
               'tyrosine': ('Tyrosine', 'g', 'Amount'),
               'valine': ('Valine', 'g', 'Amount'),
               'vita_iu': ('Total Vitamin A Activity', 'IU', 'Amount'),
-              'vita_rae': ('Total Vitamin A Activity (Retinol Activity Equivalents)', 'mcg', 'Amount'),
-              'vita_re': ('Total Vitamin A Activity (Retinol Equivalents)', 'mcg', 'Amount'),
+              'vita_rae': ('Total Vitamin A Activity (Retinol Activity Equivalents)',  # noqa
+                           'mcg', 'Amount'),
+              'vita_re': ('Total Vitamin A Activity (Retinol Equivalents)',
+                          'mcg', 'Amount'),
               'vitb12': ('Vitamin B-12 (cobalamin)', 'mcg', 'Amount'),
-              'vitb6': ('Vitamin B-6 (pyridoxine, pyridoxyl, & pyridoxamine)', 'mg', 'Amount'),
+              'vitb6': ('Vitamin B-6 (pyridoxine, pyridoxyl, & pyridoxamine)',
+                        'mg', 'Amount'),
               'vitc': ('Vitamin C (ascorbic acid)', 'mg', 'Amount'),
               'vitd': ('Vitamin D (calciferol)', 'mcg', 'Amount'),
               'vitd2': ('Vitamin D2 (ergocalciferol)', 'mcg', 'Amount'),
@@ -662,8 +670,10 @@ class VioscreenFoodComponentsRepo(BaseRepo):
               'zinc': ('Zinc', 'mg', 'Amount'),
               'oxalicm': ('Oxalic Acid from Mayo', 'mg', 'Amount'),
               'vitd_iu': ('Vitamin D', 'IU', 'Amount'),
-              'omega3_epadha': ('Omega-3 Fatty Acids [EPA + DHA]', 'g', 'Amount'),
-              'omega6_la': ('pfa182 + pfa204, la = linoleic acid', 'g', 'Amount')}
+              'omega3_epadha': ('Omega-3 Fatty Acids [EPA + DHA]', 'g',
+                                'Amount'),
+              'omega6_la': ('pfa182 + pfa204, la = linoleic acid', 'g',
+                            'Amount')}
 
     def __init__(self, transaction):
         super().__init__(transaction)
@@ -725,7 +735,7 @@ class VioscreenFoodComponentsRepo(BaseRepo):
                                                             description=codeInfo[0],  # noqa
                                                             units=codeInfo[1],  # noqa
                                                             amount=amount,
-                                                            valueType=codeInfo[2])
+                                                            valueType=codeInfo[2])  # noqa
                     components.append(vfcc)
                 return VioscreenFoodComponents(sessionId=sessionId,
                                                components=components)
@@ -837,7 +847,7 @@ class VioscreenEatingPatternsRepo(BaseRepo):
                                                             description=codeInfo[0],  # noqa
                                                             units=codeInfo[1],  # noqa
                                                             amount=amount,
-                                                            valueType=codeInfo[2])
+                                                            valueType=codeInfo[2])  # noqa
                     components.append(vepc)
                 return VioscreenEatingPatterns(sessionId=sessionId,
                                                components=components)
@@ -871,46 +881,86 @@ class VioscreenEatingPatternsRepo(BaseRepo):
 
 class VioscreenMPedsRepo(BaseRepo):
     # code : (description, units, valueType)
-    _CODES = {'A_BEV': ('MPED: Total drinks of alcohol', 'alc_drinks', 'Amount'),
-              'A_CAL': ('MPED: Calories from alcoholic beverages', 'kcal', 'Amount'),
-              'ADD_SUG': ('MPED: Teaspoon equivalents of added sugars', 'tsp_eq', 'Amount'),
-              'D_CHEESE': ('MPED: Number of cheese cup equivalents', 'cup_eq', 'Amount'),
-              'D_MILK': ('MPED: Number of milk cup equivalents', 'cup_eq', 'Amount'),
-              'D_TOT_SOYM': ('MPED: Total number of milk group (milk, yogurt & cheese) cup equivalents PLUS soy milk', 'cup_eq', 'Amount'),
-              'D_TOTAL': ('MPED: Total number of milk group (milk, yogurt & cheese) cup equivalents', 'cup_eq', 'Amount'),
-              'D_YOGURT': ('MPED: Number of yogurt cup equivalents', 'cup_eq', 'Amount'),
-              'DISCFAT_OIL': ('MPED: Grams of discretionary Oil', 'g', 'Amount'),
-              'DISCFAT_SOL': ('MPED: Grams of discretionary Solid fat', 'g', 'Amount'),
-              'F_CITMLB': ('MPED: Number of citrus, melon, berry cup equivalents', 'cup_eq', 'Amount'),
-              'F_NJ_CITMLB': ('MPED: Number of non-juice citrus, melon, berry cup equivalents', 'cup_eq', 'Amount'),
-              'F_NJ_OTHER': ('MPED: Number of other non-juice fruit cup equivalents', 'cup_eq', 'Amount'),
-              'F_NJ_TOTAL': ('MPED: Total number of non-juice fruit cup equivalents', 'cup_eq', 'Amount'),
-              'F_OTHER': ('MPED: Number of other fruit cup equivalents', 'cup_eq', 'Amount'),
-              'F_TOTAL': ('MPED: Total number of fruit cup equivalents', 'cup_eq', 'Amount'),
-              'G_NWHL': ('MPED: Number of non-whole grain ounce equivalents', 'oz_eq', 'Amount'),
-              'G_TOTAL': ('MPED: Total number of grain ounce equivalents', 'oz_eq', 'Amount'),
-              'G_WHL': ('MPED: Number of whole grain ounce equivalents', 'oz_eq', 'Amount'),
-              'LEGUMES': ('MPED: Number of cooked dry beans and peas cup equivalents', 'cup_eq', 'Amount'),
-              'M_EGG': ('MPED: Oz equivalents of lean meat from eggs', 'oz_eq', 'Amount'),
-              'M_FISH_HI': ('MPED: Oz cooked lean meat from fish, other seafood high in Omega-3', 'oz_eq', 'Amount'),
-              'M_FISH_LO': ('MPED: Oz cooked lean meat from fish, other seafood low in Omega-3', 'oz_eq', 'Amount'),
-              'M_FRANK': ('MPED: Oz cooked lean meat from franks, sausages, luncheon meats', 'oz_eq', 'Amount'),
-              'M_MEAT': ('MPED: Oz cooked lean meat from beef, pork, veal, lamb, and game', 'oz_eq', 'Amount'),
-              'M_MPF': ('MPED: Oz cooked lean meat from meat, poultry, fish', 'oz_eq', 'Amount'),
-              'M_NUTSD': ('MPED: Oz equivalents of lean meat from nuts and seeds', 'oz_eq', 'Amount'),
-              'M_ORGAN': ('MPED: Oz cooked lean meat from organ meats', 'oz_eq', 'Amount'),
-              'M_POULT': ('MPED: Oz cooked lean meat from chicken, poultry, and other poultry', 'oz_eq', 'Amount'),
-              'M_SOY': ('MPED: Oz equivalents of lean meat from soy product', 'oz_eq', 'Amount'),
-              'rgrain': ('Refined Grains (ounce equivalents)', 'oz_eq', 'Amount'),
-              'tgrain': ('Total Grains (ounce equivalents)', 'oz_eq', 'Amount'),
-              'V_DRKGR': ('MPED: Number of dark-green vegetable cup equivalents', 'cup_eq', 'Amount'),
-              'V_ORANGE': ('MPED: Number of orange vegetable cup equivalents', 'cup_eq', 'Amount'),
-              'V_OTHER': ('MPED: Number of other vegetable cup equivalents', 'cup_eq', 'Amount'),
-              'V_POTATO': ('MPED: Number of white potato cup equivalents', 'cup_eq', 'Amount'),
-              'V_STARCY': ('MPED: Number of other starchy vegetable cup equivalents', 'cup_eq', 'Amount'),
-              'V_TOMATO': ('MPED: Number of tomato cup equivalents', 'cup_eq', 'Amount'),
-              'V_TOTAL': ('MPED: Total number of vegetable cup equivalents, excl legumes', 'cup_eq', 'Amount'),
-              'wgrain': ('Whole Grains (ounce equivalents)', 'oz_eq', 'Amount')}
+    _CODES = {'A_BEV': ('MPED: Total drinks of alcohol', 'alc_drinks',
+                        'Amount'),
+              'A_CAL': ('MPED: Calories from alcoholic beverages', 'kcal',
+                        'Amount'),
+              'ADD_SUG': ('MPED: Teaspoon equivalents of added sugars',
+                          'tsp_eq', 'Amount'),
+              'D_CHEESE': ('MPED: Number of cheese cup equivalents', 'cup_eq',
+                           'Amount'),
+              'D_MILK': ('MPED: Number of milk cup equivalents', 'cup_eq',
+                         'Amount'),
+              'D_TOT_SOYM': ('MPED: Total number of milk group (milk, yogurt & cheese) cup equivalents PLUS soy milk',  # noqa
+                             'cup_eq', 'Amount'),
+              'D_TOTAL': ('MPED: Total number of milk group (milk, yogurt & cheese) cup equivalents',  # noqa
+                          'cup_eq', 'Amount'),
+              'D_YOGURT': ('MPED: Number of yogurt cup equivalents', 'cup_eq',
+                           'Amount'),
+              'DISCFAT_OIL': ('MPED: Grams of discretionary Oil', 'g',
+                              'Amount'),
+              'DISCFAT_SOL': ('MPED: Grams of discretionary Solid fat', 'g',
+                              'Amount'),
+              'F_CITMLB': ('MPED: Number of citrus, melon, berry cup equivalents',  # noqa
+                           'cup_eq', 'Amount'),
+              'F_NJ_CITMLB': ('MPED: Number of non-juice citrus, melon, berry cup equivalents',  # noqa
+                              'cup_eq', 'Amount'),
+              'F_NJ_OTHER': ('MPED: Number of other non-juice fruit cup equivalents',  # noqa
+                             'cup_eq', 'Amount'),
+              'F_NJ_TOTAL': ('MPED: Total number of non-juice fruit cup equivalents',  # noqa
+                             'cup_eq', 'Amount'),
+              'F_OTHER': ('MPED: Number of other fruit cup equivalents',
+                          'cup_eq', 'Amount'),
+              'F_TOTAL': ('MPED: Total number of fruit cup equivalents',
+                          'cup_eq', 'Amount'),
+              'G_NWHL': ('MPED: Number of non-whole grain ounce equivalents',
+                         'oz_eq', 'Amount'),
+              'G_TOTAL': ('MPED: Total number of grain ounce equivalents',
+                          'oz_eq', 'Amount'),
+              'G_WHL': ('MPED: Number of whole grain ounce equivalents',
+                        'oz_eq', 'Amount'),
+              'LEGUMES': ('MPED: Number of cooked dry beans and peas cup equivalents',  # noqa
+                          'cup_eq', 'Amount'),
+              'M_EGG': ('MPED: Oz equivalents of lean meat from eggs', 'oz_eq',
+                        'Amount'),
+              'M_FISH_HI': ('MPED: Oz cooked lean meat from fish, other seafood high in Omega-3',  # noqa
+                            'oz_eq', 'Amount'),
+              'M_FISH_LO': ('MPED: Oz cooked lean meat from fish, other seafood low in Omega-3',  # noqa
+                            'oz_eq', 'Amount'),
+              'M_FRANK': ('MPED: Oz cooked lean meat from franks, sausages, luncheon meats',  # noqa
+                          'oz_eq', 'Amount'),
+              'M_MEAT': ('MPED: Oz cooked lean meat from beef, pork, veal, lamb, and game',  # noqa
+                         'oz_eq', 'Amount'),
+              'M_MPF': ('MPED: Oz cooked lean meat from meat, poultry, fish',
+                        'oz_eq', 'Amount'),
+              'M_NUTSD': ('MPED: Oz equivalents of lean meat from nuts and seeds',  # noqa
+                          'oz_eq', 'Amount'),
+              'M_ORGAN': ('MPED: Oz cooked lean meat from organ meats',
+                          'oz_eq', 'Amount'),
+              'M_POULT': ('MPED: Oz cooked lean meat from chicken, poultry, and other poultry',  # noqa
+                          'oz_eq', 'Amount'),
+              'M_SOY': ('MPED: Oz equivalents of lean meat from soy product',
+                        'oz_eq', 'Amount'),
+              'rgrain': ('Refined Grains (ounce equivalents)', 'oz_eq',
+                         'Amount'),
+              'tgrain': ('Total Grains (ounce equivalents)', 'oz_eq',
+                         'Amount'),
+              'V_DRKGR': ('MPED: Number of dark-green vegetable cup equivalents',  # noqa
+                          'cup_eq', 'Amount'),
+              'V_ORANGE': ('MPED: Number of orange vegetable cup equivalents',
+                           'cup_eq', 'Amount'),
+              'V_OTHER': ('MPED: Number of other vegetable cup equivalents',
+                          'cup_eq', 'Amount'),
+              'V_POTATO': ('MPED: Number of white potato cup equivalents',
+                           'cup_eq', 'Amount'),
+              'V_STARCY': ('MPED: Number of other starchy vegetable cup equivalents',  # noqa
+                           'cup_eq', 'Amount'),
+              'V_TOMATO': ('MPED: Number of tomato cup equivalents', 'cup_eq',
+                           'Amount'),
+              'V_TOTAL': ('MPED: Total number of vegetable cup equivalents, excl legumes',  # noqa
+                          'cup_eq', 'Amount'),
+              'wgrain': ('Whole Grains (ounce equivalents)', 'oz_eq',
+                         'Amount')}
 
     def __init__(self, transaction):
         super().__init__(transaction)
@@ -1011,16 +1061,20 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
               'adsugtot': ('Added Sugars (by Total Sugars)', 'g', 'Amount'),
               'alanine': ('Alanine', 'g', 'Amount'),
               'alcohol': ('Alcohol', 'g', 'Amount'),
-              'alphacar': ('Alpha-Carotene (provitamin A carotenoid)', 'mcg', 'Amount'),
-              'alphtoce': ('Total Vitamin E Activity (total alpha-tocopherol equivalents)', 'mg', 'Amount'),
+              'alphacar': ('Alpha-Carotene (provitamin A carotenoid)', 'mcg',
+                           'Amount'),
+              'alphtoce': ('Total Vitamin E Activity (total alpha-tocopherol equivalents)',  # noqa
+                           'mg', 'Amount'),
               'alphtoco': ('Alpha-Tocopherol', 'mg', 'Amount'),
               'arginine': ('Arginine', 'g', 'Amount'),
               'ash': ('Ash', 'g', 'Amount'),
               'aspartam': ('Aspartame', 'mg', 'Amount'),
               'aspartic': ('Aspartic Acid', 'g', 'Amount'),
               'avcarb': ('Available Carbohydrate', 'g', 'Amount'),
-              'betacar': ('Beta-Carotene (provitamin A carotenoid)', 'mcg', 'Amount'),
-              'betacryp': ('Beta-Cryptoxanthin (provitamin A carotenoid)', 'mcg', 'Amount'),
+              'betacar': ('Beta-Carotene (provitamin A carotenoid)', 'mcg',
+                          'Amount'),
+              'betacryp': ('Beta-Cryptoxanthin (provitamin A carotenoid)',
+                           'mcg', 'Amount'),
               'betaine': ('Betaine', 'mg', 'Amount'),
               'betatoco': ('Beta-Tocopherol', 'mg', 'Amount'),
               'biochana': ('Biochanin A', 'mg', 'Amount'),
@@ -1082,10 +1136,13 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
               'mfa181': ('MUFA 18:1 (oleic acid)', 'g', 'Amount'),
               'mfa201': ('MUFA 20:1 (gadoleic acid)', 'g', 'Amount'),
               'mfa221': ('MUFA 22:1 (erucic acid)', 'g', 'Amount'),
-              'mfatot': ('Total Monounsaturated Fatty Acids (MUFA)', 'g', 'Amount'),
-              'natoco': ('Natural Alpha-Tocopherol (RRR-alpha-tocopherol or d-alpha-tocopherol)', 'mg', 'Amount'),
+              'mfatot': ('Total Monounsaturated Fatty Acids (MUFA)', 'g',
+                         'Amount'),
+              'natoco': ('Natural Alpha-Tocopherol (RRR-alpha-tocopherol or d-alpha-tocopherol)',  # noqa
+                         'mg', 'Amount'),
               'nccglbr': ('NCC Glycemic Load (bread reference)', 'g', 'Index'),
-              'nccglgr': ('NCC Glycemic Load (glucose reference)', 'unit', 'Index'),
+              'nccglgr': ('NCC Glycemic Load (glucose reference)', 'unit',
+                          'Index'),
               'niacin': ('Niacin (vitamin B3)', 'mg', 'Amount'),
               'niacineq': ('Niacin Equivalents', 'mg', 'Amount'),
               'nitrogen': ('Nitrogen', 'g', 'Amount'),
@@ -1095,13 +1152,18 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
               'pectins': ('Pectins', 'g', 'Amount'),
               'pfa182': ('PUFA 18:2 (linoleic acid)', 'g', 'Amount'),
               'pfa183': ('PUFA 18:3 (linolenic acid)', 'g', 'Amount'),
-              'pfa183n3': ('PUFA 18:3 n-3 (alpha-linolenic acid [ALA])', 'g', 'Amount'),
+              'pfa183n3': ('PUFA 18:3 n-3 (alpha-linolenic acid [ALA])', 'g',
+                           'Amount'),
               'pfa184': ('PUFA 18:4 (parinaric acid)', 'g', 'Amount'),
               'pfa204': ('PUFA 20:4 (arachidonic acid)', 'g', 'Amount'),
-              'pfa205': ('PUFA 20:5 (eicosapentaenoic acid [EPA])', 'g', 'Amount'),
-              'pfa225': ('PUFA 22:5 (docosapentaenoic acid [DPA])', 'g', 'Amount'),
-              'pfa226': ('PUFA 22:6 (docosahexaenoic acid [DHA])', 'g', 'Amount'),
-              'pfatot': ('Total Polyunsaturated Fatty Acids (PUFA)', 'g', 'Amount'),
+              'pfa205': ('PUFA 20:5 (eicosapentaenoic acid [EPA])', 'g',
+                         'Amount'),
+              'pfa225': ('PUFA 22:5 (docosapentaenoic acid [DPA])', 'g',
+                         'Amount'),
+              'pfa226': ('PUFA 22:6 (docosahexaenoic acid [DHA])', 'g',
+                         'Amount'),
+              'pfatot': ('Total Polyunsaturated Fatty Acids (PUFA)', 'g',
+                         'Amount'),
               'phenylal': ('Phenylalanine', 'g', 'Amount'),
               'phosphor': ('Phosphorus', 'mg', 'Amount'),
               'phytic': ('Phytic Acid', 'mg', 'Amount'),
@@ -1114,7 +1176,8 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
               'retinol': ('Retinol', 'mcg', 'Amount'),
               'ribofla': ('Riboflavin (vitamin B2)', 'mg', 'Amount'),
               'sacchar': ('Saccharin', 'mg', 'Amount'),
-              'satoco': ('Synthetic Alpha-Tocopherol (all rac-alpha-tocopherol or dl-alpha-tocopherol)', 'mg', 'Amount'),
+              'satoco': ('Synthetic Alpha-Tocopherol (all rac-alpha-tocopherol or dl-alpha-tocopherol)',  # noqa
+                         'mg', 'Amount'),
               'selenium': ('Selenium', 'mcg', 'Amount'),
               'serine': ('Serine', 'g', 'Amount'),
               'sfa100': ('SFA 10:0 (capric acid)', 'g', 'Amount'),
@@ -1137,23 +1200,31 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
               'sucrlose': ('Sucralose', 'g', 'Amount'),
               'sucrose': ('Sucrose', 'g', 'Amount'),
               'tagatose': ('Tagatose', 'mg', 'Amount'),
-              'tfa161t': ('TRANS 16:1 (trans-hexadecenoic acid)', 'g', 'Amount'),
-              'tfa181t': ('TRANS 18:1 (trans-octadecenoic acid [elaidic acid])', 'g', 'Amount'),
-              'tfa182t': ('TRANS 18:2 (trans-octadecadienoic acid [linolelaidic acid]; incl. c-t, t-c, t-t)', 'g', 'Amount'),
+              'tfa161t': ('TRANS 16:1 (trans-hexadecenoic acid)', 'g',
+                          'Amount'),
+              'tfa181t': ('TRANS 18:1 (trans-octadecenoic acid [elaidic acid])',  # noqa
+                          'g', 'Amount'),
+              'tfa182t': ('TRANS 18:2 (trans-octadecadienoic acid [linolelaidic acid]; incl. c-t, t-c, t-t)',  # noqa
+                          'g', 'Amount'),
               'thiamin': ('Thiamin (vitamin B1)', 'mg', 'Amount'),
               'threonin': ('Threonine', 'g', 'Amount'),
               'totaltfa': ('Total Trans-Fatty Acids (TRANS)', 'g', 'Amount'),
-              'totcla': ('Total Conjugated Linoleic Acid (CLA 18:2)', 'g', 'Amount'),
+              'totcla': ('Total Conjugated Linoleic Acid (CLA 18:2)', 'g',
+                         'Amount'),
               'totfolat': ('Total Folate', 'mcg', 'Amount'),
               'totsugar': ('Total Sugars', 'g', 'Amount'),
               'tryptoph': ('Tryptophan', 'g', 'Amount'),
               'tyrosine': ('Tyrosine', 'g', 'Amount'),
               'valine': ('Valine', 'g', 'Amount'),
-              'vita_iu': ('Total Vitamin A Activity (International Units)', 'IU', 'Amount'),
-              'vita_rae': ('Total Vitamin A Activity (Retinol Activity Equivalents)', 'mcg', 'Amount'),
-              'vita_re': ('Total Vitamin A Activity (Retinol Equivalents)', 'mcg', 'Amount'),
+              'vita_iu': ('Total Vitamin A Activity (International Units)',
+                          'IU', 'Amount'),
+              'vita_rae': ('Total Vitamin A Activity (Retinol Activity Equivalents)',  # noqa
+                           'mcg', 'Amount'),
+              'vita_re': ('Total Vitamin A Activity (Retinol Equivalents)',
+                          'mcg', 'Amount'),
               'vitb12': ('Vitamin B-12 (cobalamin)', 'mcg', 'Amount'),
-              'vitb6': ('Vitamin B-6 (pyridoxine, pyridoxyl, & pyridoxamine)', 'mg', 'Amount'),
+              'vitb6': ('Vitamin B-6 (pyridoxine, pyridoxyl, & pyridoxamine)',
+                        'mg', 'Amount'),
               'vitc': ('Vitamin C (ascorbic acid)', 'mg', 'Amount'),
               'vitd': ('Vitamin D (calciferol)', 'mcg', 'Amount'),
               'vitd2': ('vitd2', '-', 'Amount'),
@@ -1165,8 +1236,10 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
               'zinc': ('Zinc', 'mg', 'Amount'),
               'oxalicm': ('Oxalic Acid from Mayo', 'mg', 'Amount'),
               'vitd_iu': ('Vitamin D (International Units)', 'IU', 'Amount'),
-              'omega3_epadha': ('Omega-3 Fatty Acids [EPA + DHA]', 'g', 'Amount'),
-              'omega6_la': ('pfa182 + pfa204, la = linoleic acid', 'g', 'Amount')}
+              'omega3_epadha': ('Omega-3 Fatty Acids [EPA + DHA]', 'g',
+                                'Amount'),
+              'omega6_la': ('pfa182 + pfa204, la = linoleic acid', 'g',
+                            'Amount')}
 
     def __init__(self, transaction):
         super().__init__(transaction)
@@ -1188,14 +1261,24 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
             rowcount = 0
             components = vioscreen_food_consumption.components
             for component in components:
-                inserts = (vioscreen_food_consumption.sessionId, component.foodCode, component.description,
-                           component.foodGroup, component.amount, component.frequency, component.consumptionAdjustment,
-                           component.servingSizeText, component.servingFrequencyText, component.created)
+                inserts = (
+                    vioscreen_food_consumption.sessionId,
+                    component.foodCode,
+                    component.description,
+                    component.foodGroup,
+                    component.amount,
+                    component.frequency,
+                    component.consumptionAdjustment,
+                    component.servingSizeText,
+                    component.servingFrequencyText,
+                    component.created)
 
                 cur.execute("""INSERT INTO ag.vioscreen_foodconsumption
-                               (sessionId, foodCode, description, foodGroup, amount, frequency,
-                               consumptionAdjustment, servingSizeText, servingFrequencyText, created)
-                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                               (sessionId, foodCode, description, foodGroup,
+                                amount, frequency, consumptionAdjustment,
+                                servingSizeText, servingFrequencyText, created)
+                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """,
                             inserts)
                 rowcount += cur.rowcount
 
@@ -1208,10 +1291,10 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
                                      component2.code,
                                      component2.amount))
 
-                cur.executemany("""INSERT INTO ag.vioscreen_foodconsumptioncomponents
+                cur.executemany(
+                    """INSERT INTO ag.vioscreen_foodconsumptioncomponents
                                    (sessionId, description, code, amount)
-                                   VALUES (%s, %s, %s, %s)""",
-                                inserts2)
+                                   VALUES (%s, %s, %s, %s)""", inserts2)
                 rowcount += cur.rowcount
 
             return rowcount
@@ -1230,43 +1313,48 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
             The food consumption detail, or None if no record was found
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT foodCode, description, foodGroup, amount, frequency,
-                           consumptionAdjustment, servingSizeText, servingFrequencyText, created
-                           FROM ag.vioscreen_foodconsumption
-                           WHERE sessionId = %s""",
-                        (sessionId,))
+            cur.execute(
+                """SELECT foodCode, description, foodGroup, amount, frequency,
+                           consumptionAdjustment, servingSizeText,
+                           servingFrequencyText, created
+                   FROM ag.vioscreen_foodconsumption
+                   WHERE sessionId = %s""", (sessionId,))
 
             rows = cur.fetchall()
             if len(rows) > 0:
                 components = []
-                for foodCode, description, foodGroup, amount, frequency, consumptionAdjustment, \
-                        servingSizeText, servingFrequencyText, created in rows:
+                for (foodCode, description, foodGroup, amount, frequency,
+                     consumptionAdjustment, servingSizeText,
+                     servingFrequencyText, created) in rows:
                     cur.execute("""SELECT code, amount
                                    FROM ag.vioscreen_foodconsumptioncomponents
-                                   WHERE sessionId = %s AND description = %s""",
+                                   WHERE sessionId = %s AND description = %s
+                                """,
                                 (sessionId, description))
                     rows2 = cur.fetchall()
 
                     components2 = []
                     for code, amount in rows2:
                         codeInfo = self._get_code_info(code)
-                        vfcc2 = VioscreenFoodComponentsComponent(code=code,
-                                                                 description=codeInfo[0],
-                                                                 units=codeInfo[1],
-                                                                 amount=amount,
-                                                                 valueType=codeInfo[2])
+                        vfcc2 = VioscreenFoodComponentsComponent(
+                            code=code,
+                            description=codeInfo[0],
+                            units=codeInfo[1],
+                            amount=amount,
+                            valueType=codeInfo[2])
                         components2.append(vfcc2)
 
-                    vfcc = VioscreenFoodConsumptionComponent(foodCode=foodCode,
-                                                             description=description,
-                                                             foodGroup=foodGroup,
-                                                             amount=amount,
-                                                             frequency=frequency,
-                                                             consumptionAdjustment=consumptionAdjustment,
-                                                             servingSizeText=servingSizeText,
-                                                             servingFrequencyText=servingFrequencyText,
-                                                             created=created,
-                                                             data=components2)
+                    vfcc = VioscreenFoodConsumptionComponent(
+                        foodCode=foodCode,
+                        description=description,
+                        foodGroup=foodGroup,
+                        amount=amount,
+                        frequency=frequency,
+                        consumptionAdjustment=consumptionAdjustment,
+                        servingSizeText=servingSizeText,
+                        servingFrequencyText=servingFrequencyText,
+                        created=created,
+                        data=components2)
                     components.append(vfcc)
 
                 return VioscreenFoodConsumption(sessionId=sessionId,
