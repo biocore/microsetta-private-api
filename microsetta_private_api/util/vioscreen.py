@@ -25,7 +25,7 @@ from microsetta_private_api.localization import ES_MX
 # regcode, so we do not need to append anything
 COUNTRY_CODE_TO_FFQ = {
     'US': '',
-    'MX': 'mexican-v5',
+    'MX': 'mexico',
 }
 
 
