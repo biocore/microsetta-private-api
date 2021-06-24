@@ -56,6 +56,10 @@ def gen_survey_url(user_id,
     if language_tag == ES_MX:
         language_tag = 'es-ES'
 
+    # vioscreen only accepts "-" variants, whereas we use "_" internally
+    # so replace just in case.
+    language_tag = language_tag.replace('_', '-')
+
     # We'll default to the US version if there isn't a country specific one
     # available.
     ffq = COUNTRY_CODE_TO_FFQ.get(country_code, 'US')
@@ -238,8 +242,12 @@ def make_vioscreen_request(self, method, url, **kwargs):
             if code == 1016:
                 # need a new token
                 return None, True
-            if code == 1005:
-                # From David Blankenship on 5.26.21, we should issue a retry
+            elif code == 1017:
+                # From David Blankenbush on 6.24.21, this is an edge case that
+                # should not occur in production
+                return {'error': 'empty ffq'}, False
+            elif code == 1005:
+                # From David Blankenbush on 5.26.21, we should issue a retry
                 # if this code is observed
                 return None, True
             elif code == 1002:
