@@ -24,6 +24,11 @@ from ._activation import (
     check_activation
 )
 
+from ._vioscreen import (
+    read_sample_vioscreen_session
+)
+
+
 __all__ = [
     'find_accounts_for_login',
     'register_account',
@@ -55,5 +60,6 @@ __all__ = [
     'submit_answered_survey',
     'verify_jwt',
     'get_preparations',
-    'check_activation'
+    'check_activation',
+    'read_sample_vioscreen_session'
 ]

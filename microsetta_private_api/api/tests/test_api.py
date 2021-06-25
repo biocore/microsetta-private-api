@@ -1756,8 +1756,20 @@ class SampleTests(ApiTests):
             '/api/preparations/' + BC2,
             headers=MOCK_HEADERS)
 
-        self.assertEqual(200, response.status_code)
+        self.assertequal(200, response.status_code)
         response_obj = json.loads(response.data)
-        self.assertEqual(len(response_obj), 1)
+        self.assertequal(len(response_obj), 1)
 
         self.assertEqual(response_obj[0]["num_sequences"], 18302)
+
+
+@pytest.mark.usefixtures("client")
+class VioscreenTests(ApiTests):
+    def test_get_sample_vioscreen_session_200(self):
+        get_response = self.client.get('/api/account...',
+            headers=self.dummy_auth)
+
+
+    def test_get_sample_vioscreen_session_404(self):
+        pass
+
