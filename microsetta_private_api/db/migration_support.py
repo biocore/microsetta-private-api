@@ -426,6 +426,7 @@ class MigrationSupport:
                     (r[0], r[1], r[2], r[3]))
         TRN.execute()
 
+    @staticmethod
     def migrate_77(TRN):
         # a few studies were remarked as not-TMI when they actually are. A
         # retroactive update to these studies is necessary. In some cases
@@ -674,25 +675,34 @@ class MigrationSupport:
                         log("Resolution: Copy into vioscreen_registry")
                         account_id = ag_rows[0][0]
                         source_id = ag_rows[0][3]
-                        TRN.add("SELECT DISTINCT "
-                                "ag_kit_barcode_id "
-                                "FROM "
-                                "source_barcodes_surveys LEFT JOIN "
-                                "ag_kit_barcodes USING (barcode) "
-                                "WHERE survey_id = %s", (survey_id,)
-                                )
+
+                        # we only want to update samples which are not already
+                        # in the registry. participants who had taken part
+                        # early in the project, and again more recently, may
+                        # have a scenario where there are multiple vio_ids and
+                        # multiple samples, where the the recent vio_id <->
+                        # sample is in the registry and correct.
+                        TRN.add("""SELECT DISTINCT ag_kit_barcode_id
+                                   FROM source_barcodes_surveys
+                                   LEFT JOIN ag_kit_barcodes USING (barcode)
+                                   WHERE survey_id = %s
+                                   AND ag_kit_barcode_id NOT IN
+                                   (SELECT DISTINCT sample_id
+                                    FROM vioscreen_registry
+                                    WHERE deleted=false)""",
+                                (survey_id,))
                         rows = TRN.execute()[-1]
                         if len(rows) == 0:
-                            log("ARGH!  There were no samples associated!  Can"
-                                " only associate with account and source!")
-                            rows = [[None]]
-                        for r in rows:
-                            TRN.add("INSERT INTO vioscreen_registry("
-                                    "account_id, source_id, "
-                                    "sample_id, vio_id) "
-                                    "VALUES(%s, %s, %s, %s)",
-                                    (account_id, source_id, r[0], survey_id))
-                        TRN.execute()
+                            log("Barcodes already associated")
+                        else:
+                            for r in rows:
+                                TRN.add("INSERT INTO vioscreen_registry("
+                                        "account_id, source_id, "
+                                        "sample_id, vio_id) "
+                                        "VALUES(%s, %s, %s, %s)",
+                                        (account_id, source_id, r[0],
+                                         survey_id))
+                            TRN.execute()
 
             status_map = defaultdict(int)
             for k in all_wrong_flags:
