@@ -731,6 +731,8 @@ class MigrationSupport:
         "0070.sql": migrate_70.__func__,
         "0074.sql": migrate_74.__func__,
         "0077.sql": migrate_77.__func__,
+        # patch 0082 migration is executed through hotfix_vioscreen.py
+        # as it depends on external state
         # "0082.sql": migrate_82.__func__
         # ...
     }
