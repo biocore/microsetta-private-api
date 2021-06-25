@@ -689,7 +689,8 @@ class MigrationSupport:
                                    AND ag_kit_barcode_id NOT IN
                                    (SELECT DISTINCT sample_id
                                     FROM vioscreen_registry
-                                    WHERE deleted=false)""",
+                                    WHERE deleted=false
+                                        AND sample_id IS NOT NULL)""",
                                 (survey_id,))
                         rows = TRN.execute()[-1]
                         if len(rows) == 0:
