@@ -719,7 +719,7 @@ class AdminRepo(BaseRepo):
 
     def create_kits(self, number_of_kits, number_of_samples, kit_prefix,
                     project_ids):
-        """Create kits each with the same number of samples
+        """Create multiple kits, each with the same number of samples
 
         Parameters
         ----------
@@ -743,6 +743,8 @@ class AdminRepo(BaseRepo):
                                  number_of_samples, project_ids)
 
     def _are_any_projects_tmi(self, project_ids):
+        """Return true if any input projects are part of microsetta"""
+
         with self._transaction.cursor() as cur:
             # get existing projects
             query = f"""
@@ -757,6 +759,7 @@ class AdminRepo(BaseRepo):
                 if input_proj_id not in projects_tmi:
                     raise KeyError("Project id %s does not exist" %
                                    input_proj_id)
+
                 # if *any* of the projects the kits will be associate with are
                 # microsetta projects, set is_tmi to true
                 if projects_tmi[input_proj_id]:
@@ -765,6 +768,8 @@ class AdminRepo(BaseRepo):
         return is_tmi
 
     def _generate_novel_kit_names(self, number_of_kits, kit_prefix):
+        """Generate list of random kit names having input prefix"""
+
         kit_names = [self._generate_random_kit_name(8, kit_prefix)
                      for i in range(number_of_kits)]
 
@@ -773,7 +778,7 @@ class AdminRepo(BaseRepo):
             cur.execute("""SELECT kit_id FROM barcodes.kit""")
             existing = set(cur.fetchall())
 
-            # if we observe ANY conflict, lets bail. This should be extremely
+            # if we observe ANY conflict, let's bail. This should be extremely
             # rare, from googling seemed a easier than having postgres
             # generate a unique identifier that was reasonably short, hard to
             # guess
@@ -784,6 +789,8 @@ class AdminRepo(BaseRepo):
 
     def _generate_novel_barcodes(self, number_of_kits, number_of_samples,
                                  kit_names):
+        """Generate specified number of random barcodes for input kit names"""
+
         with self._transaction.cursor() as cur:
             # get the maximum observed barcode.
             # historically, barcodes were of the format NNNNNNNNN where each
@@ -813,8 +820,26 @@ class AdminRepo(BaseRepo):
     def _create_kits(self, kit_names, new_barcodes,
                      kit_name_and_barcode_tuples_list,
                      number_of_samples, project_ids, box_ids=None):
+        """Create one or more kits from input parallel lists
 
-        # int ids come in as strings ...
+        Parameters
+        ----------
+        kit_names: list of str
+            Value inside the kit box (e.g., "DM24-A3CF9")
+        new_barcodes: list of str
+            Tube/collection device barcode (e.g., "DMX00-0001")
+        kit_name_and_barcode_tuples_list: list of tuple of str
+            Kit name and associated barcode (one tuple per barcode)
+        number_of_samples: int
+            Number of samples (barcodes) in each kit
+        project_ids : list of int
+            Project ids that all barcodes are to be associated with
+        box_ids: list of str (optional)
+            Value on outside of kit box (e.g., "DM89D-VW6Y").  If not provided,
+            kit uuid is used instead.
+        """
+
+        # integer project ids come in as strings ...
         project_ids = [int(x) for x in project_ids]
 
         is_tmi = self._are_any_projects_tmi(project_ids)
@@ -869,6 +894,7 @@ class AdminRepo(BaseRepo):
                                 "VALUES (%s, %s)",
                                 kit_barcodes_insert)
 
+        # get the info on the just-created kits/barcodes and return it
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT i.kit_id, o.kit_uuid, o.box_id, "
                         "i.sample_barcodes "
@@ -902,7 +928,7 @@ class AdminRepo(BaseRepo):
         barcodes_list: list of str
             Tube/collection device barcode (e.g., "DMX00-0001")
         project_ids : list of int
-            Project ids the samples are to be associated with
+            Project ids that all barcodes in kit are to be associated with
         """
         kit_names = [kit_name]
         box_ids = [box_id]
