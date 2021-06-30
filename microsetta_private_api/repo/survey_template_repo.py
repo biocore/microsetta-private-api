@@ -366,7 +366,7 @@ class SurveyTemplateRepo(BaseRepo):
                 if height == "":
                     height = None
                 else:
-                    height = int(height)
+                    height = float(height)
                     if height_units == 'centimeters':
                         # to inches
                         height = height / 2.54
@@ -384,7 +384,7 @@ class SurveyTemplateRepo(BaseRepo):
                 if weight == "":
                     weight = None
                 else:
-                    weight = int(weight)
+                    weight = float(weight)
                     if weight_units == 'kilograms':
                         # to pounds
                         weight = weight * 2.20462
