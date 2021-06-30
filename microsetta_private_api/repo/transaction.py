@@ -41,8 +41,9 @@ class Transaction:
         # Just access exclusive mode for now- hard to escape the lock mode
         # in psycopg2.
         with self.cursor() as cur:
-            cur.execute(sql.SQL("LOCK TABLE {} IN ACCESS EXCLUSIVE MODE").format(
-                sql.Identifier(table))
+            cur.execute(
+                sql.SQL("LOCK TABLE {} IN ACCESS EXCLUSIVE MODE")
+                .format(sql.Identifier(table))
             )
 
     def commit(self):
