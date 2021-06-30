@@ -15,6 +15,7 @@
   "vioscreen_cryptokey": "1234567891011121",
   "vioscreen_admin_username": "",
   "vioscreen_admin_password": "",
+  "vioscreen_patch_path": "/tmp/vioscreen_status.tsv",
   "daklapack_auth_url": "https://someauthprovider.com/maybe/token",
   "daklapack_client_id": "qwe1-234rty-5678-etc",
   "daklapack_client_secret": "ab1~2c3def.etc",

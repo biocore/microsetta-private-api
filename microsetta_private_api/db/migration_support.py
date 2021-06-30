@@ -1,5 +1,9 @@
 import uuid
 import pycountry
+from microsetta_private_api.config_manager import SERVER_CONFIG
+import csv
+import os.path
+from collections import defaultdict
 
 
 class MigrationSupport:
@@ -299,6 +303,58 @@ class MigrationSupport:
                      r['cannot_geocode'], r['elevation']))
 
     @staticmethod
+    def fork_primary_id(TRN, old_survey_id):
+        # For each offending ID,
+        # 2:    generate a new primary ID
+        # 3:    insert a new row into ag_login_surveys
+        # 4/5:  update/replicate entries in referencing tables.
+        #       Note that updating primary keys in postgres appears to
+        #       work in the referencing tables.  Also note that no cascade
+        #       strategy could solve this more simply, as there are also
+        #       vioscreen tables in our database that must continue to refer
+        #       to the existing vioscreen survey id.
+        #
+
+        # 2: Generate a new primary ID
+        # Newly returned survey responses at the moment are uuid v4,
+        # legacy IDs are 16 random hex character strings
+        # We will use the new survey ID format matching survey_answers_repo
+        new_survey_id = str(uuid.uuid4())
+
+        # 3: Insert a new row into ag_login_surveys
+        TRN.add("SELECT ag_login_id, source_id, creation_time "
+                "FROM ag_login_surveys "
+                "WHERE survey_id=%s", (old_survey_id,))
+        ag_login_id, source_id, creation_time = TRN.execute()[-1][-1]
+        TRN.add("INSERT INTO ag_login_surveys "
+                "(ag_login_id, survey_id, vioscreen_status, "
+                "source_id, creation_time) "
+                "VALUES (%s, %s, %s, %s, %s)",
+                (ag_login_id, new_survey_id, None,
+                 source_id, creation_time))
+
+        # 4: Update referencing tables entries
+        for table_name in [
+                "survey_answers",
+                "survey_answers_other",
+                "external_survey_answers"]:
+            TRN.add("UPDATE " + table_name + " SET survey_id=%s "
+                                             "WHERE survey_id=%s",
+                    (new_survey_id, old_survey_id))
+
+        # 5: or Fork entries referencing tables
+        for table_name in ["source_barcodes_surveys"]:
+            TRN.add("SELECT barcode, survey_id FROM " + table_name + " "
+                    "WHERE survey_id=%s",
+                    (old_survey_id,))
+            rows = TRN.execute()[-1]
+            for row in rows:
+                linked_barcode = row[0]
+                TRN.add("INSERT INTO source_barcodes_surveys "
+                        "(barcode, survey_id) "
+                        "VALUES(%s, %s)", (linked_barcode, new_survey_id))
+
+    @staticmethod
     def migrate_70(TRN):
         """
         At some point in the past, primary surveys and vioscreen surveys
@@ -338,42 +394,7 @@ class MigrationSupport:
         offending_ids = [r[0] for r in rows]
 
         for old_survey_id in offending_ids:
-            # 2: Generate a new primary ID
-            # Newly returned survey responses at the moment are uuid v4,
-            # legacy IDs are 16 random hex character strings
-            # We will use the new survey ID format matching survey_answers_repo
-            new_survey_id = str(uuid.uuid4())
-
-            # 3: Insert a new row into ag_login_surveys
-            TRN.add("SELECT ag_login_id, source_id, creation_time "
-                    "FROM ag_login_surveys "
-                    "WHERE survey_id=%s", (old_survey_id,))
-            ag_login_id, source_id, creation_time = TRN.execute()[-1][-1]
-            TRN.add("INSERT INTO ag_login_surveys "
-                    "(ag_login_id, survey_id, vioscreen_status, "
-                    "source_id, creation_time) "
-                    "VALUES (%s, %s, %s, %s, %s)",
-                    (ag_login_id, new_survey_id, None,
-                     source_id, creation_time))
-
-            # 4: Update referencing tables entries
-            for table_name in [
-                               "survey_answers",
-                               "survey_answers_other",
-                               "external_survey_answers"]:
-                TRN.add("UPDATE " + table_name + " SET survey_id=%s "
-                        "WHERE survey_id=%s", (new_survey_id, old_survey_id))
-
-            # 5: or Fork entries referencing tables
-            for table_name in ["source_barcodes_surveys"]:
-                TRN.add("SELECT barcode, survey_id FROM " + table_name + " "
-                        "WHERE survey_id=%s", (old_survey_id,))
-                rows = TRN.execute()[-1]
-                for row in rows:
-                    linked_barcode = row[0]
-                    TRN.add("INSERT INTO source_barcodes_surveys "
-                            "(barcode, survey_id) "
-                            "VALUES(%s, %s)", (linked_barcode, new_survey_id))
+            MigrationSupport.fork_primary_id(TRN, old_survey_id)
 
         # Check that we were successful - no offending ids should remain
         TRN.add("SELECT DISTINCT survey_id FROM ag_login_surveys "
@@ -506,12 +527,214 @@ class MigrationSupport:
                     (project, ))
             TRN.execute()
 
+    @staticmethod
+    def migrate_82(TRN):
+        def log(*args):
+            print(*args)
+            errors.append(' '.join([str(a) for a in args]))
+
+        # flag for things that can go wrong
+        # NOTHING_WRONG = 0
+        MISSING_SURVEY_ID = 1
+        SURVEY_IS_PRIMARY_ID = 2
+        NO_SAMPLE_FOUND = 4
+        MISMATCHED_VIO_STATUS = 8
+        MISSING_SURVEY_ID_IN_REGISTRY = 16
+
+        status_map = {
+            "Finished": 3,
+            "Review": 2,  # I have no idea what Review is supposed to map to.
+            "Started": 1,
+            "New": 0
+        }
+        vs_data_path = SERVER_CONFIG["vioscreen_patch_path"]
+        if not os.path.exists(vs_data_path):
+            print("No vioscreen patch found at: " + vs_data_path)
+            return
+
+        with open(vs_data_path) as csvfile:
+            vio_reader = csv.reader(csvfile, delimiter='\t')
+            header = True
+            all_errors = {}
+            all_wrong_flags = {}
+
+            for patch_row in vio_reader:
+                if header:
+                    header = False
+                    continue
+                survey_id, status_string = patch_row
+                status_num = status_map[status_string]
+
+                errors = []
+                wrong_flags = 0
+
+                # Check state in ag_login_surveys
+                TRN.add("SELECT ag_login_id, survey_id, vioscreen_status, "
+                        "source_id, creation_time "
+                        "FROM ag_login_surveys "
+                        "WHERE survey_id = %s", (survey_id,))
+                ag_rows = TRN.execute()[-1]
+
+                # See if we have data at all.
+                if len(ag_rows) == 0:
+                    # No?  Error missing survey id.
+                    log("No record in ag_login_surveys")
+                    wrong_flags |= MISSING_SURVEY_ID
+                elif len(ag_rows) == 1:
+                    # We do have data.  Check if status matches.
+                    if ag_rows[0][2] != status_num:
+                        # No?  Error mismatched vio status
+                        log("Mismatched status.  We say: " +
+                            str(ag_rows[0][2]) + " they say: " +
+                            str(status_num))
+                        wrong_flags |= MISMATCHED_VIO_STATUS
+
+                        # If our status is None, it means primary and vio
+                        # shared survey IDs.  We need to fork the data.
+                        if ag_rows[0][2] is None:
+                            wrong_flags |= SURVEY_IS_PRIMARY_ID
+                    else:
+                        log("Status agrees.  Looks okay.")
+                else:
+                    # This can only be by programmer error.
+                    log("Multiple ag_login_surveys rows!?!")
+                    raise Exception("How can this happen!?")
+
+                # Check state in vioscreen_registry as well
+                TRN.add("SELECT vio_id, account_id, source_id, sample_id "
+                        " FROM vioscreen_registry "
+                        "WHERE vio_id = %s", (survey_id,))
+                registry_rows = TRN.execute()[-1]
+                if len(registry_rows) == 0:
+                    # Nope.  missing from vioscreen registry.
+                    log("We're missing this data from registry")
+                    log("VIO:", patch_row)
+                    wrong_flags |= MISSING_SURVEY_ID_IN_REGISTRY
+                if len(registry_rows) >= 1:
+                    # Ooh, found it.  Check if we can recover.
+                    log("Found existing data:")
+                    log("VIO:", survey_id, status_num)
+                    log("US :", registry_rows)
+                    if len(registry_rows) == 1:
+                        if registry_rows[0][3] is None:
+                            log("We don't know what sample to associate")
+                            wrong_flags |= NO_SAMPLE_FOUND
+                    else:
+                        for r in registry_rows:
+                            if r[3] is None:
+                                # This can only by be programmer error.
+                                log("Corrupted Registry.  Survey has samples "
+                                    "But some samples are null!?")
+                                log("Failing out.")
+                                raise Exception("Null Samples!?")
+
+                all_errors[survey_id] = errors
+                all_wrong_flags[survey_id] = wrong_flags
+
+                # Examine what all went wrong and determine resolution.
+                if (wrong_flags & MISSING_SURVEY_ID) == MISSING_SURVEY_ID:
+                    # Not here at all.  No idea what account to put it in
+                    log("Manual Intervention Required: account unknown")
+                if (wrong_flags & SURVEY_IS_PRIMARY_ID) \
+                        == SURVEY_IS_PRIMARY_ID:
+                    # It's here, but it's marked as a primary survey.
+                    # We need to fork out the primary survey and mark this
+                    # as a vioscreen survey in ag_login_surveys.
+                    log("Resolution: Fork primary survey ID")
+                    MigrationSupport.fork_primary_id(TRN, survey_id)
+                    TRN.execute()
+                    # It should already be marked as a mismatched status, which
+                    # will then cause it to have status updated later on.
+                    assert (wrong_flags & MISMATCHED_VIO_STATUS) == \
+                        MISMATCHED_VIO_STATUS
+                if (wrong_flags & NO_SAMPLE_FOUND) == NO_SAMPLE_FOUND:
+                    # No idea what to associate this with.
+                    # If there's only one sample, maybe we can do it?
+                    # Even that is kind of guessing though...
+                    log("Manual Intervention Required: Sample ID unknown")
+                if (wrong_flags & MISMATCHED_VIO_STATUS) == \
+                        MISMATCHED_VIO_STATUS:
+                    log("Resolution: Updating "
+                        "ag_login_surveys.vioscreen_status")
+                    TRN.add("UPDATE ag_login_surveys SET "
+                            "vioscreen_status = %s "
+                            "WHERE survey_id = %s", (status_num, survey_id))
+                    TRN.execute()
+                if (wrong_flags & MISSING_SURVEY_ID_IN_REGISTRY) == \
+                        MISSING_SURVEY_ID_IN_REGISTRY:
+                    # There are a ton of ways this could happen.  Could be
+                    # this survey wasn't in ag_login_surveys at all.  Could be
+                    # it was there but was marked as a primary survey
+                    # Could be it was there but had a vioscreen_status other
+                    # than 3.  Regardless, if the data is there now, we can
+                    # copy it over, otherwise, we're out of luck.
+                    if len(ag_rows) == 0:
+                        log("Manual Intervention Required: Missing data from "
+                            "registry cannot be restored")
+                    else:
+                        log("Resolution: Copy into vioscreen_registry")
+                        account_id = ag_rows[0][0]
+                        source_id = ag_rows[0][3]
+
+                        # we only want to update samples which are not already
+                        # in the registry. participants who had taken part
+                        # early in the project, and again more recently, may
+                        # have a scenario where there are multiple vio_ids and
+                        # multiple samples, where the the recent vio_id <->
+                        # sample is in the registry and correct.
+                        TRN.add("""SELECT DISTINCT ag_kit_barcode_id
+                                   FROM source_barcodes_surveys
+                                   LEFT JOIN ag_kit_barcodes USING (barcode)
+                                   WHERE survey_id = %s
+                                   AND ag_kit_barcode_id NOT IN
+                                   (SELECT DISTINCT sample_id
+                                    FROM vioscreen_registry
+                                    WHERE deleted=false
+                                        AND sample_id IS NOT NULL)""",
+                                (survey_id,))
+                        rows = TRN.execute()[-1]
+                        if len(rows) == 0:
+                            log("Barcodes already associated")
+                        else:
+                            for r in rows:
+                                TRN.add("INSERT INTO vioscreen_registry("
+                                        "account_id, source_id, "
+                                        "sample_id, vio_id) "
+                                        "VALUES(%s, %s, %s, %s)",
+                                        (account_id, source_id, r[0],
+                                         survey_id))
+                            TRN.execute()
+
+            status_map = defaultdict(int)
+            for k in all_wrong_flags:
+                status_map[all_wrong_flags[k]] += 1
+
+            print("\n\n-------------------------------------------------\n\n")
+            print("SUMMARY OF THINGS THAT ARE WRONG:")
+            print(status_map)
+
+            print("Examples")
+            for status in status_map:
+                print(status)
+                for k in all_wrong_flags:
+                    if all_wrong_flags[k] == status:
+                        print("\n".join(all_errors[k]))
+                        break
+
+            print("\n\n-------------------------------------------------\n\n")
+            print("SCROLL UP A BIT FOR SUMMARY!")
+            print("ALL THE LOGS (-Uncomment me-)")
+            # print(all_errors)
+
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
         "0050.sql": migrate_50.__func__,
         "0070.sql": migrate_70.__func__,
         "0074.sql": migrate_74.__func__,
         "0077.sql": migrate_77.__func__,
+        # patch 0082 migration is executed through hotfix_vioscreen.py
+        # as it depends on external state
+        # "0082.sql": migrate_82.__func__
         # ...
     }
 

@@ -5,6 +5,7 @@ from werkzeug.exceptions import NotFound
 from microsetta_private_api.api._account import \
     _validate_account_access
 from microsetta_private_api.model.source import Source
+from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
@@ -49,6 +50,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
+        acct_repo = AccountRepo(t)
         survey_template_repo = SurveyTemplateRepo(t)
         info = survey_template_repo.get_survey_template_link_info(
             survey_template_id)
@@ -69,6 +71,9 @@ def read_survey_template(account_id, source_id, survey_template_id,
                 survey_template_repo.fetch_user_basic_physiology(
                 account_id, source_id)
 
+            account = acct_repo.get_account(account_id)
+            country_code = account.address.country_code
+
             url = vioscreen.gen_survey_url(
                 db_vioscreen_id,
                 language_tag,
@@ -76,7 +81,8 @@ def read_survey_template(account_id, source_id, survey_template_id,
                 birth_year=birth_year,
                 gender=gender,
                 height=height,
-                weight=weight
+                weight=weight,
+                country_code=country_code
             )
             # TODO FIXME HACK: This field's contents are not specified!
             info.survey_template_text = {

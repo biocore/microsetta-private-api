@@ -20,17 +20,29 @@ from microsetta_private_api.model.vioscreen import VioscreenSession
 from microsetta_private_api.localization import ES_MX
 
 
+# the country code determines which FFQ is taken. Vioscreen determines
+# the FFQ based on the registration code. The US survey is only the
+# regcode, so we do not need to append anything
+COUNTRY_CODE_TO_FFQ = {
+    'US': '',
+    'MX': 'mexico',
+}
+
+
 def gen_survey_url(user_id,
                    language_tag,
                    survey_redirect_url,
                    birth_year=None,
                    gender=None,
                    height=None,
-                   weight=None
+                   weight=None,
+                   country_code=None
                    ):
     if not survey_redirect_url:
         raise BadRequest("Food Frequency Questionnaire Requires "
                          "survey_redirect_url")
+
+    regcode = SERVER_CONFIG["vioscreen_regcode"]
 
     gender_map = {'Male': 1, 'Female': 2}
     gender_id = gender_map.get(gender, 2)  # default to female
@@ -44,7 +56,18 @@ def gen_survey_url(user_id,
     if language_tag == ES_MX:
         language_tag = 'es-ES'
 
-    regcode = SERVER_CONFIG["vioscreen_regcode"]
+    # vioscreen only accepts "-" variants, whereas we use "_" internally
+    # so replace just in case.
+    language_tag = language_tag.replace('_', '-')
+
+    # We'll default to the US version if there isn't a country specific one
+    # available.
+    ffq = COUNTRY_CODE_TO_FFQ.get(country_code, 'US')
+    if ffq == '':
+        ffq = f"{regcode}"
+    else:
+        ffq = f"{regcode}-{ffq}"
+
     url = SERVER_CONFIG["vioscreen_endpoint"] +\
         "/remotelogin.aspx?%s" % url_encode(
         {
@@ -54,8 +77,9 @@ def gen_survey_url(user_id,
                                 gender_id,
                                 dob,
                                 height,
-                                weight),
-            b"RegCode": regcode.encode(),
+                                weight,
+                                regcode),
+            b"RegCode": ffq.encode(),
         }, charset='utf-16',
     )
     return url
@@ -82,13 +106,12 @@ def encrypt_key(survey_id,
                 gender_id,
                 dob,
                 height,
-                weight
+                weight,
+                regcode
                 ):
     """Encode minimal required vioscreen information to AES key"""
     firstname = "NOT"
     lastname = "IDENTIFIED"
-
-    regcode = SERVER_CONFIG["vioscreen_regcode"]
 
     returnurl = survey_redirect_url
     parts = ["FirstName=%s" % firstname,
@@ -219,8 +242,12 @@ def make_vioscreen_request(self, method, url, **kwargs):
             if code == 1016:
                 # need a new token
                 return None, True
-            if code == 1005:
-                # From David Blankenship on 5.26.21, we should issue a retry
+            elif code == 1017:
+                # From David Blankenbush on 6.24.21, this is an edge case that
+                # should not occur in production
+                return {'error': 'empty ffq'}, False
+            elif code == 1005:
+                # From David Blankenbush on 5.26.21, we should issue a retry
                 # if this code is observed
                 return None, True
             elif code == 1002:
