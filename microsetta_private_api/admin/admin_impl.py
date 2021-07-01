@@ -252,7 +252,7 @@ def send_email(body, token_info):
             endpoint = SERVER_CONFIG["endpoint"]
 
             if account_id is not None:
-                language = diag['account'].preferred_language
+                language = diag['account'].language
 
             if sample_id is not None and \
                source_id is not None and \
