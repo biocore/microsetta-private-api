@@ -861,6 +861,32 @@ paths:
         '422':
           # NB: This error would cover the case where you can't dissociate it bc it was already processed
           $ref: '#/components/responses/422UnprocessableEntity'
+  
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen_session':
+    get:
+      operationId: microsetta_private_api.api.read_sample_vioscreen_session
+      tags:
+        - Sample
+      summary: Get information about a Vioscreen session associated with a sample
+      description: Get information about a Vioscreen session associated with a sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Successfully returned session information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   # NB: "surveys" is used as a path component in two different ways (here nested under sample and above nested
   # directly under source.  The dev team assessed this and decided this dual usage was not unacceptably confusing.
