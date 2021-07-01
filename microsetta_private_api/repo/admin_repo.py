@@ -4,6 +4,7 @@ import random
 import datetime
 import pandas as pd
 import psycopg2.extras
+import json
 
 from microsetta_private_api.exceptions import RepoException
 
@@ -131,6 +132,11 @@ NUM_FULLY_RECEIVED_KITS_SQL = f"""
     GROUP by project_id
     ORDER by project_id;"""
 
+KIT_BOX_ID_KEY = "box_id"
+KIT_OUTBOUND_KEY = "outbound_fedex_tracking"
+KIT_ADDRESS_KEY = "address"
+KIT_INBOUND_KEY = "inbound_fedex_tracking"
+
 
 def _make_statuses_sql(_):
     # Note: scans with multiple identical timestamps are quite unlikely
@@ -210,6 +216,26 @@ _PROJECT_SQLS = [
                     NUM_KITS_W_AT_LEAST_ONE_PROBLEM_SAMPLE_SQL),
                 ((p.NUM_FULLY_RETURNED_KITS_KEY,), NUM_FULLY_RECEIVED_KITS_SQL)
                 ]
+
+
+def _get_kit_tuples(new_kit_uuids, kit_names, kits_details=None):
+    result = []
+    for i in range(len(new_kit_uuids)):
+        curr_kit_uuid = new_kit_uuids[i]
+        curr_kit_name = kit_names[i]
+        if kits_details is not None:
+            curr_kit_details = kits_details[i]
+        else:
+            curr_kit_details = {KIT_BOX_ID_KEY: curr_kit_uuid}
+
+        curr_tuple = (curr_kit_uuid, curr_kit_name,
+                      curr_kit_details.get(KIT_OUTBOUND_KEY),
+                      curr_kit_details.get(KIT_ADDRESS_KEY),
+                      curr_kit_details.get(KIT_INBOUND_KEY),
+                      curr_kit_details[KIT_BOX_ID_KEY])
+        result.append(curr_tuple)
+
+    return result
 
 
 class AdminRepo(BaseRepo):
@@ -819,7 +845,7 @@ class AdminRepo(BaseRepo):
 
     def _create_kits(self, kit_names, new_barcodes,
                      kit_name_and_barcode_tuples_list,
-                     number_of_samples, project_ids, box_ids=None):
+                     number_of_samples, project_ids, kits_details=None):
         """Create one or more kits from input parallel lists
 
         Parameters
@@ -853,12 +879,14 @@ class AdminRepo(BaseRepo):
 
             # create kits in kit table
             new_kit_uuids = [str(uuid.uuid4()) for x in kit_names]
-            if box_ids is None:
-                box_ids = new_kit_uuids
-            barcode_kit_inserts = list(zip(new_kit_uuids, kit_names, box_ids))
+            barcode_kit_inserts = _get_kit_tuples(
+                new_kit_uuids, kit_names, kits_details)
+
             cur.executemany("INSERT INTO barcodes.kit "
-                            "(kit_uuid, kit_id, box_id) "
-                            "VALUES (%s, %s, %s)", barcode_kit_inserts)
+                            "(kit_uuid, kit_id, outbound_fedex_tracking, "
+                            "address, inbound_fedex_tracking, box_id) "
+                            "VALUES (%s, %s, %s, %s, %s, %s)",
+                            barcode_kit_inserts)
 
             # add new barcodes to barcode table
             barcode_insertions = [(n, b, 'unassigned')
@@ -896,7 +924,8 @@ class AdminRepo(BaseRepo):
 
         # get the info on the just-created kits/barcodes and return it
         with self._transaction.dict_cursor() as cur:
-            cur.execute("SELECT i.kit_id, o.kit_uuid, o.box_id, "
+            cur.execute("SELECT i.kit_id, o.kit_uuid, o.box_id, o.address,"
+                        "o.outbound_fedex_tracking, o.inbound_fedex_tracking, "
                         "i.sample_barcodes "
                         "FROM (SELECT kit_id, "
                         "             array_agg(barcode) as sample_barcodes "
@@ -908,15 +937,19 @@ class AdminRepo(BaseRepo):
                         (tuple(kit_names), ))
 
             created = [{'kit_id': k, 'kit_uuid': u, 'box_id': bx,
+                        'address': a, 'outbound_fedex_tracking': oft,
+                        'inbound_fedex_tracking': ift,
                         'sample_barcodes': b}
-                       for k, u, bx, b in cur.fetchall()]
+                       for k, u, bx, a, oft, ift, b in cur.fetchall()]
 
         if len(kit_names) != len(created):
             raise KeyError("Not all created kits could be retrieved")
 
         return {'created': created}
 
-    def create_kit(self, kit_name, box_id, barcodes_list, project_ids):
+    def create_kit(self, kit_name, box_id, address_dict,
+                   outbound_fedex_code, inbound_fedex_code,
+                   barcodes_list, project_ids):
         """Create a single kit
 
         Parameters
@@ -925,19 +958,32 @@ class AdminRepo(BaseRepo):
             Value inside the kit box (e.g., "DM24-A3CF9")
         box_id: str
             Value on outside of kit box (e.g., "DM89D-VW6Y")
+        address_dict: dict or None
+            Address to which the kit was shipped, in format used by Daklapack
+        outbound_fedex_code: str or None
+            fedex tracking number for shipping kit to a microsetta participant;
+            may be None if e.g. kit was handed out in person
+        inbound_fedex_code: str or None
+            fedex tracking number for returning kit to microsetta project;
+            may be None if e.g. kit was purchased in bulk for a subproject
         barcodes_list: list of str
             Tube/collection device barcode (e.g., "DMX00-0001")
         project_ids : list of int
             Project ids that all barcodes in kit are to be associated with
         """
+
         kit_names = [kit_name]
-        box_ids = [box_id]
+        address = None if address_dict is None else json.dumps(address_dict)
+        kit_details = [{KIT_BOX_ID_KEY: box_id,
+                       KIT_ADDRESS_KEY: address,
+                       KIT_OUTBOUND_KEY: outbound_fedex_code,
+                       KIT_INBOUND_KEY: inbound_fedex_code}]
         kit_name_and_barcode_tuples_list = \
             [(kit_name, x) for x in barcodes_list]
 
         return self._create_kits(kit_names, barcodes_list,
                                  kit_name_and_barcode_tuples_list,
-                                 len(barcodes_list), project_ids, box_ids)
+                                 len(barcodes_list), project_ids, kit_details)
 
     def retrieve_diagnostics_by_kit_id(self, supplied_kit_id):
         kit_repo = KitRepo(self._transaction)

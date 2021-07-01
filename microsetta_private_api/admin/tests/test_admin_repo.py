@@ -3,6 +3,7 @@ from datetime import date
 import datetime
 import dateutil.parser
 import psycopg2
+import psycopg2.extras
 
 import microsetta_private_api.model.project as p
 
@@ -12,7 +13,8 @@ from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.model.daklapack_order import DaklapackOrder
 from microsetta_private_api.repo.account_repo import AccountRepo
-from microsetta_private_api.repo.admin_repo import AdminRepo
+from microsetta_private_api.repo.admin_repo import AdminRepo, _get_kit_tuples, \
+    KIT_BOX_ID_KEY, KIT_OUTBOUND_KEY, KIT_ADDRESS_KEY, KIT_INBOUND_KEY
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.admin.admin_impl import validate_admin_access
 
@@ -443,6 +445,43 @@ class AdminRepoTests(AdminTests):
                     updated_dict.pop(p.PROJ_NAME_KEY)
                 self.assertEqual(obs_dict, updated_dict)
 
+    def test__get_kit_tuples_wo_details(self):
+        kit_uuids = ['efb9645f-f38a-4d28-9788-25d1ba0bc6e6',
+                     '5be3a141-eda5-48ab-bf17-ba29a02a1fbc']
+        kit_names = ["DM24-A3CF9", "DM05-B3CF9"]
+
+        expected_out = [(kit_uuids[0], kit_names[0],
+                         None, None, None,kit_uuids[0]),
+                        (kit_uuids[1], kit_names[1],
+                         None, None, None, kit_uuids[1])]
+
+        real_out = _get_kit_tuples(kit_uuids, kit_names)
+        self.assertEqual(expected_out, real_out)
+
+    def test__get_kit_tuples_w_details(self):
+        kit_uuids = ['efb9645f-f38a-4d28-9788-25d1ba0bc6e6',
+                     '5be3a141-eda5-48ab-bf17-ba29a02a1fbc']
+        kit_names = ["DM24-A3CF9", "DM05-B3CF9"]
+        kits_details = [{KIT_OUTBOUND_KEY: "FEDEX-4562w0",
+                         KIT_ADDRESS_KEY: {"street": "123 Maple St"},
+                         KIT_INBOUND_KEY: "FEDEX-03459f2",
+                         KIT_BOX_ID_KEY: "DM89D-VW6Y"},
+                        {KIT_OUTBOUND_KEY: "FEDEX-3458d3",
+                         KIT_ADDRESS_KEY: {"street": "456 Oak St"},
+                         KIT_INBOUND_KEY: "FEDEX-0980r0",
+                         KIT_BOX_ID_KEY: "DM36P-VP3N"},
+                        ]
+
+        expected_out = [(kit_uuids[0], kit_names[0], "FEDEX-4562w0",
+                         {"street": "123 Maple St"}, "FEDEX-03459f2",
+                         "DM89D-VW6Y"),
+                        (kit_uuids[1], kit_names[1], "FEDEX-3458d3",
+                         {"street": "456 Oak St"}, "FEDEX-0980r0",
+                         "DM36P-VP3N")]
+
+        real_out = _get_kit_tuples(kit_uuids, kit_names, kits_details)
+        self.assertEqual(expected_out, real_out)
+
     def test_create_kits_fail_nonexistent_project(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
@@ -459,9 +498,14 @@ class AdminRepoTests(AdminTests):
             self.assertEqual(len(non_tmi['created']), 5)
             for obj in non_tmi['created']:
                 self.assertEqual(len(obj['sample_barcodes']), 3)
-                self.assertEqual({'kit_id', 'kit_uuid', 'box_id',
+                self.assertEqual({'kit_id', 'kit_uuid', 'box_id', 'address',
+                                  'outbound_fedex_tracking',
+                                  'inbound_fedex_tracking',
                                   'sample_barcodes'}, set(obj))
                 self.assertEqual(obj['kit_uuid'], obj['box_id'])
+                self.assertEqual(None, obj['address'])
+                self.assertEqual(None, obj['outbound_fedex_tracking'])
+                self.assertEqual(None, obj['inbound_fedex_tracking'])
 
             # should not be present in the ag tables
             non_tmi_kits = [k['kit_id'] for k in non_tmi['created']]
@@ -482,10 +526,15 @@ class AdminRepoTests(AdminTests):
             self.assertEqual(len(tmi['created']), 4)
             for obj in tmi['created']:
                 self.assertEqual(len(obj['sample_barcodes']), 2)
-                self.assertEqual({'kit_id', 'kit_uuid', 'box_id',
+                self.assertEqual({'kit_id', 'kit_uuid', 'box_id', 'address',
+                                  'outbound_fedex_tracking',
+                                  'inbound_fedex_tracking',
                                   'sample_barcodes'}, set(obj))
                 self.assertTrue(obj['kit_id'].startswith('foo_'))
                 self.assertEqual(obj['kit_uuid'], obj['box_id'])
+                self.assertEqual(None, obj['address'])
+                self.assertEqual(None, obj['outbound_fedex_tracking'])
+                self.assertEqual(None, obj['inbound_fedex_tracking'])
 
             # should be present in the ag tables
             tmi_kits = [k['kit_id'] for k in tmi['created']]
@@ -501,21 +550,33 @@ class AdminRepoTests(AdminTests):
         input_kit_name = "DM24-A3CF9"
         input_box_id = "DM89D-VW6Y"
         input_barcodes = ["X00-0001", "X00-0002", "X00-0003"]
+        input_address = {'street': '123 Maple St'}
+        input_outbound_fedex = "FEDEX-03459f2"
+        input_inbound_fedex = "FEDEX-4562w0"
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             # kit belongs to two projects, one microsetta (1) and one not (33),
             # which means it gets treated overall as microsetta
             tmi = admin_repo.create_kit(input_kit_name, input_box_id,
-                                        input_barcodes, [1, 33])
+                                        input_address, input_outbound_fedex,
+                                        input_inbound_fedex, input_barcodes,
+                                        [1, 33])
 
             self.assertEqual(['created', ], list(tmi.keys()))
             self.assertEqual(len(tmi['created']), 1)
             obj = tmi['created'][0]
             self.assertEqual(obj['sample_barcodes'], input_barcodes)
-            self.assertEqual({'kit_id', 'kit_uuid', 'box_id',
+            self.assertEqual({'kit_id', 'kit_uuid', 'box_id', 'address',
+                              'outbound_fedex_tracking',
+                              'inbound_fedex_tracking',
                               'sample_barcodes'}, set(obj))
             self.assertEqual(input_kit_name, obj['kit_id'])
             self.assertEqual(input_box_id, obj['box_id'])
+            self.assertEqual('{"street": "123 Maple St"}', obj['address'])
+            self.assertEqual(input_outbound_fedex,
+                             obj['outbound_fedex_tracking'])
+            self.assertEqual(input_inbound_fedex,
+                             obj['inbound_fedex_tracking'])
 
             # should be present in the ag tables
             tmi_kits = [k['kit_id'] for k in tmi['created']]
@@ -531,20 +592,33 @@ class AdminRepoTests(AdminTests):
         input_kit_name = "DM24-A3CF9"
         input_box_id = "DM89D-VW6Y"
         input_barcodes = ["X00-0001", "X00-0002", "X00-0003"]
+        input_address = {'street': '123 Maple St'}
+        input_outbound_fedex = "FEDEX-03459f2"
+        input_inbound_fedex = "FEDEX-4562w0"
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             # kit belongs to one project, which is not microsetta
             non_tmi = admin_repo.create_kit(input_kit_name, input_box_id,
+                                            input_address,
+                                            input_outbound_fedex,
+                                            input_inbound_fedex,
                                             input_barcodes, [33])
 
             self.assertEqual(['created', ], list(non_tmi.keys()))
             self.assertEqual(len(non_tmi['created']), 1)
             obj = non_tmi['created'][0]
             self.assertEqual(obj['sample_barcodes'], input_barcodes)
-            self.assertEqual({'kit_id', 'kit_uuid', 'box_id',
+            self.assertEqual({'kit_id', 'kit_uuid', 'box_id', 'address',
+                              'outbound_fedex_tracking',
+                              'inbound_fedex_tracking',
                               'sample_barcodes'}, set(obj))
             self.assertEqual(input_kit_name, obj['kit_id'])
             self.assertEqual(input_box_id, obj['box_id'])
+            self.assertEqual('{"street": "123 Maple St"}', obj['address'])
+            self.assertEqual(input_outbound_fedex,
+                             obj['outbound_fedex_tracking'])
+            self.assertEqual(input_inbound_fedex,
+                             obj['inbound_fedex_tracking'])
 
             # should not be present in the ag tables
             non_tmi_kits = [k['kit_id'] for k in non_tmi['created']]
@@ -938,7 +1012,7 @@ class AdminRepoTests(AdminTests):
                 cur.execute("SELECT project_id "
                             "FROM barcodes.daklapack_order_to_project "
                             "WHERE dak_order_id =  %s",
-                            (input_id, ))
+                            (input_id,))
                 curr_proj_records = cur.fetchall()
                 self.assertEqual(len(curr_proj_records), 2)
                 for curr_proj_rec in curr_proj_records:
