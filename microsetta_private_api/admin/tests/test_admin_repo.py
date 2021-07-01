@@ -13,8 +13,9 @@ from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.model.daklapack_order import DaklapackOrder
 from microsetta_private_api.repo.account_repo import AccountRepo
-from microsetta_private_api.repo.admin_repo import AdminRepo, _get_kit_tuples, \
-    KIT_BOX_ID_KEY, KIT_OUTBOUND_KEY, KIT_ADDRESS_KEY, KIT_INBOUND_KEY
+from microsetta_private_api.repo.admin_repo import AdminRepo, \
+    _get_kit_tuples, KIT_BOX_ID_KEY, KIT_OUTBOUND_KEY, KIT_ADDRESS_KEY, \
+    KIT_INBOUND_KEY
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.admin.admin_impl import validate_admin_access
 
@@ -451,7 +452,7 @@ class AdminRepoTests(AdminTests):
         kit_names = ["DM24-A3CF9", "DM05-B3CF9"]
 
         expected_out = [(kit_uuids[0], kit_names[0],
-                         None, None, None,kit_uuids[0]),
+                         None, None, None, kit_uuids[0]),
                         (kit_uuids[1], kit_names[1],
                          None, None, None, kit_uuids[1])]
 
