@@ -1060,3 +1060,24 @@ class AdminApiTests(TestCase):
                          exp_status)
         n_src = sum([v['source-email'] is not None for v in response_obj])
         self.assertEqual(n_src, 1)
+
+    def test_send_email(self):
+        def mock_func(*args, **kwargs):
+            pass
+
+        info = {
+            "issue_type": 'sample',
+            "template_args": {"sample_barcode": '000004220'},
+            'template': 'sample_is_valid'
+        }
+
+        with patch("microsetta_private_api.admin.admin_impl."
+                   "celery_send_email") as mock_celery_send_email:
+            mock_celery_send_email.apply_async = mock_func
+
+            response = self.client.post(
+                "api/admin/email",
+                content_type="application/json",
+                data=json.dumps(info),
+                headers=MOCK_HEADERS)
+            self.assertEqual(204, response.status_code)

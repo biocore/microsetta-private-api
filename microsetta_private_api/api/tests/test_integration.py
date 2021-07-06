@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import patch
 
 import pytest
@@ -1392,10 +1393,11 @@ def _create_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
 
     with transaction.cursor() as cur:
         # create a record for the new kit in ag_kit table
+        kit_uuid = str(uuid.uuid4())
         cur.execute("INSERT INTO barcodes.kit "
-                    "(kit_id)"
-                    "VALUES(%s)",
-                    (supplied_kit_id, ))
+                    "(kit_uuid, kit_id, box_id)"
+                    "VALUES(%s, %s, %s)",
+                    (kit_uuid, supplied_kit_id, kit_uuid))
 
         # create a record for the new kit in ag_kit table
         cur.execute("INSERT INTO ag_kit "
