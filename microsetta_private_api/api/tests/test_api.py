@@ -18,10 +18,12 @@ from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
+from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.model.sample import Sample, SampleInfo
 from microsetta_private_api.model.address import Address
+from microsetta_private_api.model.vioscreen import VioscreenSession
 from microsetta_private_api.api.tests.test_integration import \
     _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
 
@@ -1756,9 +1758,9 @@ class SampleTests(ApiTests):
             '/api/preparations/' + BC2,
             headers=MOCK_HEADERS)
 
-        self.assertequal(200, response.status_code)
+        self.assertEqual(200, response.status_code)
         response_obj = json.loads(response.data)
-        self.assertequal(len(response_obj), 1)
+        self.assertEqual(len(response_obj), 1)
 
         self.assertEqual(response_obj[0]["num_sequences"], 18302)
 
@@ -1766,10 +1768,59 @@ class SampleTests(ApiTests):
 @pytest.mark.usefixtures("client")
 class VioscreenTests(ApiTests):
     def test_get_sample_vioscreen_session_200(self):
-        get_response = self.client.get('/api/account...',
-            headers=self.dummy_auth)
+        vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
+                                             username="c28a4824acb4543f",
+                                             protocolId=344,
+                                             status="Finished",
+                                             startDate="2014-10-08T18:55:12.747",
+                                             endDate="2014-10-08T18:57:07.503",
+                                             cultureCode="en-US",
+                                             created="2014-10-08T18:55:07.96",
+                                             modified="2017-07-29T03:56:04.22")
+
+        exp_vio_id = "c28a4824acb4543f"
+
+        with Transaction() as t:
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
+            t.commit()
+
+        url = ('/api'
+               '/accounts/075f8243-b04e-4c60-9284-c5834618c109'
+               '/sources/a9245dd6-ed30-41dc-b50c-5198bbf48b08'
+               '/samples/aa7e0bb0-afc5-4dd1-847d-1d3b4c51f0c8'
+               '/vioscreen_session'
+        )
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_obj = json.loads(get_response.data)
+        self.assertEqual(response_obj['username'], exp_vio_id)
+
+
 
 
     def test_get_sample_vioscreen_session_404(self):
-        pass
+        url = ('/api'
+               '/accounts/075f8243-b04e-4c60-9284-c5834618c109'
+               '/sources/a9245dd6-ed30-41dc-b50c-5198bbf48b08'
+               '/samples/aa7e0bb0-afc5-4dd1-847d-1d3b4c51f0c8'
+               '/vioscreen_session'
+        )
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(get_response.status_code, 404)
+
+        response_obj = json.loads(get_response.data)
+        self.assertEqual(response_obj['message'], "Session not found")
+
 
