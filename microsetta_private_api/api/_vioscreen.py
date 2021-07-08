@@ -17,9 +17,8 @@ def read_sample_vioscreen_session(account_id, source_id, sample_id, token_info):
         if vio_username is None:
             return jsonify(code=404, message="Session not found"), 404
 
-        vioscreen_session = vio_sess.get_sessions_by_username(vio_username)
-        print(vioscreen_session)
-        if vioscreen_session is None:
+        vioscreen_sessions = vio_sess.get_sessions_by_username(vio_username)
+        if vioscreen_sessions is None:
             return jsonify(code=404, message="Session not found"), 404
 
-        return jsonify([v.to_api() for v in vioscreen_sessions]), 200
+        return jsonify(vioscreen_sessions[0].to_api()), 200

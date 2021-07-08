@@ -861,8 +861,8 @@ paths:
         '422':
           # NB: This error would cover the case where you can't dissociate it bc it was already processed
           $ref: '#/components/responses/422UnprocessableEntity'
-  
-  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen_session':
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/session':
     get:
       operationId: microsetta_private_api.api.read_sample_vioscreen_session
       tags:
@@ -1277,7 +1277,7 @@ paths:
                 'sample_barcodes':
                   type: array
                   items:
-                    # not using the defined schema for sample_barcode as it is 
+                    # not using the defined schema for sample_barcode as it is
                     # readOnly
                     type: string
       responses:
@@ -1578,7 +1578,7 @@ paths:
                 'sample_barcodes':
                   type: array
                   items:
-                    # not using the defined schema for sample_barcode as it is 
+                    # not using the defined schema for sample_barcode as it is
                     # readOnly
                     type: string
       responses:

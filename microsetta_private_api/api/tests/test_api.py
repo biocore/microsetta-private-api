@@ -1801,16 +1801,15 @@ class VioscreenTests(ApiTests):
 
         response_obj = json.loads(get_response.data)
         self.assertEqual(response_obj['username'], exp_vio_id)
-
-
-
+        self.assertEqual(response_obj['sessionId'], vioscreen_session.sessionId)
+        self.assertEqual(response_obj['status'], vioscreen_session.status)
 
     def test_get_sample_vioscreen_session_404(self):
         url = ('/api'
                '/accounts/075f8243-b04e-4c60-9284-c5834618c109'
                '/sources/a9245dd6-ed30-41dc-b50c-5198bbf48b08'
-               '/samples/aa7e0bb0-afc5-4dd1-847d-1d3b4c51f0c8'
-               '/vioscreen_session'
+               '/samples/aa7e0bb0-afc5-4dd1-847d-1d3b4c51f0c9'
+               '/vioscreen/session'
         )
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
@@ -1822,5 +1821,3 @@ class VioscreenTests(ApiTests):
 
         response_obj = json.loads(get_response.data)
         self.assertEqual(response_obj['message'], "Session not found")
-
-
