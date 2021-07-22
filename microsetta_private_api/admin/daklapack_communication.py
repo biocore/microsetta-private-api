@@ -51,3 +51,22 @@ def send_daklapack_hold_email(daklapack_order):
         email_success = False
 
     return email_success
+
+
+def get_daklapack_orders_status(page_num):
+    return _get_from_daklapack_api(f"/api/orders?Page={page_num}")
+
+
+def get_daklapack_order_details(order_id):
+    return _get_from_daklapack_api(f"/api/orders/{order_id}")
+
+
+def _get_from_daklapack_api(url_suffix):
+    oauth_session = _get_daklapack_oauth2_session()
+    dak_order_get_url = f"{SERVER_CONFIG['daklapack_api_base_url']}" \
+                        f"{url_suffix}"
+    result = oauth_session.get(
+        dak_order_get_url,
+        headers={SERVER_CONFIG["daklapack_subscription_key_name"]:
+                 SERVER_CONFIG["daklapack_subscription_key_val"]})
+    return result

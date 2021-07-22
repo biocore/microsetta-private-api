@@ -121,6 +121,68 @@ class AdminTests(TestCase):
             acct_repo.delete_account(ADMIN_ACCT_ID)
             t.commit()
 
+    @staticmethod
+    def make_dummy_dak_orders(t, bonus_record=False):
+        # create some orders;
+        # need a valid submitter id from the account table to input
+        with t.dict_cursor() as cur:
+            cur.execute("SELECT id, first_name, last_name "
+                        "FROM ag.account "
+                        "WHERE account_type = 'admin' "
+                        "ORDER BY id "
+                        "LIMIT 1;")
+            submitter_record = cur.fetchone()
+            submitter_id = submitter_record[0]
+
+            dummy_orders = [('7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                             submitter_id, 'dummy 1', None,
+                             '{"orderId": '
+                             '"7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                             dateutil.parser.isoparse(
+                                 "2020-10-09T22:43:52.219328Z"),
+                             None, "Sent"),
+                            ('8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                             submitter_id, 'dummy 2', None,
+                             '{"orderId": '
+                             '"8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                             dateutil.parser.isoparse(
+                                 "2021-10-09T22:43:52.219328Z"),
+                             None, "Pending"),
+                            ('9ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                             submitter_id, 'dummy 3', None,
+                             '{"orderId": '
+                             '"9ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                             dateutil.parser.isoparse(
+                                 "2020-10-09T22:43:52.219328Z"),
+                             None, "Error"),
+                            ('0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                             submitter_id, 'dummy 4', None,
+                             '{"orderId": '
+                             '"0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                             dateutil.parser.isoparse(
+                                 "2021-10-09T22:43:52.219328Z"),
+                             None, None)]
+
+            if bonus_record:
+                dummy_orders.append(
+                    ('abc917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                     submitter_id, 'dummy 5', None,
+                     '{"orderId": '
+                     '"abc917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                     dateutil.parser.isoparse(
+                         "2021-10-10T22:43:52.219328Z"),
+                     None, None))
+
+            cur.executemany("INSERT INTO barcodes.daklapack_order "
+                            "(dak_order_id, submitter_acct_id, "
+                            "description, fulfillment_hold_msg, "
+                            "order_json, creation_timestamp, "
+                            "last_polling_timestamp, last_polling_status) "
+                            "VALUES (%s, %s, %s, %s,%s, %s, %s, %s)",
+                            dummy_orders)
+
+            return dummy_orders
+
     def test_validate_admin_access(self):
         token_info_std = {
             "iss": "https://MOCKUNITTEST.com",
@@ -1021,56 +1083,6 @@ class AdminRepoTests(AdminTests):
 
         # NB: all the above happens within a transaction that we then DO NOT
         # commit so the db changes are not permanent
-
-    def make_dummy_dak_orders(self, t):
-        # create some orders;
-        # need a valid submitter id from the account table to input
-        with t.dict_cursor() as cur:
-            cur.execute("SELECT id, first_name, last_name "
-                        "FROM ag.account "
-                        "WHERE account_type = 'admin' "
-                        "ORDER BY id "
-                        "LIMIT 1;")
-            submitter_record = cur.fetchone()
-            submitter_id = submitter_record[0]
-
-            dummy_orders = [('7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
-                             submitter_id, 'dummy 1', None,
-                             '{"orderId": '
-                             '"7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
-                             dateutil.parser.isoparse(
-                                 "2020-10-09T22:43:52.219328Z"),
-                             None, "Sent"),
-                            ('8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
-                             submitter_id, 'dummy 2', None,
-                             '{"orderId": '
-                             '"8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
-                             dateutil.parser.isoparse(
-                                 "2021-10-09T22:43:52.219328Z"),
-                             None, "Pending"),
-                            ('9ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
-                             submitter_id, 'dummy 3', None,
-                             '{"orderId": '
-                             '"9ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
-                             dateutil.parser.isoparse(
-                                 "2020-10-09T22:43:52.219328Z"),
-                             None, "Error"),
-                            ('0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
-                             submitter_id, 'dummy 4', None,
-                             '{"orderId": '
-                             '"0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
-                             dateutil.parser.isoparse(
-                                 "2021-10-09T22:43:52.219328Z"),
-                             None, None)]
-            cur.executemany("INSERT INTO barcodes.daklapack_order "
-                            "(dak_order_id, submitter_acct_id, "
-                            "description, fulfillment_hold_msg, "
-                            "order_json, creation_timestamp, "
-                            "last_polling_timestamp, last_polling_status) "
-                            "VALUES (%s, %s, %s, %s,%s, %s, %s, %s)",
-                            dummy_orders)
-
-            return dummy_orders
 
     def test_get_unfinished_daklapack_order_ids(self):
         with Transaction() as t:
