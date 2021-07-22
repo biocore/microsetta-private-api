@@ -16,6 +16,7 @@ def poll_dak_orders():
 
     with Transaction() as t:
         poll_dak_orders_using_transaction(t)
+        t.commit()
 
 
 # This method exists (as a separate entity from poll_dak_orders)
