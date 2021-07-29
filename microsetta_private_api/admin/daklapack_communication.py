@@ -28,9 +28,7 @@ def post_daklapack_order(payload):
     dak_order_post_url = f"{SERVER_CONFIG['daklapack_api_base_url']}" \
                          f"/api/orders"
     result = oauth_session.post(
-        dak_order_post_url, json=payload,
-        headers={SERVER_CONFIG["daklapack_subscription_key_name"]:
-                 SERVER_CONFIG["daklapack_subscription_key_val"]})
+        dak_order_post_url, json=payload, headers=DAK_HEADERS)
     return result
 
 
@@ -54,7 +52,7 @@ def send_daklapack_hold_email(daklapack_order):
 
 
 def get_daklapack_orders_status(page_num):
-    return _get_from_daklapack_api(f"/api/orders?Page={page_num}")
+    return _get_from_daklapack_api(f"/api/orders?Page={int(page_num)}")
 
 
 def get_daklapack_order_details(order_id):
@@ -65,8 +63,5 @@ def _get_from_daklapack_api(url_suffix):
     oauth_session = _get_daklapack_oauth2_session()
     dak_order_get_url = f"{SERVER_CONFIG['daklapack_api_base_url']}" \
                         f"{url_suffix}"
-    result = oauth_session.get(
-        dak_order_get_url,
-        headers={SERVER_CONFIG["daklapack_subscription_key_name"]:
-                 SERVER_CONFIG["daklapack_subscription_key_val"]})
+    result = oauth_session.get(dak_order_get_url, headers=DAK_HEADERS)
     return result
