@@ -3,6 +3,11 @@ from requests_oauthlib import OAuth2Session
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.tasks import send_basic_email as celery_send_email
 
+DAK_HEADERS = {
+    SERVER_CONFIG["daklapack_subscription_key_name"]:
+        SERVER_CONFIG["daklapack_subscription_key_val"]
+}
+
 ORDER_HOLD_TEMPLATE_PATH = "email/daklapack_fulfillment_hold_request"
 
 
