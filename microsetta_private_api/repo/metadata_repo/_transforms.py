@@ -152,7 +152,7 @@ class AgeCat(Transformer):
 
 
 class BMICat(Transformer):
-    REQUIRED_COLUMNS = frozenset([BMI, ])
+    REQUIRED_COLUMNS = frozenset([BMI_, ])
     COLUMN_NAME = BMI_CAT
 
     @classmethod
