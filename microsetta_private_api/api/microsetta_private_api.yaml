@@ -1590,6 +1590,38 @@ paths:
               schema:
                 type: array
 
+  '/admin/barcode_query_fields':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.list_barcode_query_fields
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: Returns array of fields, types and values
+          content:
+            application/json:
+              schema:
+                type: array
+
+  '/admin/barcode_query':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.barcode_query
+      tags:
+        - Admin
+      parameters:
+        - $ref: '#/components/parameters/cond'
+      responses:
+        '200':
+          description: Returns array of barcodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  # not using the defined schema for sample_barcode as it is
+                  # readOnly
+                  type: string
+
 components:
   parameters:
     # path parameters
@@ -1665,6 +1697,13 @@ components:
       schema:
         $ref: '#/components/schemas/activation_code'
       required: true
+    cond:
+      name: cond
+      in: query
+      description: sql query where clause
+      schema:
+        $ref: '#/components/schemas/cond'
+        required: true
     email:
       name: email
       in: query
@@ -2315,6 +2354,9 @@ components:
     include_private:
       type: boolean
       default: false
+
+    cond:
+      type: string
 
   examples:
     human_adult_source:

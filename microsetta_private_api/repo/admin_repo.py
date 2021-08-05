@@ -1096,6 +1096,26 @@ class AdminRepo(BaseRepo):
 
             return new_uuid
 
+    def search_barcode(self, sql_cond):
+        with self._transaction.cursor() as cur:
+            # Appending the sql_cond like this
+            # is extremely dangerous!  This must ONLY
+            # be called with administrator privileges
+            cur.execute("SELECT project_barcode.barcode FROM "
+                        "project_barcode LEFT JOIN "
+                        "ag_kit_barcodes USING (barcode) "
+                        "LEFT JOIN barcodes.barcode_scans "
+                        "USING (barcode) "
+                        "LEFT JOIN ( "
+                        "SELECT barcode, max(scan_timestamp) AS scan_timestamp "
+                        "FROM barcodes.barcode_scans "
+                        "GROUP BY barcode "
+                        ") AS latest_scan "
+                        "ON barcode_scans.barcode = latest_scan.barcode "
+                        "AND barcode_scans.scan_timestamp = latest_scan.scan_timestamp "
+                        "WHERE " + sql_cond)
+            return [r[0] for r in cur.fetchall()]
+
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
         ids = self._get_ids_relevant_to_barcode(sample_barcode)
 
