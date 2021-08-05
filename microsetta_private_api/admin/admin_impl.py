@@ -589,4 +589,3 @@ def barcode_query(token_info, cond):
         t.rollback()  # Queries don't need to commit changes.
 
     return jsonify(barcodes), 200
-

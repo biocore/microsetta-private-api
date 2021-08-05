@@ -1107,12 +1107,14 @@ class AdminRepo(BaseRepo):
                         "LEFT JOIN barcodes.barcode_scans "
                         "USING (barcode) "
                         "LEFT JOIN ( "
-                        "SELECT barcode, max(scan_timestamp) AS scan_timestamp "
+                        "SELECT barcode, max(scan_timestamp) "
+                        "AS scan_timestamp "
                         "FROM barcodes.barcode_scans "
                         "GROUP BY barcode "
                         ") AS latest_scan "
                         "ON barcode_scans.barcode = latest_scan.barcode "
-                        "AND barcode_scans.scan_timestamp = latest_scan.scan_timestamp "
+                        "AND barcode_scans.scan_timestamp = "
+                        "latest_scan.scan_timestamp "
                         "WHERE " + sql_cond)
             return [r[0] for r in cur.fetchall()]
 
