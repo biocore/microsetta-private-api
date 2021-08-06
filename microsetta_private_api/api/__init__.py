@@ -25,7 +25,7 @@ from ._activation import (
 )
 
 from ._vioscreen import (
-    read_sample_vioscreen_session
+    read_sample_vioscreen_session, read_sample_vioscreen_percent_energy
 )
 
 
@@ -61,5 +61,6 @@ __all__ = [
     'verify_jwt',
     'get_preparations',
     'check_activation',
-    'read_sample_vioscreen_session'
+    'read_sample_vioscreen_session',
+    'read_sample_vioscreen_percent_energy'
 ]

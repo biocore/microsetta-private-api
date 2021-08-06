@@ -18,12 +18,14 @@ from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
-from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
+from microsetta_private_api.repo.vioscreen_repo import (VioscreenSessionRepo,
+    VioscreenPercentEnergyRepo)
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.model.sample import Sample, SampleInfo
 from microsetta_private_api.model.address import Address
-from microsetta_private_api.model.vioscreen import VioscreenSession
+from microsetta_private_api.model.vioscreen import (VioscreenSession,
+    VioscreenPercentEnergy, VioscreenPercentEnergyComponent)
 from microsetta_private_api.api.tests.test_integration import \
     _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
 
@@ -1769,7 +1771,7 @@ class SampleTests(ApiTests):
 class VioscreenTests(ApiTests):
     def test_get_sample_vioscreen_session_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="c28a4824acb4543f",
+                                             username="674533d367f222d2",
                                              protocolId=344,
                                              status="Finished",
                                              startDate="2014-10-08T18:55:12.747",
@@ -1778,18 +1780,16 @@ class VioscreenTests(ApiTests):
                                              created="2014-10-08T18:55:07.96",
                                              modified="2017-07-29T03:56:04.22")
 
-        exp_vio_id = "c28a4824acb4543f"
-
         with Transaction() as t:
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             t.commit()
 
         url = ('/api'
-               '/accounts/075f8243-b04e-4c60-9284-c5834618c109'
-               '/sources/a9245dd6-ed30-41dc-b50c-5198bbf48b08'
-               '/samples/aa7e0bb0-afc5-4dd1-847d-1d3b4c51f0c8'
-               '/vioscreen_session'
+               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
+               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
+               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b3'
+               '/vioscreen/session'
         )
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
@@ -1800,15 +1800,15 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 200)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['username'], exp_vio_id)
+        self.assertEqual(response_obj['username'], vioscreen_session.username)
         self.assertEqual(response_obj['sessionId'], vioscreen_session.sessionId)
         self.assertEqual(response_obj['status'], vioscreen_session.status)
 
     def test_get_sample_vioscreen_session_404(self):
         url = ('/api'
-               '/accounts/075f8243-b04e-4c60-9284-c5834618c109'
-               '/sources/a9245dd6-ed30-41dc-b50c-5198bbf48b08'
-               '/samples/aa7e0bb0-afc5-4dd1-847d-1d3b4c51f0c9'
+               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
+               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
+               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b4'
                '/vioscreen/session'
         )
         _ = create_dummy_acct(create_dummy_1=True,
@@ -1821,3 +1821,70 @@ class VioscreenTests(ApiTests):
 
         response_obj = json.loads(get_response.data)
         self.assertEqual(response_obj['message'], "Session not found")
+
+    def test_get_sample_vioscreen_percent_energy_200(self):
+        vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
+                                             username="c28a4824acb4543f",
+                                             protocolId=344,
+                                             status="Finished",
+                                             startDate="2014-10-08T18:55:12.747",
+                                             endDate="2014-10-08T18:57:07.503",
+                                             cultureCode="en-US",
+                                             created="2014-10-08T18:55:07.96",
+                                             modified="2017-07-29T03:56:04.22")
+
+        vioscreen_percent_energy = VioscreenPercentEnergy(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            energy_components=[
+                VioscreenPercentEnergyComponent(code="%protein",
+                                                description="Percent of calories from Protein",
+                                                short_description="Protein",
+                                                units="%",
+                                                amount=14.101114742737353)
+            ]
+        )
+
+        with Transaction() as t:
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
+            vio_perc = VioscreenPercentEnergyRepo(t)
+            if vio_perc.get_percent_energy(vioscreen_percent_energy.sessionId) is None:
+                vio_perc.insert_percent_energy(vioscreen_percent_energy)
+            t.commit()
+
+        url = ('/api'
+               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
+               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
+               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b3'
+               '/vioscreen/percentenergy'
+        )
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_obj = json.loads(get_response.data)
+        self.assertEqual(response_obj['sessionId'], vioscreen_percent_energy.sessionId)
+        self.assertEqual(response_obj['calculations'][0]['code'], vioscreen_percent_energy.energy_components[0].code)
+        self.assertEqual(response_obj['calculations'][0]['amount'], vioscreen_percent_energy.energy_components[0].amount)
+
+    def test_get_sample_vioscreen_percent_energy_404(self):
+        url = ('/api'
+               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
+               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
+               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b4'
+               '/vioscreen/percentenergy'
+        )
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(get_response.status_code, 404)
+
+        response_obj = json.loads(get_response.data)
+        self.assertEqual(response_obj['message'], "Percent Energy not found")
