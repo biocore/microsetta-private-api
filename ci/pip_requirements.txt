@@ -1,5 +1,5 @@
 openapi-spec-validator < 0.2.10
-connexion[swagger-ui]
+connexion[swagger-ui] < 2.7.1
 pyjwt[crypto]
 pytest
 pytest-cov
