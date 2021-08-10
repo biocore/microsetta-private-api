@@ -27,6 +27,7 @@ from microsetta_private_api.admin.daklapack_communication import \
     post_daklapack_order, send_daklapack_hold_email
 from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
+from microsetta_private_api.util.melissa import verify_address
 from werkzeug.exceptions import Unauthorized
 
 
@@ -481,6 +482,20 @@ def search_activation(token_info, email_query=None, code_query=None):
             raise Exception("Must specify an 'email_query' or 'code_query'")
 
         return jsonify([i.to_api() for i in infos]), 200
+
+def address_verification(token_info, address_1, address_2, city, state, \
+    postal, country):
+    validate_admin_access(token_info)
+
+    if address_1 is None or len(address_1) < 1 or \
+        postal is None or len(postal) < 1 or \
+        country is None or len(country) < 1:
+        raise Exception("Must include address_1, postal, and country fields")
+
+    melissa_response = verify_address(address_1, address_2, city, state, \
+        postal, country)
+
+    return jsonify(melissa_response), 200
 
 
 def generate_activation_codes(body, token_info):
