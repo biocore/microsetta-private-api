@@ -1144,6 +1144,57 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/admin/verify_address':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.address_verification
+      tags:
+        - Admin
+      summary: Verify a postal address
+      description: Verify a postal address
+      parameters:
+        - in: query
+          name: address_1
+          description: First line of address to verify
+          schema:
+            type: string
+        - in: query
+          name: address_2
+          description: Second line of address to verify
+          schema:
+            type: string
+        - in: query
+          name: city
+          description: City of address to verify
+          schema:
+            type: string
+        - in: query
+          name: state
+          description: State of address to verify
+          schema:
+            type: string
+        - in: query
+          name: postal
+          description: Postal code of address to verify
+          schema:
+            type: string
+        - in: query
+          name: country
+          description: Country of address to verify
+          schema:
+            type: string      
+      responses:
+        '200':
+          description: Object containing address and verification status
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+
   '/admin/scan/{sample_barcode}':
     post:
       # Note: We might want to be able to differentiate system administrator operations
