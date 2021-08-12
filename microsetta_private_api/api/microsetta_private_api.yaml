@@ -914,6 +914,32 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/dietaryscore':
+    get:
+      operationId: microsetta_private_api.api.read_sample_vioscreen_dietary_score
+      tags:
+        - Sample
+      summary: Get information about a Vioscreen dietary score associated with a sample
+      description: Get information about a Vioscreen dietary score associated with a sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Successfully returned dietary score information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   # NB: "surveys" is used as a path component in two different ways (here nested under sample and above nested
   # directly under source.  The dev team assessed this and decided this dual usage was not unacceptably confusing.
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/surveys':

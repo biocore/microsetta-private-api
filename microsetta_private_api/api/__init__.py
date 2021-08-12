@@ -25,7 +25,8 @@ from ._activation import (
 )
 
 from ._vioscreen import (
-    read_sample_vioscreen_session, read_sample_vioscreen_percent_energy
+    read_sample_vioscreen_session, read_sample_vioscreen_percent_energy,
+    read_sample_vioscreen_dietary_score
 )
 
 
@@ -62,5 +63,6 @@ __all__ = [
     'get_preparations',
     'check_activation',
     'read_sample_vioscreen_session',
-    'read_sample_vioscreen_percent_energy'
+    'read_sample_vioscreen_percent_energy',
+    'read_sample_vioscreen_dietary_score'
 ]

@@ -19,13 +19,14 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.vioscreen_repo import (VioscreenSessionRepo,
-    VioscreenPercentEnergyRepo)
+    VioscreenPercentEnergyRepo, VioscreenDietaryScoreRepo)
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.model.sample import Sample, SampleInfo
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.model.vioscreen import (VioscreenSession,
-    VioscreenPercentEnergy, VioscreenPercentEnergyComponent)
+    VioscreenPercentEnergy, VioscreenPercentEnergyComponent,
+    VioscreenDietaryScore, VioscreenDietaryScoreComponent)
 from microsetta_private_api.api.tests.test_integration import \
     _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
 
@@ -1888,3 +1889,73 @@ class VioscreenTests(ApiTests):
 
         response_obj = json.loads(get_response.data)
         self.assertEqual(response_obj['message'], "Percent Energy not found")
+
+    def test_get_sample_vioscreen_dietary_score_200(self):
+        vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
+                                             username="c28a4824acb4543f",
+                                             protocolId=344,
+                                             status="Finished",
+                                             startDate="2014-10-08T18:55:12.747",
+                                             endDate="2014-10-08T18:57:07.503",
+                                             cultureCode="en-US",
+                                             created="2014-10-08T18:55:07.96",
+                                             modified="2017-07-29T03:56:04.22")
+
+        vioscreen_dietary_score = VioscreenDietaryScore(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            scoresType="Hei2010",
+            scores=[
+                VioscreenDietaryScoreComponent(code="TotalVegetables",
+                                               name="",
+                                               score=5.5,
+                                               lowerLimit=0.0,
+                                               upperLimit=10.0)
+            ]
+        )
+
+        with Transaction() as t:
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
+            vio_diet = VioscreenDietaryScoreRepo(t)
+            if vio_diet.get_dietary_score(vioscreen_dietary_score.sessionId) is None:
+                vio_diet.insert_dietary_score(vioscreen_dietary_score)
+            t.commit()
+
+        url = ('/api'
+               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
+               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
+               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b3'
+               '/vioscreen/dietaryscore'
+        )
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_obj = json.loads(get_response.data)
+        self.assertEqual(response_obj['sessionId'], vioscreen_dietary_score.sessionId)
+        self.assertEqual(response_obj['type'], vioscreen_dietary_score.scoresType)
+        self.assertEqual(response_obj['scores'][0]['type'], vioscreen_dietary_score.scores[0].code)
+        self.assertEqual(response_obj['scores'][0]['score'], vioscreen_dietary_score.scores[0].score)
+
+
+    def test_get_sample_vioscreen_dietary_score_404(self):
+        url = ('/api'
+               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
+               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
+               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b4'
+               '/vioscreen/dietaryscore'
+        )
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(get_response.status_code, 404)
+
+        response_obj = json.loads(get_response.data)
+        self.assertEqual(response_obj['message'], "Dietary Score not found")

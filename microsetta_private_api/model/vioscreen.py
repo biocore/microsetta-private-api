@@ -161,7 +161,7 @@ class VioscreenDietaryScoreComponent(ModelBase):
         return {
             'type': self.code,
             'name': self.name,
-            'score': self.name,
+            'score': self.score,
             'lowerLimit': self.lowerLimit,
             'upperLimit': self.upperLimit
         }
