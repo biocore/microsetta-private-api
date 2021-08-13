@@ -224,11 +224,6 @@ class AdminTests(TestCase):
         with t.dict_cursor() as cur:
             if len(dummy_dak_order_ids) > 0:
                 # Delete all orders with specified ids
-                temp = cur.mogrify(
-                    "DELETE FROM barcodes.daklapack_order "
-                    "WHERE dak_order_id IN %s",
-                    (tuple(dummy_dak_order_ids),))
-
                 cur.execute(
                     "DELETE FROM barcodes.daklapack_order "
                     "WHERE dak_order_id IN %s",
