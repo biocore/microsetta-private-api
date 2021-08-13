@@ -68,5 +68,10 @@ def _get_from_daklapack_api(url_suffix):
     oauth_session = _get_daklapack_oauth2_session()
     dak_order_get_url = f"{SERVER_CONFIG['daklapack_api_base_url']}" \
                         f"{url_suffix}"
+
     result = oauth_session.get(dak_order_get_url, headers=DAK_HEADERS)
+    if result.status_code >= 300:
+        raise ValueError(f"Getting {url_suffix} received status code "
+                         f"{result.status_code}: {result.json}")
+
     return result
