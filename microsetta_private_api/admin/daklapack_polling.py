@@ -7,84 +7,103 @@ OUTBOUND_DEV_KEY = "outBoundDelivery"
 INBOUND_DEV_KEY = "inBoundDelivery"
 COLLECTION_DEVICE_TYPES = ["2point5ml_etoh_tube", "7ml_etoh_tube",
                            "neoteryx_kit"]
+BOX_TYPE = "box"
+REGISTRATION_CARD_TYPE = "registration_card"
 SENT_STATUS = "Sent"
 ERROR_STATUS = "Error"
+CODE_ERROR = "Code Error"
 
 
 def poll_dak_orders():
     """Get open orders' status from daklapack and process accordingly"""
 
-    with Transaction() as t:
-        poll_dak_orders_using_transaction(t)
-        t.commit()
+    results = {SENT_STATUS: [], ERROR_STATUS: [], CODE_ERROR: []}
 
+    def make_error_str(ex):
+        return f"{type(ex)}: {str(ex)}"
 
-# This method exists (as a separate entity from poll_dak_orders)
-# exists only to make testing easier
-def poll_dak_orders_using_transaction(t):
-    """Use transaction to get open orders' status from daklapack and process"""
+    try:
+        # from our db, get list of daklapack orders that haven't been completed
+        # NB that this transaction need not be committed because it only reads
+        with Transaction() as t:
+            a_repo = AdminRepo(t)
+            open_dak_order_ids = a_repo.get_unfinished_daklapack_order_ids()
 
-    results = {SENT_STATUS: [], ERROR_STATUS: []}
-    admin_repo = AdminRepo(t)
+        # as long as there are still orders we need status info on
+        curr_page = 0
+        while len(open_dak_order_ids) > 0:
+            # call daklapack api to get another "page" of order statuses
+            dak_orders_response = dc.get_daklapack_orders_status(curr_page)
+            dak_orders_data = dak_orders_response.json["data"]
 
-    # from our db, get list of daklapack orders that haven't been completed
-    open_dak_order_ids = admin_repo.get_unfinished_daklapack_order_ids()
-    curr_page = 0
+            # if the page number is larger than the number of actual pages of
+            # orders, the data list will be empty so break out of while loop
+            if len(dak_orders_data) == 0:
+                break
 
-    # as long as there are still orders we need status info on
-    while len(open_dak_order_ids) > 0:
-        curr_page += 1
-
-        # call daklapack api to get another "page" of order statuses
-        dak_orders_response = dc.get_daklapack_orders_status(curr_page)
-        dak_orders_data = dak_orders_response.json["data"]
-
-        # for each order for which daklapack provided a status
-        for curr_datum in dak_orders_data:
-            curr_order_id = curr_datum["orderId"]
-
-            # ignore any order that is not an open order
-            if curr_order_id not in open_dak_order_ids:
-                continue  # to next order datum
-
-            # record the current order status, whatever it is, to db
-            curr_status = curr_datum["lastState"]["status"]
-            admin_repo.set_daklapack_order_poll_info(
-                curr_order_id, datetime.now(), curr_status)
-
-            if curr_status == ERROR_STATUS or curr_status == SENT_STATUS:
+            # for each order for which daklapack provided a status
+            for curr_datum in dak_orders_data:
+                curr_order_id = curr_datum["orderId"]
+                curr_status = curr_datum["lastState"]["status"]
                 curr_creation_date = curr_datum["creationDate"]
 
-                per_article_info = process_order_articles(
-                    admin_repo, curr_order_id, curr_status,
-                    curr_creation_date)
+                # ignore any order that is not an open order
+                if curr_order_id not in open_dak_order_ids:
+                    continue  # to next order datum
 
-                # note extend not append--avoiding nested lists
-                results[curr_status].extend(per_article_info)
+                try:
+                    per_article_info = _process_single_order(
+                        curr_order_id, curr_status, curr_creation_date)
 
-                # if curr_status == ERROR_STATUS:
-                # TODO: cancel the errored order w daklapack
-                # end if error
-            # end if error or sent
+                    if per_article_info is not None:
+                        # note extend not append--avoiding nested lists
+                        results[curr_status].extend(per_article_info)
+                    # end if error or sent
+                except Exception as per_order_ex:
+                    results[CODE_ERROR].append(make_error_str(per_order_ex))
 
-            # remove current order id from the list of order ids that we
-            # want to know the status of (since now we know)
-            open_dak_order_ids.remove(curr_order_id)
+                # remove current order id from the list of order ids that we
+                # want to know the status of (since now we know)
+                open_dak_order_ids.remove(curr_order_id)
 
-            # exit once we have found info on all order ids we care about
-            if len(open_dak_order_ids) == 0:
-                break  # out of looping over each order datum
-        # next datum
-    # end while
+                # exit once we have found info on all order ids we care about
+                if len(open_dak_order_ids) == 0:
+                    break  # out of looping over each order datum
+            # next datum
 
-    # iff there were any errors,
-    # email a list of all the failed orders to
-    # an email address specified in the config
-    # errors = results[ERROR_STATUS]
-    # if len(errors) > 0:
-    #     dc.send_daklapack_errors_report_email(errors)
+            curr_page += 1
+        # end while
+
+        # email a list of any failed orders to address in the config
+        # dc.send_daklapack_order_errors_report_email(results[ERROR_STATUS])
+    except Exception as outer_ex:
+        results[CODE_ERROR].append(make_error_str(outer_ex))
+
+    # email a list of any encountered exceptions to address in the config
+    # dc.send_daklapack_polling_errors_report_email(results[CODE_ERROR])
 
     return results
+
+
+def _process_single_order(curr_order_id, curr_status, curr_creation_date):
+    per_article_info = None
+
+    with Transaction() as per_order_t:
+        per_order_admin_repo = AdminRepo(per_order_t)
+
+        # record the current order status, whatever it is, to db
+        per_order_admin_repo.set_daklapack_order_poll_info(
+            curr_order_id, datetime.now(), curr_status)
+
+        if curr_status == ERROR_STATUS or curr_status == SENT_STATUS:
+            per_article_info = process_order_articles(
+                per_order_admin_repo, curr_order_id, curr_status,
+                curr_creation_date)
+        # end if error or sent
+
+        per_order_t.commit()
+
+    return per_article_info
 
 
 def process_order_articles(admin_repo, order_id, status, create_date):
@@ -130,6 +149,14 @@ def process_order_articles(admin_repo, order_id, status, create_date):
     return per_article_outputs
 
 
+def _prevent_overwrite(old_val, new_val, val_type):
+    if old_val is not None:
+        raise ValueError(f"For type '{val_type}, cannot overwrite first value "
+                         f"found ('{old_val}') with additional value "
+                         f"'{new_val}'")
+    return new_val
+
+
 def _store_single_sent_kit(admin_repo, order_proj_ids, single_article_dict):
     device_barcodes = []
     kit_name = box_id = None
@@ -171,10 +198,11 @@ def _store_single_sent_kit(admin_repo, order_proj_ids, single_article_dict):
         curr_barcode = curr_scannable["barcode"]
         if curr_scannable_type in COLLECTION_DEVICE_TYPES:
             device_barcodes.append(curr_barcode)
-        elif curr_scannable_type == "box":
-            box_id = curr_barcode
+        elif curr_scannable_type == BOX_TYPE:
+            box_id = _prevent_overwrite(box_id, curr_barcode, BOX_TYPE)
         elif curr_scannable_type == "registration_card":
-            kit_name = curr_barcode
+            kit_name = _prevent_overwrite(kit_name, curr_barcode,
+                                          REGISTRATION_CARD_TYPE)
         else:
             # Daklapack barcodes this thing but we don't care about it
             continue  # to next scannable kit item

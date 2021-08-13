@@ -3,7 +3,7 @@ from flask import Response
 from unittest.mock import patch
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.admin.daklapack_polling import \
-    process_order_articles, poll_dak_orders_using_transaction
+    process_order_articles, poll_dak_orders
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.admin.tests.test_admin_repo import AdminTests
 
@@ -160,209 +160,322 @@ class DaklapackPollingTests(AdminTests):
          ]}  # end "articles" (instance) list, single article (type) entry
     ]}  # end "articles" (type) list, outer dict
 
-    def _check_last_polling_status(self, t, dak_order_id, expected_status):
-        with t.dict_cursor() as cur:
-            cur.execute("SELECT last_polling_status "
-                        "FROM barcodes.daklapack_order "
-                        "WHERE dak_order_id =  %s",
-                        (dak_order_id,))
-            curr_records = cur.fetchall()
-            self.assertEqual(len(curr_records), 1)
-            self.assertEqual(expected_status, curr_records[0][0])
+    @staticmethod
+    def _delete_kits(kit_ids):
+        if kit_ids is None:
+            kit_ids = []
 
-    def test_poll_dak_orders_using_transaction(self):
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                for curr_kit_id in kit_ids:
+                    # Delete from ag-kit-related tables if it
+                    # was added there
+                    cur.execute("SELECT ag_kit_id "
+                                "FROM ag.ag_kit "
+                                "WHERE supplied_kit_id=%s",
+                                (curr_kit_id,))
+                    ag_kit_ids_fetch = cur.fetchall()
+
+                    if len(ag_kit_ids_fetch) > 0:
+                        ag_kit_ids = ag_kit_ids_fetch[0]
+
+                        cur.execute("DELETE FROM ag.ag_kit_barcodes "
+                                    "WHERE ag_kit_id IN %s",
+                                    (tuple(ag_kit_ids),))
+
+                        cur.execute("DELETE FROM ag.ag_kit "
+                                    "WHERE ag_kit_id IN %s",
+                                    (tuple(ag_kit_ids),))
+
+                    # Delete barcodes and project-barcode associations
+                    cur.execute("SELECT barcode "
+                                "FROM barcodes.barcode "
+                                "WHERE kit_id=%s",
+                                (curr_kit_id,))
+                    barcodes_fetch = cur.fetchall()
+
+                    if len(barcodes_fetch) > 0:
+                        barcodes = barcodes_fetch[0]
+                        cur.execute("DELETE FROM barcodes.project_barcode "
+                                    "WHERE barcode IN %s",
+                                    (tuple(barcodes),))
+
+                        cur.execute("DELETE FROM barcodes.barcode "
+                                    "WHERE barcode IN %s",
+                                    (tuple(barcodes),))
+
+                    # Delete the kit itself
+                    cur.execute("DELETE FROM barcodes.kit "
+                                "WHERE kit_id=%s",
+                                (curr_kit_id,))
+            t.commit()
+
+    @staticmethod
+    def _delete_dak_orders_and_kits(dummy_dak_order_ids, kit_ids):
+        with Transaction() as t:
+            DaklapackPollingTests._delete_kits(t, kit_ids)
+
+            DaklapackPollingTests.delete_dummy_dak_orders(
+                t, dummy_dak_order_ids)
+            t.commit()
+
+    def _check_last_polling_status(self, dak_order_id, expected_status):
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT last_polling_status "
+                            "FROM barcodes.daklapack_order "
+                            "WHERE dak_order_id =  %s",
+                            (dak_order_id,))
+                curr_records = cur.fetchall()
+                self.assertEqual(len(curr_records), 1)
+                self.assertEqual(expected_status, curr_records[0][0])
+
+    def test_poll_dak_orders(self):
         order_statuses_pg_1 = {
-          "isSuccess": True,
-          "messages": None,
-          "total": 3,
-          "data": [
-            {
-              "id": "020a5c97-6837-4bc2-99e6-7cdad38230e7",
-              "orderId": "abc917ef-0c4d-431a-9aa0-0a1f4f41f44b",
-              "creationDate": "2021-02-26T08:30:18.805519Z",
-              "plannedSendDate": None,
-              "statusLedger": [
+            "isSuccess": True,
+            "messages": None,
+            "total": 3,
+            "data": [
                 {
-                  "changeDate": "2021-02-26T08:30:18.8050976Z",
-                  "status": "New",
-                  "origin": "OrderApi",
-                  "description": ""
+                    "id": "020a5c97-6837-4bc2-99e6-7cdad38230e7",
+                    "orderId": "abc917ef-0c4d-431a-9aa0-0a1f4f41f44b",
+                    "creationDate": "2021-02-26T08:30:18.805519Z",
+                    "plannedSendDate": None,
+                    "statusLedger": [
+                        {
+                            "changeDate": "2021-02-26T08:30:18.8050976Z",
+                            "status": "New",
+                            "origin": "OrderApi",
+                            "description": ""
+                        },
+                        {
+                            "changeDate": "2021-02-26T09:30:18.8050976Z",
+                            "status": "Inproduction",
+                            "origin": "OrderApi",
+                            "description": ""
+                        }
+                    ],
+                    "lastState": {
+                        "changeDate": "2021-02-26T08:41:43.0786247Z",
+                        "status": "Inproduction",
+                        "origin": "OrderApi",
+                        "description": ""
+                    },
+                    "shippingProvider": {
+                        "name": "FedEx",
+                        "shippingType": "FEDEX_2_DAY"
+                    },
+                    "orderLines": [
+                        {
+                            "articleId": "350100",
+                            "amount": 2
+                        }
+                    ],
+                    "code": None,
+                    "reference": None,
+                    "nawId": "20b34834-3399-4cfd-9abe-accdbf34e3e2"
                 },
                 {
-                  "changeDate": "2021-02-26T09:30:18.8050976Z",
-                  "status": "Inproduction",
-                  "origin": "OrderApi",
-                  "description": ""
+                    "id": "4b96304d-96ff-4ab3-8eb6-0aa44046d69b",
+                    "orderId": "0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b",
+                    "creationDate": "2021-02-26T08:36:00.2250124Z",
+                    "plannedSendDate": None,
+                    "statusLedger": [
+                        {
+                            "changeDate": "2021-02-26T08:36:00.2245913Z",
+                            "status": "New",
+                            "origin": "OrderApi",
+                            "description": ""
+                        },
+                        {
+                            "changeDate": "2021-02-26T09:30:18.8050976Z",
+                            "status": "Inproduction",
+                            "origin": "OrderApi",
+                            "description": ""
+                        },
+                        {
+                            "changeDate": "2021-02-26T08:49:28.2010144Z",
+                            "status": "Sent",
+                            "origin": "OrderApi",
+                            "description": ""
+                        }
+                    ],
+                    "lastState": {
+                        "changeDate": "2021-02-26T08:49:28.2010144Z",
+                        "status": "Sent",
+                        "origin": "OrderApi",
+                        "description": ""
+                    },
+                    "shippingProvider": {
+                        "name": "FedEx",
+                        "shippingType": "FEDEX_2_DAY"
+                    },
+                    "orderLines": [
+                        {
+                            "articleId": "350100",
+                            "amount": 2
+                        }
+                    ],
+                    "code": None,
+                    "reference": None,
+                    "nawId": "a236b632-b77a-4f3b-b537-75e58c9fae77"
                 }
-              ],
-              "lastState": {
-                "changeDate": "2021-02-26T08:41:43.0786247Z",
-                "status": "Inproduction",
-                "origin": "OrderApi",
-                "description": ""
-              },
-              "shippingProvider": {
-                "name": "FedEx",
-                "shippingType": "FEDEX_2_DAY"
-              },
-              "orderLines": [
-                {
-                  "articleId": "350100",
-                  "amount": 2
-                }
-              ],
-              "code": None,
-              "reference": None,
-              "nawId": "20b34834-3399-4cfd-9abe-accdbf34e3e2"
-            },
-            {
-              "id": "4b96304d-96ff-4ab3-8eb6-0aa44046d69b",
-              "orderId": "0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b",
-              "creationDate": "2021-02-26T08:36:00.2250124Z",
-              "plannedSendDate": None,
-              "statusLedger": [
-                {
-                  "changeDate": "2021-02-26T08:36:00.2245913Z",
-                  "status": "New",
-                  "origin": "OrderApi",
-                  "description": ""
-                },
-                {
-                  "changeDate": "2021-02-26T09:30:18.8050976Z",
-                  "status": "Inproduction",
-                  "origin": "OrderApi",
-                  "description": ""
-                },
-                {
-                  "changeDate": "2021-02-26T08:49:28.2010144Z",
-                  "status": "Sent",
-                  "origin": "OrderApi",
-                  "description": ""
-                }
-              ],
-              "lastState": {
-                "changeDate": "2021-02-26T08:49:28.2010144Z",
-                "status": "Sent",
-                "origin": "OrderApi",
-                "description": ""
-              },
-              "shippingProvider": {
-                "name": "FedEx",
-                "shippingType": "FEDEX_2_DAY"
-              },
-              "orderLines": [
-                {
-                  "articleId": "350100",
-                  "amount": 2
-                }
-              ],
-              "code": None,
-              "reference": None,
-              "nawId": "a236b632-b77a-4f3b-b537-75e58c9fae77"
-            }
-          ]
+            ]
         }
 
         order_statuses_pg_2 = {
-          "isSuccess": True,
-          "messages": None,
-          "total": 3,
-          "data":  [
-            {
-              # This one won't be in our db's list of open orders;
-              # we're imagining it was seen/dealt with in the past
-              "id": "566bdadb-df00-462b-9bfc-1f1c652216ed",
-              "orderId": "OX3HOOD",
-              "creationDate": "2021-02-26T08:36:12.4267351Z",
-              "plannedSendDate": None,
-              "statusLedger": [
+            "isSuccess": True,
+            "messages": None,
+            "total": 3,
+            "data": [
                 {
-                  "changeDate": "2021-02-26T08:36:12.4263206Z",
-                  "status": "New",
-                  "origin": "OrderApi",
-                  "description": ""
+                    # This one won't be in our db's list of open orders;
+                    # we're imagining it was seen/dealt with in the past
+                    "id": "566bdadb-df00-462b-9bfc-1f1c652216ed",
+                    "orderId": "OX3HOOD",
+                    "creationDate": "2021-02-26T08:36:12.4267351Z",
+                    "plannedSendDate": None,
+                    "statusLedger": [
+                        {
+                            "changeDate": "2021-02-26T08:36:12.4263206Z",
+                            "status": "New",
+                            "origin": "OrderApi",
+                            "description": ""
+                        },
+                        {
+                            "changeDate": "2021-02-26T09:30:18.8050976Z",
+                            "status": "Inproduction",
+                            "origin": "OrderApi",
+                            "description": ""
+                        },
+                        {
+                            "changeDate": "2021-02-26T08:41:43.0786247Z",
+                            "status": "Error",
+                            "origin": "OrderApi",
+                            "description": ""
+                        }
+                    ],
+                    "lastState": {
+                        "changeDate": "2021-02-26T08:41:43.0786247Z",
+                        "status": "Error",
+                        "origin": "OrderApi",
+                        "description": ""
+                    },
+                    "shippingProvider": {
+                        "name": "FedEx",
+                        "shippingType": "FEDEX_2_DAY"
+                    },
+                    "orderLines": [
+                        {
+                            "articleId": "350100",
+                            "amount": 2
+                        }
+                    ],
+                    "code": None,
+                    "reference": None,
+                    "nawId": "84169469-4e84-4b73-833b-1b790baebc20"
                 },
                 {
-                  "changeDate": "2021-02-26T09:30:18.8050976Z",
-                  "status": "Inproduction",
-                  "origin": "OrderApi",
-                  "description": ""
+                    "id": "AACbdadb-df00-462b-9bfc-1f1c652216ed",
+                    "orderId": "8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b",
+                    "creationDate": "2021-02-26T08:36:12.4267351Z",
+                    "plannedSendDate": None,
+                    "statusLedger": [
+                        {
+                            "changeDate": "2021-02-26T08:36:12.4263206Z",
+                            "status": "New",
+                            "origin": "OrderApi",
+                            "description": ""
+                        },
+                        {
+                            "changeDate": "2021-02-26T09:30:18.8050976Z",
+                            "status": "Inproduction",
+                            "origin": "OrderApi",
+                            "description": ""
+                        },
+                        {
+                            "changeDate": "2021-02-26T08:41:43.0786247Z",
+                            "status": "Error",
+                            "origin": "OrderApi",
+                            "description": ""
+                        }
+                    ],
+                    "lastState": {
+                        "changeDate": "2021-02-26T08:41:43.0786247Z",
+                        "status": "Error",
+                        "origin": "OrderApi",
+                        "description": ""
+                    },
+                    "shippingProvider": {
+                        "name": "FedEx",
+                        "shippingType": "FEDEX_2_DAY"
+                    },
+                    "orderLines": [
+                        {
+                            "articleId": "350100",
+                            "amount": 2
+                        }
+                    ],
+                    "code": None,
+                    "reference": None,
+                    "nawId": "84169469-4e84-4b73-833b-1b790baebc20"
                 },
                 {
-                  "changeDate": "2021-02-26T08:41:43.0786247Z",
-                  "status": "Error",
-                  "origin": "OrderApi",
-                  "description": ""
+                    "id": "DDCbdadb-df00-462b-9bfc-1f1c652216ed",
+                    "orderId": "bf3ef5f7-ae20-45d0-8cfb-d5c0db8024fe",
+                    "creationDate": "2021-02-26T08:36:12.4267351Z",
+                    "plannedSendDate": None,
+                    "statusLedger": [
+                        {
+                            "changeDate": "2021-02-26T08:36:12.4263206Z",
+                            "status": "New",
+                            "origin": "OrderApi",
+                            "description": ""
+                        },
+                        {
+                            "changeDate": "2021-02-26T09:30:18.8050976Z",
+                            "status": "Inproduction",
+                            "origin": "OrderApi",
+                            "description": ""
+                        },
+                        {
+                            "changeDate": "2021-02-26T08:41:43.0786247Z",
+                            "status": "Sent",
+                            "origin": "OrderApi",
+                            "description": ""
+                        }
+                    ],
+                    "lastState": {
+                        "changeDate": "2021-02-26T08:41:43.0786247Z",
+                        "status": "Sent",
+                        "origin": "OrderApi",
+                        "description": ""
+                    },
+                    "shippingProvider": {
+                        "name": "FedEx",
+                        "shippingType": "FEDEX_2_DAY"
+                    },
+                    "orderLines": [
+                        {
+                            "articleId": "350100",
+                            "amount": 2
+                        }
+                    ],
+                    "code": None,
+                    "reference": None,
+                    "nawId": "84169469-4e84-4b73-833b-1b790baebc20"
                 }
-              ],
-              "lastState": {
-                "changeDate": "2021-02-26T08:41:43.0786247Z",
-                "status": "Error",
-                "origin": "OrderApi",
-                "description": ""
-              },
-              "shippingProvider": {
-                "name": "FedEx",
-                "shippingType": "FEDEX_2_DAY"
-              },
-              "orderLines": [
-                {
-                  "articleId": "350100",
-                  "amount": 2
-                }
-              ],
-              "code": None,
-              "reference": None,
-              "nawId": "84169469-4e84-4b73-833b-1b790baebc20"
-            },
-            {
-              "id": "AACbdadb-df00-462b-9bfc-1f1c652216ed",
-              "orderId": "8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b",
-              "creationDate": "2021-02-26T08:36:12.4267351Z",
-              "plannedSendDate": None,
-              "statusLedger": [
-                  {
-                      "changeDate": "2021-02-26T08:36:12.4263206Z",
-                      "status": "New",
-                      "origin": "OrderApi",
-                      "description": ""
-                  },
-                  {
-                      "changeDate": "2021-02-26T09:30:18.8050976Z",
-                      "status": "Inproduction",
-                      "origin": "OrderApi",
-                      "description": ""
-                  },
-                  {
-                      "changeDate": "2021-02-26T08:41:43.0786247Z",
-                      "status": "Error",
-                      "origin": "OrderApi",
-                      "description": ""
-                  }
-              ],
-              "lastState": {
-                  "changeDate": "2021-02-26T08:41:43.0786247Z",
-                  "status": "Error",
-                  "origin": "OrderApi",
-                  "description": ""
-              },
-              "shippingProvider": {
-                  "name": "FedEx",
-                  "shippingType": "FEDEX_2_DAY"
-              },
-              "orderLines": [
-                  {
-                      "articleId": "350100",
-                      "amount": 2
-                  }
-              ],
-              "code": None,
-              "reference": None,
-              "nawId": "84169469-4e84-4b73-833b-1b790baebc20"
-            }
-          ]
+            ]
         }
 
+        order_statuses_pg_3 = {
+            "isSuccess": True,
+            "messages": None,
+            "total": 3,
+            "data": []
+        }
+
+        registration_card_ids = ["DEFR", "DEFR2"]
         articles_for_orders = [
             {"articles": [
                 {"articleCode": "350100",
@@ -435,17 +548,17 @@ class DaklapackPollingTests(AdminTests):
                           "name": "FedEx", "shippingType": "FEDEX_2_DAY"
                       },
                       "scannableKitItems": [
-                          {"type": "registration_card", "barcode": "DEFR",
+                          {"type": "registration_card", "barcode": "DEFR2",
                            "creationDate": "2021-02-26T08:48:16.788439Z",
                            "itemCount": 1,
                            "containerItems": []
                            },
-                          {"type": "2point5ml_etoh_tube", "barcode": "DEFT",
+                          {"type": "2point5ml_etoh_tube", "barcode": "DEFT2",
                            "creationDate": "2021-02-26T08:48:16.7885478Z",
                            "itemCount": 1,
                            "containerItems": []
                            },
-                          {"type": "box", "barcode": "DEFX",
+                          {"type": "box", "barcode": "DEFX2",
                            "creationDate": "2021-02-26T08:48:16.788439Z",
                            "itemCount": 1,
                            "containerItems": []
@@ -494,19 +607,28 @@ class DaklapackPollingTests(AdminTests):
                      'inbound_fedex_tracking': None,
                      'kit_id': 'DEFR',
                      'outbound_fedex_tracking': None,
-                     'sample_barcodes': ['DEFT']}]}]}
+                     'sample_barcodes': ['DEFT']}]}],
+            'Code Error':
+                ["<class 'StopIteration'>: "]}
 
-        with Transaction() as t:
-            self.make_dummy_dak_orders(t, bonus_record=True)
+        # clean up any lingering test records before beginning
+        self._delete_kits(registration_card_ids)
 
-            # NB: these have to be patched *where they will be looked up*, not
-            # where they are originally defined; see
+        try:
+            with Transaction() as t:
+                self.make_dummy_dak_orders(t, bonus_records=True)
+                t.commit()
+
+            # NB: these have to be patched *where they will be looked up*,
+            # not where they are originally defined; see
             # https://docs.python.org/3/library/unittest.mock.html#where-to-patch
-            with patch("microsetta_private_api.admin.daklapack_communication."
-                       "get_daklapack_orders_status") as mock_dak_orders_info:
+            with patch("microsetta_private_api.admin."
+                       "daklapack_communication.get_daklapack_orders_"
+                       "status") as mock_dak_orders_info:
                 mock_dak_orders_info.side_effect = [make_test_response(
                     200, order_statuses_pg_1), make_test_response(
-                    200, order_statuses_pg_2)]
+                    200, order_statuses_pg_2), make_test_response(
+                    200, order_statuses_pg_3)]
 
                 with patch(
                         "microsetta_private_api.admin.daklapack_communication."
@@ -515,20 +637,25 @@ class DaklapackPollingTests(AdminTests):
                         200, articles_for_orders[0]), make_test_response(
                         200, articles_for_orders[1])]
 
-                    real_out = poll_dak_orders_using_transaction(t)
+                    real_out = poll_dak_orders()
 
-            # for three incomplete orders, check status in db
+            # for three incomplete orders that saved, check status in db
             self._check_last_polling_status(
-                t, "abc917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Inproduction")
+                "abc917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Inproduction")
             self._check_last_polling_status(
-                t, "0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Sent")
+                "0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Sent")
             self._check_last_polling_status(
-                t, "8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Error")
+                "8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Error")
+            # this order is open in our db but dak api gives no info on it
+            self._check_last_polling_status(
+                "99746684-8a2b-45d9-9337-4742bf6734cc", None)
 
             # remove the kit_uuid from the real output before testing
             # since that can't be known ahead of time
             del real_out["Sent"][0]["created"][0]["kit_uuid"]
             self.assertEqual(expected_out, real_out)
+        finally:
+            self._delete_kits(registration_card_ids)
 
     def test_process_order_articles_sent_status(self):
         expected_out = [
@@ -612,18 +739,18 @@ class DaklapackPollingTests(AdminTests):
              'order_id': '7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
              'order_submitter': 'Jane Doe',
              'sent_to_address': {
-                'address1': '2166  Chapmans Lane',
-                'address2': '',
-                'city': 'Clovis',
-                'companyName': 'Jane Doe',
-                'country': 'USA',
-                'countryCode': 'US',
-                'firstName': 'Natalia J Phillips',
-                'insertion': '',
-                'lastName': '',
-                'phone': '505-784-5252',
-                'postalCode': '88103',
-                'state': 'NM'},
+                 'address1': '2166  Chapmans Lane',
+                 'address2': '',
+                 'city': 'Clovis',
+                 'companyName': 'Jane Doe',
+                 'country': 'USA',
+                 'countryCode': 'US',
+                 'firstName': 'Natalia J Phillips',
+                 'insertion': '',
+                 'lastName': '',
+                 'phone': '505-784-5252',
+                 'postalCode': '88103',
+                 'state': 'NM'},
              'status_description': "A test description"},
             {'article_code': '350201',
              'creation_date': '2021-02-26T08:30:18.805519Z',
@@ -648,18 +775,18 @@ class DaklapackPollingTests(AdminTests):
              'order_id': '7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
              'order_submitter': 'Jane Doe',
              'sent_to_address': {
-                'address1': '2166  Chapmans Lane',
-                'address2': '',
-                'city': 'Clovis',
-                'companyName': 'Jane Doe',
-                'country': 'USA',
-                'countryCode': 'US',
-                'firstName': 'Natalia J Phillips',
-                'insertion': '',
-                'lastName': '',
-                'phone': '505-784-5252',
-                'postalCode': '88103',
-                'state': 'NM'},
+                 'address1': '2166  Chapmans Lane',
+                 'address2': '',
+                 'city': 'Clovis',
+                 'companyName': 'Jane Doe',
+                 'country': 'USA',
+                 'countryCode': 'US',
+                 'firstName': 'Natalia J Phillips',
+                 'insertion': '',
+                 'lastName': '',
+                 'phone': '505-784-5252',
+                 'postalCode': '88103',
+                 'state': 'NM'},
              'status_description': None}]
 
         with Transaction() as t:
@@ -716,7 +843,6 @@ class DaklapackPollingTests(AdminTests):
                         ValueError,
                         "Order 7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b "
                         "has an unexpected status: InProduction"):
-
                     process_order_articles(
                         admin_repo, an_order_id, "InProduction",
                         "2021-02-26T08:30:18.805519Z")
