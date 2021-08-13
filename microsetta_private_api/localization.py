@@ -23,3 +23,12 @@ LANG_SUPPORT = {
         LANG_NAME_KEY: "spanish"
     }
 }
+
+
+def normalize(tag):
+    tag = tag.replace('-', '_')
+    for lang in LANG_SUPPORT:
+        if tag.lower() == lang.lower():
+            return lang
+    raise ValueError(f"Unrecognized language_tag: {tag}")
+
