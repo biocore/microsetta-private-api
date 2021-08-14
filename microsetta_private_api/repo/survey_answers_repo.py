@@ -258,7 +258,7 @@ class SurveyAnswersRepo(BaseRepo):
                                              normalized_answer))
                             except psycopg2.errors.ForeignKeyViolation:
                                 raise BadRequest(
-                                    "Invalid multiple survey response: %s" % ans)
+                                    "Invalid multiple survey response: %s" % ans)  # noqa
 
                     if q_type == "STRING" or q_type == "TEXT":
                         # Note:  Can't convert language on free text...
@@ -395,11 +395,6 @@ class SurveyAnswersRepo(BaseRepo):
             return cur.fetchone() is not None
 
     def _unlocalize(self, answer, survey_question_id, language_tag):
-        # TODO: This is shaky due to the user of natural en_us primary keys.
-        #  There is no guarantee that a word translates the same way
-        #  independent of any other context.  We will eventually move to a
-        #  better framework for localization than what currently exists!
-
         localization_info = localization.LANG_SUPPORT[language_tag]
         lang_name = localization_info[localization.LANG_NAME_KEY]
 
