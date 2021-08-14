@@ -226,6 +226,7 @@ class SurveyAnswersRepo(BaseRepo):
                     if q_type == "SINGLE":
                         # Normalize localized answer
                         normalized_answer = self._unlocalize(answer,
+                                                             survey_question_id,  # noqa
                                                              language_tag)
 
                         try:
@@ -239,11 +240,12 @@ class SurveyAnswersRepo(BaseRepo):
                                          normalized_answer))
                         except psycopg2.errors.ForeignKeyViolation:
                             raise BadRequest(
-                                "Invalid survey response: %s" % answer)
+                                "Invalid single survey response: %s" % answer)
 
                     if q_type == "MULTIPLE":
                         for ans in answer:
                             normalized_answer = self._unlocalize(ans,
+                                                                 survey_question_id,  # noqa
                                                                  language_tag)
                             try:
                                 cur.execute("INSERT INTO survey_answers "
@@ -256,7 +258,7 @@ class SurveyAnswersRepo(BaseRepo):
                                              normalized_answer))
                             except psycopg2.errors.ForeignKeyViolation:
                                 raise BadRequest(
-                                    "Invalid survey response: %s" % ans)
+                                    "Invalid multiple survey response: %s" % ans)  # noqa
 
                     if q_type == "STRING" or q_type == "TEXT":
                         # Note:  Can't convert language on free text...
@@ -392,26 +394,22 @@ class SurveyAnswersRepo(BaseRepo):
                         (acct_id, source_id, survey_id))
             return cur.fetchone() is not None
 
-    def _unlocalize(self, answer, language_tag):
-        # TODO: This is shaky due to the user of natural en_us primary keys.
-        #  There is no guarantee that a word translates the same way
-        #  independent of any other context.  We will eventually move to a
-        #  better framework for localization than what currently exists!
-
+    def _unlocalize(self, answer, survey_question_id, language_tag):
         localization_info = localization.LANG_SUPPORT[language_tag]
         lang_name = localization_info[localization.LANG_NAME_KEY]
 
         with self._transaction.cursor() as cur:
             # Normalize localized answer
-            cur.execute("SELECT american "
-                        "FROM "
-                        "survey_response "
-                        "WHERE "
-                        + lang_name + "=%s",
-                        (answer,))
+            cur.execute("""SELECT american
+                           FROM survey_response
+                             JOIN survey_question_response
+                             ON response=american
+                           WHERE survey_question_id=%s
+                             AND """ + lang_name + "=%s",
+                        (survey_question_id, answer))
             row = cur.fetchone()
             if row is None:
-                raise BadRequest("Invalid survey response: %s" % answer)
+                raise BadRequest("Invalid unlocalization: %s" % answer)
             normalized_answer = row[0]
             return normalized_answer
 
