@@ -51,9 +51,9 @@ def build_condition(top_level_obj):
 
     def build_condition_helper_rule(root_obj, out_values):
         id = root_obj['id']
-        field = root_obj['field']
-        type = root_obj['type']
-        input = root_obj['input']
+        # field = root_obj['field']
+        # type = root_obj['type']
+        # input = root_obj['input']
         operator = root_obj['operator']
         value = root_obj['value']
 
@@ -62,7 +62,9 @@ def build_condition(top_level_obj):
         cond = "{id} " + supported_operators[operator] + " {value}"
 
         out_values.append(value)
-        return sql.SQL(cond).format(id=sql.Identifier(id), value=sql.Placeholder())
+        return sql.SQL(cond).format(
+            id=sql.Identifier(id),
+            value=sql.Placeholder())
 
     def build_condition_helper(root_obj, out_values, is_top_level=False):
         if "condition" in root_obj:
@@ -80,4 +82,7 @@ def build_condition(top_level_obj):
 
     out_values = []
 
-    return build_condition_helper(top_level_obj, out_values, is_top_level=True), out_values
+    return build_condition_helper(
+        top_level_obj,
+        out_values,
+        is_top_level=True), out_values

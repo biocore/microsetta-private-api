@@ -1100,12 +1100,15 @@ class AdminRepo(BaseRepo):
 
     def search_barcode(self, sql_cond, cond_params):
         # Security Note:
-        # Even with sql queries correctly escaped, exposing a conditional query oracle
-        # with unlimited queries grants full read access to all tables joined within
-        # the query
-        # That is, administrator users searching with this method can reconstruct
+        # Even with sql queries correctly escaped,
+        # exposing a conditional query oracle
+        # with unlimited queries grants full read access
+        # to all tables joined within the query
+        # That is, administrator users searching with
+        # this method can reconstruct
         # project_barcode, ag_kit_barcodes and barcode_scans
-        # given enough queries, including columns that are not returned by the select
+        # given enough queries, including columns
+        # that are not returned by the select
         with self._transaction.cursor() as cur:
             cur.execute(
                 sql.SQL(
