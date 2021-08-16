@@ -27,6 +27,7 @@ from microsetta_private_api.admin.daklapack_communication import \
     post_daklapack_order, send_daklapack_hold_email
 from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
+from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
 
 
@@ -577,7 +578,7 @@ def list_barcode_query_fields(token_info):
     return jsonify(filter_fields), 200
 
 
-def barcode_query(token_info, cond):
+def barcode_query(body, token_info):
     # Validating admin access is absolutely critical here
     # Failing to do so enables sql query access
     # to non admin users
@@ -585,7 +586,8 @@ def barcode_query(token_info, cond):
 
     with Transaction() as t:
         repo = AdminRepo(t)
-        barcodes = repo.search_barcode(cond)
+        cond, cond_params = build_condition(body)
+        barcodes = repo.search_barcode(cond, cond_params)
         t.rollback()  # Queries don't need to commit changes.
 
     return jsonify(barcodes), 200

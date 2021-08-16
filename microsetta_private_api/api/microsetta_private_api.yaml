@@ -1604,12 +1604,15 @@ paths:
                 type: array
 
   '/admin/barcode_query':
-    get:
+    post:
       operationId: microsetta_private_api.admin.admin_impl.barcode_query
       tags:
         - Admin
-      parameters:
-        - $ref: '#/components/parameters/cond'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
       responses:
         '200':
           description: Returns array of barcodes
@@ -1697,13 +1700,6 @@ components:
       schema:
         $ref: '#/components/schemas/activation_code'
       required: true
-    cond:
-      name: cond
-      in: query
-      description: sql query where clause
-      schema:
-        $ref: '#/components/schemas/cond'
-        required: true
     email:
       name: email
       in: query
@@ -2354,9 +2350,6 @@ components:
     include_private:
       type: boolean
       default: false
-
-    cond:
-      type: string
 
   examples:
     human_adult_source:
