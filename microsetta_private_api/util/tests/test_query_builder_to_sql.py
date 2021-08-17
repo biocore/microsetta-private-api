@@ -4,7 +4,7 @@ import json
 from microsetta_private_api.repo.transaction import Transaction
 
 
-class EmailTests(unittest.TestCase):
+class QueryBuilderToSqlTests(unittest.TestCase):
     def setUp(self):
         pass
 
