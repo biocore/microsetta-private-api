@@ -595,14 +595,15 @@ class DaklapackPollingTests(AdminTests):
                   'status_description': None}],
             'Sent':
                 [{'created': [
-                    {'address': '{"firstName": "Natalia J Phillips", '
-                                '"lastName": "", "address1": "2166  '
-                                'Chapmans Lane", "insertion": "", '
-                                '"address2": "", "postalCode": "88103", '
-                                '"city": "Clovis", "state": "NM", '
-                                '"country": "USA", "countryCode": "US", '
-                                '"phone": "505-784-5252", "companyName": '
-                                '"Jane Doe"}',
+                    {'address': {'firstName': 'Natalia J Phillips',
+                                 'lastName': '',
+                                 'address1': '2166  Chapmans Lane',
+                                 'insertion': '',
+                                 'address2': '', 'postalCode': '88103',
+                                 'city': 'Clovis', 'state': 'NM',
+                                 'country': 'USA', 'countryCode': 'US',
+                                 'phone': '505-784-5252',
+                                 'companyName': 'Jane Doe'},
                      'box_id': 'DEFX',
                      'inbound_fedex_tracking': None,
                      'kit_id': 'DEFR',
@@ -661,29 +662,33 @@ class DaklapackPollingTests(AdminTests):
         expected_out = [
             {'created': [
                 {'kit_id': 'ABCR',
+                 'address': {'firstName': 'Natalia J Phillips',
+                             'lastName': '',
+                             'address1': '2166  Chapmans Lane',
+                             'insertion': '',
+                             'address2': '', 'postalCode': '88103',
+                             'city': 'Clovis', 'state': 'NM',
+                             'country': 'USA', 'countryCode': 'US',
+                             'phone': '505-784-5252',
+                             'companyName': 'Jane Doe'},
                  'box_id': 'ABCX',
-                 'address': '{"firstName": "Natalia J Phillips", '
-                            '"lastName": "", "address1": "2166  '
-                            'Chapmans Lane", "insertion": "", "address2": "", '
-                            '"postalCode": "88103", "city": "Clovis", '
-                            '"state": "NM", "country": "USA", '
-                            '"countryCode": "US", "phone": "505-784-5252", '
-                            '"companyName": "Jane Doe"}',
                  'outbound_fedex_tracking': 'Tracking Code 1',
                  'inbound_fedex_tracking': 'Tracking Code 2',
                  'sample_barcodes': ['ABCT', 'ABCN']
-                 }
+                 },
             ]},
             {'created': [
                 {'kit_id': 'ABCR2',
                  'box_id': 'ABCX2',
-                 'address': '{"firstName": "Natalia J Phillips", '
-                            '"lastName": "", "address1": "2166  '
-                            'Chapmans Lane", "insertion": "", "address2": "", '
-                            '"postalCode": "88103", "city": "Clovis", '
-                            '"state": "NM", "country": "USA", '
-                            '"countryCode": "US", "phone": "505-784-5252", '
-                            '"companyName": "Jane Doe"}',
+                 'address': {'firstName': 'Natalia J Phillips',
+                             'lastName': '',
+                             'address1': '2166  Chapmans Lane',
+                             'insertion': '',
+                             'address2': '', 'postalCode': '88103',
+                             'city': 'Clovis', 'state': 'NM',
+                             'country': 'USA', 'countryCode': 'US',
+                             'phone': '505-784-5252',
+                             'companyName': 'Jane Doe'},
                  'outbound_fedex_tracking': 'Tracking Code 2',
                  'inbound_fedex_tracking': None,
                  'sample_barcodes': ['ABCT2', 'ABCN2']
@@ -692,13 +697,15 @@ class DaklapackPollingTests(AdminTests):
             {'created': [
                 {'kit_id': 'DEFR',
                  'box_id': 'DEFX',
-                 'address': '{"firstName": "Natalia J Phillips", '
-                            '"lastName": "", "address1": "2166  '
-                            'Chapmans Lane", "insertion": "", "address2": "", '
-                            '"postalCode": "88103", "city": "Clovis", '
-                            '"state": "NM", "country": "USA", '
-                            '"countryCode": "US", "phone": "505-784-5252", '
-                            '"companyName": "Jane Doe"}',
+                 'address': {'firstName': 'Natalia J Phillips',
+                             'lastName': '',
+                             'address1': '2166  Chapmans Lane',
+                             'insertion': '',
+                             'address2': '', 'postalCode': '88103',
+                             'city': 'Clovis', 'state': 'NM',
+                             'country': 'USA', 'countryCode': 'US',
+                             'phone': '505-784-5252',
+                             'companyName': 'Jane Doe'},
                  'outbound_fedex_tracking': None,
                  'inbound_fedex_tracking': None,
                  'sample_barcodes': ['DEFT']

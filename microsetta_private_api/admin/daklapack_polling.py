@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -212,6 +213,14 @@ def _store_single_sent_kit(admin_repo, order_proj_ids, single_article_dict):
     created_kit_info = admin_repo.create_kit(
         kit_name, box_id, address_dict, outbound_fedex_code,
         inbound_fedex_code, device_barcodes, order_proj_ids)
+
+    # addresses returned from the create are strings (that in this case
+    # hold representation of json); return them as json instead.
+    # Not doing graceful error handling here because if any of these
+    # keys/structures don't exist, something is wrong and we *should* error
+    for i in range(len(created_kit_info["created"])):
+        address_str = created_kit_info["created"][i]["address"]
+        created_kit_info["created"][i]["address"] = json.loads(address_str)
 
     return created_kit_info
 
