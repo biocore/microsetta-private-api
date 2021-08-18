@@ -6,6 +6,8 @@ import pandas as pd
 import psycopg2.extras
 import json
 
+from psycopg2 import sql
+
 from microsetta_private_api.exceptions import RepoException
 
 import microsetta_private_api.model.project as p
@@ -1095,6 +1097,40 @@ class AdminRepo(BaseRepo):
             )
 
             return new_uuid
+
+    def search_barcode(self, sql_cond, cond_params):
+        # Security Note:
+        # Even with sql queries correctly escaped,
+        # exposing a conditional query oracle
+        # with unlimited queries grants full read access
+        # to all tables joined within the query
+        # That is, administrator users searching with
+        # this method can reconstruct
+        # project_barcode, ag_kit_barcodes and barcode_scans
+        # given enough queries, including columns
+        # that are not returned by the select
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                sql.SQL(
+                        "SELECT project_barcode.barcode FROM "
+                        "project_barcode LEFT JOIN "
+                        "ag_kit_barcodes USING (barcode) "
+                        "LEFT JOIN barcodes.barcode_scans "
+                        "USING (barcode) "
+                        "LEFT JOIN ( "
+                        "SELECT barcode, max(scan_timestamp) "
+                        "AS scan_timestamp "
+                        "FROM barcodes.barcode_scans "
+                        "GROUP BY barcode "
+                        ") AS latest_scan "
+                        "ON barcode_scans.barcode = latest_scan.barcode "
+                        "AND barcode_scans.scan_timestamp = "
+                        "latest_scan.scan_timestamp "
+                        "WHERE {cond}"
+                ).format(cond=sql_cond),
+                cond_params
+            )
+            return [r[0] for r in cur.fetchall()]
 
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
         ids = self._get_ids_relevant_to_barcode(sample_barcode)

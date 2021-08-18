@@ -27,6 +27,7 @@ from microsetta_private_api.admin.daklapack_communication import \
     post_daklapack_order, send_daklapack_hold_email
 from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
+from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
 
 
@@ -493,3 +494,100 @@ def generate_activation_codes(body, token_info):
         results = [{"email": email, "code": map[email]} for email in map]
         t.commit()
     return jsonify(results), 200
+
+
+def list_barcode_query_fields(token_info):
+    validate_admin_access(token_info)
+
+    # Generates a json array declaring the filters
+    # that can be used for barcode queries
+    # Will be parseable by jQuery QueryBuilder
+    # to allow a user to modify queries.
+
+    # Barcode queries can filter on:
+    #   - project (categorical, any project in our db)
+    #   - sample_status (categorical, fixed list)
+    #   - sample_type (categorical, fixed list)
+
+    # See examples https://querybuilder.js.org/demo.html
+    # https://querybuilder.js.org/assets/demo-import-export.js
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        projects_list = admin_repo.get_projects(False)
+
+    filter_fields = []
+    filter_fields.append(
+        {
+            'id': 'project_id',
+            'label': 'Project',
+            'type': 'integer',
+            'input': 'select',
+            'values': {
+                x.project_id: x.project_name for x in projects_list
+            },
+            'operators': ['equal', 'not_equal']
+        }
+    )
+    filter_fields.append(
+        {
+            'id': 'sample_status',
+            'label': 'Sample Status',
+            'type': 'string',
+            'input': 'select',
+            'values': {
+                "sample-is-valid": "Sample Is Valid",
+                "no-associated-source": "No Associated Source",
+                "no-registered-account": "No Registered Account",
+                "no-collection-info": "No Collection Info",
+                "sample-has-inconsistencies": "Sample Has Inconsistencies",
+                "received-unknown-validity": "Received Unknown Validity"
+            },
+            'operators': ['equal', 'not_equal']
+        }
+    )
+    filter_fields.append(
+        {
+            'id': 'site_sampled',
+            'label': 'Sample Site',
+            'type': 'string',
+            'input': 'select',
+            'values': {
+                "Blood (skin prick)": "Blood (skin prick)",
+                "Saliva": "Saliva",
+                "Ear wax": "Ear wax",
+                "Forehead": "Forehead",
+                "Fur": "Fur",
+                "Hair": "Hair",
+                "Left hand": "Left hand",
+                "Left leg": "Left leg",
+                "Mouth": "Mouth",
+                "Nares": "Nares",
+                "Nasal mucus": "Nasal mucus",
+                "Right hand": "Right hand",
+                "Right leg": "Right leg",
+                "Stool": "Stool",
+                "Tears": "Tears",
+                "Torso": "Torso",
+                "Vaginal mucus": "Vaginal mucus"
+            },
+            'operators': ['equal', 'not_equal']
+        }
+    )
+
+    return jsonify(filter_fields), 200
+
+
+def barcode_query(body, token_info):
+    # Validating admin access is absolutely critical here
+    # Failing to do so enables sql query access
+    # to non admin users
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        repo = AdminRepo(t)
+        cond, cond_params = build_condition(body)
+        barcodes = repo.search_barcode(cond, cond_params)
+        t.rollback()  # Queries don't need to commit changes.
+
+    return jsonify(barcodes), 200
