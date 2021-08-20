@@ -1,8 +1,6 @@
 import unittest
 from microsetta_private_api.model.vioscreen import (
-    VioscreenSession, VioscreenFoodConsumption,
-    VioscreenFoodConsumptionComponent,
-    VioscreenFoodComponentsComponent)
+    VioscreenSession, VioscreenFoodConsumption)
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import (
     VioscreenSessionRepo, VioscreenFoodConsumptionRepo)
@@ -24,10 +22,9 @@ VIOSCREEN_SESSION = VioscreenSession(sessionId='0087da64cdcb41ad800c23531d1198f2
                                      created=_to_dt(1, 1, 1970),
                                      modified=_to_dt(1, 1, 1970))
 
-package = 'microsetta_private_api/model/tests'
-# package where data is stored
 
 def get_data_path(filename):
+    package = 'microsetta_private_api/model/tests'
     return package + '/data/%s' % filename
 
 
@@ -36,7 +33,8 @@ class TestFoodConsumptionRepo(unittest.TestCase):
         with Transaction() as t:
             with open(get_data_path("foodconsumption.data")) as data:
                 CONS_DATA = json.load(data)
-            VIOSCREEN_FOOD_CONSUMPTION = VioscreenFoodConsumption.from_vioscreen(CONS_DATA)
+            VIOSCREEN_FOOD_CONSUMPTION = \
+                VioscreenFoodConsumption.from_vioscreen(CONS_DATA)
             s = VioscreenSessionRepo(t)
             s.upsert_session(VIOSCREEN_SESSION)
             r = VioscreenFoodConsumptionRepo(t)
@@ -47,15 +45,18 @@ class TestFoodConsumptionRepo(unittest.TestCase):
         with Transaction() as t:
             with open(get_data_path("foodconsumption.data")) as data:
                 CONS_DATA = json.load(data)
-            VIOSCREEN_FOOD_CONSUMPTION = VioscreenFoodConsumption.from_vioscreen(CONS_DATA)
+            VIOSCREEN_FOOD_CONSUMPTION = \
+                VioscreenFoodConsumption.from_vioscreen(CONS_DATA)
             s = VioscreenSessionRepo(t)
             s.upsert_session(VIOSCREEN_SESSION)
             r = VioscreenFoodConsumptionRepo(t)
             r.insert_food_consumption(VIOSCREEN_FOOD_CONSUMPTION)
             obs = r.get_food_consumption(VIOSCREEN_FOOD_CONSUMPTION.sessionId)
-            self.assertEqual(obs.sessionId, VIOSCREEN_FOOD_CONSUMPTION.sessionId)
+            self.assertEqual(obs.sessionId,
+                             VIOSCREEN_FOOD_CONSUMPTION.sessionId)
             obs_comps = sorted(obs.components, key=lambda x: x.description)
-            exp_comps = sorted(VIOSCREEN_FOOD_CONSUMPTION.components, key=lambda x: x.description)
+            exp_comps = sorted(VIOSCREEN_FOOD_CONSUMPTION.components,
+                               key=lambda x: x.description)
             for obs_comp, exp_comp in zip(obs_comps, exp_comps):
                 obs_cs = sorted(obs_comp.data, key=lambda x: x.code)
                 exp_cs = sorted(obs_comp.data, key=lambda x: x.code)
@@ -64,9 +65,6 @@ class TestFoodConsumptionRepo(unittest.TestCase):
 
     def test_get_food_consumption_does_not_exist(self):
         with Transaction() as t:
-            with open(get_data_path("foodconsumption.data")) as data:
-                CONS_DATA = json.load(data)
-            VIOSCREEN_FOOD_CONSUMPTION = VioscreenFoodConsumption.from_vioscreen(CONS_DATA)
             s = VioscreenSessionRepo(t)
             s.upsert_session(VIOSCREEN_SESSION)
             r = VioscreenFoodConsumptionRepo(t)
