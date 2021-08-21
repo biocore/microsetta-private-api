@@ -1315,6 +1315,12 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
         VioscreenFoodConsumption or None
             The food consumption detail, or None if no record was found
         """
+        # TODO: it may be possible to do this all in a single query. An
+        # attempt was made using array_agg(code, amount), however postgres
+        # coerces that to a string. A two dimensional array is possible with
+        # array_agg(array[code, amount]) however the types need to be the
+        # same (as best as I understand), leading to some theatrics on
+        # formatting and parsing. A problem for another day.
         with self._transaction.cursor() as cur:
             cur.execute(
                 """SELECT foodCode, description, foodGroup, amount, frequency,
