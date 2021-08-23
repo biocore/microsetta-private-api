@@ -24,11 +24,11 @@ def _get_daklapack_oauth2_session():
 
 
 def post_daklapack_order(payload):
-    return _post_to_daklapack_api(f"/api/Orders/", payload)
+    return _post_to_daklapack_api("/api/Orders/", payload)
 
 
 def post_daklapack_order_archive(payload):
-    return _post_to_daklapack_api(f"/api/Orders/Archive", payload)
+    return _post_to_daklapack_api("/api/Orders/Archive", payload)
 
 
 def _post_to_daklapack_api(url_suffix, payload):
@@ -53,7 +53,7 @@ def send_daklapack_order_errors_report_email(errors_list):
     result = None
     if len(errors_list) > 0:
         template_args = {"errors": errors_list}
-        email_subject = f"Daklapack order errors"
+        email_subject = "Daklapack order errors"
 
         result = _send_daklapack_email(template_args, email_subject,
                                        "daklapack_errors_report_email",
@@ -66,7 +66,7 @@ def send_daklapack_polling_errors_report_email(errors_list):
     result = None
     if len(errors_list) > 0:
         template_args = {"errors": errors_list}
-        email_subject = f"Daklapack polling code errors"
+        email_subject = "Daklapack polling code errors"
 
         result = _send_daklapack_email(template_args, email_subject,
                                        "daklapack_errors_report_email",

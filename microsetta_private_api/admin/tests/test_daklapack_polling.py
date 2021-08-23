@@ -642,7 +642,7 @@ class DaklapackPollingTests(AdminTests):
                                "daklapack_communication."
                                "post_daklapack_order_archive") as mock_archive:
                         mock_archive.side_effect = [make_test_response(
-                        200, {"updated": 1})]
+                            200, {"updated": 1})]
 
                         real_out = poll_dak_orders()
 
