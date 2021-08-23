@@ -1,7 +1,6 @@
 import unittest
 from microsetta_private_api.model.vioscreen import (
-    VioscreenSession, VioscreenFoodComponents,
-    VioscreenFoodComponentsComponent)
+    VioscreenSession, VioscreenFoodComponents)
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import (
     VioscreenSessionRepo, VioscreenFoodComponentsRepo)
@@ -23,10 +22,9 @@ VIOSCREEN_SESSION = VioscreenSession(sessionId='0087da64cdcb41ad800c23531d1198f2
                                      created=_to_dt(1, 1, 1970),
                                      modified=_to_dt(1, 1, 1970))
 
-package = 'microsetta_private_api/model/tests'
-# package where data is stored
 
 def get_data_path(filename):
+    package = 'microsetta_private_api/model/tests'
     return package + '/data/%s' % filename
 
 
@@ -36,7 +34,8 @@ class TestFoodComponentsRepo(unittest.TestCase):
         with Transaction() as t:
             with open(get_data_path("foodcomponents.data")) as data:
                 FC_DATA = json.load(data)
-            VIOSCREEN_FOOD_COMPONENTS = VioscreenFoodComponents.from_vioscreen(FC_DATA[0])
+            VIOSCREEN_FOOD_COMPONENTS = \
+                VioscreenFoodComponents.from_vioscreen(FC_DATA[0])
             s = VioscreenSessionRepo(t)
             s.upsert_session(VIOSCREEN_SESSION)
             r = VioscreenFoodComponentsRepo(t)
@@ -47,7 +46,8 @@ class TestFoodComponentsRepo(unittest.TestCase):
         with Transaction() as t:
             with open(get_data_path("foodcomponents.data")) as data:
                 FC_DATA = json.load(data)
-            VIOSCREEN_FOOD_COMPONENTS = VioscreenFoodComponents.from_vioscreen(FC_DATA[0])
+            VIOSCREEN_FOOD_COMPONENTS = \
+                VioscreenFoodComponents.from_vioscreen(FC_DATA[0])
             s = VioscreenSessionRepo(t)
             s.upsert_session(VIOSCREEN_SESSION)
             r = VioscreenFoodComponentsRepo(t)
@@ -57,9 +57,6 @@ class TestFoodComponentsRepo(unittest.TestCase):
 
     def test_get_food_components_does_not_exist(self):
         with Transaction() as t:
-            with open(get_data_path("foodcomponents.data")) as data:
-                FC_DATA = json.load(data)
-            VIOSCREEN_FOOD_COMPONENTS = VioscreenFoodComponents.from_vioscreen(FC_DATA[0])
             s = VioscreenSessionRepo(t)
             s.upsert_session(VIOSCREEN_SESSION)
             r = VioscreenFoodComponentsRepo(t)

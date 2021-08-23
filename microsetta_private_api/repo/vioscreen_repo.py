@@ -1260,8 +1260,11 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             rowcount = 0
             components = vioscreen_food_consumption.components
+
+            component_inserts = []
+            component_consumption_inserts = []
             for component in components:
-                inserts = (
+                component_inserts.append((
                     vioscreen_food_consumption.sessionId,
                     component.foodCode,
                     component.description,
@@ -1271,31 +1274,31 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
                     component.consumptionAdjustment,
                     component.servingSizeText,
                     component.servingFrequencyText,
-                    component.created)
+                    component.created))
 
-                cur.execute("""INSERT INTO ag.vioscreen_foodconsumption
+                for component2 in component.data:
+                    # checking if code exists in lookup
+                    self._get_code_info(component2.code)
+                    component_consumption_inserts.append((
+                        vioscreen_food_consumption.sessionId,
+                        component.description,
+                        component2.code,
+                        component2.amount))
+
+            cur.executemany("""INSERT INTO ag.vioscreen_foodconsumption
                                (sessionId, foodCode, description, foodGroup,
                                 amount, frequency, consumptionAdjustment,
                                 servingSizeText, servingFrequencyText, created)
                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            """,
-                            inserts)
-                rowcount += cur.rowcount
+                            """, component_inserts)
+            rowcount += cur.rowcount
 
-                inserts2 = []
-                for component2 in component.data:
-                    # checking if code exists in lookup
-                    self._get_code_info(component2.code)
-                    inserts2.append((vioscreen_food_consumption.sessionId,
-                                     component.description,
-                                     component2.code,
-                                     component2.amount))
-
-                cur.executemany(
-                    """INSERT INTO ag.vioscreen_foodconsumptioncomponents
-                                   (sessionId, description, code, amount)
-                                   VALUES (%s, %s, %s, %s)""", inserts2)
-                rowcount += cur.rowcount
+            cur.executemany("""
+                            INSERT INTO ag.vioscreen_foodconsumptioncomponents
+                            (sessionId, description, code, amount)
+                            VALUES (%s, %s, %s, %s)""",
+                            component_consumption_inserts)
+            rowcount += cur.rowcount
 
             return rowcount
 
@@ -1312,6 +1315,12 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
         VioscreenFoodConsumption or None
             The food consumption detail, or None if no record was found
         """
+        # TODO: it may be possible to do this all in a single query. An
+        # attempt was made using array_agg(code, amount), however postgres
+        # coerces that to a string. A two dimensional array is possible with
+        # array_agg(array[code, amount]) however the types need to be the
+        # same (as best as I understand), leading to some theatrics on
+        # formatting and parsing. A problem for another day.
         with self._transaction.cursor() as cur:
             cur.execute(
                 """SELECT foodCode, description, foodGroup, amount, frequency,
