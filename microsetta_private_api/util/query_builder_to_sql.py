@@ -26,8 +26,8 @@ supported_operators = {
     # not_ends_with,
     # is_empty,
     # is_not_empty,
-    # is_null,
-    # is_not_null,
+    'is_null': "is null",
+    'is_not_null': "is not null",
 }
 
 
@@ -59,9 +59,14 @@ def build_condition(top_level_obj):
 
         if operator not in supported_operators:
             raise RepoException("Unsupported query operator: " + str(operator))
-        cond = "{id} " + supported_operators[operator] + " {value}"
 
-        out_values.append(value)
+        if operator in ["is_null", "is_not_null"]:
+            cond = "{id}" + supported_operators[operator]
+            # no need to append null to out_values
+        else:
+            cond = "{id} " + supported_operators[operator] + " {value}"
+            out_values.append(value)
+
         return sql.SQL(cond).format(
             id=sql.Identifier(id),
             value=sql.Placeholder())

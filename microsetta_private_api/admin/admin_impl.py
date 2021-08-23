@@ -543,7 +543,7 @@ def list_barcode_query_fields(token_info):
                 "sample-has-inconsistencies": "Sample Has Inconsistencies",
                 "received-unknown-validity": "Received Unknown Validity"
             },
-            'operators': ['equal', 'not_equal']
+            'operators': ['equal', 'not_equal', 'is_null', 'is_not_null']
         }
     )
     filter_fields.append(
@@ -571,7 +571,7 @@ def list_barcode_query_fields(token_info):
                 "Torso": "Torso",
                 "Vaginal mucus": "Vaginal mucus"
             },
-            'operators': ['equal', 'not_equal']
+            'operators': ['equal', 'not_equal', 'is_null', 'is_not_null']
         }
     )
 
