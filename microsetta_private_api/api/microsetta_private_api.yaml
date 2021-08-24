@@ -1149,37 +1149,43 @@ paths:
       operationId: microsetta_private_api.admin.admin_impl.address_verification
       tags:
         - Admin
-      summary: Verify a postal address
-      description: Verify a postal address
+      summary: Verify - and automatically correct if possible - the deliverability of a postal address using Melissa Global Address API
+      description: Verify - and automatically correct if possible - the deliverability of a postal address using Melissa Global Address API
       parameters:
         - in: query
           name: address_1
-          description: First line of address to verify
+          description: First line of address to verify (e.g. street address)
+          required: true
           schema:
             type: string
         - in: query
           name: address_2
-          description: Second line of address to verify
+          description: Second line of address to verify (e.g. apartment, suite, floor)
+          required: false
           schema:
             type: string
         - in: query
           name: city
           description: City of address to verify
+          required: false
           schema:
             type: string
         - in: query
           name: state
-          description: State of address to verify
+          description: State/province of address to verify
+          required: false
           schema:
             type: string
         - in: query
           name: postal
           description: Postal code of address to verify
+          required: true
           schema:
             type: string
         - in: query
           name: country
           description: Country of address to verify
+          required: true
           schema:
             type: string      
       responses:
