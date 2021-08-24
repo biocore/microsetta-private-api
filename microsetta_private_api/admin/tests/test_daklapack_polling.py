@@ -644,7 +644,7 @@ class DaklapackPollingTests(AdminTests):
                         mock_archive.side_effect = [make_test_response(
                             200, {"updated": 1})]
 
-#                        real_out = poll_dak_orders()
+                        real_out = poll_dak_orders()
 
             # for three incomplete orders that saved, check status in db
             self._check_last_polling_status(
