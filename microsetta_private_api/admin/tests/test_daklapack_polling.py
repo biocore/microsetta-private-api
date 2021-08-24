@@ -644,7 +644,13 @@ class DaklapackPollingTests(AdminTests):
                         mock_archive.side_effect = [make_test_response(
                             200, {"updated": 1})]
 
-                        real_out = poll_dak_orders()
+                        with patch("microsetta_private_api.admin."
+                                   "daklapack_communication.send_"
+                                   "daklapack_order_errors_report_email") as \
+                                mock_email:
+                            mock_email.side_effect = [True]
+
+                            real_out = poll_dak_orders()
 
             # for three incomplete orders that saved, check status in db
             self._check_last_polling_status(
