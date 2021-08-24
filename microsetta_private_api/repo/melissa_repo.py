@@ -11,12 +11,12 @@ class MelissaRepo(BaseRepo):
 
         Parameters
         ----------
-        address_1 - Primary street address
-        address_2 - Secondary street address
-        city - City
-        state - State
-        postal - Postal code
-        country - Country
+        address_1 - Primary street address (e.g. 123 Main St)
+        address_2 - Secondary street address (e.g. Apt 555)
+        city - City (e.g. San Diego)
+        state - State (e.g. CA)
+        postal - Postal code (e.g. 92116)
+        country - Country (e.g. United States)
 
         Returns
         -------
@@ -32,7 +32,7 @@ class MelissaRepo(BaseRepo):
                             source_postal,
                             source_country)
                             VALUES (NOW(), %s, %s, %s, %s, %s, %s) 
-                            RETURNING id""",
+                            RETURNING melissa_address_query_id""",
                             (address_1, address_2, city, state, postal, 
                             country))
             record_id = cur.fetchone()[0]
@@ -47,6 +47,10 @@ class MelissaRepo(BaseRepo):
         Check if an address has already been verified to avoid duplicate
             queries against the Melissa API
 
+        Note: We ignore city and state because they're superfluous for the 
+            purpose of deduplication. A street address, postal code,
+            and country are sufficient for purposes of unique identification.
+
         Parameters
         ----------
         address_1 - Primary street address
@@ -56,7 +60,8 @@ class MelissaRepo(BaseRepo):
 
         Returns
         -------
-        bool - Record exists or does not
+        None if record is not a duplicate
+        Full table row is record is a duplicate
         """
         with self._transaction.dict_cursor() as cur:
             cur.execute(f"""SELECT * FROM ag.melissa_address_queries 
@@ -72,7 +77,7 @@ class MelissaRepo(BaseRepo):
                             address_1, address_2, postal, country))
             row = cur.fetchone()
             if row is None:
-                return False
+                return None
             else:
                 return row
 
@@ -82,6 +87,10 @@ class MelissaRepo(BaseRepo):
                         latitude, longitude):
         """
         Update record in the database with the results from the Melissa API
+
+        Note: We store the formatted address, as well as the constituent
+            elements for ease of use. There may be future cases where using
+            the pre-formatted address makes more sense.
 
         Parameters
         ----------
@@ -121,7 +130,7 @@ class MelissaRepo(BaseRepo):
                                 result_country = %s,
                                 result_latitude = %s,
                                 result_longitude = %s
-                                WHERE id = %s""",
+                                WHERE melissa_address_query_id = %s""",
                                 (source_url, result_raw, result_codes, 
                                 result_good, formatted_address, address_1, 
                                 address_2, city, state, postal, country, 
