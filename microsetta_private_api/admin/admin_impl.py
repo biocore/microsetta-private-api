@@ -574,6 +574,25 @@ def list_barcode_query_fields(token_info):
             'operators': ['equal', 'not_equal', 'is_null', 'is_not_null']
         }
     )
+    filter_fields.append(
+        {
+            # Note that this id string must match the
+            # latest scan timestamp in the exact
+            # barcode search query.
+            'id': 'scan_timestamp_latest',
+            'label': 'Last Scanned',
+            'type': 'date',
+            'description': "YYYY/MM/DD",
+            'default_value': "YYYY/MM/DD",
+            'validation': {
+                "format": "YYYY/MM/DD"
+            },
+            'operators': ['less_or_equal',
+                          'greater_or_equal',
+                          'is_null',
+                          'is_not_null']
+        }
+    )
 
     return jsonify(filter_fields), 200
 
