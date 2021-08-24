@@ -81,7 +81,7 @@ def poll_dak_orders():
     dc.send_daklapack_order_errors_report_email(results[ERROR_STATUS])
 
     # email a list of any encountered exceptions to address in the config
-    # dc.send_daklapack_polling_errors_report_email(results[CODE_ERROR])
+    dc.send_daklapack_polling_errors_report_email(results[CODE_ERROR])
 
     return results
 
