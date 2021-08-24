@@ -7,7 +7,18 @@ from microsetta_private_api.repo.melissa_repo import MelissaRepo
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
-def verify_address(address_1,address_2,city,state,postal,country):
+def verify_address(address_1, address_2=None, city=None, state=None, postal, \
+    country):
+    """
+    Required parameters: address_1, postal, country
+    Optional parameters: address_2, city, state
+    """
+
+    if address_1 is None or len(address_1) < 1 or \
+        postal is None or len(postal) < 1 or \
+        country is None or len(country) < 1:
+        raise Exception("Must include address_1, postal, and country fields")
+
     with Transaction() as t:
         # The response codes we can treat as deliverable
         GOOD_CODES = ["AV25","AV24","AV23","AV22"]
@@ -22,7 +33,7 @@ def verify_address(address_1,address_2,city,state,postal,country):
                 city, state, postal, country)
 
             if record_id is None:
-                raise Exception("Failed to create record in database")
+                raise Exception("Failed to create record in database.")
 
             url_params = {"id": SERVER_CONFIG["melissa_license_key"],
                             "opt": "DeliveryLines:ON",
@@ -40,11 +51,21 @@ def verify_address(address_1,address_2,city,state,postal,country):
 
             response = requests.get(url)
             if response.ok is False:
-                raise Exception("Error connecting to address verification API")
+                exception_msg = "Error connecting to Melissa API."
+                exception_msg += " Status Code: " + response.status_code
+                exception_msg += " Status Text: " + response.reason
+                raise Exception(exception_msg)
 
             response_raw = response.text
             response_obj = json.loads(response_raw)
             if "Records" in response_obj.keys():
+                """
+                Note: Melissa's Global Address API allows batch requests.
+                    However, our usage is on a single-record basis. Therefore,
+                    we can safely assume that the response will only include
+                    one record to parse and use.
+                """
+
                 record_obj = response_obj["Records"][0]
 
                 r_formatted_address = record_obj["FormattedAddress"]
@@ -55,6 +76,7 @@ def verify_address(address_1,address_2,city,state,postal,country):
                 for code in codes:
                     if(code in GOOD_CODES):
                         r_good = True
+                        break
 
                 r_address_1 = record_obj["AddressLine1"]
                 r_address_2 = record_obj["AddressLine2"]
@@ -65,11 +87,16 @@ def verify_address(address_1,address_2,city,state,postal,country):
                 r_latitude = record_obj["Latitude"]
                 r_longitude = record_obj["Longitude"]
     
-                melissa_repo.update_results(record_id, url, response_raw, 
-                    r_codes, r_good, r_formatted_address, r_address_1, 
-                    r_address_2, r_city, r_state, r_postal, r_country, 
-                    r_latitude, r_longitude)
+                update_success = melissa_repo.update_results(record_id, url, 
+                    response_raw, r_codes, r_good, r_formatted_address, 
+                    r_address_1, r_address_2, r_city, r_state, r_postal, 
+                    r_country, r_latitude, r_longitude)
                 t.commit()
+
+                if(update_success is False):
+                    exception_msg = "Failed to update results for Melissa "
+                    exception_msg += "Address Query " + record_id
+                    raise Exception(exception_msg)
 
                 return_dict = {"address_1": r_address_1,
                                 "address_2": r_address_2,
@@ -84,7 +111,10 @@ def verify_address(address_1,address_2,city,state,postal,country):
                 return return_dict
             else:
                 t.commit()
-                raise Exception("Error connecting to address verification API")
+                exception_msg = "Melissa Global Address API failed on "
+                exception_msg += record_id
+            
+                raise Exception(exception_msg)
         else:
             #duplicate record - return result with an added field noting dupe
             return_dict = {"address_1": dupe_status["result_address_1"],
