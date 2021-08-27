@@ -74,14 +74,14 @@ def poll_dak_orders():
 
             curr_page += 1
         # end while
-
-        # email a list of any failed orders to address in the config
-        # dc.send_daklapack_order_errors_report_email(results[ERROR_STATUS])
     except Exception as outer_ex:
         results[CODE_ERROR].append(make_error_str(outer_ex))
 
+    # email a list of any failed orders to address in the config
+    dc.send_daklapack_order_errors_report_email(results[ERROR_STATUS])
+
     # email a list of any encountered exceptions to address in the config
-    # dc.send_daklapack_polling_errors_report_email(results[CODE_ERROR])
+    dc.send_daklapack_polling_errors_report_email(results[CODE_ERROR])
 
     return results
 
@@ -100,7 +100,10 @@ def _process_single_order(curr_order_id, curr_status, curr_creation_date):
             per_article_info = process_order_articles(
                 per_order_admin_repo, curr_order_id, curr_status,
                 curr_creation_date)
-        # end if error or sent
+
+        if curr_status == ERROR_STATUS:
+            # archive the errored order
+            dc.post_daklapack_order_archive({"orderIds": [curr_order_id]})
 
         per_order_t.commit()
 

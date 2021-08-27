@@ -8,8 +8,6 @@ DAK_HEADERS = {
         SERVER_CONFIG["daklapack_subscription_key_val"]
 }
 
-ORDER_HOLD_TEMPLATE_PATH = "email/daklapack_fulfillment_hold_request"
-
 
 def _get_daklapack_oauth2_session():
     # run the "Resource Owner Client Credentials Grant Type" oauth2 workflow
@@ -26,29 +24,77 @@ def _get_daklapack_oauth2_session():
 
 
 def post_daklapack_order(payload):
+    return _post_to_daklapack_api("/api/Orders/", payload)
+
+
+def post_daklapack_order_archive(payload):
+    return _post_to_daklapack_api("/api/Orders/Archive", payload)
+
+
+def _post_to_daklapack_api(url_suffix, payload):
     oauth_session = _get_daklapack_oauth2_session()
+
+    dak_order_post_url = f"{SERVER_CONFIG['daklapack_api_base_url']}" \
+                         f"{url_suffix}"
+
     # the json parameter sets the content-type in the headers
     # to application/json, whereas if used data parameter, would have to set
     # content-type manually
-    dak_order_post_url = f"{SERVER_CONFIG['daklapack_api_base_url']}" \
-                         f"/api/orders"
     result = oauth_session.post(
         dak_order_post_url, json=payload, headers=DAK_HEADERS)
+
+    if result.status_code >= 300:
+        raise ValueError(f"Posting {payload} to {url_suffix} received "
+                         f"status code {result.status_code}: {result.json}")
+    return result
+
+
+def send_daklapack_order_errors_report_email(errors_list):
+    result = None
+    if len(errors_list) > 0:
+        template_args = {"errors": errors_list}
+        email_subject = "Daklapack order errors"
+
+        result = _send_daklapack_email(template_args, email_subject,
+                                       "daklapack_errors_report_email",
+                                       "email/daklapack_order_errors_report",
+                                       "DAK_ORDER_ERRORS_REPORT")
+    return result
+
+
+def send_daklapack_polling_errors_report_email(errors_list):
+    result = None
+    if len(errors_list) > 0:
+        template_args = {"errors": errors_list}
+        email_subject = "Daklapack polling code errors"
+
+        result = _send_daklapack_email(template_args, email_subject,
+                                       "daklapack_errors_report_email",
+                                       "email/daklapack_polling_errors_report",
+                                       "DAK_POLLING_ERRORS_REPORT")
     return result
 
 
 def send_daklapack_hold_email(daklapack_order):
+    template_args = {"order_id": daklapack_order.id,
+                     "fulfillment_hold_msg":
+                         daklapack_order.fulfillment_hold_msg}
+    email_subject = f"Hold fulfillment of order {daklapack_order.id}"
+
+    return _send_daklapack_email(template_args, email_subject,
+                                 "daklapack_service_email",
+                                 "email/daklapack_fulfillment_hold_request",
+                                 "DAK_ORDER_HOLD")
+
+
+def _send_daklapack_email(template_args, email_subject, email_config_key,
+                          template_path, email_subtype):
     try:
-        template_args = {"order_id": daklapack_order.id,
-                         "fulfillment_hold_msg":
-                             daklapack_order.fulfillment_hold_msg}
-        email_subject = f"Hold fulfillment of order {daklapack_order.id}"
-        dak_service_email = SERVER_CONFIG["daklapack_service_email"]
+        errors_report_email = SERVER_CONFIG[email_config_key]
         celery_send_email.apply_async(
-            args=[dak_service_email, email_subject,
-                  ORDER_HOLD_TEMPLATE_PATH,
+            args=[errors_report_email, email_subject, template_path,
                   list(template_args.keys()), template_args,
-                  "EMAIL", "DAK_ORDER_HOLD"])
+                  "EMAIL", email_subtype])
         email_success = True
     except Exception:  # noqa
         email_success = False

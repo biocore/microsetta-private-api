@@ -22,5 +22,6 @@
   "daklapack_subscription_key_name": "dak-specific-key",
   "daklapack_subscription_key_val": "123abc456d89z",
   "daklapack_api_base_url": "https://example.com/dak_api",
-  "daklapack_service_email": "dak_fake@example.com"
+  "daklapack_service_email": "dak_fake@example.com",
+  "daklapack_errors_report_email": "microsetta_recipient@fake.com"
 }
