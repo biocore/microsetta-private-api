@@ -29,6 +29,7 @@ from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
+from qiita_client import QiitaClient
 
 
 def search_barcode(token_info, sample_barcode):
@@ -610,3 +611,24 @@ def barcode_query(body, token_info):
         t.rollback()  # Queries don't need to commit changes.
 
     return jsonify(barcodes), 200
+
+
+def qiita_barcode_query(body, token_info):
+    validate_admin_access(token_info)
+
+    qclient = QiitaClient(
+        SERVER_CONFIG["qiita_endpoint"],
+        SERVER_CONFIG["qiita_client_id"],
+        SERVER_CONFIG["qiita_client_secret"]
+    )
+
+    qiita_body = {
+        'sample_ids': ["10317." + b for b in body["barcodes"]]
+    }
+
+    qiita_data = qclient.post(
+        '/api/v1/study/1/samples/status',
+        json=qiita_body
+    )
+
+    return jsonify(qiita_data), 200
