@@ -34,8 +34,7 @@ class MelissaRepo(BaseRepo):
                             source_country)
                             VALUES (NOW(), %s, %s, %s, %s, %s, %s)
                             RETURNING melissa_address_query_id""",
-                            (address_1, address_2, city, state, postal,
-                             country))
+                        (address_1, address_2, city, state, postal,country))
             record_id = cur.fetchone()[0]
 
             if record_id is None:
@@ -76,8 +75,8 @@ class MelissaRepo(BaseRepo):
                             AND result_postal = %s
                             AND result_country = %s
                             AND result_processed = true)""",
-                            (address_1, address_2, postal, country,
-                             address_1, address_2, postal, country))
+                        (address_1, address_2, postal, country,
+                         address_1, address_2, postal, country))
             row = cur.fetchone()
             if row is None:
                 return False
@@ -85,9 +84,9 @@ class MelissaRepo(BaseRepo):
                 return row
 
     def update_results(self, record_id, source_url, result_raw,
-                        result_codes, result_good, formatted_address,
-                        address_1, address_2, city, state, postal, country,
-                        latitude, longitude):
+                       result_codes, result_good, formatted_address,
+                       address_1, address_2, city, state, postal, country,
+                       latitude, longitude):
         """
         Update record in the database with the results from the Melissa API
 
@@ -135,8 +134,7 @@ class MelissaRepo(BaseRepo):
                                 result_latitude = %s,
                                 result_longitude = %s
                                 WHERE melissa_address_query_id = %s""",
-                                (source_url, result_raw, result_codes,
-                                 result_good, formatted_address, address_1,
-                                 address_2, city, state, postal, country,
-                                 latitude, longitude, record_id))
+                        (source_url, result_raw, result_codes, result_good,
+                         formatted_address, address_1,address_2, city, state,
+                         postal, country,latitude, longitude, record_id))
             return cur.rowcount == 1
