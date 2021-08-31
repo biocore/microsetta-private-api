@@ -632,4 +632,3 @@ def qiita_barcode_query(body, token_info):
     )
 
     return jsonify(qiita_data), 200
-
