@@ -7,11 +7,15 @@ from microsetta_private_api.repo.melissa_repo import MelissaRepo
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
-def verify_address(address_1, address_2=None, city=None, state=None, postal, \
-    country):
+def verify_address(address_1, address_2=None, city=None, state=None, \
+    postal=None, country=None):
     """
     Required parameters: address_1, postal, country
     Optional parameters: address_2, city, state
+
+    Note - postal and country default to None as you can't have non-default
+            arguments after default arguments, and preserving structural order
+            makes sense for addresses
     """
 
     if address_1 is None or len(address_1) < 1 or \
@@ -28,7 +32,20 @@ def verify_address(address_1, address_2=None, city=None, state=None, postal, \
         dupe_status = melissa_repo.check_duplicate(address_1, address_2, 
             postal, country)
 
-        if dupe_status is False:
+        if dupe_status is not False:
+            #duplicate record - return result with an added field noting dupe
+            return_dict = {"address_1": dupe_status["result_address_1"],
+                            "address_2": dupe_status['result_address_2'],
+                            "city": dupe_status['result_city'],
+                            "state": dupe_status['result_state'],
+                            "postal": dupe_status['result_postal'],
+                            "country": dupe_status['result_country'],
+                            "latitude": dupe_status['result_latitude'],
+                            "longitude": dupe_status['result_longitude'],
+                            "valid": dupe_status['result_good'],
+                            "duplicate": True}
+            return return_dict
+        else:
             record_id = melissa_repo.create_record(address_1, address_2, 
                 city, state, postal, country)
 
@@ -115,20 +132,6 @@ def verify_address(address_1, address_2=None, city=None, state=None, postal, \
                 exception_msg += record_id
             
                 raise Exception(exception_msg)
-        else:
-            #duplicate record - return result with an added field noting dupe
-            return_dict = {"address_1": dupe_status["result_address_1"],
-                            "address_2": dupe_status['result_address_2'],
-                            "city": dupe_status['result_city'],
-                            "state": dupe_status['result_state'],
-                            "postal": dupe_status['result_postal'],
-                            "country": dupe_status['result_country'],
-                            "latitude": dupe_status['result_latitude'],
-                            "longitude": dupe_status['result_longitude'],
-                            "valid": dupe_status['result_good'],
-                            "duplicate": True}
-            return return_dict
-
 
 
 
