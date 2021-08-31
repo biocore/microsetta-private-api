@@ -627,8 +627,9 @@ def qiita_barcode_query(body, token_info):
     }
 
     qiita_data = qclient.post(
-        '/api/v1/study/1/samples/status',
+        '/api/v1/study/10317/samples/status',
         json=qiita_body
     )
 
     return jsonify(qiita_data), 200
+
