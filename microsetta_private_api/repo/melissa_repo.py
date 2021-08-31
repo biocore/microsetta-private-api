@@ -60,7 +60,7 @@ class MelissaRepo(BaseRepo):
 
         Returns
         -------
-        None if record is not a duplicate
+        False if record is not a duplicate
         Full table row is record is a duplicate
         """
         with self._transaction.dict_cursor() as cur:
@@ -68,16 +68,18 @@ class MelissaRepo(BaseRepo):
                             WHERE (source_address_1 = %s
                             AND source_address_2 = %s
                             AND source_postal = %s
-                            AND source_country = %s)
+                            AND source_country = %s
+                            AND result_processed = true)
                             OR (result_address_1 = %s
                             AND result_address_2 = %s
                             AND result_postal = %s
-                            AND result_country = %s)""",
+                            AND result_country = %s
+                            AND result_processed = true)""",
                             (address_1, address_2, postal, country,
                             address_1, address_2, postal, country))
             row = cur.fetchone()
             if row is None:
-                return None
+                return False
             else:
                 return row
 
@@ -117,6 +119,7 @@ class MelissaRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             cur.execute(f"""UPDATE ag.melissa_address_queries SET
+                                result_processed = true,
                                 source_url = %s,
                                 result_raw = %s,
                                 result_codes = %s,
