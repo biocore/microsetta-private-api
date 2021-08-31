@@ -34,7 +34,7 @@ class MelissaRepo(BaseRepo):
                             source_country)
                             VALUES (NOW(), %s, %s, %s, %s, %s, %s)
                             RETURNING melissa_address_query_id""",
-                        (address_1, address_2, city, state, postal,country))
+                        (address_1, address_2, city, state, postal, country))
             record_id = cur.fetchone()[0]
 
             if record_id is None:
@@ -135,6 +135,6 @@ class MelissaRepo(BaseRepo):
                                 result_longitude = %s
                                 WHERE melissa_address_query_id = %s""",
                         (source_url, result_raw, result_codes, result_good,
-                         formatted_address, address_1,address_2, city, state,
-                         postal, country,latitude, longitude, record_id))
+                         formatted_address, address_1, address_2, city, state,
+                         postal, country, latitude, longitude, record_id))
             return cur.rowcount == 1
