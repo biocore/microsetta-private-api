@@ -28,7 +28,6 @@ from microsetta_private_api.admin.daklapack_communication import \
 from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.util.melissa import verify_address
-
 from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
 
@@ -417,7 +416,7 @@ def query_barcode_stats(body, token_info, strip_sampleid):
     validate_admin_access(token_info)
     barcodes = body["sample_barcodes"]
     if len(barcodes) > 1000:
-        return jsonify({"message": "Too many barcodes requested"}), 400
+        return jsonify({"message": "Too manny barcodes requested"}), 400
     summary = per_sample(None, barcodes, strip_sampleid)
     return jsonify(summary), 200
 
@@ -485,17 +484,18 @@ def search_activation(token_info, email_query=None, code_query=None):
 
         return jsonify([i.to_api() for i in infos]), 200
 
-def address_verification(token_info, address_1, address_2=None, city=None, \
-    state=None, postal=None, country=None):
+
+def address_verification(token_info, address_1, address_2=None, city=None, 
+                            state=None, postal=None, country=None):
     validate_admin_access(token_info)
 
     if address_1 is None or len(address_1) < 1 or \
         postal is None or len(postal) < 1 or \
         country is None or len(country) < 1:
-        raise Exception("Must include address_1, postal, and country fields")
+            raise Exception("Must include address_1, postal, and country fields")
 
-    melissa_response = verify_address(address_1, address_2, city, state, \
-        postal, country)
+    melissa_response = verify_address(address_1, address_2, city, state, 
+                                        postal, country)
 
     return jsonify(melissa_response), 200
 
@@ -510,119 +510,3 @@ def generate_activation_codes(body, token_info):
         results = [{"email": email, "code": map[email]} for email in map]
         t.commit()
     return jsonify(results), 200
-
-
-def list_barcode_query_fields(token_info):
-    validate_admin_access(token_info)
-
-    # Generates a json array declaring the filters
-    # that can be used for barcode queries
-    # Will be parseable by jQuery QueryBuilder
-    # to allow a user to modify queries.
-
-    # Barcode queries can filter on:
-    #   - project (categorical, any project in our db)
-    #   - sample_status (categorical, fixed list)
-    #   - sample_type (categorical, fixed list)
-
-    # See examples https://querybuilder.js.org/demo.html
-    # https://querybuilder.js.org/assets/demo-import-export.js
-
-    with Transaction() as t:
-        admin_repo = AdminRepo(t)
-        projects_list = admin_repo.get_projects(False)
-
-    filter_fields = []
-    filter_fields.append(
-        {
-            'id': 'project_id',
-            'label': 'Project',
-            'type': 'integer',
-            'input': 'select',
-            'values': {
-                x.project_id: x.project_name for x in projects_list
-            },
-            'operators': ['equal', 'not_equal']
-        }
-    )
-    filter_fields.append(
-        {
-            'id': 'sample_status',
-            'label': 'Sample Status',
-            'type': 'string',
-            'input': 'select',
-            'values': {
-                "sample-is-valid": "Sample Is Valid",
-                "no-associated-source": "No Associated Source",
-                "no-registered-account": "No Registered Account",
-                "no-collection-info": "No Collection Info",
-                "sample-has-inconsistencies": "Sample Has Inconsistencies",
-                "received-unknown-validity": "Received Unknown Validity"
-            },
-            'operators': ['equal', 'not_equal', 'is_null', 'is_not_null']
-        }
-    )
-    filter_fields.append(
-        {
-            'id': 'site_sampled',
-            'label': 'Sample Site',
-            'type': 'string',
-            'input': 'select',
-            'values': {
-                "Blood (skin prick)": "Blood (skin prick)",
-                "Saliva": "Saliva",
-                "Ear wax": "Ear wax",
-                "Forehead": "Forehead",
-                "Fur": "Fur",
-                "Hair": "Hair",
-                "Left hand": "Left hand",
-                "Left leg": "Left leg",
-                "Mouth": "Mouth",
-                "Nares": "Nares",
-                "Nasal mucus": "Nasal mucus",
-                "Right hand": "Right hand",
-                "Right leg": "Right leg",
-                "Stool": "Stool",
-                "Tears": "Tears",
-                "Torso": "Torso",
-                "Vaginal mucus": "Vaginal mucus"
-            },
-            'operators': ['equal', 'not_equal', 'is_null', 'is_not_null']
-        }
-    )
-    filter_fields.append(
-        {
-            # Note that this id string must match the
-            # latest scan timestamp in the exact
-            # barcode search query.
-            'id': 'scan_timestamp_latest',
-            'label': 'Last Scanned',
-            'type': 'date',
-            'description': "YYYY/MM/DD",
-            'default_value': "YYYY/MM/DD",
-            'validation': {
-                "format": "YYYY/MM/DD"
-            },
-            'operators': ['less_or_equal',
-                          'greater_or_equal',
-                          'is_null',
-                          'is_not_null']
-        }
-    )
-
-    return jsonify(filter_fields), 200
-
-
-def barcode_query(body, token_info):
-    # Validating admin access is absolutely critical here
-    # Failing to do so enables sql query access
-    # to non admin users
-    validate_admin_access(token_info)
-
-    with Transaction() as t:
-        repo = AdminRepo(t)
-        cond, cond_params = build_condition(body)
-        barcodes = repo.search_barcode(cond, cond_params)
-        t.rollback()  # Queries don't need to commit changes.
-
-    return jsonify(barcodes), 200
