@@ -28,6 +28,7 @@ from microsetta_private_api.admin.daklapack_communication import \
 from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.util.melissa import verify_address
+from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
 
 
