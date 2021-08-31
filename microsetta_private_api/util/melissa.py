@@ -18,9 +18,8 @@ def verify_address(address_1, address_2=None, city=None, state=None,
             makes sense for addresses
     """
 
-    if address_1 is None or len(address_1) < 1 or \
-        postal is None or len(postal) < 1 or \
-        country is None or len(country) < 1:
+    if address_1 is None or len(address_1) < 1 or postal is None or\
+        len(postal) < 1 or country is None or len(country) < 1:
             raise Exception("Must include address_1, postal, and country fields")
 
     with Transaction() as t:
