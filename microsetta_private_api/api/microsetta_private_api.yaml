@@ -1647,6 +1647,41 @@ paths:
               schema:
                 type: array
 
+  '/admin/barcode_query_fields':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.list_barcode_query_fields
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: Returns array of fields, types and values
+          content:
+            application/json:
+              schema:
+                type: array
+
+  '/admin/barcode_query':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.barcode_query
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Returns array of barcodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  # not using the defined schema for sample_barcode as it is
+                  # readOnly
+                  type: string
+
 components:
   parameters:
     # path parameters

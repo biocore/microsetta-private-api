@@ -1,0 +1,16 @@
+<html>
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+</head>
+<body>
+<p>
+The Daklapack order status polling code encountered the following exceptions.
+Please alert the development team.
+</p>
+
+{% for curr_error in errors %}
+    <p>{{ curr_error }}</p>
+{% endfor %}
+
+</body>
+</html>
