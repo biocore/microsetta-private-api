@@ -23,8 +23,8 @@ def _get_daklapack_oauth2_session():
     return dak_session
 
 
-def post_daklapack_order(payload):
-    return _post_to_daklapack_api("/api/Orders/", payload)
+def post_daklapack_orders(payload):
+    return _post_to_daklapack_api("/api/Orders/List", payload)
 
 
 def post_daklapack_order_archive(payload):
