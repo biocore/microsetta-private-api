@@ -1681,6 +1681,26 @@ paths:
                   # readOnly
                   type: string
 
+  '/admin/qiita_barcode_query':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.qiita_barcode_query
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Returns qiita info about barcodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
 components:
   parameters:
     # path parameters
