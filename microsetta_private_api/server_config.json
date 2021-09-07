@@ -26,5 +26,7 @@
   "qiita_endpoint": "https://xxxxxxxxxx.com",
   "qiita_client_id": "xxxxxxxxxxxxxxxxxxxx",
   "qiita_client_secret": "yyyyyyyyyyyyyyyyyyyyyy",
-  "daklapack_errors_report_email": "microsetta_recipient@fake.com"
+  "daklapack_errors_report_email": "microsetta_recipient@fake.com",
+  "melissa_url": "http://address.melissadata.net/v3/WEB/GlobalAddress/doglobaladdress",
+  "melissa_license_key": "qwerty123456"
 }
