@@ -464,11 +464,11 @@ def _create_daklapack_order(order_dict):
         if post_response.status_code >= 400:
             # for now, very basic error handling--just pass on dak api error
             response_msg = {"order_address":
-                                daklapack_order.order_structure[ADDR_DICT_KEY],
+                            daklapack_order.order_structure[ADDR_DICT_KEY],
                             "order_success": False,
                             "daklapack_api_error_msg": post_response.text,
                             "daklapack_api_error_code":
-                                post_response.status_code}
+                            post_response.status_code}
             return response_msg
 
         # IFF submission is successful AND has fulfillment hold msg,
@@ -489,10 +489,10 @@ def _create_daklapack_order(order_dict):
         t.commit()
 
     status_msg = {"order_address":
-                        daklapack_order.order_structure[ADDR_DICT_KEY],
-                    "order_success": True,
-                    "order_id": order_id,
-                    "email_success": email_success}
+                  daklapack_order.order_structure[ADDR_DICT_KEY],
+                  "order_success": True,
+                  "order_id": order_id,
+                  "email_success": email_success}
     return status_msg
 
 

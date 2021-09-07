@@ -67,7 +67,7 @@ def make_dummies(include_fedex_refs=False):
              'countryCode': 'us',
              'phone': '(858) 555-1212',
              'companyName': submitter_name
-            },
+             },
         "plannedSendDate": "",
         'shippingProvider': 'FedEx',
         'shippingType': 'FEDEX_2_DAY',
