@@ -85,7 +85,8 @@ def build_app():
         if not flask.has_request_context():
             return EN_US
 
-        return request.accept_languages.best_match([EN_US, ES_MX])
+        return request.accept_languages.best_match([EN_US, ES_MX],
+                                                   default=EN_US)
 
     init_celery(celery, app.app)
 

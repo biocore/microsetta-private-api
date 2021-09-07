@@ -12,3 +12,4 @@ requests
 requests_oauthlib
 flask-babel
 html2text
+https://github.com/qiita-spots/qiita_client/archive/refs/heads/master.zip
