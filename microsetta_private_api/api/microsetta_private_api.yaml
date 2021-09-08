@@ -1495,11 +1495,11 @@ paths:
 
   '/admin/daklapack_orders':
     post:
-      operationId: microsetta_private_api.admin.admin_impl.create_daklapack_order
+      operationId: microsetta_private_api.admin.admin_impl.create_daklapack_orders
       tags:
         - Admin
-      summary: Submit a new order to Daklapack and record to db
-      description: Submit a new order to Daklapack and record to db
+      summary: Submit new order(s) to Daklapack and record to db
+      description: Submit new order(s) to Daklapack and record to db
       requestBody:
         content:
           application/json:
@@ -1532,12 +1532,8 @@ paths:
                   type: string
                   nullable: true
       responses:
-        '201':
-          description: Order successfully submitted and recorded
-          headers:
-            Location:
-              schema:
-                type: string
+        '200':
+          description: One or more orders successfully submitted and recorded; info provided on any failures
 
   '/admin/account_email_summary':
     post:

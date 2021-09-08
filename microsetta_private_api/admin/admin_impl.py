@@ -7,7 +7,7 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
 from microsetta_private_api.model.project import Project
 from microsetta_private_api.model.daklapack_order import DaklapackOrder, \
-    ORDER_ID_KEY, SUBMITTER_ACCT_KEY
+    ORDER_ID_KEY, SUBMITTER_ACCT_KEY, ADDR_DICT_KEY
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.activation_repo import ActivationRepo
@@ -24,7 +24,7 @@ from microsetta_private_api.tasks import send_email as celery_send_email,\
 from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
 from microsetta_private_api.admin.daklapack_communication import \
-    post_daklapack_order, send_daklapack_hold_email
+    post_daklapack_orders, send_daklapack_hold_email
 from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.util.melissa import verify_address
@@ -422,29 +422,54 @@ def query_barcode_stats(body, token_info, strip_sampleid):
     return jsonify(summary), 200
 
 
-def create_daklapack_order(body, token_info):
+def create_daklapack_orders(body, token_info):
     validate_admin_access(token_info)
 
-    body = body.copy()
-    body[ORDER_ID_KEY] = str(uuid.uuid4())
+    ADDRESSES_KEY = 'addresses'
+    extended_body = body.copy()
+    results = []
 
     with Transaction() as t:
         account_repo = AccountRepo(t)
-        body[SUBMITTER_ACCT_KEY] = account_repo.find_linked_account(
+        extended_body[SUBMITTER_ACCT_KEY] = account_repo.find_linked_account(
             token_info['iss'], token_info['sub'])
 
+    for curr_address in extended_body[ADDRESSES_KEY]:
+        curr_order_dict = extended_body.copy()
+        curr_order_dict.pop(ADDRESSES_KEY)
+        curr_order_dict[ADDR_DICT_KEY] = curr_address
+
+        result_info = _create_daklapack_order(curr_order_dict)
+        results.append(result_info)
+
+    # return response to caller
+    response = jsonify({"order_submissions": results})
+    response.status_code = 200
+    return response
+
+
+def _create_daklapack_order(order_dict):
+    order_dict[ORDER_ID_KEY] = str(uuid.uuid4())
+
+    with Transaction() as t:
         try:
-            daklapack_order = DaklapackOrder.from_api(**body)
+            daklapack_order = DaklapackOrder.from_api(**order_dict)
         except ValueError as e:
             raise RepoException(e)
 
-        post_response = post_daklapack_order(daklapack_order.order_structure)
+        # The Daklapack API wants a *list* of orders, and we are submitting one
+        # at a time, so we have a list of one item :)
+        post_response = post_daklapack_orders(
+            [daklapack_order.order_structure])
         if post_response.status_code >= 400:
             # for now, very basic error handling--just pass on dak api error
-            response_msg = {"daklapack_api_error_msg": post_response.text}
-            response = jsonify(response_msg)
-            response.status_code = post_response.status_code
-            return response
+            response_msg = {"order_address":
+                            daklapack_order.order_structure[ADDR_DICT_KEY],
+                            "order_success": False,
+                            "daklapack_api_error_msg": post_response.text,
+                            "daklapack_api_error_code":
+                            post_response.status_code}
+            return response_msg
 
         # IFF submission is successful AND has fulfillment hold msg,
         # email hold fulfillment info and the order id to Daklapack contact
@@ -463,13 +488,12 @@ def create_daklapack_order(body, token_info):
         order_id = admin_repo.create_daklapack_order(daklapack_order)
         t.commit()
 
-    # return response to caller
-    response_msg = {"order_id": order_id, "email_success": email_success}
-    response = jsonify(response_msg)
-    response.status_code = 201
-    # TODO: AB: Add this endpoint as part of support for polling dak orders
-    response.headers['Location'] = f'/api/admin/daklapack_orders/{order_id}'
-    return response
+    status_msg = {"order_address":
+                  daklapack_order.order_structure[ADDR_DICT_KEY],
+                  "order_success": True,
+                  "order_id": order_id,
+                  "email_success": email_success}
+    return status_msg
 
 
 def search_activation(token_info, email_query=None, code_query=None):
