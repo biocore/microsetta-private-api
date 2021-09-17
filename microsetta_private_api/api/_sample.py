@@ -1,6 +1,7 @@
 import flask
 from flask import jsonify
-from qiita_client import QiitaClient
+from qiita_client import QiitaClient, NotFoundError, BadRequestError, \
+    ForbiddenError
 from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api.api._account import _validate_account_access
@@ -69,15 +70,28 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         )
         accession_urls = []
         for barcode_info in qiita_data:
-            experiment_accession = barcode_info["ebi_experiment_accession"]
+            experiment_accession = barcode_info.get("ebi_experiment_accession", None)
+            if experiment_accession is None:
+                continue
             accession_urls.append(
                 "https://www.ebi.ac.uk/ena/browser/view/" +
                 experiment_accession +
                 "?show=reads")
-
         sample.set_accession_urls(accession_urls)
-    except Exception as e:
+    except NotFoundError:
+        # I guess qiita doesn't know about this barcode,
+        # so probably no ebi accession info
+        pass
+    except BadRequestError as e:
+        # How do I log these to gunicorn??
+        print("Couldn't communicate with qiita", e)
+    except ForbiddenError as e:
+        # How do I log these to gunicorn??
+        print("Couldn't communicate with qiita", e)
+    except RuntimeError as e:
+        # How do I log these to gunicorn??
         print("Failed to communicate with qiita", e)
+        raise
 
     return jsonify(sample.to_api()),
 
