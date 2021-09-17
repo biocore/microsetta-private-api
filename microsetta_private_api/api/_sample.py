@@ -1,11 +1,10 @@
 import flask
 from flask import jsonify
-from qiita_client import QiitaClient, NotFoundError, BadRequestError, \
+from qiita_client import NotFoundError, BadRequestError, \
     ForbiddenError
 from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api.api._account import _validate_account_access
-from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.sample import SampleInfo
 from microsetta_private_api.model.source import Source
 from microsetta_private_api.repo.barcode_repo import BarcodeRepo
@@ -17,7 +16,6 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.util.util import fromisotime
 from microsetta_private_api.admin.admin_impl import token_grants_admin_access
 from microsetta_private_api.qiita_client_manager import qclient
-
 
 
 def read_sample_associations(account_id, source_id, token_info):
@@ -70,7 +68,7 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         )
         accession_urls = []
         for barcode_info in qiita_data:
-            experiment_accession = barcode_info.get("ebi_experiment_accession", None)
+            experiment_accession = barcode_info.get("ebi_experiment_accession")
             if experiment_accession is None:
                 continue
             accession_urls.append(
