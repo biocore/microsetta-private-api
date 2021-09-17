@@ -15,6 +15,8 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.util.util import fromisotime
 from microsetta_private_api.admin.admin_impl import token_grants_admin_access
+from microsetta_private_api.qiita_client_manager import qclient
+
 
 
 def read_sample_associations(account_id, source_id, token_info):
@@ -55,13 +57,6 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         sample = sample_repo.get_sample(account_id, source_id, sample_id)
         if sample is None:
             return jsonify(code=404, message="Sample not found"), 404
-
-    # Check qiita for accession data and fill it in
-    qclient = QiitaClient(
-        SERVER_CONFIG["qiita_endpoint"],
-        SERVER_CONFIG["qiita_client_id"],
-        SERVER_CONFIG["qiita_client_secret"]
-    )
 
     qiita_body = {
         'sample_ids': ["10317." + str(sample.barcode)]
