@@ -117,6 +117,7 @@ DUMMY_SURVEY_ANSWERS_MODEL = {
     '115': 'K7G-2G8'}
 
 DUMMY_EMPTY_SAMPLE_INFO = {
+    'accession_urls': [],
     'sample_barcode': BARCODE,
     'sample_datetime': None,
     'sample_id': MOCK_SAMPLE_ID,
