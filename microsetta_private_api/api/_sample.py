@@ -75,7 +75,10 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         accession_urls = []
         for barcode_info in qiita_data:
             experiment_accession = barcode_info["ebi_experiment_accession"]
-            accession_urls.append("https://www.ebi.ac.uk/ena/browser/view/" + experiment_accession + "?show=reads")
+            accession_urls.append(
+                "https://www.ebi.ac.uk/ena/browser/view/" +
+                experiment_accession +
+                "?show=reads")
 
         sample.set_accession_urls(accession_urls)
     except Exception as e:
