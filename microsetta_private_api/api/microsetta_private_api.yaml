@@ -2029,6 +2029,13 @@ components:
     sample_project:
       type: string
       example: "British Gut Project"
+    accession_urls:
+      type: array
+      readOnly: true
+      nullable: true
+      items:
+        type: string
+        example: "https://wherever.com"
 
     sample:
       type: object
@@ -2053,6 +2060,8 @@ components:
           $ref: '#/components/schemas/source_id_nullable'
         account_id:
           $ref: '#/components/schemas/account_id_nullable'
+        accession_urls:
+          $ref: '#/components/schemas/accession_urls'
 
     preparation:
       type: object

@@ -1,8 +1,10 @@
 import flask
 from flask import jsonify
+from qiita_client import QiitaClient
 from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api.api._account import _validate_account_access
+from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.sample import SampleInfo
 from microsetta_private_api.model.source import Source
 from microsetta_private_api.repo.barcode_repo import BarcodeRepo
@@ -54,7 +56,32 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         if sample is None:
             return jsonify(code=404, message="Sample not found"), 404
 
-        return jsonify(sample.to_api()), 200
+    # Check qiita for accession data and fill it in
+    qclient = QiitaClient(
+        SERVER_CONFIG["qiita_endpoint"],
+        SERVER_CONFIG["qiita_client_id"],
+        SERVER_CONFIG["qiita_client_secret"]
+    )
+
+    qiita_body = {
+        'sample_ids': ["10317." + str(sample.barcode)]
+    }
+
+    try:
+        qiita_data = qclient.post(
+            '/api/v1/study/10317/samples/status',
+            json=qiita_body
+        )
+        accession_urls = []
+        for barcode_info in qiita_data:
+            experiment_accession = barcode_info["ebi_experiment_accession"]
+            accession_urls.append("https://www.ebi.ac.uk/ena/browser/view/" + experiment_accession + "?show=reads")
+
+        sample.set_accession_urls(accession_urls)
+    except Exception as e:
+        print("Failed to communicate with qiita", e)
+
+    return jsonify(sample.to_api()),
 
 
 def update_sample_association(account_id, source_id, sample_id, body,
