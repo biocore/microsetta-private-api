@@ -1821,7 +1821,7 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Session not found")
+        self.assertEqual(response_obj['message'], "Username not found")
 
     def test_get_sample_vioscreen_percent_energy_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
@@ -1888,7 +1888,7 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Percent Energy not found")
+        self.assertEqual(response_obj['message'], "Username not found")
 
     def test_get_sample_vioscreen_dietary_score_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
@@ -1958,4 +1958,4 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Dietary Score not found")
+        self.assertEqual(response_obj['message'], "Username not found")
