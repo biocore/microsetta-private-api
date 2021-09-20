@@ -414,78 +414,31 @@ class AdminRepoTests(AdminTests):
             self.assertGreater(len(diag['projects_info']), 0)
 
     def test_push_metadata_to_qiita(self):
-        # test db is limited on non-valid scans
-        first_scan_id = 'f7fd3022-3a9c-4f79-b92c-5cebd83cba99'
-        second_scan_id = '76aec821-aa28-4dea-a796-2cfd1276f888'
-        third_scan_id = '76aec821-aa28-4dea-aaaa-2cfd1276f888'
-
         human_skin_not_valid_barcode = ''
-        human_skin_not_valid = {
-            "barcode_scan_id": first_scan_id,
-            "barcode": human_skin_not_valid_barcode,
-            "scan_timestamp": make_tz_datetime(2017, 7, 16),
-            "sample_status": 'no-registered-account',
-            "technician_notes": "huh?"
-        }
-
         pet_fecal_valid_barcode = ''
-        pet_fecal_valid = {
-            "barcode_scan_id": second_scan_id,
-            "barcode": pet_fecal_valid_barcode,
-            "scan_timestamp": make_tz_datetime(2020, 12, 4),
-            "sample_status": 'sample-is-valid',
-            "technician_notes": None
-        }
-
         env_valid_barcode = ''
-        env_valid = {
-            "barcode_scan_id": third_scan_id,
-            "barcode": env_valid_barcode,
-            "scan_timestamp": make_tz_datetime(2020, 12, 4),
-            "sample_status": 'sample-is-valid',
-            "technician_notes": None
-        }
 
         human_fecal_valid_barcode = '000004801'
         human_oral_valid_barcode = '000015213'
         human_skin_valid_barcode = '000027751'
-        without_scan = '000053412'
-        invalid_barcode = 'doesnotexist'
-        blank = 'blank.200.a1'
 
         test_barcodes = [human_fecal_valid_barcode,
                          human_oral_valid_barcode,
                          human_skin_not_valid_barcode,
-                         without_scan,
                          human_skin_valid_barcode,
-                         invalid_barcode,
-                         blank,
                          pet_fecal_valid_barcode,
                          env_valid_barcode]
 
-        try:
-            add_dummy_scan(human_skin_not_valid)
-            add_dummy_scan(pet_fecal_valid)
-            add_dummy_scan(env_valid)
-
+        with patch(...):
             with Transaction() as t:
                 admin_repo = AdminRepo(t)
                 success, failed = admin_repo.push_metadata_to_qiita(
                     test_barcodes)
-        finally:
-            delete_test_scan(first_scan_id)
-            delete_test_scan(second_scan_id)
-            delete_test_scan(third_scan_id)
 
-        self.assertEqual(set(success), {human_fecal_valid_barcode,
-                                        human_oral_valid_barcode,
-                                        human_skin_valid_barcode,
-                                        pet_fecal_valid_barcode,
-                                        blank,
-                                        env_valid_barcode})
-        self.assertEqual(set(failed), {human_skin_not_valid_barcode,
-                                       without_scan,
-                                       invalud_barcode})
+        self.assertEqual(success, 5)
+        self.assertEqual(failed, [
+            {human_skin_not_valid: ("This barcode is not associated with any "
+                                    "surveys matching this template id")}])
 
     def test_get_project_name_fail(self):
         with Transaction() as t:
