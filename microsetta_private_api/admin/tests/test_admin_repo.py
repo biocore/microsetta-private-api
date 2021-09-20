@@ -3,6 +3,7 @@ from datetime import date
 import datetime
 import dateutil.parser
 import psycopg2
+import psycopg2.extras
 
 import microsetta_private_api.model.project as p
 
@@ -12,7 +13,9 @@ from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.model.daklapack_order import DaklapackOrder
 from microsetta_private_api.repo.account_repo import AccountRepo
-from microsetta_private_api.repo.admin_repo import AdminRepo
+from microsetta_private_api.repo.admin_repo import AdminRepo, \
+    _get_kit_tuples, KIT_BOX_ID_KEY, KIT_OUTBOUND_KEY, KIT_ADDRESS_KEY, \
+    KIT_INBOUND_KEY
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.admin.admin_impl import validate_admin_access
 
@@ -87,7 +90,8 @@ class AdminTests(TestCase):
                               12345,
                               "US"
                           ),
-                          "fakekit")
+                          "fakekit",
+                          "en_US")
             acct_repo.create_account(acc)
 
             acc = Account(ADMIN_ACCT_ID,
@@ -104,7 +108,8 @@ class AdminTests(TestCase):
                               12345,
                               "US"
                           ),
-                          "fakekit")
+                          "fakekit",
+                          "en_US")
             acct_repo.create_account(acc)
             t.commit()
 
@@ -112,9 +117,117 @@ class AdminTests(TestCase):
     def teardown_test_data():
         with Transaction() as t:
             acct_repo = AccountRepo(t)
+            AdminTests.delete_dummy_dak_orders(t)
             acct_repo.delete_account(STANDARD_ACCT_ID)
             acct_repo.delete_account(ADMIN_ACCT_ID)
             t.commit()
+
+    @staticmethod
+    def construct_dummy_dak_order_data(t, bonus_records=False):
+        submitter_id = 'dummy submitter id'
+
+        # need a valid submitter id from the account table to actually
+        # insert into db
+        if t is not None:
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT id, first_name, last_name "
+                            "FROM ag.account "
+                            "WHERE account_type = 'admin' "
+                            "ORDER BY id "
+                            "LIMIT 1;")
+                submitter_record = cur.fetchone()
+                submitter_id = submitter_record[0]
+
+        dummy_orders = [('7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                         submitter_id, 'Already completed: Sent', None,
+                         '{"orderId": '
+                         '"7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                         dateutil.parser.isoparse(
+                             "2020-10-09T22:43:52.219328Z"),
+                         None, "Sent"),
+                        ('8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                         submitter_id, 'Already polled but incomplete; '
+                                       'will be Error', None,
+                         '{"orderId": '
+                         '"8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                         dateutil.parser.isoparse(
+                             "2021-10-09T22:43:52.219328Z"),
+                         None, "Pending"),
+                        ('9ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                         submitter_id, 'Already completed: Error', None,
+                         '{"orderId": '
+                         '"9ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                         dateutil.parser.isoparse(
+                             "2020-10-09T22:43:52.219328Z"),
+                         None, "Error"),
+                        ('0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                         submitter_id, 'Not yet polled; will be Sent', None,
+                         '{"orderId": '
+                         '"0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                         dateutil.parser.isoparse(
+                             "2021-10-09T22:43:52.219328Z"),
+                         None, None)]
+
+        if bonus_records:
+            dummy_orders.append(
+                ('abc917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                 submitter_id, 'Not yet polled; will be Inproduction', None,
+                 '{"orderId": '
+                 '"abc917ef-0c4d-431a-9aa0-0a1f4f41f44b"}',
+                 dateutil.parser.isoparse(
+                     "2021-10-10T22:43:52.219328Z"),
+                 None, None))
+
+            dummy_orders.append(
+                ('99746684-8a2b-45d9-9337-4742bf6734cc',
+                 submitter_id, 'Not yet polled; won\'t be in Dak orders', None,
+                 '{"orderId": '
+                 '"99746684-8a2b-45d9-9337-4742bf6734cc"}',
+                 dateutil.parser.isoparse(
+                     "2021-10-10T22:43:52.219328Z"),
+                 None, None))
+
+            dummy_orders.append(
+                ('bf3ef5f7-ae20-45d0-8cfb-d5c0db8024fe',
+                 submitter_id, 'Not yet polled; will error in save', None,
+                 '{"orderId": '
+                 '"bf3ef5f7-ae20-45d0-8cfb-d5c0db8024fe"}',
+                 dateutil.parser.isoparse(
+                     "2021-10-10T22:43:52.219328Z"),
+                 None, None))
+
+        return dummy_orders
+
+    @staticmethod
+    def make_dummy_dak_orders(t, bonus_records=False):
+        dummy_orders = AdminTests.construct_dummy_dak_order_data(
+            t, bonus_records)
+
+        with t.dict_cursor() as cur:
+            cur.executemany("INSERT INTO barcodes.daklapack_order "
+                            "(dak_order_id, submitter_acct_id, "
+                            "description, fulfillment_hold_msg, "
+                            "order_json, creation_timestamp, "
+                            "last_polling_timestamp, last_polling_status) "
+                            "VALUES (%s, %s, %s, %s,%s, %s, %s, %s)",
+                            dummy_orders)
+
+        return dummy_orders
+
+    @staticmethod
+    def delete_dummy_dak_orders(t, dummy_dak_order_ids=None):
+        if dummy_dak_order_ids is None:
+            dummy_orders = AdminTests.construct_dummy_dak_order_data(
+                None, bonus_records=True)
+            dummy_dak_order_ids = [i[0] for i in dummy_orders]
+
+        with t.dict_cursor() as cur:
+            if len(dummy_dak_order_ids) > 0:
+                # Delete all orders with specified ids
+                cur.execute(
+                    "DELETE FROM barcodes.daklapack_order "
+                    "WHERE dak_order_id IN %s",
+                    (tuple(dummy_dak_order_ids),))
 
     def test_validate_admin_access(self):
         token_info_std = {
@@ -300,6 +413,19 @@ class AdminRepoTests(AdminTests):
             self.assertGreater(len(diag['scans_info']), 0)
             self.assertGreater(len(diag['projects_info']), 0)
 
+    def test_get_project_name_fail(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            with self.assertRaisesRegex(NotFound, "not found"):
+                admin_repo.get_project_name(9999999)
+
+    def test_get_project_name(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            obs = admin_repo.get_project_name(1)
+            self.assertEqual(obs, 'American Gut Project')
+
     def test_get_project_barcodes_fail(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
@@ -428,6 +554,43 @@ class AdminRepoTests(AdminTests):
                     updated_dict.pop(p.PROJ_NAME_KEY)
                 self.assertEqual(obs_dict, updated_dict)
 
+    def test__get_kit_tuples_wo_details(self):
+        kit_uuids = ['efb9645f-f38a-4d28-9788-25d1ba0bc6e6',
+                     '5be3a141-eda5-48ab-bf17-ba29a02a1fbc']
+        kit_names = ["DM24-A3CF9", "DM05-B3CF9"]
+
+        expected_out = [(kit_uuids[0], kit_names[0],
+                         None, None, None, kit_uuids[0]),
+                        (kit_uuids[1], kit_names[1],
+                         None, None, None, kit_uuids[1])]
+
+        real_out = _get_kit_tuples(kit_uuids, kit_names)
+        self.assertEqual(expected_out, real_out)
+
+    def test__get_kit_tuples_w_details(self):
+        kit_uuids = ['efb9645f-f38a-4d28-9788-25d1ba0bc6e6',
+                     '5be3a141-eda5-48ab-bf17-ba29a02a1fbc']
+        kit_names = ["DM24-A3CF9", "DM05-B3CF9"]
+        kits_details = [{KIT_OUTBOUND_KEY: "FEDEX-4562w0",
+                         KIT_ADDRESS_KEY: {"street": "123 Maple St"},
+                         KIT_INBOUND_KEY: "FEDEX-03459f2",
+                         KIT_BOX_ID_KEY: "DM89D-VW6Y"},
+                        {KIT_OUTBOUND_KEY: "FEDEX-3458d3",
+                         KIT_ADDRESS_KEY: {"street": "456 Oak St"},
+                         KIT_INBOUND_KEY: "FEDEX-0980r0",
+                         KIT_BOX_ID_KEY: "DM36P-VP3N"},
+                        ]
+
+        expected_out = [(kit_uuids[0], kit_names[0], "FEDEX-4562w0",
+                         {"street": "123 Maple St"}, "FEDEX-03459f2",
+                         "DM89D-VW6Y"),
+                        (kit_uuids[1], kit_names[1], "FEDEX-3458d3",
+                         {"street": "456 Oak St"}, "FEDEX-0980r0",
+                         "DM36P-VP3N")]
+
+        real_out = _get_kit_tuples(kit_uuids, kit_names, kits_details)
+        self.assertEqual(expected_out, real_out)
+
     def test_create_kits_fail_nonexistent_project(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
@@ -444,8 +607,14 @@ class AdminRepoTests(AdminTests):
             self.assertEqual(len(non_tmi['created']), 5)
             for obj in non_tmi['created']:
                 self.assertEqual(len(obj['sample_barcodes']), 3)
-                self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
-                                 set(obj))
+                self.assertEqual({'kit_id', 'kit_uuid', 'box_id', 'address',
+                                  'outbound_fedex_tracking',
+                                  'inbound_fedex_tracking',
+                                  'sample_barcodes'}, set(obj))
+                self.assertEqual(obj['kit_uuid'], obj['box_id'])
+                self.assertEqual(None, obj['address'])
+                self.assertEqual(None, obj['outbound_fedex_tracking'])
+                self.assertEqual(None, obj['inbound_fedex_tracking'])
 
             # should not be present in the ag tables
             non_tmi_kits = [k['kit_id'] for k in non_tmi['created']]
@@ -466,9 +635,15 @@ class AdminRepoTests(AdminTests):
             self.assertEqual(len(tmi['created']), 4)
             for obj in tmi['created']:
                 self.assertEqual(len(obj['sample_barcodes']), 2)
-                self.assertEqual({'kit_id', 'kit_uuid', 'sample_barcodes'},
-                                 set(obj))
+                self.assertEqual({'kit_id', 'kit_uuid', 'box_id', 'address',
+                                  'outbound_fedex_tracking',
+                                  'inbound_fedex_tracking',
+                                  'sample_barcodes'}, set(obj))
                 self.assertTrue(obj['kit_id'].startswith('foo_'))
+                self.assertEqual(obj['kit_uuid'], obj['box_id'])
+                self.assertEqual(None, obj['address'])
+                self.assertEqual(None, obj['outbound_fedex_tracking'])
+                self.assertEqual(None, obj['inbound_fedex_tracking'])
 
             # should be present in the ag tables
             tmi_kits = [k['kit_id'] for k in tmi['created']]
@@ -479,6 +654,90 @@ class AdminRepoTests(AdminTests):
                             (tuple(tmi_kits),))
                 observed = cur.fetchall()
                 self.assertEqual(len(observed), 4)
+
+    def test_create_kit_success_is_microsetta(self):
+        input_kit_name = "DM24-A3CF9"
+        input_box_id = "DM89D-VW6Y"
+        input_barcodes = ["X00-0001", "X00-0002", "X00-0003"]
+        input_address = {'street': '123 Maple St'}
+        input_outbound_fedex = "FEDEX-03459f2"
+        input_inbound_fedex = "FEDEX-4562w0"
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            # kit belongs to two projects, one microsetta (1) and one not (33),
+            # which means it gets treated overall as microsetta
+            tmi = admin_repo.create_kit(input_kit_name, input_box_id,
+                                        input_address, input_outbound_fedex,
+                                        input_inbound_fedex, input_barcodes,
+                                        [1, 33])
+
+            self.assertEqual(['created', ], list(tmi.keys()))
+            self.assertEqual(len(tmi['created']), 1)
+            obj = tmi['created'][0]
+            self.assertEqual(obj['sample_barcodes'], input_barcodes)
+            self.assertEqual({'kit_id', 'kit_uuid', 'box_id', 'address',
+                              'outbound_fedex_tracking',
+                              'inbound_fedex_tracking',
+                              'sample_barcodes'}, set(obj))
+            self.assertEqual(input_kit_name, obj['kit_id'])
+            self.assertEqual(input_box_id, obj['box_id'])
+            self.assertEqual('{"street": "123 Maple St"}', obj['address'])
+            self.assertEqual(input_outbound_fedex,
+                             obj['outbound_fedex_tracking'])
+            self.assertEqual(input_inbound_fedex,
+                             obj['inbound_fedex_tracking'])
+
+            # should be present in the ag tables
+            tmi_kits = [k['kit_id'] for k in tmi['created']]
+            with t.cursor() as cur:
+                cur.execute("SELECT supplied_kit_id "
+                            "FROM ag.ag_kit "
+                            "WHERE supplied_kit_id IN %s",
+                            (tuple(tmi_kits),))
+                observed = cur.fetchall()
+                self.assertEqual(len(observed), 1)
+
+    def test_create_kit_success_not_microsetta(self):
+        input_kit_name = "DM24-A3CF9"
+        input_box_id = "DM89D-VW6Y"
+        input_barcodes = ["X00-0001", "X00-0002", "X00-0003"]
+        input_address = {'street': '123 Maple St'}
+        input_outbound_fedex = "FEDEX-03459f2"
+        input_inbound_fedex = "FEDEX-4562w0"
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            # kit belongs to one project, which is not microsetta
+            non_tmi = admin_repo.create_kit(input_kit_name, input_box_id,
+                                            input_address,
+                                            input_outbound_fedex,
+                                            input_inbound_fedex,
+                                            input_barcodes, [33])
+
+            self.assertEqual(['created', ], list(non_tmi.keys()))
+            self.assertEqual(len(non_tmi['created']), 1)
+            obj = non_tmi['created'][0]
+            self.assertEqual(obj['sample_barcodes'], input_barcodes)
+            self.assertEqual({'kit_id', 'kit_uuid', 'box_id', 'address',
+                              'outbound_fedex_tracking',
+                              'inbound_fedex_tracking',
+                              'sample_barcodes'}, set(obj))
+            self.assertEqual(input_kit_name, obj['kit_id'])
+            self.assertEqual(input_box_id, obj['box_id'])
+            self.assertEqual('{"street": "123 Maple St"}', obj['address'])
+            self.assertEqual(input_outbound_fedex,
+                             obj['outbound_fedex_tracking'])
+            self.assertEqual(input_inbound_fedex,
+                             obj['inbound_fedex_tracking'])
+
+            # should not be present in the ag tables
+            non_tmi_kits = [k['kit_id'] for k in non_tmi['created']]
+            with t.cursor() as cur:
+                cur.execute("SELECT supplied_kit_id "
+                            "FROM ag.ag_kit "
+                            "WHERE supplied_kit_id IN %s",
+                            (tuple(non_tmi_kits),))
+                observed = cur.fetchall()
+                self.assertEqual(len(observed), 0)
 
     def test_search_kit_id(self):
         with Transaction() as t:
@@ -862,7 +1121,7 @@ class AdminRepoTests(AdminTests):
                 cur.execute("SELECT project_id "
                             "FROM barcodes.daklapack_order_to_project "
                             "WHERE dak_order_id =  %s",
-                            (input_id, ))
+                            (input_id,))
                 curr_proj_records = cur.fetchall()
                 self.assertEqual(len(curr_proj_records), 2)
                 for curr_proj_rec in curr_proj_records:
@@ -870,3 +1129,63 @@ class AdminRepoTests(AdminTests):
 
         # NB: all the above happens within a transaction that we then DO NOT
         # commit so the db changes are not permanent
+
+    def test_get_unfinished_daklapack_order_ids(self):
+        with Transaction() as t:
+            self.make_dummy_dak_orders(t)
+
+            expected_out = ['8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b',
+                            '0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b']
+
+            admin_repo = AdminRepo(t)
+            real_out = admin_repo.get_unfinished_daklapack_order_ids()
+            self.assertEqual(sorted(expected_out), sorted(real_out))
+
+    def test_get_projects_for_dak_order(self):
+        with Transaction() as t:
+            self.make_dummy_dak_orders(t)
+
+            # create some records
+            an_order_id = '8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b'
+            dummy_associations = [
+                (an_order_id, 3),
+                (an_order_id, 1),
+                ('0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b', 4)
+            ]
+
+            insert_sql = 'insert into barcodes.daklapack_order_to_project' \
+                         ' (dak_order_id, project_id) values %s'
+
+            with t.dict_cursor() as cur:
+                psycopg2.extras.execute_values(
+                    cur, insert_sql, dummy_associations,
+                    template=None, page_size=100)
+
+                admin_repo = AdminRepo(t)
+                real_out = admin_repo.get_projects_for_dak_order(an_order_id)
+                self.assertEqual([1, 3], real_out)
+
+    def test_set_daklapack_order_poll_info(self):
+        an_order_id = '8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b'
+        a_date = dateutil.parser.isoparse("2021-06-09T22:43:52.219328Z")
+        a_status = "Error"
+
+        with Transaction() as t:
+            dummy_orders = self.make_dummy_dak_orders(t)
+            expected_record = list(dummy_orders[1])
+            expected_record[4] = {"orderId": an_order_id}
+            expected_record[6] = a_date
+            expected_record[7] = a_status
+
+            admin_repo = AdminRepo(t)
+            admin_repo.set_daklapack_order_poll_info(
+                an_order_id, a_date, a_status)
+
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT * "
+                            "FROM barcodes.daklapack_order "
+                            "WHERE dak_order_id =  %s",
+                            (an_order_id,))
+                curr_records = cur.fetchall()
+                self.assertEqual(len(curr_records), 1)
+                self.assertEqual(expected_record, curr_records[0])

@@ -2,6 +2,7 @@ from microsetta_private_api.config_manager import AMGUT_CONFIG
 import psycopg2.pool
 import psycopg2.extras
 import atexit
+from psycopg2 import sql
 
 
 class Transaction:
@@ -35,6 +36,15 @@ class Transaction:
         if not self._closed:
             self.rollback()
         Transaction._POOL.putconn(self._conn)
+
+    def lock_table(self, table):
+        # Just access exclusive mode for now- hard to escape the lock mode
+        # in psycopg2.
+        with self.cursor() as cur:
+            cur.execute(
+                sql.SQL("LOCK TABLE {} IN ACCESS EXCLUSIVE MODE")
+                .format(sql.Identifier(table))
+            )
 
     def commit(self):
         if self._closed:

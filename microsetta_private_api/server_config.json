@@ -15,11 +15,18 @@
   "vioscreen_cryptokey": "1234567891011121",
   "vioscreen_admin_username": "",
   "vioscreen_admin_password": "",
+  "vioscreen_patch_path": "/tmp/vioscreen_status.tsv",
   "daklapack_auth_url": "https://someauthprovider.com/maybe/token",
   "daklapack_client_id": "qwe1-234rty-5678-etc",
   "daklapack_client_secret": "ab1~2c3def.etc",
   "daklapack_subscription_key_name": "dak-specific-key",
   "daklapack_subscription_key_val": "123abc456d89z",
   "daklapack_api_base_url": "https://example.com/dak_api",
-  "daklapack_service_email": "dak_fake@example.com"
+  "daklapack_service_email": "dak_fake@example.com",
+  "qiita_endpoint": "https://xxxxxxxxxx.com",
+  "qiita_client_id": "xxxxxxxxxxxxxxxxxxxx",
+  "qiita_client_secret": "yyyyyyyyyyyyyyyyyyyyyy",
+  "daklapack_errors_report_email": "microsetta_recipient@fake.com",
+  "melissa_url": "http://address.melissadata.net/v3/WEB/GlobalAddress/doglobaladdress",
+  "melissa_license_key": "qwerty123456"
 }

@@ -118,7 +118,7 @@ class AuthTests(TestCase):
 
     def test_fail_401_no_headers(self):
         # Return 401 if no headers provided
-        resp = self.client.get('/api/accounts/%s/sources?language_tag=en-US' %
+        resp = self.client.get('/api/accounts/%s/sources?language_tag=en_US' %
                                ACCT_ID)
 
         check_response(resp, 401)
@@ -129,7 +129,7 @@ class AuthTests(TestCase):
 
     def test_fail_401_unparseable_token(self):
         # Return 401 if can't parse the jwt
-        resp = self.client.get('/api/accounts/%s/sources?language_tag=en-US' %
+        resp = self.client.get('/api/accounts/%s/sources?language_tag=en_US' %
                                ACCT_ID, headers={
                                    "Authorization": "Bearer boogaboogaboo"
                                })
@@ -142,7 +142,7 @@ class AuthTests(TestCase):
 
     def test_fail_401_sig_check_failure(self):
         # Return 401 if doesn't pass jwt signature check
-        resp = self.client.get('/api/accounts/%s/sources?language_tag=en-US' %
+        resp = self.client.get('/api/accounts/%s/sources?language_tag=en_US' %
                                ACCT_ID, headers={
                                    "Authorization": MODIFIED_TOKEN
                                })
@@ -151,7 +151,7 @@ class AuthTests(TestCase):
 
     def test_fail_401_expired_token(self):
         # Return 401 if expired token
-        resp = self.client.get('/api/accounts/%s/sources?language_tag=en-US' %
+        resp = self.client.get('/api/accounts/%s/sources?language_tag=en_US' %
                                ACCT_ID, headers={
                                    "Authorization": REPLAY_TOKEN
                                })
@@ -176,7 +176,7 @@ class AuthTests(TestCase):
             mock_d.side_effect = decode_fake_token
 
             resp = self.client.get(
-                '/api/accounts/%s/sources?language_tag=en-US' % ACCT_ID,
+                '/api/accounts/%s/sources?language_tag=en_US' % ACCT_ID,
                 headers={"Authorization": "Bearer %s" % fake_token})
 
             check_response(resp, expected_code)

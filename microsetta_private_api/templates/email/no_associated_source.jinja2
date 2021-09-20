@@ -217,63 +217,63 @@
 <body class="c10">
 <p class="c1 c5"><span class="c0"></span></p>
 <p class="c1">
-    <span class="c0">Hello {{contact_name |e}},</span>
+    <span class="c0">{{ _("Hello") }} {{contact_name |e}},</span>
 </p>
 <p class="c1"><span class="c0">&nbsp;</span></p>
 <p class="c8 c9">
-    <span class="c4">Thank you for your interest and participation in The Microsetta Initiative. We are writing as we've encountered an issue processing your collection, and we would appreciate your assistance in helping to resolve this matter.</span>
+    <span class="c4">{{ _("Thank you for your interest and participation in The Microsetta Initiative. We are writing as we've encountered an issue processing your collection, and we would appreciate your assistance in helping to resolve this matter.") }}</span>
 
-    <span class="c4">Specifically, the following collection sent to the lab is not associated with a source:</span>
+    <span class="c4">{{ _("Specifically, the following sample sent to the lab needs more information to be included before it can be processed:") }}</span>
 </p>
 <p class="c2"><span class="c0"></span></p>
 <p class="c8 c9">
     <ul class="c8 c9">
-    <li><span class="c0"><a href={{resolution_url}} target="_blank">{{sample_barcode |e}}</a></span></li>
+    <li><span class="c0">{{sample_barcode |e}}</span></li>
     </ul>
 </p>
 <p class="c2">
     <span class="c0"></span>
 </p>
 <p class="c8 c9">
-    <span class="c0">We require this information in order to process this specimen in compliance with our human subjects research protocol. Please log back into the participant website by clicking or copying on the following URL:</span>
+    <span class="c0">{{ _("We require this information to process this specimen in compliance with our human subjects research protocol. Please log back into the participant website by clicking or copying the following URL:") }}</span>
 </p>
 <p class="c8 c9">
     <span class="c0">&nbsp;</span>
 </p>
 <p class="c8 c9">
     <ul class="c8 c9">
-    <li><span class="c0"><a href={{account_url}} target="_blank">Your account</a></span></li>
+    <li><span class="c0"><a href={{resolution_url}} target="_blank">{{ _("Your account") }}</a></span></li>
     </ul>
 </p>
 <p class="c8 c9">
     <span class="c0">&nbsp;</span>
 </p>
 <p class="c8 c9">
-    <span class="c0">After accessing your account using the above URL, you will need to create a source by clicking on one of the buttons under the "Sources" section.</span>
+    <span class="c0">{{ _('After accessing your account using the above URL, you will need to create a source by clicking on one of the buttons under the "Sources" section.') }}</span>
 </p>
 <p class="c8 c9">
     <span class="c0">&nbsp;</span>
 </p>
 <p class="c8 c9">
-    <span class="c0">Once a source has been created, please reply to this email with the following information so that we can link the collection to your source:</span>
+    <span class="c0">{{ _("Once a source has been created, please reply to this email with the following information so that we can link the collection to your source:") }}</span>
 </p>
 <p class="c2"><span class="c0"></span></p>
 <p class="c8 c9">
     <ul class="c8 c9">
-    <li><span class="c0">Collection date</span></li>
-    <li><span class="c0">Collection time</span></li>
-    <li><span class="c0">Collection type</span></li>
+    <li><span class="c0">{{ _("Collection date") }}</span></li>
+    <li><span class="c0">{{ _("Collection time") }}</span></li>
+    <li><span class="c0">{{ _("Collection type") }}</span></li>
     </ul>
 </p>
 <p class="c8 c9">
     <span class="c0">&nbsp;</span>
 </p>
 <p class="c1">
-    <span class="c0">If you have any questions, please reply to us at <a href = "mailto: microsetta@ucsd.edu">microsetta@ucsd.edu</a></span>
+    <span class="c0">{{ _("If you have any questions, please reply to us at") }} <a href = "mailto: microsetta@ucsd.edu">microsetta@ucsd.edu</a></span>
 </p>
 <p class="c1"><span class="c0">&nbsp;</span></p>
-<p class="c1"><span class="c0">Thank you,</span></p>
-<p class="c1"><span class="c0">The Microsetta Team</span></p>
+<p class="c1"><span class="c0">{{ _("Thank you,") }}</span></p>
+<p class="c1"><span class="c0">{{ _("The Microsetta Team") }}</span></p>
 
 </body>
 </html>

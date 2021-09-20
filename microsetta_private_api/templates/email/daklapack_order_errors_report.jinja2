@@ -1,0 +1,35 @@
+<html>
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+</head>
+<body>
+<p>
+Daklapack reports that the following orders have an error in their system and cannot be fulfilled.
+Please identify and correct these errors and then submit replacement Daklapack orders.
+</p>
+<table>
+    <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Article Code</th>
+            <th>Sent-To Address</th>
+            <th>Order Submitter</th>
+            <th>Creation Date</th>
+            <th>Status Description</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for curr_error in errors %}
+        <tr>
+            <td>{{ curr_error['order_id'] }}</td>
+            <td>{{ curr_error['article_code'] }}</td>
+            <td>{{ curr_error['sent_to_address'] }}</td>
+            <td>{{ curr_error['order_submitter'] }}</td>
+            <td>{{ curr_error['creation_date'] }}</td>
+            <td>{{ curr_error['status_description'] }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>

@@ -3,10 +3,13 @@ import secrets
 import logging
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
-from flask import jsonify
+import flask
+from flask import jsonify, request
+from flask_babel import Babel
 
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.celery_utils import celery, init_celery
+from microsetta_private_api.localization import EN_US, ES_MX
 
 
 """
@@ -52,6 +55,9 @@ def build_app():
         flask_secret = secrets.token_urlsafe(16)
     app.app.secret_key = flask_secret
     app.app.config['SESSION_TYPE'] = 'memcached'
+    app.app.config['BABEL_DEFAULT_TIMEZONE'] = 'UTC'
+    app.app.config['BABEL_TRANSLATION_DIRECTORIES'] = './translations'
+
     # ---
 
     # Set default json encoder
@@ -69,6 +75,18 @@ def build_app():
         gunicorn_logger = logging.getLogger('gunicorn.error')
         app.app.logger.handlers = gunicorn_logger.handlers
         app.app.logger.setLevel(gunicorn_logger.level)
+
+    global babel
+    babel = Babel(app.app)
+
+    @babel.localeselector
+    def get_locale():
+        # for unit test support
+        if not flask.has_request_context():
+            return EN_US
+
+        return request.accept_languages.best_match([EN_US, ES_MX],
+                                                   default=EN_US)
 
     init_celery(celery, app.app)
 
@@ -90,6 +108,7 @@ def run(app):
     )
 
 
+babel = None
 app = build_app()
 
 

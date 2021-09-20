@@ -61,7 +61,8 @@ def setup_test_data():
                           12345,
                           "US"
                       ),
-                      "fakekit")
+                      "fakekit",
+                      "en_US")
         acct_repo.create_account(acc)
 
         with t.cursor() as cur:
@@ -71,19 +72,23 @@ def setup_test_data():
         t.commit()
 
 
-def delete_test_daklapack_order(new_order_id):
-    if new_order_id is not None:
+def delete_test_daklapack_orders(order_submissions):
+    if order_submissions is not None:
         with Transaction() as t:
             with t.cursor() as cur:
-                cur.execute("DELETE FROM barcodes.daklapack_order_to_project "
-                            "WHERE "
-                            "dak_order_id = %s",
-                            (new_order_id,))
+                for curr_submission in order_submissions:
+                    new_order_id = curr_submission.get("order_id")
+                    if new_order_id is not None:
+                        cur.execute("DELETE FROM barcodes."
+                                    "daklapack_order_to_project "
+                                    "WHERE "
+                                    "dak_order_id = %s",
+                                    (new_order_id,))
 
-                cur.execute("DELETE FROM barcodes.daklapack_order "
-                            "WHERE "
-                            "dak_order_id = %s",
-                            (new_order_id,))
+                        cur.execute("DELETE FROM barcodes.daklapack_order "
+                                    "WHERE "
+                                    "dak_order_id = %s",
+                                    (new_order_id,))
             t.commit()
 
 
@@ -842,10 +847,51 @@ class AdminApiTests(TestCase):
         self.assertNotIn('about_yourself_text', obs)
 
     def _test_post_daklapack_orders(self, order_info, expected_status):
+        # NB: order_id and creation_date keys not included as different
+        # every time
+        expected = [{'order_address': {'address1': '123 Main St',
+                                       'address2': '',
+                                       'city': 'San Diego',
+                                       'companyName': 'Dan H',
+                                       'country': 'USA',
+                                       'countryCode': 'us',
+                                       'firstName': 'Jane',
+                                       'insertion': 'Apt 2',
+                                       'lastName': 'Doe',
+                                       'phone': '(858) 555-1212',
+                                       'postalCode': '92210',
+                                       'state': 'CA'},
+                     'order_success': True},
+                    {'daklapack_api_error_code': 409,
+                     'daklapack_api_error_msg': 'Got 409',
+                     'order_address': {'address1': '29 Side St',
+                                       'address2': 'Kew Gardens',
+                                       'city': 'Gananoque',
+                                       'companyName': 'Dan H',
+                                       'country': 'Canada',
+                                       'countryCode': 'ca',
+                                       'firstName': 'Tom',
+                                       'insertion': '',
+                                       'lastName': 'Thumb',
+                                       'phone': '(858) 555-1212',
+                                       'postalCode': 'KG7-448',
+                                       'state': 'Ontario'},
+                     'order_success': False}]
+        order_submissions = None
+
         input_json = json.dumps(order_info)
 
-        result = None
-        new_order_id = None
+        # Not just checking if dicts are equal because there are some keys in
+        # the real, returned dictionary that aren't in the expected dictionary
+        # (order_id, creationDate) bc they change every time
+        def _check_dict_contents(expected_dict, real_dict):
+            for curr_expect_k, curr_expect_v in expected_dict.items():
+                self.assertIn(curr_expect_k, real_dict)
+                curr_real_v = real_dict[curr_expect_k]
+                if isinstance(curr_real_v, dict):
+                    _check_dict_contents(curr_expect_v, curr_real_v)
+                else:
+                    self.assertEqual(curr_expect_v, curr_real_v)
 
         try:
             # execute articles post
@@ -856,21 +902,22 @@ class AdminApiTests(TestCase):
                 headers=MOCK_HEADERS
             )
 
-            # check for expected response code
+            response_data = json.loads(response.data)
+            order_submissions = response_data.get("order_submissions")
+
+            # check for expected response code & order count
             self.assertEqual(expected_status, response.status_code)
+            self.assertEqual(len(expected), len(order_submissions))
+            for i in range(0, len(order_submissions)):
+                curr_expected = expected[i]
+                curr_real = order_submissions[i]
+                _check_dict_contents(curr_expected, curr_real)
 
-            if expected_status == 201:
-                new_order_id = extract_last_id_from_location_header(response)
-
-                result = json.loads(response.data)
-                for a_key in ["order_id", "email_success"]:
-                    self.assertTrue(a_key in result)
-
-            return result
+            return order_submissions
         finally:
-            delete_test_daklapack_order(new_order_id)
+            delete_test_daklapack_orders(order_submissions)
 
-    def test_post_daklapack_orders_success_fully_specified(self):
+    def test_post_daklapack_orders_fully_specified(self):
         # create post input json with a nonsense date field
         order_info = {
             "project_ids": DUMMY_PROJ_ID_LIST,
@@ -887,17 +934,18 @@ class AdminApiTests(TestCase):
         # where they are originally defined; see
         # https://docs.python.org/3/library/unittest.mock.html#where-to-patch
         with patch("microsetta_private_api.admin.admin_impl."
-                   "post_daklapack_order") as mock_dak_post:
-            mock_dak_post.side_effect = [make_test_response(201)]
+                   "post_daklapack_orders") as mock_dak_post:
+            mock_dak_post.side_effect = [make_test_response(201),
+                                         make_test_response(409)]
             with patch("microsetta_private_api.admin.admin_impl."
                        "send_daklapack_hold_email") as mock_email:
                 mock_email.side_effect = [True]
 
-                real_out = self._test_post_daklapack_orders(order_info, 201)
-                # has a hold message, so hold email sent
-                self.assertTrue(real_out["email_success"])
+                real_out = self._test_post_daklapack_orders(order_info, 200)
+                # the successful order has a hold message, so hold email sent
+                self.assertTrue(real_out[0]["email_success"])
 
-    def test_post_daklapack_orders_success_but_email_failure(self):
+    def test_post_daklapack_orders_email_failure(self):
         # create post input json with a nonsense date field
         order_info = {
             "project_ids": DUMMY_PROJ_ID_LIST,
@@ -914,17 +962,19 @@ class AdminApiTests(TestCase):
         # where they are originally defined; see
         # https://docs.python.org/3/library/unittest.mock.html#where-to-patch
         with patch("microsetta_private_api.admin.admin_impl."
-                   "post_daklapack_order") as mock_dak_post:
-            mock_dak_post.side_effect = [make_test_response(201)]
+                   "post_daklapack_orders") as mock_dak_post:
+            mock_dak_post.side_effect = [make_test_response(201),
+                                         make_test_response(409)]
             with patch("microsetta_private_api.admin.admin_impl."
                        "send_daklapack_hold_email") as mock_email:
                 mock_email.side_effect = [False]
 
-                real_out = self._test_post_daklapack_orders(order_info, 201)
-                # has a hold message, but hold email failed to send
-                self.assertFalse(real_out["email_success"])
+                real_out = self._test_post_daklapack_orders(order_info, 200)
+                # the successful order has a hold message,
+                # but hold email failed to send
+                self.assertFalse(real_out[0]["email_success"])
 
-    def test_post_daklapack_orders_success_wo_optionals(self):
+    def test_post_daklapack_orders_wo_optionals(self):
         # create post input json with a nonsense date field
         order_info = {
             "project_ids": DUMMY_PROJ_ID_LIST,
@@ -941,89 +991,59 @@ class AdminApiTests(TestCase):
         # where they are originally defined; see
         # https://docs.python.org/3/library/unittest.mock.html#where-to-patch
         with patch("microsetta_private_api.admin.admin_impl."
-                   "post_daklapack_order") as mock_dak_post:
-            mock_dak_post.side_effect = [make_test_response(201)]
+                   "post_daklapack_orders") as mock_dak_post:
+            mock_dak_post.side_effect = [make_test_response(201),
+                                         make_test_response(409)]
             with patch("microsetta_private_api.admin.admin_impl."
                        "send_daklapack_hold_email") as mock_email:
-                mock_email.side_effect = [True]
-                real_out = self._test_post_daklapack_orders(order_info, 201)
-                # has no hold message, so no hold email sent
-                self.assertIsNone(real_out["email_success"])
+                mock_email.side_effect = [True, True]
+                real_out = self._test_post_daklapack_orders(order_info, 200)
+                # successful order has no hold message, so no hold email sent
+                # and therefore no email_success value
+                self.assertIsNone(real_out[0]["email_success"])
 
-    def test_post_daklapack_orders_failure_dak_api(self):
-        # create post input json with a nonsense date field
-        order_info = {
-            "project_ids": DUMMY_PROJ_ID_LIST,
-            "article_code": DUMMY_INT_DAK_ARTICLE_CODE,
-            "addresses": DUMMY_ADDRESSES,
-            "description": DUMMY_DAK_ORDER_DESC,
-            "fedex_ref_1": DUMMY_FEDEX_REFS[0],
-            "fedex_ref_2": DUMMY_FEDEX_REFS[1],
-            "fedex_ref_3": DUMMY_FEDEX_REFS[2],
-            "fulfillment_hold_msg": DUMMY_HOLD_MSG
-        }
+    def test_query_project_barcode_stats_project_without_strip(self):
+        input_json = json.dumps({'project': 7, 'email': 'foobar'})
 
-        # NB: these have to be patched *where they will be looked up*, not
-        # where they are originally defined; see
-        # https://docs.python.org/3/library/unittest.mock.html#where-to-patch
-        with patch("microsetta_private_api.admin.admin_impl."
-                   "post_daklapack_order") as mock_dak_post:
-            mock_dak_post.side_effect = [make_test_response(401)]
-            # actually shouldn't get to trying to send email, but just in case
-            # code doesn't act as expected, don't want to really email anyone!
-            with patch("microsetta_private_api.admin.admin_impl."
-                       "send_daklapack_hold_email") as mock_email:
-                mock_email.side_effect = [True]
-                self._test_post_daklapack_orders(order_info, 401)
+        with patch("microsetta_private_api.tasks."
+                   "per_sample_summary.delay") as mock_delay:
+            mock_delay.return_value = None
+            response = self.client.post(
+                "api/admin/account_project_barcode_summary?"
+                "strip_sampleid=false",
+                content_type='application/json',
+                data=input_json,
+                headers=MOCK_HEADERS
+            )
 
-    def test_query_barcode_stats_no_project_no_barcodes(self):
-        input_json = json.dumps({'project': 0, 'sample_barcodes': None})
-
-        response = self.client.post(
-            "api/admin/account_barcode_summary",
-            content_type='application/json',
-            data=input_json,
-            headers=MOCK_HEADERS
-        )
-
-        # an empty string project should be unkown
-        self.assertEqual(404, response.status_code)
-
-    def test_query_barcode_stats_project_no_barcodes(self):
-        input_json = json.dumps({'project': 7, 'sample_barcodes': None})
-
-        response = self.client.post(
-            "api/admin/account_barcode_summary",
-            content_type='application/json',
-            data=input_json,
-            headers=MOCK_HEADERS
-        )
-
+        # ...we assume the system is processing to send an email
+        # so nothing specific to verify on the response data
         self.assertEqual(200, response.status_code)
 
-        response_obj = json.loads(response.data)
+    def test_query_project_barcode_stats_project_with_strip(self):
+        input_json = json.dumps({'project': 7, 'email': 'foobar'})
 
-        # there are 24 samples with project 7 in the test db
-        self.assertEqual(len(response_obj), 24)
+        with patch("microsetta_private_api.tasks."
+                   "per_sample_summary.delay") as mock_delay:
+            mock_delay.return_value = None
+            response = self.client.post(
+                "api/admin/account_project_barcode_summary?"
+                "strip_sampleid=True",
+                content_type='application/json',
+                data=input_json,
+                headers=MOCK_HEADERS
+            )
 
-        # ...10 have been received
-        self.assertEqual(sum([v['sample-received']
-                              for v in response_obj]), 10)
+        # ...we assume the system is processing to send an email
+        # so nothing specific to verify on the response data
+        self.assertEqual(200, response.status_code)
 
-        # ...9 are valid
-        self.assertEqual(sum([v['sample-is-valid']
-                              for v in response_obj]), 9)
-
-        # ...1 is missing a source
-        self.assertEqual(sum([v['no-associated-source']
-                              for v in response_obj]), 1)
-
-    def test_query_barcode_stats_project_barcodes(self):
+    def test_query_barcode_stats_project_barcodes_without_strip(self):
         barcodes = ['000010307', '000023344', '000036855']
-        input_json = json.dumps({'project': 7, 'sample_barcodes': barcodes})
+        input_json = json.dumps({'sample_barcodes': barcodes})
 
         response = self.client.post(
-            "api/admin/account_barcode_summary",
+            "api/admin/account_barcode_summary?strip_sampleid=False",
             content_type='application/json',
             data=input_json,
             headers=MOCK_HEADERS
@@ -1039,3 +1059,50 @@ class AdminApiTests(TestCase):
         exp_status = [None, 'no-associated-source', 'sample-is-valid']
         self.assertEqual([v['sample-status'] for v in response_obj],
                          exp_status)
+        n_src = sum([v['source-email'] is not None for v in response_obj])
+        self.assertEqual(n_src, 1)
+
+    def test_query_barcode_stats_project_barcodes_with_strip(self):
+        barcodes = ['000010307', '000023344', '000036855']
+        input_json = json.dumps({'sample_barcodes': barcodes})
+
+        response = self.client.post(
+            "api/admin/account_barcode_summary?strip_sampleid=True",
+            content_type='application/json',
+            data=input_json,
+            headers=MOCK_HEADERS
+        )
+        # an empty string project should be unkown
+        self.assertEqual(200, response.status_code)
+
+        response_obj = json.loads(response.data)
+        self.assertEqual(len(response_obj), 3)
+
+        self.assertEqual([v['sampleid'] for v in response_obj],
+                         [None] * len(barcodes))
+        exp_status = [None, 'no-associated-source', 'sample-is-valid']
+        self.assertEqual([v['sample-status'] for v in response_obj],
+                         exp_status)
+        n_src = sum([v['source-email'] is not None for v in response_obj])
+        self.assertEqual(n_src, 1)
+
+    def test_send_email(self):
+        def mock_func(*args, **kwargs):
+            pass
+
+        info = {
+            "issue_type": 'sample',
+            "template_args": {"sample_barcode": '000004220'},
+            'template': 'sample_is_valid'
+        }
+
+        with patch("microsetta_private_api.admin.admin_impl."
+                   "celery_send_email") as mock_celery_send_email:
+            mock_celery_send_email.apply_async = mock_func
+
+            response = self.client.post(
+                "api/admin/email",
+                content_type="application/json",
+                data=json.dumps(info),
+                headers=MOCK_HEADERS)
+            self.assertEqual(204, response.status_code)

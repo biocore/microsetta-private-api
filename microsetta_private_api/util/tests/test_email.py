@@ -38,16 +38,14 @@ class MockTemplate:
 
 
 class MockMessage:
-    def __init__(self, plain, html):
-        self.plain = plain
+    def __init__(self, html):
         self.html = html
         self.subject = 'test_subject'
 
 
 class EmailTests(unittest.TestCase):
     def setUp(self):
-        self.message = MockMessage(MockTemplate("a plain message"),
-                                   MockTemplate("<html>a html message</html>"))
+        self.message = MockMessage(MockTemplate("<html>a html message</html>"))
 
     def tearDown(self):
         SendEmail.connection = None
@@ -59,7 +57,7 @@ class EmailTests(unittest.TestCase):
         obs = SendEmail.connection.observed.as_string()
         self.assertRegex(obs, 'Content-Type: text/html')
         self.assertRegex(obs, 'Content-Type: text/plain')
-        self.assertRegex(obs, 'a plain message')
+        self.assertRegex(obs, 'a html message|')
         self.assertRegex(obs, "<html>a html message</html>")
 
     def test_send_valid_message_args(self):
@@ -69,7 +67,7 @@ class EmailTests(unittest.TestCase):
         obs = SendEmail.connection.observed.as_string()
         self.assertRegex(obs, 'Content-Type: text/html')
         self.assertRegex(obs, 'Content-Type: text/plain')
-        self.assertRegex(obs, 'a plain message'
+        self.assertRegex(obs, 'a html message'
                          '|[["baz", "biz"], ["foo", "bar"]]')
         self.assertRegex(obs, '<html>a html message</html>'
                          '|[["baz", "biz"], ["foo", "bar"]]')
@@ -83,6 +81,27 @@ class EmailTests(unittest.TestCase):
         with self.assertRaisesRegex(smtplib.SMTPException, "Unable"):
             SendEmail.send("foo", self.message)
         self.assertEqual(SendEmail._connect.call_count, 4)
+
+    def test_send_valid_message_attachment(self):
+        SendEmail._connect = MockConnect(False)
+
+        SendEmail.send("foo", self.message, attachment_filepath=__file__,
+                       attachment_filename='testfile')
+        obs = SendEmail.connection.observed.as_string()
+        self.assertRegex(obs, 'Content-Type: text/html')
+        self.assertRegex(obs, 'Content-Type: text/plain')
+        self.assertRegex(obs, ('Content-Disposition: attachment; '
+                               'filename="testfile"'))
+        self.assertRegex(obs, 'a html message|')
+        self.assertRegex(obs, "<html>a html message</html>")
+
+    def test_send_valid_message_badattachments(self):
+        SendEmail._connect = MockConnect(False)
+
+        with self.assertRaises(AssertionError):
+            SendEmail.send("foo", self.message, attachment_filepath=__file__)
+        with self.assertRaises(AssertionError):
+            SendEmail.send("foo", self.message, attachment_filename="foo")
 
 
 if __name__ == '__main__':

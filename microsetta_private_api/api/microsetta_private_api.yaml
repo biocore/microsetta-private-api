@@ -1144,6 +1144,62 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/admin/verify_address':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.address_verification
+      tags:
+        - Admin
+      summary: Verify - and automatically correct if possible - the deliverability of a postal address using Melissa Global Address API
+      description: Verify - and automatically correct if possible - the deliverability of a postal address using Melissa Global Address API
+      parameters:
+        - in: query
+          name: address_1
+          description: First line of address to verify (e.g. street address)
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: address_2
+          description: Second line of address to verify (e.g. apartment, suite, floor)
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: city
+          description: City of address to verify
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: state
+          description: State/province of address to verify
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: postal
+          description: Postal code of address to verify
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: country
+          description: Country of address to verify
+          required: true
+          schema:
+            type: string      
+      responses:
+        '200':
+          description: Object containing address and verification status
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/admin/scan/{sample_barcode}':
     post:
       # Note: We might want to be able to differentiate system administrator operations
@@ -1439,11 +1495,11 @@ paths:
 
   '/admin/daklapack_orders':
     post:
-      operationId: microsetta_private_api.admin.admin_impl.create_daklapack_order
+      operationId: microsetta_private_api.admin.admin_impl.create_daklapack_orders
       tags:
         - Admin
-      summary: Submit a new order to Daklapack and record to db
-      description: Submit a new order to Daklapack and record to db
+      summary: Submit new order(s) to Daklapack and record to db
+      description: Submit new order(s) to Daklapack and record to db
       requestBody:
         content:
           application/json:
@@ -1476,12 +1532,8 @@ paths:
                   type: string
                   nullable: true
       responses:
-        '201':
-          description: Order successfully submitted and recorded
-          headers:
-            Location:
-              schema:
-                type: string
+        '200':
+          description: One or more orders successfully submitted and recorded; info provided on any failures
 
   '/admin/account_email_summary':
     post:
@@ -1510,9 +1562,37 @@ paths:
               schema:
                 type: array
 
+  '/admin/account_project_barcode_summary':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.query_project_barcode_stats
+      parameters:
+        - $ref: '#/components/parameters/strip_sampleid'
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'project':
+                  type: integer
+                'email':
+                  type: string
+
+      responses:
+        '200':
+          description: Successfully triggered the summary job
+        '404':
+          description: Requested project not found
+        '400':
+          description: Too many barcodes requested
+
   '/admin/account_barcode_summary':
     post:
       operationId: microsetta_private_api.admin.admin_impl.query_barcode_stats
+      parameters:
+        - $ref: '#/components/parameters/strip_sampleid'
       tags:
         - Admin
       requestBody:
@@ -1527,18 +1607,17 @@ paths:
                     # not using the defined schema for sample_barcode as it is 
                     # readOnly
                     type: string
-                  nullable: true
-                project:
-                  type: integer
       responses:
         '200':
           description: Return list of dictionaries of sample status for requested accounts
-        '404':
-          description: Project not found, or requested barcodes not found
           content:
             application/json:
               schema:
-                type: object
+                type: array
+                items:
+                  type: object
+        '404':
+          description: Requested barcodes not found
 
   '/admin/activation':
     post:
@@ -1563,6 +1642,61 @@ paths:
               schema:
                 type: array
 
+  '/admin/barcode_query_fields':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.list_barcode_query_fields
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: Returns array of fields, types and values
+          content:
+            application/json:
+              schema:
+                type: array
+
+  '/admin/barcode_query':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.barcode_query
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Returns array of barcodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  # not using the defined schema for sample_barcode as it is
+                  # readOnly
+                  type: string
+
+  '/admin/qiita_barcode_query':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.qiita_barcode_query
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Returns qiita info about barcodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
 components:
   parameters:
     # path parameters
@@ -1572,6 +1706,13 @@ components:
       description: Unique id specifying a user account
       schema:
         $ref: '#/components/schemas/account_id'
+      required: true
+    strip_sampleid:
+      name: strip_sampleid
+      in: query
+      description: Whether to strip barcode information
+      schema:
+        type: boolean
       required: true
     kit_id:
       name: kit_id
@@ -1742,6 +1883,10 @@ components:
       readOnly: true
       enum: ["standard", "admin"]
       example: "standard"
+    language:
+      type: string
+      enum: ["en_US", "es_MX"]
+      example: "en_US"
     creation_time:
       type: string
       readOnly: true
@@ -1759,7 +1904,7 @@ components:
       example: "Doe"
     language_tag:
       type: string
-      example: "en-US"
+      example: "en_US"
     update_time:
       type: string
       readOnly: true
@@ -1780,6 +1925,8 @@ components:
           $ref: '#/components/schemas/address'
         account_type:
           $ref: '#/components/schemas/account_type'
+        language:
+          $ref: '#/components/schemas/language'
         creation_time:
           $ref: '#/components/schemas/creation_time'
         update_time:
@@ -1789,6 +1936,7 @@ components:
         - last_name
         - email
         - address
+        - language
 
     address:   # taken from https://opensource.zalando.com/restful-api-guidelines/#address-fields
       description:

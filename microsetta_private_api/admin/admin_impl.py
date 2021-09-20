@@ -5,10 +5,9 @@ from flask import jsonify, Response
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
-from microsetta_private_api.model.source import Source
 from microsetta_private_api.model.project import Project
 from microsetta_private_api.model.daklapack_order import DaklapackOrder, \
-    ORDER_ID_KEY, SUBMITTER_ACCT_KEY
+    ORDER_ID_KEY, SUBMITTER_ACCT_KEY, ADDR_DICT_KEY
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.activation_repo import ActivationRepo
@@ -18,16 +17,20 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
-from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.metadata_repo import (retrieve_metadata,
                                                        drop_private_columns)
-from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
-from microsetta_private_api.tasks import send_email as celery_send_email
+from microsetta_private_api.tasks import send_email as celery_send_email,\
+    per_sample_summary as celery_per_sample_summary
 from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
 from microsetta_private_api.admin.daklapack_communication import \
-    post_daklapack_order, send_daklapack_hold_email
+    post_daklapack_orders, send_daklapack_hold_email
+from microsetta_private_api import localization
+from microsetta_private_api.admin.sample_summary import per_sample
+from microsetta_private_api.util.melissa import verify_address
+from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
+from qiita_client import QiitaClient
 
 
 def search_barcode(token_info, sample_barcode):
@@ -213,6 +216,7 @@ def send_email(body, token_info):
         resolution_url = None
         contact_name = None
         activation_code = None
+        language = localization.EN_US
 
         # Depending on issue type, determine what email to send to and
         # what account is involved, as well as what link to send user to
@@ -233,6 +237,7 @@ def send_email(body, token_info):
             account_id = None
             email = None
             contact_name = None
+
             if diag["account"] is not None:
                 account_id = diag["account"].id
                 email = diag["account"].email
@@ -248,6 +253,9 @@ def send_email(body, token_info):
             if diag["sample"] is not None:
                 sample_id = diag["sample"].id
             endpoint = SERVER_CONFIG["endpoint"]
+
+            if account_id is not None:
+                language = diag['account'].language
 
             if sample_id is not None and \
                source_id is not None and \
@@ -296,7 +304,7 @@ def send_email(body, token_info):
         if activation_code is not None:
             template_args['new_account_code'] = activation_code
         celery_send_email.apply_async(args=[email, template_name,
-                                            template_args])
+                                            template_args, language])
 
         # Add an event to the log that we sent this email successfully
         event = LogEvent(
@@ -397,108 +405,71 @@ def query_email_stats(body, token_info):
     return jsonify(results), 200
 
 
-def query_barcode_stats(body, token_info):
+def query_project_barcode_stats(body, token_info, strip_sampleid):
     validate_admin_access(token_info)
-
-    barcodes = body.get("sample_barcodes")
+    email = body.get("email")
     project = body["project"]
-
-    summaries = []
-    with Transaction() as t:
-        admin_repo = AdminRepo(t)
-        sample_repo = SampleRepo(t)
-        template_repo = SurveyTemplateRepo(t)
-        vs_repo = VioscreenSessionRepo(t)
-
-        project_barcodes = admin_repo.get_project_barcodes(project)
-
-        if barcodes is None:
-            barcodes = project_barcodes
-        else:
-            barcodes = [b for b in barcodes if b in set(project_barcodes)]
-            not_found = [b for b in barcodes if b not in set(project_barcodes)]
-            if len(not_found) > 0:
-                nf = ", ".join(not_found)
-                message = f"The following barcodes were not found: '[{nf}]'"
-                return jsonify(code=404, message=message), 404
-
-        for barcode in barcodes:
-            diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
-            sample = diag['sample']
-            account = diag['account']
-            source = diag['source']
-
-            account_email = None if account is None else account.email
-            source_email = None
-            source_type = None if source is None else source.source_type
-            vio_id = None
-
-            if source is not None and source_type is Source.SOURCE_TYPE_HUMAN:
-                source_email = source.email
-
-                vio_id = template_repo.get_vioscreen_id_if_exists(account.id,
-                                                                  source.id,
-                                                                  sample.id)
-
-            sample_status = sample_repo.get_sample_status(
-                sample.barcode,
-                sample._latest_scan_timestamp
-            )
-
-            ffq_complete, ffq_taken, _ = vs_repo.get_ffq_status_by_sample(
-                sample.id
-            )
-
-            summary = {
-                "sampleid": barcode,
-                "project": project,
-                "source-type": source_type,
-                "site-sampled": sample.site,
-                "source-email": source_email,
-                "account-email": account_email,
-                "vioscreen_username": vio_id,
-                "ffq-taken": ffq_taken,
-                "ffq-complete": ffq_complete,
-                "sample-status": sample_status,
-                "sample-received": sample_status is not None
-            }
-
-            for status in ["sample-is-valid",
-                           "no-associated-source",
-                           "no-registered-account",
-                           "no-collection-info",
-                           "sample-has-inconsistencies",
-                           "received-unknown-validity"]:
-                summary[status] = sample_status == status
-
-            summaries.append(summary)
-
-    return jsonify(summaries), 200
+    celery_per_sample_summary.delay(email, project, strip_sampleid)
+    return None, 200
 
 
-def create_daklapack_order(body, token_info):
+def query_barcode_stats(body, token_info, strip_sampleid):
+    validate_admin_access(token_info)
+    barcodes = body["sample_barcodes"]
+    if len(barcodes) > 1000:
+        return jsonify({"message": "Too many barcodes requested"}), 400
+    summary = per_sample(None, barcodes, strip_sampleid)
+    return jsonify(summary), 200
+
+
+def create_daklapack_orders(body, token_info):
     validate_admin_access(token_info)
 
-    body = body.copy()
-    body[ORDER_ID_KEY] = str(uuid.uuid4())
+    ADDRESSES_KEY = 'addresses'
+    extended_body = body.copy()
+    results = []
 
     with Transaction() as t:
         account_repo = AccountRepo(t)
-        body[SUBMITTER_ACCT_KEY] = account_repo.find_linked_account(
+        extended_body[SUBMITTER_ACCT_KEY] = account_repo.find_linked_account(
             token_info['iss'], token_info['sub'])
 
+    for curr_address in extended_body[ADDRESSES_KEY]:
+        curr_order_dict = extended_body.copy()
+        curr_order_dict.pop(ADDRESSES_KEY)
+        curr_order_dict[ADDR_DICT_KEY] = curr_address
+
+        result_info = _create_daklapack_order(curr_order_dict)
+        results.append(result_info)
+
+    # return response to caller
+    response = jsonify({"order_submissions": results})
+    response.status_code = 200
+    return response
+
+
+def _create_daklapack_order(order_dict):
+    order_dict[ORDER_ID_KEY] = str(uuid.uuid4())
+
+    with Transaction() as t:
         try:
-            daklapack_order = DaklapackOrder.from_api(**body)
+            daklapack_order = DaklapackOrder.from_api(**order_dict)
         except ValueError as e:
             raise RepoException(e)
 
-        post_response = post_daklapack_order(daklapack_order.order_structure)
+        # The Daklapack API wants a *list* of orders, and we are submitting one
+        # at a time, so we have a list of one item :)
+        post_response = post_daklapack_orders(
+            [daklapack_order.order_structure])
         if post_response.status_code >= 400:
             # for now, very basic error handling--just pass on dak api error
-            response_msg = {"daklapack_api_error_msg": post_response.text}
-            response = jsonify(response_msg)
-            response.status_code = post_response.status_code
-            return response
+            response_msg = {"order_address":
+                            daklapack_order.order_structure[ADDR_DICT_KEY],
+                            "order_success": False,
+                            "daklapack_api_error_msg": post_response.text,
+                            "daklapack_api_error_code":
+                            post_response.status_code}
+            return response_msg
 
         # IFF submission is successful AND has fulfillment hold msg,
         # email hold fulfillment info and the order id to Daklapack contact
@@ -517,13 +488,12 @@ def create_daklapack_order(body, token_info):
         order_id = admin_repo.create_daklapack_order(daklapack_order)
         t.commit()
 
-    # return response to caller
-    response_msg = {"order_id": order_id, "email_success": email_success}
-    response = jsonify(response_msg)
-    response.status_code = 201
-    # TODO: AB: Add this endpoint as part of support for polling dak orders
-    response.headers['Location'] = f'/api/admin/daklapack_orders/{order_id}'
-    return response
+    status_msg = {"order_address":
+                  daklapack_order.order_structure[ADDR_DICT_KEY],
+                  "order_success": True,
+                  "order_id": order_id,
+                  "email_success": email_success}
+    return status_msg
 
 
 def search_activation(token_info, email_query=None, code_query=None):
@@ -540,6 +510,21 @@ def search_activation(token_info, email_query=None, code_query=None):
         return jsonify([i.to_api() for i in infos]), 200
 
 
+def address_verification(token_info, address_1, address_2=None, city=None,
+                         state=None, postal=None, country=None):
+    validate_admin_access(token_info)
+
+    if address_1 is None or len(address_1) < 1 or \
+            postal is None or len(postal) < 1 or \
+            country is None or len(country) < 1:
+        raise Exception("Must include address_1, postal, and country")
+
+    melissa_response = verify_address(address_1, address_2, city, state,
+                                      postal, country)
+
+    return jsonify(melissa_response), 200
+
+
 def generate_activation_codes(body, token_info):
     validate_admin_access(token_info)
 
@@ -550,3 +535,140 @@ def generate_activation_codes(body, token_info):
         results = [{"email": email, "code": map[email]} for email in map]
         t.commit()
     return jsonify(results), 200
+
+
+def list_barcode_query_fields(token_info):
+    validate_admin_access(token_info)
+
+    # Generates a json array declaring the filters
+    # that can be used for barcode queries
+    # Will be parseable by jQuery QueryBuilder
+    # to allow a user to modify queries.
+
+    # Barcode queries can filter on:
+    #   - project (categorical, any project in our db)
+    #   - sample_status (categorical, fixed list)
+    #   - sample_type (categorical, fixed list)
+
+    # See examples https://querybuilder.js.org/demo.html
+    # https://querybuilder.js.org/assets/demo-import-export.js
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        projects_list = admin_repo.get_projects(False)
+
+    filter_fields = []
+    filter_fields.append(
+        {
+            'id': 'project_id',
+            'label': 'Project',
+            'type': 'integer',
+            'input': 'select',
+            'values': {
+                x.project_id: x.project_name for x in projects_list
+            },
+            'operators': ['equal', 'not_equal']
+        }
+    )
+    filter_fields.append(
+        {
+            'id': 'sample_status',
+            'label': 'Sample Status',
+            'type': 'string',
+            'input': 'select',
+            'values': {
+                "sample-is-valid": "Sample Is Valid",
+                "no-associated-source": "No Associated Source",
+                "no-registered-account": "No Registered Account",
+                "no-collection-info": "No Collection Info",
+                "sample-has-inconsistencies": "Sample Has Inconsistencies",
+                "received-unknown-validity": "Received Unknown Validity"
+            },
+            'operators': ['equal', 'not_equal', 'is_null', 'is_not_null']
+        }
+    )
+    filter_fields.append(
+        {
+            'id': 'site_sampled',
+            'label': 'Sample Site',
+            'type': 'string',
+            'input': 'select',
+            'values': {
+                "Blood (skin prick)": "Blood (skin prick)",
+                "Saliva": "Saliva",
+                "Ear wax": "Ear wax",
+                "Forehead": "Forehead",
+                "Fur": "Fur",
+                "Hair": "Hair",
+                "Left hand": "Left hand",
+                "Left leg": "Left leg",
+                "Mouth": "Mouth",
+                "Nares": "Nares",
+                "Nasal mucus": "Nasal mucus",
+                "Right hand": "Right hand",
+                "Right leg": "Right leg",
+                "Stool": "Stool",
+                "Tears": "Tears",
+                "Torso": "Torso",
+                "Vaginal mucus": "Vaginal mucus"
+            },
+            'operators': ['equal', 'not_equal', 'is_null', 'is_not_null']
+        }
+    )
+    filter_fields.append(
+        {
+            # Note that this id string must match the
+            # latest scan timestamp in the exact
+            # barcode search query.
+            'id': 'scan_timestamp_latest',
+            'label': 'Last Scanned',
+            'type': 'date',
+            'description': "YYYY/MM/DD",
+            'default_value': "YYYY/MM/DD",
+            'validation': {
+                "format": "YYYY/MM/DD"
+            },
+            'operators': ['less_or_equal',
+                          'greater_or_equal',
+                          'is_null',
+                          'is_not_null']
+        }
+    )
+
+    return jsonify(filter_fields), 200
+
+
+def barcode_query(body, token_info):
+    # Validating admin access is absolutely critical here
+    # Failing to do so enables sql query access
+    # to non admin users
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        repo = AdminRepo(t)
+        cond, cond_params = build_condition(body)
+        barcodes = repo.search_barcode(cond, cond_params)
+        t.rollback()  # Queries don't need to commit changes.
+
+    return jsonify(barcodes), 200
+
+
+def qiita_barcode_query(body, token_info):
+    validate_admin_access(token_info)
+
+    qclient = QiitaClient(
+        SERVER_CONFIG["qiita_endpoint"],
+        SERVER_CONFIG["qiita_client_id"],
+        SERVER_CONFIG["qiita_client_secret"]
+    )
+
+    qiita_body = {
+        'sample_ids': ["10317." + b for b in body["barcodes"]]
+    }
+
+    qiita_data = qclient.post(
+        '/api/v1/study/10317/samples/status',
+        json=qiita_body
+    )
+
+    return jsonify(qiita_data), 200
