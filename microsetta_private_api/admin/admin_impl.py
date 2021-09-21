@@ -466,7 +466,8 @@ def _create_daklapack_order(order_dict):
             response_msg = {"order_address":
                             daklapack_order.order_structure[ADDR_DICT_KEY],
                             "order_success": False,
-                            "daklapack_api_error_msg": post_response.text,
+                            "daklapack_api_error_msg":
+                                post_response.get_data(as_text=True),
                             "daklapack_api_error_code":
                             post_response.status_code}
             return response_msg
