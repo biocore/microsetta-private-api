@@ -1,0 +1,343 @@
+[
+    {
+        "sessionId": "0087da64cdcb41ad800c23531d1198f2",
+        "calculations": [
+            {
+                "code": "%protein",
+                "description": "Percent of calories from Protein",
+                "shortDescription": "Protein",
+                "units": "%",
+                "amount": 14.50362489752287,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%fat",
+                "description": "Percent of calories from Fat",
+                "shortDescription": "Fat",
+                "units": "%",
+                "amount": 35.5233111996746,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%carbo",
+                "description": "Percent of calories from Carbohydrate",
+                "shortDescription": "Carbohydrate",
+                "units": "%",
+                "amount": 42.67319895276668,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%alcohol",
+                "description": "Percent of calories from Alcohol",
+                "shortDescription": "Alcohol",
+                "units": "%",
+                "amount": 7.299864950035845,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%sfatot",
+                "description": "Percent of calories from Saturated Fat",
+                "shortDescription": "Saturated Fat",
+                "units": "%",
+                "amount": 8.953245015317886,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%mfatot",
+                "description": "Percent of calories from Monounsaturated Fat",
+                "shortDescription": "Monounsaturated Fat",
+                "units": "%",
+                "amount": 16.04143105742606,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%pfatot",
+                "description": "Percent of calories from Polyunsaturated Fat",
+                "shortDescription": "Polyunsaturated Fat",
+                "units": "%",
+                "amount": 9.3864628707637,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%adsugtot",
+                "description": "Percent of calories from Added Sugar",
+                "shortDescription": "Added Sugar",
+                "units": "%",
+                "amount": 5.59094160186449,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            }
+        ]
+    },
+    {},
+    {
+        "sessionId": "005eae45652f4aef9880502a08139155",
+        "calculations": [
+            {
+                "code": "%protein",
+                "description": "Percent of calories from Protein",
+                "shortDescription": "Protein",
+                "units": "%",
+                "amount": 14.858749639268694,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%fat",
+                "description": "Percent of calories from Fat",
+                "shortDescription": "Fat",
+                "units": "%",
+                "amount": 30.167126097771146,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%carbo",
+                "description": "Percent of calories from Carbohydrate",
+                "shortDescription": "Carbohydrate",
+                "units": "%",
+                "amount": 54.9666593467124,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%alcohol",
+                "description": "Percent of calories from Alcohol",
+                "shortDescription": "Alcohol",
+                "units": "%",
+                "amount": 0.007464916247760429,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%sfatot",
+                "description": "Percent of calories from Saturated Fat",
+                "shortDescription": "Saturated Fat",
+                "units": "%",
+                "amount": 9.854668486202778,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%mfatot",
+                "description": "Percent of calories from Monounsaturated Fat",
+                "shortDescription": "Monounsaturated Fat",
+                "units": "%",
+                "amount": 10.408216625871315,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%pfatot",
+                "description": "Percent of calories from Polyunsaturated Fat",
+                "shortDescription": "Polyunsaturated Fat",
+                "units": "%",
+                "amount": 8.446574429213285,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%adsugtot",
+                "description": "Percent of calories from Added Sugar",
+                "shortDescription": "Added Sugar",
+                "units": "%",
+                "amount": 1.9479807882340903,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            }
+        ]
+    },
+    {
+        "sessionId": "00d3616753e04a5bab52d972ad936251",
+        "calculations": [
+            {
+                "code": "%protein",
+                "description": "Percent of calories from Protein",
+                "shortDescription": "Protein",
+                "units": "%",
+                "amount": 14.101114742737353,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%fat",
+                "description": "Percent of calories from Fat",
+                "shortDescription": "Fat",
+                "units": "%",
+                "amount": 44.47945688205364,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%carbo",
+                "description": "Percent of calories from Carbohydrate",
+                "shortDescription": "Carbohydrate",
+                "units": "%",
+                "amount": 41.17906211247171,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%alcohol",
+                "description": "Percent of calories from Alcohol",
+                "shortDescription": "Alcohol",
+                "units": "%",
+                "amount": 0.24036626273729872,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%sfatot",
+                "description": "Percent of calories from Saturated Fat",
+                "shortDescription": "Saturated Fat",
+                "units": "%",
+                "amount": 23.027133054230525,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%mfatot",
+                "description": "Percent of calories from Monounsaturated Fat",
+                "shortDescription": "Monounsaturated Fat",
+                "units": "%",
+                "amount": 13.51630871254169,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%pfatot",
+                "description": "Percent of calories from Polyunsaturated Fat",
+                "shortDescription": "Polyunsaturated Fat",
+                "units": "%",
+                "amount": 5.9299567345449065,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%adsugtot",
+                "description": "Percent of calories from Added Sugar",
+                "shortDescription": "Added Sugar",
+                "units": "%",
+                "amount": 3.822618465270744,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            }
+        ]
+    },
+    {
+        "sessionId": "00c41c34403c4899a9e01d455403114b",
+        "calculations": [
+            {
+                "code": "%protein",
+                "description": "Percent of calories from Protein",
+                "shortDescription": "Protein",
+                "units": "%",
+                "amount": 11.819810934852827,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%fat",
+                "description": "Percent of calories from Fat",
+                "shortDescription": "Fat",
+                "units": "%",
+                "amount": 24.245658148606022,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%carbo",
+                "description": "Percent of calories from Carbohydrate",
+                "shortDescription": "Carbohydrate",
+                "units": "%",
+                "amount": 63.93251457857734,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%alcohol",
+                "description": "Percent of calories from Alcohol",
+                "shortDescription": "Alcohol",
+                "units": "%",
+                "amount": 0.002016337963813013,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%sfatot",
+                "description": "Percent of calories from Saturated Fat",
+                "shortDescription": "Saturated Fat",
+                "units": "%",
+                "amount": 6.376076974314159,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%mfatot",
+                "description": "Percent of calories from Monounsaturated Fat",
+                "shortDescription": "Monounsaturated Fat",
+                "units": "%",
+                "amount": 8.978058847621535,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%pfatot",
+                "description": "Percent of calories from Polyunsaturated Fat",
+                "shortDescription": "Polyunsaturated Fat",
+                "units": "%",
+                "amount": 8.05870871265928,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            },
+            {
+                "code": "%adsugtot",
+                "description": "Percent of calories from Added Sugar",
+                "shortDescription": "Added Sugar",
+                "units": "%",
+                "amount": 3.8946426170304487,
+                "precision": 0,
+                "foodComponentType": 1,
+                "foodDataDefinition": null
+            }
+        ]
+    }
+]
