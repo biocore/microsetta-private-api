@@ -23,12 +23,14 @@ def _get_daklapack_oauth2_session():
     dak_session = OAuth2Session(client_id, token=token)
     return dak_session
 
+
 def _convert_to_flask_response(requests_response):
     return Response(
         response=requests_response.content,
         status=requests_response.status_code,
         headers=dict(requests_response.headers)
     )
+
 
 def post_daklapack_orders(payload):
     return _post_to_daklapack_api("/api/Orders/List", payload, raise_err=False)
