@@ -97,7 +97,7 @@ class VioscreenSession(ModelBase):
             'created': self.created,
             'modified': self.modified
         }
-      
+
     def __repr__(self):
         args = ", ".join([f"{key}={str(value)}"
                           for key, value in self.__dict__.items()])
