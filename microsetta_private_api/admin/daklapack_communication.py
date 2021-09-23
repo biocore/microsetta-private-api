@@ -1,5 +1,6 @@
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
+from flask import Response
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.tasks import send_basic_email as celery_send_email
 
@@ -23,15 +24,23 @@ def _get_daklapack_oauth2_session():
     return dak_session
 
 
+def _convert_to_flask_response(requests_response):
+    return Response(
+        response=requests_response.content,
+        status=requests_response.status_code,
+        headers=dict(requests_response.headers)
+    )
+
+
 def post_daklapack_orders(payload):
-    return _post_to_daklapack_api("/api/Orders/List", payload)
+    return _post_to_daklapack_api("/api/Orders/List", payload, raise_err=False)
 
 
 def post_daklapack_order_archive(payload):
     return _post_to_daklapack_api("/api/Orders/Archive", payload)
 
 
-def _post_to_daklapack_api(url_suffix, payload):
+def _post_to_daklapack_api(url_suffix, payload, raise_err=True):
     oauth_session = _get_daklapack_oauth2_session()
 
     dak_order_post_url = f"{SERVER_CONFIG['daklapack_api_base_url']}" \
@@ -40,12 +49,15 @@ def _post_to_daklapack_api(url_suffix, payload):
     # the json parameter sets the content-type in the headers
     # to application/json, whereas if used data parameter, would have to set
     # content-type manually
-    result = oauth_session.post(
+    requests_response = oauth_session.post(
         dak_order_post_url, json=payload, headers=DAK_HEADERS)
+    result = _convert_to_flask_response(requests_response)
 
     if result.status_code >= 300:
-        raise ValueError(f"Posting {payload} to {url_suffix} received "
-                         f"status code {result.status_code}: {result.json}")
+        if raise_err:
+            raise ValueError(f"Posting {payload} to {url_suffix} received "
+                             f"status code {result.status_code}: "
+                             f"{result.json}")
     return result
 
 
@@ -115,7 +127,10 @@ def _get_from_daklapack_api(url_suffix):
     dak_order_get_url = f"{SERVER_CONFIG['daklapack_api_base_url']}" \
                         f"{url_suffix}"
 
-    result = oauth_session.get(dak_order_get_url, headers=DAK_HEADERS)
+    requests_response = oauth_session.get(dak_order_get_url,
+                                          headers=DAK_HEADERS)
+    result = _convert_to_flask_response(requests_response)
+
     if result.status_code >= 300:
         raise ValueError(f"Getting {url_suffix} received status code "
                          f"{result.status_code}: {result.json}")

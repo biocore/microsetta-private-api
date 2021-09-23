@@ -1000,7 +1000,7 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             articles = admin_repo.get_daklapack_articles()
-            self.assertEqual(24, len(articles))
+            self.assertEqual(9, len(articles))
             first_article = articles[0]
             first_article.pop("dak_article_id")
             self.assertEqual(FIRST_DAKLAPACK_ARTICLE, first_article)
