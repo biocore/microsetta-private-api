@@ -242,6 +242,8 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     # remap the empty string to null so it is picked up by
     # fillna
     df.replace("", np.nan, inplace=True)
+    df.replace(r'\n',  ' ', regex=True, inplace=True)
+    df.replace(r'\r',  ' ', regex=True, inplace=True)
 
     # fill in any other nulls that may be present in the frame
     # as could happen if not all individuals took all surveys.

@@ -71,7 +71,7 @@ class MetadataUtilTests(unittest.TestCase):
                 }),
                 'survey_answers': [
                     {'template': 1,
-                     'response': {'1': ['DIET_TYPE', '["Vegan"]'],
+                     'response': {'1': ['DIET_TYPE', '["Vegan\nfoo"]'],
                                   '2': ['MULTIVITAMIN', 'Yes'],
                                   '3': ['PROBIOTIC_FREQUENCY', 'Unspecified'],
                                   '4': ['VITAMIN_B_SUPPLEMENT_FREQUENCY',
@@ -220,7 +220,7 @@ class MetadataUtilTests(unittest.TestCase):
                              'true', 'true', 'false', 'false',
                              UNSPECIFIED,
                              'okay', 'No', "2013-10-15T09:30:00", '000004216'],
-                            ['XY0004216', 'bar', 'Vegan', 'Yes', 'Unspecified',
+                            ['XY0004216', 'bar', 'Vegan foo', 'Yes', 'Unspecified',
                              'Unspecified', 'Unspecified', 'No',
                              'false', 'true', 'true', 'false', 'foobar',
                              UNSPECIFIED,
