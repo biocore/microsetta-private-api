@@ -17,6 +17,7 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.vioscreen_repo import (VioscreenSessionRepo,
     VioscreenPercentEnergyRepo, VioscreenDietaryScoreRepo, VioscreenSupplementsRepo,
@@ -1777,6 +1778,9 @@ class SampleTests(ApiTests):
 
 @pytest.mark.usefixtures("client")
 class VioscreenTests(ApiTests):
+    def setup(self):
+        pass
+
     def test_get_sample_vioscreen_session_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
                                              username="674533d367f222d2",
@@ -1791,6 +1795,8 @@ class VioscreenTests(ApiTests):
         with Transaction() as t:
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
+            vio_surv = SurveyTemplateRepo(t)
+
             t.commit()
 
         url = ('/api'
@@ -2126,7 +2132,7 @@ class VioscreenTests(ApiTests):
             vio_sess.upsert_session(vioscreen_session)
             vio_eat = VioscreenEatingPatternsRepo(t)
             if vio_eat.get_eating_patterns(vioscreen_eating_patterns.sessionId) is None:
-                vio_diet.insert_eating_patterns(vioscreen_eating_patterns)
+                vio_eat.insert_eating_patterns(vioscreen_eating_patterns)
             t.commit()
 
         url = ('/api'
