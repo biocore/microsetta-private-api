@@ -413,33 +413,6 @@ class AdminRepoTests(AdminTests):
             self.assertGreater(len(diag['scans_info']), 0)
             self.assertGreater(len(diag['projects_info']), 0)
 
-    def test_push_metadata_to_qiita(self):
-        human_skin_not_valid_barcode = ''
-        pet_fecal_valid_barcode = ''
-        env_valid_barcode = ''
-
-        human_fecal_valid_barcode = '000004801'
-        human_oral_valid_barcode = '000015213'
-        human_skin_valid_barcode = '000027751'
-
-        test_barcodes = [human_fecal_valid_barcode,
-                         human_oral_valid_barcode,
-                         human_skin_not_valid_barcode,
-                         human_skin_valid_barcode,
-                         pet_fecal_valid_barcode,
-                         env_valid_barcode]
-
-        with patch(...):
-            with Transaction() as t:
-                admin_repo = AdminRepo(t)
-                success, failed = admin_repo.push_metadata_to_qiita(
-                    test_barcodes)
-
-        self.assertEqual(success, 5)
-        self.assertEqual(failed, [
-            {human_skin_not_valid: ("This barcode is not associated with any "
-                                    "surveys matching this template id")}])
-
     def test_get_project_name_fail(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
