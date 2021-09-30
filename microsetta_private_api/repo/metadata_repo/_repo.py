@@ -63,13 +63,15 @@ def drop_private_columns(df):
     return df.drop(columns=to_drop, inplace=False)
 
 
-def retrieve_metadata(sample_barcodes):
+def retrieve_metadata(sample_barcodes, include_private=False):
     """Retrieve all sample metadata for the provided barcodes
 
     Parameters
     ----------
     sample_barcodes : Iterable
         The barcodes to request
+    include_private : bool, optional
+        If true, retain private columns
 
     Returns
     -------
@@ -109,6 +111,9 @@ def retrieve_metadata(sample_barcodes):
             error_report.append(st_errors)
         else:
             df = _to_pandas_dataframe(fetched, survey_templates)
+
+    if not include_private:
+        df = drop_private_columns(df)
 
     return df, error_report
 
