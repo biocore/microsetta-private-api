@@ -49,7 +49,8 @@ class AdminTests(TestCase):
         # using side_effect to change returns
         # https://stackoverflow.com/a/24897297
         test_get.side_effect = [
-            [blank, oral_valid_barcode, ],  # first .get for samples
+            ['foo.' + blank,
+             'foo.' + oral_valid_barcode, ],  # first .get for samples
             {'categories': ['a', 'b', 'c', 'd']},  # second .get for categories
         ]
         test_http_patch.return_value = []

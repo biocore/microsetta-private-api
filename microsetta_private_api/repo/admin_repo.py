@@ -1124,8 +1124,7 @@ class AdminRepo(BaseRepo):
                            ON barcode_scans.barcode = latest_scan.barcode
                                AND barcode_scans.scan_timestamp =
                                    latest_scan.scan_timestamp_latest
-                           WHERE {cond}"""
-                ).format(cond=sql_cond),
+                           WHERE {cond}""").format(cond=sql_cond),
                 cond_params
             )
             return [r[0] for r in cur.fetchall()]

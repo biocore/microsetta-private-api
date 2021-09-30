@@ -17,8 +17,7 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
-from microsetta_private_api.repo.metadata_repo import (retrieve_metadata,
-                                                       drop_private_columns)
+from microsetta_private_api.repo.metadata_repo import retrieve_metadata
 from microsetta_private_api.tasks import send_email as celery_send_email,\
     per_sample_summary as celery_per_sample_summary
 from microsetta_private_api.admin.email_templates import EmailMessage
