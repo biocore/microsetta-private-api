@@ -36,6 +36,10 @@ class EventSubtype(Enum):
     EMAIL_NO_SOURCE = "no_associated_source"
     # Fulfillment of a daklapack order must be held
     DAK_ORDER_HOLD = "daklapack_order_hold"
+    # Daklapack order polling idenfitied orders with errors
+    DAK_ORDER_ERRORS_REPORT = "daklapack_orders_error_report"
+    # Daklapack polling encountered code errors
+    DAK_POLLING_ERRORS_REPORT = "daklapack_polling_errors_report"
     # Pester daniel if for what are expected to be unusual situations
     PESTER_DANIEL = "pester_daniel"
     # for project per-sample summaries

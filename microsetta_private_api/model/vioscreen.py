@@ -95,6 +95,11 @@ class VioscreenSession(ModelBase):
             'modified': self.modified
         }
 
+    def __repr__(self):
+        args = ", ".join([f"{key}={str(value)}"
+                          for key, value in self.__dict__.items()])
+        return f"VioscreenSession({args})"
+
 
 class VioscreenPercentEnergyComponent(ModelBase):
     def __init__(self, code, description, short_description, units, amount):

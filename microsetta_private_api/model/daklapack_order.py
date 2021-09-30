@@ -5,7 +5,7 @@ ORDER_ID_KEY = 'daklapack_order_id'
 ORDER_JSON_KEY = 'order_json'
 PROJECT_IDS_LIST_KEY = 'project_ids'
 DAK_ARTICLE_CODE_KEY = 'article_code'
-ADDR_DICTS_LIST_KEY = 'addresses'
+ADDR_DICT_KEY = 'address'
 FEDEX_REF_1_KEY = 'fedex_ref_1'
 FEDEX_REF_2_KEY = 'fedex_ref_2'
 FEDEX_REF_3_KEY = 'fedex_ref_3'
@@ -71,7 +71,7 @@ class DaklapackOrder:
         # required:
         order_id = kwargs[ORDER_ID_KEY]
         article_code = kwargs[DAK_ARTICLE_CODE_KEY]
-        address_dicts_list = kwargs[ADDR_DICTS_LIST_KEY]
+        address_dict = kwargs[ADDR_DICT_KEY]
 
         # optional: fedex reference fields
         fedex_refs_dicts_list = []
@@ -90,17 +90,13 @@ class DaklapackOrder:
         curr_timestamp_str = curr_timestamp.isoformat()
         curr_timestamp_str = curr_timestamp_str.replace("+00:00", "Z")
 
-        str_addr_dicts_list = []
-        for curr_addr_dict in address_dicts_list:
-            # Daklapack API expects that ALL aspects of an address are
-            # represented as strings, including, e.g. numeric zip codes
-            str_dict = {k: str(v) for k, v in curr_addr_dict.items()}
-            curr_addr_dict = str_dict
-            curr_addr_dict["creationDate"] = curr_timestamp_str
-            # "companyName" is actually the name of the submitter
-            curr_addr_dict["companyName"] = f"{submitter_acct.first_name} " \
-                                            f"{submitter_acct.last_name}"
-            str_addr_dicts_list.append(curr_addr_dict)
+        # Daklapack API expects that ALL aspects of an address are
+        # represented as strings, including, e.g. numeric zip codes
+        str_addr_dict = {k: str(v) for k, v in address_dict.items()}
+        str_addr_dict["creationDate"] = curr_timestamp_str
+        # "companyName" is actually the name of the submitter
+        str_addr_dict["companyName"] = f"{submitter_acct.first_name} " \
+                                       f"{submitter_acct.last_name}"
 
         # Generate daklapack-required order structure
         order_structure = {
@@ -108,9 +104,15 @@ class DaklapackOrder:
             "articles": [
                 {
                     "articleCode": str(article_code),
-                    "addresses": str_addr_dicts_list
+                    # TODO: for now not allowing users to ask for more
+                    #  than one of an article code to be sent to the same
+                    #  address, but, ideally, wouldn't hardcode this
+                    "quantity": 1
                 }
             ],
+            # TODO: find out from Dak if I have to provide this
+            "plannedSendDate": "",
+            ADDR_DICT_KEY: str_addr_dict,
             "shippingProvider": "FedEx",
             "shippingType": "FEDEX_2_DAY",
             "shippingProviderMetadata": fedex_refs_dicts_list

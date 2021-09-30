@@ -15,7 +15,7 @@ jobs:
       # Label used to access the service container
       postgres:
         # Docker Hub image
-        image: postgres:9.5
+        image: postgres:13.4
         env:
           POSTGRES_DB: ag_test  
           POSTGRES_USER: postgres  

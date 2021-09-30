@@ -241,8 +241,11 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     # fill in any other nulls that may be present in the frame
     # as could happen if not all individuals took all surveys.
     # human samples get UNSPECIFIED. Everything else is missing.
-    human_mask = df['host_taxid'] == '9606'
-    df.loc[human_mask] = df.loc[human_mask].fillna(UNSPECIFIED)
+    if 'host_taxid' in df.columns:
+        # host_taxid is not assured to be present if all samples are
+        # environmental
+        human_mask = df['host_taxid'] == '9606'
+        df.loc[human_mask] = df.loc[human_mask].fillna(UNSPECIFIED)
     df.fillna(MISSING_VALUE, inplace=True)
 
     return apply_transforms(df, HUMAN_TRANSFORMS)
@@ -328,7 +331,7 @@ def _to_pandas_series(metadata, multiselect_map):
         sample_type = sample_detail.site
         sample_invariants = {}
     elif source_type == 'environmental':
-        sample_type = sample_detail['source'].description
+        sample_type = metadata['source'].source_data.description
         sample_invariants = {}
     else:
         raise RepoException("Sample has an unknown sample type")

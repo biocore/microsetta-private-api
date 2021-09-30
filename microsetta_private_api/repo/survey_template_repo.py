@@ -225,6 +225,13 @@ class SurveyTemplateRepo(BaseRepo):
     def create_vioscreen_id(self, account_id, source_id,
                             vioscreen_ext_sample_id):
         with self._transaction.cursor() as cur:
+            # This transaction scans for existing IDs,
+            # then generates a new ID if none exist
+            # To prevent workers from seeing stale state,
+            # and thus each generating multiple new IDs
+            # in the case of multiple workers,
+            # we lock the vioscreen_registry table
+            self._transaction.lock_table("vioscreen_registry")
             # test if an existing ID is available
             existing = self.get_vioscreen_id_if_exists(account_id, source_id,
                                                        vioscreen_ext_sample_id)
@@ -366,7 +373,7 @@ class SurveyTemplateRepo(BaseRepo):
                 if height == "":
                     height = None
                 else:
-                    height = int(height)
+                    height = float(height)
                     if height_units == 'centimeters':
                         # to inches
                         height = height / 2.54
@@ -384,7 +391,7 @@ class SurveyTemplateRepo(BaseRepo):
                 if weight == "":
                     weight = None
                 else:
-                    weight = int(weight)
+                    weight = float(weight)
                     if weight_units == 'kilograms':
                         # to pounds
                         weight = weight * 2.20462

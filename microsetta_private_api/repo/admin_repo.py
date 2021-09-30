@@ -4,6 +4,9 @@ import random
 import datetime
 import pandas as pd
 import psycopg2.extras
+import json
+
+from psycopg2 import sql
 
 from microsetta_private_api.exceptions import RepoException
 
@@ -131,6 +134,11 @@ NUM_FULLY_RECEIVED_KITS_SQL = f"""
     GROUP by project_id
     ORDER by project_id;"""
 
+KIT_BOX_ID_KEY = "box_id"
+KIT_OUTBOUND_KEY = "outbound_fedex_tracking"
+KIT_ADDRESS_KEY = "address"
+KIT_INBOUND_KEY = "inbound_fedex_tracking"
+
 
 def _make_statuses_sql(_):
     # Note: scans with multiple identical timestamps are quite unlikely
@@ -210,6 +218,26 @@ _PROJECT_SQLS = [
                     NUM_KITS_W_AT_LEAST_ONE_PROBLEM_SAMPLE_SQL),
                 ((p.NUM_FULLY_RETURNED_KITS_KEY,), NUM_FULLY_RECEIVED_KITS_SQL)
                 ]
+
+
+def _get_kit_tuples(new_kit_uuids, kit_names, kits_details=None):
+    result = []
+    for i in range(len(new_kit_uuids)):
+        curr_kit_uuid = new_kit_uuids[i]
+        curr_kit_name = kit_names[i]
+        if kits_details is not None:
+            curr_kit_details = kits_details[i]
+        else:
+            curr_kit_details = {KIT_BOX_ID_KEY: curr_kit_uuid}
+
+        curr_tuple = (curr_kit_uuid, curr_kit_name,
+                      curr_kit_details.get(KIT_OUTBOUND_KEY),
+                      curr_kit_details.get(KIT_ADDRESS_KEY),
+                      curr_kit_details.get(KIT_INBOUND_KEY),
+                      curr_kit_details[KIT_BOX_ID_KEY])
+        result.append(curr_tuple)
+
+    return result
 
 
 class AdminRepo(BaseRepo):
@@ -719,7 +747,7 @@ class AdminRepo(BaseRepo):
 
     def create_kits(self, number_of_kits, number_of_samples, kit_prefix,
                     project_ids):
-        """Create kits each with the same number of samples
+        """Create multiple kits, each with the same number of samples
 
         Parameters
         ----------
@@ -732,8 +760,18 @@ class AdminRepo(BaseRepo):
         project_ids : list of int
             Project ids the samples are to be associated with
         """
-        # int ids come in as strings ...
-        project_ids = [int(x) for x in project_ids]
+
+        kit_names = self._generate_novel_kit_names(number_of_kits, kit_prefix)
+        kit_name_and_barcode_tuples_list, new_barcodes = \
+            self._generate_novel_barcodes(
+                number_of_kits, number_of_samples, kit_names)
+
+        return self._create_kits(kit_names, new_barcodes,
+                                 kit_name_and_barcode_tuples_list,
+                                 number_of_samples, project_ids)
+
+    def _are_any_projects_tmi(self, project_ids):
+        """Return true if any input projects are part of microsetta"""
 
         with self._transaction.cursor() as cur:
             # get existing projects
@@ -749,24 +787,39 @@ class AdminRepo(BaseRepo):
                 if input_proj_id not in projects_tmi:
                     raise KeyError("Project id %s does not exist" %
                                    input_proj_id)
+
                 # if *any* of the projects the kits will be associate with are
                 # microsetta projects, set is_tmi to true
                 if projects_tmi[input_proj_id]:
                     is_tmi = True
 
+        return is_tmi
+
+    def _generate_novel_kit_names(self, number_of_kits, kit_prefix):
+        """Generate list of random kit names having input prefix"""
+
+        kit_names = [self._generate_random_kit_name(8, kit_prefix)
+                     for i in range(number_of_kits)]
+
+        with self._transaction.cursor() as cur:
             # get existing kits to test for conflicts
             cur.execute("""SELECT kit_id FROM barcodes.kit""")
             existing = set(cur.fetchall())
-            names = [self._generate_random_kit_name(8, kit_prefix)
-                     for i in range(number_of_kits)]
 
-            # if we observe ANY conflict, lets bail. This should be extremely
+            # if we observe ANY conflict, let's bail. This should be extremely
             # rare, from googling seemed a easier than having postgres
             # generate a unique identifier that was reasonably short, hard to
             # guess
-            if len(set(names) - existing) != number_of_kits:
+            if len(set(kit_names) - existing) != number_of_kits:
                 raise KeyError("Conflict in created names, kits not created")
 
+        return kit_names
+
+    def _generate_novel_barcodes(self, number_of_kits, number_of_samples,
+                                 kit_names):
+        """Generate specified number of random barcodes for input kit names"""
+
+        with self._transaction.cursor() as cur:
             # get the maximum observed barcode.
             # historically, barcodes were of the format NNNNNNNNN where each
             # position was a digit. this has created many problems on
@@ -783,72 +836,156 @@ class AdminRepo(BaseRepo):
             new_barcodes = ['X%0.8d' % (start_bc + i)
                             for i in range(total_barcodes)]
 
-            # partition up barcodes and associate to kit names
-            kit_barcodes = []
+            kit_name_and_barcode_tuples_list = []
             barcode_offset = range(0, total_barcodes, number_of_samples)
-            for offset, name in zip(barcode_offset, names):
+            for offset, name in zip(barcode_offset, kit_names):
                 for i in range(number_of_samples):
-                    kit_barcodes.append((name, new_barcodes[offset + i]))
+                    kit_name_and_barcode_tuples_list.append(
+                        (name, new_barcodes[offset + i]))
 
+        return kit_name_and_barcode_tuples_list, new_barcodes
+
+    def _create_kits(self, kit_names, new_barcodes,
+                     kit_name_and_barcode_tuples_list,
+                     number_of_samples, project_ids, kits_details=None):
+        """Create one or more kits from input parallel lists
+
+        Parameters
+        ----------
+        kit_names: list of str
+            Value inside the kit box (e.g., "DM24-A3CF9")
+        new_barcodes: list of str
+            Tube/collection device barcode (e.g., "DMX00-0001")
+        kit_name_and_barcode_tuples_list: list of tuple of str
+            Kit name and associated barcode (one tuple per barcode)
+        number_of_samples: int
+            Number of samples (barcodes) in each kit
+        project_ids : list of int
+            Project ids that all barcodes are to be associated with
+        box_ids: list of str (optional)
+            Value on outside of kit box (e.g., "DM89D-VW6Y").  If not provided,
+            kit uuid is used instead.
+        """
+
+        # integer project ids come in as strings ...
+        project_ids = [int(x) for x in project_ids]
+
+        is_tmi = self._are_any_projects_tmi(project_ids)
+
+        with self._transaction.cursor() as cur:
             # create barcode project associations
             barcode_projects = []
             for barcode in new_barcodes:
                 for prj_id in project_ids:
                     barcode_projects.append((barcode, prj_id))
 
-            # create shipping IDs
-            cur.executemany("INSERT INTO barcodes.kit "
-                            "(kit_id) "
-                            "VALUES (%s)", [(n, ) for n in names])
+            # create kits in kit table
+            new_kit_uuids = [str(uuid.uuid4()) for x in kit_names]
+            barcode_kit_inserts = _get_kit_tuples(
+                new_kit_uuids, kit_names, kits_details)
 
-            # add a new barcode to barcode table
+            cur.executemany("INSERT INTO barcodes.kit "
+                            "(kit_uuid, kit_id, outbound_fedex_tracking, "
+                            "address, inbound_fedex_tracking, box_id) "
+                            "VALUES (%s, %s, %s, %s, %s, %s)",
+                            barcode_kit_inserts)
+
+            # add new barcodes to barcode table
             barcode_insertions = [(n, b, 'unassigned')
-                                  for n, b in kit_barcodes]
+                                  for n, b in kit_name_and_barcode_tuples_list]
             cur.executemany("INSERT INTO barcode (kit_id, barcode, status) "
                             "VALUES (%s, %s, %s)",
                             barcode_insertions)
 
-            # add project information
+            # add project information to project_barcode table
             cur.executemany("INSERT INTO project_barcode "
                             "(barcode, project_id) "
                             "VALUES (%s, %s)", barcode_projects)
 
             if is_tmi:
-                # create a record for the new kit in ag_kit table
-                ag_kit_inserts = [(str(uuid.uuid4()), name, number_of_samples)
-                                  for name in names]
+                # create a record for each new kit in ag_kit table
+                ag_kit_inserts = [
+                    (str(uuid.uuid4()), kit_name, number_of_samples)
+                    for kit_name in kit_names]
                 cur.executemany("INSERT INTO ag.ag_kit "
                                 "(ag_kit_id, supplied_kit_id, swabs_per_kit) "
                                 "VALUES (%s, %s, %s)",
                                 ag_kit_inserts)
 
-                # associate the new barcode to a new sample id and
-                # to the new kit in the ag_kit_barcodes table
+                # for each new barcode, add a record to the ag_kit_barcodes
+                # table associating it to its ag kit, creating a new
+                # "sample_barcode"
                 kit_id_to_ag_kit_id = {k: u for u, k, _ in ag_kit_inserts}
                 kit_barcodes_insert = [(kit_id_to_ag_kit_id[i], b)
-                                       for i, b in kit_barcodes]
+                                       for i, b
+                                       in kit_name_and_barcode_tuples_list]
                 cur.executemany("INSERT INTO ag_kit_barcodes "
                                 "(ag_kit_id, barcode) "
                                 "VALUES (%s, %s)",
                                 kit_barcodes_insert)
 
+        # get the info on the just-created kits/barcodes and return it
         with self._transaction.dict_cursor() as cur:
-            cur.execute("SELECT i.kit_id, o.kit_uuid, i.sample_barcodes "
+            cur.execute("SELECT i.kit_id, o.kit_uuid, o.box_id, o.address,"
+                        "o.outbound_fedex_tracking, o.inbound_fedex_tracking, "
+                        "i.sample_barcodes "
                         "FROM (SELECT kit_id, "
                         "             array_agg(barcode) as sample_barcodes "
                         "      FROM barcodes.kit "
                         "      JOIN barcodes.barcode USING (kit_id) "
                         "      WHERE kit_id IN %s "
                         "      GROUP BY kit_id) i "
-                        "JOIN barcodes.kit o USING (kit_id)", (tuple(names), ))
+                        "JOIN barcodes.kit o USING (kit_id)",
+                        (tuple(kit_names), ))
 
-            created = [{'kit_id': k, 'kit_uuid': u, 'sample_barcodes': b}
-                       for k, u, b in cur.fetchall()]
+            created = [{'kit_id': k, 'kit_uuid': u, 'box_id': bx,
+                        'address': a, 'outbound_fedex_tracking': oft,
+                        'inbound_fedex_tracking': ift,
+                        'sample_barcodes': b}
+                       for k, u, bx, a, oft, ift, b in cur.fetchall()]
 
-        if len(names) != len(created):
+        if len(kit_names) != len(created):
             raise KeyError("Not all created kits could be retrieved")
 
         return {'created': created}
+
+    def create_kit(self, kit_name, box_id, address_dict,
+                   outbound_fedex_code, inbound_fedex_code,
+                   barcodes_list, project_ids):
+        """Create a single kit
+
+        Parameters
+        ----------
+        kit_name: str
+            Value inside the kit box (e.g., "DM24-A3CF9")
+        box_id: str
+            Value on outside of kit box (e.g., "DM89D-VW6Y")
+        address_dict: dict or None
+            Address to which the kit was shipped, in format used by Daklapack
+        outbound_fedex_code: str or None
+            fedex tracking number for shipping kit to a microsetta participant;
+            may be None if e.g. kit was handed out in person
+        inbound_fedex_code: str or None
+            fedex tracking number for returning kit to microsetta project;
+            may be None if e.g. kit was purchased in bulk for a subproject
+        barcodes_list: list of str
+            Tube/collection device barcode (e.g., "DMX00-0001")
+        project_ids : list of int
+            Project ids that all barcodes in kit are to be associated with
+        """
+
+        kit_names = [kit_name]
+        address = None if address_dict is None else json.dumps(address_dict)
+        kit_details = [{KIT_BOX_ID_KEY: box_id,
+                       KIT_ADDRESS_KEY: address,
+                       KIT_OUTBOUND_KEY: outbound_fedex_code,
+                       KIT_INBOUND_KEY: inbound_fedex_code}]
+        kit_name_and_barcode_tuples_list = \
+            [(kit_name, x) for x in barcodes_list]
+
+        return self._create_kits(kit_names, barcodes_list,
+                                 kit_name_and_barcode_tuples_list,
+                                 len(barcodes_list), project_ids, kit_details)
 
     def retrieve_diagnostics_by_kit_id(self, supplied_kit_id):
         kit_repo = KitRepo(self._transaction)
@@ -960,6 +1097,40 @@ class AdminRepo(BaseRepo):
             )
 
             return new_uuid
+
+    def search_barcode(self, sql_cond, cond_params):
+        # Security Note:
+        # Even with sql queries correctly escaped,
+        # exposing a conditional query oracle
+        # with unlimited queries grants full read access
+        # to all tables joined within the query
+        # That is, administrator users searching with
+        # this method can reconstruct
+        # project_barcode, ag_kit_barcodes and barcode_scans
+        # given enough queries, including columns
+        # that are not returned by the select
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                sql.SQL(
+                        "SELECT project_barcode.barcode FROM "
+                        "project_barcode LEFT JOIN "
+                        "ag_kit_barcodes USING (barcode) "
+                        "LEFT JOIN barcodes.barcode_scans "
+                        "USING (barcode) "
+                        "LEFT JOIN ( "
+                        "SELECT barcode, max(scan_timestamp) "
+                        "AS scan_timestamp_latest "
+                        "FROM barcodes.barcode_scans "
+                        "GROUP BY barcode "
+                        ") AS latest_scan "
+                        "ON barcode_scans.barcode = latest_scan.barcode "
+                        "AND barcode_scans.scan_timestamp = "
+                        "latest_scan.scan_timestamp_latest "
+                        "WHERE {cond}"
+                ).format(cond=sql_cond),
+                cond_params
+            )
+            return [r[0] for r in cur.fetchall()]
 
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
         ids = self._get_ids_relevant_to_barcode(sample_barcode)
@@ -1108,3 +1279,41 @@ class AdminRepo(BaseRepo):
                                            template=None, page_size=100)
 
         return order_id
+
+    def get_unfinished_daklapack_order_ids(self):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT dak_order_id "
+                "FROM "
+                "barcodes.daklapack_order "
+                "WHERE last_polling_status NOT IN (%s, %s) "
+                "OR last_polling_status IS NULL "
+                "ORDER BY last_polling_timestamp DESC;",
+                ("Sent", "Error"))
+            rows = cur.fetchall()
+            return [x[0] for x in rows]
+
+    def get_projects_for_dak_order(self, dak_order_id):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT project_id "
+                "FROM "
+                "barcodes.daklapack_order_to_project "
+                "WHERE dak_order_id = %s "
+                "ORDER BY project_id ASC;",
+                (dak_order_id,))
+            rows = cur.fetchall()
+            return [x[0] for x in rows]
+
+    def set_daklapack_order_poll_info(
+            self, dak_order_id, last_polling_timestamp, last_polling_status):
+
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "UPDATE barcodes.daklapack_order "
+                "SET "
+                "last_polling_timestamp = %s, "
+                "last_polling_status = %s "
+                "WHERE dak_order_id = %s",
+                (last_polling_timestamp, last_polling_status, dak_order_id)
+            )
