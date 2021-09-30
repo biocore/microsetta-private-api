@@ -7,10 +7,13 @@ import flask_babel
 from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
+from microsetta_private_api.repo.qiita_repo import QiitaRepo
+from microsetta_private_api.localization import EN_US
 import pandas as pd
 import tempfile
 import os
 import datetime
+import json
 
 
 @celery.task(ignore_result=True)
@@ -58,3 +61,16 @@ def per_sample_summary(email, project, strip_sampleid):
                      attachment_filepath=path,
                      attachment_filename=filename)
     os.remove(path)
+
+
+@celery.task(ignore_result=True)
+def update_qiita_metadata():
+    with Transaction() as t:
+        qiita = QiitaRepo(t)
+        n_pushed, error = qiita.push_metadata_to_qiita()
+
+        if len(error) > 0:
+            send_email("danielmcdonald@ucsd.edu", "pester_daniel",
+                       {"what": "qiita metadata push errors",
+                        "content": json.dumps(error, indent=2)},
+                       EN_US)
