@@ -1778,8 +1778,45 @@ class SampleTests(ApiTests):
 
 @pytest.mark.usefixtures("client")
 class VioscreenTests(ApiTests):
-    def setup(self):
-        pass
+    def setUp(self):
+        super().setUp()
+
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""SELECT DISTINCT ag_login_id as account_id,
+                                           source_id,
+                                           ag_kit_barcode_id as sample_id
+                           FROM ag.ag_kit_barcodes
+                           JOIN ag.ag_login_surveys using (source_id)
+                           WHERE barcode='000004216'""")
+            acct_id, src_id, samp_id = cur.fetchone()
+            self.acct_id = acct_id
+            self.src_id = src_id
+            self.samp_id = samp_id
+            self.vio_id = '674533d367f222d2'
+
+            cur.execute("""INSERT INTO ag.vioscreen_registry
+                           (account_id, source_id, sample_id, vio_id)
+                           VALUES (%s, %s, %s, %s)""",
+                        (self.acct_id, self.src_id, self.samp_id, self.vio_id))
+            t.commit()
+
+    def tearDown(self):
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""DELETE FROM ag.vioscreen_registry
+                           WHERE account_id=%s
+                               AND source_id=%s
+                               AND sample_id=%s
+                               AND vio_id=%s""",
+                        (self.acct_id, self.src_id, self.samp_id, self.vio_id))
+            t.commit()
+        super().tearDown()
+
+    def _url_constructor(self):
+        return (f'/api/accounts/{self.acct_id}'
+                f'/sources/{self.src_id}'
+                f'/samples/{self.samp_id}')
 
     def test_get_sample_vioscreen_session_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
@@ -1799,12 +1836,7 @@ class VioscreenTests(ApiTests):
 
             t.commit()
 
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b3'
-               '/vioscreen/session'
-        )
+        url = self._url_constructor() + '/vioscreen/session'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
