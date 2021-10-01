@@ -67,7 +67,11 @@ def per_sample_summary(email, project, strip_sampleid):
 def update_qiita_metadata():
     with Transaction() as t:
         qiita = QiitaRepo(t)
-        n_pushed, error = qiita.push_metadata_to_qiita()
+
+        try:
+            n_pushed, error = qiita.push_metadata_to_qiita()
+        except Exception as e:
+            error = [{'hardfail': repr(e)}, ]
 
         if len(error) > 0:
             send_email("danielmcdonald@ucsd.edu", "pester_daniel",
