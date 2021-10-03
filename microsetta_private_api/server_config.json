@@ -28,5 +28,7 @@
   "qiita_client_secret": "yyyyyyyyyyyyyyyyyyyyyy",
   "daklapack_errors_report_email": "microsetta_recipient@fake.com",
   "melissa_url": "http://address.melissadata.net/v3/WEB/GlobalAddress/doglobaladdress",
-  "melissa_license_key": "qwerty123456"
+  "melissa_license_key": "qwerty123456",
+  "myfoodrepo_url": "https://foobar.com",
+  "myfoodrepo_key": "xxxyyy"
 }
