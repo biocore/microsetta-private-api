@@ -12,7 +12,8 @@ class MFRTests(TestCase):
     # The MFR URL and API key are encoded as github repository secrets.
     # Secrets are not passed when a fork issues a PR. This test will still
     # execute from master once a PR is merged.
-    @skipIf(SERVER_CONFIG['myfoodrepo_url'] in ('', 'mfr_url_placeholder'))  # noqa
+    @skipIf(SERVER_CONFIG['myfoodrepo_url'] in ('', 'mfr_url_placeholder'),
+            "MFR secrets not provided")
     def test_create_get_delete(self):
         cohorts = self.c.cohorts()
         self.assertTrue(len(cohorts.data.cohorts) >= 1)
