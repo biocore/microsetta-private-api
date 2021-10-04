@@ -2,12 +2,17 @@ from unittest import TestCase, main
 import datetime
 
 from microsetta_private_api.client.myfoodrepo import MFRClient, MFRException
+from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
 class MFRTests(TestCase):
     def setUp(self):
         self.c = MFRClient('food_&_you')
 
+    # The MFR URL and API key are encoded as github repository secrets.
+    # Secrets are not passed when a fork issues a PR. This test will still
+    # execute from master once a PR is merged.
+    @unittest.skipIf(SERVER_CONFIG['myfoodrepo_url'] in ('', 'mfr_url_placeholder'))  # noqa
     def test_create_get_delete(self):
         cohorts = self.c.cohorts()
         self.assertTrue(len(cohorts.data.cohorts) >= 1)
