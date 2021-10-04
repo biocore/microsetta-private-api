@@ -118,18 +118,12 @@ class SampleRepo(BaseRepo):
             survey_ids = tuple([r[0] for r in cur.fetchall()])
 
             if len(survey_ids) > 0:
-                # if this was a previously assigned sample...
-                # remove stale relations
+                # if this was a previously assigned sample, then remove any
+                # stale relations
                 cur.execute("""DELETE FROM ag.source_barcodes_surveys
                                WHERE barcode=%s
                                    AND survey_id IN %s""",
                             (barcode, survey_ids))
-
-                # update any vioscreen associations to reflect the source
-                cur.execute("""UPDATE ag.vioscreen_registry
-                               SET source_id=%s
-                               WHERE sample_id=%s""",
-                            (source_id, sample_id))
 
             # collect new survey associations if they exist
             cur.execute("""SELECT survey_id
@@ -150,6 +144,12 @@ class SampleRepo(BaseRepo):
                                (barcode, survey_id)
                                VALUES (%s, %s)""",
                             updates)
+
+            # update any vioscreen associations to reflect the source
+            cur.execute("""UPDATE ag.vioscreen_registry
+                           SET source_id=%s
+                           WHERE sample_id=%s""",
+                        (source_id, sample_id))
 
     def _get_sample_barcode_from_id(self, sample_id):
         """Obtain a barcode from a ag.ag_kit_barcode_id"""
