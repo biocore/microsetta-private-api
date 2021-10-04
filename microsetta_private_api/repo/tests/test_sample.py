@@ -22,7 +22,6 @@ class SampleTests(unittest.TestCase):
         return found
 
     def test_migrate_sample(self):
-        # uuids differ in second group
         samp1 = 'd8592c74-85f0-2135-e040-8a80115d6401'  # 000001766
         samp2 = 'ceaa6fd6-0861-4335-aa35-da1857bd5294'  # 000067789
 
