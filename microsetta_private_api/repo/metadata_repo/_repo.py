@@ -327,9 +327,13 @@ def _to_pandas_series(metadata, multiselect_map):
 
     sample_detail = metadata['sample']
     collection_timestamp = sample_detail.datetime_collected
+    sample_type = sample_detail.site
 
     if source_type is None:
         raise RepoException("Sample is missing a source type")
+
+    if sample_type is None and source_type in ('human', 'animal'):
+        raise RepoException(f"{name} is missing site_sampled")
 
     if source_type == 'human':
         sample_type = sample_detail.site
