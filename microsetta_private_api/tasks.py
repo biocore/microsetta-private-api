@@ -14,6 +14,8 @@ import tempfile
 import os
 import datetime
 import json
+import io
+import traceback
 
 
 @celery.task(ignore_result=True)
@@ -70,8 +72,11 @@ def update_qiita_metadata():
 
         try:
             n_pushed, error = qiita.push_metadata_to_qiita()
-        except Exception as e:
-            error = [{'hardfail': repr(e)}, ]
+        except:
+            detail = io.StringIO()
+            traceback.print_exc(file=detail)
+            detail.seek(0)
+            error = [{'hardfail': detail.read()}, ]
 
         if len(error) > 0:
             send_email("danielmcdonald@ucsd.edu", "pester_daniel",
