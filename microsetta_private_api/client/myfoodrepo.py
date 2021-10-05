@@ -178,7 +178,7 @@ class MFRClient:
                          json={'subject': {'expired_at': str(expired_at)}})
 
     def delete_subj(self, cohort, subj):
-        """Remove a subjust being tracked
+        """Remove a subject being tracked
 
         Returns
         -------
