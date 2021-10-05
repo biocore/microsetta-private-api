@@ -1,5 +1,6 @@
 import unittest
 from microsetta_private_api.repo.sample_repo import SampleRepo
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.transaction import Transaction
 
 
@@ -21,7 +22,7 @@ class SampleTests(unittest.TestCase):
                 break
         return found
 
-    def test_migrate_sample(self):
+    def test_update_sample_assocation_with_migration(self):
         samp1 = 'd8592c74-85f0-2135-e040-8a80115d6401'  # 000001766
         samp2 = 'ceaa6fd6-0861-4335-aa35-da1857bd5294'  # 000067789
 
@@ -64,6 +65,48 @@ class SampleTests(unittest.TestCase):
             src2_samples = sr.get_samples_by_source(acct2, src2)
             self.assertTrue(self._sample_in_source(src1_samples, samp1))
             self.assertTrue(self._sample_in_source(src2_samples, samp2))
+
+    def test_migrate_sample_exceptions(self):
+        samp1 = 'd8592c74-85f0-2135-e040-8a80115d6401'  # 000001766
+        samp2 = 'ceaa6fd6-0861-4335-aa35-da1857bd5294'  # 000067789
+        bad = 'ffffffff-ffff-ffff-aaaa-aaaaaaaaaaaa'
+
+        with Transaction() as t:
+            _, src1 = self._get_source_from_sample(t, samp1)
+            _, src2 = self._get_source_from_sample(t, samp2)
+            sr = SampleRepo(t)
+
+            with self.assertRaises(RepoException):
+                # verify we dont do something unless we are intentional
+                sr.migrate_sample(samp1, src1, src2, False)
+
+            with self.assertRaises(RepoException):
+                # the sample must be associated witht the source (src)
+                # to move
+                sr.migrate_sample(samp2, src1, src2, True)
+
+            with self.assertRaises(RepoException):
+                # the destination must exist
+                sr.migrate_sample(samp1, src1, bad, True)
+
+    def test_migrate_sample(self):
+        samp1 = 'd8592c74-85f0-2135-e040-8a80115d6401'  # 000001766
+        samp2 = 'ceaa6fd6-0861-4335-aa35-da1857bd5294'  # 000067789
+
+        with Transaction() as t:
+            acct1, src1 = self._get_source_from_sample(t, samp1)
+            acct2, src2 = self._get_source_from_sample(t, samp2)
+            sr = SampleRepo(t)
+
+            sr.migrate_sample(samp1, src1, src2, True)
+
+            # get new samples by source
+            src1_samples = sr.get_samples_by_source(acct1, src1)
+            src2_samples = sr.get_samples_by_source(acct2, src2)
+
+            # verify samples are part of the new source
+            self.assertFalse(self._sample_in_source(src1_samples, samp1))
+            self.assertTrue(self._sample_in_source(src2_samples, samp1))
 
 
 if __name__ == '__main__':
