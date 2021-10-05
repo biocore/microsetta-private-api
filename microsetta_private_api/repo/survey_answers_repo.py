@@ -296,6 +296,9 @@ class SurveyAnswersRepo(BaseRepo):
             cur.execute("DELETE FROM survey_answers_other WHERE "
                         "survey_id = %s",
                         (survey_id,))
+            cur.execute("DELETE FROM source_barcodes_surveys WHERE "
+                        "survey_id = %s",
+                        (survey_id,))
             cur.execute("DELETE FROM ag_login_surveys WHERE "
                         "ag_login_id = %s AND survey_id = %s",
                         (acct_id, survey_id))

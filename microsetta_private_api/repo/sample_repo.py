@@ -107,13 +107,97 @@ class SampleRepo(BaseRepo):
                 raise RepoException(
                     "Sample association locked: Sample already received")
 
-            cur.execute("UPDATE "
-                        "ag_kit_barcodes "
-                        "SET "
-                        "source_id = %s "
-                        "WHERE "
-                        "ag_kit_barcode_id = %s",
+            barcode = existing_sample.barcode
+
+            # collect old survey associations if they exist
+            cur.execute("""SELECT survey_id
+                           FROM ag.ag_login_surveys
+                           JOIN ag.ag_kit_barcodes USING (source_id)
+                           WHERE ag_kit_barcode_id=%s""",
+                        (sample_id, ))
+            survey_ids = tuple([r[0] for r in cur.fetchall()])
+
+            if len(survey_ids) > 0:
+                # if this was a previously assigned sample, then remove any
+                # stale relations
+                cur.execute("""DELETE FROM ag.source_barcodes_surveys
+                               WHERE barcode=%s
+                                   AND survey_id IN %s""",
+                            (barcode, survey_ids))
+
+            # collect new survey associations if they exist
+            cur.execute("""SELECT survey_id
+                           FROM ag.ag_login_surveys
+                           WHERE source_id=%s""",
+                        (source_id, ))
+            survey_ids = [r[0] for r in cur.fetchall()]
+
+            # set the barcode source association
+            cur.execute("""UPDATE ag_kit_barcodes
+                           SET source_id = %s
+                           WHERE ag_kit_barcode_id = %s""",
                         (source_id, sample_id))
+
+            # set barcode survey associations
+            updates = [(barcode, sid) for sid in survey_ids]
+            cur.executemany("""INSERT INTO ag.source_barcodes_surveys
+                               (barcode, survey_id)
+                               VALUES (%s, %s)""",
+                            updates)
+
+            # update any vioscreen associations to reflect the source
+            # and the account
+            cur.execute("""SELECT account_id
+                           FROM ag.source
+                           WHERE id=%s""",
+                        (source_id, ))
+            account_id = cur.fetchone()
+            cur.execute("""UPDATE ag.vioscreen_registry
+                           SET source_id=%s, account_id=%s
+                           WHERE sample_id=%s""",
+                        (source_id, account_id, sample_id))
+
+    def migrate_sample(self, sample_id, source_id_src, source_id_dst,
+                       areyousure=False):
+        """Migrate a sample among sources
+
+        WARNING !!!
+
+        This is NOT intended for general use. This is an
+        administrative method for correcting unusual circumstances, and the
+        person issuing this function call knows what they are doing.
+
+        WARNING !!!
+        """
+        if not areyousure:
+            raise RepoException("You aren't sure you want to do this")
+
+        if source_id_src == source_id_dst:
+            # nothing to do
+            return
+
+        with self._transaction.cursor() as cur:
+            # verify the destination source exists
+            cur.execute("SELECT id FROM ag.source where id=%s",
+                        (source_id_dst, ))
+            res = cur.fetchall()
+            if len(res) != 1:
+                raise RepoException(f"source ({source_id_dst}) does not exist")
+
+            # verify the sample is currently associated with source_id_src
+            cur.execute("""SELECT ag_kit_barcode_id
+                           FROM ag.ag_kit_barcodes
+                           WHERE source_id=%s
+                               AND ag_kit_barcode_id=%s""",
+                        (source_id_src, sample_id))
+            res = cur.fetchall()
+            if len(res) != 1:
+                raise RepoException(f"{len(res)} entries associated with "
+                                    f"source ({source_id_src}) and sample "
+                                    f"({sample_id})")
+
+            self._update_sample_association(sample_id, source_id_dst,
+                                            override_locked=True)
 
     def _get_sample_barcode_from_id(self, sample_id):
         """Obtain a barcode from a ag.ag_kit_barcode_id"""
