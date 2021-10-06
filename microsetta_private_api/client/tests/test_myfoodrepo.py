@@ -7,7 +7,7 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 
 class MFRTests(TestCase):
     def setUp(self):
-        self.c = MFRClient('food_&_you')
+        self.c = MFRClient('knight_lab_test')
 
     # The MFR URL and API key are encoded as github repository secrets.
     # Secrets are not passed when a fork issues a PR. This test will still
