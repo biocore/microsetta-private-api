@@ -72,7 +72,7 @@ def update_qiita_metadata():
 
         try:
             n_pushed, error = qiita.push_metadata_to_qiita()
-        except:
+        except:  # noqa
             detail = io.StringIO()
             traceback.print_exc(file=detail)
             detail.seek(0)
