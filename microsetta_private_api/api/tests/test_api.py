@@ -1811,6 +1811,7 @@ class VioscreenTests(ApiTests):
                                AND vio_id=%s""",
                         (self.acct_id, self.src_id, self.samp_id, self.vio_id))
             t.commit()
+
         super().tearDown()
 
     def _url_constructor(self):
@@ -1851,12 +1852,41 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['status'], vioscreen_session.status)
 
     def test_get_sample_vioscreen_session_404(self):
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b4'
-               '/vioscreen/session'
-        )
+        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""DELETE FROM ag.vioscreen_foodconsumptioncomponents
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_foodconsumption
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_mpeds
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_eatingpatterns
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_foodcomponents
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_supplements
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_dietaryscore
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_percentenergy
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_sessions
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            t.commit()
+
+        url = self._url_constructor() + '/vioscreen/session'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -1866,11 +1896,11 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Username not found")
+        self.assertEqual(response_obj['message'], "Session not found")
 
     def test_get_sample_vioscreen_percent_energy_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="c28a4824acb4543f",
+                                             username="674533d367f222d2",
                                              protocolId=344,
                                              status="Finished",
                                              startDate="2014-10-08T18:55:12.747",
@@ -1898,12 +1928,7 @@ class VioscreenTests(ApiTests):
                 vio_perc.insert_percent_energy(vioscreen_percent_energy)
             t.commit()
 
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b3'
-               '/vioscreen/percentenergy'
-        )
+        url = self._url_constructor() + '/vioscreen/percentenergy'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -1918,12 +1943,17 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['calculations'][0]['amount'], vioscreen_percent_energy.energy_components[0].amount)
 
     def test_get_sample_vioscreen_percent_energy_404(self):
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b4'
-               '/vioscreen/percentenergy'
-        )
+        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""DELETE FROM ag.vioscreen_percentenergy
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            t.commit()
+
+        url = self._url_constructor() + '/vioscreen/percentenergy'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -1933,11 +1963,11 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Username not found")
+        self.assertEqual(response_obj['message'], "Percent Energy not found")
 
     def test_get_sample_vioscreen_dietary_score_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="c28a4824acb4543f",
+                                             username="674533d367f222d2",
                                              protocolId=344,
                                              status="Finished",
                                              startDate="2014-10-08T18:55:12.747",
@@ -1966,12 +1996,7 @@ class VioscreenTests(ApiTests):
                 vio_diet.insert_dietary_score(vioscreen_dietary_score)
             t.commit()
 
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b3'
-               '/vioscreen/dietaryscore'
-        )
+        url = self._url_constructor() + '/vioscreen/dietaryscore'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -1987,12 +2012,17 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['scores'][0]['score'], vioscreen_dietary_score.scores[0].score)
 
     def test_get_sample_vioscreen_dietary_score_404(self):
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b4'
-               '/vioscreen/dietaryscore'
-        )
+        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""DELETE FROM ag.vioscreen_dietaryscore
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            t.commit()
+
+        url = self._url_constructor() + '/vioscreen/dietaryscore'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2002,11 +2032,11 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Username not found")
+        self.assertEqual(response_obj['message'], "Dietary Score not found")
 
     def test_get_sample_vioscreen_supplements_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="c28a4824acb4543f",
+                                             username="674533d367f222d2",
                                              protocolId=344,
                                              status="Finished",
                                              startDate="2014-10-08T18:55:12.747",
@@ -2037,12 +2067,7 @@ class VioscreenTests(ApiTests):
                 vio_supp.insert_supplements(vioscreen_supplements)
             t.commit()
 
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b3'
-               '/vioscreen/supplements'
-        )
+        url = self._url_constructor() + '/vioscreen/supplements'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2055,12 +2080,17 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['sessionId'], vioscreen_supplements.sessionId)
 
     def test_get_sample_vioscreen_supplements_404(self):
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b4'
-               '/vioscreen/supplements'
-        )
+        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""DELETE FROM ag.vioscreen_supplements
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            t.commit()
+
+        url = self._url_constructor() + '/vioscreen/supplements'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2070,11 +2100,11 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Username not found")
+        self.assertEqual(response_obj['message'], "Supplements not found")
 
     def test_get_sample_vioscreen_food_components_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="c28a4824acb4543f",
+                                             username="674533d367f222d2",
                                              protocolId=344,
                                              status="Finished",
                                              startDate="2014-10-08T18:55:12.747",
@@ -2102,12 +2132,7 @@ class VioscreenTests(ApiTests):
                 vio_food.insert_food_components(vioscreen_food_components)
             t.commit()
 
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b3'
-               '/vioscreen/foodcomponents'
-        )
+        url = self._url_constructor() + '/vioscreen/foodcomponents'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2120,12 +2145,17 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['sessionId'], vioscreen_food_components.sessionId)
 
     def test_get_sample_vioscreen_food_components_404(self):
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b4'
-               '/vioscreen/foodcomponents'
-        )
+        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""DELETE FROM ag.vioscreen_foodcomponents
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            t.commit()
+
+        url = self._url_constructor() + '/vioscreen/foodcomponents'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2135,11 +2165,11 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Username not found")
+        self.assertEqual(response_obj['message'], "Food Components not found")
 
     def test_get_sample_vioscreen_eating_patterns_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="c28a4824acb4543f",
+                                             username="674533d367f222d2",
                                              protocolId=344,
                                              status="Finished",
                                              startDate="2014-10-08T18:55:12.747",
@@ -2167,12 +2197,7 @@ class VioscreenTests(ApiTests):
                 vio_eat.insert_eating_patterns(vioscreen_eating_patterns)
             t.commit()
 
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b3'
-               '/vioscreen/eatingpatterns'
-        )
+        url = self._url_constructor() + '/vioscreen/eatingpatterns'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2185,12 +2210,17 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['sessionId'], vioscreen_eating_patterns.sessionId)
 
     def test_get_sample_vioscreen_eating_patterns_404(self):
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b4'
-               '/vioscreen/eatingpatterns'
-        )
+        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""DELETE FROM ag.vioscreen_eatingpatterns
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            t.commit()
+
+        url = self._url_constructor() + '/vioscreen/eatingpatterns'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2200,11 +2230,11 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Username not found")
+        self.assertEqual(response_obj['message'], "Eating Patterns not found")
 
     def test_get_sample_vioscreen_mpeds_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="c28a4824acb4543f",
+                                             username="674533d367f222d2",
                                              protocolId=344,
                                              status="Finished",
                                              startDate="2014-10-08T18:55:12.747",
@@ -2232,12 +2262,7 @@ class VioscreenTests(ApiTests):
                 vio_mped.insert_mpeds(vioscreen_mpeds)
             t.commit()
 
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b3'
-               '/vioscreen/mpeds'
-        )
+        url = self._url_constructor() + '/vioscreen/mpeds'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2250,12 +2275,17 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['sessionId'], vioscreen_mpeds.sessionId)
 
     def test_get_sample_vioscreen_mpeds_404(self):
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b4'
-               '/vioscreen/mpeds'
-        )
+        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""DELETE FROM ag.vioscreen_mpeds
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            t.commit()
+
+        url = self._url_constructor() + '/vioscreen/mpeds'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2265,11 +2295,11 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Username not found")
+        self.assertEqual(response_obj['message'], "MPeds not found")
 
     def test_get_sample_vioscreen_food_consumption_200(self):
         vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="c28a4824acb4543f",
+                                             username="674533d367f222d2",
                                              protocolId=344,
                                              status="Finished",
                                              startDate="2014-10-08T18:55:12.747",
@@ -2310,12 +2340,7 @@ class VioscreenTests(ApiTests):
                 vio_cons.insert_food_consumption(vioscreen_food_consumption)
             t.commit()
 
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b3'
-               '/vioscreen/foodconsumption'
-        )
+        url = self._url_constructor() + '/vioscreen/foodconsumption'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2328,12 +2353,20 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['sessionId'], vioscreen_food_consumption.sessionId)
 
     def test_get_sample_vioscreen_food_consumption_404(self):
-        url = ('/api'
-               '/accounts/0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
-               '/sources/53846167-d41d-462c-8dda-adc00a6a44ca'
-               '/samples/09dfee70-4ea3-4fc4-80d2-3257ababc8b4'
-               '/vioscreen/foodconsumption'
-        )
+        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""DELETE FROM ag.vioscreen_foodconsumptioncomponents
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_foodconsumption
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            t.commit()
+
+        url = self._url_constructor() + '/vioscreen/foodconsumption'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2343,4 +2376,4 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Username not found")
+        self.assertEqual(response_obj['message'], "Food Consumption not found")
