@@ -27,7 +27,8 @@ from ._activation import (
 from ._vioscreen import (
     read_sample_vioscreen_session, read_sample_vioscreen_percent_energy,
     read_sample_vioscreen_dietary_score, read_sample_vioscreen_supplements,
-    read_sample_vioscreen_food_components, read_sample_vioscreen_eating_patterns,
+    read_sample_vioscreen_food_components,
+    read_sample_vioscreen_eating_patterns,
     read_sample_vioscreen_mpeds, read_sample_vioscreen_food_consumption
 )
 

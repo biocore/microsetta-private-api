@@ -17,24 +17,27 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
-from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
-from microsetta_private_api.repo.vioscreen_repo import (VioscreenSessionRepo,
-    VioscreenPercentEnergyRepo, VioscreenDietaryScoreRepo, VioscreenSupplementsRepo,
-    VioscreenFoodComponentsRepo, VioscreenEatingPatternsRepo, VioscreenMPedsRepo,
-    VioscreenFoodConsumptionRepo)
+from microsetta_private_api.repo.vioscreen_repo import (
+    VioscreenSessionRepo, VioscreenPercentEnergyRepo,
+    VioscreenDietaryScoreRepo, VioscreenSupplementsRepo,
+    VioscreenFoodComponentsRepo, VioscreenEatingPatternsRepo,
+    VioscreenMPedsRepo, VioscreenFoodConsumptionRepo
+)
 from microsetta_private_api.model.account import Account
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.model.sample import Sample, SampleInfo
 from microsetta_private_api.model.address import Address
-from microsetta_private_api.model.vioscreen import (VioscreenSession,
+from microsetta_private_api.model.vioscreen import (
+    VioscreenSession,
     VioscreenPercentEnergy, VioscreenPercentEnergyComponent,
     VioscreenDietaryScore, VioscreenDietaryScoreComponent,
     VioscreenSupplements, VioscreenSupplementsComponent,
     VioscreenFoodComponents, VioscreenFoodComponentsComponent,
     VioscreenEatingPatterns, VioscreenEatingPatternsComponent,
     VioscreenMPeds, VioscreenMPedsComponent,
-    VioscreenFoodConsumption, VioscreenFoodConsumptionComponent)
+    VioscreenFoodConsumption, VioscreenFoodConsumptionComponent
+)
 from microsetta_private_api.api.tests.test_integration import \
     _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
 
@@ -1820,20 +1823,21 @@ class VioscreenTests(ApiTests):
                 f'/samples/{self.samp_id}')
 
     def test_get_sample_vioscreen_session_200(self):
-        vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="674533d367f222d2",
-                                             protocolId=344,
-                                             status="Finished",
-                                             startDate="2014-10-08T18:55:12.747",
-                                             endDate="2014-10-08T18:57:07.503",
-                                             cultureCode="en-US",
-                                             created="2014-10-08T18:55:07.96",
-                                             modified="2017-07-29T03:56:04.22")
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         with Transaction() as t:
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
-            vio_surv = SurveyTemplateRepo(t)
 
             t.commit()
 
@@ -1842,13 +1846,15 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 200)
 
         response_obj = json.loads(get_response.data)
         self.assertEqual(response_obj['username'], vioscreen_session.username)
-        self.assertEqual(response_obj['sessionId'], vioscreen_session.sessionId)
+        self.assertEqual(response_obj['sessionId'],
+                         vioscreen_session.sessionId)
         self.assertEqual(response_obj['status'], vioscreen_session.status)
 
     def test_get_sample_vioscreen_session_404(self):
@@ -1891,7 +1897,8 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 404)
 
@@ -1899,24 +1906,28 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['message'], "Session not found")
 
     def test_get_sample_vioscreen_percent_energy_200(self):
-        vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="674533d367f222d2",
-                                             protocolId=344,
-                                             status="Finished",
-                                             startDate="2014-10-08T18:55:12.747",
-                                             endDate="2014-10-08T18:57:07.503",
-                                             cultureCode="en-US",
-                                             created="2014-10-08T18:55:07.96",
-                                             modified="2017-07-29T03:56:04.22")
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         vioscreen_percent_energy = VioscreenPercentEnergy(
             sessionId="000ada854d4f45f5abda90ccade7f0a8",
             energy_components=[
-                VioscreenPercentEnergyComponent(code="%protein",
-                                                description="Percent of calories from Protein",
-                                                short_description="Protein",
-                                                units="%",
-                                                amount=14.101114742737353)
+                VioscreenPercentEnergyComponent(
+                    code="%protein",
+                    description="Percent of calories from Protein",
+                    short_description="Protein",
+                    units="%",
+                    amount=14.101114742737353
+                )
             ]
         )
 
@@ -1924,7 +1935,8 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_perc = VioscreenPercentEnergyRepo(t)
-            if vio_perc.get_percent_energy(vioscreen_percent_energy.sessionId) is None:
+            if (vio_perc.get_percent_energy(vioscreen_percent_energy.sessionId)
+                    is None):
                 vio_perc.insert_percent_energy(vioscreen_percent_energy)
             t.commit()
 
@@ -1933,14 +1945,18 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 200)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['sessionId'], vioscreen_percent_energy.sessionId)
-        self.assertEqual(response_obj['calculations'][0]['code'], vioscreen_percent_energy.energy_components[0].code)
-        self.assertEqual(response_obj['calculations'][0]['amount'], vioscreen_percent_energy.energy_components[0].amount)
+        self.assertEqual(response_obj['sessionId'],
+                         vioscreen_percent_energy.sessionId)
+        self.assertEqual(response_obj['calculations'][0]['code'],
+                         vioscreen_percent_energy.energy_components[0].code)
+        self.assertEqual(response_obj['calculations'][0]['amount'],
+                         vioscreen_percent_energy.energy_components[0].amount)
 
     def test_get_sample_vioscreen_percent_energy_404(self):
         sessionId = "000ada854d4f45f5abda90ccade7f0a8"
@@ -1958,7 +1974,8 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 404)
 
@@ -1966,15 +1983,17 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['message'], "Percent Energy not found")
 
     def test_get_sample_vioscreen_dietary_score_200(self):
-        vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="674533d367f222d2",
-                                             protocolId=344,
-                                             status="Finished",
-                                             startDate="2014-10-08T18:55:12.747",
-                                             endDate="2014-10-08T18:57:07.503",
-                                             cultureCode="en-US",
-                                             created="2014-10-08T18:55:07.96",
-                                             modified="2017-07-29T03:56:04.22")
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         vioscreen_dietary_score = VioscreenDietaryScore(
             sessionId="000ada854d4f45f5abda90ccade7f0a8",
@@ -1992,7 +2011,8 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_diet = VioscreenDietaryScoreRepo(t)
-            if vio_diet.get_dietary_score(vioscreen_dietary_score.sessionId) is None:
+            if (vio_diet.get_dietary_score(vioscreen_dietary_score.sessionId)
+                    is None):
                 vio_diet.insert_dietary_score(vioscreen_dietary_score)
             t.commit()
 
@@ -2001,15 +2021,20 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 200)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['sessionId'], vioscreen_dietary_score.sessionId)
-        self.assertEqual(response_obj['type'], vioscreen_dietary_score.scoresType)
-        self.assertEqual(response_obj['scores'][0]['type'], vioscreen_dietary_score.scores[0].code)
-        self.assertEqual(response_obj['scores'][0]['score'], vioscreen_dietary_score.scores[0].score)
+        self.assertEqual(response_obj['sessionId'],
+                         vioscreen_dietary_score.sessionId)
+        self.assertEqual(response_obj['type'],
+                         vioscreen_dietary_score.scoresType)
+        self.assertEqual(response_obj['scores'][0]['type'],
+                         vioscreen_dietary_score.scores[0].code)
+        self.assertEqual(response_obj['scores'][0]['score'],
+                         vioscreen_dietary_score.scores[0].score)
 
     def test_get_sample_vioscreen_dietary_score_404(self):
         sessionId = "000ada854d4f45f5abda90ccade7f0a8"
@@ -2027,7 +2052,8 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 404)
 
@@ -2035,15 +2061,17 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['message'], "Dietary Score not found")
 
     def test_get_sample_vioscreen_supplements_200(self):
-        vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="674533d367f222d2",
-                                             protocolId=344,
-                                             status="Finished",
-                                             startDate="2014-10-08T18:55:12.747",
-                                             endDate="2014-10-08T18:57:07.503",
-                                             cultureCode="en-US",
-                                             created="2014-10-08T18:55:07.96",
-                                             modified="2017-07-29T03:56:04.22")
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         vioscreen_supplements = VioscreenSupplements(
             sessionId="000ada854d4f45f5abda90ccade7f0a8",
@@ -2063,7 +2091,8 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_supp = VioscreenSupplementsRepo(t)
-            if vio_supp.get_supplements(vioscreen_supplements.sessionId) is None:
+            if (vio_supp.get_supplements(vioscreen_supplements.sessionId)
+                    is None):
                 vio_supp.insert_supplements(vioscreen_supplements)
             t.commit()
 
@@ -2072,12 +2101,14 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 200)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['sessionId'], vioscreen_supplements.sessionId)
+        self.assertEqual(response_obj['sessionId'],
+                         vioscreen_supplements.sessionId)
 
     def test_get_sample_vioscreen_supplements_404(self):
         sessionId = "000ada854d4f45f5abda90ccade7f0a8"
@@ -2095,7 +2126,8 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 404)
 
@@ -2103,24 +2135,28 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['message'], "Supplements not found")
 
     def test_get_sample_vioscreen_food_components_200(self):
-        vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="674533d367f222d2",
-                                             protocolId=344,
-                                             status="Finished",
-                                             startDate="2014-10-08T18:55:12.747",
-                                             endDate="2014-10-08T18:57:07.503",
-                                             cultureCode="en-US",
-                                             created="2014-10-08T18:55:07.96",
-                                             modified="2017-07-29T03:56:04.22")
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         vioscreen_food_components = VioscreenFoodComponents(
             sessionId="000ada854d4f45f5abda90ccade7f0a8",
             components=[
-                VioscreenFoodComponentsComponent(code="acesupot",
-                                                 description="Acesulfame Potassium",
-                                                 units="mg",
-                                                 amount=0.0,
-                                                 valueType="Amount")
+                VioscreenFoodComponentsComponent(
+                    code="acesupot",
+                    description="Acesulfame Potassium",
+                    units="mg",
+                    amount=0.0,
+                    valueType="Amount"
+                )
             ]
         )
 
@@ -2128,7 +2164,8 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_food = VioscreenFoodComponentsRepo(t)
-            if vio_food.get_food_components(vioscreen_food_components.sessionId) is None:
+            if (vio_food.get_food_components(
+                    vioscreen_food_components.sessionId) is None):
                 vio_food.insert_food_components(vioscreen_food_components)
             t.commit()
 
@@ -2137,12 +2174,14 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 200)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['sessionId'], vioscreen_food_components.sessionId)
+        self.assertEqual(response_obj['sessionId'],
+                         vioscreen_food_components.sessionId)
 
     def test_get_sample_vioscreen_food_components_404(self):
         sessionId = "000ada854d4f45f5abda90ccade7f0a8"
@@ -2160,7 +2199,8 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 404)
 
@@ -2168,15 +2208,17 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['message'], "Food Components not found")
 
     def test_get_sample_vioscreen_eating_patterns_200(self):
-        vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="674533d367f222d2",
-                                             protocolId=344,
-                                             status="Finished",
-                                             startDate="2014-10-08T18:55:12.747",
-                                             endDate="2014-10-08T18:57:07.503",
-                                             cultureCode="en-US",
-                                             created="2014-10-08T18:55:07.96",
-                                             modified="2017-07-29T03:56:04.22")
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         vioscreen_eating_patterns = VioscreenEatingPatterns(
             sessionId="000ada854d4f45f5abda90ccade7f0a8",
@@ -2193,7 +2235,8 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_eat = VioscreenEatingPatternsRepo(t)
-            if vio_eat.get_eating_patterns(vioscreen_eating_patterns.sessionId) is None:
+            if (vio_eat.get_eating_patterns(
+                    vioscreen_eating_patterns.sessionId) is None):
                 vio_eat.insert_eating_patterns(vioscreen_eating_patterns)
             t.commit()
 
@@ -2202,12 +2245,14 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 200)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['sessionId'], vioscreen_eating_patterns.sessionId)
+        self.assertEqual(response_obj['sessionId'],
+                         vioscreen_eating_patterns.sessionId)
 
     def test_get_sample_vioscreen_eating_patterns_404(self):
         sessionId = "000ada854d4f45f5abda90ccade7f0a8"
@@ -2225,7 +2270,8 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 404)
 
@@ -2233,24 +2279,28 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['message'], "Eating Patterns not found")
 
     def test_get_sample_vioscreen_mpeds_200(self):
-        vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="674533d367f222d2",
-                                             protocolId=344,
-                                             status="Finished",
-                                             startDate="2014-10-08T18:55:12.747",
-                                             endDate="2014-10-08T18:57:07.503",
-                                             cultureCode="en-US",
-                                             created="2014-10-08T18:55:07.96",
-                                             modified="2017-07-29T03:56:04.22")
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         vioscreen_mpeds = VioscreenMPeds(
             sessionId="000ada854d4f45f5abda90ccade7f0a8",
             components=[
-                VioscreenMPedsComponent(code="A_BEV",
-                                        description="MPED: Total drinks of alcohol",
-                                        units="alc_drinks",
-                                        amount=1.30647563412786,
-                                        valueType="Amount")
+                VioscreenMPedsComponent(
+                    code="A_BEV",
+                    description="MPED: Total drinks of alcohol",
+                    units="alc_drinks",
+                    amount=1.30647563412786,
+                    valueType="Amount"
+                )
             ]
         )
 
@@ -2267,7 +2317,8 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 200)
 
@@ -2290,7 +2341,8 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 404)
 
@@ -2298,15 +2350,17 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['message'], "MPeds not found")
 
     def test_get_sample_vioscreen_food_consumption_200(self):
-        vioscreen_session = VioscreenSession(sessionId="000ada854d4f45f5abda90ccade7f0a8",
-                                             username="674533d367f222d2",
-                                             protocolId=344,
-                                             status="Finished",
-                                             startDate="2014-10-08T18:55:12.747",
-                                             endDate="2014-10-08T18:57:07.503",
-                                             cultureCode="en-US",
-                                             created="2014-10-08T18:55:07.96",
-                                             modified="2017-07-29T03:56:04.22")
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         vioscreen_food_consumption = VioscreenFoodConsumption(
             sessionId="000ada854d4f45f5abda90ccade7f0a8",
@@ -2322,11 +2376,13 @@ class VioscreenTests(ApiTests):
                     servingFrequencyText="2-3 per month",
                     created="2017-07-29T02:02:54.72",
                     data=[
-                        VioscreenFoodComponentsComponent(code="acesupot",
-                                                         description="Acesulfame Potassium",
-                                                         units="mg",
-                                                         amount=0.0,
-                                                         valueType="Amount")
+                        VioscreenFoodComponentsComponent(
+                            code="acesupot",
+                            description="Acesulfame Potassium",
+                            units="mg",
+                            amount=0.0,
+                            valueType="Amount"
+                        )
                     ]
                 )
             ]
@@ -2336,7 +2392,8 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_cons = VioscreenFoodConsumptionRepo(t)
-            if vio_cons.get_food_consumption(vioscreen_food_consumption.sessionId) is None:
+            if (vio_cons.get_food_consumption(
+                    vioscreen_food_consumption.sessionId) is None):
                 vio_cons.insert_food_consumption(vioscreen_food_consumption)
             t.commit()
 
@@ -2345,12 +2402,14 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 200)
 
         response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['sessionId'], vioscreen_food_consumption.sessionId)
+        self.assertEqual(response_obj['sessionId'],
+                         vioscreen_food_consumption.sessionId)
 
     def test_get_sample_vioscreen_food_consumption_404(self):
         sessionId = "000ada854d4f45f5abda90ccade7f0a8"
@@ -2371,7 +2430,8 @@ class VioscreenTests(ApiTests):
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
-        get_response = self.client.get(url, headers=make_headers(FAKE_TOKEN_ADMIN))
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 404)
 

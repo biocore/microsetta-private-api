@@ -459,7 +459,8 @@ class VioscreenFoodConsumption(ModelBase):
 
 
 class VioscreenComposite(ModelBase):
-    def __init__(self, session, percent_energy, dietary_score, supplements, food_components, eating_patterns, mpeds, food_consumption):
+    def __init__(self, session, percent_energy, dietary_score, supplements,
+                 food_components, eating_patterns, mpeds, food_consumption):
         self.session = session
         self.percent_energy = percent_energy
         self.dietary_score = dietary_score
