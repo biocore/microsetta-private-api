@@ -1022,6 +1022,79 @@ paths:
                     type: string
                     nullable: true
 
+  '/campaign_information':
+    get:
+      operationId: microsetta_private_api.api.get_campaign_information
+      tags:
+        - Campaigns
+      summary: Get campaign information based on provided campaign_id
+      description: Get campaign information based on provided campaign_id
+      security: []
+      parameters:
+        - in: query
+          name: campaign_id
+          description: unique identifier of campaign to get information for
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: campaign information
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.post_campaign_information
+      tags:
+        - Campaigns
+        - Admin
+      summary: Create or update campaign information
+      description: Create or update campaign information
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'campaign_id':
+                  type: string
+                'title':
+                  type: string
+                'instructions':
+                  type: string
+                'permitted_countries':
+                  type: string
+                'language_key':
+                  type: string
+                'accepting_participants':
+                  type: string
+                'associated_projects':
+                  type: string
+                'language_key_alt':
+                  type: string
+                'title_alt':
+                  type: string
+                'instructions_alt':
+                  type: string
+                'extension':
+                  type: string
+      responses:
+        '200':
+          description: campaign information
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
 
   '/preparations/{sample_barcode}':
     get:
@@ -1199,6 +1272,23 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+
+  '/admin/campaigns/list':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.list_campaigns
+      tags:
+        - Admin
+      summary: Return a list of all campaigns
+      description: Return a list of all campaigns
+      responses:
+        '200':
+          description: Array of campaigns
+          content:
+            application/json:
+              schema:
+                type: array
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
 
   '/admin/scan/{sample_barcode}':
     post:
