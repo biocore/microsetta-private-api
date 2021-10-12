@@ -1,5 +1,3 @@
-from flask import jsonify
-
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
 from microsetta_private_api.repo.transaction import Transaction
 
