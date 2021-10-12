@@ -2,7 +2,6 @@ import psycopg2
 
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.campaign import Campaign
-from werkzeug.exceptions import NotFound
 
 
 class CampaignRepo(BaseRepo):
@@ -93,7 +92,7 @@ class CampaignRepo(BaseRepo):
                     return None
                 else:
                     return self._row_to_campaign(r)
-            except psycopg2.errors.InvalidTextRepresentation as e:
+            except psycopg2.errors.InvalidTextRepresentation:
                 # if someone tries to input a random/malformed campaign ID
                 # we just want to return None and let the signup form display
                 # the default campaign info
