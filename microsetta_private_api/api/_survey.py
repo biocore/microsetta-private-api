@@ -102,14 +102,14 @@ def read_survey_template(account_id, source_id, survey_template_id,
             "108": {
                 # Height
                 "inputType": "number",
-                "validator": "number",
+                "validator": "integer",
                 "min": 0,
                 "max": None
             },
             "113": {
                 # Weight
                 "inputType": "number",
-                "validator": "number",
+                "validator": "integer",
                 "min": 0,
                 "max": None
             }
