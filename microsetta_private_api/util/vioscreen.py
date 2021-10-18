@@ -17,7 +17,7 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from microsetta_private_api.model.vioscreen import VioscreenSession
-from microsetta_private_api.localization import ES_MX
+from microsetta_private_api.localization import ES_MX, EN_US
 
 
 # the country code determines which FFQ is taken. Vioscreen determines
@@ -492,4 +492,5 @@ def update_session_detail():
                            for s, m in failed_sessions])
         send_email("danielmcdonald@ucsd.edu", "pester_daniel",
                    {"what": "Vioscreen sessions failed",
-                    "content": payload})
+                    "content": payload},
+                   EN_US)
