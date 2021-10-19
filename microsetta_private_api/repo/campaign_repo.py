@@ -107,7 +107,7 @@ class CampaignRepo(BaseRepo):
 
             self.update_header_image(body['campaign_id'], body['extension'])
 
-        return self.get_campaign_by_id(self, body['campaign_id'])
+        return self.get_campaign_by_id(body['campaign_id'])
 
     def get_campaign_by_id(self, campaign_id):
         with self._transaction.dict_cursor() as cur:
