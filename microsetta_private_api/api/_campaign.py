@@ -8,7 +8,9 @@ def get_campaign_information(campaign_id):
         campaign_repo = CampaignRepo(t)
         campaign = campaign_repo.get_campaign_by_id(campaign_id)
 
+        # rather than return an error on a bad campaign id, we'll return
+        # a code indicating that so the signup form can handle it gracefully
         if campaign is None:
-            return jsonify(code=404, message="Campaign not found"), 404
+            return jsonify(campaign_id="BADID"), 200
         else:
             return campaign, 200
