@@ -12,6 +12,7 @@ BOX_TYPE = "box"
 REGISTRATION_CARD_TYPE = "registration_card"
 SENT_STATUS = "Sent"
 ERROR_STATUS = "Error"
+ARCHIVE_STATUS = "Archived"
 CODE_ERROR = "Code Error"
 
 
@@ -104,6 +105,9 @@ def _process_single_order(curr_order_id, curr_status, curr_creation_date):
         if curr_status == ERROR_STATUS:
             # archive the errored order
             dc.post_daklapack_order_archive({"orderIds": [curr_order_id]})
+
+            per_order_admin_repo.set_daklapack_order_poll_info(
+                curr_order_id, datetime.now(), ARCHIVE_STATUS)
 
         per_order_t.commit()
 

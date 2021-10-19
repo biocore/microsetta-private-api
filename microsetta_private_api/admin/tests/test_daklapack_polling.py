@@ -663,8 +663,10 @@ class DaklapackPollingTests(AdminTests):
                 "abc917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Inproduction")
             self._check_last_polling_status(
                 "0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Sent")
+            # this order had a status of "Error" in the daklapack response but
+            # this is changed to "Archived" after we archive the errored order
             self._check_last_polling_status(
-                "8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Error")
+                "8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Archived")
             # this order is open in our db but dak api gives no info on it
             self._check_last_polling_status(
                 "99746684-8a2b-45d9-9337-4742bf6734cc", None)
