@@ -1314,3 +1314,12 @@ class AdminRepo(BaseRepo):
                 "WHERE dak_order_id = %s",
                 (last_polling_timestamp, last_polling_status, dak_order_id)
             )
+
+    def set_kit_uuids_for_dak_order(self, dak_order_id, kit_uuids):
+        kit_uuid_tuples = [(dak_order_id, i) for i in kit_uuids]
+
+        insert_sql = 'insert into barcodes.daklapack_order_to_kit' \
+                     ' (dak_order_id, kit_uuid) values %s'
+        with self._transaction.cursor() as cur:
+            psycopg2.extras.execute_values(cur, insert_sql, kit_uuid_tuples,
+                                           template=None, page_size=100)
