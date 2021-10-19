@@ -18,8 +18,7 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
-from microsetta_private_api.repo.metadata_repo import (retrieve_metadata,
-                                                       drop_private_columns)
+from microsetta_private_api.repo.metadata_repo import retrieve_metadata
 from microsetta_private_api.tasks import send_email as celery_send_email,\
     per_sample_summary as celery_per_sample_summary
 from microsetta_private_api.admin.email_templates import EmailMessage
@@ -31,7 +30,7 @@ from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.util.melissa import verify_address
 from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
-from qiita_client import QiitaClient
+from microsetta_private_api.qiita import qclient
 
 
 def search_barcode(token_info, sample_barcode):
@@ -115,13 +114,10 @@ def qiita_compatible_metadata(token_info, include_private, body):
     # TODO: this call constructs transactions implicitly. It would be
     # better for the transaction to be established and passed in,
     # similar to how other "repo" objects are managed
-    df, errors = retrieve_metadata(samples)
+    df, errors = retrieve_metadata(samples, include_private=include_private)
 
     if errors:
         return jsonify(code=404, message=str(errors)), 404
-
-    if not include_private:
-        df = drop_private_columns(df)
 
     return jsonify(df.to_dict(orient='index')), 200
 
@@ -681,12 +677,6 @@ def barcode_query(body, token_info):
 
 def qiita_barcode_query(body, token_info):
     validate_admin_access(token_info)
-
-    qclient = QiitaClient(
-        SERVER_CONFIG["qiita_endpoint"],
-        SERVER_CONFIG["qiita_client_id"],
-        SERVER_CONFIG["qiita_client_secret"]
-    )
 
     qiita_body = {
         'sample_ids': ["10317." + b for b in body["barcodes"]]
