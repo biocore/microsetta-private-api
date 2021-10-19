@@ -161,62 +161,72 @@ class DaklapackPollingTests(AdminTests):
     ]}  # end "articles" (type) list, outer dict
 
     @staticmethod
-    def _delete_kits(kit_ids):
+    def _delete_dak_orders_to_kits(t, kit_ids):
         if kit_ids is None:
             kit_ids = []
 
-        with Transaction() as t:
-            with t.dict_cursor() as cur:
-                for curr_kit_id in kit_ids:
-                    # Delete from ag-kit-related tables if it
-                    # was added there
-                    cur.execute("SELECT ag_kit_id "
-                                "FROM ag.ag_kit "
-                                "WHERE supplied_kit_id=%s",
-                                (curr_kit_id,))
-                    ag_kit_ids_fetch = cur.fetchall()
-
-                    if len(ag_kit_ids_fetch) > 0:
-                        ag_kit_ids = ag_kit_ids_fetch[0]
-
-                        cur.execute("DELETE FROM ag.ag_kit_barcodes "
-                                    "WHERE ag_kit_id IN %s",
-                                    (tuple(ag_kit_ids),))
-
-                        cur.execute("DELETE FROM ag.ag_kit "
-                                    "WHERE ag_kit_id IN %s",
-                                    (tuple(ag_kit_ids),))
-
-                    # Delete barcodes and project-barcode associations
-                    cur.execute("SELECT barcode "
-                                "FROM barcodes.barcode "
-                                "WHERE kit_id=%s",
-                                (curr_kit_id,))
-                    barcodes_fetch = cur.fetchall()
-
-                    if len(barcodes_fetch) > 0:
-                        barcodes = barcodes_fetch[0]
-                        cur.execute("DELETE FROM barcodes.project_barcode "
-                                    "WHERE barcode IN %s",
-                                    (tuple(barcodes),))
-
-                        cur.execute("DELETE FROM barcodes.barcode "
-                                    "WHERE barcode IN %s",
-                                    (tuple(barcodes),))
-
-                    # Delete the kit itself
-                    cur.execute("DELETE FROM barcodes.kit "
-                                "WHERE kit_id=%s",
-                                (curr_kit_id,))
-            t.commit()
+        kit_ids_tuple = tuple(kit_ids)
+        with t.dict_cursor() as cur:
+            cur.execute("DELETE FROM barcodes.daklapack_order_to_kit "
+                        "USING barcodes.kit "
+                        "WHERE "
+                        "daklapack_order_to_kit.kit_uuid = kit.kit_uuid "
+                        "AND kit.kit_id IN %s",
+                        (kit_ids_tuple,))
 
     @staticmethod
-    def _delete_dak_orders_and_kits(dummy_dak_order_ids, kit_ids):
-        with Transaction() as t:
-            DaklapackPollingTests._delete_kits(t, kit_ids)
+    def _delete_kits(t, kit_ids):
+        if kit_ids is None:
+            kit_ids = []
 
-            DaklapackPollingTests.delete_dummy_dak_orders(
-                t, dummy_dak_order_ids)
+        with t.dict_cursor() as cur:
+            for curr_kit_id in kit_ids:
+                # Delete from ag-kit-related tables if it
+                # was added there
+                cur.execute("SELECT ag_kit_id "
+                            "FROM ag.ag_kit "
+                            "WHERE supplied_kit_id=%s",
+                            (curr_kit_id,))
+                ag_kit_ids_fetch = cur.fetchall()
+
+                if len(ag_kit_ids_fetch) > 0:
+                    ag_kit_ids = ag_kit_ids_fetch[0]
+
+                    cur.execute("DELETE FROM ag.ag_kit_barcodes "
+                                "WHERE ag_kit_id IN %s",
+                                (tuple(ag_kit_ids),))
+
+                    cur.execute("DELETE FROM ag.ag_kit "
+                                "WHERE ag_kit_id IN %s",
+                                (tuple(ag_kit_ids),))
+
+                # Delete barcodes and project-barcode associations
+                cur.execute("SELECT barcode "
+                            "FROM barcodes.barcode "
+                            "WHERE kit_id=%s",
+                            (curr_kit_id,))
+                barcodes_fetch = cur.fetchall()
+
+                if len(barcodes_fetch) > 0:
+                    barcodes = barcodes_fetch[0]
+                    cur.execute("DELETE FROM barcodes.project_barcode "
+                                "WHERE barcode IN %s",
+                                (tuple(barcodes),))
+
+                    cur.execute("DELETE FROM barcodes.barcode "
+                                "WHERE barcode IN %s",
+                                (tuple(barcodes),))
+
+                # Delete the kit itself
+                cur.execute("DELETE FROM barcodes.kit "
+                            "WHERE kit_id=%s",
+                            (curr_kit_id,))
+
+    @staticmethod
+    def _delete_kits_and_dak_orders_to_kits(kit_ids):
+        with Transaction() as t:
+            DaklapackPollingTests._delete_dak_orders_to_kits(t, kit_ids)
+            DaklapackPollingTests._delete_kits(t, kit_ids)
             t.commit()
 
     def _check_last_polling_status(self, dak_order_id, expected_status):
@@ -613,7 +623,7 @@ class DaklapackPollingTests(AdminTests):
                 ["<class 'StopIteration'>: "]}
 
         # clean up any lingering test records before beginning
-        self._delete_kits(registration_card_ids)
+        self._delete_kits_and_dak_orders_to_kits(registration_card_ids)
 
         try:
             with Transaction() as t:
@@ -676,7 +686,7 @@ class DaklapackPollingTests(AdminTests):
             del real_out["Sent"][0]["created"][0]["kit_uuid"]
             self.assertEqual(expected_out, real_out)
         finally:
-            self._delete_kits(registration_card_ids)
+            self._delete_kits_and_dak_orders_to_kits(registration_card_ids)
 
     def test_process_order_articles_sent_status(self):
         expected_out = [

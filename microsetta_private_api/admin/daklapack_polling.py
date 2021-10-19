@@ -142,6 +142,11 @@ def process_order_articles(admin_repo, order_id, status, create_date):
                 # represents exactly one kit, no more or less.)
                 curr_output = _store_single_sent_kit(
                     admin_repo, order_proj_ids, curr_article_instance)
+
+                # able to assume there is only one kit uuid bc
+                # _store_single_sent_kit stores a single kit, by definition
+                kit_uuid = curr_output["created"][0]["kit_uuid"]
+                admin_repo.set_kit_uuids_for_dak_order(order_id, [kit_uuid])
             elif status == ERROR_STATUS:
                 curr_output = _gather_article_error_info(
                     order_id, create_date, curr_article_instance)
@@ -224,9 +229,12 @@ def _store_single_sent_kit(admin_repo, order_proj_ids, single_article_dict):
     # hold representation of json); return them as json instead.
     # Not doing graceful error handling here because if any of these
     # keys/structures don't exist, something is wrong and we *should* error
-    for i in range(len(created_kit_info["created"])):
-        address_str = created_kit_info["created"][i]["address"]
-        created_kit_info["created"][i]["address"] = json.loads(address_str)
+    if len(created_kit_info["created"]) == 1:
+        address_str = created_kit_info["created"][0]["address"]
+        created_kit_info["created"][0]["address"] = json.loads(address_str)
+    else:
+        raise ValueError(f"Expected exactly one kit created, "
+                         f"found {len(created_kit_info['created'])}")
 
     return created_kit_info
 
