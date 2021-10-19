@@ -1,0 +1,83 @@
+[
+    {"sessionId": "0087da64cdcb41ad800c23531d1198f2",
+        "data": [
+            {"supplement": "MultiVitamin", "frequency": "", "amount": "",
+                "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
+        ]
+     },
+    {"sessionId": "00e381e946a04693bbc7ab8b830700e9",
+        "data": [
+            {"supplement": "MultiVitamin", "frequency": "", "amount": "",
+                "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
+        ]
+     },
+    {"sessionId": "005eae45652f4aef9880502a08139155",
+        "data": [
+            {"supplement": "MultiVitamin", "frequency": "7",
+                "amount": "200", "average": "200"},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
+        ]
+     },
+    {"sessionId": "00d3616753e04a5bab52d972ad936251",
+        "data": [
+            {"supplement": "MultiVitamin", "frequency": "7", "amount": "200",
+                "average": "200"},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
+        ]
+     },
+    {"sessionId": "004c7bec8c904a76bfc5c2f65a33637b",
+        "data": [
+            {"supplement": "MultiVitamin", "frequency": "", "amount": "",
+                "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
+        ]
+     },
+    {"sessionId": "00c41c34403c4899a9e01d455403114b",
+        "data": [
+            {"supplement": "MultiVitamin", "frequency": "7", "amount": "200",
+                "average": "200"},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
+        ]
+     },
+    {"sessionId": "0003765db07940849b2461b3a058ffba",
+        "data": [
+            {"supplement": "MultiVitamin",
+                "frequency": "Less than once per week",
+                "amount": "200", "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
+        ]
+     },
+    {"sessionId": "005e14983cc646ca8707c2984ed88930",
+        "data": [
+            {"supplement": "MultiVitamin", "frequency": "", "amount": "",
+                "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
+        ]
+     },
+    {"sessionId": "00d5c51ef24e410286057f49bd3f36b2",
+        "data": [
+            {"supplement": "MultiVitamin", "frequency": "", "amount": "",
+                "average": ""},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
+        ]
+     },
+    {"sessionId": "006392a3ce1f419ebbaa12b6a5aaaf49",
+        "data": [
+            {"supplement": "MultiVitamin", "frequency": "2", "amount": "200",
+                "average": "57"},
+            {"supplement": "Calcium", "frequency": "", "amount": "",
+                "average": ""}
+        ]
+     }
+]
