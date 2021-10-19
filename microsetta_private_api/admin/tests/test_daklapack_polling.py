@@ -39,17 +39,17 @@ class DaklapackPollingTests(AdminTests):
                   "name": "FedEx", "shippingType": "FEDEX_2_DAY"
               },
               "scannableKitItems": [
-                  {"type": "7ml_etoh_tube", "barcode": "ABCT",
+                  {"type": "Tube", "barcode": "ABCT",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "registration_card", "barcode": "ABCR",
+                  {"type": "KitId", "barcode": "ABCR",
                    "creationDate": "2021-02-26T08:48:16.7885478Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "box", "barcode": "ABCX",
+                  {"type": "BoxId", "barcode": "ABCX",
                    "creationDate": "2021-02-26T08:48:16.7885478Z",
                    "itemCount": 1,
                    "containerItems": []
@@ -59,7 +59,7 @@ class DaklapackPollingTests(AdminTests):
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "neoteryx_kit", "barcode": "ABCN",
+                  {"type": "Tube", "barcode": "ABCN",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
@@ -84,17 +84,17 @@ class DaklapackPollingTests(AdminTests):
                   "name": "FedEx", "shippingType": "FEDEX_2_DAY"
               },
               "scannableKitItems": [
-                  {"type": "7ml_etoh_tube", "barcode": "ABCT2",
+                  {"type": "Tube", "barcode": "ABCT2",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "registration_card", "barcode": "ABCR2",
+                  {"type": "KitId", "barcode": "ABCR2",
                    "creationDate": "2021-02-26T08:48:16.7885478Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "box", "barcode": "ABCX2",
+                  {"type": "BoxId", "barcode": "ABCX2",
                    "creationDate": "2021-02-26T08:48:16.7885478Z",
                    "itemCount": 1,
                    "containerItems": []
@@ -104,7 +104,7 @@ class DaklapackPollingTests(AdminTests):
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "neoteryx_kit", "barcode": "ABCN2",
+                  {"type": "Tube", "barcode": "ABCN2",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
@@ -137,17 +137,17 @@ class DaklapackPollingTests(AdminTests):
                   "name": "FedEx", "shippingType": "FEDEX_2_DAY"
               },
               "scannableKitItems": [
-                  {"type": "registration_card", "barcode": "DEFR",
+                  {"type": "KitId", "barcode": "DEFR",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "2point5ml_etoh_tube", "barcode": "DEFT",
+                  {"type": "Tube", "barcode": "DEFT",
                    "creationDate": "2021-02-26T08:48:16.7885478Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "box", "barcode": "DEFX",
+                  {"type": "BoxId", "barcode": "DEFX",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
@@ -501,17 +501,17 @@ class DaklapackPollingTests(AdminTests):
                           "name": "FedEx", "shippingType": "FEDEX_2_DAY"
                       },
                       "scannableKitItems": [
-                          {"type": "registration_card", "barcode": "DEFR",
+                          {"type": "KitId", "barcode": "DEFR",
                            "creationDate": "2021-02-26T08:48:16.788439Z",
                            "itemCount": 1,
                            "containerItems": []
                            },
-                          {"type": "2point5ml_etoh_tube", "barcode": "DEFT",
+                          {"type": "Tube", "barcode": "DEFT",
                            "creationDate": "2021-02-26T08:48:16.7885478Z",
                            "itemCount": 1,
                            "containerItems": []
                            },
-                          {"type": "box", "barcode": "DEFX",
+                          {"type": "BoxId", "barcode": "DEFX",
                            "creationDate": "2021-02-26T08:48:16.788439Z",
                            "itemCount": 1,
                            "containerItems": []
@@ -548,17 +548,17 @@ class DaklapackPollingTests(AdminTests):
                           "name": "FedEx", "shippingType": "FEDEX_2_DAY"
                       },
                       "scannableKitItems": [
-                          {"type": "registration_card", "barcode": "DEFR2",
+                          {"type": "KitId", "barcode": "DEFR2",
                            "creationDate": "2021-02-26T08:48:16.788439Z",
                            "itemCount": 1,
                            "containerItems": []
                            },
-                          {"type": "2point5ml_etoh_tube", "barcode": "DEFT2",
+                          {"type": "Tube", "barcode": "DEFT2",
                            "creationDate": "2021-02-26T08:48:16.7885478Z",
                            "itemCount": 1,
                            "containerItems": []
                            },
-                          {"type": "box", "barcode": "DEFX2",
+                          {"type": "BoxId", "barcode": "DEFX2",
                            "creationDate": "2021-02-26T08:48:16.788439Z",
                            "itemCount": 1,
                            "containerItems": []

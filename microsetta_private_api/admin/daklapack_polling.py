@@ -6,10 +6,9 @@ from microsetta_private_api.admin import daklapack_communication as dc
 
 OUTBOUND_DEV_KEY = "outBoundDelivery"
 INBOUND_DEV_KEY = "inBoundDelivery"
-COLLECTION_DEVICE_TYPES = ["2point5ml_etoh_tube", "7ml_etoh_tube",
-                           "neoteryx_kit"]
-BOX_TYPE = "box"
-REGISTRATION_CARD_TYPE = "registration_card"
+COLLECTION_DEVICE_TYPES = ["Tube"]
+BOX_TYPE = "BoxId"
+REGISTRATION_CARD_TYPE = "KitId"
 SENT_STATUS = "Sent"
 ERROR_STATUS = "Error"
 ARCHIVE_STATUS = "Archived"
@@ -208,7 +207,7 @@ def _store_single_sent_kit(admin_repo, order_proj_ids, single_article_dict):
             device_barcodes.append(curr_barcode)
         elif curr_scannable_type == BOX_TYPE:
             box_id = _prevent_overwrite(box_id, curr_barcode, BOX_TYPE)
-        elif curr_scannable_type == "registration_card":
+        elif curr_scannable_type == REGISTRATION_CARD_TYPE:
             kit_name = _prevent_overwrite(kit_name, curr_barcode,
                                           REGISTRATION_CARD_TYPE)
         else:
