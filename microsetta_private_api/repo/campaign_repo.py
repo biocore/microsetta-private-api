@@ -117,7 +117,8 @@ class CampaignRepo(BaseRepo):
                     "permitted_countries, language_key, "
                     "accepting_participants, "
                     "language_key_alt, title_alt, instructions_alt "
-                    "FROM barcodes.campaigns WHERE campaign_id = %s", (campaign_id,)
+                    "FROM barcodes.campaigns WHERE campaign_id = %s",
+                    (campaign_id,)
                 )
                 r = cur.fetchone()
                 if r is None:
