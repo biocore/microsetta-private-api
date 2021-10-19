@@ -1,6 +1,7 @@
 CREATE TABLE barcodes.interested_users (
     interested_user_id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     campaign_id uuid NOT NULL,
+    source varchar,
     first_name varchar NOT NULL,
     last_name varchar NOT NULL,
     email varchar NOT NULL,
