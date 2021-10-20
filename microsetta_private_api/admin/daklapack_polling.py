@@ -3,6 +3,7 @@ from datetime import datetime
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.admin import daklapack_communication as dc
+import celery
 
 OUTBOUND_DEV_KEY = "outBoundDelivery"
 INBOUND_DEV_KEY = "inBoundDelivery"
@@ -15,6 +16,7 @@ ARCHIVE_STATUS = "Archived"
 CODE_ERROR = "Code Error"
 
 
+@celery.task(ignore_result=False)
 def poll_dak_orders():
     """Get open orders' status from daklapack and process accordingly"""
 
