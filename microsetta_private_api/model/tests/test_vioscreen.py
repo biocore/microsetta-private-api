@@ -15,12 +15,12 @@ from microsetta_private_api.model.vioscreen import (
 )
 
 
-package = 'microsetta_private_api/model/tests'
+package = 'microsetta_private_api'
 # package where data is stored
 
 def get_data_path(filename):
-    return pkg_resources.resource_filename(package, 
-                                           '/data/%s' % filename)
+    return pkg_resources.resource_filename(package,
+                                           'model/tests/data/%s' % filename)
 
 
 class SessionsTestCase(unittest.TestCase):
