@@ -17,6 +17,7 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
+from microsetta_private_api.repo.campaign_repo import CampaignRepo
 from microsetta_private_api.repo.metadata_repo import retrieve_metadata
 from microsetta_private_api.tasks import send_email as celery_send_email,\
     per_sample_summary as celery_per_sample_summary
@@ -520,6 +521,30 @@ def address_verification(token_info, address_1, address_2=None, city=None,
                                       postal, country)
 
     return jsonify(melissa_response), 200
+
+
+def list_campaigns(token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        campaign_repo = CampaignRepo(t)
+        campaigns = campaign_repo.get_all_campaigns()
+    return jsonify(campaigns), 200
+
+
+def post_campaign_information(body, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        campaign_repo = CampaignRepo(t)
+
+        if 'campaign_id' in body:
+            res = campaign_repo.update_campaign(body)
+        else:
+            res = campaign_repo.create_campaign(body)
+
+        t.commit()
+        return jsonify(res), 200
 
 
 def generate_activation_codes(body, token_info):
