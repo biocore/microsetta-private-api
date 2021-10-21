@@ -24,10 +24,6 @@ from ._activation import (
     check_activation
 )
 
-from ._campaign import (
-    get_campaign_information
-)
-
 __all__ = [
     'find_accounts_for_login',
     'register_account',
@@ -59,6 +55,5 @@ __all__ = [
     'submit_answered_survey',
     'verify_jwt',
     'get_preparations',
-    'check_activation',
-    'get_campaign_information'
+    'check_activation'
 ]
