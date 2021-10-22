@@ -1813,6 +1813,36 @@ class VioscreenTests(ApiTests):
                                AND sample_id=%s
                                AND vio_id=%s""",
                         (self.acct_id, self.src_id, self.samp_id, self.vio_id))
+
+            sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+            cur.execute("""DELETE FROM ag.vioscreen_foodconsumptioncomponents
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_foodconsumption
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_mpeds
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_eatingpatterns
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_foodcomponents
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_supplements
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_dietaryscore
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_percentenergy
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+            cur.execute("""DELETE FROM ag.vioscreen_sessions
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
             t.commit()
 
         super().tearDown()
@@ -1858,40 +1888,6 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['status'], vioscreen_session.status)
 
     def test_get_sample_vioscreen_session_404(self):
-        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
-
-        with Transaction() as t:
-            cur = t.cursor()
-            cur.execute("""DELETE FROM ag.vioscreen_foodconsumptioncomponents
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-            cur.execute("""DELETE FROM ag.vioscreen_foodconsumption
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-            cur.execute("""DELETE FROM ag.vioscreen_mpeds
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-            cur.execute("""DELETE FROM ag.vioscreen_eatingpatterns
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-            cur.execute("""DELETE FROM ag.vioscreen_foodcomponents
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-            cur.execute("""DELETE FROM ag.vioscreen_supplements
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-            cur.execute("""DELETE FROM ag.vioscreen_dietaryscore
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-            cur.execute("""DELETE FROM ag.vioscreen_percentenergy
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-            cur.execute("""DELETE FROM ag.vioscreen_sessions
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-
-            t.commit()
-
         url = self._url_constructor() + '/vioscreen/session'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
@@ -1935,9 +1931,7 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_perc = VioscreenPercentEnergyRepo(t)
-            if (vio_perc.get_percent_energy(vioscreen_percent_energy.sessionId)
-                    is None):
-                vio_perc.insert_percent_energy(vioscreen_percent_energy)
+            vio_perc.insert_percent_energy(vioscreen_percent_energy)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/percentenergy'
@@ -1959,14 +1953,21 @@ class VioscreenTests(ApiTests):
                          vioscreen_percent_energy.energy_components[0].amount)
 
     def test_get_sample_vioscreen_percent_energy_404(self):
-        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         with Transaction() as t:
-            cur = t.cursor()
-            cur.execute("""DELETE FROM ag.vioscreen_percentenergy
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/percentenergy'
@@ -2011,9 +2012,7 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_diet = VioscreenDietaryScoreRepo(t)
-            if (vio_diet.get_dietary_score(vioscreen_dietary_score.sessionId)
-                    is None):
-                vio_diet.insert_dietary_score(vioscreen_dietary_score)
+            vio_diet.insert_dietary_score(vioscreen_dietary_score)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/dietaryscore'
@@ -2037,14 +2036,21 @@ class VioscreenTests(ApiTests):
                          vioscreen_dietary_score.scores[0].score)
 
     def test_get_sample_vioscreen_dietary_score_404(self):
-        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         with Transaction() as t:
-            cur = t.cursor()
-            cur.execute("""DELETE FROM ag.vioscreen_dietaryscore
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/dietaryscore'
@@ -2091,9 +2097,7 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_supp = VioscreenSupplementsRepo(t)
-            if (vio_supp.get_supplements(vioscreen_supplements.sessionId)
-                    is None):
-                vio_supp.insert_supplements(vioscreen_supplements)
+            vio_supp.insert_supplements(vioscreen_supplements)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/supplements'
@@ -2111,14 +2115,21 @@ class VioscreenTests(ApiTests):
                          vioscreen_supplements.sessionId)
 
     def test_get_sample_vioscreen_supplements_404(self):
-        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         with Transaction() as t:
-            cur = t.cursor()
-            cur.execute("""DELETE FROM ag.vioscreen_supplements
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/supplements'
@@ -2164,9 +2175,7 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_food = VioscreenFoodComponentsRepo(t)
-            if (vio_food.get_food_components(
-                    vioscreen_food_components.sessionId) is None):
-                vio_food.insert_food_components(vioscreen_food_components)
+            vio_food.insert_food_components(vioscreen_food_components)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/foodcomponents'
@@ -2184,14 +2193,21 @@ class VioscreenTests(ApiTests):
                          vioscreen_food_components.sessionId)
 
     def test_get_sample_vioscreen_food_components_404(self):
-        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         with Transaction() as t:
-            cur = t.cursor()
-            cur.execute("""DELETE FROM ag.vioscreen_foodcomponents
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/foodcomponents'
@@ -2235,9 +2251,7 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_eat = VioscreenEatingPatternsRepo(t)
-            if (vio_eat.get_eating_patterns(
-                    vioscreen_eating_patterns.sessionId) is None):
-                vio_eat.insert_eating_patterns(vioscreen_eating_patterns)
+            vio_eat.insert_eating_patterns(vioscreen_eating_patterns)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/eatingpatterns'
@@ -2255,14 +2269,21 @@ class VioscreenTests(ApiTests):
                          vioscreen_eating_patterns.sessionId)
 
     def test_get_sample_vioscreen_eating_patterns_404(self):
-        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         with Transaction() as t:
-            cur = t.cursor()
-            cur.execute("""DELETE FROM ag.vioscreen_eatingpatterns
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/eatingpatterns'
@@ -2308,8 +2329,7 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_mped = VioscreenMPedsRepo(t)
-            if vio_mped.get_mpeds(vioscreen_mpeds.sessionId) is None:
-                vio_mped.insert_mpeds(vioscreen_mpeds)
+            vio_mped.insert_mpeds(vioscreen_mpeds)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/mpeds'
@@ -2326,14 +2346,21 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['sessionId'], vioscreen_mpeds.sessionId)
 
     def test_get_sample_vioscreen_mpeds_404(self):
-        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         with Transaction() as t:
-            cur = t.cursor()
-            cur.execute("""DELETE FROM ag.vioscreen_mpeds
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/mpeds'
@@ -2392,9 +2419,7 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_cons = VioscreenFoodConsumptionRepo(t)
-            if (vio_cons.get_food_consumption(
-                    vioscreen_food_consumption.sessionId) is None):
-                vio_cons.insert_food_consumption(vioscreen_food_consumption)
+            vio_cons.insert_food_consumption(vioscreen_food_consumption)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/foodconsumption'
@@ -2412,17 +2437,21 @@ class VioscreenTests(ApiTests):
                          vioscreen_food_consumption.sessionId)
 
     def test_get_sample_vioscreen_food_consumption_404(self):
-        sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
 
         with Transaction() as t:
-            cur = t.cursor()
-            cur.execute("""DELETE FROM ag.vioscreen_foodconsumptioncomponents
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-            cur.execute("""DELETE FROM ag.vioscreen_foodconsumption
-                           WHERE sessionId = %s""",
-                        (sessionId,))
-
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/foodconsumption'
