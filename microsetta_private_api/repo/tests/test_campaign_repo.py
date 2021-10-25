@@ -8,7 +8,6 @@ from psycopg2.errors import UniqueViolation
 class CampaignRepoTests(unittest.TestCase):
     def setUp(self):
         self.test_campaign_title_1 = 'Test Campaign'
-        associated_projects = "1"
         with Transaction() as t:
             cur = t.cursor()
             cur.execute(

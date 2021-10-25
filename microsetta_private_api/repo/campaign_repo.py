@@ -2,6 +2,7 @@ import psycopg2
 
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.campaign import Campaign
+from microsetta_private_api.exceptions import RepoException
 
 
 class CampaignRepo(BaseRepo):
