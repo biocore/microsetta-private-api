@@ -539,9 +539,15 @@ def post_campaign_information(body, token_info):
         campaign_repo = CampaignRepo(t)
 
         if 'campaign_id' in body:
-            res = campaign_repo.update_campaign(body)
+            try:
+                res = campaign_repo.update_campaign(**body)
+            except ValueError as e:
+                raise RepoException(e)
         else:
-            res = campaign_repo.create_campaign(body)
+            try:
+                res = campaign_repo.create_campaign(**body)
+            except ValueError as e:
+                raise RepoException(e)
 
         t.commit()
         return jsonify(res), 200

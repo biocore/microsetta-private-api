@@ -28,7 +28,7 @@ class CampaignRepo(BaseRepo):
             cur.execute(
                 "SELECT barcodes.project.project "
                 "FROM barcodes.campaigns "
-                "LEFT JOIN barcodes.campaigns_projects "
+                "INNER JOIN barcodes.campaigns_projects "
                 "ON "
                 "barcodes.campaigns.campaign_id = "
                 "barcodes.campaigns_projects.campaign_id "
@@ -57,7 +57,21 @@ class CampaignRepo(BaseRepo):
             rows = cur.fetchall()
             return [self._row_to_campaign(r) for r in rows]
 
-    def create_campaign(self, body):
+    def create_campaign(self, **kwargs):
+        # required parameters to create a campaign
+        title = kwargs['title']
+        associated_projects = kwargs['associated_projects']
+
+        # optional parameters when creating a campaign
+        instructions = kwargs.get('instructions')
+        permitted_countries = kwargs.get('permitted_countries')
+        language_key = kwargs.get('language_key')
+        accepting_participants = kwargs.get('accepting_participants')
+        language_key_alt = kwargs.get('language_key_alt')
+        title_alt = kwargs.get('title_alt')
+        instructions_alt = kwargs.get('instructions_alt')
+        extension = kwargs.get('extension')
+
         with self._transaction.cursor() as cur:
             cur.execute(
                 "INSERT INTO barcodes.campaigns (title, instructions, "
@@ -66,18 +80,16 @@ class CampaignRepo(BaseRepo):
                 "instructions_alt) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s) "
                 "RETURNING campaign_id",
-                (body['title'], body['instructions'],
-                 body['permitted_countries'], body['language_key'],
-                 body['accepting_participants'],
-                 body['language_key_alt'], body['title_alt'],
-                 body['instructions_alt'])
+                (title, instructions, permitted_countries, language_key,
+                 accepting_participants, language_key_alt, title_alt,
+                 instructions_alt)
             )
             campaign_id = cur.fetchone()[0]
 
             if campaign_id is None:
                 raise RepoException("Error inserting campaign into database")
             else:
-                projects = body['associated_projects'].split(",")
+                projects = associated_projects.split(",")
                 for project_id in projects:
                     cur.execute(
                         "INSERT INTO barcodes.campaigns_projects ("
@@ -86,10 +98,24 @@ class CampaignRepo(BaseRepo):
                         (campaign_id, project_id)
                     )
 
-                self.update_header_image(campaign_id, body['extension'])
+                self.update_header_image(campaign_id, extension)
                 return self.get_campaign_by_id(campaign_id)
 
-    def update_campaign(self, body):
+    def update_campaign(self, **kwargs):
+        # required parameters to update a campaign
+        campaign_id = kwargs['campaign_id']
+        title = kwargs['title']
+
+        # optional parameters to update a campaign
+        instructions = kwargs.get('instructions')
+        permitted_countries = kwargs.get('permitted_countries')
+        language_key = kwargs.get('language_key')
+        accepting_participants = kwargs.get('accepting_participants')
+        language_key_alt = kwargs.get('language_key_alt')
+        title_alt = kwargs.get('title_alt')
+        instructions_alt = kwargs.get('instructions_alt')
+        extension = kwargs.get('extension')
+
         with self._transaction.cursor() as cur:
             cur.execute(
                 "UPDATE barcodes.campaigns SET title = %s, instructions = %s, "
@@ -97,16 +123,14 @@ class CampaignRepo(BaseRepo):
                 "accepting_participants = %s, language_key_alt = %s, "
                 "title_alt = %s, instructions_alt = %s "
                 "WHERE campaign_id = %s",
-                (body['title'], body['instructions'],
-                 body['permitted_countries'], body['language_key'],
-                 body['accepting_participants'], body['language_key_alt'],
-                 body['title_alt'], body['instructions_alt'],
-                 body['campaign_id'])
+                (title, instructions, permitted_countries, language_key,
+                 accepting_participants, language_key_alt, title_alt,
+                 instructions_alt, campaign_id)
             )
 
-            self.update_header_image(body['campaign_id'], body['extension'])
+            self.update_header_image(campaign_id, extension)
 
-        return self.get_campaign_by_id(body['campaign_id'])
+        return self.get_campaign_by_id(campaign_id)
 
     def get_campaign_by_id(self, campaign_id):
         with self._transaction.dict_cursor() as cur:
@@ -131,7 +155,7 @@ class CampaignRepo(BaseRepo):
                 return None
 
     def update_header_image(self, campaign_id, extension):
-        if len(extension) > 0:
+        if extension is not None and len(extension) > 0:
             with self._transaction.cursor() as cur:
                 header_image = campaign_id + "." + extension
                 cur.execute(
