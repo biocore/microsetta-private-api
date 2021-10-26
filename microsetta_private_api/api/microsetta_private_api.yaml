@@ -1044,23 +1044,19 @@ paths:
             application/json:
               schema:
                 type: object
-        '404':
-          $ref: '#/components/responses/404NotFound'
     post:
       operationId: microsetta_private_api.admin.admin_impl.post_campaign_information
       tags:
         - Campaigns
         - Admin
-      summary: Create or update campaign information
-      description: Create or update campaign information
+      summary: Create campaign
+      description: Create campaign
       requestBody:
         content:
           application/json:
             schema:
               type: object
               properties:
-                'campaign_id':
-                  type: string
                 'title':
                   type: string
                 'instructions':
@@ -1081,6 +1077,9 @@ paths:
                   type: string
                 'extension':
                   type: string
+              required:
+                - title
+                - associated_projects
       responses:
         '200':
           description: campaign information
@@ -1094,7 +1093,55 @@ paths:
           $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
-
+    put:
+      operationId: microsetta_private_api.admin.admin_impl.put_campaign_information
+      tags:
+        - Campaigns
+        - Admin
+      summary: Update campaign
+      description: Update campaign
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'campaign_id':
+                  type: string
+                'title':
+                  type: string
+                'instructions':
+                  type: string
+                'permitted_countries':
+                  type: string
+                'language_key':
+                  type: string
+                'accepting_participants':
+                  type: string
+                'language_key_alt':
+                  type: string
+                'title_alt':
+                  type: string
+                'instructions_alt':
+                  type: string
+                'extension':
+                  type: string
+              required:
+                - campaign_id
+                - title
+      responses:
+        '200':
+          description: campaign information
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   '/preparations/{sample_barcode}':
     get:

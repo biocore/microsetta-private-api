@@ -27,13 +27,13 @@ CREATE TABLE barcodes.interested_users (
     country varchar,
     latitude double precision,
     longitude double precision,
-    confirm_consent boolean DEFAULT FALSE,
+    confirm_consent boolean not null DEFAULT FALSE,
     ip_address varchar,
-    creation_timestamp timestamp DEFAULT NOW(),
+    creation_timestamp timestamp not null DEFAULT NOW(),
     update_timestamp timestamp,
-    address_checked boolean DEFAULT FALSE,
-    address_valid boolean DEFAULT FALSE,
-    converted_to_account boolean DEFAULT FALSE,
+    address_checked boolean not null DEFAULT FALSE,
+    address_valid boolean not null DEFAULT FALSE,
+    converted_to_account boolean not null DEFAULT FALSE,
     converted_to_account_timestamp timestamp,
     CONSTRAINT fk_campaign_id FOREIGN KEY ( campaign_id ) REFERENCES barcodes.campaigns ( campaign_id )
 );

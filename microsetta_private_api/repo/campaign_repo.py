@@ -91,13 +91,12 @@ class CampaignRepo(BaseRepo):
                 raise RepoException("Error inserting campaign into database")
             else:
                 projects = associated_projects.split(",")
-                for project_id in projects:
-                    cur.execute(
-                        "INSERT INTO barcodes.campaigns_projects ("
-                        "campaign_id,project_id"
-                        ") VALUES (%s, %s) ",
-                        (campaign_id, project_id)
-                    )
+                cur.executemany(
+                    "INSERT INTO barcodes.campaigns_projects ("
+                    "campaign_id,project_id"
+                    ") VALUES (%s, %s) ",
+                    [(campaign_id, pid) for pid in projects]
+                )
 
                 self.update_header_image(campaign_id, extension)
                 return self.get_campaign_by_id(campaign_id)
@@ -106,6 +105,10 @@ class CampaignRepo(BaseRepo):
         # required parameters to update a campaign
         campaign_id = kwargs['campaign_id']
         title = kwargs['title']
+
+        # not permitted to update associated projects
+        if 'associated_projects' in kwargs:
+            raise RepoException("Modification of associated projects not allowed")
 
         # optional parameters to update a campaign
         instructions = kwargs.get('instructions')

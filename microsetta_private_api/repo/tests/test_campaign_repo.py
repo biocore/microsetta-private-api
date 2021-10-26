@@ -2,7 +2,7 @@ import unittest
 
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
 from microsetta_private_api.repo.transaction import Transaction
-from psycopg2.errors import UniqueViolation
+from psycopg2.errors import UniqueViolation, ForeignKeyViolation
 
 
 class CampaignRepoTests(unittest.TestCase):
@@ -67,11 +67,21 @@ class CampaignRepoTests(unittest.TestCase):
         # test to verify requirement of associated_projects
         with Transaction() as t:
             campaign_no_projects = {
-                "title": "Test Campaign"
+                "title": "Unique Campaign Name"
             }
             campaign_repo = CampaignRepo(t)
             with self.assertRaises(KeyError):
                 campaign_repo.create_campaign(**campaign_no_projects)
+
+        # test to verify that associated_projects must be valid project_ids
+        with Transaction() as t:
+            campaign_bad_projects = {
+                "title": "Unique Campaign Name",
+                "associated_projects": "-1"
+            }
+            campaign_repo = CampaignRepo(t)
+            with self.assertRaises(ForeignKeyViolation):
+                campaign_repo.create_campaign(**campaign_bad_projects)
 
     def test_get_campaign_by_id_valid(self):
         # verify that it does not return None when using valid campaign_id
