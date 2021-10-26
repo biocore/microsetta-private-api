@@ -108,7 +108,7 @@ class CampaignRepo(BaseRepo):
 
         # not permitted to update associated projects
         if 'associated_projects' in kwargs:
-            raise RepoException("Modification of associated projects not allowed")
+            raise RepoException("Modifying associated projects not allowed")
 
         # optional parameters to update a campaign
         instructions = kwargs.get('instructions')
