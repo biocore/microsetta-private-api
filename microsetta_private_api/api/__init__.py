@@ -75,6 +75,6 @@ __all__ = [
     'read_sample_vioscreen_food_components',
     'read_sample_vioscreen_eating_patterns',
     'read_sample_vioscreen_mpeds',
-    'read_sample_vioscreen_food_consumption'
+    'read_sample_vioscreen_food_consumption', 
     'get_campaign_information'
 ]
