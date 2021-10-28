@@ -39,17 +39,17 @@ class DaklapackPollingTests(AdminTests):
                   "name": "FedEx", "shippingType": "FEDEX_2_DAY"
               },
               "scannableKitItems": [
-                  {"type": "7ml_etoh_tube", "barcode": "ABCT",
+                  {"type": "Tube", "barcode": "ABCT",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "registration_card", "barcode": "ABCR",
+                  {"type": "KitId", "barcode": "ABCR",
                    "creationDate": "2021-02-26T08:48:16.7885478Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "box", "barcode": "ABCX",
+                  {"type": "BoxId", "barcode": "ABCX",
                    "creationDate": "2021-02-26T08:48:16.7885478Z",
                    "itemCount": 1,
                    "containerItems": []
@@ -59,7 +59,7 @@ class DaklapackPollingTests(AdminTests):
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "neoteryx_kit", "barcode": "ABCN",
+                  {"type": "Tube", "barcode": "ABCN",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
@@ -84,17 +84,17 @@ class DaklapackPollingTests(AdminTests):
                   "name": "FedEx", "shippingType": "FEDEX_2_DAY"
               },
               "scannableKitItems": [
-                  {"type": "7ml_etoh_tube", "barcode": "ABCT2",
+                  {"type": "Tube", "barcode": "ABCT2",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "registration_card", "barcode": "ABCR2",
+                  {"type": "KitId", "barcode": "ABCR2",
                    "creationDate": "2021-02-26T08:48:16.7885478Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "box", "barcode": "ABCX2",
+                  {"type": "BoxId", "barcode": "ABCX2",
                    "creationDate": "2021-02-26T08:48:16.7885478Z",
                    "itemCount": 1,
                    "containerItems": []
@@ -104,7 +104,7 @@ class DaklapackPollingTests(AdminTests):
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "neoteryx_kit", "barcode": "ABCN2",
+                  {"type": "Tube", "barcode": "ABCN2",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
@@ -137,17 +137,17 @@ class DaklapackPollingTests(AdminTests):
                   "name": "FedEx", "shippingType": "FEDEX_2_DAY"
               },
               "scannableKitItems": [
-                  {"type": "registration_card", "barcode": "DEFR",
+                  {"type": "KitId", "barcode": "DEFR",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "2point5ml_etoh_tube", "barcode": "DEFT",
+                  {"type": "Tube", "barcode": "DEFT",
                    "creationDate": "2021-02-26T08:48:16.7885478Z",
                    "itemCount": 1,
                    "containerItems": []
                    },
-                  {"type": "box", "barcode": "DEFX",
+                  {"type": "BoxId", "barcode": "DEFX",
                    "creationDate": "2021-02-26T08:48:16.788439Z",
                    "itemCount": 1,
                    "containerItems": []
@@ -161,62 +161,72 @@ class DaklapackPollingTests(AdminTests):
     ]}  # end "articles" (type) list, outer dict
 
     @staticmethod
-    def _delete_kits(kit_ids):
+    def _delete_dak_orders_to_kits(t, kit_ids):
         if kit_ids is None:
             kit_ids = []
 
-        with Transaction() as t:
-            with t.dict_cursor() as cur:
-                for curr_kit_id in kit_ids:
-                    # Delete from ag-kit-related tables if it
-                    # was added there
-                    cur.execute("SELECT ag_kit_id "
-                                "FROM ag.ag_kit "
-                                "WHERE supplied_kit_id=%s",
-                                (curr_kit_id,))
-                    ag_kit_ids_fetch = cur.fetchall()
-
-                    if len(ag_kit_ids_fetch) > 0:
-                        ag_kit_ids = ag_kit_ids_fetch[0]
-
-                        cur.execute("DELETE FROM ag.ag_kit_barcodes "
-                                    "WHERE ag_kit_id IN %s",
-                                    (tuple(ag_kit_ids),))
-
-                        cur.execute("DELETE FROM ag.ag_kit "
-                                    "WHERE ag_kit_id IN %s",
-                                    (tuple(ag_kit_ids),))
-
-                    # Delete barcodes and project-barcode associations
-                    cur.execute("SELECT barcode "
-                                "FROM barcodes.barcode "
-                                "WHERE kit_id=%s",
-                                (curr_kit_id,))
-                    barcodes_fetch = cur.fetchall()
-
-                    if len(barcodes_fetch) > 0:
-                        barcodes = barcodes_fetch[0]
-                        cur.execute("DELETE FROM barcodes.project_barcode "
-                                    "WHERE barcode IN %s",
-                                    (tuple(barcodes),))
-
-                        cur.execute("DELETE FROM barcodes.barcode "
-                                    "WHERE barcode IN %s",
-                                    (tuple(barcodes),))
-
-                    # Delete the kit itself
-                    cur.execute("DELETE FROM barcodes.kit "
-                                "WHERE kit_id=%s",
-                                (curr_kit_id,))
-            t.commit()
+        kit_ids_tuple = tuple(kit_ids)
+        with t.dict_cursor() as cur:
+            cur.execute("DELETE FROM barcodes.daklapack_order_to_kit "
+                        "USING barcodes.kit "
+                        "WHERE "
+                        "daklapack_order_to_kit.kit_uuid = kit.kit_uuid "
+                        "AND kit.kit_id IN %s",
+                        (kit_ids_tuple,))
 
     @staticmethod
-    def _delete_dak_orders_and_kits(dummy_dak_order_ids, kit_ids):
-        with Transaction() as t:
-            DaklapackPollingTests._delete_kits(t, kit_ids)
+    def _delete_kits(t, kit_ids):
+        if kit_ids is None:
+            kit_ids = []
 
-            DaklapackPollingTests.delete_dummy_dak_orders(
-                t, dummy_dak_order_ids)
+        with t.dict_cursor() as cur:
+            for curr_kit_id in kit_ids:
+                # Delete from ag-kit-related tables if it
+                # was added there
+                cur.execute("SELECT ag_kit_id "
+                            "FROM ag.ag_kit "
+                            "WHERE supplied_kit_id=%s",
+                            (curr_kit_id,))
+                ag_kit_ids_fetch = cur.fetchall()
+
+                if len(ag_kit_ids_fetch) > 0:
+                    ag_kit_ids = ag_kit_ids_fetch[0]
+
+                    cur.execute("DELETE FROM ag.ag_kit_barcodes "
+                                "WHERE ag_kit_id IN %s",
+                                (tuple(ag_kit_ids),))
+
+                    cur.execute("DELETE FROM ag.ag_kit "
+                                "WHERE ag_kit_id IN %s",
+                                (tuple(ag_kit_ids),))
+
+                # Delete barcodes and project-barcode associations
+                cur.execute("SELECT barcode "
+                            "FROM barcodes.barcode "
+                            "WHERE kit_id=%s",
+                            (curr_kit_id,))
+                barcodes_fetch = cur.fetchall()
+
+                if len(barcodes_fetch) > 0:
+                    barcodes = barcodes_fetch[0]
+                    cur.execute("DELETE FROM barcodes.project_barcode "
+                                "WHERE barcode IN %s",
+                                (tuple(barcodes),))
+
+                    cur.execute("DELETE FROM barcodes.barcode "
+                                "WHERE barcode IN %s",
+                                (tuple(barcodes),))
+
+                # Delete the kit itself
+                cur.execute("DELETE FROM barcodes.kit "
+                            "WHERE kit_id=%s",
+                            (curr_kit_id,))
+
+    @staticmethod
+    def _delete_kits_and_dak_orders_to_kits(kit_ids):
+        with Transaction() as t:
+            DaklapackPollingTests._delete_dak_orders_to_kits(t, kit_ids)
+            DaklapackPollingTests._delete_kits(t, kit_ids)
             t.commit()
 
     def _check_last_polling_status(self, dak_order_id, expected_status):
@@ -501,17 +511,17 @@ class DaklapackPollingTests(AdminTests):
                           "name": "FedEx", "shippingType": "FEDEX_2_DAY"
                       },
                       "scannableKitItems": [
-                          {"type": "registration_card", "barcode": "DEFR",
+                          {"type": "KitId", "barcode": "DEFR",
                            "creationDate": "2021-02-26T08:48:16.788439Z",
                            "itemCount": 1,
                            "containerItems": []
                            },
-                          {"type": "2point5ml_etoh_tube", "barcode": "DEFT",
+                          {"type": "Tube", "barcode": "DEFT",
                            "creationDate": "2021-02-26T08:48:16.7885478Z",
                            "itemCount": 1,
                            "containerItems": []
                            },
-                          {"type": "box", "barcode": "DEFX",
+                          {"type": "BoxId", "barcode": "DEFX",
                            "creationDate": "2021-02-26T08:48:16.788439Z",
                            "itemCount": 1,
                            "containerItems": []
@@ -548,17 +558,17 @@ class DaklapackPollingTests(AdminTests):
                           "name": "FedEx", "shippingType": "FEDEX_2_DAY"
                       },
                       "scannableKitItems": [
-                          {"type": "registration_card", "barcode": "DEFR2",
+                          {"type": "KitId", "barcode": "DEFR2",
                            "creationDate": "2021-02-26T08:48:16.788439Z",
                            "itemCount": 1,
                            "containerItems": []
                            },
-                          {"type": "2point5ml_etoh_tube", "barcode": "DEFT2",
+                          {"type": "Tube", "barcode": "DEFT2",
                            "creationDate": "2021-02-26T08:48:16.7885478Z",
                            "itemCount": 1,
                            "containerItems": []
                            },
-                          {"type": "box", "barcode": "DEFX2",
+                          {"type": "BoxId", "barcode": "DEFX2",
                            "creationDate": "2021-02-26T08:48:16.788439Z",
                            "itemCount": 1,
                            "containerItems": []
@@ -613,7 +623,7 @@ class DaklapackPollingTests(AdminTests):
                 ["<class 'StopIteration'>: "]}
 
         # clean up any lingering test records before beginning
-        self._delete_kits(registration_card_ids)
+        self._delete_kits_and_dak_orders_to_kits(registration_card_ids)
 
         try:
             with Transaction() as t:
@@ -663,8 +673,10 @@ class DaklapackPollingTests(AdminTests):
                 "abc917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Inproduction")
             self._check_last_polling_status(
                 "0ed917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Sent")
+            # this order had a status of "Error" in the daklapack response but
+            # this is changed to "Archived" after we archive the errored order
             self._check_last_polling_status(
-                "8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Error")
+                "8ed917ef-0c4d-431a-9aa0-0a1f4f41f44b", "Archived")
             # this order is open in our db but dak api gives no info on it
             self._check_last_polling_status(
                 "99746684-8a2b-45d9-9337-4742bf6734cc", None)
@@ -674,7 +686,7 @@ class DaklapackPollingTests(AdminTests):
             del real_out["Sent"][0]["created"][0]["kit_uuid"]
             self.assertEqual(expected_out, real_out)
         finally:
-            self._delete_kits(registration_card_ids)
+            self._delete_kits_and_dak_orders_to_kits(registration_card_ids)
 
     def test_process_order_articles_sent_status(self):
         expected_out = [

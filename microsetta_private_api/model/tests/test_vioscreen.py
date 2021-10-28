@@ -1,6 +1,7 @@
 import unittest
 import pandas as pd
 import json
+import pkg_resources
 from microsetta_private_api.model.vioscreen import (
     VioscreenSession,
     VioscreenPercentEnergyComponent, VioscreenPercentEnergy,
@@ -14,11 +15,11 @@ from microsetta_private_api.model.vioscreen import (
 )
 
 
-package = 'microsetta_private_api/model/tests'
-# package where data is stored
+package = 'microsetta_private_api'
 
 def get_data_path(filename):
-    return package + '/data/%s' % filename
+    return pkg_resources.resource_filename(package,
+                                           'model/tests/data/%s' % filename)
 
 
 class SessionsTestCase(unittest.TestCase):

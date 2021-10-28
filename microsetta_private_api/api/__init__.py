@@ -32,6 +32,9 @@ from ._vioscreen import (
     read_sample_vioscreen_mpeds, read_sample_vioscreen_food_consumption
 )
 
+from ._campaign import (
+    get_campaign_information
+)
 
 __all__ = [
     'find_accounts_for_login',
@@ -73,4 +76,5 @@ __all__ = [
     'read_sample_vioscreen_eating_patterns',
     'read_sample_vioscreen_mpeds',
     'read_sample_vioscreen_food_consumption'
+    'get_campaign_information'
 ]
