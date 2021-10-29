@@ -862,6 +862,214 @@ paths:
           # NB: This error would cover the case where you can't dissociate it bc it was already processed
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/session':
+    get:
+      operationId: microsetta_private_api.api.read_sample_vioscreen_session
+      tags:
+        - Vioscreen
+      summary: Get information about a Vioscreen session associated with a sample
+      description: Get information about a Vioscreen session associated with a sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Successfully returned session information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/percentenergy':
+    get:
+      operationId: microsetta_private_api.api.read_sample_vioscreen_percent_energy
+      tags:
+        - Vioscreen
+      summary: Get information about a Vioscreen percent energy associated with a sample
+      description: Get information about a Vioscreen percent energy associated with a sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Successfully returned percent energy information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/dietaryscore':
+    get:
+      operationId: microsetta_private_api.api.read_sample_vioscreen_dietary_score
+      tags:
+        - Vioscreen
+      summary: Get information about a Vioscreen dietary score associated with a sample
+      description: Get information about a Vioscreen dietary score associated with a sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Successfully returned dietary score information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/supplements':
+    get:
+      operationId: microsetta_private_api.api.read_sample_vioscreen_supplements
+      tags:
+        - Vioscreen
+      summary: Get information about a Vioscreen supplements associated with a sample
+      description: Get information about a Vioscreen supplements associated with a sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Successfully returned supplements information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/foodcomponents':
+    get:
+      operationId: microsetta_private_api.api.read_sample_vioscreen_food_components
+      tags:
+        - Vioscreen
+      summary: Get information about a Vioscreen food components associated with a sample
+      description: Get information about a Vioscreen food components associated with a sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Successfully returned food components information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/eatingpatterns':
+    get:
+      operationId: microsetta_private_api.api.read_sample_vioscreen_eating_patterns
+      tags:
+        - Vioscreen
+      summary: Get information about a Vioscreen eating patterns associated with a sample
+      description: Get information about a Vioscreen eating patterns associated with a sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Successfully returned eating patterns information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/mpeds':
+    get:
+      operationId: microsetta_private_api.api.read_sample_vioscreen_mpeds
+      tags:
+        - Vioscreen
+      summary: Get information about a Vioscreen mpeds associated with a sample
+      description: Get information about a Vioscreen mpeds associated with a sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Successfully returned mpeds information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/foodconsumption':
+    get:
+      operationId: microsetta_private_api.api.read_sample_vioscreen_food_consumption
+      tags:
+        - Vioscreen
+      summary: Get information about a Vioscreen food consumption associated with a sample
+      description: Get information about a Vioscreen food consumption associated with a sample
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+      responses:
+        '200':
+          description: Successfully returned food consumption information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   # NB: "surveys" is used as a path component in two different ways (here nested under sample and above nested
   # directly under source.  The dev team assessed this and decided this dual usage was not unacceptably confusing.
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/surveys':
@@ -1444,7 +1652,7 @@ paths:
                 'sample_barcodes':
                   type: array
                   items:
-                    # not using the defined schema for sample_barcode as it is 
+                    # not using the defined schema for sample_barcode as it is
                     # readOnly
                     type: string
       responses:
@@ -1741,7 +1949,7 @@ paths:
                 'sample_barcodes':
                   type: array
                   items:
-                    # not using the defined schema for sample_barcode as it is 
+                    # not using the defined schema for sample_barcode as it is
                     # readOnly
                     type: string
       responses:

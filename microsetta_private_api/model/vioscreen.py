@@ -4,10 +4,8 @@ from microsetta_private_api.model.model_base import ModelBase
 
 def normalize_timestamp(timestamp, timezone, normalize_to='US/Pacific'):
     """Normalize a timestamp to a specific timezone
-
     Vioscreen timezone information is not encoded directly within the
     timestamp, but separately.
-
     Parameters
     ----------
     timestamp : str
@@ -16,7 +14,6 @@ def normalize_timestamp(timestamp, timezone, normalize_to='US/Pacific'):
         The timezone information as provided by vioscreen
     normalize_to : str
         What timezone to normalize too, using Pandas timezone conventions
-
     Returns
     -------
     pd.Timestamp
@@ -169,7 +166,7 @@ class VioscreenDietaryScoreComponent(ModelBase):
         return {
             'type': self.code,
             'name': self.name,
-            'score': self.name,
+            'score': self.score,
             'lowerLimit': self.lowerLimit,
             'upperLimit': self.upperLimit
         }
@@ -462,9 +459,16 @@ class VioscreenFoodConsumption(ModelBase):
 
 
 class VioscreenComposite(ModelBase):
-    def __init__(self, session, percent_energy):
+    def __init__(self, session, percent_energy, dietary_score, supplements,
+                 food_components, eating_patterns, mpeds, food_consumption):
         self.session = session
         self.percent_energy = percent_energy
+        self.dietary_score = dietary_score
+        self.supplements = supplements
+        self.food_components = food_components
+        self.eating_patterns = eating_patterns
+        self.mpeds = mpeds
+        self.food_consumption = food_consumption
 
         # make first class as the vioscreen username is our internal
         # survey identifier
