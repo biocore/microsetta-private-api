@@ -26,12 +26,10 @@ class VioscreenSessionRepo(BaseRepo):
 
     def upsert_session(self, session):
         """Insert or update a vioscreen session
-
         Parameters
         ----------
         session : VioscreenSession
             The session object to insert or update
-
         Returns
         -------
         bool
@@ -56,12 +54,10 @@ class VioscreenSessionRepo(BaseRepo):
 
     def get_session(self, sessionId):
         """Obtain a session model for a sessionId
-
         Parameters
         ----------
         sessionId : str
             The session ID to retrieve
-
         Returns
         -------
         VioscreenSession or None
@@ -81,12 +77,10 @@ class VioscreenSessionRepo(BaseRepo):
 
     def get_sessions_by_username(self, username):
         """Obtain all sessions associated with a username
-
         Parameters
         ----------
         username : str
             The username to search for
-
         Returns
         -------
         list of VioscreenSession, or None
@@ -109,24 +103,18 @@ class VioscreenSessionRepo(BaseRepo):
 
     def get_unfinished_sessions(self):
         """Obtain the sessions for that appear incomplete
-
         An incomplete session is one that meets any of the following criteria:
-
         1) the ag.vioscreen_registry.vio_id does not exist in the
            ag.vioscreen_sessions table
         2) the ag.vioscreen_sessions.endDate is null
         3) the ag.vioscreen_sessions.status is not "Finished"
-
         In the event a user has multiple sessions:
-
         * if ALL sessions are incomplete, all sessions will be returned
         * if ANY session is complete, no sessions will be returned
-
         The operating model for AG/TMI has been a single session per vioscreen
         username (i.e., vio_id). As such, *if* a vioscreen vio_id has multiple
         sessions associated with it, we do not actually know right now how to
         appropriately handle a scenario where *multiple* sessions are finished.
-
         Returns
         -------
         list of VioscreenSession
@@ -163,12 +151,10 @@ class VioscreenSessionRepo(BaseRepo):
 
     def get_ffq_status_by_sample(self, sample_uuid):
         """Obtain the FFQ status for a given sample
-
         Parameters
         ----------
         sample_uuid : UUID4
             The UUID to check the status of
-
         Returns
         -------
         (bool, bool, str or None)
@@ -217,12 +203,10 @@ class VioscreenPercentEnergyRepo(BaseRepo):
 
     def insert_percent_energy(self, vioscreen_percent_energy):
         """Add percent energy data for a session
-
         Parameters
         ----------
         vioscreen_percent_energy : VioscreenPercentEnergy
             The observed percent energy data
-
         Returns
         -------
             Returns number of rows modified
@@ -245,12 +229,10 @@ class VioscreenPercentEnergyRepo(BaseRepo):
 
     def get_percent_energy(self, sessionId):
         """Obtain the percent energy data for a sessionId
-
         Parameters
         ----------
         sessionId : str
             The session ID to retrieve data for
-
         Returns
         -------
         VioscreenPercentEnergy or None
@@ -281,18 +263,15 @@ class VioscreenPercentEnergyRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular energy component by its code
-
         Parameters
         ----------
         code : str
             The code to obtain detail for
-
         Returns
         -------
         tuple
             The description, short description and units for a
             particular code
-
         Raises
         ------
         NotFound
@@ -328,12 +307,10 @@ class VioscreenDietaryScoreRepo(BaseRepo):
 
     def insert_dietary_score(self, vioscreen_dietary_score):
         """Add in dietary score results for a session
-
         Parameters
         ----------
         vioscreen_dietary_score : VioscreenDietaryScore
             An instance of a dietary score model
-
         Returns
         -------
         int
@@ -359,12 +336,10 @@ class VioscreenDietaryScoreRepo(BaseRepo):
 
     def get_dietary_score(self, sessionId):
         """Obtain the dietary score detail for a particular session
-
         Parameters
         ----------
         sessionId : str
             The session ID to query
-
         Returns
         -------
         VioscreenDietaryScore or None
@@ -397,20 +372,17 @@ class VioscreenDietaryScoreRepo(BaseRepo):
 
     def _get_code_info(self, scoresType, code):
         """Obtain the detail about a particular score type by its code
-
         Parameters
         ----------
         scoresType : str
             The score type (e.g. Hei2010) to obtain detail for
         code : str
             The code to obtain detail for
-
         Returns
         -------
         tuple
             The name, lower and upper limit for a particular code
             and score type
-
         Raises
         ------
         NotFound
@@ -433,12 +405,10 @@ class VioscreenSupplementsRepo(BaseRepo):
 
     def insert_supplements(self, vioscreen_supplements):
         """Add in supplement results for a session
-
         Parameters
         ----------
         vioscreen_supplements : VioscreenSupplements
             An instance of a supplements model
-
         Returns
         -------
         int
@@ -462,12 +432,10 @@ class VioscreenSupplementsRepo(BaseRepo):
 
     def get_supplements(self, sessionId):
         """Obtain the supplement detail for a particular session
-
         Parameters
         ----------
         sessionId : str
             The session ID to query
-
         Returns
         -------
         VioscreenSupplements or None
@@ -680,12 +648,10 @@ class VioscreenFoodComponentsRepo(BaseRepo):
 
     def insert_food_components(self, vioscreen_food_components):
         """Add in food components results for a session
-
         Parameters
         ----------
         vioscreen_food_components : VioscreenFoodComponents
             An instance of a food components model
-
         Returns
         -------
         int
@@ -709,12 +675,10 @@ class VioscreenFoodComponentsRepo(BaseRepo):
 
     def get_food_components(self, sessionId):
         """Obtain the food components detail for a particular session
-
         Parameters
         ----------
         sessionId : str
             The session ID to query
-
         Returns
         -------
         VioscreenFoodComponents or None
@@ -744,18 +708,15 @@ class VioscreenFoodComponentsRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular food component by its code
-
         Parameters
         ----------
         code : str
             The code to obtain detail for
-
         Returns
         -------
         tuple
             The description, units and valueType for a
             particular code
-
         Raises
         ------
         NotFound
@@ -792,12 +753,10 @@ class VioscreenEatingPatternsRepo(BaseRepo):
 
     def insert_eating_patterns(self, vioscreen_eating_patterns):
         """Add in eating patterns results for a session
-
         Parameters
         ----------
         vioscreen_eating_patterns : VioscreenEatingPatterns
             An instance of a eating patterns model
-
         Returns
         -------
         int
@@ -821,12 +780,10 @@ class VioscreenEatingPatternsRepo(BaseRepo):
 
     def get_eating_patterns(self, sessionId):
         """Obtain the eating patterns detail for a particular session
-
         Parameters
         ----------
         sessionId : str
             The session ID to query
-
         Returns
         -------
         VioscreenEatingPatterns or None
@@ -856,18 +813,15 @@ class VioscreenEatingPatternsRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular eating pattern by its code
-
         Parameters
         ----------
         code : str
             The code to obtain detail for
-
         Returns
         -------
         tuple
             The description, units and valueType for a
             particular code
-
         Raises
         ------
         NotFound
@@ -967,12 +921,10 @@ class VioscreenMPedsRepo(BaseRepo):
 
     def insert_mpeds(self, vioscreen_mpeds):
         """Add in mpeds results for a session
-
         Parameters
         ----------
         vioscreen_mpeds : VioscreenMPeds
             An instance of a mpeds model
-
         Returns
         -------
         int
@@ -996,12 +948,10 @@ class VioscreenMPedsRepo(BaseRepo):
 
     def get_mpeds(self, sessionId):
         """Obtain the mpeds detail for a particular session
-
         Parameters
         ----------
         sessionId : str
             The session ID to query
-
         Returns
         -------
         VioscreenMPeds or None
@@ -1031,18 +981,15 @@ class VioscreenMPedsRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular mped by its code
-
         Parameters
         ----------
         code : str
             The code to obtain detail for
-
         Returns
         -------
         tuple
             The description, units and valueType for a
             particular code
-
         Raises
         ------
         NotFound
@@ -1246,12 +1193,10 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
 
     def insert_food_consumption(self, vioscreen_food_consumption):
         """Add in food consumption results for a session
-
         Parameters
         ----------
         vioscreen_food_consumption : VioscreenFoodConsumption
             An instance of a food consumption model
-
         Returns
         -------
         int
@@ -1304,12 +1249,10 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
 
     def get_food_consumption(self, sessionId):
         """Obtain the food consumption detail for a particular session
-
         Parameters
         ----------
         sessionId : str
             The session ID to query
-
         Returns
         -------
         VioscreenFoodConsumption or None
@@ -1373,18 +1316,15 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular food consumption component by its code
-
         Parameters
         ----------
         code : str
             The code to obtain detail for
-
         Returns
         -------
         tuple
             The description, units and valueType for a
             particular code
-
         Raises
         ------
         NotFound
