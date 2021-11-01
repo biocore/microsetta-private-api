@@ -31,7 +31,6 @@ SHIPPING_POSTAL_CODE = "postal_code"
 SHIPPING_COUNTRY = "country"
 ADDRESS_POST_CODE = "post_code"
 ADDRESS_COUNTRY_CODE = "country_code"
-FUNDRAZR_OBJECT_ID = "id"
 
 
 class Shipping(ModelBase):
@@ -84,7 +83,6 @@ class Item(ModelBase):
 
 class Payment(ModelBase):
     def __init__(self,
-                 id,
                  transaction_id,
                  created,
                  campaign_id,
@@ -101,7 +99,8 @@ class Payment(ModelBase):
                  message=None,
                  phone_number=None,
                  shipping_address=None,
-                 claimed_items=None):
+                 claimed_items=None,
+                 tmi_status=None):  # if coming from the API
         self.transaction_id = transaction_id
         self.created = created
         self.campaign = campaign_id
@@ -117,9 +116,9 @@ class Payment(ModelBase):
         self.account = account
         self.subscribe_to_updates = subscribe_to_updates
         self.claimed_items = claimed_items
-        self.id = id
         self.phone_nnumber = phone_number
         self.message = message
+        self.tmi_status = tmi_status
 
     def to_api(self):
         return {
@@ -145,7 +144,7 @@ class Payment(ModelBase):
         required = [CREATED_TIMESTAMP, CAMPAIGN_ID, AMOUNT, NET_AMOUNT,
                     CURRENCY, STATUS, PAYER_FIRST_NAME, SUBSCRIBE_TO_UPDATES,
                     PAYER_LAST_NAME, PAYER_EMAIL, TRANSACTION_ID,
-                    FUNDRAZR_ACCOUNT_TYPE, CONTACT_EMAIL, FUNDRAZR_OBJECT_ID]
+                    FUNDRAZR_ACCOUNT_TYPE, CONTACT_EMAIL]
 
         optional = [MESSAGE, SHIPPING_ADDRESS, CLAIMED_ITEMS, PHONE_NUMBER]
 
