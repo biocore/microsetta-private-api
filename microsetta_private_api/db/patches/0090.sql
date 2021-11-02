@@ -12,8 +12,16 @@ CREATE TABLE barcodes.fundrazr (
     internal_campaign_id uuid NOT NULL,
     currency VARCHAR NOT NULL,
     UNIQUE (remote_campaign_id, internal_campaign_id),
-    CONSTRAINT FOREIGN KEY fk_campaign (internal_campaign_id) REFERENCES barcodes.campaigns (campaign_id)
+    CONSTRAINT fk_campaign FOREIGN KEY (internal_campaign_id) REFERENCES barcodes.campaigns (campaign_id)
 );
+
+INSERT INTO barcodes.campaigns 
+    (title) 
+    VALUES ('The Microsetta Initiative');
+INSERT INTO barcodes.fundrazr 
+    SELECT '31l0S2' AS remote_campaign_id, campaign_id AS internal_campaign_id, 'usd' AS currency
+    FROM barcodes.campaigns
+    WHERE title='The Microsetta Initiative';
 
 CREATE TYPE tmi_transaction_status AS ENUM ('received', 'valid-address', 'invalid-address', 'shipment-requested');
 
@@ -25,15 +33,15 @@ CREATE TABLE barcodes.fundrazr_transaction (
     net_amount FLOAT NOT NULL,
     currency VARCHAR NOT NULL,
     fundrazr_status VARCHAR NOT NULL,
-    payer_name VARCHAR NOT NULL,
     payer_first_name VARCHAR NOT NULL,
     payer_last_name VARCHAR NOT NULL,
     payer_email VARCHAR NOT NULL,
     account_type VARCHAR NOT NULL,
     contact_email VARCHAR NOT NULL,
+    phone_number VARCHAR,
+    message VARCHAR,
     shipping_first_name VARCHAR NULL,
     shipping_last_name VARCHAR NULL,
-    shipping_company VARCHAR NULL,
     shipping_address1 VARCHAR NULL,
     shipping_address2 VARCHAR NULL,
     shipping_city VARCHAR NULL,
@@ -42,7 +50,7 @@ CREATE TABLE barcodes.fundrazr_transaction (
     shipping_postal VARCHAR NULL,
     subscribed_to_updates BOOLEAN NOT NULL,
     tmi_status tmi_transaction_status NOT NULL DEFAULT 'received',
-    CONSTRAINT FOREIGN KEY fk_transaction_campaign (remote_campaign_id) REFERENCES barcodes.fundrazr (remote_campaign_id)
+    CONSTRAINT fk_transaction_campaign FOREIGN KEY (remote_campaign_id) REFERENCES barcodes.fundrazr (remote_campaign_id)
 );
 
 CREATE TABLE barcodes.fundrazr_perk (
@@ -50,7 +58,7 @@ CREATE TABLE barcodes.fundrazr_perk (
     remote_campaign_id VARCHAR NOT NULL,
     title VARCHAR NOT NULL,
     price FLOAT NOT NULL,
-    CONSTRAINT FOREIGN KEY fk_transaction_campaign (remote_campaign_id) REFERENCES barcodes.fundrazr (remote_campaign_id)
+    CONSTRAINT fk_transaction_campaign FOREIGN KEY (remote_campaign_id) REFERENCES barcodes.fundrazr (remote_campaign_id)
 );
 
 CREATE TABLE barcodes.fundrazr_transaction_perk (
@@ -58,8 +66,8 @@ CREATE TABLE barcodes.fundrazr_transaction_perk (
     transaction_id VARCHAR NOT NULL,
     perk_id VARCHAR NOT NULL,
     quantity INTEGER NOT NULL,
-    CONSTRAINT FOREIGN KEY fk_transaction_claimed_perk (transaction_id) REFERENCES barcodes.fundrazr_transaction (id),
-    CONSTRAINT FOREIGN KEY fk_transaction_what_perk (perk_id) REFERENCES bardodes.fundrazr_perk (id),
+    CONSTRAINT fk_transaction_claimed_perk FOREIGN KEY (transaction_id) REFERENCES barcodes.fundrazr_transaction (id),
+    CONSTRAINT fk_transaction_what_perk FOREIGN KEY (perk_id) REFERENCES barcodes.fundrazr_perk (id),
     UNIQUE (transaction_id, perk_id)
 );
 
@@ -68,16 +76,16 @@ CREATE TABLE barcodes.fundrazr_transaction_perk (
 CREATE TABLE barcodes.fundrazr_daklapack_orders (
     fundrazr_transaction_perk_id UUID NOT NULL,
     dak_order_id UUID NOT NULL,
-    CONSTRAINT FOREIGN KEY fk_fundrazr_dak_order_perk (fundrazr_transaction_perk_id) REFERENCES barcodes.fundrazr_transaction_perk (id),
-    CONSTRAINT FOREIGN KEY fk_fundrazr_dak_order_order (dak_order_id) REFERENCES barcodes.daklapack_order (dak_order_id),
+    CONSTRAINT fk_fundrazr_dak_order_perk FOREIGN KEY (fundrazr_transaction_perk_id) REFERENCES barcodes.fundrazr_transaction_perk (id),
+    CONSTRAINT fk_fundrazr_dak_order_order FOREIGN KEY (dak_order_id) REFERENCES barcodes.daklapack_order (dak_order_id),
     UNIQUE (fundrazr_transaction_perk_id, dak_order_id)
 );
 
 CREATE TABLE barcodes.fundrazr_perk_to_daklapack_article (
     perk_id VARCHAR NOT NULL,
-    dak_article_code VARCHAR NOT NULL,
-    CONSTRAINT PRIMARY KEY (perk_id, dak_article_code),
-    CONSTRAINT FOREIGN KEY (fk_perk_to_dak) REFERENCES barcodes.daklapack_article (dak_article_code)
+    dak_article_code INTEGER NOT NULL,
+    CONSTRAINT pk_perk_to_dak PRIMARY KEY (perk_id, dak_article_code),
+    CONSTRAINT fk_perk_to_dak FOREIGN KEY (dak_article_code) REFERENCES barcodes.daklapack_article (dak_article_code)
 );
 
 -- This is not a complete list, but what is available right now. A 
@@ -111,14 +119,14 @@ CREATE TABLE barcodes.fundrazr_perk_to_daklapack_article (
 -- ('0G1h3', '11OxG1', 'Microbes For Two: See What You’re Sharing', 180),
 -- ('3G1ic', '11OxG1', 'Microbes For Three', 260),
 -- ('7G1j6', '11OxG1', 'Microbes For Four', 320),
-INSERT INTO TABLE barcodes.fundrazr_perk
+INSERT INTO barcodes.fundrazr_perk
     (id, remote_campaign_id, title, price)
-    VALUES (('0I5n8', '31l0S2', 'Find Out Who’s In Your Gut', 99),
-            ('7I5c0', '31l0S2', 'You Plus The World', 130),
-            ('6I5fd', '31l0S2', 'See What You’re Sharing', 195));
+    VALUES ('0I5n8', '31l0S2', 'Find Out Who’s In Your Gut', 99.0),
+           ('7I5c0', '31l0S2', 'You Plus The World', 130.0),
+           ('6I5fd', '31l0S2', 'See What You’re Sharing', 195.0);
 
-INSERT INTO TABLE barcodes.fundrazr_perk_to_daklapack_article
+INSERT INTO barcodes.fundrazr_perk_to_daklapack_article
     (perk_id, dak_article_code)
-    VALUES (('0I5n8', 350100),  
-             '7I5c0', 350100), -- you plus the world is single tube + extra to help others
-             '6I5fd', 350103));
+    VALUES ('0I5n8', 350100),  
+           ('7I5c0', 350100), -- you plus the world is single tube + extra to help others
+           ('6I5fd', 350103);

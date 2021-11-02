@@ -1,10 +1,11 @@
 import unittest
+import psycopg2
 from microsetta_private_api.model.fundrazr import Payment, Item, Shipping
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.repo.transaction import Transaction
-from microsetta_private_api.repo.fundrazr import (Fundrazr,
-                                                  DuplicateTransaction,
+from microsetta_private_api.repo.fundrazr import (FundRazr,
                                                   UnknownItem)
+import datetime
 
 
 ADDRESS1 = Address(
@@ -30,13 +31,13 @@ CLAIMED_ITEMS2 = [
 
 
 CLAIMED_ITEMS3 = [
-    Item('baditem', 2, '0I5n8'),
+    Item('baditem', 2, 'baditem'),
 ]
 
 
 TRANSACTION_ONE_ITEM = Payment(
     '123abc',
-    1365172131,
+    datetime.datetime.now(),
     '31l0S2',
     100,
     80,
@@ -44,7 +45,6 @@ TRANSACTION_ONE_ITEM = Payment(
     'completed',
     'foo',
     'bar',
-    'foo bar',
     'foo@bar.com',
     'baz@bar.com',
     'paypal',
@@ -54,10 +54,11 @@ TRANSACTION_ONE_ITEM = Payment(
     SHIPPING1,
     CLAIMED_ITEMS1)
 
+print(TRANSACTION_ONE_ITEM.shipping_address)
 
 TRANSACTION_TWO_ITEMS = Payment(
     '123abc',
-    1365172131,
+    datetime.datetime.now(),
     '31l0S2',
     100,
     80,
@@ -65,7 +66,6 @@ TRANSACTION_TWO_ITEMS = Payment(
     'completed',
     'foo',
     'bar',
-    'foo bar',
     'foo@bar.com',
     'baz@bar.com',
     'paypal',
@@ -78,7 +78,7 @@ TRANSACTION_TWO_ITEMS = Payment(
 
 TRANSACTION_UNKNOWN_ITEM = Payment(
     '123abc',
-    1365172131,
+    datetime.datetime.now(),
     '31l0S2',
     100,
     80,
@@ -86,7 +86,6 @@ TRANSACTION_UNKNOWN_ITEM = Payment(
     'completed',
     'foo',
     'bar',
-    'foo bar',
     'foo@bar.com',
     'baz@bar.com',
     'paypal',
@@ -99,7 +98,7 @@ TRANSACTION_UNKNOWN_ITEM = Payment(
 
 TRANSACTION_NO_ITEMS = Payment(
     '123abc',
-    1365172131,
+    datetime.datetime.now(),
     '31l0S2',
     100,
     80,
@@ -107,7 +106,6 @@ TRANSACTION_NO_ITEMS = Payment(
     'completed',
     'foo',
     'bar',
-    'foo bar',
     'foo@bar.com',
     'baz@bar.com',
     'paypal',
@@ -120,7 +118,7 @@ TRANSACTION_NO_ITEMS = Payment(
 
 TRANSACTION_NO_SHIPPING = Payment(
     '123abc',
-    1365172131,
+    datetime.datetime.now(),
     '31l0S2',
     100,
     80,
@@ -128,7 +126,6 @@ TRANSACTION_NO_SHIPPING = Payment(
     'completed',
     'foo',
     'bar',
-    'foo bar',
     'foo@bar.com',
     'baz@bar.com',
     'paypal',
@@ -142,7 +139,7 @@ TRANSACTION_NO_SHIPPING = Payment(
 class FundrazrTests(unittest.TestCase):
     def test_add_transaction(self):
         with Transaction() as t:
-            r = Fundrazr(t)
+            r = FundRazr(t)
             r.add_transaction(TRANSACTION_ONE_ITEM)
 
             cur = t.cursor()
@@ -154,15 +151,15 @@ class FundrazrTests(unittest.TestCase):
 
     def test_add_transaction_duplicate(self):
         with Transaction() as t:
-            r = Fundrazr(t)
+            r = FundRazr(t)
             r.add_transaction(TRANSACTION_ONE_ITEM)
 
-            with self.assertRaises(DuplicateTransaction):
+            with self.assertRaises(psycopg2.errors.UniqueViolation):
                 r.add_transaction(TRANSACTION_ONE_ITEM)
 
     def test_add_transaction_no_perk(self):
         with Transaction() as t:
-            r = Fundrazr(t)
+            r = FundRazr(t)
             r.add_transaction(TRANSACTION_NO_ITEMS)
 
             cur = t.cursor()
@@ -174,7 +171,7 @@ class FundrazrTests(unittest.TestCase):
 
     def test_add_transaction_unknown_item(self):
         with Transaction() as t:
-            r = Fundrazr(t)
+            r = FundRazr(t)
             with self.assertRaises(UnknownItem):
                 r.add_transaction(TRANSACTION_UNKNOWN_ITEM)
 

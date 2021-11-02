@@ -31,6 +31,7 @@ SHIPPING_POSTAL_CODE = "postal_code"
 SHIPPING_COUNTRY = "country"
 ADDRESS_POST_CODE = "post_code"
 ADDRESS_COUNTRY_CODE = "country_code"
+TMI_STATUS = 'microsetta_status'
 
 
 class Shipping(ModelBase):
@@ -103,10 +104,13 @@ class Payment(ModelBase):
                  tmi_status=None):  # if coming from the API
         self.transaction_id = transaction_id
         self.created = created
-        self.campaign = campaign_id
+        self.campaign_id = campaign_id
         self.amount = amount
         self.net_amount = net_amount
         self.currency = currency
+
+        # from fundrazr api doc, one of
+        # completed, preapproved, cancelled, refunded, reversed
         self.status = status
         self.payer_first_name = payer_first_name
         self.payer_last_name = payer_last_name
@@ -116,7 +120,7 @@ class Payment(ModelBase):
         self.account = account
         self.subscribe_to_updates = subscribe_to_updates
         self.claimed_items = claimed_items
-        self.phone_nnumber = phone_number
+        self.phone_number = phone_number
         self.message = message
         self.tmi_status = tmi_status
 
@@ -136,6 +140,9 @@ class Payment(ModelBase):
             SHIPPING_ADDRESS: self.shipping.to_api(),
             FUNDRAZR_ACCOUNT_TYPE: self.fundrazr_account_type,
             SUBSCRIBE_TO_UPDATES: self.subscribe_to_updates,
+            PHONE_NUMBER: self.phone_number,
+            TMI_STATUS: self.tmi_status,
+            MESSAGE: self.message,
             CLAIMED_ITEMS: [i.to_api() for i in self.claimed_items]
         }
 
