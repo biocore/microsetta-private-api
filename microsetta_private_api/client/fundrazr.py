@@ -1,8 +1,8 @@
 import json
 import requests
 from urllib.parse import urljoin
-from types import SimpleNamespace
 from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.model.fundrazr import Payment
 
 
 class FundrazrException(Exception):
@@ -85,6 +85,17 @@ class FundrazrClient:
 
         Response will be paginated so may need to issue multiple queries
         """
-        pass
-        # construct the model fun things blah blah
+        def url_maker(id_):
+            url = f'/payments?organization={self.ORGANIZATION_ID}'
+            if id_ is not None:
+                url += f'&since_id={id_}'
+            url += '&limit=50'
+            return url
 
+        current = self._req('GET', url_maker(since_id))
+
+        while current:
+            for obj in current['entities']:
+                yield Payment.from_api(obj)
+            last_id = current['after_id']
+            current = self._req('GET', url_maker(last_id))
