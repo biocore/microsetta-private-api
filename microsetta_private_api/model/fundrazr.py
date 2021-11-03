@@ -115,7 +115,7 @@ class Payment(ModelBase):
         self.payer_first_name = payer_first_name
         self.payer_last_name = payer_last_name
         self.payer_email = payer_email
-        self.contact_email = payer_email
+        self.contact_email = contact_email
         self.shipping_address = shipping_address
         self.account = account
         self.subscribe_to_updates = subscribe_to_updates
@@ -123,6 +123,25 @@ class Payment(ModelBase):
         self.phone_number = phone_number
         self.message = message
         self.tmi_status = tmi_status
+
+    def copy(self):
+        # we have nested objects, and the default copy on model base doesn't
+        # cascade, so let's do the extra work here
+        if self.shipping_address is None:
+            address = None
+        else:
+            address = self.shipping_address.copy()
+
+        if self.claimed_items is None:
+            claimed_items = None
+        else:
+            claimed_items = [i.copy() for i in self.claimed_items]
+
+        cls = self.__class__(**self.__dict__)
+        cls.shipping_address = address
+        cls.claimed_items = claimed_items
+
+        return cls
 
     def to_api(self):
         return {
@@ -169,3 +188,43 @@ class Payment(ModelBase):
             structured[SHIPPING_ADDRESS] = shipping
 
         return cls(**structured)
+
+    @classmethod
+    def from_db(cls, trn, items):
+        if trn.get('shipping_first_name') is not None:
+            first = trn['shipping_first_name']
+            last = trn['shipping_last_name']
+            address = Address(trn['shipping_address1'],
+                              trn['shipping_city'],
+                              trn['shipping_state'],
+                              trn['shipping_postal'],
+                              trn['shipping_country'],
+                              trn['shipping_address2'])
+            shipping = Shipping(first, last, address)
+        else:
+            shipping = None
+
+        if items is not None:
+            items = [Item(**item) for item in items]
+        else:
+            items = None
+
+        # rewrite some fields becuase daniel wasn't paying attention
+        d = dict(trn)
+        d['transaction_id'] = d['id']
+        d['account'] = d['account_type']
+        d['subscribe_to_updates'] = d['subscribed_to_updates']
+        d['campaign_id'] = d['remote_campaign_id']
+        d['status'] = d['fundrazr_status']
+        d['claimed_items'] = items
+        d['shipping_address'] = shipping
+
+        for k in ['id', 'account_type', 'subscribed_to_updates',
+                  'remote_campaign_id', 'fundrazr_status',
+                  'shipping_first_name', 'shipping_last_name',
+                  'shipping_address1', 'shipping_city',
+                  'shipping_state', 'shipping_postal',
+                  'shipping_country', 'shipping_address2']:
+            d.pop(k)
+
+        return cls(**d)
