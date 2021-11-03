@@ -30,5 +30,9 @@
   "melissa_url": "http://address.melissadata.net/v3/WEB/GlobalAddress/doglobaladdress",
   "melissa_license_key": "qwerty123456",
   "myfoodrepo_url": "mfr_url_placeholder",
-  "myfoodrepo_key": "mfr_key_placeholder"
+  "myfoodrepo_key": "mfr_key_placeholder",
+  "fundrazr_key": "fr_key_placeholder",
+  "fundrazr_url": "fr_url_placeholder",
+  "fundrazr_organization": "fr_org_placeholder",
+  "fundrazr_campaign_to_project": {"placeholder": "placeholder"}
 }
