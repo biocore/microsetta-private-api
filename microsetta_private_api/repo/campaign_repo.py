@@ -28,17 +28,17 @@ class CampaignRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             cur.execute(
                 "SELECT barcodes.project.project "
-                "FROM barcodes.campaigns "
-                "INNER JOIN barcodes.campaigns_projects "
+                "FROM campaign.campaigns "
+                "INNER JOIN campaign.campaigns_projects "
                 "ON "
-                "barcodes.campaigns.campaign_id = "
-                "barcodes.campaigns_projects.campaign_id "
+                "campaign.campaigns.campaign_id = "
+                "campaign.campaigns_projects.campaign_id "
                 "LEFT JOIN barcodes.project "
                 "ON "
-                "barcodes.campaigns_projects.project_id = "
+                "campaign.campaigns_projects.project_id = "
                 "barcodes.project.project_id "
                 "WHERE "
-                "barcodes.campaigns.campaign_id = %s",
+                "campaign.campaigns.campaign_id = %s",
                 (campaign_id,)
             )
 
@@ -53,7 +53,7 @@ class CampaignRepo(BaseRepo):
                 "permitted_countries, language_key, accepting_participants, "
                 "language_key_alt, title_alt, "
                 "instructions_alt "
-                "FROM barcodes.campaigns ORDER BY title"
+                "FROM campaign.campaigns ORDER BY title"
             )
             rows = cur.fetchall()
             return [self._row_to_campaign(r) for r in rows]
@@ -75,7 +75,7 @@ class CampaignRepo(BaseRepo):
 
         with self._transaction.cursor() as cur:
             cur.execute(
-                "INSERT INTO barcodes.campaigns (title, instructions, "
+                "INSERT INTO campaign.campaigns (title, instructions, "
                 "permitted_countries, language_key, accepting_participants, "
                 "language_key_alt, title_alt, "
                 "instructions_alt) "
@@ -92,7 +92,7 @@ class CampaignRepo(BaseRepo):
             else:
                 projects = associated_projects.split(",")
                 cur.executemany(
-                    "INSERT INTO barcodes.campaigns_projects ("
+                    "INSERT INTO campaign.campaigns_projects ("
                     "campaign_id,project_id"
                     ") VALUES (%s, %s) ",
                     [(campaign_id, pid) for pid in projects]
@@ -122,7 +122,7 @@ class CampaignRepo(BaseRepo):
 
         with self._transaction.cursor() as cur:
             cur.execute(
-                "UPDATE barcodes.campaigns SET title = %s, instructions = %s, "
+                "UPDATE campaign.campaigns SET title = %s, instructions = %s, "
                 "permitted_countries = %s, language_key = %s, "
                 "accepting_participants = %s, language_key_alt = %s, "
                 "title_alt = %s, instructions_alt = %s "
@@ -144,7 +144,7 @@ class CampaignRepo(BaseRepo):
                     "permitted_countries, language_key, "
                     "accepting_participants, "
                     "language_key_alt, title_alt, instructions_alt "
-                    "FROM barcodes.campaigns WHERE campaign_id = %s",
+                    "FROM campaign.campaigns WHERE campaign_id = %s",
                     (campaign_id,)
                 )
                 r = cur.fetchone()
@@ -163,7 +163,7 @@ class CampaignRepo(BaseRepo):
             with self._transaction.cursor() as cur:
                 header_image = campaign_id + "." + extension
                 cur.execute(
-                    "UPDATE barcodes.campaigns SET header_image = %s "
+                    "UPDATE campaign.campaigns SET header_image = %s "
                     "WHERE campaign_id = %s",
                     (header_image, campaign_id)
                 )

@@ -11,7 +11,7 @@ class CampaignRepoTests(unittest.TestCase):
         with Transaction() as t:
             cur = t.cursor()
             cur.execute(
-                "INSERT INTO barcodes.campaigns (title) "
+                "INSERT INTO campaign.campaigns (title) "
                 "VALUES (%s) "
                 "RETURNING campaign_id",
                 (self.test_campaign_title_1, )
@@ -19,7 +19,7 @@ class CampaignRepoTests(unittest.TestCase):
             self.test_campaign_id1 = cur.fetchone()[0]
 
             cur.execute(
-                "INSERT INTO barcodes.campaigns_projects "
+                "INSERT INTO campaign.campaigns_projects "
                 "(campaign_id, project_id) "
                 "VALUES (%s, 1)",
                 (self.test_campaign_id1, )
@@ -30,12 +30,12 @@ class CampaignRepoTests(unittest.TestCase):
         with Transaction() as t:
             cur = t.cursor()
             cur.execute(
-                "DELETE FROM barcodes.campaigns_projects "
+                "DELETE FROM campaign.campaigns_projects "
                 "WHERE campaign_id = %s",
                 (self.test_campaign_id1,)
             )
             cur.execute(
-                "DELETE FROM barcodes.campaigns "
+                "DELETE FROM campaign.campaigns "
                 "WHERE campaign_id = %s",
                 (self.test_campaign_id1, )
             )
