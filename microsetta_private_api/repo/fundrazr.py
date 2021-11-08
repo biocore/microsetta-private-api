@@ -95,7 +95,7 @@ class FundRazr(BaseRepo):
 
         placeholders = ', '.join(['%s'] * len(fields))
         fields_formatted = ', '.join(fields)
-        sql = (f"""INSERT INTO barcodes.fundrazr_transaction
+        sql = (f"""INSERT INTO campaign.fundrazr_transaction
                    ({fields_formatted})
                    VALUES ({placeholders})""",
                data)
@@ -108,7 +108,7 @@ class FundRazr(BaseRepo):
                            for i in items]
                 try:
                     cur.executemany("""INSERT INTO
-                                           barcodes.fundrazr_transaction_perk
+                                           campaign.fundrazr_transaction_perk
                                        (transaction_id, perk_id, quantity)
                                        VALUES (%s, %s, %s)""",
                                     inserts)
@@ -161,7 +161,7 @@ class FundRazr(BaseRepo):
                 payment.transaction_id)
 
         fields_formatted = ','.join([f'{f}=%s' for f in fields])
-        sql = (f"""UPDATE barcodes.fundrazr_transaction
+        sql = (f"""UPDATE campaign.fundrazr_transaction
                    SET {fields_formatted}
                    WHERE id=%s
                    RETURNING id""",
@@ -213,7 +213,7 @@ class FundRazr(BaseRepo):
 
         # do not trust the instance, get the actual current status
         sql = ("""SELECT tmi_status
-                  FROM barcodes.fundrazr_transaction
+                  FROM campaign.fundrazr_transaction
                   WHERE id=%s""",
                (payment.transaction_id, ))
         with self._transaction.cursor() as cur:
@@ -227,7 +227,7 @@ class FundRazr(BaseRepo):
         if status not in allowed_transitions[current_status]:
             raise InvalidStatusChange(f"From '{current_status}' to '{status}'")
 
-        sql = ("""UPDATE barcodes.fundrazr_transaction
+        sql = ("""UPDATE campaign.fundrazr_transaction
                   SET tmi_status=%s
                   WHERE id=%s""",
                (status, payment.transaction_id))
@@ -288,7 +288,7 @@ class FundRazr(BaseRepo):
         clauses = ' AND '.join(clauses)
 
         sql = (f"""SELECT id
-                   FROM barcodes.fundrazr_transaction
+                   FROM campaign.fundrazr_transaction
                    WHERE {clauses}""",
                tuple(data))
 
@@ -303,12 +303,12 @@ class FundRazr(BaseRepo):
         fields = self._ORDER + self._SHIPPING
         fields_formatted = ','.join(fields)
         transaction_sql = (f"""SELECT {fields_formatted}
-                               FROM barcodes.fundrazr_transaction
+                               FROM campaign.fundrazr_transaction
                                WHERE id=%s
                                ORDER BY created""",
                            (id_, ))
         items_sql = ("""SELECT *
-                        FROM barcodes.fundrazr_transaction_perk
+                        FROM campaign.fundrazr_transaction_perk
                         WHERE transaction_id=%s""",
                      (id_, ))
 

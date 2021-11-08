@@ -203,14 +203,14 @@ class FundrazrTests(unittest.TestCase):
     def _verify_insertion_count_perks(self, t, tid, expected_count):
         cur = t.cursor()
         cur.execute("""SELECT id
-                       FROM barcodes.fundrazr_transaction
+                       FROM campaign.fundrazr_transaction
                        WHERE id=%s""",
                     (tid, ))
         res = cur.fetchone()
         self.assertEqual(res[0], tid)
 
         cur.execute("""SELECT COUNT(*)
-                       FROM barcodes.fundrazr_transaction_perk
+                       FROM campaign.fundrazr_transaction_perk
                        WHERE transaction_id=%s""",
                     (tid, ))
         res = cur.fetchall()
@@ -259,7 +259,7 @@ class FundrazrTests(unittest.TestCase):
 
             cur = t.cursor()
             cur.execute("""SELECT shipping_first_name, shipping_last_name
-                           FROM barcodes.fundrazr_transaction
+                           FROM campaign.fundrazr_transaction
                            WHERE id=%s""",
                         (TRANSACTION_ONE_ITEM.transaction_id, ))
             first, last = cur.fetchone()
