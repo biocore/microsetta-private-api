@@ -169,3 +169,230 @@ class CampaignRepo(BaseRepo):
                 )
 
         return True
+
+
+class UserTransaction(BaseRepo):
+    def add_transaction(self, payment):
+        """Adds a received transaction to the database
+
+        Parameters
+        ----------
+        payment : Payment object
+            An instantiated Payment model, with or without shipping
+            and with or without claimed items
+
+        Raises
+        ------
+        DuplicateTransaction
+            If the transaction already exists
+
+        Returns
+        -------
+        bool
+            True if inserted
+        """
+        # gatekeep first thing to avoid adding an interested user if
+        # an unknown trn type
+        if payment.transaction_type != self.TRN_TYPE_FUNDRAZR:
+            raise ValueError("'%s' is unrecognized" % payment.transaction_type)
+
+        interested_user_id = _add_interested_user(payment)
+        if payment.transaction_type == self.TRN_TYPE_FUNDRAZR:
+            return self._add_transaction_fundrazr(payment, interested_user_id)
+        else:
+            # TODO: add more transaction types...
+            pass
+
+    def _add_interested_user(self, payment):
+        # determine the internal campaign the payment is associated with
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT internal_campaign_id
+                           FROM campaign.transaction_source_to_campaign
+                           WHERE remote_id = %s""",
+                        (payment.remote_campaign_id, ))
+            res = cur.fetchone()
+            if len(res) == 0:
+                raise RepoException(f"Unknown external campaign "
+                                    f"'{payment.remote_campaign_id}'")
+            internal_campaign_id = res[0]
+
+        shipping = payment.shipping_address
+        address = shipping.address if shipping is not None else None
+
+        if shipping is None:
+            data = (internal_campaign_id, payment.payer_first_name,
+                    payment.last_name, payment.payer_email,
+                    payment.phone_number)
+            fields = ('campaign_id', 'first_name', 'last_name', 'email',
+                      'phone')
+        else:
+            data = (internal_campaign_id, shipping.first_name,
+                    shipping.last_name, payment.contact_email,
+                    payment.phone_number, address.street, address.street2,
+                    address.city, address.country_code, address.state,
+                    address.post_code)
+            fields = ('campaign_id', 'first_name', 'last_name', 'email',
+                      'phone', 'address_1', 'address_2', 'city', 'country',
+                      'state', 'postal_code')
+
+        placeholders = ', '.join(['%s'] * len(fields))
+        fields_formatted = ', '.join(fields)
+        sql = (f"""INSERT INTO campaign.interested_users
+                   ({fields_formatted})
+                   VALUES ({placeholders})
+                   RETURNING interested_user_id""",
+               data)
+
+        with self._transaction.cursor() as cur:
+            cur.execute(*sql)
+            interested_user_id = cur.fetchone()
+
+        return interested_user_id
+
+    def _add_transaction_fundrazr(self, payment, interested_user_id):
+        items = payment.claimed_items
+        fields = ('id', 'interested_user_id', 'remote_campaign_id', 'created',
+                  'amount', 'net_amount', 'currency', 'message',
+                  'subscribed_to_updates', 'account_type', 'transaction_type')
+
+        data = (payment.transaction_id,
+                interested_user_id,
+                payment.campaign_id,
+                payment.created,
+                payment.amount,
+                payment.net_amount,
+                payment.currency,
+                payment.message,
+                payment.subscribe_to_updates,
+                payment.account,
+                self.TRN_TYPE_FUNDRAZR)
+
+        with self._transaction.cursor() as cur:
+            cur.execute(f"""INSERT INTO campaign.transaction
+                         ({fields_formatted})
+                         VALUES ({placeholders})""",
+                        data)
+
+            if items is not None:
+                inserts = [(payment.transaction_id, i.id, i.quantity)
+                           for i in items]
+                try:
+                    cur.executemany("""INSERT INTO
+                                           campaign.fundrazr_transaction_perk
+                                       (transaction_id, perk_id, quantity)
+                                       VALUES (%s, %s, %s)""",
+                                    inserts)
+                except psycopg2.errors.ForeignKeyViolation:
+                    # this would indicate a synchronization issue, where
+                    # fundrazr knows of a perk which we do not
+                    detail = [i.to_api() for i in items]
+                    raise UnknownItem(f"One or more perks are unknown:\n"
+                                      f"{json.dumps(detail, indent=2)}")
+
+        return True
+
+    def get_transactions(self, before=None, after=None, transaction_id=None,
+                         contact_email=None, transaction_source=None,
+                         campaign_id=None):
+        """Somewhat flexible getter for transactions
+
+        Parameters
+        ----------
+        before : datetime, optional
+            Limit transactions to before a specific date
+        after : datetime, optional
+            Limit transactions to after a specific date
+        transaction_id : str, optional
+            Limit to a specific transaction ID
+        contact_email : str, optional
+            Limit by a persons contact email
+        transaction_source : str, optional
+            Limit to a particular transcation source type
+        campaign_id : str, optional
+            Limit to a particular campaign
+
+        Returns
+        -------
+        list of Payment
+            A list of constructed Payment instances
+        """
+        empty = [q is None for q in [before, after, transaction_id,
+                                     contact_email, transaction_source,
+                                     campaign_id]]
+        if all(empty):
+            # nothing to do...
+            return []
+
+        clauses = []
+        data = []
+        if before is not None:
+            clauses.append("created < %s")
+            data.append(before)
+        if after is not None:
+            clauses.append("created > %s")
+            data.append(after)
+        if transaction_id is not None:
+            clauses.append("id = %s")
+            data.append(transaction_id)
+        if contact_email is not None:
+            clauses.append("contact_email = %s")
+            data.append(contact_email)
+        if campaign_id is not None:
+            clauses.append("internal_campaign_id = %s")
+            data.append(campaign_id)
+        if transaction_source is not None:
+            clauses.append("transaction_type = %s")
+            data.append(transaction_source)
+
+        clauses = ' AND '.join(clauses)
+
+        sql = (f"""SELECT id
+                   FROM campaign.transaction t
+                   JOIN campaign.transaction_source_to_campaign tstc
+                       USING (remote_campaign_id)
+                   WHERE {clauses}""",
+               tuple(data))
+
+        with self._transaction.cursor() as cur:
+            cur.execute(*sql)
+            res = cur.fetchall()
+
+        return self._payments_from_transactios(res)
+
+    def _payments_from_transactions(self, ids):
+        """Construct a payment instance from a transaction ID"""
+        # first obtain general transaction information
+        fields = self._ORDER + self._
+        fields_formatted = ','.join(fields)
+        transaction_sql = (f"""SELECT {fields_formatted}
+                               FROM campaign.transaction
+                               JOIN campaign.interested_users
+                                   USING (interested_user_id)
+                               WHERE id IN %s"""
+                           (ids, ))
+
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(*transaction_sql)
+            trn_data = cur.fetchall()
+
+        # determine if we have fundrazr data
+        fundrazr_ids = [row['transaction_id'] for row in trn_data
+                        if row['transaction_type'] == self.TRN_TYPE_FUNDRAZR]
+
+        # ...and if so, pull out the respective perk information
+        if len(fundrazr_ids) > 0:
+            items_sql = ("""SELECT transaction_id, ARRAY_AGG((title, quantity))
+                            FROM campaign.fundrazr_transaction_perk
+                            JOIN campaign.fundrazr_perk
+                                USING (perk_id)
+                            WHERE transaction_id IN %s""",
+                         (fundrazr_ids, ))
+            with self._transaction.dict_cursor() as cur:
+                cur.execute(*items_sql)
+                fundrazr_data = cur.fetchall()
+
+            lookup = {row['transaction_id']: row for row in fundrazr_data}
+            for entry in trn_data:
+                entry['fundrazr_perks'] = lookup.get(entry['transaction_id'])
+
+        return [Payment.from_db(data) for data in trn_data]

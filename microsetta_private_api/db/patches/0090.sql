@@ -3,16 +3,7 @@ ALTER TABLE barcodes.interested_users SET SCHEMA campaign;
 ALTER TABLE barcodes.campaigns SET SCHEMA campaign;
 ALTER TABLE barcodes.campaigns_projects SET SCHEMA campaign;
 
--- we have a sync issue, where if these data change we cannot assure fundrazr
--- reflects those changes. Right now, this is a pragmatic table to link perks
--- to articles. if we move to centralizing fundrazr content, then this table
--- should be altered to reflect the full perk information, and mechanisms
--- need to be established to enforce fundrazr is consistent. specifically,
--- it would be imperative to revise the fundrazr and fundrazr_perk 
--- representation to track all of their fields, a policy determined for
--- whether fundrazr or us represents the ground truth, and mechanisms
--- to absorb or push change as needed to be added.
-CREATE TABLE campaign.fundrazr (
+CREATE TABLE campaign.transaction_source_to_campaign (
     remote_campaign_id VARCHAR PRIMARY KEY,
     internal_campaign_id uuid NOT NULL,
     currency VARCHAR NOT NULL,
@@ -22,14 +13,29 @@ CREATE TABLE campaign.fundrazr (
 
 INSERT INTO campaign.campaigns 
     (title) 
-    VALUES ('The Microsetta Initiative');
-INSERT INTO campaign.fundrazr 
+    VALUES ('The Microsetta Initiative'),
+           ('American Gut Project'),
+           ('British Gut Project');
+INSERT INTO campaign.transaction_source_to_campaign
     SELECT '31l0S2' AS remote_campaign_id, campaign_id AS internal_campaign_id, 'usd' AS currency
     FROM campaign.campaigns
     WHERE title='The Microsetta Initiative';
+INSERT INTO campaign.transaction_source_to_campaign
+    SELECT '4Tqx5' AS remote_campaign_id, campaign_id AS internal_campaign_id, 'usd' AS currency
+    FROM campaign.campaigns
+    WHERE title='American Gut Project';
+INSERT INTO campaign.transaction_source_to_campaign
+    SELECT '4sSf3' AS remote_campaign_id, campaign_id AS internal_campaign_id, 'gbp' AS currency
+    FROM campaign.campaigns
+    WHERE title='British Gut Project';
 
-CREATE TABLE campaign.fundrazr_transaction (
+CREATE TYPE TRN_TYPE AS ENUM ('fundrazr');
+
+CREATE TABLE campaign.transaction (
     id VARCHAR PRIMARY KEY, 
+    interested_user_id UUID NOT NULL,
+    transaction_type TRN_TYPE NOT NULL,
+    remote_campaign_id VARCHAR NOT NULL,
     created TIMESTAMP NOT NULL,
     amount FLOAT NOT NULL,
     net_amount FLOAT NOT NULL,
@@ -40,21 +46,8 @@ CREATE TABLE campaign.fundrazr_transaction (
     account_type VARCHAR NOT NULL,
     message VARCHAR,
     subscribed_to_updates BOOLEAN NOT NULL,
-    CONSTRAINT fk_transaction_campaign FOREIGN KEY (remote_campaign_id) REFERENCES campaign.fundrazr (remote_campaign_id),
+    CONSTRAINT fk_transaction_campaign FOREIGN KEY (remote_campaign_id) REFERENCES campaign.transaction_source_to_campaign (remote_campaign_id),
     CONSTRAINT fk_transaction_user FOREIGN KEY (interested_user_id) REFERENCES campaign.interested_users (interested_user_id)
-);
-
-CREATE TABLE campaign.transaction (
-    interested_user_id UUID PRIMARY KEY,
-    fundrazr_transaction_id VARCHAR NULL,
-    -- this constraint is placed on the assumption that future
-    -- transaction types will be introduced. the model is for 
-    -- a single field per transaction type, and the check ensures
-    -- that a single, and only a single, field is not null.
-    -- this check will need to be ALTER'd if additional transaction
-    -- types are added
-    CONSTRAINT chk_ensure_transaction CHECK (fundrazr_transaction_id IS NOT NULL),
-    CONSTRAINT fk_fundrazr_transaction FOREIGN KEY (fundrazr_transaction_id) REFERENCES campaign.fundrazr_transaction (id),
 );
 
 CREATE TABLE campaign.fundrazr_perk (
@@ -62,7 +55,7 @@ CREATE TABLE campaign.fundrazr_perk (
     remote_campaign_id VARCHAR NOT NULL,
     title VARCHAR NOT NULL,
     price FLOAT NOT NULL,
-    CONSTRAINT fk_transaction_campaign FOREIGN KEY (remote_campaign_id) REFERENCES campaign.fundrazr (remote_campaign_id)
+    CONSTRAINT fk_transaction_campaign FOREIGN KEY (remote_campaign_id) REFERENCES campaign.transaction_source_to_campaign (remote_campaign_id)
 );
 
 CREATE TABLE campaign.fundrazr_transaction_perk (
@@ -70,7 +63,7 @@ CREATE TABLE campaign.fundrazr_transaction_perk (
     transaction_id VARCHAR NOT NULL,
     perk_id VARCHAR NOT NULL,
     quantity INTEGER NOT NULL,
-    CONSTRAINT fk_transaction_claimed_perk FOREIGN KEY (transaction_id) REFERENCES campaign.fundrazr_transaction (id),
+    CONSTRAINT fk_transaction_claimed_perk FOREIGN KEY (transaction_id) REFERENCES campaign.transaction (id),
     CONSTRAINT fk_transaction_what_perk FOREIGN KEY (perk_id) REFERENCES campaign.fundrazr_perk (id),
     UNIQUE (transaction_id, perk_id)
 );
