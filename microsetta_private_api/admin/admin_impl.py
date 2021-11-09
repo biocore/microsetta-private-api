@@ -557,6 +557,7 @@ def list_barcode_query_fields(token_info):
         admin_repo = AdminRepo(t)
         projects_list = admin_repo.get_projects(False)
 
+    projects_list.sort(key=lambda x: x.project_name)
     filter_fields = []
     filter_fields.append(
         {
