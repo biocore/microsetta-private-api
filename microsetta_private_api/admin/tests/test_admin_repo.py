@@ -1000,7 +1000,7 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             articles = admin_repo.get_daklapack_articles()
-            self.assertEqual(24, len(articles))
+            self.assertEqual(9, len(articles))
             first_article = articles[0]
             first_article.pop("dak_article_id")
             self.assertEqual(FIRST_DAKLAPACK_ARTICLE, first_article)
@@ -1189,3 +1189,30 @@ class AdminRepoTests(AdminTests):
                 curr_records = cur.fetchall()
                 self.assertEqual(len(curr_records), 1)
                 self.assertEqual(expected_record, curr_records[0])
+
+    def test_set_kit_uuids_for_dak_order(self):
+        with Transaction() as t:
+            dummy_orders = self.make_dummy_dak_orders(t)
+            a_dak_order_id = dummy_orders[0][0]
+
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT kit_uuid "
+                            "FROM barcodes.kit LIMIT 2;")
+                two_kit_uuids_rows = cur.fetchall()
+                two_kit_uuids = [i[0] for i in two_kit_uuids_rows]
+
+            expected_records = [[a_dak_order_id, i] for i in two_kit_uuids]
+
+            admin_repo = AdminRepo(t)
+            admin_repo.set_kit_uuids_for_dak_order(
+                a_dak_order_id, two_kit_uuids)
+
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT * "
+                            "FROM barcodes.daklapack_order_to_kit "
+                            "WHERE dak_order_id =  %s",
+                            (a_dak_order_id,))
+                curr_records = cur.fetchall()
+                self.assertEqual(len(curr_records), 2)
+                for expected_record in expected_records:
+                    self.assertIn(expected_record, curr_records)

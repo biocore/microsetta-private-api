@@ -17,8 +17,8 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
-from microsetta_private_api.repo.metadata_repo import (retrieve_metadata,
-                                                       drop_private_columns)
+from microsetta_private_api.repo.campaign_repo import CampaignRepo
+from microsetta_private_api.repo.metadata_repo import retrieve_metadata
 from microsetta_private_api.tasks import send_email as celery_send_email,\
     per_sample_summary as celery_per_sample_summary
 from microsetta_private_api.admin.email_templates import EmailMessage
@@ -30,7 +30,7 @@ from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.util.melissa import verify_address
 from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
-from microsetta_private_api.qiita_client_manager import qclient
+from microsetta_private_api.qiita import qclient
 
 
 def search_barcode(token_info, sample_barcode):
@@ -114,13 +114,10 @@ def qiita_compatible_metadata(token_info, include_private, body):
     # TODO: this call constructs transactions implicitly. It would be
     # better for the transaction to be established and passed in,
     # similar to how other "repo" objects are managed
-    df, errors = retrieve_metadata(samples)
+    df, errors = retrieve_metadata(samples, include_private=include_private)
 
     if errors:
         return jsonify(code=404, message=str(errors)), 404
-
-    if not include_private:
-        df = drop_private_columns(df)
 
     return jsonify(df.to_dict(orient='index')), 200
 
@@ -466,7 +463,8 @@ def _create_daklapack_order(order_dict):
             response_msg = {"order_address":
                             daklapack_order.order_structure[ADDR_DICT_KEY],
                             "order_success": False,
-                            "daklapack_api_error_msg": post_response.text,
+                            "daklapack_api_error_msg":
+                                post_response.get_data(as_text=True),
                             "daklapack_api_error_code":
                             post_response.status_code}
             return response_msg
@@ -523,6 +521,45 @@ def address_verification(token_info, address_1, address_2=None, city=None,
                                       postal, country)
 
     return jsonify(melissa_response), 200
+
+
+def list_campaigns(token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        campaign_repo = CampaignRepo(t)
+        campaigns = campaign_repo.get_all_campaigns()
+    return jsonify(campaigns), 200
+
+
+def post_campaign_information(body, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        campaign_repo = CampaignRepo(t)
+
+        try:
+            res = campaign_repo.create_campaign(**body)
+        except ValueError as e:
+            raise RepoException(e)
+
+        t.commit()
+        return jsonify(res), 200
+
+
+def put_campaign_information(body, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        campaign_repo = CampaignRepo(t)
+
+        try:
+            res = campaign_repo.update_campaign(**body)
+        except ValueError as e:
+            raise RepoException(e)
+
+        t.commit()
+        return jsonify(res), 200
 
 
 def generate_activation_codes(body, token_info):

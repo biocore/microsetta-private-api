@@ -110,7 +110,6 @@ class DaklapackOrder:
                     "quantity": 1
                 }
             ],
-            # TODO: find out from Dak if I have to provide this
             "plannedSendDate": "",
             ADDR_DICT_KEY: str_addr_dict,
             "shippingProvider": "FedEx",

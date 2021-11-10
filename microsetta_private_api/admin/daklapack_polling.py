@@ -3,18 +3,20 @@ from datetime import datetime
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.admin import daklapack_communication as dc
+from microsetta_private_api.celery_utils import celery
 
 OUTBOUND_DEV_KEY = "outBoundDelivery"
 INBOUND_DEV_KEY = "inBoundDelivery"
-COLLECTION_DEVICE_TYPES = ["2point5ml_etoh_tube", "7ml_etoh_tube",
-                           "neoteryx_kit"]
-BOX_TYPE = "box"
-REGISTRATION_CARD_TYPE = "registration_card"
+COLLECTION_DEVICE_TYPES = ["Tube"]
+BOX_TYPE = "BoxId"
+REGISTRATION_CARD_TYPE = "KitId"
 SENT_STATUS = "Sent"
 ERROR_STATUS = "Error"
+ARCHIVE_STATUS = "Archived"
 CODE_ERROR = "Code Error"
 
 
+@celery.task(ignore_result=False)
 def poll_dak_orders():
     """Get open orders' status from daklapack and process accordingly"""
 
@@ -105,6 +107,9 @@ def _process_single_order(curr_order_id, curr_status, curr_creation_date):
             # archive the errored order
             dc.post_daklapack_order_archive({"orderIds": [curr_order_id]})
 
+            per_order_admin_repo.set_daklapack_order_poll_info(
+                curr_order_id, datetime.now(), ARCHIVE_STATUS)
+
         per_order_t.commit()
 
     return per_article_info
@@ -139,6 +144,11 @@ def process_order_articles(admin_repo, order_id, status, create_date):
                 # represents exactly one kit, no more or less.)
                 curr_output = _store_single_sent_kit(
                     admin_repo, order_proj_ids, curr_article_instance)
+
+                # able to assume there is only one kit uuid bc
+                # _store_single_sent_kit stores a single kit, by definition
+                kit_uuid = curr_output["created"][0]["kit_uuid"]
+                admin_repo.set_kit_uuids_for_dak_order(order_id, [kit_uuid])
             elif status == ERROR_STATUS:
                 curr_output = _gather_article_error_info(
                     order_id, create_date, curr_article_instance)
@@ -204,7 +214,7 @@ def _store_single_sent_kit(admin_repo, order_proj_ids, single_article_dict):
             device_barcodes.append(curr_barcode)
         elif curr_scannable_type == BOX_TYPE:
             box_id = _prevent_overwrite(box_id, curr_barcode, BOX_TYPE)
-        elif curr_scannable_type == "registration_card":
+        elif curr_scannable_type == REGISTRATION_CARD_TYPE:
             kit_name = _prevent_overwrite(kit_name, curr_barcode,
                                           REGISTRATION_CARD_TYPE)
         else:
@@ -221,9 +231,12 @@ def _store_single_sent_kit(admin_repo, order_proj_ids, single_article_dict):
     # hold representation of json); return them as json instead.
     # Not doing graceful error handling here because if any of these
     # keys/structures don't exist, something is wrong and we *should* error
-    for i in range(len(created_kit_info["created"])):
-        address_str = created_kit_info["created"][i]["address"]
-        created_kit_info["created"][i]["address"] = json.loads(address_str)
+    if len(created_kit_info["created"]) == 1:
+        address_str = created_kit_info["created"][0]["address"]
+        created_kit_info["created"][0]["address"] = json.loads(address_str)
+    else:
+        raise ValueError(f"Expected exactly one kit created, "
+                         f"found {len(created_kit_info['created'])}")
 
     return created_kit_info
 

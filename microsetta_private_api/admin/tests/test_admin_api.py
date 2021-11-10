@@ -95,7 +95,7 @@ def delete_test_daklapack_orders(order_submissions):
 def make_test_response(status_code):
     result = Response()
     result.status_code = status_code
-    result.text = f"Got {status_code}"
+    result.data = f"Got {status_code}"
     return result
 
 
