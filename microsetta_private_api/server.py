@@ -11,6 +11,8 @@ from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.celery_utils import celery, init_celery
 from microsetta_private_api.localization import EN_US, ES_MX
 
+import logging
+
 
 """
 Basic flask/connexion-based web application
@@ -111,6 +113,12 @@ def run(app):
 babel = None
 app = build_app()
 
+# This hooks up app.app.logger to the gunicorn file, allowing us to write
+# to that file with app.app.logger.debug/info/warning/error/critical()
+# See https://trstringer.com/logging-flask-gunicorn-the-manageable-way/
+gunicorn_logger = logging.getLogger('gunicorn.error')
+app.app.logger.handlers = gunicorn_logger.handlers
+app.app.logger.setLevel(gunicorn_logger.level)
 
 # If we're running in stand alone mode, run the application
 if __name__ == '__main__':

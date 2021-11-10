@@ -17,6 +17,8 @@ from microsetta_private_api.util.util import fromisotime
 from microsetta_private_api.admin.admin_impl import token_grants_admin_access
 from microsetta_private_api.qiita_client_manager import qclient
 
+from flask import current_app as app
+
 
 def read_sample_associations(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
@@ -83,12 +85,15 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
     except BadRequestError as e:
         # How do I log these to gunicorn??
         print("Couldn't communicate with qiita", e)
+        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
     except ForbiddenError as e:
         # How do I log these to gunicorn??
         print("Couldn't communicate with qiita", e)
+        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
     except RuntimeError as e:
         # How do I log these to gunicorn??
         print("Failed to communicate with qiita", e)
+        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
         raise
 
     return jsonify(sample.to_api()),
