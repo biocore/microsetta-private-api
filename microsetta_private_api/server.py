@@ -11,8 +11,6 @@ from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.celery_utils import celery, init_celery
 from microsetta_private_api.localization import EN_US, ES_MX
 
-import logging
-
 
 """
 Basic flask/connexion-based web application
