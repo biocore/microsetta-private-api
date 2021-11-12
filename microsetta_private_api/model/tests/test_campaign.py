@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 from datetime import datetime
-from microsetta_private_api.model.fundrazr import Payment
+from microsetta_private_api.model.campaign import Payment
 
 
 NO_SHIPPING = {

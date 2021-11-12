@@ -3,12 +3,13 @@ from microsetta_private_api.model.model_base import ModelBase
 from microsetta_private_api.model.address import Address
 
 
+# fundrazr fields
+TRANSACTION_TYPE = 'transaction_type'
 CREATED_TIMESTAMP = "created"
 CAMPAIGN_ID = "campaign_id"
 AMOUNT = "amount"
 NET_AMOUNT = "net_amount"
 CURRENCY = "currency"
-STATUS = "status"
 PAYER_NAME = "payer_name"
 PAYER_FIRST_NAME = "payer_first_name"
 PAYER_LAST_NAME = "payer_last_name"
@@ -31,7 +32,6 @@ SHIPPING_POSTAL_CODE = "postal_code"
 SHIPPING_COUNTRY = "country"
 ADDRESS_POST_CODE = "post_code"
 ADDRESS_COUNTRY_CODE = "country_code"
-TMI_STATUS = 'microsetta_status'
 
 
 class Shipping(ModelBase):
@@ -65,9 +65,12 @@ class Shipping(ModelBase):
         d = {SHIPPING_FIRST_NAME: self.first_name,
              SHIPPING_LAST_NAME: self.last_name}
         d.update(self.address.to_api())
+        return d
 
 
 class Item(ModelBase):
+    REQUIRED = (ITEM_TITLE, ITEM_QUANTITY, ITEM_ID)
+
     def __init__(self, title, quantity, id):
         self.title = title
         self.quantity = quantity
@@ -75,14 +78,24 @@ class Item(ModelBase):
 
     @classmethod
     def from_api(cls, **kwargs):
-        REQUIRED = [ITEM_TITLE, ITEM_QUANTITY, ITEM_ID]
-        return cls(**{k: kwargs[k] for k in REQUIRED})
+        return cls(**{k: kwargs[k] for k in cls.REQUIRED})
 
     def to_api(self):
         return self.__dict__.copy()
 
 
 class Payment(ModelBase):
+    REQUIRED = (CREATED_TIMESTAMP, CAMPAIGN_ID, AMOUNT,
+                NET_AMOUNT, CURRENCY, PAYER_FIRST_NAME,
+                SUBSCRIBE_TO_UPDATES, PAYER_LAST_NAME,
+                PAYER_EMAIL, TRANSACTION_ID,
+                FUNDRAZR_ACCOUNT_TYPE, CONTACT_EMAIL)
+
+    OPTIONAL = (MESSAGE, SHIPPING_ADDRESS, CLAIMED_ITEMS,
+                PHONE_NUMBER)
+
+    TRANSACTION_TYPE = None
+
     def __init__(self,
                  transaction_id,
                  created,
@@ -90,28 +103,23 @@ class Payment(ModelBase):
                  amount,
                  net_amount,
                  currency,
-                 status,
                  payer_first_name,
                  payer_last_name,
                  payer_email,
                  contact_email,
                  account,
                  subscribe_to_updates,
+                 interested_user_id=None,
                  message=None,
                  phone_number=None,
                  shipping_address=None,
-                 claimed_items=None,
-                 tmi_status=None):  # if coming from the API
+                 claimed_items=None, **kwargs):
         self.transaction_id = transaction_id
         self.created = created
         self.campaign_id = campaign_id
         self.amount = amount
         self.net_amount = net_amount
         self.currency = currency
-
-        # from fundrazr api doc, one of
-        # completed, preapproved, cancelled, refunded, reversed
-        self.status = status
         self.payer_first_name = payer_first_name
         self.payer_last_name = payer_last_name
         self.payer_email = payer_email
@@ -122,7 +130,7 @@ class Payment(ModelBase):
         self.claimed_items = claimed_items
         self.phone_number = phone_number
         self.message = message
-        self.tmi_status = tmi_status
+        self.interested_user_id = interested_user_id
 
     def copy(self):
         # we have nested objects, and the default copy on model base doesn't
@@ -146,12 +154,12 @@ class Payment(ModelBase):
     def to_api(self):
         return {
             TRANSACTION_ID: self.transaction_id,
+            TRANSACTION_TYPE: self.transaction_type,
             CREATED_TIMESTAMP: str(self.created),
             CAMPAIGN_ID: self.campaign_id,
             AMOUNT: self.amount,
             NET_AMOUNT: self.net_amount,
             CURRENCY: self.currency,
-            STATUS: self.status,
             PAYER_FIRST_NAME: self.payer_first_name,
             PAYER_LAST_NAME: self.payer_lase_name,
             PAYER_EMAIL: self.payer_email,
@@ -160,28 +168,21 @@ class Payment(ModelBase):
             FUNDRAZR_ACCOUNT_TYPE: self.fundrazr_account_type,
             SUBSCRIBE_TO_UPDATES: self.subscribe_to_updates,
             PHONE_NUMBER: self.phone_number,
-            TMI_STATUS: self.tmi_status,
             MESSAGE: self.message,
             CLAIMED_ITEMS: [i.to_api() for i in self.claimed_items]
         }
 
     @classmethod
     def from_api(cls, **kwargs):
-        required = [CREATED_TIMESTAMP, CAMPAIGN_ID, AMOUNT, NET_AMOUNT,
-                    CURRENCY, STATUS, PAYER_FIRST_NAME, SUBSCRIBE_TO_UPDATES,
-                    PAYER_LAST_NAME, PAYER_EMAIL, TRANSACTION_ID,
-                    FUNDRAZR_ACCOUNT_TYPE, CONTACT_EMAIL]
-
-        optional = [MESSAGE, SHIPPING_ADDRESS, CLAIMED_ITEMS, PHONE_NUMBER]
-
-        structured = {k: kwargs[k] for k in required}
-        structured.update({k: kwargs[k] for k in optional if k in kwargs})
+        structured = {k: kwargs[k] for k in cls.REQUIRED}
+        structured.update({k: kwargs[k] for k in cls.OPTIONAL if k in kwargs})
 
         structured['created'] = datetime.fromtimestamp(structured['created'])
 
         if CLAIMED_ITEMS in structured:
+            items = structured[CLAIMED_ITEMS]
             structured[CLAIMED_ITEMS] = [Item.from_api(**item)
-                                         for item in structured[CLAIMED_ITEMS]]
+                                         for item in items]
 
         if SHIPPING_ADDRESS in structured:
             shipping = Shipping.from_api(**structured[SHIPPING_ADDRESS])
@@ -190,7 +191,7 @@ class Payment(ModelBase):
         return cls(**structured)
 
     @classmethod
-    def from_db(cls, trn, items):
+    def from_db(cls, trn):
         if trn.get('shipping_first_name') is not None:
             first = trn['shipping_first_name']
             last = trn['shipping_last_name']
@@ -204,6 +205,7 @@ class Payment(ModelBase):
         else:
             shipping = None
 
+        items = trn['fundrazr_perks']
         if items is not None:
             items = [Item(**item) for item in items]
         else:
@@ -215,19 +217,22 @@ class Payment(ModelBase):
         d['account'] = d['account_type']
         d['subscribe_to_updates'] = d['subscribed_to_updates']
         d['campaign_id'] = d['remote_campaign_id']
-        d['status'] = d['fundrazr_status']
         d['claimed_items'] = items
+        d['contact_email'] = d['email']
+        d['phone_number'] = d['phone']
         d['shipping_address'] = shipping
-
-        for k in ['id', 'account_type', 'subscribed_to_updates',
-                  'remote_campaign_id', 'fundrazr_status',
-                  'shipping_first_name', 'shipping_last_name',
-                  'shipping_address1', 'shipping_city',
-                  'shipping_state', 'shipping_postal',
-                  'shipping_country', 'shipping_address2']:
-            d.pop(k)
-
         return cls(**d)
+
+
+class FundRazrPayment(Payment):
+    TRANSACTION_TYPE = 'fundrazr'
+
+
+def payment_from_db(data):
+    if data['transaction_type'] == FundRazrPayment.TRANSACTION_TYPE:
+        return FundRazrPayment.from_db(data)
+    else:
+        raise KeyError(f"Unknown type '{data['transaction_type']}'")
 
 
 class Campaign(ModelBase):
@@ -248,16 +253,4 @@ class Campaign(ModelBase):
         self.instructions_alt = instructions_alt
 
     def to_api(self):
-        return {
-            "campaign_id": self.campaign_id,
-            "title": self.title,
-            "instructions": self.instructions,
-            "header_image": self.header_image,
-            "permitted_countries": self.permitted_countries,
-            "language_key": self.language_key,
-            "accepting_participants": self.accepting_participants,
-            "associated_projects": self.associated_projects,
-            "language_key_alt": self.language_key_alt,
-            "title_alt": self.title_alt,
-            "instructions_alt": self.instructions_alt
-        }
+        return self.__dict__.copy()

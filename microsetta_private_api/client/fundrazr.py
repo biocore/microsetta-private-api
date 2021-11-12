@@ -2,7 +2,7 @@ import json
 import requests
 from urllib.parse import urljoin
 from microsetta_private_api.config_manager import SERVER_CONFIG
-from microsetta_private_api.model.fundrazr import Payment
+from microsetta_private_api.model.campaign import FundRazrPayment
 
 
 class FundrazrException(Exception):
@@ -42,8 +42,8 @@ class FundrazrClient:
     BASEURL = SERVER_CONFIG['fundrazr_url']
     ORGANIZATION_ID = SERVER_CONFIG['fundrazr_organization']
 
-    def __init__(self, study):
-        self.study_codename = study
+    def __init__(self):
+        print(self.ORGANIZATION_ID)
         self.s = requests.Session()
         self._actions = {'GET': self.s.get,
                          'POST': self.s.post,
@@ -63,7 +63,6 @@ class FundrazrClient:
 
         formed = urljoin(self.BASEURL, url)
         r = method(formed, headers=self.HEADERS, data=data, **kwargs)
-
         if r.status_code != 200:
             raise FundrazrException(f'Failure, ({r.status_code})\n'
                                     f'{json.dumps(r.json(), indent=2)}')
@@ -96,6 +95,6 @@ class FundrazrClient:
 
         while current:
             for obj in current['entities']:
-                yield Payment.from_api(obj)
+                yield FundRazrPayment.from_api(obj)
             last_id = current['after_id']
             current = self._req('GET', url_maker(last_id))

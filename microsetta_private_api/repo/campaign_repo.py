@@ -1,8 +1,17 @@
 import psycopg2
+import json
 
 from microsetta_private_api.repo.base_repo import BaseRepo
-from microsetta_private_api.model.campaign import Campaign
+from microsetta_private_api.model.campaign import Campaign, payment_from_db
 from microsetta_private_api.exceptions import RepoException
+
+
+class UnknownItem(psycopg2.errors.ForeignKeyViolation):
+    pass
+
+
+class UnknownTransaction(ValueError):
+    pass
 
 
 class CampaignRepo(BaseRepo):
@@ -172,6 +181,8 @@ class CampaignRepo(BaseRepo):
 
 
 class UserTransaction(BaseRepo):
+    TRN_TYPE_FUNDRAZR = 'fundrazr'
+
     def add_transaction(self, payment):
         """Adds a received transaction to the database
 
@@ -193,11 +204,11 @@ class UserTransaction(BaseRepo):
         """
         # gatekeep first thing to avoid adding an interested user if
         # an unknown trn type
-        if payment.transaction_type != self.TRN_TYPE_FUNDRAZR:
-            raise ValueError("'%s' is unrecognized" % payment.transaction_type)
+        if payment.TRANSACTION_TYPE != self.TRN_TYPE_FUNDRAZR:
+            raise ValueError("'%s' is unrecognized" % payment.TRANSACTION_TYPE)
 
-        interested_user_id = _add_interested_user(payment)
-        if payment.transaction_type == self.TRN_TYPE_FUNDRAZR:
+        interested_user_id = self._add_interested_user(payment)
+        if payment.TRANSACTION_TYPE == self.TRN_TYPE_FUNDRAZR:
             return self._add_transaction_fundrazr(payment, interested_user_id)
         else:
             # TODO: add more transaction types...
@@ -208,8 +219,8 @@ class UserTransaction(BaseRepo):
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT internal_campaign_id
                            FROM campaign.transaction_source_to_campaign
-                           WHERE remote_id = %s""",
-                        (payment.remote_campaign_id, ))
+                           WHERE remote_campaign_id = %s""",
+                        (payment.campaign_id, ))
             res = cur.fetchone()
             if len(res) == 0:
                 raise RepoException(f"Unknown external campaign "
@@ -221,7 +232,7 @@ class UserTransaction(BaseRepo):
 
         if shipping is None:
             data = (internal_campaign_id, payment.payer_first_name,
-                    payment.last_name, payment.payer_email,
+                    payment.payer_last_name, payment.contact_email,
                     payment.phone_number)
             fields = ('campaign_id', 'first_name', 'last_name', 'email',
                       'phone')
@@ -253,8 +264,8 @@ class UserTransaction(BaseRepo):
         items = payment.claimed_items
         fields = ('id', 'interested_user_id', 'remote_campaign_id', 'created',
                   'amount', 'net_amount', 'currency', 'message',
-                  'subscribed_to_updates', 'account_type', 'transaction_type')
-
+                  'subscribed_to_updates', 'account_type', 'payer_first_name',
+                  'payer_last_name', 'payer_email', 'transaction_type')
         data = (payment.transaction_id,
                 interested_user_id,
                 payment.campaign_id,
@@ -265,12 +276,18 @@ class UserTransaction(BaseRepo):
                 payment.message,
                 payment.subscribe_to_updates,
                 payment.account,
+                payment.payer_first_name,
+                payment.payer_last_name,
+                payment.payer_email,
                 self.TRN_TYPE_FUNDRAZR)
+
+        placeholders = ', '.join(['%s'] * len(fields))
+        fields_formatted = ', '.join(fields)
 
         with self._transaction.cursor() as cur:
             cur.execute(f"""INSERT INTO campaign.transaction
-                         ({fields_formatted})
-                         VALUES ({placeholders})""",
+                            ({fields_formatted})
+                            VALUES ({placeholders})""",
                         data)
 
             if items is not None:
@@ -292,7 +309,7 @@ class UserTransaction(BaseRepo):
         return True
 
     def get_transactions(self, before=None, after=None, transaction_id=None,
-                         contact_email=None, transaction_source=None,
+                         email=None, transaction_source=None,
                          campaign_id=None):
         """Somewhat flexible getter for transactions
 
@@ -304,7 +321,7 @@ class UserTransaction(BaseRepo):
             Limit transactions to after a specific date
         transaction_id : str, optional
             Limit to a specific transaction ID
-        contact_email : str, optional
+        email : str, optional
             Limit by a persons contact email
         transaction_source : str, optional
             Limit to a particular transcation source type
@@ -317,7 +334,7 @@ class UserTransaction(BaseRepo):
             A list of constructed Payment instances
         """
         empty = [q is None for q in [before, after, transaction_id,
-                                     contact_email, transaction_source,
+                                     email, transaction_source,
                                      campaign_id]]
         if all(empty):
             # nothing to do...
@@ -334,9 +351,9 @@ class UserTransaction(BaseRepo):
         if transaction_id is not None:
             clauses.append("id = %s")
             data.append(transaction_id)
-        if contact_email is not None:
-            clauses.append("contact_email = %s")
-            data.append(contact_email)
+        if email is not None:
+            clauses.append("email = %s")
+            data.append(email)
         if campaign_id is not None:
             clauses.append("internal_campaign_id = %s")
             data.append(campaign_id)
@@ -350,6 +367,8 @@ class UserTransaction(BaseRepo):
                    FROM campaign.transaction t
                    JOIN campaign.transaction_source_to_campaign tstc
                        USING (remote_campaign_id)
+                   JOIN campaign.interested_users
+                       USING (interested_user_id)
                    WHERE {clauses}""",
                tuple(data))
 
@@ -357,42 +376,46 @@ class UserTransaction(BaseRepo):
             cur.execute(*sql)
             res = cur.fetchall()
 
-        return self._payments_from_transactios(res)
+        if len(res) > 0:
+            return self._payments_from_transactions(res)
+        else:
+            return []
 
     def _payments_from_transactions(self, ids):
         """Construct a payment instance from a transaction ID"""
         # first obtain general transaction information
-        fields = self._ORDER + self._
-        fields_formatted = ','.join(fields)
-        transaction_sql = (f"""SELECT {fields_formatted}
-                               FROM campaign.transaction
-                               JOIN campaign.interested_users
-                                   USING (interested_user_id)
-                               WHERE id IN %s"""
-                           (ids, ))
+        transaction_sql = ("""SELECT *
+                              FROM campaign.transaction
+                              JOIN campaign.interested_users
+                                  USING (interested_user_id)
+                              WHERE id IN %s""",
+                           (tuple(ids), ))
 
         with self._transaction.dict_cursor() as cur:
             cur.execute(*transaction_sql)
             trn_data = cur.fetchall()
 
+        trn_data = [dict(r) for r in trn_data]
+
         # determine if we have fundrazr data
-        fundrazr_ids = [row['transaction_id'] for row in trn_data
+        fundrazr_ids = [row['id'] for row in trn_data
                         if row['transaction_type'] == self.TRN_TYPE_FUNDRAZR]
 
         # ...and if so, pull out the respective perk information
         if len(fundrazr_ids) > 0:
-            items_sql = ("""SELECT transaction_id, ARRAY_AGG((title, quantity))
-                            FROM campaign.fundrazr_transaction_perk
-                            JOIN campaign.fundrazr_perk
-                                USING (perk_id)
-                            WHERE transaction_id IN %s""",
-                         (fundrazr_ids, ))
+            items_sql = ("""SELECT ftp.transaction_id, ARRAY_AGG((title, quantity))
+                            FROM campaign.fundrazr_transaction_perk ftp
+                            JOIN campaign.fundrazr_perk fp
+                               ON fp.id=ftp.perk_id
+                            WHERE ftp.transaction_id IN %s
+                            GROUP BY ftp.transaction_id""",
+                         (tuple(fundrazr_ids), ))
             with self._transaction.dict_cursor() as cur:
                 cur.execute(*items_sql)
                 fundrazr_data = cur.fetchall()
 
-            lookup = {row['transaction_id']: row for row in fundrazr_data}
+            lookup = {row['id']: row for row in fundrazr_data}
             for entry in trn_data:
-                entry['fundrazr_perks'] = lookup.get(entry['transaction_id'])
+                entry['fundrazr_perks'] = lookup.get(entry['id'])
 
-        return [Payment.from_db(data) for data in trn_data]
+        return [payment_from_db(data) for data in trn_data]

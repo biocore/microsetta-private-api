@@ -5,7 +5,8 @@ from microsetta_private_api.repo.campaign_repo import (UserTransaction,
                                                        CampaignRepo,
                                                        UnknownItem)
 from microsetta_private_api.repo.transaction import Transaction
-from microsetta_private_api.model.campaign import Payment, Item, Shipping
+from microsetta_private_api.model.campaign import (FundRazrPayment, Item,
+                                                   Shipping)
 from microsetta_private_api.model.address import Address
 
 from psycopg2.errors import UniqueViolation, ForeignKeyViolation
@@ -45,118 +46,118 @@ CLAIMED_ITEMS3 = [
 ]
 
 
-TRANSACTION_ONE_ITEM = Payment(
+TRANSACTION_ONE_ITEM = FundRazrPayment(
     '123abc',
     datetime.datetime.now(),
     '31l0S2',
     100.,
     80.,
     'usd',
-    'completed',
     'foo',
     'bar',
     'foo@bar.com',
     'baz@bar.com',
     'paypal',
     True,
+    None,
     'coolcool',
     '123456789',
     SHIPPING1,
     CLAIMED_ITEMS1)
-TRANSACTION_ONE_ITEM_ALT_ADDRESS = Payment(
+TRANSACTION_ONE_ITEM_ALT_ADDRESS = FundRazrPayment(
     '123abc',
     datetime.datetime.now(),
     '31l0S2',
     100.,
     80.,
     'usd',
-    'completed',
     'foo',
     'bar',
     'foo@bar.com',
     'baz@bar.com',
     'paypal',
     True,
+    None,
     'coolcool',
     '123456789',
     SHIPPING2,
     CLAIMED_ITEMS1)
 
 
-TRANSACTION_TWO_ITEMS = Payment(
+TRANSACTION_TWO_ITEMS = FundRazrPayment(
     '123abc',
     datetime.datetime.now(),
     '31l0S2',
     100.,
     80.,
     'usd',
-    'completed',
     'foo',
     'bar',
     'foo@bar.com',
     'baz@bar.com',
     'paypal',
     True,
+    None,
     'coolcool',
     '123456789',
     SHIPPING1,
     CLAIMED_ITEMS2)
 
 
-TRANSACTION_UNKNOWN_ITEM = Payment(
+TRANSACTION_UNKNOWN_ITEM = FundRazrPayment(
     '123abc',
     datetime.datetime.now(),
     '31l0S2',
     100.,
     80.,
     'usd',
-    'completed',
     'foo',
     'bar',
     'foo@bar.com',
     'baz@bar.com',
     'paypal',
     True,
+    None,
     'coolcool',
     '123456789',
     SHIPPING1,
     CLAIMED_ITEMS3)
 
 
-TRANSACTION_NO_ITEMS = Payment(
+TRANSACTION_NO_ITEMS = FundRazrPayment(
     '123abc',
     datetime.datetime.now(),
     '31l0S2',
     100.,
     80.,
     'usd',
-    'completed',
     'foo',
     'bar',
     'foo@bar.com',
     'baz@bar.com',
     'paypal',
     True,
+    None,
     'coolcool',
     '123456789',
     SHIPPING1,
     None)
 
 
-TRANSACTION_NO_SHIPPING = Payment(
+TRANSACTION_NO_SHIPPING = FundRazrPayment(
     '123abc',
     datetime.datetime.now(),
     '31l0S2',
     100.,
     80.,
     'usd',
-    'completed',
     'foo',
     'bar',
     'foo@bar.com',
     'baz@bar.com',
     'paypal',
     True,
+    None,
     'coolcool',
     '123456789',
     None,
@@ -293,7 +294,7 @@ class FundrazrTransactionTests(unittest.TestCase):
     def _verify_insertion_count_perks(self, t, tid, expected_count):
         cur = t.cursor()
         cur.execute("""SELECT id
-                       FROM campaign.fundrazr_transaction
+                       FROM campaign.transaction
                        WHERE id=%s""",
                     (tid, ))
         res = cur.fetchone()
@@ -318,7 +319,7 @@ class FundrazrTransactionTests(unittest.TestCase):
             r = UserTransaction(t)
             r.add_transaction(TRANSACTION_ONE_ITEM)
 
-            with self.assertRaises(psycopg2.errors.UniqueViolation):
+            with self.assertRaises(UniqueViolation):
                 r.add_transaction(TRANSACTION_ONE_ITEM)
 
     def test_add_transaction_no_perk(self):
@@ -341,61 +342,6 @@ class FundrazrTransactionTests(unittest.TestCase):
             with self.assertRaises(UnknownItem):
                 r.add_transaction(TRANSACTION_UNKNOWN_ITEM)
 
-    def test_update_transaction_address(self):
-        with Transaction() as t:
-            r = UserTransaction(t)
-            r.add_transaction(TRANSACTION_ONE_ITEM)
-            r.update_transaction(TRANSACTION_ONE_ITEM_ALT_ADDRESS)
-
-            cur = t.cursor()
-            cur.execute("""SELECT shipping_first_name, shipping_last_name
-                           FROM campaign.fundrazr_transaction
-                           WHERE id=%s""",
-                        (TRANSACTION_ONE_ITEM.transaction_id, ))
-            first, last = cur.fetchone()
-            self.assertEqual(first, SHIPPING2.first_name)
-            self.assertEqual(last, SHIPPING2.last_name)
-
-    def test_set_transaction_status(self):
-        with Transaction() as t:
-            r = UserTransaction(t)
-            r.add_transaction(TRANSACTION_ONE_ITEM)
-
-            with self.assertRaises(InvalidStatusChange):
-                r.set_transaction_status(TRANSACTION_ONE_ITEM,
-                                         UserTransaction.TMI_STATUS_SHIPMENT_REQUESTED)  # noqa
-
-            r.set_transaction_status(TRANSACTION_ONE_ITEM,
-                                     UserTransaction.TMI_STATUS_INVALID_ADDRESS)
-
-            with self.assertRaises(InvalidStatusChange):
-                # We cannot revert to received
-                r.set_transaction_status(TRANSACTION_ONE_ITEM,
-                                         UserTransaction.TMI_STATUS_RECEIVED)
-
-            with self.assertRaises(InvalidStatusChange):
-                r.set_transaction_status(TRANSACTION_ONE_ITEM,
-                                         UserTransaction.TMI_STATUS_SHIPMENT_REQUESTED)  # noqa
-
-            r.set_transaction_status(TRANSACTION_ONE_ITEM,
-                                     UserTransaction.TMI_STATUS_VALID_ADDRESS)
-
-            with self.assertRaises(InvalidStatusChange):
-                # We cannot go from valid to invalid address
-                r.set_transaction_status(TRANSACTION_ONE_ITEM,
-                                         UserTransaction.TMI_STATUS_INVALID_ADDRESS)
-
-            with self.assertRaises(InvalidStatusChange):
-                # We cannot revert to received
-                r.set_transaction_status(TRANSACTION_ONE_ITEM,
-                                         UserTransaction.TMI_STATUS_RECEIVED)
-
-            final = r.set_transaction_status(TRANSACTION_ONE_ITEM,
-                                             UserTransaction.TMI_STATUS_SHIPMENT_REQUESTED)  # noqa
-
-            self.assertEqual(final.tmi_status,
-                             UserTransaction.TMI_STATUS_SHIPMENT_REQUESTED)
-
     def test_get_transactions_by_date(self):
         with Transaction() as t:
             r = UserTransaction(t)
@@ -403,30 +349,23 @@ class FundrazrTransactionTests(unittest.TestCase):
 
             obs = r.get_transactions(before=datetime.datetime(2021, 12, 1))
             exp = [self.obj1, self.obj2, self.obj3, self.obj4]
-            self.assertEqual(obs, exp)
+            self._payment_equal(obs, exp)
 
             obs = r.get_transactions(before=datetime.datetime(2021, 10, 1))
             exp = [self.obj3, self.obj4]
-            self.assertEqual(obs, exp)
+            self._payment_equal(obs, exp)
 
             obs = r.get_transactions(before=datetime.datetime(2021, 10, 15),
                                      after=datetime.datetime(2020, 12, 1))
             exp = [self.obj2, self.obj3]
-            self.assertEqual(obs, exp)
+            self._payment_equal(obs, exp)
 
-    def test_get_transactions_by_status(self):
-        with Transaction() as t:
-            r = UserTransaction(t)
-            self._load_some_transactions(r)
-            obs = r.get_transactions(tmi_status=UserTransaction.TMI_STATUS_RECEIVED)
-            self.assertEqual(obs, [self.obj1, self.obj2, self.obj3, self.obj4])
-
-            va = UserTransaction.TMI_STATUS_VALID_ADDRESS
-            new_obj2 = r.set_transaction_status(self.obj2, va)
-            obs = r.get_transactions(tmi_status=UserTransaction.TMI_STATUS_RECEIVED)
-            self.assertEqual(obs, [self.obj1, self.obj3, self.obj4])
-            obs = r.get_transactions(tmi_status=va)
-            self.assertEqual(obs, [new_obj2, ])
+    def _payment_equal(self, obs, exp):
+        # ignore the interested_user_id as it's made on insertion
+        # and has db enforcement
+        for o in obs:
+            o.interested_user_id = None
+        self.assertEqual(obs, exp)
 
     def test_get_transaction_by_id(self):
         with Transaction() as t:
@@ -435,28 +374,28 @@ class FundrazrTransactionTests(unittest.TestCase):
 
             for obj in [self.obj1, self.obj2, self.obj3, self.obj4]:
                 obs = r.get_transactions(transaction_id=obj.transaction_id)
-                self.assertEqual(obs, [obj, ])
+                self._payment_equal(obs, [obj, ])
 
     def test_get_transaction_by_email(self):
         with Transaction() as t:
             r = UserTransaction(t)
             self._load_some_transactions(r)
 
-            obs = r.get_transactions(contact_email=self.obj1.contact_email)
+            obs = r.get_transactions(email=self.obj1.contact_email)
             exp = [self.obj1, self.obj2]
-            self.assertEqual(obs, exp)
+            self._payment_equal(obs, exp)
 
-            obs = r.get_transactions(contact_email=self.obj2.contact_email)
+            obs = r.get_transactions(email=self.obj2.contact_email)
             exp = [self.obj1, self.obj2]
-            self.assertEqual(obs, exp)
+            self._payment_equal(obs, exp)
 
-            obs = r.get_transactions(contact_email=self.obj3.contact_email)
+            obs = r.get_transactions(email=self.obj3.contact_email)
             exp = [self.obj3, ]
-            self.assertEqual(obs, exp)
+            self._payment_equal(obs, exp)
 
-            obs = r.get_transactions(contact_email=self.obj4.contact_email)
+            obs = r.get_transactions(email=self.obj4.contact_email)
             exp = [self.obj4, ]
-            self.assertEqual(obs, exp)
+            self._payment_equal(obs, exp)
 
 
 if __name__ == '__main__':
