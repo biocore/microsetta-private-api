@@ -87,12 +87,12 @@ class Item(ModelBase):
 class Payment(ModelBase):
     REQUIRED = (CREATED_TIMESTAMP, CAMPAIGN_ID, AMOUNT,
                 NET_AMOUNT, CURRENCY, PAYER_FIRST_NAME,
-                SUBSCRIBE_TO_UPDATES, PAYER_LAST_NAME,
+                PAYER_LAST_NAME,
                 PAYER_EMAIL, TRANSACTION_ID,
                 FUNDRAZR_ACCOUNT_TYPE, CONTACT_EMAIL)
 
     OPTIONAL = (MESSAGE, SHIPPING_ADDRESS, CLAIMED_ITEMS,
-                PHONE_NUMBER)
+                PHONE_NUMBER, SUBSCRIBE_TO_UPDATES)
 
     TRANSACTION_TYPE = None
 
@@ -108,7 +108,7 @@ class Payment(ModelBase):
                  payer_email,
                  contact_email,
                  account,
-                 subscribe_to_updates,
+                 subscribe_to_updates=None,
                  interested_user_id=None,
                  message=None,
                  phone_number=None,
@@ -174,6 +174,7 @@ class Payment(ModelBase):
 
     @classmethod
     def from_api(cls, **kwargs):
+        print(kwargs)
         structured = {k: kwargs[k] for k in cls.REQUIRED}
         structured.update({k: kwargs[k] for k in cls.OPTIONAL if k in kwargs})
 

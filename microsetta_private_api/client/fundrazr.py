@@ -43,7 +43,6 @@ class FundrazrClient:
     ORGANIZATION_ID = SERVER_CONFIG['fundrazr_organization']
 
     def __init__(self):
-        print(self.ORGANIZATION_ID)
         self.s = requests.Session()
         self._actions = {'GET': self.s.get,
                          'POST': self.s.post,
@@ -67,34 +66,44 @@ class FundrazrClient:
             raise FundrazrException(f'Failure, ({r.status_code})\n'
                                     f'{json.dumps(r.json(), indent=2)}')
 
-        return r.json()
+        try:
+            return r.json()
+        except json.decoder.JSONDecodeError:
+            # in testing, the staging API will return an empty string
+            return {}
 
     def campaigns(self):
         """GET /campaigns?organization={id}
 
         Obtain general campaign detail
         """
-        pass
-        # map into campaign table from cassidy
+        raise NotImplementedError("Add if needed in the future")
 
-    def payments(self, since_id=None):
-        """GET /payments?organization={orgid}&since_id={since_id}&limit=50
+    def payments(self, since=None):
+        """GET /payments?organization={orgid}&since={unixtimestamp}&limit=50
 
         Obtain payments across all campaigns since the last ID
 
         Response will be paginated so may need to issue multiple queries
         """
-        def url_maker(id_):
+        def url_maker(since, id_):
             url = f'/payments?organization={self.ORGANIZATION_ID}'
+            if since is not None:
+                url += f'&since={since}'
             if id_ is not None:
                 url += f'&since_id={id_}'
             url += '&limit=50'
             return url
 
-        current = self._req('GET', url_maker(since_id))
+        current = self._req('GET', url_maker(since, None))
 
         while current:
-            for obj in current['entities']:
-                yield FundRazrPayment.from_api(obj)
-            last_id = current['after_id']
-            current = self._req('GET', url_maker(last_id))
+            for obj in current['entries']:
+                yield FundRazrPayment.from_api(**obj)
+            last_id = current.get('after_id')
+
+            if last_id is None:
+                # nothing more to get
+                current = []
+            else:
+                current = self._req('GET', url_maker(None, last_id))
