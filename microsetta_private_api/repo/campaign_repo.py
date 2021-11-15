@@ -179,6 +179,111 @@ class CampaignRepo(BaseRepo):
 
         return True
 
+    def is_member_by_email(self, email, campaign_id):
+        """Determine if an individual, by email, is associated with a campaign
+
+        Validity is based off of either (a) direct association as though the
+        interested_user table or (b) association with an account created using
+        a kit that is part of a project with a the campaign.
+
+        Note
+        ----
+        This method is imperfect for historical accounts under the edge case
+        of a person creating an account with an unassociated project, and later
+        claiming a sample from an associated project.
+
+        Parameters
+        ----------
+        email : str
+            The email to test for
+        campaign_id : uuid4
+            The campaign ID to examine
+
+        Returns
+        -------
+        bool
+            True if the user is part of the campaign
+        """
+        with self._transaction.cursor() as cur:
+            # scenario (1)
+            cur.execute("""SELECT EXISTS (
+                               SELECT email
+                               FROM campaign.interested_users
+                               WHERE email=%s
+                                   AND campaign_id=%s)""",
+                        (email, campaign_id))
+            if cur.fetchone()[0] is True:
+                return True
+
+            # scenario (2)
+            cur.execute("""SELECT EXISTS (
+                               SELECT email
+                               FROM ag.account
+                               INNER JOIN barcodes.barcode
+                                   ON created_with_kit_id=kit_id
+                               INNER JOIN barcodes.project_barcode
+                                   USING (barcode)
+                               INNER JOIN campaign.campaigns_projects
+                                   USING (project_id)
+                               WHERE email=%s
+                                   AND campaign_id=%s)""",
+                        (email, campaign_id))
+
+            if cur.fetchone()[0] is True:
+                return True
+
+        return False
+
+    def is_member_by_source(self, account_id, source_id, campaign_id):
+        """Determine if an individual, by source, is associated with a campaign
+
+        Validity is based off whether the account and source IDs are valid
+        and the account was created using a kit that is part of a project
+        associated with the campaign
+
+        Note
+        ----
+        This method is imperfect for historical accounts under the edge case
+        of a person creating an account with an unassociated project, and later
+        claiming a sample from an associated project.
+
+        Parameters
+        ----------
+        account_id : uuid4
+            The account ID to test for
+        source_id : uuid4
+            The source ID to test for
+        campaign_id : uuid4
+            The campaign ID to consider
+
+        Returns
+        -------
+        bool
+            True if the user is part of the campaign
+        """
+        with self._transaction.cursor() as cur:
+
+            cur.execute("""SELECT EXISTS (
+                               SELECT account.email
+                               FROM ag.account
+                               INNER JOIN ag.source
+                                   ON account.id=account_id
+                               INNER JOIN barcodes.barcode
+                                   ON created_with_kit_id=kit_id
+                               INNER JOIN barcodes.project_barcode
+                                   USING (barcode)
+                               INNER JOIN campaign.campaigns_projects
+                                   USING (project_id)
+                               WHERE account.id=%s
+                                   AND source.id=%s
+                                   AND campaign_id=%s)""",
+                        (account_id, source_id, campaign_id))
+
+            if cur.fetchone()[0] is True:
+                return True
+
+        return False
+
 
 class UserTransaction(BaseRepo):
     TRN_TYPE_FUNDRAZR = 'fundrazr'
@@ -199,7 +304,6 @@ class UserTransaction(BaseRepo):
 
         Returns
         -------
-        bool
             True if inserted
         """
         # gatekeep first thing to avoid adding an interested user if
