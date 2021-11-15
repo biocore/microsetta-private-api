@@ -52,6 +52,24 @@ NO_ITEMS = {
   "object": "payment"
 }
 
+ANONYMOUS = {
+  "created": 1586389911,
+  "campaign_id": "4Tqx5",
+  "amount": 25,
+  "net_amount": 22.97,
+  "currency": "usd",
+  "status": "completed",
+  "payer_name": "anonymous",
+  "payer_first_name": "anonymous",
+  "payer_last_name": "",
+  "transaction_id": "123123",
+  "account": "paypal",
+  "subscribe_to_updates": True,
+  "phone_number": "5551231233",
+  "id": "5241253",
+  "object": "payment"
+}
+
 
 ONE_ITEM = {
   "created": 1584372532,
@@ -171,6 +189,11 @@ class FundrazrPaymentTests(TestCase):
     def test_order_with_no_items(self):
         obs = Payment.from_api(**NO_ITEMS)
         self.assertEqual(obs.shipping_address.first_name, 'person')
+        self.assertEqual(obs.claimed_items, None)
+
+    def test_anonymous_order(self):
+        obs = Payment.from_api(**ANONYMOUS)
+        self.assertEqual(obs.payer_first_name, 'anonymous')
         self.assertEqual(obs.claimed_items, None)
 
     def test_order_with_multiple_items(self):

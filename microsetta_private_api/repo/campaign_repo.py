@@ -215,6 +215,10 @@ class UserTransaction(BaseRepo):
             pass
 
     def _add_interested_user(self, payment):
+        # if we don't have an interested user
+        if payment.contact_email is None:
+            return None
+
         # determine the internal campaign the payment is associated with
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT internal_campaign_id
@@ -310,7 +314,7 @@ class UserTransaction(BaseRepo):
 
     def get_transactions(self, before=None, after=None, transaction_id=None,
                          email=None, transaction_source=None,
-                         campaign_id=None):
+                         campaign_id=None, include_anonymous=False):
         """Somewhat flexible getter for transactions
 
         Parameters
@@ -327,19 +331,15 @@ class UserTransaction(BaseRepo):
             Limit to a particular transcation source type
         campaign_id : str, optional
             Limit to a particular campaign
+        include_anonymous : bool, optional
+            Include anonymous transactions w/o interested users, default is
+            False.
 
         Returns
         -------
         list of Payment
             A list of constructed Payment instances
         """
-        empty = [q is None for q in [before, after, transaction_id,
-                                     email, transaction_source,
-                                     campaign_id]]
-        if all(empty):
-            # nothing to do...
-            return []
-
         clauses = []
         data = []
         if before is not None:
@@ -361,16 +361,26 @@ class UserTransaction(BaseRepo):
             clauses.append("transaction_type = %s")
             data.append(transaction_source)
 
-        clauses = ' AND '.join(clauses)
+        if include_anonymous:
+            anonymous_join = 'LEFT'
+        else:
+            anonymous_join = 'INNER'
+
+        if len(clauses) > 0:
+            clauses = 'WHERE ' + ' AND '.join(clauses)
+            data = tuple(data)
+        else:
+            clauses = ''
+            data = None
 
         sql = (f"""SELECT id
                    FROM campaign.transaction t
                    JOIN campaign.transaction_source_to_campaign tstc
                        USING (remote_campaign_id)
-                   JOIN campaign.interested_users
+                   {anonymous_join} JOIN campaign.interested_users
                        USING (interested_user_id)
-                   WHERE {clauses}""",
-               tuple(data))
+                   {clauses}""",
+               data)
 
         with self._transaction.cursor() as cur:
             cur.execute(*sql)
@@ -386,9 +396,11 @@ class UserTransaction(BaseRepo):
         # first obtain general transaction information
         transaction_sql = ("""SELECT *
                               FROM campaign.transaction
-                              JOIN campaign.interested_users
+                              LEFT JOIN campaign.interested_users
                                   USING (interested_user_id)
-                              WHERE id IN %s""",
+                              WHERE id IN %s
+                              ORDER BY created DESC
+                              """,
                            (tuple(ids), ))
 
         with self._transaction.dict_cursor() as cur:

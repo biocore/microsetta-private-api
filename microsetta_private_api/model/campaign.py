@@ -88,11 +88,15 @@ class Payment(ModelBase):
     REQUIRED = (CREATED_TIMESTAMP, CAMPAIGN_ID, AMOUNT,
                 NET_AMOUNT, CURRENCY, PAYER_FIRST_NAME,
                 PAYER_LAST_NAME,
-                PAYER_EMAIL, TRANSACTION_ID,
-                FUNDRAZR_ACCOUNT_TYPE, CONTACT_EMAIL)
+                TRANSACTION_ID,
+                FUNDRAZR_ACCOUNT_TYPE)
 
+    # offline transactions do not necessarily habe
+    # have payer or contact emails per fundrazr's
+    # dev team.
     OPTIONAL = (MESSAGE, SHIPPING_ADDRESS, CLAIMED_ITEMS,
-                PHONE_NUMBER, SUBSCRIBE_TO_UPDATES)
+                PHONE_NUMBER, SUBSCRIBE_TO_UPDATES,
+                PAYER_EMAIL, CONTACT_EMAIL)
 
     TRANSACTION_TYPE = None
 
@@ -105,15 +109,16 @@ class Payment(ModelBase):
                  currency,
                  payer_first_name,
                  payer_last_name,
-                 payer_email,
-                 contact_email,
                  account,
                  subscribe_to_updates=None,
                  interested_user_id=None,
                  message=None,
                  phone_number=None,
                  shipping_address=None,
-                 claimed_items=None, **kwargs):
+                 claimed_items=None,
+                 payer_email=None,
+                 contact_email=None,
+                 **kwargs):
         self.transaction_id = transaction_id
         self.created = created
         self.campaign_id = campaign_id
@@ -174,7 +179,6 @@ class Payment(ModelBase):
 
     @classmethod
     def from_api(cls, **kwargs):
-        print(kwargs)
         structured = {k: kwargs[k] for k in cls.REQUIRED}
         structured.update({k: kwargs[k] for k in cls.OPTIONAL if k in kwargs})
 
@@ -220,6 +224,7 @@ class Payment(ModelBase):
         d['campaign_id'] = d['remote_campaign_id']
         d['claimed_items'] = items
         d['contact_email'] = d['email']
+        d['payer_email'] = d['payer_email']
         d['phone_number'] = d['phone']
         d['shipping_address'] = shipping
         return cls(**d)

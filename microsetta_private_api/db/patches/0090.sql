@@ -31,9 +31,13 @@ INSERT INTO campaign.transaction_source_to_campaign
 
 CREATE TYPE TRN_TYPE AS ENUM ('fundrazr');
 
+-- interested_user_id is nullable in the case of 
+-- offline contributions. these transactions do not
+-- have payer or contact emails per fundrazr's
+-- dev team.
 CREATE TABLE campaign.transaction (
     id VARCHAR PRIMARY KEY, 
-    interested_user_id UUID NOT NULL,
+    interested_user_id UUID,
     transaction_type TRN_TYPE NOT NULL,
     remote_campaign_id VARCHAR NOT NULL,
     created TIMESTAMP NOT NULL,
@@ -42,7 +46,7 @@ CREATE TABLE campaign.transaction (
     currency VARCHAR NOT NULL,
     payer_first_name VARCHAR NOT NULL,
     payer_last_name VARCHAR NOT NULL,
-    payer_email VARCHAR NOT NULL,
+    payer_email VARCHAR,
     account_type VARCHAR NOT NULL,
     message VARCHAR,
     subscribed_to_updates BOOLEAN NOT NULL,

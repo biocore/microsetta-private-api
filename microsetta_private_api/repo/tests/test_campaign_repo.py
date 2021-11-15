@@ -55,15 +55,17 @@ TRANSACTION_ONE_ITEM = FundRazrPayment(
     'usd',
     'foo',
     'bar',
-    'foo@bar.com',
-    'baz@bar.com',
     'paypal',
     True,
     None,
     'coolcool',
     '123456789',
     SHIPPING1,
-    CLAIMED_ITEMS1)
+    CLAIMED_ITEMS1,
+    payer_email='foo@bar.com',
+    contact_email='baz@bar.com')
+
+
 TRANSACTION_ONE_ITEM_ALT_ADDRESS = FundRazrPayment(
     '123abc',
     datetime.datetime.now(),
@@ -73,15 +75,15 @@ TRANSACTION_ONE_ITEM_ALT_ADDRESS = FundRazrPayment(
     'usd',
     'foo',
     'bar',
-    'foo@bar.com',
-    'baz@bar.com',
     'paypal',
     True,
     None,
     'coolcool',
     '123456789',
     SHIPPING2,
-    CLAIMED_ITEMS1)
+    CLAIMED_ITEMS1,
+    payer_email='foo@bar.com',
+    contact_email='baz@bar.com')
 
 
 TRANSACTION_TWO_ITEMS = FundRazrPayment(
@@ -93,15 +95,15 @@ TRANSACTION_TWO_ITEMS = FundRazrPayment(
     'usd',
     'foo',
     'bar',
-    'foo@bar.com',
-    'baz@bar.com',
     'paypal',
     True,
     None,
     'coolcool',
     '123456789',
     SHIPPING1,
-    CLAIMED_ITEMS2)
+    CLAIMED_ITEMS2,
+    payer_email='foo@bar.com',
+    contact_email='baz@bar.com')
 
 
 TRANSACTION_UNKNOWN_ITEM = FundRazrPayment(
@@ -113,15 +115,15 @@ TRANSACTION_UNKNOWN_ITEM = FundRazrPayment(
     'usd',
     'foo',
     'bar',
-    'foo@bar.com',
-    'baz@bar.com',
     'paypal',
     True,
     None,
     'coolcool',
     '123456789',
     SHIPPING1,
-    CLAIMED_ITEMS3)
+    CLAIMED_ITEMS3,
+    payer_email='foo@bar.com',
+    contact_email='baz@bar.com')
 
 
 TRANSACTION_NO_ITEMS = FundRazrPayment(
@@ -133,15 +135,15 @@ TRANSACTION_NO_ITEMS = FundRazrPayment(
     'usd',
     'foo',
     'bar',
-    'foo@bar.com',
-    'baz@bar.com',
     'paypal',
     True,
     None,
     'coolcool',
     '123456789',
     SHIPPING1,
-    None)
+    None,
+    payer_email='foo@bar.com',
+    contact_email='baz@bar.com')
 
 
 TRANSACTION_NO_SHIPPING = FundRazrPayment(
@@ -153,15 +155,35 @@ TRANSACTION_NO_SHIPPING = FundRazrPayment(
     'usd',
     'foo',
     'bar',
-    'foo@bar.com',
-    'baz@bar.com',
     'paypal',
     True,
     None,
     'coolcool',
     '123456789',
     None,
-    None)
+    None,
+    payer_email='foo@bar.com',
+    contact_email='baz@bar.com')
+
+
+TRANSACTION_ANONYMOUS = FundRazrPayment(
+    '123abc',
+    datetime.datetime.now(),
+    '31l0S2',
+    100.,
+    80.,
+    'usd',
+    'foo',
+    'bar',
+    'paypal',
+    True,
+    None,
+    'coolcool',
+    None,
+    None,
+    None,
+    payer_email=None,
+    contact_email=None)
 
 
 class CampaignRepoTests(unittest.TestCase):
@@ -264,32 +286,39 @@ class FundrazrTransactionTests(unittest.TestCase):
         obj2 = obj1.copy()
         obj3 = obj1.copy()
         obj4 = obj1.copy()
+        obj5 = obj1.copy()
 
         obj1.transaction_id = 'obj1'
         obj2.transaction_id = 'obj2'
         obj3.transaction_id = 'obj3'
         obj4.transaction_id = 'obj4'
+        obj5.transaction_id = 'obj5'
 
         obj1.created = datetime.datetime(2021, 11, 1)
         obj2.created = datetime.datetime(2021, 10, 1)
         obj3.created = datetime.datetime(2021, 1, 1)
         obj4.created = datetime.datetime(2011, 11, 1)
+        obj5.created = datetime.datetime(2015, 11, 1)
 
         obj1.contact_email = 'obj1obj2@foo.com'
         obj2.contact_email = 'obj1obj2@foo.com'
         obj3.contact_email = 'obj3@foo.com'
         obj4.contact_email = 'obj4@foo.com'
+        obj5.contact_email = None
+        obj5.phone_number = None
 
         self.obj1 = obj1
         self.obj2 = obj2
         self.obj3 = obj3
         self.obj4 = obj4
+        self.obj5 = obj5
 
     def _load_some_transactions(self, r):
         r.add_transaction(self.obj1)
         r.add_transaction(self.obj2)
         r.add_transaction(self.obj3)
         r.add_transaction(self.obj4)
+        r.add_transaction(self.obj5)
 
     def _verify_insertion_count_perks(self, t, tid, expected_count):
         cur = t.cursor()
@@ -313,6 +342,13 @@ class FundrazrTransactionTests(unittest.TestCase):
             r.add_transaction(TRANSACTION_ONE_ITEM)
             tid = TRANSACTION_ONE_ITEM.transaction_id
             self._verify_insertion_count_perks(t, tid, 1)
+
+    def test_add_transaction_anonymous(self):
+        with Transaction() as t:
+            r = UserTransaction(t)
+            r.add_transaction(TRANSACTION_ANONYMOUS)
+            tid = TRANSACTION_ANONYMOUS.transaction_id
+            self._verify_insertion_count_perks(t, tid, 0)
 
     def test_add_transaction_duplicate(self):
         with Transaction() as t:
@@ -358,6 +394,15 @@ class FundrazrTransactionTests(unittest.TestCase):
             obs = r.get_transactions(before=datetime.datetime(2021, 10, 15),
                                      after=datetime.datetime(2020, 12, 1))
             exp = [self.obj2, self.obj3]
+            self._payment_equal(obs, exp)
+
+    def test_get_transactions_with_anonymous(self):
+        with Transaction() as t:
+            r = UserTransaction(t)
+            self._load_some_transactions(r)
+
+            obs = r.get_transactions(include_anonymous=True)
+            exp = [self.obj1, self.obj2, self.obj3, self.obj5, self.obj4]
             self._payment_equal(obs, exp)
 
     def _payment_equal(self, obs, exp):
