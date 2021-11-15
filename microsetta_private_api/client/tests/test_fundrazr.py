@@ -8,7 +8,7 @@ class FundrazrClientTests(TestCase):
     def setUp(self):
         self.c = FundrazrClient()
 
-    @skipIf(SERVER_CONFIG['fundrazr_url'] in ('', 'fundrazr_url_placeholder'),
+    @skipIf(SERVER_CONFIG['fundrazr_url'] in ('', 'fr_url_placeholder'),
             "Fundrazr secrets not provided")
     def test_payments(self):
         # payments comeback with the most recent first
