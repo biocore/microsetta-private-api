@@ -84,15 +84,12 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         pass
     except BadRequestError as e:
         # How do I log these to gunicorn??
-        print("Couldn't communicate with qiita", e)
         app.logger.warning("Couldn't communicate with qiita", exc_info=True)
     except ForbiddenError as e:
         # How do I log these to gunicorn??
-        print("Couldn't communicate with qiita", e)
         app.logger.warning("Couldn't communicate with qiita", exc_info=True)
     except RuntimeError as e:
         # How do I log these to gunicorn??
-        print("Failed to communicate with qiita", e)
         app.logger.warning("Couldn't communicate with qiita", exc_info=True)
         raise
 
