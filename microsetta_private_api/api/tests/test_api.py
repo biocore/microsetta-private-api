@@ -548,7 +548,13 @@ def client(request):
         with patch("microsetta_private_api.api."
                    "verify_jwt") as mock_v:
             mock_v.side_effect = mock_verify
-            yield client
+            # This is a bit moronic, but since qiita won't be available
+            # from the test machine, every file that grabs a qclient
+            # needs to be patched to use a magic mock.
+            with patch("microsetta_private_api.api._sample.qclient"), \
+                    patch("microsetta_private_api.admin.admin_impl.qclient"), \
+                    patch("microsetta_private_api.repo.qiita_repo.qclient"):
+                yield client
 
 
 @pytest.mark.usefixtures("client")
