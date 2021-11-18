@@ -22,6 +22,11 @@ class Sample(ModelBase):
         self.source_id = source_id
         self.account_id = account_id
 
+        self.accession_urls = []
+
+    def set_accession_urls(self, accession_urls):
+        self.accession_urls = accession_urls
+
     @property
     def edit_locked(self):
         # If a sample has been scanned and is valid, it is locked.
@@ -59,7 +64,8 @@ class Sample(ModelBase):
             "sample_notes": self.notes,
             "source_id": self.source_id,
             "account_id": self.account_id,
-            "sample_projects": list(self.sample_projects)
+            "sample_projects": list(self.sample_projects),
+            "accession_urls": self.accession_urls
         }
 
 
