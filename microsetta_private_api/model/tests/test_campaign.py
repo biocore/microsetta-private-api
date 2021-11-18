@@ -182,7 +182,8 @@ class FundrazrPaymentTests(TestCase):
 
     def test_order_no_shipping(self):
         obs = Payment.from_api(**NO_SHIPPING)
-        self.assertEqual(obs.created, datetime.fromtimestamp(1586423564))
+        tz = Payment._TZ_US_PACIFIC
+        self.assertEqual(obs.created, datetime.fromtimestamp(1586423564, tz))
         self.assertEqual(obs.shipping_address, None)
         self.assertEqual(obs.claimed_items, None)
 
