@@ -2,12 +2,14 @@ from datetime import datetime
 import pytz
 from microsetta_private_api.model.model_base import ModelBase
 from microsetta_private_api.model.address import Address
+import time
 
 
 # fundrazr fields
 TRANSACTION_TYPE = 'transaction_type'
 CREATED_TIMESTAMP = "created"
 CAMPAIGN_ID = "campaign_id"
+ID = 'id'
 AMOUNT = "amount"
 NET_AMOUNT = "net_amount"
 CURRENCY = "currency"
@@ -19,7 +21,8 @@ TRANSACTION_ID = "transaction_id"
 FUNDRAZR_ACCOUNT_TYPE = "account"
 MESSAGE = "message"
 CLAIMED_ITEMS = "claimed_items"
-ITEM_TITLE = "title"
+ITEMS = "items"
+TITLE = "title"
 ITEM_QUANTITY = "quantity"
 ITEM_ID = "id"
 CONTACT_EMAIL = "contact_email"
@@ -33,6 +36,31 @@ SHIPPING_POSTAL_CODE = "postal_code"
 SHIPPING_COUNTRY = "country"
 ADDRESS_POST_CODE = "post_code"
 ADDRESS_COUNTRY_CODE = "country_code"
+STATS = 'stats'
+
+
+class FundRazrCampaign:
+    def __init__(self, campaign_id, title, currency, items, stats):
+        self.campaign_id = campaign_id
+        self.title = title
+        self.currency = currency
+        self.items = items
+        self.stats = stats
+
+    @classmethod
+    def from_api(cls, **kwargs):
+        title = kwargs[TITLE]
+        campaign_id = kwargs[ID]
+        currency = kwargs[CURRENCY]
+
+        items = []
+        for item in kwargs.get(ITEMS, []):
+            item = item.copy()
+            item[ITEM_QUANTITY] = 0
+            items.append(Item.from_api(**item))
+
+        stats = kwargs[STATS]
+        return cls(campaign_id, title, currency, items, stats)
 
 
 class Shipping(ModelBase):
@@ -70,7 +98,7 @@ class Shipping(ModelBase):
 
 
 class Item(ModelBase):
-    REQUIRED = (ITEM_TITLE, ITEM_QUANTITY, ITEM_ID)
+    REQUIRED = (TITLE, ITEM_QUANTITY, ITEM_ID)
 
     def __init__(self, title, quantity, id):
         self.title = title
@@ -92,7 +120,7 @@ class Payment(ModelBase):
                 TRANSACTION_ID,
                 FUNDRAZR_ACCOUNT_TYPE)
 
-    # offline transactions do not necessarily habe
+    # offline transactions do not necessarily
     # have payer or contact emails per fundrazr's
     # dev team.
     OPTIONAL = (MESSAGE, SHIPPING_ADDRESS, CLAIMED_ITEMS,
@@ -232,6 +260,10 @@ class Payment(ModelBase):
         d[PHONE_NUMBER] = d['phone']
         d[SHIPPING_ADDRESS] = shipping
         return cls(**d)
+
+    def created_as_unixts(self):
+        """Express .created as a unix timestamp"""
+        return int(time.mktime(self.created.timetuple()))
 
 
 class FundRazrPayment(Payment):

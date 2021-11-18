@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 from datetime import datetime
-from microsetta_private_api.model.campaign import Payment
+from microsetta_private_api.model.campaign import Payment, FundRazrCampaign
 
 
 NO_SHIPPING = {
@@ -169,6 +169,73 @@ MULTIPLE_ITEMS = {
 }
 
 
+CAMPAIGN_WITH_ITEMS = {
+    "url": "a place",
+    "title": "American Gut",
+    "introduction": "words and words",
+    "image_url": "stuff",
+    "location": {
+      "city": "cool",
+      "country": "ca",
+      "state": "BC",
+      "latitude": 49.2612,
+      "longitude": -123.1139
+    },
+    "category": "community",
+    "campaign_type": "standard",
+    "type": "kia",
+    "currency": "usd",
+    "status": "active",
+    "items": [
+      {
+        "title": "foobar",
+        "description": "stuff",
+        "image_url": "things",
+        "price": 180,
+        "claimed": 1,
+        "id": "a2uQa",
+        "object": "item"
+      }
+        ],
+    "stats": {
+        "total_raised": 714,
+        "contribution_count": 5,
+        "comment_count": 0,
+        "update_count": 0
+    },
+    "id": "c4NG5",
+    "object": "campaign"
+}
+
+
+CAMPAIGN_NO_ITEMS = {
+    "url": "no place",
+    "title": "not American Gut",
+    "introduction": "words and words",
+    "image_url": "stuff",
+    "location": {
+      "city": "cool",
+      "country": "ca",
+      "state": "BC",
+      "latitude": 49.2612,
+      "longitude": -123.1139
+    },
+    "category": "community",
+    "campaign_type": "standard",
+    "type": "kia",
+    "currency": "usd",
+    "status": "active",
+    "stats": {
+        "total_raised": 714,
+        "contribution_count": 5,
+        "comment_count": 0,
+        "update_count": 0
+    },
+    "id": "c4NGxxx",
+    "object": "campaign"
+}
+
+
 class FundrazrPaymentTests(TestCase):
     def test_order_with_one_item(self):
         obs = Payment.from_api(**ONE_ITEM)
@@ -211,6 +278,20 @@ class FundrazrPaymentTests(TestCase):
         self.assertNotEqual(id(a), id(b))
         self.assertNotEqual(id(a.claimed_items), id(b.claimed_items))
         self.assertNotEqual(id(a.shipping_address), id(b.shipping_address))
+
+
+class FundrazrCampaignTests(TestCase):
+    def test_campaign_with_items(self):
+        obs = FundRazrCampaign.from_api(**CAMPAIGN_WITH_ITEMS)
+        self.assertEqual(obs.title, 'American Gut')
+        self.assertEqual(obs.campaign_id, 'c4NG5')
+        self.assertEqual(len(obs.items), 1)
+
+    def test_campaign_without_items(self):
+        obs = FundRazrCampaign.from_api(**CAMPAIGN_NO_ITEMS)
+        self.assertEqual(obs.title, 'not American Gut')
+        self.assertEqual(obs.campaign_id, 'c4NGxxx')
+        self.assertEqual(obs.items, [])
 
 
 if __name__ == '__main__':
