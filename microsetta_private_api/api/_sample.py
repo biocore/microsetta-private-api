@@ -82,13 +82,13 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         # I guess qiita doesn't know about this barcode,
         # so probably no ebi accession info
         pass
-    except BadRequestError as e:
+    except BadRequestError:
         # How do I log these to gunicorn??
         app.logger.warning("Couldn't communicate with qiita", exc_info=True)
-    except ForbiddenError as e:
+    except ForbiddenError:
         # How do I log these to gunicorn??
         app.logger.warning("Couldn't communicate with qiita", exc_info=True)
-    except RuntimeError as e:
+    except RuntimeError:
         # How do I log these to gunicorn??
         app.logger.warning("Couldn't communicate with qiita", exc_info=True)
         raise
