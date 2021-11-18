@@ -381,8 +381,10 @@ class FundrazrTransactionTests(unittest.TestCase):
         self.obj5 = obj5
 
     def _load_some_transactions(self, r):
-        r.add_transaction(self.obj1)
+        # slight order tweak to ensure the "most recent"
+        # is not loaded first or last
         r.add_transaction(self.obj2)
+        r.add_transaction(self.obj1)
         r.add_transaction(self.obj3)
         r.add_transaction(self.obj4)
         r.add_transaction(self.obj5)
@@ -444,6 +446,14 @@ class FundrazrTransactionTests(unittest.TestCase):
             r = UserTransaction(t)
             with self.assertRaises(UnknownItem):
                 r.add_transaction(TRANSACTION_UNKNOWN_ITEM)
+
+    def test_most_recent_transaction(self):
+        with Transaction() as t:
+            r = UserTransaction(t)
+            self._load_some_transactions(r)
+            obs = r.most_recent_transaction()
+            exp = self.obj1
+            self._payment_equal([obs, ], [exp, ])
 
     def test_get_transactions_by_date(self):
         with Transaction() as t:

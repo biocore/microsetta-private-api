@@ -1,4 +1,5 @@
 from datetime import datetime
+import pytz
 from microsetta_private_api.model.model_base import ModelBase
 from microsetta_private_api.model.address import Address
 
@@ -100,6 +101,8 @@ class Payment(ModelBase):
 
     TRANSACTION_TYPE = None
 
+    _TZ_US_PACIFIC = pytz.timezone('US/Pacific')
+
     def __init__(self,
                  transaction_id,
                  created,
@@ -182,7 +185,9 @@ class Payment(ModelBase):
         structured = {k: kwargs[k] for k in cls.REQUIRED}
         structured.update({k: kwargs[k] for k in cls.OPTIONAL if k in kwargs})
 
-        structured['created'] = datetime.fromtimestamp(structured['created'])
+        # force everything to be relative to UCSD
+        structured['created'] = datetime.fromtimestamp(structured['created'],
+                                                       self._TZ_US_PACIFIC)
 
         if CLAIMED_ITEMS in structured:
             items = structured[CLAIMED_ITEMS]
@@ -218,7 +223,7 @@ class Payment(ModelBase):
 
         d = dict(trn)
         d[TRANSACTION_ID] = d['id']
-        d[ACCOUNT] = d['account_type']
+        d[FUNDRAZR_ACCOUNT_TYPE] = d['account_type']
         d[SUBSCRIBE_TO_UPDATES] = d['subscribed_to_updates']
         d[CAMPAIGN_ID] = d['remote_campaign_id']
         d[CLAIMED_ITEMS] = items

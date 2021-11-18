@@ -416,9 +416,35 @@ class UserTransaction(BaseRepo):
 
         return True
 
+    def most_recent_transaction(self, transaction_source=None,
+                                campaign_id=None, include_anonymous=False,
+                                email=None):
+        """Return the latest transaction
+
+        campaign_id : str, optional
+            Limit to a particular campaign
+        transaction_source : str, optional
+            Limit to a particular transcation source type
+        include_anonymous : bool, optional
+            Include anonymous transactions w/o interested users, default is
+            False.
+        email : str, optional
+            Limit by a persons contact email
+
+        Returns
+        -------
+        Payment
+            Constructed Payment instance of the most recent transaction
+        """
+        return self.get_transactions(transaction_source=transaction_source,
+                                     campaign_id=campaign_id,
+                                     include_anonymous=include_anonymous,
+                                     email=email, most_recent=True)[0]
+
     def get_transactions(self, before=None, after=None, transaction_id=None,
                          email=None, transaction_source=None,
-                         campaign_id=None, include_anonymous=False):
+                         campaign_id=None, include_anonymous=False,
+                         most_recent=False):
         """Somewhat flexible getter for transactions
 
         Parameters
@@ -433,11 +459,11 @@ class UserTransaction(BaseRepo):
             Limit by a persons contact email
         transaction_source : str, optional
             Limit to a particular transcation source type
-        campaign_id : str, optional
-            Limit to a particular campaign
         include_anonymous : bool, optional
             Include anonymous transactions w/o interested users, default is
             False.
+        most_recent : bool, optional
+            Only obtain the most recent transaction
 
         Returns
         -------
@@ -477,13 +503,19 @@ class UserTransaction(BaseRepo):
             clauses = ''
             data = None
 
+        if most_recent:
+            limit_or_not = 'ORDER BY created DESC LIMIT 1'
+        else:
+            limit_or_not = ''
+
+
         sql = (f"""SELECT id
                    FROM campaign.transaction t
                    JOIN campaign.transaction_source_to_campaign tstc
                        USING (remote_campaign_id)
                    {anonymous_join} JOIN campaign.interested_users
                        USING (interested_user_id)
-                   {clauses}""",
+                   {clauses} {limit_or_not}""",
                data)
 
         with self._transaction.cursor() as cur:

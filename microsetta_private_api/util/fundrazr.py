@@ -4,6 +4,7 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.campaign import UserTransaction
 from microsetta_private_api.client.fundrazr import FundRazrClient
 from microsetta_private_api.localization import EN_US
+import time
 
 
 @celery.task(ignore_result=True)
@@ -13,9 +14,11 @@ def get_fundrazr_transactions():
     amount = 0
     with Transaction() as t:
         tr = UserTransaction(t)
-        last_transaction = tr.last_transaction(tr.TRN_TYPE_FUNDRAZR)
+        latest = tr.most_recent_transaction(transaction_source=tr.TRN_TYPE_FUNDRAZR,  # noqa
+                                            include_anonymous=True)
 
-        for payment in c.payments(since_id=last_transaction):
+        unixtimestamp = int(time.mktime(latest.created.timetuple()))
+        for payment in c.payments(since=unixtimestamp):
             tr.add_transaction(payment)
             added += 1
             amount += payment.amount
