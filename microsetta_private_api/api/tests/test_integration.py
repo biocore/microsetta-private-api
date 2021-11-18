@@ -73,7 +73,10 @@ def client(request):
         request.cls.client = client
 
         with patch("microsetta_private_api.api."
-                   "verify_jwt") as mock_verify:
+                   "verify_jwt") as mock_verify, \
+                patch("microsetta_private_api.api._sample.qclient"), \
+                patch("microsetta_private_api.admin.admin_impl.qclient"), \
+                patch("microsetta_private_api.repo.qiita_repo.qclient"):
             mock_verify.side_effect = mock_verify_func
             yield client
 
