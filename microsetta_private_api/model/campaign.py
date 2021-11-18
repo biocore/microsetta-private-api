@@ -187,7 +187,7 @@ class Payment(ModelBase):
 
         # force everything to be relative to UCSD
         structured['created'] = datetime.fromtimestamp(structured['created'],
-                                                       self._TZ_US_PACIFIC)
+                                                       cls._TZ_US_PACIFIC)
 
         if CLAIMED_ITEMS in structured:
             items = structured[CLAIMED_ITEMS]

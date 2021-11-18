@@ -508,7 +508,6 @@ class UserTransaction(BaseRepo):
         else:
             limit_or_not = ''
 
-
         sql = (f"""SELECT id
                    FROM campaign.transaction t
                    JOIN campaign.transaction_source_to_campaign tstc
