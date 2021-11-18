@@ -9,32 +9,6 @@ class FundrazrException(Exception):
     pass
 
 
-CAMPAIGN_TITLE = 'title'
-CAMPAIGN_ITEMS = 'items'
-CAMPAIGN_CREATED = 'created'
-CAMPAIGN_ID = 'id'
-
-Campaign = None  # placeholder pending upstream PR
-
-
-def _fundrazr_campaign_to_campaign_model(fr_data):
-    projects = SERVER_CONFIG['fundrazr_campaign_to_project']
-
-    # default to The Microsetta Initiative
-    projects = projects.get(fr_data[CAMPAIGN_ID], [118, ])
-    return Campaign(fr_data[CAMPAIGN_ID],
-                    fr_data[CAMPAIGN_TITLE],
-                    None,  # instructions
-                    None,  # header_image
-                    None,  # permitted_countries
-                    None,  # language_key
-                    True,  # accepting_participants
-                    projects,
-                    None,  # language_key_alt
-                    None,  # title_key_alt
-                    None)  # instructions_alt
-
-
 class FundrazrClient:
     HEADERS = {
         "Authorization": f"Bearer {SERVER_CONFIG['fundrazr_key']}"
