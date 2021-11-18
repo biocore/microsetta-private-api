@@ -2,7 +2,8 @@ import json
 import requests
 from urllib.parse import urljoin
 from microsetta_private_api.config_manager import SERVER_CONFIG
-from microsetta_private_api.model.campaign import FundRazrPayment
+from microsetta_private_api.model.campaign import (FundRazrPayment,
+                                                   FundRazrCampaign)
 
 
 class FundrazrException(Exception):
@@ -38,7 +39,7 @@ class FundrazrClient:
         r = method(formed, headers=self.HEADERS, data=data, **kwargs)
         if r.status_code != 200:
             raise FundrazrException(f'Failure, ({r.status_code})\n'
-                                    f'{json.dumps(r.json(), indent=2)}')
+                                    f'{r.content}')
 
         try:
             return r.json()
@@ -51,7 +52,9 @@ class FundrazrClient:
 
         Obtain general campaign detail
         """
-        raise NotImplementedError("Add if needed in the future")
+        data = self._req('GET',
+                         f'/campaigns?organization={self.ORGANIZATION_ID}')
+        return [FundRazrCampaign.from_api(**e) for e in data['entries']]
 
     def payments(self, since=None):
         """GET /payments?organization={orgid}&since={unixtimestamp}&limit=50
@@ -59,7 +62,14 @@ class FundrazrClient:
         Obtain payments across all campaigns since the last ID
 
         Response will be paginated so may need to issue multiple queries
+
+        N.B. since on fundrazr API is *inclusive*
         """
+        if since is not None:
+            # ensure we aren't getting the current transaction if using most
+            # recent
+            since += 1
+
         def url_maker(since, id_):
             url = f'/payments?organization={self.ORGANIZATION_ID}'
             if since is not None:

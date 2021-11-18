@@ -204,6 +204,14 @@ class FundrazrPaymentTests(TestCase):
                          'USPS Priority Mail Shipping')
         self.assertEqual(obs.claimed_items[0].quantity, 5)
 
+    def test_copy(self):
+        a = Payment.from_api(**ONE_ITEM)
+        b = a.copy()
+        self.assertEqual(a, b)
+        self.assertNotEqual(id(a), id(b))
+        self.assertNotEqual(id(a.claimed_items), id(b.claimed_items))
+        self.assertNotEqual(id(a.shipping_address), id(b.shipping_address))
+
 
 if __name__ == '__main__':
     main()

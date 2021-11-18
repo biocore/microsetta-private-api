@@ -8,7 +8,7 @@ class FundrazrClientTests(TestCase):
     def setUp(self):
         self.c = FundrazrClient()
 
-    @skipIf(SERVER_CONFIG['fundrazr_url'] in ('', 'fr_url_placeholder'),
+    @skipIf(SERVER_CONFIG['fundrazr_url'] in ('', 'fundrazr_url_placeholder'),
             "Fundrazr secrets not provided")
     def test_payments(self):
         # payments comeback with the most recent first
@@ -27,15 +27,20 @@ class FundrazrClientTests(TestCase):
         # we should have more than 2 transactions...
         self.assertTrue(len(remainder) > 0)
 
-        second_to_last = obs2.created
-        print(type(second_to_last))
-        print(second_to_last)
+        second_to_last = obs2.created_as_unixts()
         timegen = self.c.payments(since=second_to_last)
         items = list(timegen)
 
         # there should only be a single transaction newer than
         # second to last
         self.assertEqual(len(items), 1)
+
+    def test_campaigns(self):
+        obs = self.c.campaigns()
+
+        # staging has two campaigns, let's assume that's stable...
+        self.assertEqual(len(obs), 2)
+        self.assertTrue(len(obs[0].items) > 0)
 
 
 if __name__ == '__main__':
