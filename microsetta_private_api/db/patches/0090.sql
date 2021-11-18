@@ -2,6 +2,7 @@ CREATE SCHEMA campaign;
 ALTER TABLE barcodes.interested_users SET SCHEMA campaign;
 ALTER TABLE barcodes.campaigns SET SCHEMA campaign;
 ALTER TABLE barcodes.campaigns_projects SET SCHEMA campaign;
+ALTER TABLE ag.melissa_address_queries SET SCHEMA campaign;
 
 CREATE TABLE campaign.transaction_source_to_campaign (
     remote_campaign_id VARCHAR PRIMARY KEY,
