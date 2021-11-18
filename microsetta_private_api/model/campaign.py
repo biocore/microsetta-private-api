@@ -216,17 +216,16 @@ class Payment(ModelBase):
         else:
             items = None
 
-        # rewrite some fields becuase daniel wasn't paying attention
         d = dict(trn)
-        d['transaction_id'] = d['id']
-        d['account'] = d['account_type']
-        d['subscribe_to_updates'] = d['subscribed_to_updates']
-        d['campaign_id'] = d['remote_campaign_id']
-        d['claimed_items'] = items
-        d['contact_email'] = d['email']
-        d['payer_email'] = d['payer_email']
-        d['phone_number'] = d['phone']
-        d['shipping_address'] = shipping
+        d[TRANSACTION_ID] = d['id']
+        d[ACCOUNT] = d['account_type']
+        d[SUBSCRIBE_TO_UPDATES] = d['subscribed_to_updates']
+        d[CAMPAIGN_ID] = d['remote_campaign_id']
+        d[CLAIMED_ITEMS] = items
+        d[CONTACT_EMAIL] = d['email']
+        d[PAYER_EMAIL] = d['payer_email']
+        d[PHONE_NUMBER] = d['phone']
+        d[SHIPPING_ADDRESS] = shipping
         return cls(**d)
 
 
