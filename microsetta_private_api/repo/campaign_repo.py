@@ -330,9 +330,9 @@ class UserTransaction(BaseRepo):
                            WHERE remote_campaign_id = %s""",
                         (payment.campaign_id, ))
             res = cur.fetchone()
-            if len(res) == 0:
+            if res is None:
                 raise RepoException(f"Unknown external campaign "
-                                    f"'{payment.remote_campaign_id}'")
+                                    f"'{payment.campaign_id}'")
             internal_campaign_id = res[0]
 
         shipping = payment.shipping_address
@@ -433,13 +433,17 @@ class UserTransaction(BaseRepo):
 
         Returns
         -------
-        Payment
+        Payment or None
             Constructed Payment instance of the most recent transaction
         """
-        return self.get_transactions(transaction_source=transaction_source,
+        trns = self.get_transactions(transaction_source=transaction_source,
                                      campaign_id=campaign_id,
                                      include_anonymous=include_anonymous,
-                                     email=email, most_recent=True)[0]
+                                     email=email, most_recent=True)
+        if len(trns) > 0:
+            return trns[0]
+        else:
+            return None
 
     def get_transactions(self, before=None, after=None, transaction_id=None,
                          email=None, transaction_source=None,
