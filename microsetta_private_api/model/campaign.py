@@ -37,6 +37,7 @@ SHIPPING_COUNTRY = "country"
 ADDRESS_POST_CODE = "post_code"
 ADDRESS_COUNTRY_CODE = "country_code"
 STATS = 'stats'
+PRICE = 'price'
 
 
 class FundRazrCampaign:
@@ -44,8 +45,16 @@ class FundRazrCampaign:
         self.campaign_id = campaign_id
         self.title = title
         self.currency = currency
-        self.items = items
         self.stats = stats
+
+        if items is None:
+            self.items = []
+        elif isinstance(items, list):
+            self.items = items
+        elif isinstance(items, Item):
+            self.items = [items, ]
+        else:
+            raise ValueError(f"Cannot handle item of type {type(items)}")
 
     @classmethod
     def from_api(cls, **kwargs):
@@ -99,15 +108,19 @@ class Shipping(ModelBase):
 
 class Item(ModelBase):
     REQUIRED = (TITLE, ITEM_QUANTITY, ITEM_ID)
+    OPTIONAL = (PRICE, )
 
-    def __init__(self, title, quantity, id):
+    def __init__(self, title, quantity, id, price=None):
         self.title = title
         self.quantity = quantity
         self.id = id
+        self.price = price
 
     @classmethod
     def from_api(cls, **kwargs):
-        return cls(**{k: kwargs[k] for k in cls.REQUIRED})
+        d = {k: kwargs[k] for k in cls.REQUIRED}
+        d.update({k: kwargs[k] for k in cls.OPTIONAL})
+        return cls(**d)
 
     def to_api(self):
         return self.__dict__.copy()

@@ -4,10 +4,11 @@ import uuid
 
 from microsetta_private_api.repo.campaign_repo import (UserTransaction,
                                                        CampaignRepo,
-                                                       UnknownItem)
+                                                       UnknownItem,
+                                                       FundRazrCampaignRepo)
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.model.campaign import (FundRazrPayment, Item,
-                                                   Shipping)
+                                                   Shipping, FundRazrCampaign)
 from microsetta_private_api.model.address import Address
 
 from psycopg2.errors import UniqueViolation, ForeignKeyViolation
@@ -246,7 +247,7 @@ class CampaignRepoTests(unittest.TestCase):
         with Transaction() as t:
             new_campaign = {
                 "title": "Unique Campaign Name",
-                "associated_projects": "1"
+                "associated_projects": ["1", ]
             }
             campaign_repo = CampaignRepo(t)
             obs = campaign_repo.create_campaign(**new_campaign)
@@ -258,7 +259,7 @@ class CampaignRepoTests(unittest.TestCase):
         with Transaction() as t:
             duplicate_campaign = {
                 "title": "Test Campaign",
-                "associated_projects": "1"
+                "associated_projects": ["1", ]
             }
             campaign_repo = CampaignRepo(t)
             with self.assertRaises(UniqueViolation):
@@ -277,7 +278,7 @@ class CampaignRepoTests(unittest.TestCase):
         with Transaction() as t:
             campaign_bad_projects = {
                 "title": "Unique Campaign Name",
-                "associated_projects": "-1"
+                "associated_projects": ["-1", ]
             }
             campaign_repo = CampaignRepo(t)
             with self.assertRaises(ForeignKeyViolation):
@@ -518,6 +519,59 @@ class FundrazrTransactionTests(unittest.TestCase):
             obs = r.get_transactions(email=self.obj4.contact_email)
             exp = [self.obj4, ]
             self._payment_equal(obs, exp)
+
+
+class FundrazrCampaignTests(unittest.TestCase):
+    def setUp(self):
+        self.campaign_with_item = FundRazrCampaign('c1', 'test1', 'usd',
+                                                   Item('xyz', 0, 'i1', 10),
+                                                   None)
+        self.campaign_without_item = FundRazrCampaign('c2', 'test2', 'usd',
+                                                      None, None)
+        self.perk = Item('zyx', 0, 'i2', 5)
+
+    def test_campaign_exists_doesnt_exist(self):
+        with Transaction() as t:
+            c = FundRazrCampaignRepo(t)
+            self.assertFalse(c.campaign_exists('foobar'))
+
+    def test_campaign_exists(self):
+        with Transaction() as t:
+            c = FundRazrCampaignRepo(t)
+            c.insert_campaign(self.campaign_with_item, [1, ])
+            self.assertTrue(c.campaign_exists('c1'))
+
+    def test_item_exists_doesnt_exist(self):
+        with Transaction() as t:
+            c = FundRazrCampaignRepo(t)
+            c.insert_campaign(self.campaign_with_item, [1, ])
+            self.assertFalse(c.item_exists('c1', 'notpresent'))
+
+    def test_item_exists(self):
+        with Transaction() as t:
+            c = FundRazrCampaignRepo(t)
+            c.insert_campaign(self.campaign_with_item, [1, ])
+            self.assertTrue(c.item_exists('c1', 'i1'))
+
+    def test_insert_campaign_with_item(self):
+        with Transaction() as t:
+            c = FundRazrCampaignRepo(t)
+            c.insert_campaign(self.campaign_with_item, [1, ])
+            self.assertTrue(c.campaign_exists('c1'))
+            self.assertTrue(c.item_exists('c1', 'i1'))
+
+    def test_insert_campaign_without_item(self):
+        with Transaction() as t:
+            c = FundRazrCampaignRepo(t)
+            c.insert_campaign(self.campaign_without_item, [1, ])
+            self.assertTrue(c.campaign_exists('c2'))
+
+    def test_add_perk_to_campaign(self):
+        with Transaction() as t:
+            c = FundRazrCampaignRepo(t)
+            c.insert_campaign(self.campaign_without_item, [1, ])
+            c.add_perk_to_campaign('c2', self.perk)
+            self.assertTrue(c.item_exists('c2', 'i2'))
 
 
 if __name__ == '__main__':

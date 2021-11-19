@@ -99,12 +99,11 @@ class CampaignRepo(BaseRepo):
             if campaign_id is None:
                 raise RepoException("Error inserting campaign into database")
             else:
-                projects = associated_projects.split(",")
                 cur.executemany(
                     "INSERT INTO campaign.campaigns_projects ("
                     "campaign_id,project_id"
                     ") VALUES (%s, %s) ",
-                    [(campaign_id, pid) for pid in projects]
+                    [(campaign_id, pid) for pid in associated_projects]
                 )
 
                 self.update_header_image(campaign_id, extension)
@@ -283,6 +282,115 @@ class CampaignRepo(BaseRepo):
                 return True
 
         return False
+
+
+class FundRazrCampaignRepo(BaseRepo):
+    def campaign_exists(self, id_):
+        """Test if a fundrazr campaign ID is known
+
+        Parameters
+        ----------
+        id_ : str
+            A fundrazr campaign ID
+
+        Returns
+        -------
+        bool
+            True if the campaign is known in our database
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT EXISTS (
+                               SELECT internal_campaign_id
+                               FROM campaign.transaction_source_to_campaign
+                               WHERE remote_campaign_id=%s)""",
+                        (id_, ))
+            res = cur.fetchone()[0]
+        return res
+
+    def item_exists(self, campaign_id, item_id):
+        """Test if a fundrazr perk exists for a campaign
+
+        Parameters
+        ----------
+        campaign_id : str
+            A fundrazr campaign ID
+        item_id : str
+            A fundrazr perk ID
+
+        Returns
+        -------
+        bool
+            True if the item is part of the queried campaign in our database
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT EXISTS (
+                               SELECT id
+                               FROM campaign.fundrazr_perk
+                               WHERE remote_campaign_id=%s
+                                   AND id=%s)""",
+                        (campaign_id, item_id))
+            res = cur.fetchone()[0]
+        return res
+
+    def insert_campaign(self, campaign_obj, assoc_projects=None):
+        """Add a fundrazr campaign and its items to the database
+
+        NOTE: we *do not* know associated projects other than default to
+        a microsetta association. This may need to be revised in the future
+
+        Parameters
+        ----------
+        campaign_obj : FundRazrCampaign
+            A campaign instance
+        assoc_projects : Iterable of int
+            Projects to associate with, defaults to Microsetta (118)
+        """
+        if assoc_projects is None:
+            # 118 -> The Microsetta Initiative
+            assoc_projects = [118, ]
+
+        cr = CampaignRepo(self._transaction)
+        known = cr.get_all_campaigns()
+        known = {c.title: c.campaign_id for c in known}
+
+        if not self.campaign_exists(campaign_obj.campaign_id):
+            if campaign_obj.title not in known:
+                new_ = cr.create_campaign(title=campaign_obj.title,
+                                          associated_projects=assoc_projects)
+                internal_campaign_id = new_.campaign_id
+            else:
+                internal_campaign_id = known[campaign_obj.title]
+
+            sql = ("""INSERT INTO campaign.transaction_source_to_campaign
+                      (remote_campaign_id, internal_campaign_id, currency)
+                      VALUES (%s, %s, %s)""",
+                   (campaign_obj.campaign_id, internal_campaign_id,
+                    campaign_obj.currency))
+
+            with self._transaction.cursor() as cur:
+                cur.execute(*sql)
+
+        for item in campaign_obj.items:
+            if not self.item_exists(campaign_obj.campaign_id, item.id):
+                self.add_perk_to_campaign(campaign_obj.campaign_id, item)
+
+    def add_perk_to_campaign(self, campaign_id, perk):
+        """Add a fundazr perk to a campaign
+
+        Parameters
+        ----------
+        campaign_id : str
+            A fundrazr campaign ID
+        perk : Item
+            An instance of a campaign Item
+        """
+        sql = ("""INSERT INTO campaign.fundrazr_perk
+                  (id, remote_campaign_id, title, price)
+                  VALUES (%s, %s, %s, %s)""",
+               (perk.id, campaign_id, perk.title, perk.price))
+
+        with self._transaction.cursor() as cur:
+            cur.execute(*sql)
 
 
 class UserTransaction(BaseRepo):
