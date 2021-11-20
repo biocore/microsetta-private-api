@@ -252,17 +252,17 @@ class FundrazrPaymentTests(TestCase):
         tz = Payment._TZ_US_PACIFIC
         self.assertEqual(obs.created, datetime.fromtimestamp(1586423564, tz))
         self.assertEqual(obs.shipping_address, None)
-        self.assertEqual(obs.claimed_items, None)
+        self.assertEqual(obs.claimed_items, [])
 
     def test_order_with_no_items(self):
         obs = Payment.from_api(**NO_ITEMS)
         self.assertEqual(obs.shipping_address.first_name, 'person')
-        self.assertEqual(obs.claimed_items, None)
+        self.assertEqual(obs.claimed_items, [])
 
     def test_anonymous_order(self):
         obs = Payment.from_api(**ANONYMOUS)
         self.assertEqual(obs.payer_first_name, 'anonymous')
-        self.assertEqual(obs.claimed_items, None)
+        self.assertEqual(obs.claimed_items, [])
 
     def test_order_with_multiple_items(self):
         obs = Payment.from_api(**MULTIPLE_ITEMS)

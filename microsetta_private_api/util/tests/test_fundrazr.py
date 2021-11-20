@@ -3,11 +3,21 @@ import datetime
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.util.fundrazr import get_fundrazr_transactions
-from microsetta_private_api.repo.campaign_repo import UserTransaction
+from microsetta_private_api.repo.campaign_repo import (UserTransaction,
+                                                       FundRazrCampaignRepo)
 from microsetta_private_api.repo.transaction import Transaction
 
 
 class FundRazrTests(TestCase):
+    def setUp(self):
+        # swap out the default project association for one that
+        # exists in the test database
+        self.old = FundRazrCampaignRepo._DEFAULT_PROJECT_ASSOCIATION
+        FundRazrCampaignRepo._DEFAULT_PROJECT_ASSOCIATION = (1, )
+
+    def tearDown(self):
+        FundRazrCampaignRepo._DEFAULT_PROJECT_ASSOCIATION = self.old
+
     @skipIf(SERVER_CONFIG['fundrazr_url'] in ('', 'fundrazr_url_placeholder'),
             "Fundrazr secrets not provided")
     def test_get_fundrazr_transactions(self):

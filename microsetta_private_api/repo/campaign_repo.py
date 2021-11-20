@@ -285,6 +285,9 @@ class CampaignRepo(BaseRepo):
 
 
 class FundRazrCampaignRepo(BaseRepo):
+    # 118 -> The Microsetta Initiative
+    _DEFAULT_PROJECT_ASSOCIATION = (118, )
+
     def campaign_exists(self, id_):
         """Test if a fundrazr campaign ID is known
 
@@ -346,8 +349,7 @@ class FundRazrCampaignRepo(BaseRepo):
             Projects to associate with, defaults to Microsetta (118)
         """
         if assoc_projects is None:
-            # 118 -> The Microsetta Initiative
-            assoc_projects = [118, ]
+            assoc_projects = self._DEFAULT_PROJECT_ASSOCIATION
 
         cr = CampaignRepo(self._transaction)
         known = cr.get_all_campaigns()

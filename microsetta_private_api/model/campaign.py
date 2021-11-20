@@ -154,7 +154,7 @@ class Payment(ModelBase):
                  payer_first_name,
                  payer_last_name,
                  account,
-                 subscribe_to_updates=None,
+                 subscribe_to_updates=False,
                  interested_user_id=None,
                  message=None,
                  phone_number=None,
@@ -176,10 +176,14 @@ class Payment(ModelBase):
         self.shipping_address = shipping_address
         self.account = account
         self.subscribe_to_updates = subscribe_to_updates
-        self.claimed_items = claimed_items
         self.phone_number = phone_number
         self.message = message
         self.interested_user_id = interested_user_id
+
+        if claimed_items is None:
+            self.claimed_items = []
+        else:
+            self.claimed_items = claimed_items
 
     def copy(self):
         # we have nested objects, and the default copy on model base doesn't
@@ -189,10 +193,7 @@ class Payment(ModelBase):
         else:
             address = self.shipping_address.copy()
 
-        if self.claimed_items is None:
-            claimed_items = None
-        else:
-            claimed_items = [i.copy() for i in self.claimed_items]
+        claimed_items = [i.copy() for i in self.claimed_items]
 
         cls = self.__class__(**self.__dict__)
         cls.shipping_address = address
