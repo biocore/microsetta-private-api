@@ -8,7 +8,8 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenFoodComponents, VioscreenFoodComponentsComponent,
     VioscreenEatingPatterns, VioscreenEatingPatternsComponent,
     VioscreenMPeds, VioscreenMPedsComponent,
-    VioscreenFoodConsumption, VioscreenFoodConsumptionComponent)
+    VioscreenFoodConsumption, VioscreenFoodConsumptionComponent,
+    VioscreenComposite)
 from werkzeug.exceptions import NotFound
 
 
@@ -1340,6 +1341,66 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
 class VioscreenRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
+
+    def insert_ffq(self, ffq):
+        """Represent an ffq instance in our database
+
+        Parameters
+        ----------
+        ffq : VioscreenComposite instance
+            A complete ffq
+        """
+        supp = VioscreenSupplementsRepo(self._transaction)
+        scores = VioscreenDietaryScoreRepo(self._transaction)
+        energy = VioscreenPercentEnergyRepo(self._transaction)
+        food = VioscreenFoodComponentsRepo(self._transaction)
+        patterns = VioscreenEatingPatternsRepo(self._transaction)
+        mpeds = VioscreenMPedsRepo(self._transaction)
+        cons = VioscreenFoodConsumptionRepo(self._transaction)
+
+        insert_percent_energy(vioscreen_percent_energy)
+        insert_dietary_score(vioscreen_dietary_score)
+        insert_supplements(vioscreen_supplements)
+        insert_food_components(vioscreen_food_components)
+        insert_eating_patterns(vioscreen_eating_patterns)
+        insert_mpeds(vioscreen_mpeds)
+        insert_food_consumption(vioscreen_food_consumption)
+
+    def get_ffq(self, session_id):
+        """Obtain a complete ffq
+
+        Parameters
+        ----------
+        session_id : str
+            The session ID to obtain a FFQ for
+
+        Returns
+        -------
+        VioscreenComposite or None
+            The composite object if the FFQ exists
+        """
+        sess = VioscreenSessionRep(self._transaction)
+        supp = VioscreenSupplementsRepo(self._transaction)
+        scores = VioscreenDietaryScoreRepo(self._transaction)
+        energy = VioscreenPercentEnergyRepo(self._transaction)
+        food = VioscreenFoodComponentsRepo(self._transaction)
+        patterns = VioscreenEatingPatternsRepo(self._transaction)
+        mpeds = VioscreenMPedsRepo(self._transaction)
+        cons = VioscreenFoodConsumptionRepo(self._transaction)
+
+        session = sess.get_session(session_id)
+        percent_energy = energy.get_percent_energy(session_id)
+        dietary_score = scores.get_dietary_score(session_id)
+        supplements = supp.get_supplements(session_id)
+        eating_patterns = patterns.get_eating_patterns(session_id)
+        mpeds = mpeds.get_mpeds(session_id)
+        food_consumption = cons.get_food_consumption(session_id)
+        food_components = food.get_food_components(session_id)
+
+        return VioscreenComposite(session, percent_energy, dietary_score,
+                                  supplements, food_components,
+                                  eating_patterns, mpeds,
+                                  food_consumption)
 
     def upsert_vioscreen_status(self, account_id, source_id,
                                 survey_id, status):

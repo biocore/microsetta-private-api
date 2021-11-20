@@ -16,7 +16,15 @@ import requests
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
-from microsetta_private_api.model.vioscreen import VioscreenSession
+from microsetta_private_api.model.vioscreen import (VioscreenSession,
+                                                    VioscreenPercentEnergy,
+                                                    VioscreenDietaryScore,
+                                                    VioscreenSupplements,
+                                                    VioscreenFoodComponents,
+                                                    VioscreenEatingPatterns,
+                                                    VioscreenMPeds,
+                                                    VioscreenFoodConsumption,
+                                                    VioscreenComposite)
 from microsetta_private_api.localization import ES_MX, EN_US
 
 
@@ -334,26 +342,33 @@ class VioscreenAdminAPI:
             return result
 
     def foodcomponents(self, id_):
-        return self._get_session_data(id_, 'foodcomponents').get('data')
+        data = self._get_session_data(id_, 'foodcomponents').get('data')
+        return VioscreenFoodComponents(**data)
 
     def percentenergy(self, id_):
-        return self._get_session_data(id_, 'percentenergy').get('calculations')
+        data = self._get_session_data(id_, 'percentenergy').get('calculations')
+        return VioscreenPercentEnergy.from_vioscreen(**data)
 
     def mpeds(self, id_):
-        return self._get_session_data(id_, 'mpeds').get('data')
+        data = self._get_session_data(id_, 'mpeds').get('data')
+        return VioscreenMPeds.from_vioscreen(**data)
 
     def eatingpatterns(self, id_):
-        return self._get_session_data(id_, 'eatingpatterns').get('data')
+        data = self._get_session_data(id_, 'eatingpatterns').get('data')
+        return VioscreenEatingPatterns.from_vioscreen(**data)
 
     def foodconsumption(self, id_):
-        return self._get_session_data(id_, 'foodconsumption')\
-            .get('foodConsumption')
+        data = self._get_session_data(id_, 'foodconsumption')
+        data = data.get('foodConsumption')
+        return VioscreenFoodConsumption.from_vioscreen(**data)
 
     def dietaryscore(self, id_):
-        return self._get_session_data(id_, 'dietaryscore').get('dietaryScore')
+        data = self._get_session_data(id_, 'dietaryscore').get('dietaryScore')
+        return VioscreenDietaryScore.from_vioscreen(**data)
 
     def supplements(self, id_):
-        return self._get_session_data(id_, 'supplements').get('data')
+        data = self._get_session_data(id_, 'supplements').get('data')
+        return VioscreenSupplements.from_vioscreen(**data)
 
     def users(self):
         return self.get('users')['users']
@@ -376,24 +391,44 @@ class VioscreenAdminAPI:
     def session_detail(self, session_id):
         return self.get('sessions/%s/detail' % session_id)
 
-    def get_ffq(self, session_id):
+    def get_ffq(self, session):
+        ### add method for consumping composit and inserting to db
+
         errors = []
-        name_func = [('foodcomponents', self.foodcomponents),
-                     ('percentenergy', self.percentenergy),
-                     ('mpeds', self.mpeds),
-                     ('eatingpatterns', self.eatingpatterns),
-                     ('foodconsumption', self.foodconsumption),
-                     ('dietaryscore', self.dietaryscore)]
-        results = {}
-        for name, f in name_func:
-            data = f(session_id)
+        name_func_key = [('foodcomponents',
+                          self.foodcomponents,
+                          'food_consumption'),
+                         ('percentenergy',
+                          self.percentenergy,
+                          'percent_energy'),
+                         ('mpeds',
+                          self.mpeds,
+                          'mpeds'),
+                         ('eatingpatterns',
+                          self.eatingpatterns,
+                          'eating_patterns'),
+                         ('foodconsumption',
+                          self.foodconsumption,
+                          'food_consumption'),
+                         ('dietaryscore',
+                          self.dietaryscore,
+                          'dietary_score'),
+                         ('supplements',
+                          self.supplements,
+                          'supplements')]
+        results = {'session': session}
+        for name, f, key in name_func_key:
+            data = f(session.sessionId)
             if data is None:
                 errors.append("FFQ appears incomplete or not taken")
                 break
 
-            results[name] = data
+            results[key] = data
 
-        return errors, results
+        if errors:
+            return errors, None
+        else:
+            return errors, VioscreenComposite(**results)
 
     def top_food_report(self, session_id):
         result = self.post(
@@ -492,5 +527,40 @@ def update_session_detail():
                            for s, m in failed_sessions])
         send_email("danielmcdonald@ucsd.edu", "pester_daniel",
                    {"what": "Vioscreen sessions failed",
+                    "content": payload},
+                   EN_US)
+
+
+@celery.task(ignore_result=True)
+def fetch_ffqs():
+    vio_api = VioscreenAdminAPI(perform_async=False)
+
+    # obtain our current unfinished sessions to check
+    with Transaction() as t:
+        r = VioscreenSessionRepo(t)
+        not_represented = r.get_unrepresented_ffqs()
+
+    failed_sessions = []
+    n_to_get = len(not_represented)
+    for idx, sess in enumerate(not_represented, 1):
+        updated = []
+
+        # Out of caution, we'll wrap the external resource interaction within
+        # a blanket try/except
+        try:
+            ffq = vio_api.get_ffq(sess)
+        except Exception as e:  # noqa
+            failed_sessions.append((sess.sessionId, str(e)))
+            continue
+
+        with Transcation() as t:
+            vs = VioscreenRepo(t)
+            vs.insert_ffq(ffq)
+
+    if len(failed_sessions) > 0:
+        payload = ''.join(['%s : %s\n' % (repr(s), m)
+                           for s, m in failed_sessions])
+        send_email("danielmcdonald@ucsd.edu", "pester_daniel",
+                   {"what": "Vioscreen ffq insert failed",
                     "content": payload},
                    EN_US)
