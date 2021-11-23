@@ -1,7 +1,4 @@
-import psycopg2
-
 from microsetta_private_api.repo.base_repo import BaseRepo
-from microsetta_private_api.model.interested_user import InterestedUser
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.util.melissa import verify_address
 
