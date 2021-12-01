@@ -1,5 +1,4 @@
 from flask import jsonify
-from microsetta_private_api.model.interested_user import InterestedUser
 from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.exceptions import RepoException
@@ -31,4 +30,3 @@ def create_interested_user(body):
         t.commit()
 
     return jsonify(user_id=interested_user_id), 200
-
