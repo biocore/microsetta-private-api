@@ -13,22 +13,23 @@ class InterestedUserRepo(BaseRepo):
         first_name = kwargs['first_name']
         last_name = kwargs['last_name']
         email = kwargs['email']
-        phone = kwargs['phone']
-        address_1 = kwargs['address_1']
-        city = kwargs['city']
-        state = kwargs['state']
-        postal_code = kwargs['postal']
-        country = kwargs['country']
 
         # optional parameters for an interested user:
         acquisition_source = kwargs.get('acquisition_source')
+        phone = kwargs.get('phone')
+        address_1 = kwargs.get('address_1')
         address_2 = kwargs.get('address_2')
+        city = kwargs.get('city')
+        state = kwargs.get('state')
+        postal_code = kwargs.get('postal')
+        country = kwargs.get('country')
         latitude = kwargs.get('latitude')
         longitude = kwargs.get('longitude')
         confirm_consent = kwargs.get('confirm_consent', False)
         ip_address = kwargs.get('ip_address')
         address_checked = kwargs.get('address_checked', False)
         address_valid = kwargs.get('address_valid', False)
+        over_18 = kwargs.get('over_18', False)
 
         with self._transaction.cursor() as cur:
             cur.execute(
@@ -36,18 +37,18 @@ class InterestedUserRepo(BaseRepo):
                 "campaign_id, acquisition_source, first_name, last_name, "
                 "email, phone, address_1, address_2, city, state, "
                 "postal_code, country, latitude, longitude, confirm_consent, "
-                "ip_address, address_checked, address_valid, "
+                "ip_address, address_checked, address_valid, over_18, "
                 "creation_timestamp) "
                 "VALUES ("
                 "%s, %s, %s, %s, "
                 "%s, %s, %s, %s, %s, %s, "
                 "%s, %s, %s, %s, %s, "
-                "%s, %s, %s, "
+                "%s, %s, %s, %s, "
                 "NOW()) RETURNING interested_user_id",
                 (campaign_id, acquisition_source, first_name, last_name,
                  email, phone, address_1, address_2, city, state,
                  postal_code, country, latitude, longitude, confirm_consent,
-                 ip_address, address_checked, address_valid)
+                 ip_address, address_checked, address_valid, over_18)
             )
             interested_user_id = cur.fetchone()[0]
 
@@ -63,19 +64,25 @@ class InterestedUserRepo(BaseRepo):
             cur.execute(
                 "SELECT address_1, address_2, city, state, postal_code, "
                 "country "
-                "FROM barcodes.interested_users WHERE interested_user_id = %s",
+                "FROM barcodes.interested_users WHERE interested_user_id = %s "
+                "AND address_checked = false AND address_1 != '' AND "
+                "postal_code != '' AND country != ''",
                 (interested_user_id,)
             )
             r = cur.fetchone()
             if r is None:
                 return None
             else:
-                melissa_response = verify_address(r['address_1'],
-                                                  r['address_2'],
-                                                  r['city'],
-                                                  r['state'],
-                                                  r['postal_code'],
-                                                  r['country'])
+                try:
+                    melissa_response = verify_address(r['address_1'],
+                                                      r['address_2'],
+                                                      r['city'],
+                                                      r['state'],
+                                                      r['postal_code'],
+                                                      r['country'])
+                except Exception as e:
+                    raise RepoException(e)
+
                 if melissa_response['valid'] is True:
                     # For valid addresses, we append the latitude/longitude
                     # and silently update the address to the Melissa-verified

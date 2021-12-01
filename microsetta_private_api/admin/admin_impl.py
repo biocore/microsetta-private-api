@@ -508,11 +508,8 @@ def search_activation(token_info, email_query=None, code_query=None):
         return jsonify([i.to_api() for i in infos]), 200
 
 
-def address_verification(token_info=None, address_1=None, address_2=None,
+def address_verification(address_1=None, address_2=None,
                          city=None, state=None, postal=None, country=None):
-    if token_info is not None:
-        validate_admin_access(token_info)
-
     if address_1 is None or len(address_1) < 1 or \
             postal is None or len(postal) < 1 or \
             country is None or len(country) < 1:

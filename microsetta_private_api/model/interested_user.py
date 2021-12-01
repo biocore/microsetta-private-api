@@ -7,7 +7,8 @@ class InterestedUser(ModelBase):
                  city, state, postal_code, country, latitude, longitude,
                  confirm_consent, ip_address, creation_timestamp,
                  update_timestamp, address_checked, address_valid,
-                 converted_to_account, converted_to_account_timestamp):
+                 converted_to_account, converted_to_account_timestamp,
+                 over_18):
         self.interested_user_id = interested_user_id
         self.campaign_id = campaign_id
         self.acquisition_source = acquisition_source
@@ -31,6 +32,7 @@ class InterestedUser(ModelBase):
         self.address_valid = address_valid
         self.converted_to_account = converted_to_account
         self.converted_to_account_timestamp = converted_to_account_timestamp
+        self.over_18 = over_18
 
     def to_api(self):
         return self.__dict__.copy()

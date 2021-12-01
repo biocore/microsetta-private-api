@@ -1393,6 +1393,8 @@ paths:
                   type: string
                 'ip_address':
                   type: string
+                'over_18':
+                  type: string
               required:
                 - campaign_id
                 - first_name
@@ -1581,8 +1583,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
 
