@@ -35,6 +35,8 @@ class FundrazrClientTests(TestCase):
         # second to last
         self.assertEqual(len(items), 1)
 
+    @skipIf(SERVER_CONFIG['fundrazr_url'] in ('', 'fundrazr_url_placeholder'),
+            "Fundrazr secrets not provided")
     def test_campaigns(self):
         obs = self.c.campaigns()
 
