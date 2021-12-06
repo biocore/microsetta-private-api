@@ -44,6 +44,12 @@ class FundrazrClientTests(TestCase):
         self.assertEqual(len(obs), 2)
         self.assertTrue(len(obs[0].items) > 0)
 
+    @skipIf(SERVER_CONFIG['fundrazr_url'] in ('', 'fundrazr_url_placeholder'),
+            "Fundrazr secrets not provided")
+    def test_campaign(self):
+        obs = self.c.campaign('14i22')
+        self.assertEqual(obs.title, 'American Gut V2')
+
 
 if __name__ == '__main__':
     main()

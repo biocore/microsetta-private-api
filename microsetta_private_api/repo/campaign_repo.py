@@ -1,6 +1,7 @@
 import psycopg2
 import json
 
+from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.campaign import Campaign, payment_from_db
 from microsetta_private_api.exceptions import RepoException
@@ -433,6 +434,15 @@ class UserTransaction(BaseRepo):
         if payment.contact_email is None:
             return None
 
+        # be responsive to new campaigns being created
+        cr = FundRazrCampaignRepo(self._transaction)
+        if not cr.campaign_exists(payment.campaign_id):
+            fc = FundrazrClient()
+            campaign = fc.campaign(payment.campaign_id)
+            # TODO: expose a means to modify associated projects,
+            # but for right now, just default to microsetta
+            cr.insert_campaign(campaign)
+
         # determine the internal campaign the payment is associated with
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT internal_campaign_id
@@ -440,9 +450,6 @@ class UserTransaction(BaseRepo):
                            WHERE remote_campaign_id = %s""",
                         (payment.campaign_id, ))
             res = cur.fetchone()
-            if res is None:
-                raise RepoException(f"Unknown external campaign "
-                                    f"'{payment.campaign_id}'")
             internal_campaign_id = res[0]
 
         shipping = payment.shipping_address

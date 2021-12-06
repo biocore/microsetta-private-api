@@ -56,6 +56,15 @@ class FundrazrClient:
                          f'/campaigns?organization={self.ORGANIZATION_ID}')
         return [FundRazrCampaign.from_api(**e) for e in data['entries']]
 
+    def campaign(self, campaign_id):
+        """GET /campaigns/{campaign_id}
+
+        Obtain general campaign detail
+        """
+        data = self._req('GET',
+                         f'/campaigns/{campaign_id}')
+        return FundRazrCampaign.from_api(**data)
+
     def payments(self, since=None):
         """GET /payments?organization={orgid}&since={unixtimestamp}&limit=50
 

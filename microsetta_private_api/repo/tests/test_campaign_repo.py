@@ -1,7 +1,9 @@
 import unittest
+from unittest import skipIf
 import datetime
 import uuid
 
+from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.campaign_repo import (UserTransaction,
                                                        CampaignRepo,
                                                        FundRazrCampaignRepo)
@@ -45,6 +47,26 @@ CLAIMED_ITEMS2 = [
 CLAIMED_ITEMS3 = [
     Item('unseen item', 2, 'unseen item', 100),
 ]
+
+
+TRANSACTION_NO_EXISTING_CAMPAIGN = FundRazrPayment(
+    '123abc',
+    datetime.datetime.now(),
+    '14i22',  # this ID exists in fundrazr staging only
+    100.,
+    80.,
+    'usd',
+    'foo',
+    'bar',
+    'paypal',
+    True,
+    None,
+    'coolcool',
+    '123456789',
+    SHIPPING1,
+    None,
+    payer_email='foo@bar.com',
+    contact_email='baz@bar.com')
 
 
 TRANSACTION_ONE_ITEM = FundRazrPayment(
@@ -380,6 +402,13 @@ class FundrazrTransactionTests(unittest.TestCase):
         self.obj4 = obj4
         self.obj5 = obj5
 
+        # ensure the default exists
+        self.old_default = FundRazrCampaignRepo._DEFAULT_PROJECT_ASSOCIATION
+        FundRazrCampaignRepo._DEFAULT_PROJECT_ASSOCIATION = (1, )
+
+    def tearDown(self):
+        FundRazrCampaignRepo._DEFAULT_PROJECT_ASSOCIATION = self.old_default
+
     def _load_some_transactions(self, r):
         # slight order tweak to ensure the "most recent"
         # is not loaded first or last
@@ -404,6 +433,15 @@ class FundrazrTransactionTests(unittest.TestCase):
                     (tid, ))
         res = cur.fetchall()
         self.assertEqual(res, [(expected_count, ), ])
+
+    @skipIf(SERVER_CONFIG['fundrazr_url'] in ('', 'fundrazr_url_placeholder'),
+            "Fundrazr secrets not provided")
+    def test_add_transaction_new_campaign(self):
+        with Transaction() as t:
+            r = UserTransaction(t)
+            r.add_transaction(TRANSACTION_NO_EXISTING_CAMPAIGN)
+            tid = TRANSACTION_NO_EXISTING_CAMPAIGN.transaction_id
+            self._verify_insertion_count_perks(t, tid, 0)
 
     def test_add_transaction(self):
         with Transaction() as t:
