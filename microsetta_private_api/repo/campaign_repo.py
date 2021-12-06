@@ -502,6 +502,16 @@ class UserTransaction(BaseRepo):
         placeholders = ', '.join(['%s'] * len(fields))
         fields_formatted = ', '.join(fields)
 
+        # historical perks may not be represented by the database
+        # as the list of perks (directly) associated with a campaign
+        # through the fundrazr API, is limited to the *current* state
+        # of available perks
+        if items is not None:
+            cr = FundRazrCampaignRepo(self._transaction)
+            for item in items:
+                if not cr.item_exists(payment.campaign_id, item.id):
+                    cr.add_perk_to_campaign(payment.campaign_id, item)
+
         with self._transaction.cursor() as cur:
             cur.execute(f"""INSERT INTO campaign.transaction
                             ({fields_formatted})

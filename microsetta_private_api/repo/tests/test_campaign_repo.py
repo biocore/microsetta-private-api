@@ -4,7 +4,6 @@ import uuid
 
 from microsetta_private_api.repo.campaign_repo import (UserTransaction,
                                                        CampaignRepo,
-                                                       UnknownItem,
                                                        FundRazrCampaignRepo)
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.model.campaign import (FundRazrPayment, Item,
@@ -44,7 +43,7 @@ CLAIMED_ITEMS2 = [
 
 
 CLAIMED_ITEMS3 = [
-    Item('baditem', 2, 'baditem'),
+    Item('unseen item', 2, 'unseen item', 100),
 ]
 
 
@@ -445,8 +444,9 @@ class FundrazrTransactionTests(unittest.TestCase):
     def test_add_transaction_unknown_item(self):
         with Transaction() as t:
             r = UserTransaction(t)
-            with self.assertRaises(UnknownItem):
-                r.add_transaction(TRANSACTION_UNKNOWN_ITEM)
+            r.add_transaction(TRANSACTION_UNKNOWN_ITEM)
+            tid = TRANSACTION_UNKNOWN_ITEM.transaction_id
+            self._verify_insertion_count_perks(t, tid, 1)
 
     def test_most_recent_transaction(self):
         with Transaction() as t:
