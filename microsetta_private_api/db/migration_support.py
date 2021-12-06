@@ -726,6 +726,23 @@ class MigrationSupport:
             print("ALL THE LOGS (-Uncomment me-)")
             # print(all_errors)
 
+    @staticmethod
+    def migrate_90(ignored):
+        """Load historical fundrazr transactions"""
+        from microsetta_private_api.client.fundrazr import FundrazrClient
+        from microsetta_private_api.repo.campaign_repo import UserTransaction
+        from microsetta_private_api.repo.transaction import Transaction
+
+        # NOTE: we cannot use the provided TRN object as it is the legacy
+        # transaction model, and we need to instantiate repos here
+        # which depend on the present Transaction object
+        fc = FundrazrClient()
+        with Transaction() as t:
+            ut = UserTransaction(t)
+            for payment in fc.payments():
+                ut.add_transaction(payment)
+            t.commit()
+
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
         "0050.sql": migrate_50.__func__,
@@ -736,6 +753,7 @@ class MigrationSupport:
         # as it depends on external state
         # "0082.sql": migrate_82.__func__
         # ...
+        "0090.sql": migrate_90.__func__,
     }
 
     @classmethod
