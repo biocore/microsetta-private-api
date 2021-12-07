@@ -2,37 +2,41 @@ from microsetta_private_api.model.model_base import ModelBase
 
 
 class InterestedUser(ModelBase):
-    def __init__(self, interested_user_id, campaign_id, acquisition_source,
-                 first_name, last_name, email, phone, address_1, address_2,
-                 city, state, postal_code, country, latitude, longitude,
-                 confirm_consent, ip_address, creation_timestamp,
-                 update_timestamp, address_checked, address_valid,
-                 converted_to_account, converted_to_account_timestamp,
-                 over_18):
-        self.interested_user_id = interested_user_id
-        self.campaign_id = campaign_id
-        self.acquisition_source = acquisition_source
-        self.first_name = first_name
-        self.last_name = last_name
-        self.email = email
-        self.phone = phone
-        self.address_1 = address_1
-        self.address_2 = address_2
-        self.city = city
-        self.state = state
-        self.postal_code = postal_code
-        self.country = country
-        self.latitude = latitude
-        self.longitude = longitude
-        self.confirm_consent = confirm_consent
-        self.ip_address = ip_address
-        self.creation_timestamp = creation_timestamp
-        self.update_timestamp = update_timestamp
-        self.address_checked = address_checked
-        self.address_valid = address_valid
-        self.converted_to_account = converted_to_account
-        self.converted_to_account_timestamp = converted_to_account_timestamp
-        self.over_18 = over_18
+    def __init__(self, **kwargs):
+        # interested_user_id won't exist yet on incoming new users
+        self.interested_user_id = kwargs.get('interested_user_id')
+
+        # absolute minimum fields required for an interested user
+        self.campaign_id = kwargs['campaign_id']
+        self.first_name = kwargs['first_name']
+        self.last_name = kwargs['last_name']
+        self.email = kwargs['email']
+
+        # remaining fields are either optional or auto-created later
+        self.acquisition_source = kwargs.get('acquisition_source')
+        self.phone = kwargs.get('phone')
+        self.address_1 = kwargs.get('address_1')
+        self.address_2 = kwargs.get('address_2')
+        self.city = kwargs.get('city')
+        self.state = kwargs.get('state')
+        self.postal_code = kwargs.get('postal_code')
+        self.country = kwargs.get('country')
+        self.latitude = kwargs.get('latitude')
+        self.longitude = kwargs.get('longitude')
+        self.confirm_consent = kwargs.get('confirm_consent', False)
+        self.ip_address = kwargs.get('ip_address')
+        self.creation_timestamp = kwargs.get('creation_timestamp')
+        self.update_timestamp = kwargs.get('update_timestamp')
+        self.address_checked = kwargs.get('address_checked', False)
+        self.address_valid = kwargs.get('address_valid', False)
+        self.converted_to_account = kwargs.get('converted_to_account', False)
+        self.converted_to_account_timestamp = \
+            kwargs.get('converted_to_account_timestamp')
+        self.over_18 = kwargs.get('over_18', False)
 
     def to_api(self):
         return self.__dict__.copy()
+
+    @classmethod
+    def from_dict(cls, values_dict):
+        return cls(**values_dict)

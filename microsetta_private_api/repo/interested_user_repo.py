@@ -7,30 +7,7 @@ class InterestedUserRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
 
-    def insert_interested_user(self, **kwargs):
-        # required parameters for an interested user:
-        campaign_id = kwargs['campaign_id']
-        first_name = kwargs['first_name']
-        last_name = kwargs['last_name']
-        email = kwargs['email']
-
-        # optional parameters for an interested user:
-        acquisition_source = kwargs.get('acquisition_source')
-        phone = kwargs.get('phone')
-        address_1 = kwargs.get('address_1')
-        address_2 = kwargs.get('address_2')
-        city = kwargs.get('city')
-        state = kwargs.get('state')
-        postal_code = kwargs.get('postal')
-        country = kwargs.get('country')
-        latitude = kwargs.get('latitude')
-        longitude = kwargs.get('longitude')
-        confirm_consent = kwargs.get('confirm_consent', False)
-        ip_address = kwargs.get('ip_address')
-        address_checked = kwargs.get('address_checked', False)
-        address_valid = kwargs.get('address_valid', False)
-        over_18 = kwargs.get('over_18', False)
-
+    def insert_interested_user(self, interested_user):
         with self._transaction.cursor() as cur:
             cur.execute(
                 "INSERT INTO barcodes.interested_users ("
@@ -45,10 +22,17 @@ class InterestedUserRepo(BaseRepo):
                 "%s, %s, %s, %s, %s, "
                 "%s, %s, %s, %s, "
                 "NOW()) RETURNING interested_user_id",
-                (campaign_id, acquisition_source, first_name, last_name,
-                 email, phone, address_1, address_2, city, state,
-                 postal_code, country, latitude, longitude, confirm_consent,
-                 ip_address, address_checked, address_valid, over_18)
+                (interested_user.campaign_id,
+                 interested_user.acquisition_source,
+                 interested_user.first_name, interested_user.last_name,
+                 interested_user.email, interested_user.phone,
+                 interested_user.address_1, interested_user.address_2,
+                 interested_user.city, interested_user.state,
+                 interested_user.postal_code, interested_user.country,
+                 interested_user.latitude, interested_user.longitude,
+                 interested_user.confirm_consent, interested_user.ip_address,
+                 interested_user.address_checked,
+                 interested_user.address_valid, interested_user.over_18)
             )
             interested_user_id = cur.fetchone()[0]
 
