@@ -736,7 +736,7 @@ class MigrationSupport:
         import sys
 
         # we must be in a test (or nonsensical) environment
-        if SERVER_CONFIG['fundrazr_url'] == 'fundrazr_url_placeholder':
+        if SERVER_CONFIG['fundrazr_url'] in ('fundrazr_url_placeholder', ""):
             print("Skipping FundRazr transaction load", file=sys.stderr)
             return
 
