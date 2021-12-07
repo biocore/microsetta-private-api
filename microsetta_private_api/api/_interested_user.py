@@ -16,11 +16,12 @@ def create_interested_user(body):
         interested_user_repo = InterestedUserRepo(t)
 
         try:
-            interested_user_id = interested_user_repo.insert_interested_user(interested_user)
-        except RepoException as e:
+            interested_user_id = \
+                interested_user_repo.insert_interested_user(interested_user)
+        except RepoException:
             return jsonify(
                 code=400,
-                message="Failed to create interested user"
+                message="Failed to create interested user."
             ), 400
 
         try:
