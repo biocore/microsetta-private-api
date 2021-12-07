@@ -1,6 +1,7 @@
 import unittest
 import uuid
 
+from microsetta_private_api.model.interested_user import InterestedUser
 from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
 from microsetta_private_api.repo.transaction import Transaction
 from psycopg2.errors import ForeignKeyViolation
@@ -50,41 +51,43 @@ class InterestedUserRepoTests(unittest.TestCase):
             t.commit()
 
     def test_create_interested_user_valid(self):
+        dummy_user = {
+            "campaign_id": self.test_campaign_id,
+            "first_name": "Test",
+            "last_name": "McTesterson",
+            "email": "test@testing.com"
+        }
+
+        interested_user = InterestedUser.from_dict(dummy_user)
+
         with Transaction() as t:
-            dummy_user = {
-                "campaign_id": self.test_campaign_id,
-                "first_name": "Test",
-                "last_name": "McTesterson",
-                "email": "test@testing.com"
-            }
             interested_user_repo = InterestedUserRepo(t)
-            obs = interested_user_repo.insert_interested_user(**dummy_user)
+            obs = interested_user_repo.insert_interested_user(interested_user)
             self.assertTrue(obs is not None)
             t.rollback()
 
     def test_create_interested_user_invalid(self):
         # test with a required field missing
-        with Transaction() as t:
-            dummy_user = {
-                "campaign_id": self.test_campaign_id,
-                "first_name": "Test",
-                "last_name": "McTesterson"
-            }
-            interested_user_repo = InterestedUserRepo(t)
-            with self.assertRaises(KeyError):
-                interested_user_repo.insert_interested_user(**dummy_user)
+        dummy_user = {
+            "campaign_id": self.test_campaign_id,
+            "first_name": "Test",
+            "last_name": "McTesterson"
+        }
+        with self.assertRaises(KeyError):
+            interested_user = InterestedUser.from_dict(dummy_user)
 
         # test with invalid campaign ID
+        dummy_user = {
+            "campaign_id": self.fake_campaign_id,
+            "first_name": "Test",
+            "last_name": "McTesterson",
+            "email": "test@testing.com"
+        }
+        interested_user = InterestedUser.from_dict(dummy_user)
         with Transaction() as t:
-            dummy_user = {
-                "campaign_id": self.fake_campaign_id,
-                "first_name": "Test",
-                "last_name": "McTesterson",
-                "email": "test@testing.com"
-            }
             interested_user_repo = InterestedUserRepo(t)
             with self.assertRaises(ForeignKeyViolation):
-                interested_user_repo.insert_interested_user(**dummy_user)
+                interested_user_repo.insert_interested_user(interested_user)
 
 
 if __name__ == '__main__':
