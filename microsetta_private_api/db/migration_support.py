@@ -732,6 +732,14 @@ class MigrationSupport:
         from microsetta_private_api.client.fundrazr import FundrazrClient
         from microsetta_private_api.repo.campaign_repo import UserTransaction
         from microsetta_private_api.repo.transaction import Transaction
+        from microsetta_private_api.config_manager import SERVER_CONFIG
+        import sys
+        print(SERVER_CONFIG['fundrazr_url'])
+
+        # we must be in a test (or nonsensical) environment
+        if SERVER_CONFIG['fundrazr_url'] == 'fundrazr_url_placeholder':
+            print("Skipping FundRazr transaction load", file=sys.stderr)
+            return
 
         # NOTE: we cannot use the provided TRN object as it is the legacy
         # transaction model, and we need to instantiate repos here
