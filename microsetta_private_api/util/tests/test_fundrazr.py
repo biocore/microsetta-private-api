@@ -32,15 +32,20 @@ class FundRazrTests(TestCase):
             obs = ut.get_transactions(before=now)
             self.assertEqual(obs, [])
 
-        get_fundrazr_transactions()
+            get_fundrazr_transactions(test_transaction=t)
 
-        with Transaction() as t:
-            ut = UserTransaction(t)
             obs = ut.get_transactions(before=now)
 
             # staging has like 7 transactions, but let's not assume that'll be
             # true in perpetuity
             self.assertTrue(len(obs) > 0)
+
+            # rerun to make sure we dont get more transactions, and that we
+            # properly handle the lack of new transactions
+            seen = len(obs)
+            get_fundrazr_transactions(test_transaction=t)
+            obs = ut.get_transactions(before=now)
+            self.assertEqual(len(obs), seen)
 
 
 if __name__ == '__main__':

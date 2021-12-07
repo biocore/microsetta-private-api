@@ -244,7 +244,7 @@ class Payment(ModelBase):
 
     @classmethod
     def from_db(cls, trn):
-        if trn.get('shipping_first_name') is not None:
+        if trn.get('shipping_postal') is not None:
             first = trn['shipping_first_name']
             last = trn['shipping_last_name']
             address = Address(trn['shipping_address1'],
@@ -269,9 +269,7 @@ class Payment(ModelBase):
         d[SUBSCRIBE_TO_UPDATES] = d['subscribed_to_updates']
         d[CAMPAIGN_ID] = d['remote_campaign_id']
         d[CLAIMED_ITEMS] = items
-        d[CONTACT_EMAIL] = d['email']
         d[PAYER_EMAIL] = d['payer_email']
-        d[PHONE_NUMBER] = d['phone']
         d[SHIPPING_ADDRESS] = shipping
         return cls(**d)
 

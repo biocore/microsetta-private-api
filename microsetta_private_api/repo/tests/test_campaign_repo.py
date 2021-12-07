@@ -376,23 +376,29 @@ class FundrazrTransactionTests(unittest.TestCase):
         obj3 = obj1.copy()
         obj4 = obj1.copy()
         obj5 = obj1.copy()
+        obj6 = TRANSACTION_ONE_ITEM.copy()
 
         obj1.transaction_id = 'obj1'
         obj2.transaction_id = 'obj2'
         obj3.transaction_id = 'obj3'
         obj4.transaction_id = 'obj4'
         obj5.transaction_id = 'obj5'
+        obj6.transaction_id = 'obj6'
 
         obj1.created = datetime.datetime(2021, 11, 1)
         obj2.created = datetime.datetime(2021, 10, 1)
         obj3.created = datetime.datetime(2021, 1, 1)
         obj4.created = datetime.datetime(2011, 11, 1)
         obj5.created = datetime.datetime(2015, 11, 1)
+        obj6.created = datetime.datetime(2016, 11, 1)
 
         obj1.contact_email = 'obj1obj2@foo.com'
         obj2.contact_email = 'obj1obj2@foo.com'
         obj3.contact_email = 'obj3@foo.com'
         obj4.contact_email = 'obj4@foo.com'
+        obj6.contact_email = 'obj6@foo.com'
+
+        # make obj5 look anonymous
         obj5.contact_email = None
         obj5.phone_number = None
 
@@ -401,6 +407,7 @@ class FundrazrTransactionTests(unittest.TestCase):
         self.obj3 = obj3
         self.obj4 = obj4
         self.obj5 = obj5
+        self.obj6 = obj6
 
         # ensure the default exists
         self.old_default = FundRazrCampaignRepo._DEFAULT_PROJECT_ASSOCIATION
@@ -417,6 +424,7 @@ class FundrazrTransactionTests(unittest.TestCase):
         r.add_transaction(self.obj3)
         r.add_transaction(self.obj4)
         r.add_transaction(self.obj5)
+        r.add_transaction(self.obj6)
 
     def _verify_insertion_count_perks(self, t, tid, expected_count):
         cur = t.cursor()
@@ -499,12 +507,16 @@ class FundrazrTransactionTests(unittest.TestCase):
             r = UserTransaction(t)
             self._load_some_transactions(r)
 
+            # obj5 is not included as it is anonymous, and the anonymous
+            # flag is not set
             obs = r.get_transactions(before=datetime.datetime(2021, 12, 1))
-            exp = [self.obj1, self.obj2, self.obj3, self.obj4]
+            exp = [self.obj1, self.obj2, self.obj3, self.obj6, self.obj4]
             self._payment_equal(obs, exp)
 
+            # obj5 is not included as it is anonymous, and the anonymous
+            # flag is not set
             obs = r.get_transactions(before=datetime.datetime(2021, 10, 1))
-            exp = [self.obj3, self.obj4]
+            exp = [self.obj3, self.obj6, self.obj4]
             self._payment_equal(obs, exp)
 
             obs = r.get_transactions(before=datetime.datetime(2021, 10, 15),
@@ -518,7 +530,8 @@ class FundrazrTransactionTests(unittest.TestCase):
             self._load_some_transactions(r)
 
             obs = r.get_transactions(include_anonymous=True)
-            exp = [self.obj1, self.obj2, self.obj3, self.obj5, self.obj4]
+            exp = [self.obj1, self.obj2, self.obj3, self.obj6, self.obj5,
+                   self.obj4]
             self._payment_equal(obs, exp)
 
     def _payment_equal(self, obs, exp):
@@ -533,7 +546,7 @@ class FundrazrTransactionTests(unittest.TestCase):
             r = UserTransaction(t)
             self._load_some_transactions(r)
 
-            for obj in [self.obj1, self.obj2, self.obj3, self.obj4]:
+            for obj in [self.obj1, self.obj2, self.obj3, self.obj4, self.obj6]:
                 obs = r.get_transactions(transaction_id=obj.transaction_id)
                 self._payment_equal(obs, [obj, ])
 

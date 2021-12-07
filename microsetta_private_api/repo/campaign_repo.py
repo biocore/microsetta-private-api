@@ -528,6 +528,7 @@ class UserTransaction(BaseRepo):
             if items is not None:
                 inserts = [(payment.transaction_id, i.id, i.quantity)
                            for i in items]
+
                 try:
                     cur.executemany("""INSERT INTO
                                            campaign.fundrazr_transaction_perk
@@ -660,15 +661,24 @@ class UserTransaction(BaseRepo):
     def _payments_from_transactions(self, ids):
         """Construct a payment instance from a transaction ID"""
         # first obtain general transaction information
-        transaction_sql = ("""SELECT *
-                              FROM campaign.transaction
-                              LEFT JOIN campaign.interested_users
+        transaction_sql = ("""SELECT iu.first_name as shipping_first_name,
+                                     iu.last_name as shipping_last_name,
+                                     iu.email as contact_email,
+                                     iu.phone as phone_number,
+                                     iu.address_1 as shipping_address1,
+                                     iu.address_2 as shipping_address2,
+                                     iu.city as shipping_city,
+                                     iu.state as shipping_state,
+                                     iu.postal_code as shipping_postal,
+                                     iu.country as shipping_country,
+                                     t.*
+                              FROM campaign.transaction t
+                              LEFT JOIN campaign.interested_users iu
                                   USING (interested_user_id)
                               WHERE id IN %s
                               ORDER BY created DESC
                               """,
                            (tuple(ids), ))
-
         with self._transaction.dict_cursor() as cur:
             cur.execute(*transaction_sql)
             trn_data = cur.fetchall()
@@ -681,7 +691,13 @@ class UserTransaction(BaseRepo):
 
         # ...and if so, pull out the respective perk information
         if len(fundrazr_ids) > 0:
-            items_sql = ("""SELECT ftp.transaction_id, ARRAY_AGG((title, quantity))
+            # we have to jump through hoops with array_agg in order to get a
+            # mixed data type return back :/
+            items_sql = ("""SELECT ftp.transaction_id,
+                                   ARRAY_AGG(array[fp.title,
+                                                   ftp.quantity::VARCHAR,
+                                                   fp.id])
+                                       as items
                             FROM campaign.fundrazr_transaction_perk ftp
                             JOIN campaign.fundrazr_perk fp
                                ON fp.id=ftp.perk_id
@@ -690,10 +706,16 @@ class UserTransaction(BaseRepo):
                          (tuple(fundrazr_ids), ))
             with self._transaction.dict_cursor() as cur:
                 cur.execute(*items_sql)
-                fundrazr_data = cur.fetchall()
 
-            lookup = {row['id']: row for row in fundrazr_data}
+                fundrazr_data = {}
+                for row in cur.fetchall():
+                    tid, perks = row
+                    fundrazr_data[tid] = [{'title': p[0],
+                                           'quantity': int(p[1]),
+                                           'id': p[2]}
+                                          for p in perks]
+
             for entry in trn_data:
-                entry['fundrazr_perks'] = lookup.get(entry['id'])
+                entry['fundrazr_perks'] = fundrazr_data.get(entry['id'])
 
         return [payment_from_db(data) for data in trn_data]
