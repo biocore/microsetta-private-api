@@ -1407,8 +1407,8 @@ paths:
             application/json:
               schema:
                 type: object
-        '404':
-          $ref: '#/components/responses/404NotFound'
+        '400':
+          description: Creation or validation issue with the interested user
 
   '/preparations/{sample_barcode}':
     get:

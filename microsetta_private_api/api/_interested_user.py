@@ -9,8 +9,11 @@ def create_interested_user(body):
     body['postal_code'] = body['postal']
     try:
         interested_user = InterestedUser.from_dict(body)
-    except ValueError as e:
-        raise Exception(e)
+    except ValueError:
+        return jsonify(
+            code=400,
+            message="Failed to instantiate interested user."
+        ), 400
 
     with Transaction() as t:
         interested_user_repo = InterestedUserRepo(t)
@@ -24,10 +27,22 @@ def create_interested_user(body):
                 message="Failed to create interested user."
             ), 400
 
+        t.commit()
+
+    # opening a new transaction for address verification so we don't lose the
+    # interested user record if something unexpected happens during address
+    # verification
+    with Transaction() as t:
+        interested_user_repo = InterestedUserRepo(t)
         try:
+            # at this point, we don't particularly care if it's valid
+            # we just care that it doesn't fail to execute
             interested_user_repo.verify_address(interested_user_id)
-        except RepoException as e:
-            raise Exception(e)
+        except RepoException:
+            return jsonify(
+                code=400,
+                message="Failed to verify address."
+            ), 400
 
         t.commit()
 

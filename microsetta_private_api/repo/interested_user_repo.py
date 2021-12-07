@@ -86,6 +86,7 @@ class InterestedUserRepo(BaseRepo):
                          melissa_response['longitude'],
                          interested_user_id,)
                     )
+                    return True
                 else:
                     cur.execute(
                         "UPDATE barcodes.interested_users "
@@ -93,5 +94,4 @@ class InterestedUserRepo(BaseRepo):
                         "WHERE interested_user_id = %s",
                         (interested_user_id,)
                     )
-
-                return True
+                    return False
