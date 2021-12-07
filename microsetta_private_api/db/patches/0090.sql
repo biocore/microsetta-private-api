@@ -90,45 +90,14 @@ CREATE TABLE campaign.fundrazr_perk_to_daklapack_article (
     CONSTRAINT fk_perk_to_dak FOREIGN KEY (dak_article_code) REFERENCES barcodes.daklapack_article (dak_article_code)
 );
 
--- This is not a complete list, but what is available right now. A 
--- minimal set are added, relative to the Microsetta campaign
--- (31l0S2) so we can exercise links against daklapack
-
--- >>> res = requests.get('https://api.fundrazr.com/v1/campaigns?organization=873K6', headers=d)
--- >>> res
--- <Response [200]>
--- >>> x = res.json()
--- >>> [e['title'] for e in x['entries']]
--- ['The Microsetta Initiative - Mexico', 'The Microsetta Initiative', 'Australian Gut', 'Global FoodOmics Project', 'British Gut', 'American Gut']
--- >>> for e in x['entries']:
--- ...   campaign_id = e['id']
--- ...   for item in e.get('items', []):
--- ...     perk_id = item['id']
--- ...     price = item['price']
--- ...     title = item['title']
--- ...     print(f"('{perk_id}', '{campaign_id}', '{title}', {price}),")
--- ... 
--- ('0Kzr2', 'b1q1v4', 'ASD-Cohort Parent', 75),
--- ('cKzqc', 'b1q1v4', 'Find Out Who’s In Your Gut', 99),
--- ('5Kzm3', 'b1q1v4', 'You Plus The World', 130),
--- ('5Kzna', 'b1q1v4', 'See What You’re Sharing', 195),
--- ('2Kzoa', 'b1q1v4', 'Microbes For Three', 290),
--- ('0I5n8', '31l0S2', 'Find Out Who’s In Your Gut', 99),
--- ('7I5c0', '31l0S2', 'You Plus The World', 130),
--- ('6I5fd', '31l0S2', 'See What You’re Sharing', 195),
--- ('eI5ie', '31l0S2', 'Microbes For Three', 290),
--- ('aG1g6', '11OxG1', 'Find Out Who’s In Your Gut - Microbes for One', 99),
--- ('0G1h3', '11OxG1', 'Microbes For Two: See What You’re Sharing', 180),
--- ('3G1ic', '11OxG1', 'Microbes For Three', 260),
--- ('7G1j6', '11OxG1', 'Microbes For Four', 320),
+-- This is not a complete list, but what is available right now.
+-- Perks will get added on demand per the add_transaction API
 INSERT INTO campaign.fundrazr_perk
     (id, remote_campaign_id, title, price)
     VALUES ('0I5n8', '31l0S2', 'Find Out Who’s In Your Gut', 99.0),
            ('7I5c0', '31l0S2', 'You Plus The World', 130.0),
            ('6I5fd', '31l0S2', 'See What You’re Sharing', 195.0);
 
-INSERT INTO campaign.fundrazr_perk_to_daklapack_article
-    (perk_id, dak_article_code)
-    VALUES ('0I5n8', 350100),  
-           ('7I5c0', 350100), -- you plus the world is single tube + extra to help others
-           ('6I5fd', 350103);
+-- we are *not* staging perk <-> article code relations yet, as
+-- these have not yet been determined, and will be handled in 
+-- a later patch
