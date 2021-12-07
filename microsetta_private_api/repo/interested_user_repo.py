@@ -39,8 +39,6 @@ class InterestedUserRepo(BaseRepo):
             if interested_user_id is None:
                 raise RepoException("Error inserting interested user")
             else:
-                self.verify_address(interested_user_id)
-
                 return interested_user_id
 
     def verify_address(self, interested_user_id):
