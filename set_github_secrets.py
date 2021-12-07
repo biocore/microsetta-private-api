@@ -1,9 +1,10 @@
 import os
 from json import loads, dumps
 
-
+print("in set gh secrets")
 # test if one of our secrets exists
 if os.environ.get('MFR_URL') is not None:
+    print("actually setting gh secrets")
     config = loads(open('microsetta_private_api/server_config.json').read())
 
     config['myfoodrepo_url'] = os.environ['MFR_URL']
