@@ -151,7 +151,7 @@ class InterestedUserRepoTests(unittest.TestCase):
             self.assertTrue(obs is True)
 
     @patch("microsetta_private_api.repo.interested_user_repo.verify_address")
-    def test_verify_address_not_verified_is_invalid(self,test_verify_address):
+    def test_verify_address_not_verified_is_invalid(self, test_verify_address):
         test_verify_address.return_value = {
             "address_1": ADDRESS_1,
             "address_2": ADDRESS_2,
