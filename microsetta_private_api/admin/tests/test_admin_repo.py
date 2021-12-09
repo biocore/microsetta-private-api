@@ -1,6 +1,5 @@
 from unittest import TestCase
-from datetime import date
-import datetime
+from datetime import date, datetime, timedelta, timezone
 import dateutil.parser
 import psycopg2
 import psycopg2.extras
@@ -304,9 +303,8 @@ class AdminRepoTests(AdminTests):
     #  these fixed ones
     def test_retrieve_diagnostics_by_barcode_w_extra_info(self):
         def make_tz_datetime(y, m, d):
-            return datetime.datetime(y, m, d, 0, 0,
-                                     tzinfo=psycopg2.tz.FixedOffsetTimezone(
-                                         offset=-420, name=None))
+            return datetime(y, m, d, 0, 0,
+                            tzinfo=timezone(timedelta(minutes=-420)))
 
         # Non-AGP barcode so no acct, source, or sample;
         # also no preexisting scans in test db
