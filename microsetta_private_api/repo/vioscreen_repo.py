@@ -104,18 +104,24 @@ class VioscreenSessionRepo(BaseRepo):
 
     def get_unfinished_sessions(self):
         """Obtain the sessions for that appear incomplete
+
         An incomplete session is one that meets any of the following criteria:
+
         1) the ag.vioscreen_registry.vio_id does not exist in the
            ag.vioscreen_sessions table
         2) the ag.vioscreen_sessions.endDate is null
         3) the ag.vioscreen_sessions.status is not "Finished"
+
         In the event a user has multiple sessions:
+
         * if ALL sessions are incomplete, all sessions will be returned
         * if ANY session is complete, no sessions will be returned
+
         The operating model for AG/TMI has been a single session per vioscreen
         username (i.e., vio_id). As such, *if* a vioscreen vio_id has multiple
         sessions associated with it, we do not actually know right now how to
         appropriately handle a scenario where *multiple* sessions are finished.
+
         Returns
         -------
         list of VioscreenSession
@@ -1379,7 +1385,7 @@ class VioscreenRepo(BaseRepo):
         VioscreenComposite or None
             The composite object if the FFQ exists
         """
-        sess = VioscreenSessionRep(self._transaction)
+        sess = VioscreenSessionRepo(self._transaction)
         supp = VioscreenSupplementsRepo(self._transaction)
         scores = VioscreenDietaryScoreRepo(self._transaction)
         energy = VioscreenPercentEnergyRepo(self._transaction)

@@ -15,7 +15,8 @@ import requests
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.transaction import Transaction
-from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
+from microsetta_private_api.repo.vioscreen_repo import (VioscreenSessionRepo,
+                                                        VioscreenRepo)
 from microsetta_private_api.model.vioscreen import (VioscreenSession,
                                                     VioscreenPercentEnergy,
                                                     VioscreenDietaryScore,
@@ -27,6 +28,8 @@ from microsetta_private_api.model.vioscreen import (VioscreenSession,
                                                     VioscreenComposite)
 from microsetta_private_api.localization import ES_MX, EN_US
 
+# TODO: much of the logic in this module should be migrated and placed
+# under microsetta_private_api.client.vioscreen
 
 # the country code determines which FFQ is taken. Vioscreen determines
 # the FFQ based on the registration code. The US survey is only the
@@ -333,9 +336,9 @@ class VioscreenAdminAPI:
                 url,
                 **kwargs)
 
-    def _get_session_data(self, id_, name):
+    def _get_session_data(self, id_, name, **kwargs):
         url = 'sessions/%s/%s' % (id_, name)
-        result = self.get(url)
+        result = self.get(url, **kwargs)
         if 'error' in result:
             return {}
         else:
@@ -362,8 +365,12 @@ class VioscreenAdminAPI:
         return VioscreenFoodConsumption.from_vioscreen(data)
 
     def dietaryscore(self, id_):
-        data = self._get_session_data(id_, 'dietaryscore')
-        return VioscreenDietaryScore.from_vioscreen(data)
+        scores = []
+        for scoretype in ['Hei2010', 'Hei2015']:
+            params = {'dietaryScoreType': scoretype, 'foodDatabaseId': '13'}
+            req = self._get_session_data(id_, 'dietaryscore', params=params)
+            scores.append(VioscreenDietaryScore.from_vioscreen(req))
+        return scores
 
     def supplements(self, id_):
         data = self._get_session_data(id_, 'supplements')
@@ -411,14 +418,15 @@ class VioscreenAdminAPI:
                           'food_consumption'),
                          ('dietaryscore',
                           self.dietaryscore,
-                          'dietary_score'),
+                          'dietary_scores'),
                          ('supplements',
                           self.supplements,
                           'supplements')]
         results = {'session': self.session_detail(session_id)}
         for name, f, key in name_func_key:
-            data = f(session_id)
-            if data is None:
+            try:
+                data = f(session_id)
+            except:  # noqa
                 errors.append("FFQ appears incomplete or not taken")
                 break
 
@@ -470,6 +478,7 @@ def update_session_detail():
 
     failed_sessions = []
     n_to_get = len(unfinished_sessions)
+    n_updated = 0
     for idx, sess in enumerate(unfinished_sessions, 1):
         updated = []
 
@@ -505,6 +514,7 @@ def update_session_detail():
                 for update in updated:
                     r.upsert_session(update)
                 t.commit()
+                n_updated += len(updated)
 
         current_task.update_state(
             state="PROGRESS",
@@ -516,7 +526,7 @@ def update_session_detail():
         state="SUCCESS",
         meta={"completion": n_to_get,
               "status": "SUCCESS",
-              "message": f"{n_to_get} sessions updated"})
+              "message": f"{n_updated} sessions updated"})
 
     if len(failed_sessions) > 0:
         # ...and let's make Daniel feel bad about not having a better means to
@@ -536,24 +546,23 @@ def fetch_ffqs():
     # obtain our current unfinished sessions to check
     with Transaction() as t:
         r = VioscreenSessionRepo(t)
-        not_represented = r.get_unrepresented_ffqs()
+        not_represented = r.get_unfinished_sessions()
 
     failed_sessions = []
-    n_to_get = len(not_represented)
     for idx, sess in enumerate(not_represented, 1):
-        updated = []
 
         # Out of caution, we'll wrap the external resource interaction within
         # a blanket try/except
         try:
-            ffq = vio_api.get_ffq(sess)
+            ffq = vio_api.get_ffq(sess.sessionId)
         except Exception as e:  # noqa
             failed_sessions.append((sess.sessionId, str(e)))
             continue
 
-        with Transcation() as t:
+        with Transaction() as t:
             vs = VioscreenRepo(t)
             vs.insert_ffq(ffq)
+            t.commit()
 
     if len(failed_sessions) > 0:
         payload = ''.join(['%s : %s\n' % (repr(s), m)
