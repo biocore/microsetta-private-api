@@ -47,13 +47,13 @@ class VioscreenSession(ModelBase):
         self.modified = modified
 
     def update_from_vioscreen(self, update):
-        self.startDate = update['startDate']
-        self.endDate = update['endDate']
-        self.modified = update['modified']
-        self.status = update['status']
-        self.protocolId = update['protocolId']
-        self.cultureCode = update['cultureCode']
-        self.created = update['created']
+        self.startDate = update.startDate
+        self.endDate = update.endDate
+        self.modified = update.modified
+        self.status = update.status
+        self.protocolId = update.protocolId
+        self.cultureCode = update.cultureCode
+        self.created = update.created
         return self
 
     @property

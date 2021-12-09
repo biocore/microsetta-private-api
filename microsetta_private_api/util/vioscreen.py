@@ -342,33 +342,32 @@ class VioscreenAdminAPI:
             return result
 
     def foodcomponents(self, id_):
-        data = self._get_session_data(id_, 'foodcomponents').get('data')
-        return VioscreenFoodComponents(**data)
+        data = self._get_session_data(id_, 'foodcomponents')
+        return VioscreenFoodComponents.from_vioscreen(data)
 
     def percentenergy(self, id_):
-        data = self._get_session_data(id_, 'percentenergy').get('calculations')
-        return VioscreenPercentEnergy.from_vioscreen(**data)
+        data = self._get_session_data(id_, 'percentenergy')
+        return VioscreenPercentEnergy.from_vioscreen(data)
 
     def mpeds(self, id_):
-        data = self._get_session_data(id_, 'mpeds').get('data')
-        return VioscreenMPeds.from_vioscreen(**data)
+        data = self._get_session_data(id_, 'mpeds')
+        return VioscreenMPeds.from_vioscreen(data)
 
     def eatingpatterns(self, id_):
-        data = self._get_session_data(id_, 'eatingpatterns').get('data')
-        return VioscreenEatingPatterns.from_vioscreen(**data)
+        data = self._get_session_data(id_, 'eatingpatterns')
+        return VioscreenEatingPatterns.from_vioscreen(data)
 
     def foodconsumption(self, id_):
         data = self._get_session_data(id_, 'foodconsumption')
-        data = data.get('foodConsumption')
-        return VioscreenFoodConsumption.from_vioscreen(**data)
+        return VioscreenFoodConsumption.from_vioscreen(data)
 
     def dietaryscore(self, id_):
-        data = self._get_session_data(id_, 'dietaryscore').get('dietaryScore')
-        return VioscreenDietaryScore.from_vioscreen(**data)
+        data = self._get_session_data(id_, 'dietaryscore')
+        return VioscreenDietaryScore.from_vioscreen(data)
 
     def supplements(self, id_):
-        data = self._get_session_data(id_, 'supplements').get('data')
-        return VioscreenSupplements.from_vioscreen(**data)
+        data = self._get_session_data(id_, 'supplements')
+        return VioscreenSupplements.from_vioscreen(data)
 
     def users(self):
         return self.get('users')['users']
@@ -389,15 +388,15 @@ class VioscreenAdminAPI:
             return detail['sessions']
 
     def session_detail(self, session_id):
-        return self.get('sessions/%s/detail' % session_id)
+        sess_data = self.get('sessions/%s/detail' % session_id)
+        user_data = self.user(sess_data['username'])
+        return VioscreenSession.from_vioscreen(sess_data, user_data)
 
-    def get_ffq(self, session):
-        ### add method for consumping composit and inserting to db
-
+    def get_ffq(self, session_id):
         errors = []
         name_func_key = [('foodcomponents',
                           self.foodcomponents,
-                          'food_consumption'),
+                          'food_components'),
                          ('percentenergy',
                           self.percentenergy,
                           'percent_energy'),
@@ -416,9 +415,9 @@ class VioscreenAdminAPI:
                          ('supplements',
                           self.supplements,
                           'supplements')]
-        results = {'session': session}
+        results = {'session': self.session_detail(session_id)}
         for name, f, key in name_func_key:
-            data = f(session.sessionId)
+            data = f(session_id)
             if data is None:
                 errors.append("FFQ appears incomplete or not taken")
                 break
@@ -458,7 +457,6 @@ def update_session_detail():
     # HOWEVER, we could implement a watch and monitor child tasks, but
     # not sure if that would be a particular benefit here
     vio_api = VioscreenAdminAPI(perform_async=False)
-
     current_task.update_state(
         state="PROGRESS",
         meta={"completion": 0,
@@ -492,7 +490,7 @@ def update_session_detail():
             else:
                 # update our model inplace
                 update = vio_api.session_detail(sess.sessionId)
-                if update['status'] != sess.status:
+                if update.status != sess.status:
                     updated.append(sess.update_from_vioscreen(update))
         except Exception as e:  # noqa
             failed_sessions.append((sess.sessionId, str(e)))
