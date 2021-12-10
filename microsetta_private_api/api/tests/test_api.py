@@ -2019,7 +2019,7 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_diet = VioscreenDietaryScoreRepo(t)
-            vio_diet.insert_dietary_score(vioscreen_dietary_score)
+            vio_diet.insert_dietary_scores([vioscreen_dietary_score, ])
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/dietaryscore'
