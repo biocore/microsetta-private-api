@@ -100,24 +100,24 @@ class TestDietaryScoreRepo(unittest.TestCase):
             s = VioscreenSessionRepo(t)
             s.upsert_session(VIOSCREEN_SESSION)
             r = VioscreenDietaryScoreRepo(t)
-            obs = r.insert_dietary_score(VIOSCREEN_DIETARY_SCORE)
+            obs = r.insert_dietary_scores([VIOSCREEN_DIETARY_SCORE, ])
             self.assertEqual(obs, 13)
 
-    def test_get_dietary_score_exists(self):
+    def test_get_dietary_scores_exists(self):
         with Transaction() as t:
             s = VioscreenSessionRepo(t)
             s.upsert_session(VIOSCREEN_SESSION)
             r = VioscreenDietaryScoreRepo(t)
-            r.insert_dietary_score(VIOSCREEN_DIETARY_SCORE)
-            obs = r.get_dietary_score(VIOSCREEN_DIETARY_SCORE.sessionId)
-            self.assertEqual(obs, VIOSCREEN_DIETARY_SCORE)
+            r.insert_dietary_scores([VIOSCREEN_DIETARY_SCORE, ])
+            obs = r.get_dietary_scores(VIOSCREEN_DIETARY_SCORE.sessionId)
+            self.assertEqual(obs, [VIOSCREEN_DIETARY_SCORE, ])
 
-    def test_get_dietary_score_does_not_exist(self):
+    def test_get_dietary_scores_does_not_exist(self):
         with Transaction() as t:
             s = VioscreenSessionRepo(t)
             s.upsert_session(VIOSCREEN_SESSION)
             r = VioscreenDietaryScoreRepo(t)
-            obs = r.get_dietary_score('does not exist')
+            obs = r.get_dietary_scores('does not exist')
             self.assertEqual(obs, None)
 
 
