@@ -550,7 +550,6 @@ def fetch_ffqs():
 
     failed_sessions = []
     for idx, sess in enumerate(not_represented, 1):
-
         # Out of caution, we'll wrap the external resource interaction within
         # a blanket try/except
         try:

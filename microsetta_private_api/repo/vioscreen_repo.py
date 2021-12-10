@@ -408,8 +408,8 @@ class VioscreenDietaryScoreRepo(BaseRepo):
                 vdsc = VioscreenDietaryScoreComponent(code=code,
                                                       name=codeInfo[0],
                                                       score=score,
-                                                      lowerLimit=codeInfo[1],  # noqa
-                                                      upperLimit=codeInfo[2])  # noqa
+                                                      lowerLimit=codeInfo[1],
+                                                      upperLimit=codeInfo[2])
                 components.append(vdsc)
 
             scores.append(VioscreenDietaryScore(sessionId=sessionId,
