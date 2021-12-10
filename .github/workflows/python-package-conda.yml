@@ -50,6 +50,11 @@ jobs:
           FUNDRAZR_TEST_APIKEY: "${{ secrets.FUNDRAZR_TEST_APIKEY }}"
           FUNDRAZR_TEST_URL: "${{ secrets.FUNDRAZR_TEST_URL }}"
           FUNDRAZR_TEST_ORG: "${{ secrets.FUNDRAZR_TEST_ORG }}"
+          VS_ENDPOINT: "${{ secrets.VS_ENDPOINT }}"
+          VS_USER: "${{ secrets.VS_USER }}"
+          VS_PASSWORD: "${{ secrets.VS_PASSWORD }}"
+          VS_CRYPTOKEY: "${{ secrets.VS_CRYPTOKEY }}"
+          VS_REGCODE: "${{ secrets.VS_REGCODE }}"
         run: |
           # pull out the port so we can modify the configuration file easily
           pgport=${{ job.services.postgres.ports[5432] }}
