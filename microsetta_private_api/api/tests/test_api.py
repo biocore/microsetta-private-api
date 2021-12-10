@@ -2032,7 +2032,7 @@ class VioscreenTests(ApiTests):
 
         self.assertEqual(get_response.status_code, 200)
 
-        response_obj = json.loads(get_response.data)
+        response_obj = json.loads(get_response.data)[0]
         self.assertEqual(response_obj['sessionId'],
                          vioscreen_dietary_score.sessionId)
         self.assertEqual(response_obj['type'],

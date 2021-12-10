@@ -932,7 +932,7 @@ paths:
             application/json:
               schema:
                 type:
-                  object
+                  array
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':
