@@ -27,10 +27,12 @@ class VioscreenSessionRepo(BaseRepo):
 
     def upsert_session(self, session):
         """Insert or update a vioscreen session
+
         Parameters
         ----------
         session : VioscreenSession
             The session object to insert or update
+
         Returns
         -------
         bool
@@ -55,10 +57,12 @@ class VioscreenSessionRepo(BaseRepo):
 
     def get_session(self, sessionId):
         """Obtain a session model for a sessionId
+
         Parameters
         ----------
         sessionId : str
             The session ID to retrieve
+
         Returns
         -------
         VioscreenSession or None
@@ -78,10 +82,12 @@ class VioscreenSessionRepo(BaseRepo):
 
     def get_sessions_by_username(self, username):
         """Obtain all sessions associated with a username
+
         Parameters
         ----------
         username : str
             The username to search for
+
         Returns
         -------
         list of VioscreenSession, or None
@@ -158,10 +164,12 @@ class VioscreenSessionRepo(BaseRepo):
 
     def get_ffq_status_by_sample(self, sample_uuid):
         """Obtain the FFQ status for a given sample
+
         Parameters
         ----------
         sample_uuid : UUID4
             The UUID to check the status of
+
         Returns
         -------
         (bool, bool, str or None)
@@ -210,10 +218,12 @@ class VioscreenPercentEnergyRepo(BaseRepo):
 
     def insert_percent_energy(self, vioscreen_percent_energy):
         """Add percent energy data for a session
+
         Parameters
         ----------
         vioscreen_percent_energy : VioscreenPercentEnergy
             The observed percent energy data
+
         Returns
         -------
             Returns number of rows modified
@@ -236,10 +246,12 @@ class VioscreenPercentEnergyRepo(BaseRepo):
 
     def get_percent_energy(self, sessionId):
         """Obtain the percent energy data for a sessionId
+
         Parameters
         ----------
         sessionId : str
             The session ID to retrieve data for
+
         Returns
         -------
         VioscreenPercentEnergy or None
@@ -270,15 +282,18 @@ class VioscreenPercentEnergyRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular energy component by its code
+
         Parameters
         ----------
         code : str
             The code to obtain detail for
+
         Returns
         -------
         tuple
             The description, short description and units for a
             particular code
+
         Raises
         ------
         NotFound
@@ -404,17 +419,20 @@ class VioscreenDietaryScoreRepo(BaseRepo):
 
     def _get_code_info(self, scoresType, code):
         """Obtain the detail about a particular score type by its code
+
         Parameters
         ----------
         scoresType : str
             The score type (e.g. Hei2010) to obtain detail for
         code : str
             The code to obtain detail for
+
         Returns
         -------
         tuple
             The name, lower and upper limit for a particular code
             and score type
+
         Raises
         ------
         NotFound
@@ -437,10 +455,12 @@ class VioscreenSupplementsRepo(BaseRepo):
 
     def insert_supplements(self, vioscreen_supplements):
         """Add in supplement results for a session
+
         Parameters
         ----------
         vioscreen_supplements : VioscreenSupplements
             An instance of a supplements model
+
         Returns
         -------
         int
@@ -464,10 +484,12 @@ class VioscreenSupplementsRepo(BaseRepo):
 
     def get_supplements(self, sessionId):
         """Obtain the supplement detail for a particular session
+
         Parameters
         ----------
         sessionId : str
             The session ID to query
+
         Returns
         -------
         VioscreenSupplements or None
@@ -680,10 +702,12 @@ class VioscreenFoodComponentsRepo(BaseRepo):
 
     def insert_food_components(self, vioscreen_food_components):
         """Add in food components results for a session
+
         Parameters
         ----------
         vioscreen_food_components : VioscreenFoodComponents
             An instance of a food components model
+
         Returns
         -------
         int
@@ -707,10 +731,12 @@ class VioscreenFoodComponentsRepo(BaseRepo):
 
     def get_food_components(self, sessionId):
         """Obtain the food components detail for a particular session
+
         Parameters
         ----------
         sessionId : str
             The session ID to query
+
         Returns
         -------
         VioscreenFoodComponents or None
@@ -740,15 +766,18 @@ class VioscreenFoodComponentsRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular food component by its code
+
         Parameters
         ----------
         code : str
             The code to obtain detail for
+
         Returns
         -------
         tuple
             The description, units and valueType for a
             particular code
+
         Raises
         ------
         NotFound
@@ -785,10 +814,12 @@ class VioscreenEatingPatternsRepo(BaseRepo):
 
     def insert_eating_patterns(self, vioscreen_eating_patterns):
         """Add in eating patterns results for a session
+
         Parameters
         ----------
         vioscreen_eating_patterns : VioscreenEatingPatterns
             An instance of a eating patterns model
+
         Returns
         -------
         int
@@ -812,10 +843,12 @@ class VioscreenEatingPatternsRepo(BaseRepo):
 
     def get_eating_patterns(self, sessionId):
         """Obtain the eating patterns detail for a particular session
+
         Parameters
         ----------
         sessionId : str
             The session ID to query
+
         Returns
         -------
         VioscreenEatingPatterns or None
@@ -845,15 +878,18 @@ class VioscreenEatingPatternsRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular eating pattern by its code
+
         Parameters
         ----------
         code : str
             The code to obtain detail for
+
         Returns
         -------
         tuple
             The description, units and valueType for a
             particular code
+
         Raises
         ------
         NotFound
@@ -953,10 +989,12 @@ class VioscreenMPedsRepo(BaseRepo):
 
     def insert_mpeds(self, vioscreen_mpeds):
         """Add in mpeds results for a session
+
         Parameters
         ----------
         vioscreen_mpeds : VioscreenMPeds
             An instance of a mpeds model
+
         Returns
         -------
         int
@@ -980,10 +1018,12 @@ class VioscreenMPedsRepo(BaseRepo):
 
     def get_mpeds(self, sessionId):
         """Obtain the mpeds detail for a particular session
+
         Parameters
         ----------
         sessionId : str
             The session ID to query
+
         Returns
         -------
         VioscreenMPeds or None
@@ -1013,15 +1053,18 @@ class VioscreenMPedsRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular mped by its code
+
         Parameters
         ----------
         code : str
             The code to obtain detail for
+
         Returns
         -------
         tuple
             The description, units and valueType for a
             particular code
+
         Raises
         ------
         NotFound
@@ -1225,10 +1268,12 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
 
     def insert_food_consumption(self, vioscreen_food_consumption):
         """Add in food consumption results for a session
+
         Parameters
         ----------
         vioscreen_food_consumption : VioscreenFoodConsumption
             An instance of a food consumption model
+
         Returns
         -------
         int
@@ -1281,10 +1326,12 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
 
     def get_food_consumption(self, sessionId):
         """Obtain the food consumption detail for a particular session
+
         Parameters
         ----------
         sessionId : str
             The session ID to query
+
         Returns
         -------
         VioscreenFoodConsumption or None
@@ -1307,7 +1354,7 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
             rows = cur.fetchall()
             if len(rows) > 0:
                 components = []
-                for (foodCode, description, foodGroup, amount, frequency,
+                for (foodCode, description, foodGroup, amount_outer, frequency,
                      consumptionAdjustment, servingSizeText,
                      servingFrequencyText, created) in rows:
                     cur.execute("""SELECT code, amount
@@ -1332,7 +1379,7 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
                         foodCode=foodCode,
                         description=description,
                         foodGroup=foodGroup,
-                        amount=amount,
+                        amount=amount_outer,
                         frequency=frequency,
                         consumptionAdjustment=consumptionAdjustment,
                         servingSizeText=servingSizeText,
@@ -1348,15 +1395,18 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
 
     def _get_code_info(self, code):
         """Obtain the detail about a particular food consumption component by its code
+
         Parameters
         ----------
         code : str
             The code to obtain detail for
+
         Returns
         -------
         tuple
             The description, units and valueType for a
             particular code
+
         Raises
         ------
         NotFound
@@ -1381,6 +1431,7 @@ class VioscreenRepo(BaseRepo):
         ffq : VioscreenComposite instance
             A complete ffq
         """
+        sess = VioscreenSessionRepo(self._transaction)
         supp = VioscreenSupplementsRepo(self._transaction)
         scores = VioscreenDietaryScoreRepo(self._transaction)
         energy = VioscreenPercentEnergyRepo(self._transaction)
@@ -1389,6 +1440,7 @@ class VioscreenRepo(BaseRepo):
         mpeds = VioscreenMPedsRepo(self._transaction)
         cons = VioscreenFoodConsumptionRepo(self._transaction)
 
+        sess.upsert_session(ffq.session)
         energy.insert_percent_energy(ffq.percent_energy)
         scores.insert_dietary_scores(ffq.dietary_scores)
         supp.insert_supplements(ffq.supplements)
@@ -1421,7 +1473,7 @@ class VioscreenRepo(BaseRepo):
 
         session = sess.get_session(session_id)
         percent_energy = energy.get_percent_energy(session_id)
-        dietary_scores = scores.get_dietary_score(session_id)
+        dietary_scores = scores.get_dietary_scores(session_id)
         supplements = supp.get_supplements(session_id)
         eating_patterns = patterns.get_eating_patterns(session_id)
         mpeds = mpeds.get_mpeds(session_id)

@@ -124,6 +124,9 @@ class VioscreenPercentEnergyComponent(ModelBase):
             'amount': self.amount
         }
 
+    def __lt__(self, other):
+        return self.code < other.code
+
 
 class VioscreenPercentEnergy(ModelBase):
     def __init__(self, sessionId, energy_components):
@@ -148,6 +151,15 @@ class VioscreenPercentEnergy(ModelBase):
                              for component in self.energy_components]
         }
 
+    def __eq__(self, other):
+        if self.sessionId != other.sessionId:
+            return False
+
+        a = sorted(self.energy_components)
+        b = sorted(other.energy_components)
+
+        return a == b
+
 
 class VioscreenDietaryScoreComponent(ModelBase):
     def __init__(self, code, name, score, lowerLimit, upperLimit):
@@ -170,6 +182,9 @@ class VioscreenDietaryScoreComponent(ModelBase):
             'lowerLimit': self.lowerLimit,
             'upperLimit': self.upperLimit
         }
+
+    def __lt__(self, other):
+        return self.code < other.code
 
 
 class VioscreenDietaryScore(ModelBase):
@@ -198,6 +213,18 @@ class VioscreenDietaryScore(ModelBase):
                        for component in self.scores]
         }
 
+    def __eq__(self, other):
+        if self.sessionId != other.sessionId:
+            return False
+
+        if self.scoresType != other.scoresType:
+            return False
+
+        a = sorted(self.scores)
+        b = sorted(other.scores)
+
+        return a == b
+
 
 class VioscreenSupplementsComponent(ModelBase):
     def __init__(self, supplement, frequency, amount, average):
@@ -218,6 +245,9 @@ class VioscreenSupplementsComponent(ModelBase):
             'amount': self.amount,
             'average': self.average
         }
+
+    def __lt__(self, other):
+        return self.supplement < other.supplement
 
 
 class VioscreenSupplements(ModelBase):
@@ -243,6 +273,15 @@ class VioscreenSupplements(ModelBase):
                      for component in self.supplements_components]
         }
 
+    def __eq__(self, other):
+        if self.sessionId != other.sessionId:
+            return False
+
+        a = sorted(self.supplements_components)
+        b = sorted(other.supplements_components)
+
+        return a == b
+
 
 class VioscreenFoodComponentsComponent(ModelBase):
     def __init__(self, code, description, units, amount, valueType):
@@ -266,6 +305,9 @@ class VioscreenFoodComponentsComponent(ModelBase):
             'amount': self.amount,
             'valueType': self.valueType
         }
+
+    def __lt__(self, other):
+        return self.code < other.code
 
 
 class VioscreenFoodComponents(ModelBase):
@@ -291,6 +333,15 @@ class VioscreenFoodComponents(ModelBase):
                      for component in self.components]
         }
 
+    def __eq__(self, other):
+        if self.sessionId != other.sessionId:
+            return False
+
+        a = sorted(self.components)
+        b = sorted(other.components)
+
+        return a == b
+
 
 class VioscreenEatingPatternsComponent(ModelBase):
     def __init__(self, code, description, units, amount, valueType):
@@ -314,6 +365,9 @@ class VioscreenEatingPatternsComponent(ModelBase):
             'amount': self.amount,
             'valueType': self.valueType
         }
+
+    def __lt__(self, other):
+        return self.code < other.code
 
 
 class VioscreenEatingPatterns(ModelBase):
@@ -339,6 +393,15 @@ class VioscreenEatingPatterns(ModelBase):
                      for component in self.components]
         }
 
+    def __eq__(self, other):
+        if self.sessionId != other.sessionId:
+            return False
+
+        a = sorted(self.components)
+        b = sorted(other.components)
+
+        return a == b
+
 
 class VioscreenMPedsComponent(ModelBase):
     def __init__(self, code, description, units, amount, valueType):
@@ -363,6 +426,9 @@ class VioscreenMPedsComponent(ModelBase):
             'valueType': self.valueType
         }
 
+    def __lt__(self, other):
+        return self.code < other.code
+
 
 class VioscreenMPeds(ModelBase):
     def __init__(self, sessionId, components):
@@ -386,6 +452,15 @@ class VioscreenMPeds(ModelBase):
             'data': [component.to_api()
                      for component in self.components]
         }
+
+    def __eq__(self, other):
+        if self.sessionId != other.sessionId:
+            return False
+
+        a = sorted(self.components)
+        b = sorted(other.components)
+
+        return a == b
 
 
 class VioscreenFoodConsumptionComponent(ModelBase):
@@ -433,6 +508,21 @@ class VioscreenFoodConsumptionComponent(ModelBase):
                      for component in self.data]
         }
 
+    def __lt__(self, other):
+        return self.foodCode < other.foodCode
+
+    def __eq__(self, other):
+        for k in self.__dict__:
+            if k == 'data':
+                continue
+            if self.__dict__[k] != other.__dict__[k]:
+                return False
+
+        self_data = sorted(self.data)
+        other_data = sorted(other.data)
+
+        return self_data == other_data
+
 
 class VioscreenFoodConsumption(ModelBase):
     def __init__(self, sessionId, components):
@@ -456,6 +546,15 @@ class VioscreenFoodConsumption(ModelBase):
             'foodConsumption': [component.to_api()
                                 for component in self.components]
         }
+
+    def __eq__(self, other):
+        if self.sessionId != other.sessionId:
+            return False
+
+        a = sorted(self.components)
+        b = sorted(other.components)
+
+        return a == b
 
 
 class VioscreenComposite(ModelBase):
