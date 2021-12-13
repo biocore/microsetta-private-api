@@ -178,6 +178,7 @@ class VioscreenAdminAPIAgent(Task):
                 "password": self.password}
 
         url = urljoin(self.baseurl, 'auth/login')
+
         req = self.session.post(url, data=data)
         if req.status_code != 200:
             # TODO: Check if this can send back 3XX redirects or anything
