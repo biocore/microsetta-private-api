@@ -26,7 +26,7 @@ class InterestedUserRepoTests(unittest.TestCase):
 
             # create a test campaign
             cur.execute(
-                "INSERT INTO barcodes.campaigns (title) "
+                "INSERT INTO campaign.campaigns (title) "
                 "VALUES (%s) "
                 "RETURNING campaign_id",
                 (self.test_campaign_title_1, )
@@ -35,7 +35,7 @@ class InterestedUserRepoTests(unittest.TestCase):
 
             # create necessary campaign/project relationship
             cur.execute(
-                "INSERT INTO barcodes.campaigns_projects "
+                "INSERT INTO campaign.campaigns_projects "
                 "(campaign_id, project_id) "
                 "VALUES (%s, 1)",
                 (self.test_campaign_id, )
@@ -53,12 +53,12 @@ class InterestedUserRepoTests(unittest.TestCase):
         with Transaction() as t:
             cur = t.cursor()
             cur.execute(
-                "DELETE FROM barcodes.campaigns_projects "
+                "DELETE FROM campaign.campaigns_projects "
                 "WHERE campaign_id = %s",
                 (self.test_campaign_id,)
             )
             cur.execute(
-                "DELETE FROM barcodes.campaigns "
+                "DELETE FROM campaign.campaigns "
                 "WHERE campaign_id = %s",
                 (self.test_campaign_id,)
             )

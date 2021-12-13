@@ -10,7 +10,7 @@ class InterestedUserRepo(BaseRepo):
     def insert_interested_user(self, interested_user):
         with self._transaction.cursor() as cur:
             cur.execute(
-                "INSERT INTO barcodes.interested_users ("
+                "INSERT INTO campaign.interested_users ("
                 "campaign_id, acquisition_source, first_name, last_name, "
                 "email, phone, address_1, address_2, city, state, "
                 "postal_code, country, latitude, longitude, confirm_consent, "
@@ -46,7 +46,7 @@ class InterestedUserRepo(BaseRepo):
             cur.execute(
                 "SELECT address_1, address_2, city, state, postal_code, "
                 "country "
-                "FROM barcodes.interested_users WHERE interested_user_id = %s "
+                "FROM campaign.interested_users WHERE interested_user_id = %s "
                 "AND address_checked = false AND address_1 != '' AND "
                 "postal_code != '' AND country != ''",
                 (interested_user_id,)
@@ -71,7 +71,7 @@ class InterestedUserRepo(BaseRepo):
                     # version. However, we leave country alone to maintain
                     # consistency with internal country names
                     cur.execute(
-                        "UPDATE barcodes.interested_users "
+                        "UPDATE campaign.interested_users "
                         "SET address_checked = true, address_valid = true, "
                         "address_1 = %s, address_2 = %s, city = %s, "
                         "state = %s, postal_code = %s, "
@@ -89,7 +89,7 @@ class InterestedUserRepo(BaseRepo):
                     return True
                 else:
                     cur.execute(
-                        "UPDATE barcodes.interested_users "
+                        "UPDATE campaign.interested_users "
                         "SET address_checked = true, address_valid = false "
                         "WHERE interested_user_id = %s",
                         (interested_user_id,)
