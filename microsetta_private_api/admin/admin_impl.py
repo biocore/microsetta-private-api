@@ -417,17 +417,26 @@ def query_barcode_stats(body, token_info, strip_sampleid):
     elif 'project_id' in body:
         project_id = body["project_id"]
         barcodes = get_barcodes_for(project_id)
-        if len(barcodes) > 1000:
-            barcodes = barcodes[0:1000]
 
-    # TODO: Change behavior so that if more than 1000 barcodes are passed
-    #  then a warning is passed to the user, but 1000 summaries are still
-    #  generated and returned as well (A partial answer is returned).
+    unprocessed_barcodes = None
 
     if len(barcodes) > 1000:
-        return jsonify({"message": "Too many barcodes requested"}), 400
+        unprocessed_barcodes = barcodes[1000:]
+        barcodes = barcodes[0:1000]
 
-    return jsonify(per_sample(None, barcodes, strip_sampleid)), 200
+    results = {'samples': per_sample(None, barcodes, strip_sampleid)}
+
+    if unprocessed_barcodes:
+        results['partial_result'] = True
+
+        # if returning a partial result, include the remainder of the barcodes
+        # so that they can be used in a subsequent query like a paging
+        # mechanism.
+        results['unprocessed_barcodes'] = unprocessed_barcodes
+    else:
+        results['partial_result'] = False
+
+    return jsonify(results), 200
 
 
 def create_daklapack_orders(body, token_info):

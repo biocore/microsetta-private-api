@@ -1954,13 +1954,11 @@ paths:
                     type: string
       responses:
         '200':
-          description: Return list of dictionaries of sample status for requested accounts
+          description: Return an object containing a list of dictionaries of sample status for requested accounts
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
+                type: object
         '404':
           description: Requested barcodes not found
 
