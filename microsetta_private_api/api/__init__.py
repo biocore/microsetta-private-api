@@ -36,6 +36,10 @@ from ._campaign import (
     get_campaign_information
 )
 
+from ._interested_user import (
+    create_interested_user
+)
+
 __all__ = [
     'find_accounts_for_login',
     'register_account',
@@ -76,5 +80,6 @@ __all__ = [
     'read_sample_vioscreen_eating_patterns',
     'read_sample_vioscreen_mpeds',
     'read_sample_vioscreen_food_consumption',
-    'get_campaign_information'
+    'get_campaign_information',
+    'create_interested_user'
 ]

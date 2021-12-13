@@ -24,7 +24,7 @@ Install additional requirements using pip:
 
 Then install the microsetta-private-api in editable mode:
 
-`pip install -e .`
+`pip install -e . --no-deps`
  
 ## Test Usage
 
