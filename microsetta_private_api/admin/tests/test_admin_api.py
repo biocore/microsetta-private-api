@@ -1048,10 +1048,11 @@ class AdminApiTests(TestCase):
             data=input_json,
             headers=MOCK_HEADERS
         )
-        # an empty string project should be unkown
+        # an empty string project should be unknown
         self.assertEqual(200, response.status_code)
-
         response_obj = json.loads(response.data)
+        self.assertIn('samples', response_obj)
+        response_obj = response_obj['samples']
         self.assertEqual(len(response_obj), 3)
 
         self.assertEqual([v['sampleid'] for v in response_obj],
@@ -1076,6 +1077,8 @@ class AdminApiTests(TestCase):
         self.assertEqual(200, response.status_code)
 
         response_obj = json.loads(response.data)
+        self.assertIn('samples', response_obj)
+        response_obj = response_obj['samples']
         self.assertEqual(len(response_obj), 3)
 
         self.assertEqual([v['sampleid'] for v in response_obj],

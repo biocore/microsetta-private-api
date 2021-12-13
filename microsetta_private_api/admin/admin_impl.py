@@ -27,6 +27,7 @@ from microsetta_private_api.admin.daklapack_communication import \
     post_daklapack_orders, send_daklapack_hold_email
 from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
+from microsetta_private_api.admin.sample_summary import get_barcodes_for
 from microsetta_private_api.util.melissa import verify_address
 from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
@@ -412,11 +413,31 @@ def query_project_barcode_stats(body, token_info, strip_sampleid):
 
 def query_barcode_stats(body, token_info, strip_sampleid):
     validate_admin_access(token_info)
-    barcodes = body["sample_barcodes"]
+    if 'sample_barcodes' in body:
+        barcodes = body["sample_barcodes"]
+    elif 'project_id' in body:
+        project_id = body["project_id"]
+        barcodes = get_barcodes_for(project_id)
+
+    unprocessed_barcodes = None
+
     if len(barcodes) > 1000:
-        return jsonify({"message": "Too many barcodes requested"}), 400
-    summary = per_sample(None, barcodes, strip_sampleid)
-    return jsonify(summary), 200
+        unprocessed_barcodes = barcodes[1000:]
+        barcodes = barcodes[0:1000]
+
+    results = {'samples': per_sample(None, barcodes, strip_sampleid)}
+
+    if unprocessed_barcodes:
+        results['partial_result'] = True
+
+        # if returning a partial result, include the remainder of the barcodes
+        # so that they can be used in a subsequent query like a paging
+        # mechanism.
+        results['unprocessed_barcodes'] = unprocessed_barcodes
+    else:
+        results['partial_result'] = False
+
+    return jsonify(results), 200
 
 
 def create_daklapack_orders(body, token_info):
