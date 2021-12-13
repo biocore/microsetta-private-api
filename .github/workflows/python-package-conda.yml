@@ -6,10 +6,6 @@ on:
   pull_request:
     
 jobs:
-  strategy:
-    matrix:
-      python-version: ['3.7', '3.9']
-
   # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
   postgres-runner-job:
     runs-on: ubuntu-latest
@@ -34,6 +30,11 @@ jobs:
         ports:
           # based on https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml#L44-L72
           - 5432/tcp
+
+  build:
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.9']
 
     steps:
       # Downloads a copy of the code in your repository before running CI tests
