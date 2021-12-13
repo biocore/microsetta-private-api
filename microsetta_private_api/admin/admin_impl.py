@@ -26,7 +26,8 @@ from microsetta_private_api.util.redirects import build_login_redirect
 from microsetta_private_api.admin.daklapack_communication import \
     post_daklapack_orders, send_daklapack_hold_email
 from microsetta_private_api import localization
-from microsetta_private_api.admin.sample_summary import per_sample, get_barcodes_for
+from microsetta_private_api.admin.sample_summary import per_sample
+from microsetta_private_api.admin.sample_summary import get_barcodes_for
 from microsetta_private_api.util.melissa import verify_address
 from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
