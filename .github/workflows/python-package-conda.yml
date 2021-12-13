@@ -6,6 +6,10 @@ on:
   pull_request:
     
 jobs:
+  strategy:
+    matrix:
+      python-version: ['3.7', '3.9']
+
   # derived from https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml
   postgres-runner-job:
     runs-on: ubuntu-latest
@@ -40,7 +44,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:        
           auto-update-conda: true
-          python-version: 3.7 
+          python-version: ${{ matrix.python-version }}
       
       - name: Install
         shell: bash -l {0}
@@ -61,7 +65,7 @@ jobs:
           # PGPASSWORD is read by pg_restore, which is called by the build_db process. 
           export PGPASSWORD=postgres
           
-          conda create --yes -n test-microsetta-private python=3.7
+          conda create --yes -n test-microsetta-private python=${{ matrix.python_version }}
           conda activate test-microsetta-private
           conda install --yes --file ci/conda_requirements.txt
           pip install -r ci/pip_requirements.txt
