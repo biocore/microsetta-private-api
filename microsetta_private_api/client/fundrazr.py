@@ -84,7 +84,9 @@ class FundrazrClient:
             if since is not None:
                 url += f'&since={since}'
             if id_ is not None:
-                url += f'&since_id={id_}'
+                url += f'&after={id_}'
+            if since is None and id_ is None:
+                url += '&since=1293868800'  # before the project started
             url += '&limit=50'
             return url
 
@@ -93,10 +95,10 @@ class FundrazrClient:
         while current:
             for obj in current['entries']:
                 yield FundRazrPayment.from_api(**obj)
-            last_id = current.get('after_id')
+            last_id = current.get('after_cursor')
 
             if last_id is None:
                 # nothing more to get
                 current = []
             else:
-                current = self._req('GET', url_maker(None, last_id))
+                current = self._req('GET', url_maker(since, last_id))
