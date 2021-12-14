@@ -298,17 +298,7 @@ class Payment(ModelBase):
 
     def created_as_unixts(self):
         """Express .created as a unix timestamp"""
-        try:
-            return int(time.mktime(self.created.timetuple()))
-        except:  # noqa
-            import datetime
-            import pytz
-            x = pytz.timezone('US/Pacific')
-            y = datetime.datetime(2017,5,26,15,30,16)
-            z = x.localize(y)
-            print(time.mktime(z.timetuple()))
-
-            raise ValueError(str(self.created))
+        return int(time.mktime(self.created.timetuple()))
 
 
 class FundRazrPayment(Payment):
