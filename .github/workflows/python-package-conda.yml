@@ -31,11 +31,6 @@ jobs:
           # based on https://github.com/actions/example-services/blob/master/.github/workflows/postgres-service.yml#L44-L72
           - 5432/tcp
 
-  build:
-    strategy:
-      matrix:
-        python-version: ['3.7', '3.9']
-
     steps:
     # Downloads a copy of the code in your repository before running CI tests
     - name: Check out repository code
@@ -45,7 +40,7 @@ jobs:
       uses: conda-incubator/setup-miniconda@v2
       with:        
         auto-update-conda: true
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.9
     
     - name: Install
       shell: bash -l {0}
@@ -66,7 +61,7 @@ jobs:
         # PGPASSWORD is read by pg_restore, which is called by the build_db process. 
         export PGPASSWORD=postgres
         
-        conda create --yes -n test-microsetta-private python=${{ matrix.python_version }}
+        conda create --yes -n test-microsetta-private python=3.9
         conda activate test-microsetta-private
         conda install --yes --file ci/conda_requirements.txt
         pip install -r ci/pip_requirements.txt
