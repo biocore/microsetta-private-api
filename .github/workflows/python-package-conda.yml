@@ -64,8 +64,8 @@ jobs:
         conda create --yes -n test-microsetta-private python=3.9
         conda activate test-microsetta-private
         conda install --yes --file ci/conda_requirements.txt
-        pip install -r ci/pip_requirements.txt
-        pip install -e . --no-deps 
+        #pip install -r ci/pip_requirements.txt
+        #pip install -e . --no-deps 
         
         # establish database state
         #python microsetta_private_api/LEGACY/build_db.py
