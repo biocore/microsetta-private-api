@@ -301,7 +301,11 @@ class Payment(ModelBase):
         try:
             return int(time.mktime(self.created.timetuple()))
         except:  # noqa
-            raise ValueError(self.created.timetuple())
+            import datetime
+            print(str(self.created))
+            print(repr(self.created))
+            print(time.mktime(datetime.datetime(1990, 10, 10).timetuple()))
+            raise ValueError(str(self.created))
 
 
 class FundRazrPayment(Payment):
