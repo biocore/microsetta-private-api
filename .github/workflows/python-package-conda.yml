@@ -70,6 +70,8 @@ jobs:
         
         # establish database state
         #python microsetta_private_api/LEGACY/build_db.py
+        cat tzbroken.py
+
         python tzbroken.py
 
     - name: Test
