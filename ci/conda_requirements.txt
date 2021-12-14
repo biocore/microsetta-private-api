@@ -4,3 +4,4 @@ flask
 natsort
 pycryptodome
 pandas
+pytz < 2021.3
