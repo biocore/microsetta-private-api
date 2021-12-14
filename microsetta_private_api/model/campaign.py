@@ -302,9 +302,12 @@ class Payment(ModelBase):
             return int(time.mktime(self.created.timetuple()))
         except:  # noqa
             import datetime
-            print(str(self.created))
-            print(repr(self.created))
-            print(time.mktime(datetime.datetime(1990, 10, 10).timetuple()))
+            import pytz
+            x = pytz.timezone('US/Pacific')
+            y = datetime.datetime(2017,5,26,15,30,16)
+            z = x.localize(y)
+            print(time.mktime(z.timetuple()))
+
             raise ValueError(str(self.created))
 
 
