@@ -52,14 +52,14 @@ jobs:
         FUNDRAZR_TEST_ORG: "${{ secrets.FUNDRAZR_TEST_ORG }}"
       run: |
         # pull out the port so we can modify the configuration file easily
-        pgport=${{ job.services.postgres.ports[5432] }}
-        sed -i "s/self.port = 5432/self.port = $pgport/" microsetta_private_api/config_manager.py
-        
-        # use hashes to avoid delimiter overlap with a URL
-        python set_github_secrets.py
+        #pgport=${{ job.services.postgres.ports[5432] }}
+        #sed -i "s/self.port = 5432/self.port = $pgport/" microsetta_private_api/config_manager.py
+        #
+        ## use hashes to avoid delimiter overlap with a URL
+        #python set_github_secrets.py
 
-        # PGPASSWORD is read by pg_restore, which is called by the build_db process. 
-        export PGPASSWORD=postgres
+        ## PGPASSWORD is read by pg_restore, which is called by the build_db process. 
+        #export PGPASSWORD=postgres
         
         conda create --yes -n test-microsetta-private python=3.9
         conda activate test-microsetta-private
@@ -68,7 +68,8 @@ jobs:
         pip install -e . --no-deps 
         
         # establish database state
-        python microsetta_private_api/LEGACY/build_db.py
+        #python microsetta_private_api/LEGACY/build_db.py
+        python tzbroken.py
 
     - name: Test
       shell: bash -l {0}
