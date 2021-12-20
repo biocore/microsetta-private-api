@@ -74,6 +74,12 @@ jobs:
       shell: bash -l {0}
       run: |
         conda activate test-microsetta-private
+
+        # workaround for Python bpo-44413
+        # https://bugs.python.org/issue44413
+        # discussed further in Debian 1001774
+        # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1001774
+        sudo timedatectl set-timezone America/Los_Angeles
         make test
 
   lint:
