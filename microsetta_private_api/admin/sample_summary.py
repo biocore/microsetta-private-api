@@ -7,6 +7,14 @@ from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from werkzeug.exceptions import NotFound
 
 
+def get_barcodes_for(project_id):
+    if project_id is None:
+        raise ValueError("project_id must be defined.")
+
+    with Transaction() as t:
+        return AdminRepo(t).get_project_barcodes(project_id)
+
+
 def per_sample(project, barcodes, strip_sampleid):
     summaries = []
     with Transaction() as t:

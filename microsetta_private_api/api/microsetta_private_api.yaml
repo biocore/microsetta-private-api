@@ -1351,6 +1351,65 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/interested_user':
+    post:
+      operationId: microsetta_private_api.api.create_interested_user
+      tags:
+        - Campaigns
+      summary: Submit interested user's information
+      description: Submit interested user's information
+      security: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'campaign_id':
+                  type: string
+                'acquisition_source':
+                  type: string
+                'first_name':
+                  type: string
+                'last_name':
+                  type: string
+                'email':
+                  type: string
+                'phone':
+                  type: string
+                'country':
+                  type: string
+                'address_1':
+                  type: string
+                'address_2':
+                  type: string
+                'city':
+                  type: string
+                'state':
+                  type: string
+                'postal':
+                  type: string
+                'confirm_consent':
+                  type: string
+                'ip_address':
+                  type: string
+                'over_18':
+                  type: string
+              required:
+                - campaign_id
+                - first_name
+                - last_name
+                - email
+      responses:
+        '200':
+          description: Interested user ID
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Creation or validation issue with the interested user
+
   '/preparations/{sample_barcode}':
     get:
       operationId: microsetta_private_api.api.get_preparations
@@ -1477,6 +1536,7 @@ paths:
       operationId: microsetta_private_api.admin.admin_impl.address_verification
       tags:
         - Admin
+      security: []
       summary: Verify - and automatically correct if possible - the deliverability of a postal address using Melissa Global Address API
       description: Verify - and automatically correct if possible - the deliverability of a postal address using Melissa Global Address API
       parameters:
@@ -1523,8 +1583,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
 
@@ -1954,13 +2012,11 @@ paths:
                     type: string
       responses:
         '200':
-          description: Return list of dictionaries of sample status for requested accounts
+          description: Return an object containing a list of dictionaries of sample status for requested accounts
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
+                type: object
         '404':
           description: Requested barcodes not found
 
