@@ -2021,7 +2021,7 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_diet = VioscreenDietaryScoreRepo(t)
-            vio_diet.insert_dietary_score(vioscreen_dietary_score)
+            vio_diet.insert_dietary_scores([vioscreen_dietary_score, ])
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/dietaryscore'
@@ -2034,7 +2034,7 @@ class VioscreenTests(ApiTests):
 
         self.assertEqual(get_response.status_code, 200)
 
-        response_obj = json.loads(get_response.data)
+        response_obj = json.loads(get_response.data)[0]
         self.assertEqual(response_obj['sessionId'],
                          vioscreen_dietary_score.sessionId)
         self.assertEqual(response_obj['type'],
