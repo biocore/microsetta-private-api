@@ -89,6 +89,8 @@ class DaklapackOrder:
         curr_timestamp = datetime.now(timezone.utc)
         curr_timestamp_str = curr_timestamp.isoformat()
         curr_timestamp_str = curr_timestamp_str.replace("+00:00", "Z")
+        # planned send date is a date or an empty string
+        planned_send_str = '' if not planned_send_date else planned_send_date
 
         # Daklapack API expects that ALL aspects of an address are
         # represented as strings, including, e.g. numeric zip codes

@@ -17,7 +17,7 @@ from microsetta_private_api.admin.tests.test_admin_repo import \
     FIRST_DAKLAPACK_ARTICLE, delete_test_scan
 from microsetta_private_api.model.tests.test_daklapack_order import \
     DUMMY_PROJ_ID_LIST, DUMMY_DAK_ARTICLE_CODE, DUMMY_ADDRESSES, \
-    DUMMY_DAK_ORDER_DESC, DUMMY_HOLD_MSG, DUMMY_FEDEX_REFS
+    DUMMY_DAK_ORDER_DESC, DUMMY_PLANNED_SEND_DATE, DUMMY_FEDEX_REFS
 
 
 DUMMY_PROJ_NAME = "test project"
@@ -918,7 +918,7 @@ class AdminApiTests(TestCase):
             delete_test_daklapack_orders(order_submissions)
 
     def test_post_daklapack_orders_fully_specified(self):
-        # create post input json with a nonsense date field
+        # create post input json
         order_info = {
             "project_ids": DUMMY_PROJ_ID_LIST,
             "article_code": DUMMY_INT_DAK_ARTICLE_CODE,
@@ -927,7 +927,8 @@ class AdminApiTests(TestCase):
             "fedex_ref_1": DUMMY_FEDEX_REFS[0],
             "fedex_ref_2": DUMMY_FEDEX_REFS[1],
             "fedex_ref_3": DUMMY_FEDEX_REFS[2],
-            "fulfillment_hold_msg": DUMMY_HOLD_MSG
+            "planned_send_date": DUMMY_PLANNED_SEND_DATE,
+            "quantity": 2
         }
 
         # NB: these have to be patched *where they will be looked up*, not
@@ -937,45 +938,11 @@ class AdminApiTests(TestCase):
                    "post_daklapack_orders") as mock_dak_post:
             mock_dak_post.side_effect = [make_test_response(201),
                                          make_test_response(409)]
-            with patch("microsetta_private_api.admin.admin_impl."
-                       "send_daklapack_hold_email") as mock_email:
-                mock_email.side_effect = [True]
 
-                real_out = self._test_post_daklapack_orders(order_info, 200)
-                # the successful order has a hold message, so hold email sent
-                self.assertTrue(real_out[0]["email_success"])
-
-    def test_post_daklapack_orders_email_failure(self):
-        # create post input json with a nonsense date field
-        order_info = {
-            "project_ids": DUMMY_PROJ_ID_LIST,
-            "article_code": DUMMY_INT_DAK_ARTICLE_CODE,
-            "addresses": DUMMY_ADDRESSES,
-            "description": DUMMY_DAK_ORDER_DESC,
-            "fedex_ref_1": DUMMY_FEDEX_REFS[0],
-            "fedex_ref_2": DUMMY_FEDEX_REFS[1],
-            "fedex_ref_3": DUMMY_FEDEX_REFS[2],
-            "fulfillment_hold_msg": DUMMY_HOLD_MSG
-        }
-
-        # NB: these have to be patched *where they will be looked up*, not
-        # where they are originally defined; see
-        # https://docs.python.org/3/library/unittest.mock.html#where-to-patch
-        with patch("microsetta_private_api.admin.admin_impl."
-                   "post_daklapack_orders") as mock_dak_post:
-            mock_dak_post.side_effect = [make_test_response(201),
-                                         make_test_response(409)]
-            with patch("microsetta_private_api.admin.admin_impl."
-                       "send_daklapack_hold_email") as mock_email:
-                mock_email.side_effect = [False]
-
-                real_out = self._test_post_daklapack_orders(order_info, 200)
-                # the successful order has a hold message,
-                # but hold email failed to send
-                self.assertFalse(real_out[0]["email_success"])
+            self._test_post_daklapack_orders(order_info, 200)
 
     def test_post_daklapack_orders_wo_optionals(self):
-        # create post input json with a nonsense date field
+        # create post input json
         order_info = {
             "project_ids": DUMMY_PROJ_ID_LIST,
             "article_code": DUMMY_INT_DAK_ARTICLE_CODE,
@@ -984,7 +951,8 @@ class AdminApiTests(TestCase):
             "fedex_ref_1": None,
             "fedex_ref_2": None,
             "fedex_ref_3": None,
-            "fulfillment_hold_msg": None
+            "planned_send_date": None,
+            "quantity": 1
         }
 
         # NB: these have to be patched *where they will be looked up*, not
@@ -994,13 +962,8 @@ class AdminApiTests(TestCase):
                    "post_daklapack_orders") as mock_dak_post:
             mock_dak_post.side_effect = [make_test_response(201),
                                          make_test_response(409)]
-            with patch("microsetta_private_api.admin.admin_impl."
-                       "send_daklapack_hold_email") as mock_email:
-                mock_email.side_effect = [True, True]
-                real_out = self._test_post_daklapack_orders(order_info, 200)
-                # successful order has no hold message, so no hold email sent
-                # and therefore no email_success value
-                self.assertIsNone(real_out[0]["email_success"])
+
+            self._test_post_daklapack_orders(order_info, 200)
 
     def test_query_project_barcode_stats_project_without_strip(self):
         input_json = json.dumps({'project': 7, 'email': 'foobar'})
