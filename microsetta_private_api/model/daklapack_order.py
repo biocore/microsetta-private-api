@@ -9,14 +9,15 @@ ADDR_DICT_KEY = 'address'
 FEDEX_REF_1_KEY = 'fedex_ref_1'
 FEDEX_REF_2_KEY = 'fedex_ref_2'
 FEDEX_REF_3_KEY = 'fedex_ref_3'
-FULFILLMENT_HOLD_MSG = 'fulfillment_hold_msg'
+PLANNED_SEND_DATE_KEY = 'planned_send_date'
 DESCRIPTION_KEY = 'description'
 SUBMITTER_ACCT_KEY = "submitter_acct"
+QUANTITY_KEY = "quantity"
 
 
 class DaklapackOrder:
     def __init__(self, daklapack_order_id, submitter_acct, project_ids_list,
-                 order_structure, description, fulfillment_hold_msg,
+                 order_structure, description, planned_send_date,
                  creation_timestamp=None, last_polling_timestamp=None,
                  last_polling_status=None):
 
@@ -26,11 +27,12 @@ class DaklapackOrder:
         self.creation_timestamp = creation_timestamp
         if self.creation_timestamp is None:
             self.creation_timestamp = datetime.now(timezone.utc)
+        self.planned_send_date = planned_send_date
 
+        # these fields exist in the db only
         self.submitter_acct = submitter_acct
         self.project_ids_list = project_ids_list
         self.description = description
-        self.fulfillment_hold_msg = fulfillment_hold_msg
 
         # keep these "private" as they really shouldn't be mucked with directly
         self._order_structure = order_structure
@@ -59,19 +61,23 @@ class DaklapackOrder:
         # note: api can't set last_polling_status and last_polling_timestamp:
         # they will default to None.
 
-        # fields that don't go into json (only db):
+        # user-provided fields that don't go into json (only db):
         # required:
         submitter_acct = kwargs[SUBMITTER_ACCT_KEY]
         project_ids_list = kwargs[PROJECT_IDS_LIST_KEY]
         # optional:
         description = kwargs.get(DESCRIPTION_KEY)
-        fulfillment_hold_msg = kwargs.get(FULFILLMENT_HOLD_MSG)
+
+        # field that goes into both the json and the db:
+        # required but may be empty string:
+        planned_send_date = kwargs.get(PLANNED_SEND_DATE_KEY)
 
         # fields that eventually go only into json:
         # required:
         order_id = kwargs[ORDER_ID_KEY]
         article_code = kwargs[DAK_ARTICLE_CODE_KEY]
         address_dict = kwargs[ADDR_DICT_KEY]
+        quantity = kwargs[QUANTITY_KEY]
 
         # optional: fedex reference fields
         fedex_refs_dicts_list = []
@@ -106,13 +112,10 @@ class DaklapackOrder:
             "articles": [
                 {
                     "articleCode": str(article_code),
-                    # TODO: for now not allowing users to ask for more
-                    #  than one of an article code to be sent to the same
-                    #  address, but, ideally, wouldn't hardcode this
-                    "quantity": 1
+                    "quantity": str(quantity)
                 }
             ],
-            "plannedSendDate": "",
+            "plannedSendDate": planned_send_str,
             ADDR_DICT_KEY: str_addr_dict,
             "shippingProvider": "FedEx",
             "shippingType": "FEDEX_2_DAY",
@@ -120,7 +123,7 @@ class DaklapackOrder:
         }
 
         return cls(order_id, submitter_acct, project_ids_list,
-                   order_structure, description, fulfillment_hold_msg,
+                   order_structure, description, planned_send_date,
                    creation_timestamp=curr_timestamp)
 
     def set_last_polling_info(self, last_polling_status,

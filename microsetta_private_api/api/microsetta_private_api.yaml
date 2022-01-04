@@ -1857,6 +1857,8 @@ paths:
                     type: integer
                 article_code:
                   type: integer
+                quantity:
+                  type: integer
                 addresses:
                   type: array
                   items:
@@ -1873,8 +1875,10 @@ paths:
                 fedex_ref_3:
                   type: string
                   nullable: true
-                fulfillment_hold_msg:
+                planned_send_date:
                   type: string
+                  format: date-time
+                  example: "2007-04-05T12:30-02:00"
                   nullable: true
       responses:
         '200':
