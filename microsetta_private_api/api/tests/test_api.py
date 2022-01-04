@@ -9,6 +9,7 @@ import datetime
 from dateutil.parser import isoparse
 from urllib.parse import urlencode
 from unittest import TestCase
+from math import isclose
 import microsetta_private_api.server
 from microsetta_private_api import localization
 from microsetta_private_api.model.preparation import Preparation
@@ -1921,7 +1922,7 @@ class VioscreenTests(ApiTests):
             modified="2017-07-29T03:56:04.22"
         )
 
-        vioscreen_percent_energy = VioscreenPercentEnergy(
+        vioscreen_percent_e = VioscreenPercentEnergy(
             sessionId="000ada854d4f45f5abda90ccade7f0a8",
             energy_components=[
                 VioscreenPercentEnergyComponent(
@@ -1938,7 +1939,7 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_perc = VioscreenPercentEnergyRepo(t)
-            vio_perc.insert_percent_energy(vioscreen_percent_energy)
+            vio_perc.insert_percent_energy(vioscreen_percent_e)
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/percentenergy'
@@ -1953,11 +1954,12 @@ class VioscreenTests(ApiTests):
 
         response_obj = json.loads(get_response.data)
         self.assertEqual(response_obj['sessionId'],
-                         vioscreen_percent_energy.sessionId)
+                         vioscreen_percent_e.sessionId)
         self.assertEqual(response_obj['calculations'][0]['code'],
-                         vioscreen_percent_energy.energy_components[0].code)
-        self.assertEqual(response_obj['calculations'][0]['amount'],
-                         vioscreen_percent_energy.energy_components[0].amount)
+                         vioscreen_percent_e.energy_components[0].code)
+        self.assertTrue(isclose(response_obj['calculations'][0]['amount'],
+                        vioscreen_percent_e.energy_components[0].amount,
+                        rel_tol=0.00000000000001))
 
     def test_get_sample_vioscreen_percent_energy_404(self):
         vioscreen_session = VioscreenSession(
@@ -2019,7 +2021,7 @@ class VioscreenTests(ApiTests):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             vio_diet = VioscreenDietaryScoreRepo(t)
-            vio_diet.insert_dietary_score(vioscreen_dietary_score)
+            vio_diet.insert_dietary_scores([vioscreen_dietary_score, ])
             t.commit()
 
         url = self._url_constructor() + '/vioscreen/dietaryscore'
@@ -2032,7 +2034,7 @@ class VioscreenTests(ApiTests):
 
         self.assertEqual(get_response.status_code, 200)
 
-        response_obj = json.loads(get_response.data)
+        response_obj = json.loads(get_response.data)[0]
         self.assertEqual(response_obj['sessionId'],
                          vioscreen_dietary_score.sessionId)
         self.assertEqual(response_obj['type'],

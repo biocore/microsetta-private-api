@@ -27,6 +27,7 @@ from microsetta_private_api.admin.daklapack_communication import \
     post_daklapack_orders
 from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
+from microsetta_private_api.admin.sample_summary import get_barcodes_for
 from microsetta_private_api.util.melissa import verify_address
 from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
@@ -412,11 +413,31 @@ def query_project_barcode_stats(body, token_info, strip_sampleid):
 
 def query_barcode_stats(body, token_info, strip_sampleid):
     validate_admin_access(token_info)
-    barcodes = body["sample_barcodes"]
+    if 'sample_barcodes' in body:
+        barcodes = body["sample_barcodes"]
+    elif 'project_id' in body:
+        project_id = body["project_id"]
+        barcodes = get_barcodes_for(project_id)
+
+    unprocessed_barcodes = None
+
     if len(barcodes) > 1000:
-        return jsonify({"message": "Too many barcodes requested"}), 400
-    summary = per_sample(None, barcodes, strip_sampleid)
-    return jsonify(summary), 200
+        unprocessed_barcodes = barcodes[1000:]
+        barcodes = barcodes[0:1000]
+
+    results = {'samples': per_sample(None, barcodes, strip_sampleid)}
+
+    if unprocessed_barcodes:
+        results['partial_result'] = True
+
+        # if returning a partial result, include the remainder of the barcodes
+        # so that they can be used in a subsequent query like a paging
+        # mechanism.
+        results['unprocessed_barcodes'] = unprocessed_barcodes
+    else:
+        results['partial_result'] = False
+
+    return jsonify(results), 200
 
 
 def create_daklapack_orders(body, token_info):
@@ -495,10 +516,8 @@ def search_activation(token_info, email_query=None, code_query=None):
         return jsonify([i.to_api() for i in infos]), 200
 
 
-def address_verification(token_info, address_1, address_2=None, city=None,
-                         state=None, postal=None, country=None):
-    validate_admin_access(token_info)
-
+def address_verification(address_1=None, address_2=None,
+                         city=None, state=None, postal=None, country=None):
     if address_1 is None or len(address_1) < 1 or \
             postal is None or len(postal) < 1 or \
             country is None or len(country) < 1:

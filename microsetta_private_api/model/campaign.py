@@ -34,6 +34,7 @@ SHIPPING_LAST_NAME = "last_name"
 SHIPPING_COMPANY = "company_name"
 SHIPPING_POSTAL_CODE = "postal_code"
 SHIPPING_COUNTRY = "country"
+SHIPPING_STATE = "state"
 ADDRESS_POST_CODE = "post_code"
 ADDRESS_COUNTRY_CODE = "country_code"
 STATS = 'stats'
@@ -97,6 +98,10 @@ class Shipping(ModelBase):
         kwargs[ADDRESS_COUNTRY_CODE] = kwargs[SHIPPING_COUNTRY]
         kwargs.pop(SHIPPING_COUNTRY)
 
+        # observed in at least one transaction
+        if SHIPPING_STATE not in kwargs:
+            kwargs[SHIPPING_STATE] = 'not provided'
+
         return cls(first_name, last_name, Address(**kwargs))
 
     def to_api(self):
@@ -127,9 +132,12 @@ class Item(ModelBase):
 
 
 class Payment(ModelBase):
+    # PAYER_FIRST_NAME and PAYER_LAST_NAME are required
+    # but there is an edge case where at least one transaction
+    # lacks these, and so we will obtain the name from
+    # shipping instead
     REQUIRED = (CREATED_TIMESTAMP, CAMPAIGN_ID, AMOUNT,
-                NET_AMOUNT, CURRENCY, PAYER_FIRST_NAME,
-                PAYER_LAST_NAME,
+                NET_AMOUNT, CURRENCY,
                 TRANSACTION_ID,
                 FUNDRAZR_ACCOUNT_TYPE)
 
@@ -236,9 +244,24 @@ class Payment(ModelBase):
             structured[CLAIMED_ITEMS] = [Item.from_api(**item)
                                          for item in items]
 
+        shipping = None
         if SHIPPING_ADDRESS in structured:
             shipping = Shipping.from_api(**structured[SHIPPING_ADDRESS])
             structured[SHIPPING_ADDRESS] = shipping
+
+        # one of out ~16000 transactions lacks payer_first and last names
+        # so rather than coercing the database schema, we will work around
+        # this unusual case
+        if PAYER_FIRST_NAME in kwargs:
+            structured[PAYER_FIRST_NAME] = kwargs[PAYER_FIRST_NAME]
+            structured[PAYER_LAST_NAME] = kwargs[PAYER_LAST_NAME]
+        else:
+            if shipping is not None:
+                structured[PAYER_FIRST_NAME] = shipping.first_name
+                structured[PAYER_LAST_NAME] = shipping.last_name
+            else:
+                structured[PAYER_FIRST_NAME] = 'not provided'
+                structured[PAYER_LAST_NAME] = 'not provided'
 
         return cls(**structured)
 
