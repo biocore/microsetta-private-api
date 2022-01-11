@@ -16,6 +16,9 @@ QUANTITY_KEY = "quantity"
 
 
 class DaklapackOrder:
+    DATE_FORMAT = "%Y-%m-%d"
+    DATESTAMP_FORMAT = f"{DATE_FORMAT} %H:%M:%S.%f"
+
     def __init__(self, daklapack_order_id, submitter_acct, project_ids_list,
                  order_structure, description, planned_send_date,
                  creation_timestamp=None, last_polling_timestamp=None,
@@ -57,9 +60,6 @@ class DaklapackOrder:
 
     @classmethod
     def from_api(cls, **kwargs):
-        def change_timezone_format(date_str):
-            return date_str.replace("+00:00", "Z")
-
         curr_timestamp = None
         # note: api can't set last_polling_status and last_polling_timestamp:
         # they will default to None.
@@ -95,13 +95,14 @@ class DaklapackOrder:
                     "value": curr_input})
 
         # creation date is now; NB: not time-zone aware
-        curr_timestamp_str = datetime.now().strftime("%Y-%m-%d")
-        # planned send date goes into order as a date or an empty string
-        # (but goes into db as a date or a null)
-        if not planned_send_date:
-            planned_send_str = ''
-        else:
-            planned_send_str = change_timezone_format(planned_send_date)
+        curr_timestamp_str = datetime.now().strftime(cls.DATESTAMP_FORMAT)
+        # FYI, not enforced here, but planned send date must be in DATE_FORMAT,
+        # *not* DATESTAMP format ... apparently the Daklapack API allows
+        # createDate to have a time attached to it but doesn't allow that for
+        # plannedSendDate
+        # planned send date str goes into order as a date or an empty string
+        # (but planned send date goes into db as a date or a null)
+        planned_send_str = planned_send_date if planned_send_date else ''
 
         # Daklapack API expects that ALL aspects of an address are
         # represented as strings, including, e.g. numeric zip codes

@@ -1,5 +1,4 @@
 from copy import deepcopy
-from dateutil import parser
 from datetime import datetime, timezone, timedelta, date
 from unittest import TestCase
 from microsetta_private_api.api.tests.test_api import DUMMY_ACCT_INFO_2
@@ -9,7 +8,7 @@ from microsetta_private_api.model.daklapack_order import DaklapackOrder
 DUMMY_DAK_ORDER_ID = '7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b'
 DUMMY_PROJ_ID_LIST = [1, 12]
 DUMMY_DAK_ORDER_DESC = "test daklapack order"
-DUMMY_PLANNED_SEND_DATE = str(date(2032, 2, 9))
+DUMMY_PLANNED_SEND_DATE = date(2032, 2, 9).strftime(DaklapackOrder.DATE_FORMAT)
 DUMMY_DAK_ARTICLE_CODE = '350102'
 DUMMY_ADDRESSES = [{
     'firstName': 'Jane',
@@ -99,8 +98,9 @@ class DaklapackOrderTests(TestCase):
         real_address = real_out.order_structure['address']
         # pop out creation date and make sure it is approximately now :)
         curr_create_str = real_address.pop("creationDate")
-        curr_create_time = parser.isoparse(curr_create_str)
-        self.assertAlmostEqual(datetime.now(timezone.utc),
+        curr_create_time = datetime.strptime(
+            curr_create_str, DaklapackOrder.DATESTAMP_FORMAT)
+        self.assertAlmostEqual(datetime.now(),
                                curr_create_time,
                                delta=timedelta(minutes=2))
         self.assertEqual(dummy_order_struct, real_out.order_structure)
