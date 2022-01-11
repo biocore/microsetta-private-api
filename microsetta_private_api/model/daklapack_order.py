@@ -57,6 +57,9 @@ class DaklapackOrder:
 
     @classmethod
     def from_api(cls, **kwargs):
+        def change_timezone_format(date_str):
+            return date_str.replace("+00:00", "Z")
+
         curr_timestamp = None
         # note: api can't set last_polling_status and last_polling_timestamp:
         # they will default to None.
@@ -94,9 +97,12 @@ class DaklapackOrder:
         # creation date is now
         curr_timestamp = datetime.now(timezone.utc)
         curr_timestamp_str = curr_timestamp.isoformat()
-        curr_timestamp_str = curr_timestamp_str.replace("+00:00", "Z")
-        # planned send date is a date or an empty string
-        planned_send_str = '' if not planned_send_date else planned_send_date
+        curr_timestamp_str = change_timezone_format(curr_timestamp_str)
+        # planned send date goes into order as a date or an empty string
+        if not planned_send_date:
+            planned_send_str = ''
+        else:
+            planned_send_str = change_timezone_format(planned_send_date)
 
         # Daklapack API expects that ALL aspects of an address are
         # represented as strings, including, e.g. numeric zip codes
