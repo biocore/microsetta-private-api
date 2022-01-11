@@ -1,5 +1,5 @@
 from copy import deepcopy
-from datetime import datetime, timezone, timedelta, date
+from datetime import datetime, timedelta, date
 from unittest import TestCase
 from microsetta_private_api.api.tests.test_api import DUMMY_ACCT_INFO_2
 from microsetta_private_api.model.account import Account
