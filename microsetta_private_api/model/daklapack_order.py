@@ -94,11 +94,10 @@ class DaklapackOrder:
                     "key": curr_val,
                     "value": curr_input})
 
-        # creation date is now
-        curr_timestamp = datetime.now(timezone.utc)
-        curr_timestamp_str = curr_timestamp.isoformat()
-        curr_timestamp_str = change_timezone_format(curr_timestamp_str)
+        # creation date is now; NB: not time-zone aware
+        curr_timestamp_str = datetime.now().strftime("%Y-%m-%d")
         # planned send date goes into order as a date or an empty string
+        # (but goes into db as a date or a null)
         if not planned_send_date:
             planned_send_str = ''
         else:

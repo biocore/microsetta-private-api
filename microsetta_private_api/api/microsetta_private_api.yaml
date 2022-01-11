@@ -1936,7 +1936,7 @@ paths:
                 planned_send_date:
                   type: string
                   format: date-time
-                  example: "2007-04-05T12:30-02:00"
+                  example: "2007-04-05"
                   nullable: true
       responses:
         '200':
