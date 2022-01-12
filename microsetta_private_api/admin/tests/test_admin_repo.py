@@ -205,7 +205,7 @@ class AdminTests(TestCase):
         with t.dict_cursor() as cur:
             cur.executemany("INSERT INTO barcodes.daklapack_order "
                             "(dak_order_id, submitter_acct_id, "
-                            "description, fulfillment_hold_msg, "
+                            "description, planned_send_date, "
                             "order_json, creation_timestamp, "
                             "last_polling_timestamp, last_polling_status) "
                             "VALUES (%s, %s, %s, %s,%s, %s, %s, %s)",
@@ -1081,12 +1081,12 @@ class AdminRepoTests(AdminTests):
             last_polling_timestamp = dateutil.parser.isoparse(
                 "2020-10-19T12:40:19.219328Z")
             desc = "a description"
-            hold_msg = "hold this order"
+            planned_send_date = date(2032, 2, 9)
             last_status = "accepted"
 
             # create dummy daklapack order object
             input = DaklapackOrder(input_id, submitter_acct, list(project_ids),
-                                   order_struct, desc, hold_msg,
+                                   order_struct, desc, planned_send_date,
                                    creation_timestamp, last_polling_timestamp,
                                    last_status)
 
@@ -1099,7 +1099,7 @@ class AdminRepoTests(AdminTests):
             expected_record = [input_id,
                                submitter_id,
                                desc,
-                               hold_msg,
+                               planned_send_date,
                                order_struct,
                                creation_timestamp,
                                last_polling_timestamp,

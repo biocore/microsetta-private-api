@@ -87,18 +87,6 @@ def send_daklapack_polling_errors_report_email(errors_list):
     return result
 
 
-def send_daklapack_hold_email(daklapack_order):
-    template_args = {"order_id": daklapack_order.id,
-                     "fulfillment_hold_msg":
-                         daklapack_order.fulfillment_hold_msg}
-    email_subject = f"Hold fulfillment of order {daklapack_order.id}"
-
-    return _send_daklapack_email(template_args, email_subject,
-                                 "daklapack_service_email",
-                                 "email/daklapack_fulfillment_hold_request",
-                                 "DAK_ORDER_HOLD")
-
-
 def _send_daklapack_email(template_args, email_subject, email_config_key,
                           template_path, email_subtype):
     try:

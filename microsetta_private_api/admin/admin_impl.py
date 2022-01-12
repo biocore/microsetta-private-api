@@ -24,7 +24,7 @@ from microsetta_private_api.tasks import send_email as celery_send_email,\
 from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
 from microsetta_private_api.admin.daklapack_communication import \
-    post_daklapack_orders, send_daklapack_hold_email
+    post_daklapack_orders
 from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.admin.sample_summary import get_barcodes_for
@@ -490,18 +490,6 @@ def _create_daklapack_order(order_dict):
                             post_response.status_code}
             return response_msg
 
-        # IFF submission is successful AND has fulfillment hold msg,
-        # email hold fulfillment info and the order id to Daklapack contact
-        email_success = None
-        if daklapack_order.fulfillment_hold_msg:
-            email_success = send_daklapack_hold_email(daklapack_order)
-            # if couldn't send the fulfillment hold message for any reason,
-            # still DO save order to db bc it WAS sent to Daklapack, but also
-            # record the email failure to the db and return info to caller
-            if not email_success:
-                daklapack_order.set_last_polling_info(
-                    "fulfillment hold message not sent")
-
         # write order to db
         admin_repo = AdminRepo(t)
         order_id = admin_repo.create_daklapack_order(daklapack_order)
@@ -510,8 +498,7 @@ def _create_daklapack_order(order_dict):
     status_msg = {"order_address":
                   daklapack_order.order_structure[ADDR_DICT_KEY],
                   "order_success": True,
-                  "order_id": order_id,
-                  "email_success": email_success}
+                  "order_id": order_id}
     return status_msg
 
 
