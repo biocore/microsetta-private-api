@@ -9,6 +9,10 @@ if not SERVER_CONFIG['qiita_endpoint']:
 
         def post(self, *args, **kwargs):
             raise NotFoundError("No qiita client")
+
+        def http_patch(self, *args, **kwargs):
+            raise NotFoundError("No qiita client")
+
     qclient = _mock()
 else:
     qclient = QiitaClient(
