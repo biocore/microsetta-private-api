@@ -248,11 +248,6 @@ class SurveyTemplateRepo(BaseRepo):
         source_id : str, UUID
             The source UUID
 
-        Raises
-        ------
-        KeyError
-            If the source already has a subject assigned
-
         Returns
         -------
         bool
