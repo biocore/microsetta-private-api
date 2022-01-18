@@ -1,5 +1,4 @@
 import unittest
-import datetime
 import uuid
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
