@@ -1,5 +1,6 @@
 from werkzeug.exceptions import NotFound
 
+from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api import localization
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.survey_template import SurveyTemplate, \
@@ -19,6 +20,7 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 class SurveyTemplateRepo(BaseRepo):
 
     VIOSCREEN_ID = 10001
+    MYFOODREPO_ID = 10002
     SURVEY_INFO = {
         1: SurveyTemplateLinkInfo(
             1,
@@ -61,11 +63,25 @@ class SurveyTemplateRepo(BaseRepo):
             "Vioscreen Food Frequency Questionnaire",
             "1.0",
             "remote"
+        ),
+        MYFOODREPO_ID: SurveyTemplateLinkInfo(
+            MYFOODREPO_ID,
+            "MyFoodRepo Diet Tracking",
+            "1.0",
+            "remote"
         )
     }
 
     def __init__(self, transaction):
         super().__init__(transaction)
+
+    def local_surveys(self):
+        return {k: v for k, v in self.SURVEY_INFO
+                if v.survey_template_type == 'local'}
+
+    def remote_surveys(self):
+        return {k: v for k, v in self.SURVEY_INFO
+                if v.survey_template_type == 'remote'}
 
     def list_survey_ids(self):
         with self._transaction.cursor() as cur:
@@ -221,6 +237,124 @@ class SurveyTemplateRepo(BaseRepo):
 
             rows = cur.fetchall()
             return [SurveyTemplateTrigger(x[0], x[1]) for x in rows]
+
+    def create_myfoodrepo_entry(self, account_id, source_id):
+        """Create a MyFoodRepo entry if a slot is available
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Raises
+        ------
+        KeyError
+            If the source already has a subject assigned
+
+        Returns
+        -------
+        bool
+            True if a slot was obtained, False otherwise
+        """
+        with self._transaction.cursor() as cur:
+            if self.myfoodrepo_slots_available() > 0:
+                # Add to the myfoodrepo_registry
+                cur.execute("""INSERT INTO myfoodrepo_registry (account_id,
+                                                                source_id)
+                               VALUES (%s, %s)""",
+                            (account_id, source_id))
+
+                return True
+            else:
+                return False
+
+    def set_myfoodrepo_id(self, account_id, source_id, mfr_id):
+        """Set the MyFoodRepo ID of a registry entry
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+        mfr_id : str
+            A created MyFoodRepo subject ID
+
+        Raises
+        ------
+        KeyError
+            If the source already has a subject assigned
+        """
+        with self._transaction.cursor() as cur:
+            existing, created = self.get_myfoodrepo_id_if_exists(account_id,
+                                                                 source_id)
+
+            if existing is not None:
+                raise KeyError(f"{account_id} and {source_id} are already "
+                               f"assigned to {existing}")
+
+            if existing is None and created is None:
+                raise KeyError(f"{account_id} and {source_id} do not have "
+                               f"a slot")
+
+            # Put a survey with status -1 into ag_login_surveys
+            cur.execute("INSERT INTO ag_login_surveys("
+                        "ag_login_id, "
+                        "survey_id, "
+                        "vioscreen_status, "
+                        "source_id) "
+                        "VALUES(%s, %s, %s, %s)",
+                        (account_id, mfr_id, -1, source_id))
+
+            # Add to the myfoodrepo_registry
+            cur.execute("""UPDATE myfoodrepo_registry
+                           SET myfoodrepo_id=%s
+                           WHERE account_id=%s AND source_id=%s""",
+                        (mfr_id, account_id, source_id))
+
+    def get_myfoodrepo_id_if_exists(self, account_id, source_id):
+        """Return a MyFoodRepo ID if one exists
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Returns
+        -------
+        (str or None, datetime or None)
+            The associated MyFoodRepo ID and the time it was created.
+            If (None, <time>), it indicates a slot is created but the subject
+            ID has not been assigned.
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT myfoodrepo_id, creation_timestamp
+                           FROM myfoodrepo_registry
+                           WHERE account_id=%s AND source_id=%s""",
+                        (account_id, source_id))
+            res = cur.fetchone()
+
+            if res is None:
+                return (None, None)
+            else:
+                return res
+
+    def myfoodrepo_slots_available(self):
+        """Test if there are available slots for a myfoodrepo participant"""
+        maximum_slots = SERVER_CONFIG['myfoodrepo_slots']
+        interval = "'7 days'"
+        with self._transaction.cursor() as cur:
+            cur.execute(f"""SELECT count(*)
+                            FROM myfoodrepo_registry
+                            WHERE creation_timestamp >= (
+                                NOW() - INTERVAL {interval}
+                            )""")
+            count = cur.fetchone()[0]
+            return max(0, maximum_slots - count)
 
     def create_vioscreen_id(self, account_id, source_id,
                             vioscreen_ext_sample_id):
