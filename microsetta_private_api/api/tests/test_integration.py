@@ -355,6 +355,15 @@ class IntegrationTests(TestCase):
         self.assertListEqual([x["survey_template_id"] for x in env_surveys],
                              [])
 
+    def test_bobo_takes_vioscreen(self):
+        self.fail()
+
+    def test_bobo_takes_myfoodrepo_with_slots(self):
+        self.fail()
+
+    def test_bobo_takes_myfoodrepo_without_slots(self):
+        self.fail()
+
     def test_bobo_takes_a_survey(self):
         """
            Check that a user can login to an account,
