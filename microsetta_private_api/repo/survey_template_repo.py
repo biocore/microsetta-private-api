@@ -259,6 +259,11 @@ class SurveyTemplateRepo(BaseRepo):
             True if a slot was obtained, False otherwise
         """
         with self._transaction.cursor() as cur:
+            # we are testing for availability based on entries in the
+            # myfoodrepo_registry. to ensure workers see accurate state,
+            # we lock the table prior to our slot and update check forcing
+            # the effort in this method to be serial.
+            self._transaction.lock_table("myfoodrepo_registry")
             if self.myfoodrepo_slots_available() > 0:
                 # Add to the myfoodrepo_registry
                 cur.execute("""INSERT INTO myfoodrepo_registry (account_id,
@@ -344,7 +349,13 @@ class SurveyTemplateRepo(BaseRepo):
                 return res
 
     def myfoodrepo_slots_available(self):
-        """Test if there are available slots for a myfoodrepo participant"""
+        """Test if there are available slots for a myfoodrepo participant
+
+        Returns
+        -------
+        bool
+            True if there is a slot available
+        """
         maximum_slots = SERVER_CONFIG['myfoodrepo_slots']
         interval = "'7 days'"
         with self._transaction.cursor() as cur:
