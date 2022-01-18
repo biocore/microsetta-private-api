@@ -353,8 +353,8 @@ class SurveyTemplateRepo(BaseRepo):
 
         Returns
         -------
-        bool
-            True if there is a slot available
+        int
+            The number of slots available
         """
         maximum_slots = SERVER_CONFIG['myfoodrepo_slots']
         interval = "'7 days'"
