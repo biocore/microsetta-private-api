@@ -11,7 +11,7 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
-from microsetta_private_api.util import vioscreen, vue_adapter
+from microsetta_private_api.util import vioscreen, myfoodrepo, vue_adapter
 from microsetta_private_api.util.vioscreen import VioscreenAdminAPI
 
 
@@ -36,12 +36,76 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [1, 3, 4, 5, 6,
-                                     SurveyTemplateRepo.VIOSCREEN_ID]]), 200
+                                     SurveyTemplateRepo.VIOSCREEN_ID,
+                                     SurveyTemplateRepo.MYFOODREPO_ID]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200
         else:
             return jsonify([]), 200
+
+
+def _remote_survey_url_vioscreen(transaction, account_id, source_id,
+                                 language_tag, survey_redirect_url,
+                                 vioscreen_ext_sample_id):
+    # assumes an instance of Transaction is already available
+    acct_repo = AccountRepo(transaction)
+    survey_template_repo = SurveyTemplateRepo(transaction)
+
+    if vioscreen_ext_sample_id:
+        # User is about to start a vioscreen survey for this sample
+        # record this in the database.
+        db_vioscreen_id = survey_template_repo.create_vioscreen_id(
+            account_id, source_id, vioscreen_ext_sample_id
+        )
+    else:
+        raise ValueError("Vioscreen Template requires "
+                         "vioscreen_ext_sample_id parameter.")
+
+    (birth_year, gender, height, weight) = \
+        survey_template_repo.fetch_user_basic_physiology(
+        account_id, source_id)
+
+    account = acct_repo.get_account(account_id)
+    country_code = account.address.country_code
+
+    url = vioscreen.gen_survey_url(
+        db_vioscreen_id,
+        language_tag,
+        survey_redirect_url,
+        birth_year=birth_year,
+        gender=gender,
+        height=height,
+        weight=weight,
+        country_code=country_code
+    )
+
+    return url
+
+
+def _remote_survey_url_myfoodrepo(transaction, account_id, source_id,
+                                  language_tag):
+    # assumes an instance of Transaction is already available
+    survey_template_repo = SurveyTemplateRepo(transaction)
+
+    # do we already have an id?
+    mfr_id = survey_template_repo.get_myfoodrepo_id_if_exists(account_id,
+                                                              source_id)
+
+    if mfr_id is None:
+        # if not, see create one if we have a slot available
+        slot = survey_template_repo.create_myfoodrepo_entry(account_id,
+                                                            source_id)
+        if not slot:
+            # we could not obtain a slot
+            return None
+
+        mfr_id = myfoodrepo.create_subj()
+        survey_template_repo.set_myfoodrepo_id(account_id,
+                                               source_id,
+                                               mfr_id)
+
+    return myfoodrepo.gen_survey_url(mfr_id)
 
 
 def read_survey_template(account_id, source_id, survey_template_id,
@@ -50,40 +114,29 @@ def read_survey_template(account_id, source_id, survey_template_id,
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
-        acct_repo = AccountRepo(t)
         survey_template_repo = SurveyTemplateRepo(t)
         info = survey_template_repo.get_survey_template_link_info(
             survey_template_id)
+        remote_surveys = set(survey_template_repo.remote_surveys())
 
         # For external surveys, we generate links pointing out
-        if survey_template_id == SurveyTemplateRepo.VIOSCREEN_ID:
-            if vioscreen_ext_sample_id:
-                # User is about to start a vioscreen survey for this sample
-                # record this in the database.
-                db_vioscreen_id = survey_template_repo.create_vioscreen_id(
-                    account_id, source_id, vioscreen_ext_sample_id
-                )
+        if survey_template_id in remote_surveys:
+            if survey_template_id == SurveyTemplateRepo.VIOSCREEN_ID:
+                url = _remote_survey_url_vioscreen(t,
+                                                   account_id,
+                                                   source_id,
+                                                   language_tag,
+                                                   survey_redirect_url,
+                                                   vioscreen_ext_sample_id)
+            elif survey_template_id == SurveyTemplateRepo.MYFOODREPO_ID:
+                url = _remote_survey_url_myfoodrepo(t,
+                                                    account_id,
+                                                    source_id,
+                                                    language_tag)
             else:
-                raise ValueError("Vioscreen Template requires "
-                                 "vioscreen_ext_sample_id parameter.")
+                raise ValueError(f"Cannot generate URL for survey "
+                                 f"{survey_template_id}")
 
-            (birth_year, gender, height, weight) = \
-                survey_template_repo.fetch_user_basic_physiology(
-                account_id, source_id)
-
-            account = acct_repo.get_account(account_id)
-            country_code = account.address.country_code
-
-            url = vioscreen.gen_survey_url(
-                db_vioscreen_id,
-                language_tag,
-                survey_redirect_url,
-                birth_year=birth_year,
-                gender=gender,
-                height=height,
-                weight=weight,
-                country_code=country_code
-            )
             # TODO FIXME HACK: This field's contents are not specified!
             info.survey_template_text = {
                 "url": url
