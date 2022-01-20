@@ -22,13 +22,15 @@
   "daklapack_subscription_key_name": "dak-specific-key",
   "daklapack_subscription_key_val": "123abc456d89z",
   "daklapack_api_base_url": "https://example.com/dak_api",
-  "daklapack_service_email": "dak_fake@example.com",
-  "qiita_endpoint": "https://xxxxxxxxxx.com",
+  "qiita_endpoint": false,
   "qiita_client_id": "xxxxxxxxxxxxxxxxxxxx",
   "qiita_client_secret": "yyyyyyyyyyyyyyyyyyyyyy",
   "daklapack_errors_report_email": "microsetta_recipient@fake.com",
   "melissa_url": "http://address.melissadata.net/v3/WEB/GlobalAddress/doglobaladdress",
   "melissa_license_key": "qwerty123456",
   "myfoodrepo_url": "mfr_url_placeholder",
-  "myfoodrepo_key": "mfr_key_placeholder"
+  "myfoodrepo_key": "mfr_key_placeholder",
+  "fundrazr_key": "fundrazr_api_placeholder",
+  "fundrazr_url": "fundrazr_url_placeholder",
+  "fundrazr_organization": "fundrazr_org_placeholder"
 }

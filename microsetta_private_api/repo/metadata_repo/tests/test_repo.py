@@ -271,6 +271,17 @@ class MetadataUtilTests(unittest.TestCase):
         obs = _to_pandas_series(data, ms_map)
         pdt.assert_series_equal(obs, exp.loc[obs.index])
 
+    def test_to_pandsa_series_non_human_site(self):
+        data = self.raw_sample_1
+        data['sample'].d['site'] = 'Fur'
+
+        templates = {10: self.fake_survey_template1,
+                     1: self.fake_survey_template2}
+
+        ms_map = _construct_multiselect_map(templates)
+        with self.assertRaises(RepoException):
+            _to_pandas_series(data, ms_map)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -71,3 +71,7 @@ class Transaction:
         cur = self._conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute('SET search_path TO ag, barcodes, public')
         return cur
+
+    @property
+    def conn(self):
+        return self._conn

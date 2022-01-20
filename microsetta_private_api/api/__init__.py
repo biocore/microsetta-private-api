@@ -1,6 +1,7 @@
 from ._account import (
     find_accounts_for_login, register_account, claim_legacy_acct,
-    read_account, update_account, check_email_match, verify_jwt,
+    read_account, update_account, check_email_match, _verify_jwt,
+    _verify_jwt_mock
 )
 from ._consent import (
     render_consent_doc,
@@ -36,6 +37,21 @@ from ._vioscreen import (
 from ._campaign import (
     get_campaign_information
 )
+
+from ._interested_user import (
+    create_interested_user
+)
+
+from ..config_manager import SERVER_CONFIG
+
+
+verify_jwt = _verify_jwt
+if SERVER_CONFIG.get('disable_authentication', False):
+    import sys
+    print("WARNING: jwt authentication disabled",
+          file=sys.stderr, flush=True)
+    verify_jwt = _verify_jwt_mock
+
 
 __all__ = [
     'find_accounts_for_login',
@@ -78,5 +94,6 @@ __all__ = [
     'read_sample_vioscreen_mpeds',
     'read_sample_vioscreen_food_consumption',
     'get_vioscreen_dietary_scores_by_component',
-    'get_campaign_information'
+    'get_campaign_information',
+    'create_interested_user'
 ]

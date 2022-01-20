@@ -32,44 +32,60 @@ jobs:
           - 5432/tcp
 
     steps:
-      # Downloads a copy of the code in your repository before running CI tests
-      - name: Check out repository code
-        uses: actions/checkout@v2
+    # Downloads a copy of the code in your repository before running CI tests
+    - name: Check out repository code
+      uses: actions/checkout@v2
 
-      - name: Setup for conda
-        uses: conda-incubator/setup-miniconda@v2
-        with:        
-          auto-update-conda: true
-          python-version: 3.7 
-      
-      - name: Install
-        shell: bash -l {0}
-        run: |
-          # pull out the port so we can modify the configuration file easily
-          pgport=${{ job.services.postgres.ports[5432] }}
-          sed -i "s/self.port = 5432/self.port = $pgport/" microsetta_private_api/config_manager.py
+    - name: Setup for conda
+      uses: conda-incubator/setup-miniconda@v2
+      with:        
+        auto-update-conda: true
+        python-version: 3.7 
+    
+    - name: Install
+      shell: bash -l {0}
+      env:
+        MFR_URL: "${{ secrets.MFR_URL }}"
+        MFR_TEST_APIKEY: "${{ secrets.MFR_TEST_APIKEY }}"
+        FUNDRAZR_TEST_APIKEY: "${{ secrets.FUNDRAZR_TEST_APIKEY }}"
+        FUNDRAZR_TEST_URL: "${{ secrets.FUNDRAZR_TEST_URL }}"
+        FUNDRAZR_TEST_ORG: "${{ secrets.FUNDRAZR_TEST_ORG }}"
+        VS_ENDPOINT: "${{ secrets.VS_ENDPOINT }}"
+        VS_USER: "${{ secrets.VS_USER }}"
+        VS_PASSWORD: "${{ secrets.VS_PASSWORD }}"
+        VS_CRYPTOKEY: "${{ secrets.VS_CRYPTOKEY }}"
+        VS_REGCODE: "${{ secrets.VS_REGCODE }}"
+      run: |
+        # pull out the port so we can modify the configuration file easily
+        pgport=${{ job.services.postgres.ports[5432] }}
+        sed -i "s/self.port = 5432/self.port = $pgport/" microsetta_private_api/config_manager.py
+        
+        # use hashes to avoid delimiter overlap with a URL
+        python set_github_secrets.py
 
-          # use hashes to avoid delimiter overlap with a URL
-          sed -i "s#mfr_url_placeholder#${{ secrets.MFR_URL }}#" microsetta_private_api/server_config.json
-          sed -i "s/mfr_key_placeholder/${{ secrets.MFR_TEST_APIKEY }}/" microsetta_private_api/server_config.json
-          
-          # PGPASSWORD is read by pg_restore, which is called by the build_db process. 
-          export PGPASSWORD=postgres
-          
-          conda create --yes -n test-microsetta-private python=3.7
-          conda activate test-microsetta-private
-          conda install --yes --file ci/conda_requirements.txt
-          pip install -r ci/pip_requirements.txt
-          pip install -e . --no-deps 
-          
-          # establish database state
-          python microsetta_private_api/LEGACY/build_db.py
+        # PGPASSWORD is read by pg_restore, which is called by the build_db process. 
+        export PGPASSWORD=postgres
+        
+        conda create --yes -n test-microsetta-private python=3.9
+        conda activate test-microsetta-private
+        conda install --yes --file ci/conda_requirements.txt
+        pip install -r ci/pip_requirements.txt
+        pip install -e . --no-deps 
+        
+        # establish database state
+        python microsetta_private_api/LEGACY/build_db.py
 
-      - name: Test
-        shell: bash -l {0}
-        run: |
-          conda activate test-microsetta-private
-          make test
+    - name: Test
+      shell: bash -l {0}
+      run: |
+        conda activate test-microsetta-private
+
+        # workaround for Python bpo-44413
+        # https://bugs.python.org/issue44413
+        # discussed further in Debian 1001774
+        # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1001774
+        sudo timedatectl set-timezone America/Los_Angeles
+        make test
 
   lint:
     runs-on: ubuntu-latest

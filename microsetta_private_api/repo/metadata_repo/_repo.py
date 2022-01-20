@@ -337,7 +337,16 @@ def _to_pandas_series(metadata, multiselect_map):
 
     if source_type == 'human':
         sample_type = sample_detail.site
-        sample_invariants = HUMAN_SITE_INVARIANTS[sample_type]
+        sample_invariants = HUMAN_SITE_INVARIANTS.get(sample_type)
+
+        # there are a handful of samples that exhibit an unusual state
+        # of reporting as human, but a site sampled as Fur. I believe
+        # these are tests, but regardless, resolution is not clear.
+        # let's catch unexpected, and move forward so we don't bomb on
+        # a KeyError
+        if sample_invariants is None:
+            raise RepoException("Unexpected sample type: %s" % sample_type)
+
     elif source_type == 'animal':
         sample_type = sample_detail.site
         sample_invariants = {}

@@ -4,11 +4,11 @@
 A private microservice to support The Microsetta Initiative
 
 ## Installation
-The private microservice depends on Postgres 9.5. For OSX users, we recommend installing [Postgres.app](https://postgresapp.com/). For Linux users, please consult documentation for the Linux distribution in use. 
+The private microservice depends on Postgres 9 or higher. For OSX users, we recommend installing [Postgres.app](https://postgresapp.com/). For Linux users, please consult documentation for the Linux distribution in use. 
 
 Create a new `conda` environment containing `flask` and other necessary packages: 
 
-`conda create -n microsetta-private-api flask psycopg2 natsort pycryptodome`
+`conda create --yes -n microsetta-private-api python=3.7`
 
 Once the conda environment is created, activate it:
 
@@ -16,32 +16,25 @@ Once the conda environment is created, activate it:
 
 Ensure that the `conda-forge` channel has been added to the conda install and run:
 
-`conda install -c conda-forge python-dateutil pycountry coveralls pytest-cov` 
+`conda install --yes --file ci/conda_requirements.txt`
 
-Install connexion version 2.0 (which supports the OpenAPI Specification 3.0) as well as the Swagger UI:
+Install additional requirements using pip:
 
-`pip install connexion[swagger-ui]`
-
-Install the JSON Web Tokens library with cryptography support:
-
-`pip install pyjwt[crypto]`
-
-Install Redis and Celery with Redis support for out-of-band compute:
-
-```bash
-conda install redis
-pip install celery[redis]
-```
+`pip install -r ci/pip_requirements.txt`
 
 Then install the microsetta-private-api in editable mode:
 
-`pip install -e .`
+`pip install -e . --no-deps`
  
 ## Test Usage
 
 In the activated conda environment, initialize a test database:
 
 `python microsetta_private_api/LEGACY/build_db.py`
+
+To run unittests:
+
+`make test`
 
 Then we'll initiate a Celery worker (Example shown is with embedded Celery Beat scheduler):
 
@@ -61,4 +54,3 @@ which will start the server on http://localhost:8082 . Note that this usage is s
 **development ONLY**--real use of the service would require a production-level server. 
 
 The Swagger UI should also be available at http://localhost:8082/api/ui .
-

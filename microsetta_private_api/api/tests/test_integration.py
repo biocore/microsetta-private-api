@@ -73,7 +73,10 @@ def client(request):
         request.cls.client = client
 
         with patch("microsetta_private_api.api."
-                   "verify_jwt") as mock_verify:
+                   "verify_jwt") as mock_verify, \
+                patch("microsetta_private_api.api._sample.qclient"), \
+                patch("microsetta_private_api.admin.admin_impl.qclient"), \
+                patch("microsetta_private_api.repo.qiita_repo.qclient"):
             mock_verify.side_effect = mock_verify_func
             yield client
 
@@ -1055,7 +1058,7 @@ class IntegrationTests(TestCase):
         readonly_fields = [
             'sample_id', 'sample_barcode',
             'sample_edit_locked', 'sample_remove_locked', 'sample_projects',
-            'source_id', 'account_id'
+            'source_id', 'account_id', "accession_urls"
         ]
 
         for readonly_field in readonly_fields:

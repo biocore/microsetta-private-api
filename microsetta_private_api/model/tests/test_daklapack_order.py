@@ -1,6 +1,5 @@
 from copy import deepcopy
-from dateutil import parser
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, date
 from unittest import TestCase
 from microsetta_private_api.api.tests.test_api import DUMMY_ACCT_INFO_2
 from microsetta_private_api.model.account import Account
@@ -9,7 +8,7 @@ from microsetta_private_api.model.daklapack_order import DaklapackOrder
 DUMMY_DAK_ORDER_ID = '7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b'
 DUMMY_PROJ_ID_LIST = [1, 12]
 DUMMY_DAK_ORDER_DESC = "test daklapack order"
-DUMMY_HOLD_MSG = "hold this order"
+DUMMY_PLANNED_SEND_DATE = date(2032, 2, 9).strftime(DaklapackOrder.DATE_FORMAT)
 DUMMY_DAK_ARTICLE_CODE = '350102'
 DUMMY_ADDRESSES = [{
     'firstName': 'Jane',
@@ -40,7 +39,7 @@ DUMMY_ADDRESSES = [{
 DUMMY_FEDEX_REFS = ['Bill Ted', 'Mine', 'Yours']
 
 
-def make_dummies(include_fedex_refs=False):
+def make_dummies(include_fedex_refs=False, include_planned_send_date=False):
     dummy_acct_dict = deepcopy(DUMMY_ACCT_INFO_2)
     dummy_acct_dict['id'] = 'dummy_acct_id'
     dummy_acct = Account.from_dict(dummy_acct_dict, "an_iss", "a_sub")
@@ -51,7 +50,7 @@ def make_dummies(include_fedex_refs=False):
         'articles': [
             {
                 'articleCode': '350102',
-                'quantity': 1
+                'quantity': '2'
             }
         ],
         'address':
@@ -84,6 +83,9 @@ def make_dummies(include_fedex_refs=False):
              'value': 'Yours'}
         ]
 
+    if include_planned_send_date:
+        dummy_order_struct['plannedSendDate'] = DUMMY_PLANNED_SEND_DATE
+
     return dummy_order_struct, dummy_acct
 
 
@@ -96,41 +98,46 @@ class DaklapackOrderTests(TestCase):
         real_address = real_out.order_structure['address']
         # pop out creation date and make sure it is approximately now :)
         curr_create_str = real_address.pop("creationDate")
-        curr_create_time = parser.isoparse(curr_create_str)
-        self.assertAlmostEqual(datetime.now(timezone.utc),
+        curr_create_time = datetime.strptime(
+            curr_create_str, DaklapackOrder.DATESTAMP_FORMAT)
+        self.assertAlmostEqual(datetime.now(),
                                curr_create_time,
                                delta=timedelta(minutes=2))
         self.assertEqual(dummy_order_struct, real_out.order_structure)
 
     def test_from_api_fully_specified(self):
-        dummy_order_struct, dummy_acct = make_dummies(include_fedex_refs=True)
+        dummy_order_struct, dummy_acct = make_dummies(
+            include_fedex_refs=True, include_planned_send_date=True)
 
         real_out = DaklapackOrder.from_api(
             submitter_acct=dummy_acct,
             project_ids=DUMMY_PROJ_ID_LIST,
             description=DUMMY_DAK_ORDER_DESC,
-            fulfillment_hold_msg=DUMMY_HOLD_MSG,
+            planned_send_date=DUMMY_PLANNED_SEND_DATE,
             daklapack_order_id=DUMMY_DAK_ORDER_ID,
             article_code=DUMMY_DAK_ARTICLE_CODE,
             address=DUMMY_ADDRESSES[0],
             fedex_ref_1=DUMMY_FEDEX_REFS[0],
             fedex_ref_2=DUMMY_FEDEX_REFS[1],
-            fedex_ref_3=DUMMY_FEDEX_REFS[2])
+            fedex_ref_3=DUMMY_FEDEX_REFS[2],
+            quantity=2)
 
         self._compare_base_orders(dummy_acct, dummy_order_struct, real_out)
         self.assertEqual(DUMMY_DAK_ORDER_DESC, real_out.description)
-        self.assertEqual(DUMMY_HOLD_MSG, real_out.fulfillment_hold_msg)
+        self.assertEqual(DUMMY_PLANNED_SEND_DATE, real_out.planned_send_date)
 
     def test_from_api_wo_optionals(self):
-        dummy_order_struct, dummy_acct = make_dummies(include_fedex_refs=False)
+        dummy_order_struct, dummy_acct = make_dummies(
+            include_fedex_refs=False, include_planned_send_date=False)
 
         real_out = DaklapackOrder.from_api(
             submitter_acct=dummy_acct,
             project_ids=DUMMY_PROJ_ID_LIST,
             daklapack_order_id=DUMMY_DAK_ORDER_ID,
             article_code=DUMMY_DAK_ARTICLE_CODE,
-            address=DUMMY_ADDRESSES[0])
+            address=DUMMY_ADDRESSES[0],
+            quantity=2)
 
         self._compare_base_orders(dummy_acct, dummy_order_struct, real_out)
         self.assertEqual(None, real_out.description)
-        self.assertEqual(None, real_out.fulfillment_hold_msg)
+        self.assertEqual(None, real_out.planned_send_date)

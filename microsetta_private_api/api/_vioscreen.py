@@ -76,12 +76,12 @@ def read_sample_vioscreen_dietary_score(account_id, source_id,
     with Transaction() as t:
         vio_diet = VioscreenDietaryScoreRepo(t)
 
-        vioscreen_dietary_score = vio_diet.get_dietary_score(
+        vioscreen_dietary_scores = vio_diet.get_dietary_scores(
             vioscreen_session[0].sessionId)
-        if vioscreen_dietary_score is None:
+        if vioscreen_dietary_scores is None:
             return jsonify(code=404, message="Dietary Score not found"), 404
 
-        return jsonify(vioscreen_dietary_score.to_api()), 200
+        return jsonify([vds.to_api() for vds in vioscreen_dietary_scores]), 200
 
 
 def read_sample_vioscreen_supplements(account_id, source_id,

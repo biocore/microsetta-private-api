@@ -1,5 +1,7 @@
 import flask
 from flask import jsonify
+from qiita_client import NotFoundError, BadRequestError, \
+    ForbiddenError
 from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api.api._account import _validate_account_access
@@ -13,6 +15,9 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.util.util import fromisotime
 from microsetta_private_api.admin.admin_impl import token_grants_admin_access
+from microsetta_private_api.qiita import qclient
+
+from flask import current_app as app
 
 
 def read_sample_associations(account_id, source_id, token_info):
@@ -54,7 +59,41 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         if sample is None:
             return jsonify(code=404, message="Sample not found"), 404
 
-        return jsonify(sample.to_api()), 200
+    qiita_body = {
+        'sample_ids': ["10317." + str(sample.barcode)]
+    }
+
+    try:
+        qiita_data = qclient.post(
+            '/api/v1/study/10317/samples/status',
+            json=qiita_body
+        )
+        accession_urls = []
+        for barcode_info in qiita_data:
+            experiment_accession = barcode_info.get("ebi_experiment_accession")
+            if experiment_accession is None:
+                continue
+            accession_urls.append(
+                "https://www.ebi.ac.uk/ena/browser/view/" +
+                experiment_accession +
+                "?show=reads")
+        sample.set_accession_urls(accession_urls)
+    except NotFoundError:
+        # I guess qiita doesn't know about this barcode,
+        # so probably no ebi accession info
+        pass
+    except BadRequestError:
+        # How do I log these to gunicorn??
+        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
+    except ForbiddenError:
+        # How do I log these to gunicorn??
+        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
+    except RuntimeError:
+        # How do I log these to gunicorn??
+        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
+        raise
+
+    return jsonify(sample.to_api()),
 
 
 def update_sample_association(account_id, source_id, sample_id, body,

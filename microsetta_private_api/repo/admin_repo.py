@@ -1250,7 +1250,7 @@ class AdminRepo(BaseRepo):
             order_id,
             daklapack_order.submitter_acct.id,
             daklapack_order.description,
-            daklapack_order.fulfillment_hold_msg,
+            daklapack_order.planned_send_date,
             daklapack_order.order_json,
             daklapack_order.creation_timestamp,
             daklapack_order.last_polling_timestamp,
@@ -1261,7 +1261,7 @@ class AdminRepo(BaseRepo):
             cur.execute(
                 "INSERT INTO barcodes.daklapack_order "
                 "(dak_order_id, submitter_acct_id, description, "
-                "fulfillment_hold_msg, order_json, creation_timestamp, "
+                "planned_send_date, order_json, creation_timestamp, "
                 "last_polling_timestamp, last_polling_status) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 order_args
