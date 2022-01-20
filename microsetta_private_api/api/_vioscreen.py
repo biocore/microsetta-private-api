@@ -185,3 +185,20 @@ def read_sample_vioscreen_food_consumption(account_id, source_id,
             return jsonify(code=404, message="Food Consumption not found"), 404
 
         return jsonify(vioscreen_food_consumption.to_api()), 200
+
+
+def get_vioscreen_dietary_scores_by_component(account_id, source_id,
+                                              sample_id, token_info,
+                                              score_type, score_code):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        vio_diet = VioscreenDietaryScoreRepo(t)
+        scores = vio_diet.get_dietary_scores_by_component(score_type,
+                                                          score_code)
+
+        if scores is None:
+            return jsonify(code=404, message="Dietary Scores not found"), 404
+
+        return jsonify({"scoresType": score_type, "code": score_code,
+                        "scores": scores})

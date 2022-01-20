@@ -1070,6 +1070,34 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/dietaryscore/type/{score_type}/code/{score_code}':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_dietary_scores_by_component
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen dietary scores for a specific component
+      description: Get information about Vioscreen dietary scores for a specific component
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/score_type'
+        - $ref: '#/components/parameters/score_code'
+      responses:
+        '200':
+          description: Successfully returned dietary score information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   # NB: "surveys" is used as a path component in two different ways (here nested under sample and above nested
   # directly under source.  The dev team assessed this and decided this dual usage was not unacceptably confusing.
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/surveys':
@@ -1515,7 +1543,7 @@ paths:
           description: Country of address to verify
           required: true
           schema:
-            type: string      
+            type: string
       responses:
         '200':
           description: Object containing address and verification status
@@ -2108,6 +2136,18 @@ components:
       description: Project ID
       schema:
         $ref: '#/components/schemas/project_id'
+    score_type:
+      name: score_type
+      in: path
+      description: Dietary Score Type
+      schema:
+        $ref: '#/components/schemas/score_type'
+    score_code:
+      name: score_code
+      in: path
+      description: Dietary Score Code
+      schema:
+        $ref: '#/components/schemas/score_code'
 
     # query parameters
     activation_code:
@@ -2750,6 +2790,14 @@ components:
         - project_name
         - is_microsetta
         - bank_samples
+
+    # dietary score section
+    score_type:
+      type: string
+      example: "Hei2010"
+    score_code:
+      type: string
+      example: "TotalVegetables"
 
     # error section
     Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/

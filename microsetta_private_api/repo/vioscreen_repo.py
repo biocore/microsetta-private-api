@@ -398,6 +398,35 @@ class VioscreenDietaryScoreRepo(BaseRepo):
 
         return scores[code]
 
+    def get_dietary_scores_by_component(self, scoresType, code):
+        """Obtain the all the dietary scores for a particular component
+        Parameters
+        ----------
+        scoresType : str
+            The scoresType to query
+        code : str
+            The code to query
+        Returns
+        -------
+        Float Array or None
+            The dietary scores, or None if no record was found
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT score
+                           FROM ag.vioscreen_dietaryscore
+                           WHERE scoresType = %s AND code = %s""",
+                        (scoresType, code))
+
+            rows = cur.fetchall()
+            if len(rows) > 0:
+                scores = []
+                for score in rows:
+                    scores.append(score[0])
+                return scores
+
+            else:
+                return None
+
 
 class VioscreenSupplementsRepo(BaseRepo):
     def __init__(self, transaction):
