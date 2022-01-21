@@ -479,6 +479,11 @@ class VioscreenFoodConsumptionComponent(ModelBase):
         # data is a list of individual VioscreenFoodComponentsComponent objects
         self.data = data
 
+    def __repr__(self):
+        parts = ', '.join([f"{k}={v}"
+                           for k, v in sorted(self.__dict__.items())])
+        return "<%s>" % parts
+
     @classmethod
     def from_vioscreen(cls, component):
         data = [
@@ -553,7 +558,9 @@ class VioscreenFoodConsumption(ModelBase):
 
         a = sorted(self.components)
         b = sorted(other.components)
-
+        print(a == b)
+        print(a[:10])
+        print(b[:10])
         return a == b
 
 
