@@ -515,7 +515,7 @@ class VioscreenFoodConsumptionComponent(ModelBase):
         }
 
     def __lt__(self, other):
-        return self.foodCode < other.foodCode
+        return self.description < other.description
 
     def __eq__(self, other):
         for k in self.__dict__:
