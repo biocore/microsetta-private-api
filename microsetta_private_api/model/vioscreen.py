@@ -572,3 +572,9 @@ class VioscreenComposite(ModelBase):
         # make first class as the vioscreen username is our internal
         # survey identifier
         self.vio_id = session.username
+
+    def __eq__(self, other):
+        print(self.__dict__.keys() == other.__dict__.keys())
+        for k in self.__dict__:
+            print(k, self.__dict__[k] == other.__dict__[k])
+        return self.__dict__ == other.__dict__
