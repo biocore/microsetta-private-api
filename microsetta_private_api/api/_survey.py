@@ -349,7 +349,6 @@ def top_food_report(account_id, source_id, survey_id, token_info):
 
 
 def read_myfoodrepo_available_slots():
-    print("asdasdasd")
     with Transaction() as t:
         st_repo = SurveyTemplateRepo(t)
         available = st_repo.myfoodrepo_slots_available()
