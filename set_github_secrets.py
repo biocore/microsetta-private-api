@@ -3,12 +3,14 @@ from json import loads, dumps
 
 # test if one of our secrets exists
 if os.environ.get('MFR_URL') is not None:
+    print("SETTING SECRETS")
     config = loads(open('microsetta_private_api/server_config.json').read())
 
     config['myfoodrepo_url'] = os.environ['MFR_URL']
     config['myfoodrepo_key'] = os.environ['MFR_TEST_APIKEY']
     config['fundrazr_key'] = os.environ['FUNDRAZR_TEST_APIKEY']
     config['fundrazr_url'] = os.environ['FUNDRAZR_TEST_URL']
+    print(config['fundrazr_url'])
     config['fundrazr_organization'] = os.environ['FUNDRAZR_TEST_ORG']
     config["vioscreen_endpoint"] = os.environ['VS_ENDPOINT']
     config["vioscreen_regcode"] = os.environ['VS_REGCODE']
