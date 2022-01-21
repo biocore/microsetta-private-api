@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 import werkzeug
 from werkzeug.exceptions import Unauthorized
+from urllib.parse import urlparse, parse_qs
 
 import microsetta_private_api.server
 from microsetta_private_api.localization import LANG_SUPPORT, \
@@ -18,6 +19,8 @@ from microsetta_private_api.model.source import \
     Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.util.util import json_converter, fromisotime
+from microsetta_private_api.util import vioscreen
+from microsetta_private_api.config_manager import SERVER_CONFIG
 import datetime
 import json
 from unittest import TestCase
@@ -245,6 +248,16 @@ class IntegrationTests(TestCase):
             acct_repo = AccountRepo(t)
             source_repo = SourceRepo(t)
             _remove_mock_kit(t)
+
+            # since myfoodrepo is source not sample based,
+            # we cannot simply use the "remove_mock_kit"
+            # machinery. however, we still need to clean up
+            # dangling FKs, so let's do so
+            cur = t.cursor()
+            cur.execute("DELETE FROM myfoodrepo_registry "
+                        "WHERE account_id=%s",
+                        (ACCT_ID,))
+
             survey_answers_repo = SurveyAnswersRepo(t)
             for source in source_repo.get_sources_in_account(ACCT_ID):
                 answers = survey_answers_repo.list_answered_surveys(ACCT_ID,
@@ -349,28 +362,181 @@ class IntegrationTests(TestCase):
         # Survey status should not be in templates
         self.assertNotIn("survey_status", bobo_surveys[0])
         self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
-                             [1, 3, 4, 5, 6, 10001])
+                             [1, 3, 4, 5, 6, 10001, 10002])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
                              [2])
         self.assertListEqual([x["survey_template_id"] for x in env_surveys],
                              [])
 
+    def _bobo_to_claim_a_sample(self):
+        resp = self.client.get(
+            '/api/accounts/%s/sources?language_tag=en_US' % ACCT_ID,
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+        sources = json.loads(resp.data)
+        bobo = [x for x in sources if x['source_name'] == 'Bo'][0]
+
+        # claim a sample
+        resp = self.client.get(
+            '/api/kits/?language_tag=en_US&kit_name=%s' % SUPPLIED_KIT_ID,
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+
+        unused_samples = json.loads(resp.data)
+        sample_id = unused_samples[0]['sample_id']
+
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/samples?language_tag=en_US' %
+            (ACCT_ID, bobo['source_id']),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_id": sample_id
+                }),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+        return bobo
+
     def test_bobo_takes_vioscreen(self):
-        self.fail()
+        bobo = self._bobo_to_claim_a_sample()
+
+        # take vioscreen
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/10001'
+            '?language_tag=en_US&vioscreen_ext_sample_id=%s'
+            '&survey_redirect_url=http://foo.bar' %
+            (ACCT_ID, bobo['source_id'], MOCK_SAMPLE_ID),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+
+        # "answer" the vioscreen survey. first, we're going to deconstruct
+        # the submitted key to obtain the survey ID. second, we need to
+        # reconstruct a key to simulate a payload we would receive from
+        # vioscreen. In the simulated key, we'll include status=3 which for
+        # vioscreen indicates a finished survey.
+        data = json.loads(resp.data)
+        url = data['survey_template_text']['url']
+        submitted_arguments = parse_qs(urlparse(url).query)
+        keydata = vioscreen.decode_key(submitted_arguments['Key'][0])
+        vio_info = {}
+        for keyval in keydata.decode("utf-8").split("&"):
+            key, val = keyval.split("=")
+            vio_info[key] = val
+        regcode = submitted_arguments['RegCode'][0]
+        completed_key = vioscreen.encrypt_key(vio_info['Username'],
+                                              vio_info['CultureCode'],
+                                              'http://foo.bar',
+                                              1,
+                                              vio_info['DOB'],
+                                              None,
+                                              None,
+                                              regcode,
+                                              ["status=3", ])
+
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys'
+            '?language_tag=en_US' %
+            (ACCT_ID, bobo['source_id']),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "survey_template_id": 10001,
+                    "survey_text": {'key': completed_key.decode('utf-8')}
+                }),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp, 201)
+
+        resp = self.client.delete(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
+            (ACCT_ID, bobo['source_id'], MOCK_SAMPLE_ID),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
 
     def test_bobo_takes_myfoodrepo_with_slots(self):
-        self.fail()
+        bobo = self._bobo_to_claim_a_sample()
+
+        # take myfoodrepo
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/10002'
+            '?language_tag=en_US'
+            '&survey_redirect_url=http://foo.bar' %
+            (ACCT_ID, bobo['source_id']),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+        data = json.loads(resp.data)
+        exp_start = SERVER_CONFIG['myfoodrepo_user_url']
+        url = data['survey_template_text']['url']
+        self.assertTrue(url.startswith(exp_start))
+
+        # we don't yet know how MFR wants subject ID encoded
+
+        # verify we err if we attempt to answer the survey. an "answer" here is
+        # undefined
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys'
+            '?language_tag=en_US' %
+            (ACCT_ID, bobo['source_id']),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "survey_template_id": 10002,
+                    "survey_text": {'key': 'stuff'}
+                }),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp, 404)
 
     def test_bobo_takes_myfoodrepo_without_slots(self):
-        self.fail()
+        bobo = self._bobo_to_claim_a_sample()
 
-    def test_bobo_takes_a_survey(self):
+        # modify the database to max out slots
+        with Transaction() as t:
+            slots = SERVER_CONFIG['myfoodrepo_slots']
+            cur = t.cursor()
+            cur.execute("""INSERT INTO ag.myfoodrepo_registry
+                           (account_id, source_id)
+                           SELECT account_id, id as source_id
+                                 FROM ag.source
+                                 WHERE account_id != %s
+                                 LIMIT %s""",
+                        (ACCT_ID, slots))
+            t.commit()
+
+        # take myfoodrepo
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/10002'
+            '?language_tag=en_US'
+            '&survey_redirect_url=http://foo.bar' %
+            (ACCT_ID, bobo['source_id']),
+            headers=MOCK_HEADERS
+        )
+        # we throw a 404 as a slot is "not found"
+        check_response(resp, 404)
+        data = json.loads(resp.data)
+        self.assertEqual(data['detail'], ("Sorry, but the annotators are "
+                                          "all allocated"))
+
+        # ...and clean up to be polite
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""DELETE FROM ag.myfoodrepo_registry
+                           WHERE myfoodrepo_id IS NULL""")
+            t.commit()
+
+    def test_bobo_takes_all_local_surveys(self):
         """
            Check that a user can login to an account,
            list sources,
            pick a source,
            list surveys for that source,
-           pick a survey,
+           for each local survey,
            retrieve that survey
            submit answers to that survey
         """
@@ -387,50 +553,57 @@ class IntegrationTests(TestCase):
             headers=MOCK_HEADERS
         )
         bobo_surveys = json.loads(resp.data)
-        chosen_survey = bobo_surveys[0]["survey_template_id"]
-        resp = self.client.get(
-            '/api/accounts/%s/sources/%s/survey_templates/%s'
-            '?language_tag=en_US' %
-            (ACCT_ID, bobo['source_id'], chosen_survey),
-            headers=MOCK_HEADERS
-        )
-        check_response(resp)
 
-        model = fuzz_form(json.loads(resp.data)["survey_template_text"])
-        resp = self.client.post(
-            '/api/accounts/%s/sources/%s/surveys?language_tag=en_US'
-            % (ACCT_ID, bobo['source_id']),
-            content_type='application/json',
-            data=json.dumps(
-                {
-                    'survey_template_id': chosen_survey,
-                    'survey_text': model
-                }),
-            headers=MOCK_HEADERS
-        )
-        check_response(resp, 201)
-        loc = resp.headers.get("Location")
-        url = werkzeug.urls.url_parse(loc)
-        survey_id = url.path.split('/')[-1]
+        for bobo_survey in bobo_surveys:
+            chosen_survey = bobo_survey["survey_template_id"]
 
-        # TODO: Need a sanity check, is returned Location supposed to specify
-        #  query parameters?
-        resp = self.client.get(loc + "?language_tag=en_US",
-                               headers=MOCK_HEADERS
-                               )
-        check_response(resp)
-        retrieved_survey = json.loads(resp.data)
-        # Retrieved surveys should have a survey_status field, though it is
-        # None for everything but vioscreen.
-        self.assertIn("survey_status", retrieved_survey)
-        self.assertDictEqual(retrieved_survey["survey_text"], model)
+            # 10001 and 10002 are non-local surveys
+            if chosen_survey in (10001, 10002):
+                continue
 
-        # Clean up after the new survey
-        with Transaction() as t:
-            repo = SurveyAnswersRepo(t)
-            found = repo.delete_answered_survey(ACCT_ID, survey_id)
-            self.assertTrue(found, "Couldn't find survey to delete, oops!")
-            t.commit()
+            resp = self.client.get(
+                '/api/accounts/%s/sources/%s/survey_templates/%s'
+                '?language_tag=en_US' %
+                (ACCT_ID, bobo['source_id'], chosen_survey),
+                headers=MOCK_HEADERS
+            )
+            check_response(resp)
+
+            model = fuzz_form(json.loads(resp.data)["survey_template_text"])
+            resp = self.client.post(
+                '/api/accounts/%s/sources/%s/surveys?language_tag=en_US'
+                % (ACCT_ID, bobo['source_id']),
+                content_type='application/json',
+                data=json.dumps(
+                    {
+                        'survey_template_id': chosen_survey,
+                        'survey_text': model
+                    }),
+                headers=MOCK_HEADERS
+            )
+            check_response(resp, 201)
+            loc = resp.headers.get("Location")
+            url = werkzeug.urls.url_parse(loc)
+            survey_id = url.path.split('/')[-1]
+
+            # TODO: Need a sanity check, is returned Location supposed to
+            # specify query parameters?
+            resp = self.client.get(loc + "?language_tag=en_US",
+                                   headers=MOCK_HEADERS
+                                   )
+            check_response(resp)
+            retrieved_survey = json.loads(resp.data)
+            # Retrieved surveys should have a survey_status field, though it is
+            # None for everything but vioscreen.
+            self.assertIn("survey_status", retrieved_survey)
+            self.assertDictEqual(retrieved_survey["survey_text"], model)
+
+            # Clean up after the new survey
+            with Transaction() as t:
+                repo = SurveyAnswersRepo(t)
+                found = repo.delete_answered_survey(ACCT_ID, survey_id)
+                self.assertTrue(found, "Couldn't find survey to delete, oops!")
+                t.commit()
 
     def test_create_new_account(self):
         # Clean up before the test in case we already have a janedoe
@@ -1458,6 +1631,11 @@ def _remove_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
         for curr_index in range(0, len(barcodes)):
             barcode = barcodes[curr_index]
             mock_sample_id = mock_sample_ids[curr_index]
+
+            # clean up any registry entries which may hold foreign keys
+            cur.execute("DELETE FROM vioscreen_registry "
+                        "WHERE sample_id=%s",
+                        (mock_sample_id,))
 
             # delete the record for this sample/barcode from the
             # ag_kit_barcodes table

@@ -86,24 +86,30 @@ def _remote_survey_url_vioscreen(transaction, account_id, source_id,
 def _remote_survey_url_myfoodrepo(transaction, account_id, source_id,
                                   language_tag):
     # assumes an instance of Transaction is already available
-    survey_template_repo = SurveyTemplateRepo(transaction)
+    st_repo = SurveyTemplateRepo(transaction)
 
     # do we already have an id?
-    mfr_id = survey_template_repo.get_myfoodrepo_id_if_exists(account_id,
-                                                              source_id)
+    mfr_id, created = st_repo.get_myfoodrepo_id_if_exists(account_id,
+                                                          source_id)
 
     if mfr_id is None:
-        # if not, see create one if we have a slot available
-        slot = survey_template_repo.create_myfoodrepo_entry(account_id,
-                                                            source_id)
-        if not slot:
-            # we could not obtain a slot
-            return None
+        # we need an ID so let's try and get one
+        if created is None:
+            # we need a slot and an id
+            slot = st_repo.create_myfoodrepo_entry(account_id, source_id)
+            if not slot:
+                # we could not obtain a slot
+                raise NotFound("Sorry, but the annotators are all allocated")
 
-        mfr_id = myfoodrepo.create_subj()
-        survey_template_repo.set_myfoodrepo_id(account_id,
-                                               source_id,
-                                               mfr_id)
+            mfr_id = myfoodrepo.create_subj()
+        else:
+            # we have a slot but no id
+            mfr_id = myfoodrepo.create_subj()
+
+        st_repo.set_myfoodrepo_id(account_id, source_id, mfr_id)
+    else:
+        # we already have an ID then just return the URL
+        pass
 
     return myfoodrepo.gen_survey_url(mfr_id)
 
@@ -229,6 +235,8 @@ def submit_answered_survey(account_id, source_id, language_tag, body,
     if body['survey_template_id'] == SurveyTemplateRepo.VIOSCREEN_ID:
         return _submit_vioscreen_status(account_id, source_id,
                                         body["survey_text"]["key"])
+    if body['survey_template_id'] == SurveyTemplateRepo.MYFOODREPO_ID:
+        raise NotFound("We don't have a notion of answering this survey type")
 
     # TODO: Is this supposed to return new survey id?
     # TODO: Rename survey_text to survey_model/model to match Vue's naming?
@@ -285,7 +293,7 @@ def _submit_vioscreen_status(account_id, source_id, info_str):
     vio_info = {}
     for keyval in info.split("&"):
         key, val = keyval.split("=")
-        vio_info[key] = val
+        vio_info[key.lower()] = val
 
     with Transaction() as t:
         vio_repo = VioscreenRepo(t)

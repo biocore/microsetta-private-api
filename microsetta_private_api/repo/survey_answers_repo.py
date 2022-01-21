@@ -309,6 +309,12 @@ class SurveyAnswersRepo(BaseRepo):
                         "WHERE "
                         "account_id = %s AND vio_id = %s",
                         (acct_id, survey_id))
+            cur.execute("UPDATE myfoodrepo_registry SET "
+                        "deleted=true, "
+                        "source_id = NULL "
+                        "WHERE "
+                        "account_id = %s AND myfoodrepo_id = %s",
+                        (acct_id, survey_id))
         return True
 
     def associate_answered_survey_with_sample(self, account_id, source_id,
@@ -352,7 +358,7 @@ class SurveyAnswersRepo(BaseRepo):
                         "barcode = %s AND "
                         "survey_id = %s",
                         (s.barcode, survey_id))
-            # Also delete from vioscreen registry
+            # Also delete from vioscreen and myfoodrepo registries
             cur.execute("UPDATE vioscreen_registry "
                         "SET deleted=true "
                         "WHERE "
@@ -361,6 +367,13 @@ class SurveyAnswersRepo(BaseRepo):
                         "sample_id = %s AND "
                         "vio_id = %s",
                         (account_id, source_id, sample_id, survey_id))
+            cur.execute("UPDATE myfoodrepo_registry "
+                        "SET deleted=true "
+                        "WHERE "
+                        "account_id = %s AND "
+                        "source_id = %s AND "
+                        "myfoodrepo_id = %s",
+                        (account_id, source_id, survey_id))
 
     def build_metadata_map(self):
         with self._transaction.cursor() as cur:

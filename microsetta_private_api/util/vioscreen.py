@@ -118,7 +118,8 @@ def encrypt_key(survey_id,
                 dob,
                 height,
                 weight,
-                regcode
+                regcode,
+                _testing_arguments=None
                 ):
     """Encode minimal required vioscreen information to AES key"""
     firstname = "NOT"
@@ -136,6 +137,9 @@ def encrypt_key(survey_id,
              "Visit=1",
              "EncryptQuery=True",
              "ReturnUrl={%s}" % returnurl]
+
+    if _testing_arguments is not None:
+        parts.extend(_testing_arguments)
 
     if height is not None and weight is not None:
         parts.append("Height=%s" % height)

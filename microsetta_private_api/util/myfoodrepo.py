@@ -9,4 +9,4 @@ def gen_survey_url(mfr_id):
 
 def create_subj():
     # deal with the cohort, create a subject etc
-    raise ValueError()
+    return "foobar"

@@ -76,11 +76,11 @@ class SurveyTemplateRepo(BaseRepo):
         super().__init__(transaction)
 
     def local_surveys(self):
-        return {k: v for k, v in self.SURVEY_INFO
+        return {k: v for k, v in self.SURVEY_INFO.items()
                 if v.survey_template_type == 'local'}
 
     def remote_surveys(self):
-        return {k: v for k, v in self.SURVEY_INFO
+        return {k: v for k, v in self.SURVEY_INFO.items()
                 if v.survey_template_type == 'remote'}
 
     def list_survey_ids(self):
