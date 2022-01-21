@@ -481,7 +481,8 @@ class VioscreenFoodConsumptionComponent(ModelBase):
 
     def __repr__(self):
         parts = ', '.join([f"{k}={v}"
-                           for k, v in sorted(self.__dict__.items())])
+                           for k, v in sorted(self.__dict__.items())
+                           if k != 'data'])
         return "<%s>" % parts
 
     @classmethod
