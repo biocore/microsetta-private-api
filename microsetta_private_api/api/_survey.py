@@ -346,3 +346,15 @@ def top_food_report(account_id, source_id, survey_id, token_info):
         #                      filename='top-food-report.pdf')
 
         return response
+
+
+def read_myfoodrepo_available_slots():
+    print("asdasdasd")
+    with Transaction() as t:
+        st_repo = SurveyTemplateRepo(t)
+        available = st_repo.myfoodrepo_slots_available()
+        total = st_repo.myfoodrepo_slots_total()
+
+    resp = jsonify(code=200, number_of_available_slots=available,
+                   total_number_of_slots=total)
+    return resp, 200

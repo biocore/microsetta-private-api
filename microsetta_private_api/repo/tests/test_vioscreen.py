@@ -10,9 +10,8 @@ from microsetta_private_api.repo.tests.test_vioscreen_supplements import (
     VIOSCREEN_SUPPLEMENTS
     )
 from microsetta_private_api.model.vioscreen import (
-    VioscreenSupplements, VioscreenFoodConsumption, VioscreenDietaryScore,
-    VioscreenPercentEnergy, VioscreenFoodComponents, VioscreenMPeds,
-    VioscreenEatingPatterns, VioscreenComposite)
+    VioscreenFoodConsumption, VioscreenPercentEnergy, VioscreenFoodComponents,
+    VioscreenMPeds, VioscreenEatingPatterns, VioscreenComposite)
 
 
 def get_data_path(filename):

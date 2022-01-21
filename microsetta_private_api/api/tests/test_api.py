@@ -1235,6 +1235,16 @@ class SourceTests(ApiTests):
 
 @pytest.mark.usefixtures("client")
 class SurveyTests(ApiTests):
+    def test_myfoodrepo_slots(self):
+        get_resp = self.client.get('/api/slots/myfoodrepo/?language_tag=en_US',
+                                   headers=self.dummy_auth)
+        self.assertEqual(get_resp.status_code, 200)
+        data = json.loads(get_resp.data)
+        self.assertTrue(data['number_of_available_slots'] > 0)
+
+        # no slots should be used
+        self.assertEqual(data['number_of_available_slots'],
+                         data['total_number_of_slots'])
 
     def _validate_survey_info(self, response, expected_output, expected_model):
         # load the response body

@@ -344,7 +344,7 @@ class SurveyTemplateRepo(BaseRepo):
                 return res
 
     def myfoodrepo_slots_available(self):
-        """Test if there are available slots for a myfoodrepo participant
+        """Return the available number of slots
 
         Returns
         -------
@@ -361,6 +361,17 @@ class SurveyTemplateRepo(BaseRepo):
                             )""")
             count = cur.fetchone()[0]
             return max(0, maximum_slots - count)
+
+    def myfoodrepo_slots_total(self):
+        """Return the total number of slots
+
+        Returns
+        -------
+        int
+            The total number of slots
+        """
+        maximum_slots = SERVER_CONFIG['myfoodrepo_slots']
+        return maximum_slots
 
     def create_vioscreen_id(self, account_id, source_id,
                             vioscreen_ext_sample_id):
