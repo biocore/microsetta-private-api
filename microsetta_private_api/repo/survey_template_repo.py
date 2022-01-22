@@ -299,14 +299,14 @@ class SurveyTemplateRepo(BaseRepo):
                 raise KeyError(f"{account_id} and {source_id} do not have "
                                f"a slot")
 
-            # Put a survey with status -1 into ag_login_surveys
+            # Put a survey into ag_login_surveys
             cur.execute("INSERT INTO ag_login_surveys("
                         "ag_login_id, "
                         "survey_id, "
                         "vioscreen_status, "
                         "source_id) "
                         "VALUES(%s, %s, %s, %s)",
-                        (account_id, mfr_id, -1, source_id))
+                        (account_id, mfr_id, None, source_id))
 
             # Add to the myfoodrepo_registry
             cur.execute("""UPDATE myfoodrepo_registry

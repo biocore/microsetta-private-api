@@ -44,18 +44,25 @@ class SurveyAnswersRepo(BaseRepo):
                         (survey_answers_id,))
             rows += cur.fetchall()
 
-            # TODO:  We probably can't merge the PR with this change, need
-            #  a policy to resolve these survey ids (unless they only happen
-            #  in dev builds)
-            # TODO:  It's even worse than I feared.  Some of our primary
-            #  surveys are ALSO vioscreen surveys with the same key. wtf.
             if len(rows) == 0:
+                # see if it's vioscreen
                 vioscreen_repo = VioscreenRepo(self._transaction)
                 status = vioscreen_repo._get_vioscreen_status(
                     survey_answers_id)
                 if status is not None:
                     return SurveyTemplateRepo.VIOSCREEN_ID, status
+
+                # see if it's myfoodrepo
+                cur.execute("""SELECT EXISTS (
+                                   SELECT myfoodrepo_id
+                                   FROM myfoodrepo_registry
+                                   WHERE myfoodrepo_id=%s)""",
+                            (survey_answers_id, ))
+                if cur.fetchone()[0] is True:
+                    return SurveyTemplateRepo.MYFOODREPO_ID, None
                 else:
+                    # not vioscreen and not myfoodrepo?
+
                     return None, None
                     # TODO: Maybe this should throw an exception, but doing so
                     #  locks the end user out of the minimal implementation
