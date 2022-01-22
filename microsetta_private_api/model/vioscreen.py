@@ -559,9 +559,7 @@ class VioscreenFoodConsumption(ModelBase):
 
         a = sorted(self.components)
         b = sorted(other.components)
-        print(a == b)
-        print(a[:10])
-        print(b[:10])
+
         return a == b
 
 
@@ -582,7 +580,4 @@ class VioscreenComposite(ModelBase):
         self.vio_id = session.username
 
     def __eq__(self, other):
-        print(self.__dict__.keys() == other.__dict__.keys())
-        for k in self.__dict__:
-            print(k, self.__dict__[k] == other.__dict__[k])
         return self.__dict__ == other.__dict__
