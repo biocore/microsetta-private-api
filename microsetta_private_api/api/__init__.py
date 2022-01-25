@@ -37,7 +37,8 @@ from ._campaign import (
 )
 
 from ._interested_user import (
-    create_interested_user
+    create_interested_user, get_interested_user_address_update,
+    put_interested_user_address_update
 )
 
 __all__ = [
@@ -81,5 +82,7 @@ __all__ = [
     'read_sample_vioscreen_mpeds',
     'read_sample_vioscreen_food_consumption',
     'get_campaign_information',
-    'create_interested_user'
+    'create_interested_user',
+    'get_interested_user_address_update',
+    'put_interested_user_address_update'
 ]

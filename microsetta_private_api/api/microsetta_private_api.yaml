@@ -1410,6 +1410,82 @@ paths:
         '400':
           description: Creation or validation issue with the interested user
 
+  '/update_address':
+    get:
+      operationId: microsetta_private_api.api.get_interested_user_address_update
+      tags:
+        - Campaigns
+      summary: Retrieve an interesteded user's address to fix validation error
+      description: Retrieve an interested user's address to fix validation error
+      security: [ ]
+      parameters:
+        - in: query
+          name: interested_user_id
+          description: unique identifier of interested user
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: email
+          description: interested user's email address
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: interested user's address information
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      operationId: microsetta_private_api.api.put_interested_user_address_update
+      tags:
+        - Campaigns
+      summary: Update an interested user's address
+      description: Update an interested user's address
+      security: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'interested_user_id':
+                  type: string
+                'email':
+                  type: string
+                'address_1':
+                  type: string
+                'address_2':
+                  type: string
+                'city':
+                  type: string
+                'state':
+                  type: string
+                'postal':
+                  type: string
+              required:
+                - interested_user_id
+                - email
+                - address_1
+                - city
+                - state
+                - postal
+      responses:
+        '200':
+          description: Interested user ID
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Update or validation issue with the interested user's address
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/preparations/{sample_barcode}':
     get:
       operationId: microsetta_private_api.api.get_preparations

@@ -24,7 +24,7 @@ class MelissaRepo(BaseRepo):
         record_id - Unique ID of the address verification record
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""INSERT INTO ag.melissa_address_queries (
+            cur.execute("""INSERT INTO campaign.melissa_address_queries (
                             query_timestamp,
                             source_address_1,
                             source_address_2,
@@ -64,7 +64,7 @@ class MelissaRepo(BaseRepo):
         Full table row is record is a duplicate
         """
         with self._transaction.dict_cursor() as cur:
-            cur.execute("""SELECT * FROM ag.melissa_address_queries
+            cur.execute("""SELECT * FROM campaign.melissa_address_queries
                             WHERE (source_address_1 = %s
                             AND source_address_2 = %s
                             AND source_postal = %s
@@ -118,7 +118,7 @@ class MelissaRepo(BaseRepo):
 
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""UPDATE ag.melissa_address_queries SET
+            cur.execute("""UPDATE campaign.melissa_address_queries SET
                                 result_processed = true,
                                 source_url = %s,
                                 result_raw = %s,

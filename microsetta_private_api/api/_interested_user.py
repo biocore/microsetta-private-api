@@ -47,3 +47,107 @@ def create_interested_user(body):
         t.commit()
 
     return jsonify(user_id=interested_user_id), 200
+
+
+def get_interested_user_address_update(interested_user_id, email):
+    with Transaction() as t:
+        interested_user_repo = InterestedUserRepo(t)
+        interested_user = \
+            interested_user_repo.get_interested_user_by_id(interested_user_id)
+
+        if interested_user is None:
+            return jsonify(
+                code=404,
+                message="Invalid user."
+            ), 404
+        else:
+            # we're using both email and interested_user_id to make sure
+            # someone doesn't stumble upon a valid email and/or id.
+            # if they don't both match, treat as invalid
+            if interested_user.email != email:
+                return jsonify(
+                    iuemail=interested_user.email,
+                    email=email,
+                    code=404,
+                    message="Invalid user."
+                ), 404
+            else:
+                # if the address is already valid, no reason to update
+                if interested_user.address_valid is True:
+                    return jsonify(
+                        code=404,
+                        message="Address already verified."
+                    ), 404
+                else:
+                    # we've determined it's a valid user and their address
+                    # needs to be fixed, so we return a subset of their info
+                    return jsonify(
+                        interested_user_id=interested_user.interested_user_id,
+                        email=interested_user.email,
+                        address_1=interested_user.address_1,
+                        address_2=interested_user.address_2,
+                        city=interested_user.city,
+                        state=interested_user.state,
+                        postal_code=interested_user.postal_code,
+                        country=interested_user.country
+                    ), 200
+
+
+def put_interested_user_address_update(body):
+    interested_user_id = body['interested_user_id']
+    email = body['email']
+
+    with Transaction() as t:
+        i_u_repo = InterestedUserRepo(t)
+        interested_user = \
+            i_u_repo.get_interested_user_by_id(interested_user_id)
+
+        if interested_user is None:
+            return jsonify(
+                code=404,
+                message="Invalid user."
+            ), 404
+        else:
+            # we're using both email and interested_user_id to make sure
+            # someone doesn't stumble upon a valid email and/or id.
+            # if they don't both match, treat as invalid
+            if interested_user.email != email:
+                return jsonify(
+                    code=404,
+                    message="Invalid user."
+                ), 404
+            else:
+                # reset address_checked flag so the verify_address() function
+                # can run and update with Melissa-generated results
+                interested_user.address_checked = False
+                interested_user.address_1 = body['address_1']
+                interested_user.address_2 = body['address_2']
+                interested_user.city = body['city']
+                interested_user.state = body['state']
+                interested_user.postal_code = body['postal']
+                update_success = \
+                    i_u_repo.update_interested_user(interested_user)
+
+                if update_success is False:
+                    return jsonify(
+                        code=400,
+                        message="Failed to update address."
+                    ), 400
+        t.commit()
+
+    # open new transaction so we don't lose user data if there's a problem
+    # with address validation
+    with Transaction() as t:
+        interested_user_repo = InterestedUserRepo(t)
+        try:
+            interested_user_repo.verify_address(interested_user_id)
+        except RepoException:
+            # we really shouldn't reach this point, but just in case
+            return jsonify(
+                code=400,
+                message="Failed to verify address."
+            ), 400
+
+        t.commit()
+
+    return jsonify(user_id=interested_user_id), 200
