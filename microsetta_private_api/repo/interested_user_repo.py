@@ -91,7 +91,8 @@ class InterestedUserRepo(BaseRepo):
                     "creation_timestamp, update_timestamp, address_checked, "
                     "address_valid, converted_to_account, "
                     "converted_to_account_timestamp, over_18 "
-                    "FROM campaign.interested_users WHERE interested_user_id = %s",
+                    "FROM campaign.interested_users "
+                    "WHERE interested_user_id = %s",
                     (interested_user_id,)
                 )
                 r = cur.fetchone()
