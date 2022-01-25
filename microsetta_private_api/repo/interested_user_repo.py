@@ -159,3 +159,4 @@ class InterestedUserRepo(BaseRepo):
                         (interested_user_id,)
                     )
                     return False
+

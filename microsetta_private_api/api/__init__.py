@@ -86,3 +86,4 @@ __all__ = [
     'get_interested_user_address_update',
     'put_interested_user_address_update'
 ]
+
