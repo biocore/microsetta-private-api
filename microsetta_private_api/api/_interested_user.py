@@ -151,4 +151,3 @@ def put_interested_user_address_update(body):
         t.commit()
 
     return jsonify(user_id=interested_user_id), 200
-

@@ -138,4 +138,3 @@ class MelissaRepo(BaseRepo):
                          formatted_address, address_1, address_2, city, state,
                          postal, country, latitude, longitude, record_id))
             return cur.rowcount == 1
-
