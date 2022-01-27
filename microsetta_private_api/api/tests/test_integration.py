@@ -23,7 +23,7 @@ from microsetta_private_api.util import vioscreen
 from microsetta_private_api.config_manager import SERVER_CONFIG
 import datetime
 import json
-from unittest import TestCase
+from unittest import TestCase, skipIf
 from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 import copy
 import microsetta_private_api.api
@@ -458,6 +458,8 @@ class IntegrationTests(TestCase):
         )
         check_response(resp)
 
+    @skipIf(SERVER_CONFIG['myfoodrepo_url'] in ('', 'mfr_url_placeholder'),
+            "MFR secrets not provided")
     def test_bobo_takes_myfoodrepo_with_slots(self):
         bobo = self._bobo_to_claim_a_sample()
 
