@@ -32,6 +32,7 @@
   "myfoodrepo_user_url": "mfr_user_url_placeholder",
   "myfoodrepo_key": "mfr_key_placeholder",
   "myfoodrepo_slots": 15,
+  "myfoodrepo_study": "mfr_study_placeholder",
   "fundrazr_key": "fundrazr_api_placeholder",
   "fundrazr_url": "fundrazr_url_placeholder",
   "fundrazr_organization": "fundrazr_org_placeholder"
