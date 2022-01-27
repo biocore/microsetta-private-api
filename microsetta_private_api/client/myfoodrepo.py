@@ -31,8 +31,7 @@ class MFRClient:
     def default_cohort(self):
         if self._default_cohort is None:
             data = self.cohorts()
-            self._default_cohort = data.cohorts[0].codename
-
+            self._default_cohort = data.data.cohorts[0].codename
         return self._default_cohort
 
     def __del__(self):

@@ -14,6 +14,13 @@ class MFRTests(TestCase):
     # execute from master once a PR is merged.
     @skipIf(SERVER_CONFIG['myfoodrepo_url'] in ('', 'mfr_url_placeholder'),
             "MFR secrets not provided")
+    @skipIf(SERVER_CONFIG['myfoodrepo_url'] in ('', 'mfr_url_placeholder'),
+            "MFR secrets not provided")
+    def test_default_cohort(self):
+        cohorts = self.c.cohorts()
+        self.assertEqual(self.c.default_cohort,
+                         cohorts.data.cohorts[0].codename)
+
     def test_create_get_delete(self):
         cohorts = self.c.cohorts()
         self.assertTrue(len(cohorts.data.cohorts) >= 1)
