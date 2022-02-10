@@ -146,6 +146,27 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+    
+    delete:
+      operationId: microsetta_private_api.api.delete_account
+      tags:
+        - Account
+      summary: Delete and scrub the user and sources
+      description: Delete and scrub the user and sources
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '204':
+          description: Successfully deleted and scrubbed the account
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
 
   '/accounts/{account_id}/email_match':
     get:
