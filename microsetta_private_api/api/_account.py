@@ -126,6 +126,11 @@ def check_email_match(account_id, token_info):
     return jsonify(result), 200
 
 
+def delete_account(account_id, token_info):
+    _validate_account_access(token_info, account_id)
+    return jsonify(message="not implemented"), 422
+
+
 def update_account(account_id, body, token_info):
     acc = _validate_account_access(token_info, account_id)
 

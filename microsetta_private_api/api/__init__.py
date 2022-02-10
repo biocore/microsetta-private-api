@@ -1,7 +1,7 @@
 from ._account import (
     find_accounts_for_login, register_account, claim_legacy_acct,
     read_account, update_account, check_email_match, _verify_jwt,
-    _verify_jwt_mock
+    _verify_jwt_mock, delete_account
 )
 from ._consent import (
     render_consent_doc,
@@ -59,6 +59,7 @@ __all__ = [
     'claim_legacy_acct',
     'read_account',
     'update_account',
+    'delete_account',
     'check_email_match',
     'render_consent_doc',
     'create_source',
