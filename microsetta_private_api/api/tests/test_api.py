@@ -935,6 +935,96 @@ class AccountTests(ApiTests):
 
         return result
 
+    def test_account_delete_success(self):
+        account_id = create_dummy_acct()
+        response = self.client.delete(
+            '/api/accounts/%s?%s' %
+            (account_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+        self.assertEqual(204, response.status_code)
+
+        # we should not be able to delete it again
+        response = self.client.delete(
+            '/api/accounts/%s?%s' %
+            (account_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+        self.assertEqual(404, response.status_code)
+
+    def test_account_delete_unauthorized(self):
+        create_dummy_acct()
+        not_the_dummy_acct_id = 'd8592c74-9694-2135-e040-8a80115d6401'
+        response = self.client.delete(
+            '/api/accounts/%s?%s' %
+            (not_the_dummy_acct_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+        self.assertEqual(401, response.status_code)
+
+    def _create_assign_sample(self, received):
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        create_dummy_kit(dummy_acct_id, dummy_source_id)
+        _ = create_dummy_answered_survey(
+            dummy_acct_id, dummy_source_id, dummy_sample_id=MOCK_SAMPLE_ID)
+
+        base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
+            dummy_acct_id, dummy_source_id)
+        sample_url = "{0}/{1}".format(base_url, MOCK_SAMPLE_ID)
+
+        body = {'sample_site': 'Stool', "sample_notes": "",
+                'sample_datetime': "2017-07-21T17:32:28Z"}
+
+        put_resp = self.client.put(
+            '%s?%s' % (sample_url, self.default_lang_querystring),
+            json=body,
+            headers=self.dummy_auth
+        )
+        self.assertEqual(200, put_resp.status_code)
+        return dummy_acct_id
+
+    def test_account_delete_with_unreceived_sample(self):
+        account_id = self._create_assign_sample(False)
+
+        # verify can delete because the sample is not received
+        response = self.client.delete(
+            '/api/accounts/%s?%s' %
+            (account_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+        self.assertEqual(204, response.status_code)
+
+    def test_account_delete_with_received_sample(self):
+        account_id = self._create_assign_sample(True)
+
+        post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
+                                     json={'sample_status': 'sample-is-valid',
+                                           'technician_notes': "foobar"},
+                                     headers=make_headers(FAKE_TOKEN_ADMIN))
+        self.assertequal(201, post_resp.status_code)
+
+        # verify we cannot delete because the sample is received
+        response = self.client.delete(
+            '/api/accounts/%s?%s' %
+            (account_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+        self.assertequal(422, response.status_code)
+
+    def test_account_delete_admin_override(self):
+        account_id = self._create_assign_sample(True)
+
+        post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
+                                     json={'sample_status': 'sample-is-valid',
+                                           'technician_notes': "foobar"},
+                                     headers=make_headers(FAKE_TOKEN_ADMIN))
+        self.assertequal(201, post_resp.status_code)
+
+        # verify an admin can delete received samples
+        response = self.client.delete(
+            '/api/accounts/%s?%s' %
+            (account_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+        self.assertequal(204, response.status_code)
+
     def test_account_update_success(self):
         """Successfully update existing account"""
         dummy_acct_id = create_dummy_acct()
