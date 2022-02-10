@@ -25,6 +25,14 @@ class MFRClient:
                          'POST': self.s.post,
                          'PUT': self.s.put,
                          'DELETE': self.s.delete}
+        self._default_cohort = None
+
+    @property
+    def default_cohort(self):
+        if self._default_cohort is None:
+            data = self.cohorts()
+            self._default_cohort = data.data.cohorts[0].codename
+        return self._default_cohort
 
     def __del__(self):
         self.s.close()
