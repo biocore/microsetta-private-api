@@ -249,3 +249,18 @@ def _validate_account_access(token_info, account_id):
                 raise Unauthorized()
 
         return account
+
+
+def _validate_has_account(token_info):
+    # WARNING: this does NOT authenticate a user but tests for the
+    # presence of an account
+    with Transaction() as t:
+        account_repo = AccountRepo(t)
+        token_associated_account = account_repo.find_linked_account(
+            token_info['iss'],
+            token_info['sub'])
+
+    if token_associated_account is None:
+        raise Unauthorized()
+    else:
+        return

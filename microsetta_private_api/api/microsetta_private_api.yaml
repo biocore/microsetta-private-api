@@ -1070,7 +1070,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/dietaryscore/type/{score_type}/code/{score_code}':
+  '/vioscreen/dietaryscore/type/{score_type}/code/{score_code}':
     get:
       operationId: microsetta_private_api.api.get_vioscreen_dietary_scores_by_component
       tags:
@@ -1078,14 +1078,79 @@ paths:
       summary: Get information about Vioscreen dietary scores for a specific component
       description: Get information about Vioscreen dietary scores for a specific component
       parameters:
-        - $ref: '#/components/parameters/account_id'
-        - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
         - $ref: '#/components/parameters/score_type'
         - $ref: '#/components/parameters/score_code'
       responses:
         '200':
           description: Successfully returned dietary score information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/vioscreen/dietaryscore/':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_dietary_scores_descriptions
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen dietary scores descriptions
+      description: Get information about Vioscreen dietary scores descriptions
+      responses:
+        '200':
+          description: Successfully returned dietary scores information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/vioscreen/foodcomponents/code/{fc_code}':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_food_components_by_code
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen food components for a specific code
+      description: Get information about Vioscreen food components for a specific code
+      parameters:
+        - $ref: '#/components/parameters/fc_code'
+      responses:
+        '200':
+          description: Successfully returned food components information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/vioscreen/foodcomponents':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_food_components_descriptions
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen food components descriptions
+      description: Get information about Vioscreen food components descriptions
+      responses:
+        '200':
+          description: Successfully returned food components information
           content:
             application/json:
               schema:
@@ -2208,6 +2273,12 @@ components:
       description: Dietary Score Code
       schema:
         $ref: '#/components/schemas/score_code'
+    fc_code:
+      name: fc_code
+      in: path
+      description: Food Components Code
+      schema:
+        $ref: '#/components/schemas/fc_code'
 
     # query parameters
     activation_code:
@@ -2860,13 +2931,16 @@ components:
         - is_microsetta
         - bank_samples
 
-    # dietary score section
+    # vioscreen section
     score_type:
       type: string
       example: "Hei2010"
     score_code:
       type: string
       example: "TotalVegetables"
+    fc_code:
+      type: string
+      example: "acesupot"
 
     # error section
     Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/

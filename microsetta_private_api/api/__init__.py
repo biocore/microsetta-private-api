@@ -31,7 +31,10 @@ from ._vioscreen import (
     read_sample_vioscreen_food_components,
     read_sample_vioscreen_eating_patterns,
     read_sample_vioscreen_mpeds, read_sample_vioscreen_food_consumption,
-    get_vioscreen_dietary_scores_by_component
+    get_vioscreen_dietary_scores_by_component,
+    get_vioscreen_dietary_scores_descriptions,
+    get_vioscreen_food_components_by_code,
+    get_vioscreen_food_components_descriptions
 )
 
 from ._campaign import (
@@ -94,6 +97,9 @@ __all__ = [
     'read_sample_vioscreen_mpeds',
     'read_sample_vioscreen_food_consumption',
     'get_vioscreen_dietary_scores_by_component',
+    'get_vioscreen_dietary_scores_descriptions',
+    'get_vioscreen_food_components_by_code',
+    'get_vioscreen_food_components_descriptions',
     'get_campaign_information',
     'create_interested_user'
 ]

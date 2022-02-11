@@ -1852,6 +1852,9 @@ class VioscreenTests(ApiTests):
                         (sessionId,))
 
             sessionId2 = "000ada854d4f45f5abda90ccade7f0a9"
+            cur.execute("""DELETE FROM ag.vioscreen_foodcomponents
+                           WHERE sessionId = %s""",
+                        (sessionId2,))
             cur.execute("""DELETE FROM ag.vioscreen_dietaryscore
                            WHERE sessionId = %s""",
                         (sessionId2,))
@@ -2542,11 +2545,11 @@ class VioscreenTests(ApiTests):
             vio_sess.upsert_session(vioscreen_session)
             vio_sess.upsert_session(vioscreen_session2)
             vio_diet = VioscreenDietaryScoreRepo(t)
-            vio_diet.insert_dietary_score(vioscreen_dietary_score)
-            vio_diet.insert_dietary_score(vioscreen_dietary_score2)
+            vio_diet.insert_dietary_scores([vioscreen_dietary_score, ])
+            vio_diet.insert_dietary_scores([vioscreen_dietary_score2, ])
             t.commit()
 
-        url = self._url_constructor() + '/vioscreen/dietaryscore/type/Hei2010/code/TotalVegetables'
+        url = ('/api/vioscreen/dietaryscore/type/Hei2010/code/TotalVegetables')
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2560,6 +2563,35 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['scores'], [5.5, 7.3])
 
     def test_get_vioscreen_dietary_scores_by_component_404(self):
+        url = ('/api/vioscreen/dietaryscore/type/Hei2010/code/TotalVegetables')
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(get_response.status_code, 404)
+
+        response_obj = json.loads(get_response.data)
+        self.assertEqual(response_obj['message'], "Dietary Scores not found")
+
+    def test_get_vioscreen_dietary_scores_descriptions_200(self):
+        url = ('/api/vioscreen/dietaryscore/')
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_obj = json.loads(get_response.data)
+        self.assertEqual(response_obj['Hei2010']['TotalVegetables'],
+                         ['Total Vegetables', 0.0, 5.0])
+
+    def test_get_vioscreen_food_components_by_code_200(self):
         vioscreen_session = VioscreenSession(
             sessionId="000ada854d4f45f5abda90ccade7f0a8",
             username="674533d367f222d2",
@@ -2572,12 +2604,68 @@ class VioscreenTests(ApiTests):
             modified="2017-07-29T03:56:04.22"
         )
 
+        vioscreen_session2 = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a9",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
+
+        vioscreen_food_components = VioscreenFoodComponents(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            components=[
+                VioscreenFoodComponentsComponent(
+                    code="acesupot",
+                    description="Acesulfame Potassium",
+                    units="mg",
+                    amount=3.0,
+                    valueType="Amount"
+                )
+            ]
+        )
+
+        vioscreen_food_components2 = VioscreenFoodComponents(
+            sessionId="000ada854d4f45f5abda90ccade7f0a9",
+            components=[
+                VioscreenFoodComponentsComponent(
+                    code="acesupot",
+                    description="Acesulfame Potassium",
+                    units="mg",
+                    amount=4.5,
+                    valueType="Amount"
+                )
+            ]
+        )
+
         with Transaction() as t:
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
+            vio_sess.upsert_session(vioscreen_session2)
+            vio_food = VioscreenFoodComponentsRepo(t)
+            vio_food.insert_food_components(vioscreen_food_components)
+            vio_food.insert_food_components(vioscreen_food_components2)
             t.commit()
 
-        url = self._url_constructor() + '/vioscreen/dietaryscore/type/Hei2010/code/TotalVegetables'
+        url = ('/api/vioscreen/foodcomponents/code/acesupot')
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_obj = json.loads(get_response.data)
+        self.assertEqual(response_obj['amounts'], [3.0, 4.5])
+
+    def test_get_vioscreen_food_components_by_code_404(self):
+        url = ('/api/vioscreen/foodcomponents/code/acesupot')
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
@@ -2586,3 +2674,21 @@ class VioscreenTests(ApiTests):
                                        headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(get_response.status_code, 404)
+
+        response_obj = json.loads(get_response.data)
+        self.assertEqual(response_obj['message'], 'Food Components not found')
+
+    def test_get_vioscreen_food_components_descriptions_200(self):
+        url = ('/api/vioscreen/foodcomponents')
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_obj = json.loads(get_response.data)
+        self.assertEqual(response_obj['acesupot'],
+                         ['Acesulfame Potassium', 'mg', 'Amount'])
