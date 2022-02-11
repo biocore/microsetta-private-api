@@ -2,7 +2,7 @@ import os
 from json import loads, dumps
 
 # test if one of our secrets exists
-if os.environ.get('MFR_URL') is not None:
+if os.environ.get('MFR_URL', '') != '':
     config = loads(open('microsetta_private_api/server_config.json').read())
 
     config['myfoodrepo_url'] = os.environ['MFR_URL']

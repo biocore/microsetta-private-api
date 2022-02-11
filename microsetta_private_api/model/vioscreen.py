@@ -479,6 +479,12 @@ class VioscreenFoodConsumptionComponent(ModelBase):
         # data is a list of individual VioscreenFoodComponentsComponent objects
         self.data = data
 
+    def __repr__(self):
+        parts = ', '.join([f"{k}={v}"
+                           for k, v in sorted(self.__dict__.items())
+                           if k != 'data'])
+        return "<%s>" % parts
+
     @classmethod
     def from_vioscreen(cls, component):
         data = [
@@ -509,7 +515,7 @@ class VioscreenFoodConsumptionComponent(ModelBase):
         }
 
     def __lt__(self, other):
-        return self.foodCode < other.foodCode
+        return self.description < other.description
 
     def __eq__(self, other):
         for k in self.__dict__:
@@ -572,3 +578,6 @@ class VioscreenComposite(ModelBase):
         # make first class as the vioscreen username is our internal
         # survey identifier
         self.vio_id = session.username
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__

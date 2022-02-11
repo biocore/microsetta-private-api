@@ -1,5 +1,6 @@
 import unittest
 import uuid
+from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
 from psycopg2.errors import ForeignKeyViolation
@@ -108,6 +109,130 @@ class SurveyTemplateTests(unittest.TestCase):
                                                      TEST1_SOURCE_ID)
                 exp = (1973, 'Male', None, None)
                 self.assertEqual(obs, exp)
+
+    def test_set_myfoodrepo_id_valid(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.create_myfoodrepo_entry(TEST2_ACCOUNT_ID,
+                                                        TEST2_SOURCE_ID)
+            self.assertTrue(obs)
+
+            template_repo.set_myfoodrepo_id(TEST2_ACCOUNT_ID,
+                                            TEST2_SOURCE_ID,
+                                            "asubject")
+            t.rollback()
+
+    def test_set_myfoodrepo_cannot_assign_new_id(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+
+            obs = template_repo.create_myfoodrepo_entry(TEST2_ACCOUNT_ID,
+                                                        TEST2_SOURCE_ID)
+            self.assertTrue(obs)
+
+            template_repo.set_myfoodrepo_id(TEST2_ACCOUNT_ID,
+                                            TEST2_SOURCE_ID,
+                                            "asubject")
+
+            with self.assertRaises(KeyError):
+                template_repo.set_myfoodrepo_id(TEST2_ACCOUNT_ID,
+                                                TEST2_SOURCE_ID,
+                                                "adifferentsubject")
+            t.rollback()
+
+    def test_set_myfoodrepo_no_slot(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+
+            with self.assertRaises(KeyError):
+                template_repo.set_myfoodrepo_id(TEST2_ACCOUNT_ID,
+                                                TEST2_SOURCE_ID,
+                                                "asubject")
+            t.rollback()
+
+    def test_create_myfoodrepo_id(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.create_myfoodrepo_entry(TEST2_ACCOUNT_ID,
+                                                        TEST2_SOURCE_ID)
+            self.assertTrue(obs)
+
+            t.rollback()
+
+    def test_create_myfoodrepo_id_no_slots(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+
+            # insert 1 less than the available slots
+            slots = SERVER_CONFIG['myfoodrepo_slots']
+            cur = t.cursor()
+            cur.execute("""INSERT INTO ag.myfoodrepo_registry
+                           (account_id, source_id)
+                           SELECT account_id, id as source_id
+                                 FROM ag.source
+                                 WHERE id NOT IN %s
+                                 LIMIT %s""",
+                        ((TEST1_SOURCE_ID, TEST2_SOURCE_ID), slots - 1))
+
+            # our next insertion should work
+            obs = template_repo.create_myfoodrepo_entry(TEST1_ACCOUNT_ID,
+                                                        TEST1_SOURCE_ID)
+            self.assertTrue(obs)
+
+            # we should now be at the maximum number of slots, so our final
+            # insertion should fail
+            obs = template_repo.create_myfoodrepo_entry(TEST2_ACCOUNT_ID,
+                                                        TEST2_SOURCE_ID)
+            self.assertFalse(obs)
+
+            # update some of our creation timestamps
+            cur.execute("""UPDATE ag.myfoodrepo_registry
+                           SET creation_timestamp=NOW() - INTERVAL '30 days'
+                           WHERE source_id IN (
+                               SELECT source_id
+                               FROM ag.myfoodrepo_registry
+                               WHERE source_id != %s
+                               LIMIT 5
+                           )""",
+                        (TEST2_SOURCE_ID, ))
+
+            # we now have slots, so we should be successful creating an entry
+            obs = template_repo.create_myfoodrepo_entry(TEST2_ACCOUNT_ID,
+                                                        TEST2_SOURCE_ID)
+            self.assertTrue(obs)
+
+    def test_create_myfoodrepo_id_bad_source_or_account(self):
+        # transaction needs to be created each time as the FK violation
+        # disrupts the active transaction
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            with self.assertRaises(ForeignKeyViolation):
+                template_repo.create_myfoodrepo_entry(str(uuid.uuid4()),
+                                                      TEST2_SOURCE_ID)
+
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            with self.assertRaises(ForeignKeyViolation):
+                template_repo.create_myfoodrepo_entry(TEST2_ACCOUNT_ID,
+                                                      str(uuid.uuid4()))
+
+    def test_get_myfoodrepo_id_if_exists(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.get_myfoodrepo_id_if_exists(TEST1_ACCOUNT_ID,
+                                                            TEST1_SOURCE_ID)
+            self.assertEqual(obs, (None, None))
+
+            obs = template_repo.create_myfoodrepo_entry(TEST1_ACCOUNT_ID,
+                                                        TEST1_SOURCE_ID)
+            self.assertTrue(obs)
+
+            template_repo.set_myfoodrepo_id(TEST1_ACCOUNT_ID, TEST1_SOURCE_ID,
+                                            "asubject")
+            obs = template_repo.get_myfoodrepo_id_if_exists(TEST1_ACCOUNT_ID,
+                                                            TEST1_SOURCE_ID)
+            self.assertEqual(obs[0], "asubject")
+            self.assertTrue(obs[1] is not None)
 
     def test_create_vioscreen_id_valid(self):
         with Transaction() as t:

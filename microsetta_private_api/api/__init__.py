@@ -14,6 +14,7 @@ from ._survey import (
     read_survey_template, read_survey_templates, read_answered_survey,
     read_answered_surveys, submit_answered_survey,
     read_answered_survey_associations, top_food_report,
+    read_myfoodrepo_available_slots
 )
 from ._sample import (
     read_sample_association, associate_sample, read_sample_associations,
@@ -76,6 +77,7 @@ __all__ = [
     'read_answered_surveys',
     'read_answered_survey_associations',
     'top_food_report',
+    'read_myfoodrepo_available_slots',
     'read_sample_association',
     'associate_sample',
     'read_sample_associations',

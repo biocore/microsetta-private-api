@@ -1271,6 +1271,32 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/slots/myfoodrepo/':
+    get:
+      operationId: microsetta_private_api.api.read_myfoodrepo_available_slots
+      tags:
+        - Surveys
+      summary: Get the number of open myfoodrepo annotator slots
+      description: Get the number of open myfoodrepo annotator slots
+      parameters:
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Successfully returned the number of slots
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  number_of_available_slots:
+                    type: integer
+                  total_number_of_slots:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
   '/kits/':
     get:
       operationId: microsetta_private_api.api.read_kit

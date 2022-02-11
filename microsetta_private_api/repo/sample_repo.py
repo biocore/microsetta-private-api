@@ -147,15 +147,17 @@ class SampleRepo(BaseRepo):
 
             # update any vioscreen associations to reflect the source
             # and the account
-            cur.execute("""SELECT account_id
-                           FROM ag.source
-                           WHERE id=%s""",
-                        (source_id, ))
-            account_id = cur.fetchone()
-            cur.execute("""UPDATE ag.vioscreen_registry
-                           SET source_id=%s, account_id=%s
-                           WHERE sample_id=%s""",
-                        (source_id, account_id, sample_id))
+            if source_id is not None:
+                cur.execute("""SELECT account_id
+                               FROM ag.source
+                               WHERE id=%s""",
+                            (source_id, ))
+                account_id = cur.fetchone()
+
+                cur.execute("""UPDATE ag.vioscreen_registry
+                               SET source_id=%s, account_id=%s
+                               WHERE sample_id=%s""",
+                            (source_id, account_id, sample_id))
 
     def migrate_sample(self, sample_id, source_id_src, source_id_dst,
                        areyousure=False):
