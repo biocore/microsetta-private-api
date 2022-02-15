@@ -62,7 +62,7 @@ class EmailMessage(Enum):
         EventSubtype.PESTER_DANIEL
     )
     address_invalid = (
-        "Your Microsetta Initiative status update",
+        "Your Microsetta Initiative status update: information needed",
         "email/address_invalid.jinja2",
         ("contact_name", "resolution_url"),
         EventType.EMAIL,

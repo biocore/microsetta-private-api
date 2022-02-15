@@ -497,6 +497,7 @@ class UserTransaction(BaseRepo):
 
             if valid_address is not True:
                 cn = payment.payer_first_name + " " + payment.payer_last_name
+
                 # TODO - endpoint refers to Private API, not interface
                 # do we need to add a new variable to server config?
                 resolution_url = SERVER_CONFIG["endpoint"] +\
