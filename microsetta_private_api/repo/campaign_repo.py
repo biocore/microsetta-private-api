@@ -5,6 +5,10 @@ from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.campaign import Campaign, payment_from_db
 from microsetta_private_api.exceptions import RepoException
+from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
+from microsetta_private_api.tasks import send_email
+from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.localization import EN_US, EN_GB, ES_MX
 
 
 class UnknownItem(psycopg2.errors.ForeignKeyViolation):
@@ -482,6 +486,33 @@ class UserTransaction(BaseRepo):
         with self._transaction.cursor() as cur:
             cur.execute(*sql)
             interested_user_id = cur.fetchone()
+
+        if shipping is not None:
+            i_u_repo = InterestedUserRepo(self._transaction)
+            try:
+                valid_address = i_u_repo.verify_address(interested_user_id)
+            except RepoException:
+                # we shouldn't reach this point, but address wasn't verified
+                valid_address = False
+
+            if valid_address is not True:
+                cn = payment.payer_first_name + " " + payment.payer_last_name
+                # TODO - endpoint refers to Private API, not interface
+                # do we need to add a new variable to server config?
+                resolution_url = SERVER_CONFIG["endpoint"] +\
+                    "/update_address?uid=" + interested_user_id +\
+                    "&email=" + payment.contact_email
+                try:
+                    # TODO - will need to add actual language flag to the email
+                    # Fundrazr doesn't provide a language flag, defer for now
+                    send_email(payment.contact_email,
+                               "address_invalid",
+                               {"contact_name": cn,
+                                "resolution_url": resolution_url},
+                               EN_US)
+                except:  # noqa
+                    # try our best to email
+                    pass
 
         return interested_user_id
 
