@@ -8,7 +8,7 @@ from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
 from microsetta_private_api.tasks import send_email
 from microsetta_private_api.config_manager import SERVER_CONFIG
-from microsetta_private_api.localization import EN_US, EN_GB, ES_MX
+from microsetta_private_api.localization import EN_US
 
 
 class UnknownItem(psycopg2.errors.ForeignKeyViolation):
