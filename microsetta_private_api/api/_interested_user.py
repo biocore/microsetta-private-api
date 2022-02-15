@@ -1,3 +1,5 @@
+import uuid
+import re
 from flask import jsonify
 from microsetta_private_api.model.interested_user import InterestedUser
 from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
@@ -50,24 +52,21 @@ def create_interested_user(body):
 
 
 def get_interested_user_address_update(interested_user_id, email):
-    with Transaction() as t:
-        interested_user_repo = InterestedUserRepo(t)
-        interested_user = \
-            interested_user_repo.get_interested_user_by_id(interested_user_id)
+    valid_data = _validate_iuid_and_email_syntax(interested_user_id, email)
+    if not valid_data:
+        return jsonify(
+            code=404,
+            message="Invalid user."
+        ), 404
+    else:
+        with Transaction() as t:
+            i_u_repo = InterestedUserRepo(t)
+            interested_user = \
+                i_u_repo.get_interested_user_by_id(interested_user_id)
 
-        if interested_user is None:
-            return jsonify(
-                code=404,
-                message="Invalid user."
-            ), 404
-        else:
-            # we're using both email and interested_user_id to make sure
-            # someone doesn't stumble upon a valid email and/or id.
-            # if they don't both match, treat as invalid
-            if interested_user.email != email:
+            valid_user = _validate_user_match(interested_user, email)
+            if not valid_user:
                 return jsonify(
-                    iuemail=interested_user.email,
-                    email=email,
                     code=404,
                     message="Invalid user."
                 ), 404
@@ -97,21 +96,20 @@ def put_interested_user_address_update(body):
     interested_user_id = body['interested_user_id']
     email = body['email']
 
-    with Transaction() as t:
-        i_u_repo = InterestedUserRepo(t)
-        interested_user = \
-            i_u_repo.get_interested_user_by_id(interested_user_id)
+    valid_data = _validate_iuid_and_email_syntax(interested_user_id, email)
+    if not valid_data:
+        return jsonify(
+            code=404,
+            message="Invalid user."
+        ), 404
+    else:
+        with Transaction() as t:
+            i_u_repo = InterestedUserRepo(t)
+            interested_user = \
+                i_u_repo.get_interested_user_by_id(interested_user_id)
 
-        if interested_user is None:
-            return jsonify(
-                code=404,
-                message="Invalid user."
-            ), 404
-        else:
-            # we're using both email and interested_user_id to make sure
-            # someone doesn't stumble upon a valid email and/or id.
-            # if they don't both match, treat as invalid
-            if interested_user.email != email:
+            valid_user = _validate_user_match(interested_user, email)
+            if not valid_user:
                 return jsonify(
                     code=404,
                     message="Invalid user."
@@ -133,21 +131,47 @@ def put_interested_user_address_update(body):
                         code=400,
                         message="Failed to update address."
                     ), 400
-        t.commit()
+                t.commit()
 
-    # open new transaction so we don't lose user data if there's a problem
-    # with address validation
-    with Transaction() as t:
-        interested_user_repo = InterestedUserRepo(t)
-        try:
-            interested_user_repo.verify_address(interested_user_id)
-        except RepoException:
-            # we really shouldn't reach this point, but just in case
-            return jsonify(
-                code=400,
-                message="Failed to verify address."
-            ), 400
+        # open new transaction so we don't lose user data if there's a problem
+        # with address validation
+        with Transaction() as t:
+            interested_user_repo = InterestedUserRepo(t)
+            try:
+                interested_user_repo.verify_address(interested_user_id)
+            except RepoException:
+                # we really shouldn't reach this point, but just in case
+                return jsonify(
+                    code=400,
+                    message="Failed to verify address."
+                ), 400
 
-        t.commit()
+            t.commit()
 
-    return jsonify(user_id=interested_user_id), 200
+        return jsonify(user_id=interested_user_id), 200
+
+
+def _validate_iuid_and_email_syntax(interested_user_id, email):
+    try:
+        uuid.UUID(interested_user_id)
+    except ValueError:
+        return False
+
+    if re.fullmatch(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)",
+                    email):
+        return True
+    else:
+        return False
+
+
+def _validate_user_match(interested_user, email):
+    if interested_user is None:
+        return False
+    else:
+        # we're using both email and interested_user_id to make sure
+        # someone doesn't stumble upon a valid email and/or id.
+        # if they don't both match, treat as invalid
+        if interested_user.email != email:
+            return False
+        else:
+            return True
