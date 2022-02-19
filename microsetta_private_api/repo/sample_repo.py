@@ -381,3 +381,25 @@ class SampleRepo(BaseRepo):
             if row is None:
                 return None
             return row[0]
+
+    def scrub(self, account_id, source_id, sample_id):
+        """Wipe out free text information for a sample"""
+        notes = "scrubbed"
+        with self._transaction.cursor() as cur:
+            # verify our account / source relation is reasonable
+            cur.execute("""SELECT id
+                           FROM ag.source
+                           WHERE id=%s AND account_id""",
+                        (source_id, account_id))
+            res = cur.fetchone()
+
+            if res is None:
+                raise RepoException("Invalid account / source relation")
+
+            cur.execute("""UPDATE ag_kit_barcodes
+                           SET notes=%s
+                           WHERE source_id=%s AND ag_kit_barcode_id=%s""",
+                        (notes, source_id, sample_id))
+
+            if cur.rowcount != 1:
+                raise RepoException("Invalid source / sample relation")

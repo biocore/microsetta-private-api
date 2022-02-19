@@ -1,4 +1,5 @@
 import psycopg2
+import datetime
 
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
@@ -6,6 +7,7 @@ from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 
 from werkzeug.exceptions import NotFound
+from hashlib import sha512
 
 
 def _source_to_row(s):
@@ -150,11 +152,38 @@ class SourceRepo(BaseRepo):
                         "%s, %s, %s, "
                         "%s, %s, %s)",
                         _source_to_row(source))
+
+            host_subject_id = self.construct_host_subject_id(source.account_id,
+                                                             source.name)
+            cur.execute("""INSERT INTO source_host_subject_id (source_id,
+                                                               host_subject_id)
+                           VALUES (%s, %s)""",
+                        (source.id, host_subject_id))
+
             return cur.rowcount == 1
+
+    @staticmethod
+    def construct_host_subject_id(account_id, source_name):
+        prehash = account_id + source_name.lower()
+        return sha512(prehash.encode()).hexdigest()
+
+    def get_host_subject_id(self, source):
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT host_subject_id
+                           FROM source_host_subject_id
+                           WHERE source_id = %s""",
+                        (source.id, ))
+            r = cur.fetchone()
+            if r is None:
+                return None
+            return r
 
     def delete_source(self, account_id, source_id):
         try:
             with self._transaction.cursor() as cur:
+                cur.execute("DELETE FROM source_host_subject_id "
+                            "WHERE source.id = %s",
+                            (source_id, ))
                 cur.execute("DELETE FROM source WHERE source.id = %s AND "
                             "source.account_id = %s",
                             (source_id, account_id))
@@ -164,3 +193,35 @@ class SourceRepo(BaseRepo):
                 raise RepoException("A source cannot be deleted while samples "
                                     "are associated with it") from e
             raise RepoException("Error deleting source") from e
+
+    def scrub(self, account_id, source_id):
+        source = self.get_source(account_id, source_id)
+
+        if source is None:
+            raise RepoException("Source not found")
+
+        if source.source_type != Source.SOURCE_TYPE_HUMAN:
+            raise RepoException("Source is not human")
+
+        name = "scrubbed"
+        description = "scrubbed"
+        email = "scrubbed@microsetta.ucsd.edu"
+        parent1_name = "scrubbed"
+        parent2_name = "scrubbed"
+        assent_obtainer = "scrubbed"
+        date_revoked = datetime.datetime.now()
+
+        with self._transaction.cursor() as cur:
+            cur.execute("""UPDATE source
+                           SET source_name = %s,
+                               participant_email = %s,
+                               description = %s,
+                               parent_1_name = %s,
+                               parent_2_name = %s,
+                               consent_revoked = t,
+                               date_revoked = %s,
+                               assent_obtainer = %s,
+                               update_time = %s
+                           WHERE id = %s""",
+                        (name, description, email, parent1_name, parent2_name,
+                         date_revoked, assent_obtainer, date_revoked))

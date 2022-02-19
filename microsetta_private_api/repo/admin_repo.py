@@ -17,7 +17,6 @@ from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from werkzeug.exceptions import NotFound
-from hashlib import sha512
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 
@@ -1155,11 +1154,7 @@ class AdminRepo(BaseRepo):
         if source is None:
             raise RepoException("Barcode is not associated with a source")
 
-        # TODO: This is my best understanding of how the data must be
-        #  transformed to get the host_subject_id, needs verification that it
-        #  generates the expected values for preexisting samples.
-        prehash = account_id + source.name.lower()
-        host_subject_id = sha512(prehash.encode()).hexdigest()
+        host_subject_id = source_repo.get_host_subject_id(source)
 
         survey_answers_repo = SurveyAnswersRepo(self._transaction)
         answer_ids = survey_answers_repo.list_answered_surveys_by_sample(
