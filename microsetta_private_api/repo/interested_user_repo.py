@@ -63,6 +63,7 @@ class InterestedUserRepo(BaseRepo):
                 "postal_code = %s, "
                 "country = %s, "
                 "address_checked = %s, "
+                "address_valid = %s, "
                 "update_timestamp = NOW() "
                 "WHERE interested_user_id = %s",
                 (interested_user.first_name,
@@ -76,6 +77,7 @@ class InterestedUserRepo(BaseRepo):
                  interested_user.postal_code,
                  interested_user.country,
                  interested_user.address_checked,
+                 interested_user.address_valid,
                  interested_user.interested_user_id)
             )
             return cur.rowcount == 1
@@ -104,6 +106,25 @@ class InterestedUserRepo(BaseRepo):
                 # if someone tries to input a random/malformed user ID
                 # we just want to return None
                 return None
+
+    def get_interested_user_by_email(self, email):
+        email = "%" + email + "%"
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT interested_user_id, campaign_id, acquisition_source, "
+                "first_name, last_name, email, phone, address_1, address_2, "
+                "city, state, postal_code, country, latitude, longitude, "
+                "confirm_consent, ip_address, creation_timestamp, "
+                "update_timestamp, address_checked, address_valid, "
+                "converted_to_account, converted_to_account_timestamp,"
+                "over_18 "
+                "FROM campaign.interested_users "
+                "WHERE email ILIKE %s "
+                "ORDER BY email",
+                (email,)
+            )
+            rs = cur.fetchall()
+            return [InterestedUserRepo._row_to_interested_user(r) for r in rs]
 
     def verify_address(self, interested_user_id):
         with self._transaction.dict_cursor() as cur:

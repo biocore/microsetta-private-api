@@ -32,6 +32,7 @@ from microsetta_private_api.util.melissa import verify_address
 from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
 from microsetta_private_api.qiita import qclient
+from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
 
 
 def search_barcode(token_info, sample_barcode):
@@ -65,6 +66,70 @@ def search_email(token_info, email):
         if diag is None:
             return jsonify(code=404, message="Email not found"), 404
         return jsonify(diag), 200
+
+
+def search_interested_users_by_email(token_info, email):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        i_u_repo = InterestedUserRepo(t)
+        users = i_u_repo.get_interested_user_by_email(email)
+        users_obj = {
+            "users": users
+        }
+        if users is None:
+            return jsonify(
+                code=404,
+                message="Email not found"
+            ), 404
+        return jsonify(users_obj), 200
+
+
+def get_interested_user_by_id(token_info, iuid):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        i_u_repo = InterestedUserRepo(t)
+        user = i_u_repo.get_interested_user_by_id(iuid)
+        if user is None:
+            return jsonify(
+                code=404,
+                message="User not found"
+            ), 404
+        return jsonify(user), 200
+
+
+def put_interested_user_by_id(token_info, iuid, body):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        i_u_repo = InterestedUserRepo(t)
+        user = i_u_repo.get_interested_user_by_id(iuid)
+        if user is None:
+            return jsonify(
+                code=404,
+                message="User not found"
+            ), 404
+
+        # we're going to set both address_checked and _valid to True
+        # and bypass Melissa since the address is being updated by admin
+        user.address_checked = True
+        user.address_valid = True
+        user.address_1 = body['address_1']
+        user.address_2 = body['address_2']
+        user.city = body['city']
+        user.state = body['state']
+        user.postal_code = body['postal']
+        update_success = \
+            i_u_repo.update_interested_user(user)
+
+        if update_success is False:
+            return jsonify(
+                code=400,
+                message="Failed to update address."
+            ), 400
+        t.commit()
+        return jsonify(user), 200
 
 
 def scan_barcode(token_info, sample_barcode, body):

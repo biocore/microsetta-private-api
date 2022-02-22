@@ -1596,6 +1596,106 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/admin/search/interested_users/{email}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.search_interested_users_by_email
+      tags:
+        - Admin
+      summary: Find interested users by email
+      description: Find interested users by email
+      parameters:
+        - in: path
+          name: email
+          description: email address
+          schema:
+            type: string
+            example: "test@test.com"
+          required: true
+      responses:
+        '200':
+          description: Object containing interested users with similar emails (if any)
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/admin/interested_user/{iuid}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_interested_user_by_id
+      tags:
+        - Admin
+      summary: Get interested user by ID
+      description: Get interested user by Id
+      parameters:
+        - in: path
+          name: iuid
+          description: Interested user ID
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Interested user's information
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      operationId: microsetta_private_api.admin.admin_impl.put_interested_user_by_id
+      tags:
+        - Admin
+      summary: Update interested user
+      description: Update interested user
+      parameters:
+        - in: path
+          name: iuid
+          description: Interested user ID
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'address_1':
+                  type: string
+                'address_2':
+                  type: string
+                'city':
+                  type: string
+                'state':
+                  type: string
+                'postal':
+                  type: string
+              required:
+                - address_1
+                - city
+                - state
+                - postal
+      responses:
+        '200':
+          description: Interested user's updated information
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Failed to update address
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/admin/search/activation':
     get:
       operationId: microsetta_private_api.admin.admin_impl.search_activation
