@@ -1415,7 +1415,7 @@ paths:
       operationId: microsetta_private_api.api.get_interested_user_address_update
       tags:
         - Campaigns
-      summary: Retrieve an interesteded user's address to fix validation error
+      summary: Retrieve an interested user's address to fix validation error
       description: Retrieve an interested user's address to fix validation error
       security: [ ]
       parameters:
@@ -1455,6 +1455,8 @@ paths:
                     type: string
                   'country':
                     type: string
+        '400':
+          description: Address already valid
         '404':
           $ref: '#/components/responses/404NotFound'
     put:

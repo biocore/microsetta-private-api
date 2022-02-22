@@ -72,11 +72,11 @@ def get_interested_user_address_update(interested_user_id, email):
                 ), 404
             else:
                 # if the address is already valid, no reason to update
-                if interested_user.address_valid is True:
+                if interested_user.address_valid:
                     return jsonify(
-                        code=404,
+                        code=400,
                         message="Address already verified."
-                    ), 404
+                    ), 400
                 else:
                     # we've determined it's a valid user and their address
                     # needs to be fixed, so we return a subset of their info
@@ -171,7 +171,4 @@ def _validate_user_match(interested_user, email):
         # we're using both email and interested_user_id to make sure
         # someone doesn't stumble upon a valid email and/or id.
         # if they don't both match, treat as invalid
-        if interested_user.email != email:
-            return False
-        else:
-            return True
+        return interested_user.email == email
