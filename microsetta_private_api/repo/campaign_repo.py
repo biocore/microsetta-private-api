@@ -443,8 +443,8 @@ class UserTransaction(BaseRepo):
             cn = payment.payer_first_name + " " + payment.payer_last_name
 
             resolution_url = SERVER_CONFIG["interface_endpoint"] + \
-                             "/update_address?uid=" + interested_user_id + \
-                             "&email=" + payment.contact_email
+                "/update_address?uid=" + interested_user_id + \
+                "&email=" + payment.contact_email
             try:
                 # TODO - will need to add actual language flag to the email
                 # Fundrazr doesn't provide a language flag, defer for now
