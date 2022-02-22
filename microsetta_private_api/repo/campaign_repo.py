@@ -442,8 +442,9 @@ class UserTransaction(BaseRepo):
         if valid_address is False:
             cn = payment.payer_first_name + " " + payment.payer_last_name
 
+            # casting str to avoid concatenation error
             resolution_url = SERVER_CONFIG["interface_endpoint"] + \
-                "/update_address?uid=" + interested_user_id + \
+                "/update_address?uid=" + str(interested_user_id) + \
                 "&email=" + payment.contact_email
             try:
                 # TODO - will need to add actual language flag to the email
