@@ -100,14 +100,19 @@ class SourceRepo(BaseRepo):
             rows = cur.fetchall()
             return [_row_to_source(x) for x in rows]
 
-    def get_source(self, account_id, source_id):
+    def get_source(self, account_id, source_id, allow_revoked=False):
+        if allow_revoked:
+            revoked = 'NOT NULL'
+        else:
+            revoked = 'NULL'
+
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + SourceRepo.read_cols + " FROM "
                         "source "
                         "WHERE "
                         "source.id = %s AND "
                         "source.account_id = %s AND "
-                        "source.date_revoked IS NULL",
+                        f"source.date_revoked IS {revoked}",
                         (source_id, account_id))
             r = cur.fetchone()
             if r is None:
@@ -182,7 +187,7 @@ class SourceRepo(BaseRepo):
         try:
             with self._transaction.cursor() as cur:
                 cur.execute("DELETE FROM source_host_subject_id "
-                            "WHERE source.id = %s",
+                            "WHERE source_id = %s",
                             (source_id, ))
                 cur.execute("DELETE FROM source WHERE source.id = %s AND "
                             "source.account_id = %s",
@@ -218,10 +223,10 @@ class SourceRepo(BaseRepo):
                                description = %s,
                                parent_1_name = %s,
                                parent_2_name = %s,
-                               consent_revoked = t,
                                date_revoked = %s,
                                assent_obtainer = %s,
                                update_time = %s
                            WHERE id = %s""",
-                        (name, description, email, parent1_name, parent2_name,
-                         date_revoked, assent_obtainer, date_revoked))
+                        (name, email, description, parent1_name, parent2_name,
+                         date_revoked, assent_obtainer, date_revoked,
+                         source_id))

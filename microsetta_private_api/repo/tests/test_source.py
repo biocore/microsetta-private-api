@@ -10,7 +10,7 @@ from microsetta_private_api.model.source import Source, HumanInfo
 
 
 ACCOUNT_ID = '607f6723-c704-4b52-bc26-556a9aec85f6'
-HUMAN_SOURCE = Source('ffffffff-ffff-ffff-aaaa-aaaaaaaaaaaa',
+HUMAN_SOURCE = Source('ffffffff-ffff-cccc-aaaa-aaaaaaaaaaaa',
                       ACCOUNT_ID,
                       Source.SOURCE_TYPE_HUMAN,
                       'test person',
@@ -63,13 +63,19 @@ class SourceRepoTests(unittest.TestCase):
                      HUMAN_SOURCE.id)
 
             obs = sr.get_source(HUMAN_SOURCE.account_id,
-                                HUMAN_SOURCE.id)
+                                HUMAN_SOURCE.id,
+                                allow_revoked=False)
+            self.assertEqual(obs, None)
+
+            obs = sr.get_source(HUMAN_SOURCE.account_id,
+                                HUMAN_SOURCE.id,
+                                allow_revoked=True)
 
             self.assertNotEqual(obs.name, HUMAN_SOURCE.name)
             self.assertNotEqual(obs.source_data.email,
                                 HUMAN_SOURCE.source_data.email)
 
-            self.assertTrue(obs.source_data.consent_revoked)
+            self.assertTrue(obs.source_data.date_revoked is not None)
 
 
 if __name__ == '__main__':
