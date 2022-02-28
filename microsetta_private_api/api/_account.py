@@ -12,10 +12,13 @@ from microsetta_private_api.api.literals import AUTHROCKET_PUB_KEY, \
 from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.activation_repo import ActivationRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.admin.admin_impl import token_grants_admin_access
 
 
 def find_accounts_for_login(token_info):
@@ -128,7 +131,40 @@ def check_email_match(account_id, token_info):
 
 def delete_account(account_id, token_info):
     _validate_account_access(token_info, account_id)
-    return jsonify(message="not implemented"), 422
+    is_admin = token_grants_admin_access(token_info)
+
+    with Transaction() as t:
+        delete_account = True
+
+        acct_repo = AccountRepo(t)
+        src_repo = SourceRepo(t)
+        samp_repo = SampleRepo(t)
+
+        sources = src_repo.get_sources_in_account(account_id)
+        for source in sources:
+            delete_source = True
+
+            samples = samp_repo.get_samples_by_source(account_id, source.id)
+            for sample in samples:
+                if sample.remove_locked:
+                    delete_source = False
+                    samp_repo.scrub(account_id, source.id, sample.id)
+                else:
+                    samp_repo.dissociate_sample(account_id, source.id,
+                                                sample.id)
+
+            if delete_source:
+                src_repo.delete_source(account_id, source.id)
+            else:
+                delete_account = False
+                src_repo.scrub(account_id, source.id)
+
+        if delete_account:
+            acct_repo.delete_account(account_id)
+        else:
+            acct_repo.scrub(account_id)
+
+    return None, 204
 
 
 def update_account(account_id, body, token_info):
