@@ -287,7 +287,7 @@ class InterestedUserRepoTests(unittest.TestCase):
 
     def test_get_interested_user_by_email_invalid(self):
         with Transaction() as t:
-            t_e = "THISSTRINGWONTMATCHANEMAILADDRESSINTHETABLE"
+            t_e = "THISSTRINGSHOULDNTMATCHANEMAILADDRESSINTHETABLE"
             interested_user_repo = InterestedUserRepo(t)
             obs = \
                 interested_user_repo.get_interested_user_by_email(t_e)
