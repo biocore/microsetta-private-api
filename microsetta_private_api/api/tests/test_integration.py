@@ -495,6 +495,8 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 404)
 
+    @skipIf(SERVER_CONFIG['myfoodrepo_url'] in ('', 'mfr_url_placeholder'),
+            "MFR secrets not provided")
     def test_bobo_takes_myfoodrepo_without_slots(self):
         bobo = self._bobo_to_claim_a_sample()
 
