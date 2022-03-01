@@ -7,6 +7,7 @@ if os.environ.get('MFR_URL', '') != '':
 
     config['myfoodrepo_url'] = os.environ['MFR_URL']
     config['myfoodrepo_key'] = os.environ['MFR_TEST_APIKEY']
+    config['myfoodrepo_study'] = os.environ['MFR_STUDY']
     config['fundrazr_key'] = os.environ['FUNDRAZR_TEST_APIKEY']
     config['fundrazr_url'] = os.environ['FUNDRAZR_TEST_URL']
     config['fundrazr_organization'] = os.environ['FUNDRAZR_TEST_ORG']

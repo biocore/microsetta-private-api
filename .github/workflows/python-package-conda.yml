@@ -47,6 +47,7 @@ jobs:
       env:
         MFR_URL: "${{ secrets.MFR_URL }}"
         MFR_TEST_APIKEY: "${{ secrets.MFR_TEST_APIKEY }}"
+        MFR_STUDY: "${{ secrets.MFR_STUDY }}"
         FUNDRAZR_TEST_APIKEY: "${{ secrets.FUNDRAZR_TEST_APIKEY }}"
         FUNDRAZR_TEST_URL: "${{ secrets.FUNDRAZR_TEST_URL }}"
         FUNDRAZR_TEST_ORG: "${{ secrets.FUNDRAZR_TEST_ORG }}"
