@@ -1091,6 +1091,99 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/vioscreen/dietaryscore/type/{score_type}/code/{score_code}':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_dietary_scores_by_component
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen dietary scores for a specific component
+      description: Get information about Vioscreen dietary scores for a specific component
+      parameters:
+        - $ref: '#/components/parameters/score_type'
+        - $ref: '#/components/parameters/score_code'
+      responses:
+        '200':
+          description: Successfully returned dietary score information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/vioscreen/dietaryscore/':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_dietary_scores_descriptions
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen dietary scores descriptions
+      description: Get information about Vioscreen dietary scores descriptions
+      responses:
+        '200':
+          description: Successfully returned dietary scores information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/vioscreen/foodcomponents/code/{fc_code}':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_food_components_by_code
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen food components for a specific code
+      description: Get information about Vioscreen food components for a specific code
+      parameters:
+        - $ref: '#/components/parameters/fc_code'
+      responses:
+        '200':
+          description: Successfully returned food components information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/vioscreen/foodcomponents':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_food_components_descriptions
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen food components descriptions
+      description: Get information about Vioscreen food components descriptions
+      responses:
+        '200':
+          description: Successfully returned food components information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   # NB: "surveys" is used as a path component in two different ways (here nested under sample and above nested
   # directly under source.  The dev team assessed this and decided this dual usage was not unacceptably confusing.
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/surveys':
@@ -1457,6 +1550,101 @@ paths:
         '400':
           description: Creation or validation issue with the interested user
 
+  '/update_address':
+    get:
+      operationId: microsetta_private_api.api.get_interested_user_address_update
+      tags:
+        - Campaigns
+      summary: Retrieve an interested user's address to fix validation error
+      description: Retrieve an interested user's address to fix validation error
+      security: [ ]
+      parameters:
+        - in: query
+          name: interested_user_id
+          description: unique identifier of interested user
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: email
+          description: interested user's email address
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: interested user's address information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  'interested_user_id':
+                    type: string
+                  'email':
+                    type: string
+                  'address_1':
+                    type: string
+                  'address_2':
+                    type: string
+                  'city':
+                    type: string
+                  'state':
+                    type: string
+                  'postal_code':
+                    type: string
+                  'country':
+                    type: string
+        '400':
+          description: Address already valid
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      operationId: microsetta_private_api.api.put_interested_user_address_update
+      tags:
+        - Campaigns
+      summary: Update an interested user's address
+      description: Update an interested user's address
+      security: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'interested_user_id':
+                  type: string
+                'email':
+                  type: string
+                'address_1':
+                  type: string
+                'address_2':
+                  type: string
+                'city':
+                  type: string
+                'state':
+                  type: string
+                'postal':
+                  type: string
+              required:
+                - interested_user_id
+                - email
+                - address_1
+                - city
+                - state
+                - postal
+      responses:
+        '200':
+          description: Interested user ID
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Update or validation issue with the interested user's address
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/preparations/{sample_barcode}':
     get:
       operationId: microsetta_private_api.api.get_preparations
@@ -1550,6 +1738,106 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/admin/search/interested_users/{email}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.search_interested_users_by_email
+      tags:
+        - Admin
+      summary: Find interested users by email
+      description: Find interested users by email
+      parameters:
+        - in: path
+          name: email
+          description: email address
+          schema:
+            type: string
+            example: "test@test.com"
+          required: true
+      responses:
+        '200':
+          description: Object containing interested users with similar emails (if any)
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/admin/interested_user/{iuid}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_interested_user_by_id
+      tags:
+        - Admin
+      summary: Get interested user by ID
+      description: Get interested user by Id
+      parameters:
+        - in: path
+          name: iuid
+          description: Interested user ID
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Interested user's information
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      operationId: microsetta_private_api.admin.admin_impl.put_interested_user_by_id
+      tags:
+        - Admin
+      summary: Update interested user
+      description: Update interested user
+      parameters:
+        - in: path
+          name: iuid
+          description: Interested user ID
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'address_1':
+                  type: string
+                'address_2':
+                  type: string
+                'city':
+                  type: string
+                'state':
+                  type: string
+                'postal':
+                  type: string
+              required:
+                - address_1
+                - city
+                - state
+                - postal
+      responses:
+        '200':
+          description: Interested user's updated information
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Failed to update address
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/admin/search/activation':
     get:
       operationId: microsetta_private_api.admin.admin_impl.search_activation
@@ -1622,7 +1910,7 @@ paths:
           description: Country of address to verify
           required: true
           schema:
-            type: string      
+            type: string
       responses:
         '200':
           description: Object containing address and verification status
@@ -2215,6 +2503,24 @@ components:
       description: Project ID
       schema:
         $ref: '#/components/schemas/project_id'
+    score_type:
+      name: score_type
+      in: path
+      description: Dietary Score Type
+      schema:
+        $ref: '#/components/schemas/score_type'
+    score_code:
+      name: score_code
+      in: path
+      description: Dietary Score Code
+      schema:
+        $ref: '#/components/schemas/score_code'
+    fc_code:
+      name: fc_code
+      in: path
+      description: Food Components Code
+      schema:
+        $ref: '#/components/schemas/fc_code'
 
     # query parameters
     activation_code:
@@ -2866,6 +3172,17 @@ components:
         - project_name
         - is_microsetta
         - bank_samples
+
+    # vioscreen section
+    score_type:
+      type: string
+      example: "Hei2010"
+    score_code:
+      type: string
+      example: "TotalVegetables"
+    fc_code:
+      type: string
+      example: "acesupot"
 
     # error section
     Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/

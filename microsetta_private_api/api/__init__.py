@@ -31,7 +31,11 @@ from ._vioscreen import (
     read_sample_vioscreen_dietary_score, read_sample_vioscreen_supplements,
     read_sample_vioscreen_food_components,
     read_sample_vioscreen_eating_patterns,
-    read_sample_vioscreen_mpeds, read_sample_vioscreen_food_consumption
+    read_sample_vioscreen_mpeds, read_sample_vioscreen_food_consumption,
+    get_vioscreen_dietary_scores_by_component,
+    get_vioscreen_dietary_scores_descriptions,
+    get_vioscreen_food_components_by_code,
+    get_vioscreen_food_components_descriptions
 )
 
 from ._campaign import (
@@ -39,7 +43,8 @@ from ._campaign import (
 )
 
 from ._interested_user import (
-    create_interested_user
+    create_interested_user, get_interested_user_address_update,
+    put_interested_user_address_update
 )
 
 from ..config_manager import SERVER_CONFIG
@@ -95,6 +100,12 @@ __all__ = [
     'read_sample_vioscreen_eating_patterns',
     'read_sample_vioscreen_mpeds',
     'read_sample_vioscreen_food_consumption',
+    'get_vioscreen_dietary_scores_by_component',
+    'get_vioscreen_dietary_scores_descriptions',
+    'get_vioscreen_food_components_by_code',
+    'get_vioscreen_food_components_descriptions',
     'get_campaign_information',
-    'create_interested_user'
+    'create_interested_user',
+    'get_interested_user_address_update',
+    'put_interested_user_address_update'
 ]

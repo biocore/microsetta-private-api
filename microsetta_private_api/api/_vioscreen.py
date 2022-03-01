@@ -1,6 +1,6 @@
 from flask import jsonify
 from microsetta_private_api.api._account import \
-    _validate_account_access
+    _validate_account_access, _validate_has_account
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.vioscreen_repo import (
@@ -185,3 +185,58 @@ def read_sample_vioscreen_food_consumption(account_id, source_id,
             return jsonify(code=404, message="Food Consumption not found"), 404
 
         return jsonify(vioscreen_food_consumption.to_api()), 200
+
+
+def get_vioscreen_dietary_scores_by_component(score_type, score_code,
+                                              token_info):
+    _validate_has_account(token_info)
+
+    with Transaction() as t:
+        vio_diet = VioscreenDietaryScoreRepo(t)
+        scores = vio_diet.get_dietary_scores_by_component(score_type,
+                                                          score_code)
+
+        if scores is None:
+            return jsonify(code=404, message="Dietary Scores not found"), 404
+
+        return jsonify({"scoresType": score_type, "code": score_code,
+                        "scores": scores})
+
+
+def get_vioscreen_dietary_scores_descriptions(token_info):
+    _validate_has_account(token_info)
+
+    with Transaction() as t:
+        vio_diet = VioscreenDietaryScoreRepo(t)
+        descriptions = vio_diet.get_dietary_scores_descriptions()
+
+        if descriptions is None:
+            return jsonify(code=404, message="Dietary Scores not found"), 404
+
+        return jsonify(descriptions)
+
+
+def get_vioscreen_food_components_by_code(fc_code, token_info):
+    _validate_has_account(token_info)
+
+    with Transaction() as t:
+        vio_food = VioscreenFoodComponentsRepo(t)
+        amounts = vio_food.get_food_components_by_code(fc_code)
+
+        if amounts is None:
+            return jsonify(code=404, message="Food Components not found"), 404
+
+        return jsonify({"code": fc_code, "amounts": amounts})
+
+
+def get_vioscreen_food_components_descriptions(token_info):
+    _validate_has_account(token_info)
+
+    with Transaction() as t:
+        vio_food = VioscreenFoodComponentsRepo(t)
+        descriptions = vio_food.get_food_components_descriptions()
+
+        if descriptions is None:
+            return jsonify(code=404, message="Food Components not found"), 404
+
+        return jsonify(descriptions)

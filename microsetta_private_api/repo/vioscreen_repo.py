@@ -448,6 +448,38 @@ class VioscreenDietaryScoreRepo(BaseRepo):
 
         return scores[code]
 
+    def get_dietary_scores_by_component(self, scoresType, code):
+        """Obtain the all the dietary scores for a particular component
+        Parameters
+        ----------
+        scoresType : str
+            The scoresType to query
+        code : str
+            The code to query
+        Returns
+        -------
+        Float Array or None
+            The dietary scores, or None if no record was found
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT score
+                           FROM ag.vioscreen_dietaryscore
+                           WHERE scoresType = %s AND code = %s""",
+                        (scoresType, code))
+
+            rows = cur.fetchall()
+            if len(rows) > 0:
+                scores = []
+                for score in rows:
+                    scores.append(score[0])
+                return scores
+
+            else:
+                return None
+
+    def get_dietary_scores_descriptions(self):
+        return self._CODES
+
 
 class VioscreenSupplementsRepo(BaseRepo):
     def __init__(self, transaction):
@@ -787,6 +819,36 @@ class VioscreenFoodComponentsRepo(BaseRepo):
             raise NotFound("No such code: " + code)
 
         return self._CODES[code]
+
+    def get_food_components_by_code(self, code):
+        """Obtain the all the amounts for a particular code
+        Parameters
+        ----------
+        code : str
+            The code to query
+        Returns
+        -------
+        Float Array or None
+            The amounts, or None if no record was found
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT amount
+                           FROM ag.vioscreen_foodcomponents
+                           WHERE code = %s""",
+                        (code,))
+
+            rows = cur.fetchall()
+            if len(rows) > 0:
+                amounts = []
+                for amount in rows:
+                    amounts.append(amount[0])
+                return amounts
+
+            else:
+                return None
+
+    def get_food_components_descriptions(self):
+        return self._CODES
 
 
 class VioscreenEatingPatternsRepo(BaseRepo):
