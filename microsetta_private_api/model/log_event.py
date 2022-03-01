@@ -44,6 +44,8 @@ class EventSubtype(Enum):
     PESTER_DANIEL = "pester_daniel"
     # for project per-sample summaries
     EMAIL_PER_PROJECT_SUMMARY = "per_project_summary"
+    # for addresses that Melissa deems invalid
+    EMAIL_ADDRESS_INVALID = "address_invalid"
 
 
 class LogEvent(ModelBase):

@@ -43,7 +43,8 @@ from ._campaign import (
 )
 
 from ._interested_user import (
-    create_interested_user
+    create_interested_user, get_interested_user_address_update,
+    put_interested_user_address_update
 )
 
 from ..config_manager import SERVER_CONFIG
@@ -103,5 +104,7 @@ __all__ = [
     'get_vioscreen_food_components_by_code',
     'get_vioscreen_food_components_descriptions',
     'get_campaign_information',
-    'create_interested_user'
+    'create_interested_user',
+    'get_interested_user_address_update',
+    'put_interested_user_address_update'
 ]

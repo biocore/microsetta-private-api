@@ -5,6 +5,10 @@ from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.campaign import Campaign, payment_from_db
 from microsetta_private_api.exceptions import RepoException
+from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
+from microsetta_private_api.tasks import send_email
+from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.localization import EN_US
 
 
 class UnknownItem(psycopg2.errors.ForeignKeyViolation):
@@ -423,6 +427,38 @@ class UserTransaction(BaseRepo):
             raise ValueError("'%s' is unrecognized" % payment.TRANSACTION_TYPE)
 
         interested_user_id = self._add_interested_user(payment)
+
+        # begin address verification
+        i_u_repo = InterestedUserRepo(self._transaction)
+        try:
+            valid_address = i_u_repo.verify_address(interested_user_id)
+        except RepoException:
+            # we shouldn't reach this point, but address wasn't verified
+            valid_address = False
+
+        # we specifically care if valid_address is False, as verify_address
+        # will return None if the user doesn't have a shipping address
+        # in this case, that implies a perk that doesn't require shipping
+        if valid_address is False:
+            cn = payment.payer_first_name + " " + payment.payer_last_name
+
+            # casting str to avoid concatenation error
+            resolution_url = SERVER_CONFIG["interface_endpoint"] + \
+                "/update_address?uid=" + str(interested_user_id) + \
+                "&email=" + payment.contact_email
+            try:
+                # TODO - will need to add actual language flag to the email
+                # Fundrazr doesn't provide a language flag, defer for now
+                send_email(payment.contact_email,
+                           "address_invalid",
+                           {"contact_name": cn,
+                            "resolution_url": resolution_url},
+                           EN_US)
+            except:  # noqa
+                # try our best to email
+                pass
+        # end address verification
+
         if payment.TRANSACTION_TYPE == self.TRN_TYPE_FUNDRAZR:
             return self._add_transaction_fundrazr(payment, interested_user_id)
         else:

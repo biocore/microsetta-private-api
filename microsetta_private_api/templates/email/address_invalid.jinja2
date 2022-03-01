@@ -1,0 +1,253 @@
+<html>
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+    <style type="text/css">
+        ol
+        {
+            margin:0;
+            padding:0
+        }
+        table td,table th
+        {
+            padding:0
+        }
+        .c0
+        {
+            color:#000000;
+            font-weight:400;
+            text-decoration:none;
+            vertical-align:baseline;
+            font-size:12pt;
+            font-family:"Arial";
+            font-style:normal
+        }
+        .c1
+        {
+            background-color:#ffffff;
+            padding-top:0pt;
+            padding-bottom:0pt;
+            line-height:1.15;
+            orphans:2;
+            widows:2;
+            text-align:left
+        }
+        .c2
+        {
+            background-color:#ffffff;
+            padding-top:0pt;
+            padding-bottom:0pt;
+            line-height:1.15;
+            orphans:2;
+            widows:2;
+            text-align:left;
+            height:11pt
+        }
+        .c3
+        {
+            color:#000000;
+            font-weight:400;
+            text-decoration:none;
+            vertical-align:baseline;
+            font-size:11pt;font-family:"Arial";font-style:normal
+        }
+        .c4
+        {
+            font-size:12pt
+        }
+        .c5
+        {
+            height:11pt
+        }
+        .c6
+        {
+            color:#000000;
+            font-weight:700;
+            text-decoration:none;
+            vertical-align:baseline;
+            font-family:"Arial";
+            font-style:normal
+        }
+        .c7
+        {
+            font-weight:700
+        }
+        .c8
+        {
+            padding-top:0pt;
+            padding-bottom:0pt;
+            line-height:1.15;
+            orphans:2;
+            widows:2;
+            text-align:left
+        }
+        .c9
+        {
+            background-color:#ffffff;
+        }
+        .c10
+        {
+            background-color:#ffffff;
+            max-width:468pt;
+            padding:5%
+        }
+        .c11
+        {
+
+        }
+        .title
+        {
+            padding-top:0pt;
+            color:#000000;
+            font-size:26pt;
+            padding-bottom:3pt;
+            font-family:"Arial";
+            line-height:1.15;
+            page-break-after:avoid;
+            orphans:2;
+            widows:2;
+            text-align:left
+        }
+        .subtitle
+        {
+            padding-top:0pt;
+            color:#666666;
+            font-size:15pt;
+            padding-bottom:16pt;
+            font-family:"Arial";
+            line-height:1.15;
+            page-break-after:avoid;
+            orphans:2;
+            widows:2;
+            text-align:left
+        }
+        li
+        {
+            color:#000000;
+            font-size:11pt;
+            font-family:"Arial"
+        }
+        p
+        {
+            margin:0;
+            color:#000000;
+            font-size:11pt;
+            font-family:"Arial"
+        }
+        h1
+        {
+            padding-top:20pt;
+            color:#000000;
+            font-size:20pt;
+            padding-bottom:6pt;
+            font-family:"Arial";
+            line-height:1.15;
+            page-break-after:avoid;
+            orphans:2;
+            widows:2;
+            text-align:left
+        }
+        h2
+        {
+            padding-top:18pt;
+            color:#000000;
+            font-size:16pt;
+            padding-bottom:6pt;
+            font-family:"Arial";
+            line-height:1.15;
+            page-break-after:avoid;
+            orphans:2;
+            widows:2;
+            text-align:left
+        }
+        h3
+        {
+            padding-top:16pt;
+            color:#434343;
+            font-size:14pt;
+            padding-bottom:4pt;
+            font-family:"Arial";
+            line-height:1.15;
+            page-break-after:avoid;
+            orphans:2;
+            widows:2;
+            text-align:left
+        }
+        h4
+        {
+            padding-top:14pt;
+            color:#666666;
+            font-size:12pt;
+            padding-bottom:4pt;
+            font-family:"Arial";
+            line-height:1.15;
+            page-break-after:avoid;
+            orphans:2;
+            widows:2;
+            text-align:left
+        }
+        h5
+        {
+            padding-top:12pt;
+            color:#666666;
+            font-size:11pt;
+            padding-bottom:4pt;
+            font-family:"Arial";
+            line-height:1.15;
+            page-break-after:avoid;
+            orphans:2;
+            widows:2;
+            text-align:left
+        }
+        h6
+        {
+            padding-top:12pt;
+            color:#666666;
+            font-size:11pt;
+            padding-bottom:4pt;
+            font-family:"Arial";
+            line-height:1.15;
+            page-break-after:avoid;
+            font-style:italic;
+            orphans:2;
+            widows:2;
+            text-align:left
+        }
+    </style>
+</head>
+<body class="c10">
+<p class="c1 c5"><span class="c0"></span></p>
+<p class="c1">
+    <span class="c0">{{ _("Hello") }} {{contact_name |e}},</span>
+</p>
+<p class="c1"><span class="c0">&nbsp;</span></p>
+<p class="c8 c9">
+    <span class="c4">{{ _("Thank you for your interest and participation in The Microsetta Initiative. We are writing as we've encountered an issue processing your transaction, and we would appreciate your assistance in helping to resolve this matter.") }}</span>
+
+    <span class="c4">{{ _("Specifically, we were unable to verify the address to which you requested we ship you kit(s).") }}</span>
+</p>
+<p class="c2">
+    <span class="c0"></span>
+</p>
+<p class="c8 c9">
+    <span class="c0">{{ _("To resolve this issue and ensure we have a valid shipping address, please click the following link or copy and paste the URL into your browser:") }}</span>
+</p>
+<p class="c8 c9">
+    <span class="c0">&nbsp;</span>
+</p>
+<p class="c8 c9">
+    <ul class="c8 c9">
+    <li><span class="c0"><a href={{resolution_url}} target="_blank">{{resolution_url}}</a></span></li>
+    </ul>
+</p>
+<p class="c8 c9">
+    <span class="c0">&nbsp;</span>
+</p>
+<p class="c1">
+    <span class="c0">{{ _("If you have any questions, please reply to us at") }} <a href = "mailto: microsetta@ucsd.edu">microsetta@ucsd.edu</a></span>
+</p>
+<p class="c1"><span class="c0">&nbsp;</span></p>
+<p class="c1"><span class="c0">{{ _("Thank you,") }}</span></p>
+<p class="c1"><span class="c0">{{ _("The Microsetta Team") }}</span></p>
+
+</body>
+</html>

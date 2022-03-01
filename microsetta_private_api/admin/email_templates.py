@@ -61,6 +61,13 @@ class EmailMessage(Enum):
         EventType.EMAIL,
         EventSubtype.PESTER_DANIEL
     )
+    address_invalid = (
+        "Your Microsetta Initiative status update: information needed",
+        "email/address_invalid.jinja2",
+        ("contact_name", "resolution_url"),
+        EventType.EMAIL,
+        EventSubtype.EMAIL_ADDRESS_INVALID
+    )
 
     def __init__(self, subject, html, required, event_type, event_sub):
         self.subject = subject
