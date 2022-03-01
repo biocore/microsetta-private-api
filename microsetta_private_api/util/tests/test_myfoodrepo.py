@@ -1,4 +1,5 @@
 import unittest
+from unittest import skipIf
 from dateutil import parser
 import pytz
 import datetime
@@ -9,6 +10,8 @@ from microsetta_private_api.client.myfoodrepo import MFRClient
 
 
 class MyFoodRepoTests(unittest.TestCase):
+    @skipIf(SERVER_CONFIG['myfoodrepo_url'] in ('', 'mfr_url_placeholder'),
+            "MFR secrets not provided")
     def test_create_subj(self):
         client = MFRClient(SERVER_CONFIG["myfoodrepo_study"])
         exp_delta = SERVER_CONFIG["myfoodrepo_participation_days"]
