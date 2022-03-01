@@ -1070,6 +1070,99 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/vioscreen/dietaryscore/type/{score_type}/code/{score_code}':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_dietary_scores_by_component
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen dietary scores for a specific component
+      description: Get information about Vioscreen dietary scores for a specific component
+      parameters:
+        - $ref: '#/components/parameters/score_type'
+        - $ref: '#/components/parameters/score_code'
+      responses:
+        '200':
+          description: Successfully returned dietary score information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/vioscreen/dietaryscore/':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_dietary_scores_descriptions
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen dietary scores descriptions
+      description: Get information about Vioscreen dietary scores descriptions
+      responses:
+        '200':
+          description: Successfully returned dietary scores information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/vioscreen/foodcomponents/code/{fc_code}':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_food_components_by_code
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen food components for a specific code
+      description: Get information about Vioscreen food components for a specific code
+      parameters:
+        - $ref: '#/components/parameters/fc_code'
+      responses:
+        '200':
+          description: Successfully returned food components information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/vioscreen/foodcomponents':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_food_components_descriptions
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen food components descriptions
+      description: Get information about Vioscreen food components descriptions
+      responses:
+        '200':
+          description: Successfully returned food components information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   # NB: "surveys" is used as a path component in two different ways (here nested under sample and above nested
   # directly under source.  The dev team assessed this and decided this dual usage was not unacceptably confusing.
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/surveys':
@@ -1601,7 +1694,7 @@ paths:
           description: Country of address to verify
           required: true
           schema:
-            type: string      
+            type: string
       responses:
         '200':
           description: Object containing address and verification status
@@ -2194,6 +2287,24 @@ components:
       description: Project ID
       schema:
         $ref: '#/components/schemas/project_id'
+    score_type:
+      name: score_type
+      in: path
+      description: Dietary Score Type
+      schema:
+        $ref: '#/components/schemas/score_type'
+    score_code:
+      name: score_code
+      in: path
+      description: Dietary Score Code
+      schema:
+        $ref: '#/components/schemas/score_code'
+    fc_code:
+      name: fc_code
+      in: path
+      description: Food Components Code
+      schema:
+        $ref: '#/components/schemas/fc_code'
 
     # query parameters
     activation_code:
@@ -2845,6 +2956,17 @@ components:
         - project_name
         - is_microsetta
         - bank_samples
+
+    # vioscreen section
+    score_type:
+      type: string
+      example: "Hei2010"
+    score_code:
+      type: string
+      example: "TotalVegetables"
+    fc_code:
+      type: string
+      example: "acesupot"
 
     # error section
     Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/
