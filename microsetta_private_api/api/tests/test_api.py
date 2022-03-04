@@ -862,6 +862,76 @@ class AccountsTests(ApiTests):
 
 @pytest.mark.usefixtures("client")
 class AccountTests(ApiTests):
+    def test_account_scrub_success(self):
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        response = self.client.delete(
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # pull the account details
+        response = self.client.get(
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+
+        for k in DUMMY_ACCT_INFO:
+            if k in (KIT_NAME_KEY, 'language'):
+                continue
+            self.assertNotEqual(DUMMY_ACCT_INFO[k],
+                                response_obj[k])
+
+        # pull the source details
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s?%s' %
+            (dummy_acct_id, dummy_source_id,
+             self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+
+        self.assertEqual(response_obj['source_name'],
+                         'scrubbed')
+        self.assertEqual(response_obj['consent']['participant_email'],
+                         'scrubbed@microsetta.ucsd.edu')
+
+    def test_account_scrub_non_existant(self):
+        response = self.client.delete(
+            '/api/accounts/%s?%s' %
+            (MISSING_ACCT_ID, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(403, response.status_code)
+
+        response = self.client.delete(
+            '/api/accounts/%s?%s' %
+            (MISSING_ACCT_ID, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(404, response.status_code)
+
+    def test_account_scrub_non_admin(self):
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.delete(
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(403, response.status_code)
 
     # region account view/get tests
     def test_account_view_success(self):
