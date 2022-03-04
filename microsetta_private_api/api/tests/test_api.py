@@ -863,13 +863,34 @@ class AccountsTests(ApiTests):
 @pytest.mark.usefixtures("client")
 class AccountTests(ApiTests):
     def test_account_scrub_success(self):
+        # setup an account with a source and sample
         dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
 
-        response = self.client.delete(
-            '/api/accounts/%s?%s' %
-            (dummy_acct_id, self.default_lang_querystring),
+        create_dummy_kit(dummy_acct_id, dummy_source_id)
+        _ = create_dummy_answered_survey(
+            dummy_acct_id, dummy_source_id, dummy_sample_id=MOCK_SAMPLE_ID)
+
+        base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
+            dummy_acct_id, dummy_source_id)
+        sample_url = "{0}/{1}".format(base_url, MOCK_SAMPLE_ID)
+
+        sample_body = {'sample_site': 'Stool',
+                       "sample_notes": "foobar",
+                       'sample_datetime': "2017-07-21T17:32:28Z"}
+
+        put_resp = self.client.put(
+            '%s?%s' % (sample_url, self.default_lang_querystring),
+            json=sample_body,
+            headers=self.dummy_auth
+        )
+        self.assertEqual(200, put_resp.status_code)
+
+        # now let's scrub it
+        response = self.client.post(
+            '/api/accounts/%s/scrub' %
+            (dummy_acct_id,),
             headers=make_headers(FAKE_TOKEN_ADMIN))
 
         # check response code
@@ -905,18 +926,33 @@ class AccountTests(ApiTests):
         self.assertEqual(response_obj['consent']['participant_email'],
                          'scrubbed@microsetta.ucsd.edu')
 
+        # pull the sample details
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/samples/%s?%s' %
+            (dummy_acct_id, dummy_source_id, MOCK_SAMPLE_ID,
+             self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+        self.assertEqual(response_obj['sample_notes'], 'scrubbed')
+        self.assertEqual(response_obj['sample_site'],
+                         sample_body['sample_site'])
+        self.assertEqual(response_obj['sample_datetime'],
+                         sample_body['sample_datetime'])
+
     def test_account_scrub_non_existant(self):
-        response = self.client.delete(
-            '/api/accounts/%s?%s' %
-            (MISSING_ACCT_ID, self.default_lang_querystring),
+        response = self.client.post(
+            '/api/accounts/%s/scrub' %
+            (MISSING_ACCT_ID, ),
             headers=self.dummy_auth)
 
         # check response code
         self.assertEqual(403, response.status_code)
 
         response = self.client.delete(
-            '/api/accounts/%s?%s' %
-            (MISSING_ACCT_ID, self.default_lang_querystring),
+            '/api/accounts/%s/scrub' %
+            (MISSING_ACCT_ID, ),
             headers=make_headers(FAKE_TOKEN_ADMIN))
 
         # check response code
@@ -926,8 +962,8 @@ class AccountTests(ApiTests):
         dummy_acct_id = create_dummy_acct(create_dummy_1=True)
 
         response = self.client.delete(
-            '/api/accounts/%s?%s' %
-            (dummy_acct_id, self.default_lang_querystring),
+            '/api/accounts/%s/scrub' %
+            (dummy_acct_id, ),
             headers=self.dummy_auth)
 
         # check response code
