@@ -203,6 +203,7 @@ class SourceRepo(BaseRepo):
             raise RepoException("Error deleting source") from e
 
     def scrub(self, account_id, source_id):
+        """Replace identifying information with scrubbed text"""
         source = self.get_source(account_id, source_id)
 
         if source is None:
