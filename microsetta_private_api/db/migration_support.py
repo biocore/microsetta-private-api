@@ -727,7 +727,7 @@ class MigrationSupport:
             # print(all_errors)
 
     @staticmethod
-    def migrate_95(TRN):
+    def migrate_96(TRN):
         from microsetta_private_api.repo.source_repo import SourceRepo as sr
 
         TRN.add("SELECT id, source_name FROM source")
@@ -752,7 +752,7 @@ class MigrationSupport:
         # as it depends on external state
         # "0082.sql": migrate_82.__func__
         # ...
-        "0095.sql": migrate_95.__func__,
+        "0096.sql": migrate_96.__func__,
     }
 
     @classmethod
