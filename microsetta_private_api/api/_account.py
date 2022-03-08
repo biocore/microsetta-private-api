@@ -231,7 +231,8 @@ def _validate_account_access(token_info, account_id):
         if account is None:
             raise NotFound(ACCT_NOT_FOUND_MSG)
         else:
-            if token_associated_account.account_type == 'deleted':
+            if token_associated_account is not None and \
+                    token_associated_account.account_type == 'deleted':
                 raise Unauthorized()
 
             # Whether or not the token_info is associated with an admin acct
