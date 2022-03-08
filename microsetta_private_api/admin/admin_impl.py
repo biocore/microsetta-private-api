@@ -775,3 +775,50 @@ def qiita_barcode_query(body, token_info):
     )
 
     return jsonify(qiita_data), 200
+
+
+def delete_account(account_id, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        acct_repo = AccountRepo(t)
+        src_repo = SourceRepo(t)
+        samp_repo = SampleRepo(t)
+
+        acct = acct_repo.get_account(account_id)
+        if acct is None:
+            return jsonify(message="Account not found", code=404), 404
+        else:
+            # the account is already scrubbed so let's stop early
+            if acct.account_type == 'deleted':
+                return None, 204
+
+        sample_count = 0
+        sources = src_repo.get_sources_in_account(account_id)
+
+        for source in sources:
+            samples = samp_repo.get_samples_by_source(account_id, source.id)
+
+            has_samples = len(samples) > 0
+            sample_count += len(samples)
+
+            for sample in samples:
+                # we scrub rather than disassociate in the event that the
+                # sample is in our freezers but not with an up-to-date scan
+                samp_repo.scrub(account_id, source.id, sample.id)
+
+            # a source is safe to delete if there are no associated samples
+            if has_samples:
+                src_repo.scrub(account_id, source.id)
+            else:
+                src_repo.delete_source(account_id, source.id)
+
+        # an account is safe to delete if there are no associated samples
+        if sample_count > 0:
+            acct_repo.scrub(account_id)
+        else:
+            acct_repo.delete_account(account_id)
+
+        t.commit()
+
+    return None, 204

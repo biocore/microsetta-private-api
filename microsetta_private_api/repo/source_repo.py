@@ -79,40 +79,43 @@ class SourceRepo(BaseRepo):
                  "deceased_parent, date_signed, date_revoked, " \
                  "assent_obtainer, age_range, description"
 
-    def get_sources_in_account(self, account_id, source_type=None):
+    def get_sources_in_account(self, account_id, source_type=None,
+                               allow_revoked=False):
+        if not allow_revoked:
+            no_revoked = " AND source.date_revoked IS NULL"
+        else:
+            no_revoked = ""
+
         with self._transaction.dict_cursor() as cur:
             if source_type is None:
                 cur.execute("SELECT " + SourceRepo.read_cols + " FROM "
                             "source "
                             "WHERE "
-                            "source.account_id = %s AND "
-                            "source.date_revoked IS NULL",
+                            "source.account_id = %s" + no_revoked,
                             (account_id,))
             else:
                 cur.execute("SELECT " + SourceRepo.read_cols + " FROM "
                             "source "
                             "WHERE "
                             "source.account_id = %s AND "
-                            "source.source_type = %s AND "
-                            "source.date_revoked IS NULL",
+                            "source.source_type = %s" + no_revoked,
                             (account_id, source_type))
 
             rows = cur.fetchall()
             return [_row_to_source(x) for x in rows]
 
     def get_source(self, account_id, source_id, allow_revoked=False):
-        if allow_revoked:
-            revoked = 'NOT NULL'
+        if not allow_revoked:
+            no_revoked = " AND source.date_revoked IS NULL"
         else:
-            revoked = 'NULL'
+            no_revoked = ""
 
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + SourceRepo.read_cols + " FROM "
                         "source "
                         "WHERE "
                         "source.id = %s AND "
-                        "source.account_id = %s AND "
-                        f"source.date_revoked IS {revoked}",
+                        "source.account_id = %s" + no_revoked,
                         (source_id, account_id))
             r = cur.fetchone()
             if r is None:

@@ -228,7 +228,8 @@ class SampleRepo(BaseRepo):
             sample_row = cur.fetchone()
             return self._create_sample_obj(sample_row)
 
-    def get_samples_by_source(self, account_id, source_id):
+    def get_samples_by_source(self, account_id, source_id,
+                              allow_revoked=False):
         sql = "{0}{1}".format(
             self.PARTIAL_SQL,
             " WHERE"
@@ -242,7 +243,8 @@ class SampleRepo(BaseRepo):
                 raise NotFound("No such account")
 
             source_repo = SourceRepo(self._transaction)
-            if source_repo.get_source(account_id, source_id) is None:
+            if source_repo.get_source(account_id, source_id,
+                                      allow_revoked=allow_revoked) is None:
                 raise NotFound("No such source")
 
             cur.execute(sql, (account_id, source_id))
@@ -389,7 +391,7 @@ class SampleRepo(BaseRepo):
             # verify our account / source relation is reasonable
             cur.execute("""SELECT id
                            FROM ag.source
-                           WHERE id=%s AND account_id""",
+                           WHERE id=%s AND account_id=%s""",
                         (source_id, account_id))
             res = cur.fetchone()
 
@@ -403,3 +405,5 @@ class SampleRepo(BaseRepo):
 
             if cur.rowcount != 1:
                 raise RepoException("Invalid source / sample relation")
+            else:
+                return True
