@@ -14,6 +14,7 @@ from microsetta_private_api.repo.activation_repo import ActivationRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -784,6 +785,7 @@ def delete_account(account_id, token_info):
         acct_repo = AccountRepo(t)
         src_repo = SourceRepo(t)
         samp_repo = SampleRepo(t)
+        sar_repo = SurveyAnswersRepo(t)
 
         acct = acct_repo.get_account(account_id)
         if acct is None:
@@ -807,10 +809,19 @@ def delete_account(account_id, token_info):
                 # sample is in our freezers but not with an up-to-date scan
                 samp_repo.scrub(account_id, source.id, sample.id)
 
-            # a source is safe to delete if there are no associated samples
+            surveys = sar_repo.list_answered_surveys(account_id, source.id)
             if has_samples:
+                # if we have samples, we need to scrub survey / source
+                # free text
+                print(surveys)
+                for survey_id in surveys:
+                    sar_repo.scrub(account_id, source.id, survey_id)
                 src_repo.scrub(account_id, source.id)
             else:
+                # if we do not have associated samples, then the source
+                # is safe to delete
+                for survey_id in surveys:
+                    sar_repo.delete_answered_survey(account_id, survey_id)
                 src_repo.delete_source(account_id, source.id)
 
         # an account is safe to delete if there are no associated samples
