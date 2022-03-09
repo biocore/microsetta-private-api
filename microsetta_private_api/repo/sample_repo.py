@@ -385,7 +385,28 @@ class SampleRepo(BaseRepo):
             return row[0]
 
     def scrub(self, account_id, source_id, sample_id):
-        """Wipe out free text information for a sample"""
+        """Wipe out free text information for a sample
+
+        Parameters
+        ----------
+        account_id : str, uuid
+            The associated account ID to scrub
+        source_id : str, uuid
+            The associated source ID to scrub
+        sample_id : str, uuid
+            The associated sample ID to scrub
+
+        Raises
+        ------
+        RepoException
+            If the account / source is relation is bad
+            If the source / sample relation is bad
+            If the update fails for any reason
+
+        Returns
+        -------
+        True if the sample was scrubbed, will raise otherwise
+        """
         notes = "scrubbed"
         with self._transaction.cursor() as cur:
             # verify our account / source relation is reasonable

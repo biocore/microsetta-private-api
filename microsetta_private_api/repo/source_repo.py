@@ -203,7 +203,26 @@ class SourceRepo(BaseRepo):
             raise RepoException("Error deleting source") from e
 
     def scrub(self, account_id, source_id):
-        """Replace identifying information with scrubbed text"""
+        """Replace identifying information with scrubbed text
+
+        Parameters
+        ----------
+        account_id : str, uuid
+            The associated account ID to scrub
+        source_id : str, uuid
+            The associated source ID to scrub
+
+        Raises
+        ------
+        RepoException
+            If the source was not found
+            If the source is not human
+            If the update failed
+
+        Returns
+        -------
+        True if the record was updated, raises otherwise
+        """
         source = self.get_source(account_id, source_id)
 
         if source is None:
@@ -234,3 +253,8 @@ class SourceRepo(BaseRepo):
                         (name, email, description, parent1_name, parent2_name,
                          date_revoked, assent_obtainer, date_revoked,
                          source_id))
+
+            if cur.rowcount != 1:
+                raise RepoException("Invalid source relation")
+            else:
+                return True
