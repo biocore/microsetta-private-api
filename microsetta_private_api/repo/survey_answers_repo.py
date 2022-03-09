@@ -449,3 +449,31 @@ class SurveyAnswersRepo(BaseRepo):
                 return []
             else:
                 return [r[0] for r in sample_rows]
+
+    def scrub(self, account_id, source_id, survey_id):
+        """Replace free text with scrubbed text"""
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT survey_id
+                           FROM ag.ag_login_surveys
+                           WHERE ag_login_id = %s AND
+                               source_id = %s AND
+                               survey_id = %s""",
+                        (account_id, source_id, survey_id))
+            res = cur.fetchone()
+            if res is None:
+                raise RepoException("Invalid account / source / survey "
+                                    "relation")
+
+            text = 'scrubbed'
+            cur.execute("""UPDATE survey_answers_other
+                           SET response=%s
+                           WHERE survey_id=%s
+                               AND survey_question_id IN (
+                                   SELECT survey_question_id
+                                   FROM survey_answers_other
+                                       JOIN survey_question_response_type
+                                           USING (survey_question_id)
+                                   WHERE survey_response_type='TEXT'
+                                       AND survey_id=%s
+                                   )""",
+                        (text, survey_id, survey_id))

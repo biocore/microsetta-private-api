@@ -146,6 +146,27 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+    
+    delete:
+      operationId: microsetta_private_api.admin.admin_impl.delete_account
+      tags:
+        - Account
+        - Admin
+      summary: Delete and scrub the user and sources
+      description: Delete and scrub the user and sources
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '204':
+          description: Successfully deleted and scrubbed the account
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
 
   '/accounts/{account_id}/email_match':
     get:
@@ -2618,7 +2639,7 @@ components:
     account_type: # e.g., regular user or admin--room to grow
       type: string
       readOnly: true
-      enum: ["standard", "admin"]
+      enum: ["standard", "admin", "deleted"]
       example: "standard"
     language:
       type: string

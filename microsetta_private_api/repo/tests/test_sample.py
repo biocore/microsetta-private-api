@@ -22,6 +22,40 @@ class SampleTests(unittest.TestCase):
                 break
         return found
 
+    def test_scrub_bad_source(self):
+        samp1 = 'd8592c74-85f0-2135-e040-8a80115d6401'  # 000001766
+        with Transaction() as t:
+            acct1, src1 = self._get_source_from_sample(t, samp1)
+            sr = SampleRepo(t)
+
+            with self.assertRaises(RepoException):
+                sr.scrub(acct1, acct1, samp1)
+
+    def test_scrub_bad_sample(self):
+        samp1 = 'd8592c74-85f0-2135-e040-8a80115d6401'  # 000001766
+        with Transaction() as t:
+            acct1, src1 = self._get_source_from_sample(t, samp1)
+            sr = SampleRepo(t)
+
+            with self.assertRaises(RepoException):
+                sr.scrub(acct1, src1, src1)
+
+    def test_scrub(self):
+        samp1 = 'd8592c74-85f0-2135-e040-8a80115d6401'  # 000001766
+        with Transaction() as t:
+            acct1, src1 = self._get_source_from_sample(t, samp1)
+
+            sr = SampleRepo(t)
+
+            # get original source associations
+            src1_sample = sr.get_samples_by_source(acct1, src1)[0]
+
+            res = sr.scrub(acct1, src1, src1_sample.id)
+            self.assertTrue(res)
+
+            obs_sample = sr.get_samples_by_source(acct1, src1)[0]
+            self.assertNotEqual(src1_sample.notes, obs_sample.notes)
+
     def test_update_sample_assocation_with_migration(self):
         samp1 = 'd8592c74-85f0-2135-e040-8a80115d6401'  # 000001766
         samp2 = 'ceaa6fd6-0861-4335-aa35-da1857bd5294'  # 000067789

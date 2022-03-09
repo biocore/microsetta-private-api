@@ -1,3 +1,4 @@
+import datetime
 import psycopg2
 
 from microsetta_private_api.repo.base_repo import BaseRepo
@@ -220,3 +221,43 @@ class AccountRepo(BaseRepo):
                         "ORDER BY email",
                         (email,))
             return [x[0] for x in cur.fetchall()]
+
+    def scrub(self, account_id):
+        """Remove any identifying information from the account
+
+        Parameters
+        ----------
+        account_id : uuid
+            The account to scrub details from
+
+        Returns
+        -------
+        bool
+            True if the account was successfully scrubbed
+        """
+        account = self.get_account(account_id)
+
+        if account is None:
+            raise RepoException(f"account ({account_id}) does not exist")
+
+        # email must be unique. let's construct using the present time
+        # so we know when the account was scrubbed indefinitely. using time
+        # creates a possible race condition with the email, so we'll include
+        # the account ID as well to ensure uniqueness. we quote the email
+        # address so that it remains technically valid; quoting of ":" is
+        # necessary, see https://stackoverflow.com/a/2049510
+        date = datetime.datetime.now().isoformat()
+        email = f'"{date}_{account.id}_scrubbed"@microsetta.ucsd.edu'
+
+        account.email = email
+        account.account_type = 'deleted'
+        account.auth_issuer = None
+        account.auth_sub = None
+        account.first_name = 'scrubbed'
+        account.last_name = 'scrubbed'
+        account.address.street = 'scrubbed'
+        account.address.city = 'scrubbed'
+        account.address.state = 'NA'
+        account.address.post_code = 'scrubbed'
+
+        return self.update_account(account) == 1
