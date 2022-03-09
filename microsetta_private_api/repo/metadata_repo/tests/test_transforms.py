@@ -264,6 +264,7 @@ class TransformTests(unittest.TestCase):
 
     def test_constant(self):
         class constant(Constant):
+            REQUIRED_COLUMNS = frozenset(['baz', ])
             COLUMN_NAME = 'cool'
             VALUE = '1234'
 

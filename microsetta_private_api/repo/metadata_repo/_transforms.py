@@ -110,9 +110,13 @@ class Rename:
 
 
 class Constant(Transformer):
-    REQUIRED_COLUMNS = frozenset([])
+    REQUIRED_COLUMNS = None
     COLUMN_NAME = None
     VALUE = None
+
+    @classmethod
+    def satisfies_requirements(cls, df):
+        return cls.REQUIRED_COLUMNS.issubset(set(df.columns))
 
     @classmethod
     def _transform(cls, df):
@@ -354,7 +358,8 @@ class RenameHostHeightUnits(Rename):
 
 
 class ConstantHostAgeUnits(Constant):
-    COLUMN = HOST_AGE_UNITS
+    REQUIRED_COLUMNS = frozenset([HOST_AGE, ])
+    COLUMN_NAME = HOST_AGE_UNITS
     VALUE = HOST_AGE_UNIT_VALUE
 
 
