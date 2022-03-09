@@ -813,7 +813,6 @@ def delete_account(account_id, token_info):
             if has_samples:
                 # if we have samples, we need to scrub survey / source
                 # free text
-                print(surveys)
                 for survey_id in surveys:
                     sar_repo.scrub(account_id, source.id, survey_id)
                 src_repo.scrub(account_id, source.id)
