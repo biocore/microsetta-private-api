@@ -17,7 +17,7 @@ def create_subj():
 
     client = MFRClient(SERVER_CONFIG["myfoodrepo_study"])
     participation_length = SERVER_CONFIG["myfoodrepo_participation_days"]
-    cohort = client.default_cohort
+    cohort = SERVER_CONFIG['myfoodrepo_cohort']
 
     subj = client.create_subj(cohort)
     subj_id = subj.data.subject.key
