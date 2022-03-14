@@ -34,6 +34,7 @@
   "myfoodrepo_key": "mfr_key_placeholder",
   "myfoodrepo_slots": 15,
   "myfoodrepo_study": "mfr_study_placeholder",
+  "myfoodrepo_cohort": "testing",
   "myfoodrepo_participation_days": 8,
   "fundrazr_key": "fundrazr_api_placeholder",
   "fundrazr_url": "fundrazr_url_placeholder",
