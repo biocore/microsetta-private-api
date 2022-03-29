@@ -117,6 +117,15 @@ class MelissaRepo(BaseRepo):
         bool - True if a row was updated
 
         """
+
+        # if the result doesn't contain lat/long, need to set them to null
+        # otherwise, they default to '' and cause a database error on update
+        if not latitude:
+            latitude = None
+
+        if not longitude:
+            longitude = None
+
         with self._transaction.cursor() as cur:
             cur.execute("""UPDATE campaign.melissa_address_queries SET
                                 result_processed = true,

@@ -91,7 +91,7 @@ def verify_address(address_1, address_2=None, city=None, state=None,
 
                 codes = r_codes.split(",")
                 for code in codes:
-                    if(code in GOOD_CODES):
+                    if code in GOOD_CODES:
                         r_good = True
                         break
 
@@ -115,7 +115,7 @@ def verify_address(address_1, address_2=None, city=None, state=None,
                                                         r_longitude)
                 t.commit()
 
-                if(u_success is False):
+                if u_success is False:
                     exception_msg = "Failed to update results for Melissa "
                     exception_msg += "Address Query " + record_id
                     raise Exception(exception_msg)

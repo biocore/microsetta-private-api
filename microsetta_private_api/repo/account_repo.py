@@ -5,6 +5,7 @@ from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.exceptions import RepoException
+from microsetta_private_api.util.melissa import verify_address
 
 
 class AccountRepo(BaseRepo):
@@ -221,6 +222,58 @@ class AccountRepo(BaseRepo):
                         "ORDER BY email",
                         (email,))
             return [x[0] for x in cur.fetchall()]
+
+    def geocode_accounts(self):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute("SELECT id, street, city, state, post_code, "
+                        "country_code FROM ag.account "
+                        "WHERE latitude is null AND cannot_geocode = false "
+                        "LIMIT 10")
+            rows = cur.fetchall()
+            for r in rows:
+                try:
+                    melissa_response = verify_address(r['street'],
+                                                      "",
+                                                      r['city'],
+                                                      r['state'],
+                                                      r['post_code'],
+                                                      r['country_code'])
+                except Exception as e:
+                    # address validation failed for some reason
+                    # we're going to mark the record as unable to geocode
+                    # but we want to continue checking addresses
+                    cur.execute("UPDATE ag.account SET cannot_geocode = true "
+                                "WHERE id = %s",
+                                (r['id'],)
+                    )
+                    continue
+
+                if melissa_response['latitude'] and \
+                        melissa_response['longitude']:
+                    # Note - Melissa can return a valid lat/long for addresses
+                    # that aren't deliverable (e.g. missing apartment number).
+                    # Therefore, we log the lat/long AND a true/false
+                    # for address_verified so we can later separate geocoded
+                    # addresses from verified deliverable addresses
+                    cur.execute(
+                        "UPDATE ag.account "
+                        "SET address_verified = %s, "
+                        "latitude = %s, longitude = %s "
+                        "WHERE id = %s",
+                        (melissa_response['valid'],
+                         melissa_response['latitude'],
+                         melissa_response['longitude'],
+                         r['id'],)
+                    )
+                else:
+                    # Melissa couldn't find the address
+                    cur.execute(
+                        "UPDATE ag.account "
+                        "SET cannot_geocode = true "
+                        "WHERE id = %s",
+                        (r['id'],)
+                    )
+        return True
 
     def scrub(self, account_id):
         """Remove any identifying information from the account
