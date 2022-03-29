@@ -238,10 +238,27 @@ class AccountRepo(BaseRepo):
                                                       r['state'],
                                                       r['post_code'],
                                                       r['country_code'])
+                except KeyError:
+                    # missing field geocoding will never succeed
+                    cur.execute("UPDATE ag.account SET cannot_geocode = true "
+                                "WHERE id = %s",
+                                (r['id'],))
+                    continue
+                except ValueError:
+                    # Melissa worked but we were unable to update the database
+                    cur.execute("UPDATE ag.account SET cannot_geocode = true "
+                                "WHERE id = %s",
+                                (r['id'],))
+                    continue
+                except RepoException:
+                    # we couldn't create a record in the database for the
+                    # Melissa API attempt - should never reach this point
+                    continue
                 except Exception:
-                    # address validation failed for some reason
-                    # we're going to mark the record as unable to geocode
-                    # but we want to continue checking addresses
+                    # we either couldn't connect to Melissa or their server
+                    # returned a response with no records
+                    # TODO: What's the best way to log this failure state
+                    # so we can investigate?
                     cur.execute("UPDATE ag.account SET cannot_geocode = true "
                                 "WHERE id = %s",
                                 (r['id'],))
