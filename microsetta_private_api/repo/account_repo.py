@@ -228,7 +228,7 @@ class AccountRepo(BaseRepo):
             cur.execute("SELECT id, street, city, state, post_code, "
                         "country_code FROM ag.account "
                         "WHERE latitude is null AND cannot_geocode = false "
-                        "LIMIT 10")
+                        "LIMIT 100")
             rows = cur.fetchall()
             for r in rows:
                 try:
