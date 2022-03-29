@@ -238,14 +238,13 @@ class AccountRepo(BaseRepo):
                                                       r['state'],
                                                       r['post_code'],
                                                       r['country_code'])
-                except Exception as e:
+                except Exception:
                     # address validation failed for some reason
                     # we're going to mark the record as unable to geocode
                     # but we want to continue checking addresses
                     cur.execute("UPDATE ag.account SET cannot_geocode = true "
                                 "WHERE id = %s",
-                                (r['id'],)
-                    )
+                                (r['id'],))
                     continue
 
                 if melissa_response['latitude'] and \
