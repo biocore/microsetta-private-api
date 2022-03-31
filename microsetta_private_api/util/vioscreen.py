@@ -455,9 +455,14 @@ class VioscreenAdminAPI:
         # TODO: Celery becomes a lot harder to use when you need to wait for
         #  answers and encode/decode things.  Blah.
         if self.perform_async:
-            return base64.b64decode(result.get().encode("utf-8"))
-        else:
-            return base64.b64decode(result.encode('utf-8'))
+            result = result.get()
+
+        if isinstance(result, dict):
+            # the times we've observed this scenario, the content is
+            # {'error': 'empty ffq'}
+            return None
+
+        return base64.b64decode(result.encode('utf-8'))
 
 
 @celery.task(ignore_result=False)
