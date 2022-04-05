@@ -20,20 +20,15 @@ from microsetta_private_api.admin.admin_impl import validate_admin_access
 
 STANDARD_ACCT_ID = "12345678-bbbb-cccc-dddd-eeeeffffffff"
 ADMIN_ACCT_ID = "12345678-1234-1234-1234-123412341234"
-FIRST_DAKLAPACK_ARTICLE = {'dak_article_code': 350100,
+FIRST_LIVE_DAK_ARTICLE = {'dak_article_code': '3510000E',
                            'short_description': 'TMI 1 tube',
-                           'num_2point5ml_etoh_tubes': 1,
-                           'num_7ml_etoh_tube': 0,
-                           'num_neoteryx_kit': 0,
-                           'outer_sleeve': 'Microsetta',
-                           'box': 'Microsetta',
-                           'return_label': 'Microsetta',
-                           'compartment_bag': 'Microsetta',
-                           'num_stool_collector': 0,
-                           'instructions': 'Fv1',
-                           'registration_card': 'Microsetta',
-                           'swabs': '1x bag of two',
-                           'rigid_safety_bag': 'yes'}
+                           'detailed_description': 'TMI 1 tube, American English'
+                          }
+# This is the first one in the db, but it is retired
+FIRST_DAK_ARTICLE = {'dak_article_code': '350103',
+                     'short_description': 'TMI 2 tubes',
+                     'detailed_description': 'TMI 2 tubes'
+                     }
 
 
 def add_dummy_scan(scan_dict):
@@ -994,14 +989,23 @@ class AdminRepoTests(AdminTests):
         # and is 2nd in (zero-based) list, after project 2
         self.assertEqual(updated_dict, output[1].to_api())
 
-    def test_get_daklapack_articles(self):
+    def test_get_daklapack_articles_not_retired(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             articles = admin_repo.get_daklapack_articles()
-            self.assertEqual(9, len(articles))
+            self.assertEqual(11, len(articles))
             first_article = articles[0]
             first_article.pop("dak_article_id")
-            self.assertEqual(FIRST_DAKLAPACK_ARTICLE, first_article)
+            self.assertEqual(FIRST_LIVE_DAK_ARTICLE, first_article)
+
+    def test_get_daklapack_articles_all(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            articles = admin_repo.get_daklapack_articles(include_retired=True)
+            self.assertEqual(19, len(articles))
+            first_article = articles[0]
+            first_article.pop("dak_article_id")
+            self.assertEqual(FIRST_DAK_ARTICLE, first_article)
 
     def test_create_daklapack_order(self):
         with Transaction() as t:

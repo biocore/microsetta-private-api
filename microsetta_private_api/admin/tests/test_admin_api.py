@@ -14,17 +14,13 @@ from microsetta_private_api.api.tests.test_api import (  # noqa
     MOCK_HEADERS,  ACCT_ID_1, ACCT_MOCK_ISS, ACCT_MOCK_SUB,
     extract_last_id_from_location_header)
 from microsetta_private_api.admin.tests.test_admin_repo import \
-    FIRST_DAKLAPACK_ARTICLE, delete_test_scan
+    FIRST_LIVE_DAK_ARTICLE, delete_test_scan
 from microsetta_private_api.model.tests.test_daklapack_order import \
     DUMMY_PROJ_ID_LIST, DUMMY_DAK_ARTICLE_CODE, DUMMY_ADDRESSES, \
     DUMMY_DAK_ORDER_DESC, DUMMY_PLANNED_SEND_DATE, DUMMY_FEDEX_REFS
 
 
 DUMMY_PROJ_NAME = "test project"
-# although the article code is stored as a string in the json that we
-# send to daklapack, it is stored as an int in our db's daklapack_article table
-# so our private api expects it to be sent as an int
-DUMMY_INT_DAK_ARTICLE_CODE = int(DUMMY_DAK_ARTICLE_CODE)
 
 
 def teardown_test_data():
@@ -754,7 +750,7 @@ class AdminApiTests(TestCase):
         first_article.pop("dak_article_id")
 
         self.assertEqual(len(article_dicts_list), len(response_obj))
-        self.assertEqual(FIRST_DAKLAPACK_ARTICLE, response_obj[0])
+        self.assertEqual(FIRST_LIVE_DAK_ARTICLE, response_obj[0])
 
     def test_email_stats(self):
         with Transaction() as t:
@@ -921,7 +917,7 @@ class AdminApiTests(TestCase):
         # create post input json
         order_info = {
             "project_ids": DUMMY_PROJ_ID_LIST,
-            "article_code": DUMMY_INT_DAK_ARTICLE_CODE,
+            "article_code": DUMMY_DAK_ARTICLE_CODE,
             "addresses": DUMMY_ADDRESSES,
             "description": DUMMY_DAK_ORDER_DESC,
             "fedex_ref_1": DUMMY_FEDEX_REFS[0],
@@ -945,7 +941,7 @@ class AdminApiTests(TestCase):
         # create post input json
         order_info = {
             "project_ids": DUMMY_PROJ_ID_LIST,
-            "article_code": DUMMY_INT_DAK_ARTICLE_CODE,
+            "article_code": DUMMY_DAK_ARTICLE_CODE,
             "addresses": DUMMY_ADDRESSES,
             "description": None,
             "fedex_ref_1": None,

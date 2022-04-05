@@ -2249,7 +2249,7 @@ paths:
                   items:
                     type: integer
                 article_code:
-                  type: integer
+                  type: string
                 quantity:
                   type: integer
                 addresses:
