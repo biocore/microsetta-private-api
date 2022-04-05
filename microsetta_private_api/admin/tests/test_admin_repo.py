@@ -21,8 +21,8 @@ from microsetta_private_api.admin.admin_impl import validate_admin_access
 STANDARD_ACCT_ID = "12345678-bbbb-cccc-dddd-eeeeffffffff"
 ADMIN_ACCT_ID = "12345678-1234-1234-1234-123412341234"
 FIRST_LIVE_DAK_ARTICLE = {'dak_article_code': '3510000E',
-                           'short_description': 'TMI 1 tube',
-                           'detailed_description': 'TMI 1 tube, American English'
+                          'short_description': 'TMI 1 tube',
+                          'detailed_description': 'TMI 1 tube, American English'
                           }
 # This is the first one in the db, but it is retired
 FIRST_DAK_ARTICLE = {'dak_article_code': '350103',
