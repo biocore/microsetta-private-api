@@ -560,7 +560,7 @@ def fetch_ffqs():
         # update session status information
         try:
             session_detail = vio_api.session_detail(sess)
-        except:
+        except:  # noqa
             unable_to_update_session.append(sess)
         else:
             updated_sessions.append(session_detail)
@@ -583,11 +583,11 @@ def fetch_ffqs():
         try:
             error, ffq = vio_api.get_ffq(sess.sessionId)
         except Exception as e:  # noqa
-            failed_sessions.append((sess.sessionId, str(e)))
+            failed_ffqs.append((sess.sessionId, str(e)))
             continue
 
         if error:
-            failed_sessions.append((sess.sessionId, repr(error)))
+            failed_ffqs.append((sess.sessionId, repr(error)))
         else:
             # the call to get_ffq is long, and the data from many ffqs is
             # large so let's insert as we go
@@ -596,9 +596,9 @@ def fetch_ffqs():
                 vs.insert_ffq(ffq)
                 t.commit()
 
-    if len(failed_sessions) > 0:
+    if len(failed_ffqs) > 0 or len(unable_to_update_session) > 0:
         payload = ''.join(['%s : %s\n' % (repr(s), m)
-                           for s, m in failed_sessions])
+                           for s, m in failed_ffqs + unable_to_update_session])
         send_email("danielmcdonald@ucsd.edu", "pester_daniel",
                    {"what": "Vioscreen ffq insert failed",
                     "content": payload},
