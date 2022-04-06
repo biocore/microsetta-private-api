@@ -196,6 +196,49 @@ class VioscreenSessionRepo(BaseRepo):
             else:
                 raise ValueError("A sample should not have multiple FFQs")
 
+    def get_missing_ffqs(self):
+        """The set of valid sessions which lack FFQ data
+
+        An valid session but missing session is one that meets
+        the following criteria:
+
+        1) the ag.vioscreen_sessions entry is "Finished"
+        2) the ag.vioscreen_sessions entry endDate is not null
+        3) the sessionId is not present in one of the vioscreen FFQ
+           decomposed tables
+
+        Returns
+        -------
+        list of VioscreenSession
+            The missing sessions
+        """
+        with self._transaction.cursor() as cur:
+            # criteria 1 and 2, check endDate and status
+            cur.execute("""SELECT sessionid
+                           FROM ag.vioscreen_sessions
+                           WHERE endDate IS NOT NULL
+                               AND status = 'Finished'""")
+            complete_sessions = {i[0] for i in cur.fetchall()}
+
+            # criteria 3, determine sessions which we have ffq data for
+            cur.execute("""SELECT distinct(sessionid)
+                           FROM ag.vioscreen_percentenergy""")
+            sessions_with_data = {i[0] for i in cur.fetchall()}
+
+            sessions_without_data = complete_sessions - sessions_with_data
+
+            without_data = []
+            if sessions_without_data:
+                # construct session objects for all of our missing sessions
+                cur.execute(f"""SELECT {self._sql_cols}
+                                FROM ag.vioscreen_sessions
+                                  WHERE sessionId IN %s""",
+                            (tuple(sessions_without_data), ))
+                for row in cur.fetchall():
+                    without_data.append(VioscreenSession(*row))
+
+        return without_data
+
 
 class VioscreenPercentEnergyRepo(BaseRepo):
     # code : (long description, short description, units)
