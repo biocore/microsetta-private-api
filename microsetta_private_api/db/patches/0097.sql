@@ -48,7 +48,7 @@ INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, det
 INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, detailed_description) VALUES ('3512004E', 'TMI 1 tube + urine', 'TMI 1 tube + urine, American English');
 INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, detailed_description) VALUES ('3532004E', 'TMI 2 tubes + urine', 'TMI 2 tubes + urine, American English');
 INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, detailed_description) VALUES ('3510001M', 'TMI 1 tube', 'TMI 1 tube, Mexican Spanish, no inbound label');
-INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, detailed_description) VALUES ('3510001S', 'TMI 1 tube', 'TMI 1 tube, Spanish, no inbound label*');
+INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, detailed_description) VALUES ('3510001S', 'TMI 1 tube', 'TMI 1 tube, Spanish, no inbound label');
 INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, detailed_description) VALUES ('3510001J', 'TMI 1 tube', 'TMI 1 tube, Japanese, no inbound label');
 INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, detailed_description) VALUES ('3520003E', 'TMI scoop tube', 'TMI 1 scoop tube (6ml EtOH), American English');
 INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, detailed_description) VALUES ('3521003E', 'TMI scoop tube + blood', 'TMI 1 scoop tube (6 ml EtOH) + blood, American English');
