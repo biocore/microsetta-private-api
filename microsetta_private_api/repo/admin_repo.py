@@ -1224,17 +1224,14 @@ class AdminRepo(BaseRepo):
 
         return pulldown
 
-    def get_daklapack_articles(self):
+    def get_daklapack_articles(self, include_retired=False):
+        retired_constraint = "" if include_retired else "WHERE retired = False"
+        cmd = f"SELECT dak_article_id, dak_article_code, short_description, " \
+              f"detailed_description " \
+              f"FROM barcodes.daklapack_article {retired_constraint} " \
+              f"ORDER BY daklapack_article.dak_article_code;"
         with self._transaction.dict_cursor() as cur:
-            cur.execute(
-                "SELECT dak_article_id, dak_article_code, short_description, "
-                "num_2point5ml_etoh_tubes, num_7ml_etoh_tube, "
-                "num_neoteryx_kit, outer_sleeve, box, return_label, "
-                "compartment_bag, num_stool_collector, instructions, "
-                "registration_card, swabs, rigid_safety_bag "
-                "FROM "
-                "barcodes.daklapack_article "
-                "ORDER BY daklapack_article.dak_article_code;")
+            cur.execute(cmd)
             rows = cur.fetchall()
             return [dict(x) for x in rows]
 
