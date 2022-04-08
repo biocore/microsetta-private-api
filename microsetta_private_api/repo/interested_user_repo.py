@@ -147,6 +147,12 @@ class InterestedUserRepo(BaseRepo):
                                                       r['state'],
                                                       r['postal_code'],
                                                       r['country'])
+                except KeyError as e:
+                    raise RepoException(e)
+                except ValueError as e:
+                    raise RepoException(e)
+                except RepoException as e:
+                    raise RepoException(e)
                 except Exception as e:
                     raise RepoException(e)
 
