@@ -35,12 +35,11 @@ ALTER TABLE barcodes.daklapack_article DROP COLUMN rigid_safety_bag;
 ALTER TABLE barcodes.daklapack_article ADD COLUMN detailed_description VARCHAR;
 ALTER TABLE barcodes.daklapack_article ADD COLUMN retired boolean DEFAULT FALSE;
 
-UPDATE barcodes.daklapack_article SET retired=TRUE, detailed_description=short_description
-WHERE dak_article_code IN (350103, 350104, 350109, 350110, 350200, 350201, 350205, 350210);
+UPDATE barcodes.daklapack_article SET retired=TRUE, detailed_description=short_description;
 
 ALTER TABLE barcodes.daklapack_article ALTER COLUMN dak_article_code TYPE VARCHAR;
 
-UPDATE barcodes.daklapack_article SET dak_article_code='3510000E', short_description='TMI 1 tube', detailed_description='TMI 1 tube, American English' WHERE dak_article_code='350100';
+UPDATE barcodes.daklapack_article SET dak_article_code='3510000E', short_description='TMI 1 tube', detailed_description='TMI 1 tube, American English', retired=FALSE WHERE dak_article_code='350100';
 
 INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, detailed_description) VALUES ('3510001E', 'TMI 1 tube', 'TMI 1 tube, American English, no inbound label');
 INSERT INTO barcodes.daklapack_article (dak_article_code, short_description, detailed_description) VALUES ('3511000E', 'TMI 1 tube + blood', 'TMI 1 tube + blood, American English');
