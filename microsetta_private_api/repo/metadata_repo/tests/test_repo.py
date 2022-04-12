@@ -1,6 +1,7 @@
 import unittest
 import pandas as pd
 import pandas.testing as pdt
+from copy import copy
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.metadata_repo._constants import (
     HUMAN_SITE_INVARIANTS, UNSPECIFIED)
@@ -243,8 +244,21 @@ class MetadataUtilTests(unittest.TestCase):
         for k, v in HUMAN_SITE_INVARIANTS['Stool'].items():
             exp[k] = v
 
-        obs = _to_pandas_dataframe(data, templates)
+        err, obs = _to_pandas_dataframe(data, templates)
         pdt.assert_frame_equal(obs, exp, check_like=True)
+        self.assertEqual(err, [])
+
+    def test_to_pandas_dataframe_site_sampled_bug(self):
+        raw_sample_3 = copy(self.raw_sample_1)
+        raw_sample_3['sample'].d['site'] = 'Fur'
+        data = [raw_sample_3, ]
+
+        templates = {1: self.fake_survey_template2}
+        err, obs = _to_pandas_dataframe(data, templates)
+
+        self.assertEqual(len(obs), 0)
+        self.assertEqual(len(err), 1)
+        self.assertIn(raw_sample_3['sample_barcode'], err[0])
 
     def test_to_pandas_series(self):
         data = self.raw_sample_1
