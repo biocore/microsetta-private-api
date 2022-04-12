@@ -338,6 +338,9 @@ def top_food_report(account_id, source_id, survey_id, token_info):
         session_id = sessions[0]['sessionId']
         report = vio.top_food_report(session_id)
 
+        if report is None:
+            return NotFound("The requested FFQ is empty")
+
         response = make_response(report)
         response.headers.set("Content-Type", "application/pdf")
         # TODO: Do we want it to download a file or be embedded in the html?
