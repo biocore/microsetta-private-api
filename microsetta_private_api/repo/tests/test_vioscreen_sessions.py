@@ -220,7 +220,7 @@ class VioscreenSessions(unittest.TestCase):
             obs = r.get_missing_ffqs()
             self.assertIn(VIOSCREEN_USERNAME1, {o.username for o in obs})
 
-            # give our
+            # give our user a "completed" ffq
             user1_pe = VIOSCREEN_PERCENT_ENERGY
             pr.insert_percent_energy(user1_pe)
             obs = r.get_missing_ffqs()
