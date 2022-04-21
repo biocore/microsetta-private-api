@@ -86,9 +86,9 @@ def update_qiita_metadata():
                        EN_US)
 
 
-@celery.task(ignore_result=True)
-def geocode_accounts():
-    with Transaction() as t:
-        account_repo = AccountRepo(t)
-        account_repo.geocode_accounts()
-        t.commit()
+# @celery.task(ignore_result=True)
+# def geocode_accounts():
+#     with Transaction() as t:
+#         account_repo = AccountRepo(t)
+#         account_repo.geocode_accounts()
+#         t.commit()
