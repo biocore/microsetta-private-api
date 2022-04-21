@@ -8,7 +8,7 @@ from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.qiita_repo import QiitaRepo
-from microsetta_private_api.repo.account_repo import AccountRepo
+# from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.localization import EN_US
 import pandas as pd
 import tempfile
