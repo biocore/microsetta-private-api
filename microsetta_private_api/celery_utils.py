@@ -41,10 +41,10 @@ def init_celery(celery, app):
             "task": "microsetta_private_api.tasks.update_qiita_metadata",  # noqa
             "schedule":  60 * 60 * 24  # every 24 hours
         },
-        "geocode_accounts": {
-            "task": "microsetta_private_api.tasks.geocode_accounts",
-            "schedule": 60
-        }
+        # "geocode_accounts": {
+        #     "task": "microsetta_private_api.tasks.geocode_accounts",
+        #     "schedule": 60
+        # }
     }
 
 
