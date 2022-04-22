@@ -21,6 +21,7 @@ class SurveyTemplateRepo(BaseRepo):
 
     VIOSCREEN_ID = 10001
     MYFOODREPO_ID = 10002
+    PFFQSURVEY_ID = 10003
     SURVEY_INFO = {
         1: SurveyTemplateLinkInfo(
             1,
@@ -61,6 +62,12 @@ class SurveyTemplateRepo(BaseRepo):
         VIOSCREEN_ID: SurveyTemplateLinkInfo(
             VIOSCREEN_ID,
             "Vioscreen Food Frequency Questionnaire",
+            "1.0",
+            "remote"
+        ),
+        PFFQSURVEY_ID: SurveyTemplateLinkInfo(
+            PFFQSURVEY_ID,
+            "Polyphenol Food Frequency Questionnaire",
             "1.0",
             "remote"
         ),
@@ -419,6 +426,81 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 vioscreen_id = existing
         return vioscreen_id
+
+
+    def create_pffqsurvey_id(self, account_id, source_id,
+                            pffqsurvey_ext_sample_id):
+        # requires a pffqsurvey_ext_sample_id to exist
+        # it is possible the I need to create this locally in this app
+        # TODO: verify how the pffqsurvey_ext_sample_id is managed 
+        # (via external or internal )
+        with self._transaction.cursor() as cur:
+            # This transaction scans for existing IDs,
+            # then generates a new ID if none exist
+            # To prevent workers from seeing stale state,
+            # and thus each generating multiple new IDs
+            # in the case of multiple workers,
+            # we lock the pffqsurvey_registry table
+            self._transaction.lock_table("pffqsurvey_registry")
+            # test if an existing ID is available
+            existing = self.get_pffqsurvey_id_if_exists(account_id, source_id,
+                                                       pffqsurvey_ext_sample_id)
+                    
+            pffqsurvey_url = SERVER_CONFIG['pffqsurvey_url']
+            if existing is None:
+                pffqsurvey_id = secrets.token_hex(8)
+                # Put a survey with status -1 into ag_login_surveys
+                # TODO DOJO need to get the pffqsurvey_status detail verified (i.e. is it in the table?)
+                cur.execute("INSERT INTO ag_login_surveys("
+                            "ag_login_id, "
+                            "survey_id, "
+                            "vioscreen_status, "
+                            "source_id) "
+                            "VALUES(%s, %s, %s, %s)",
+                            (account_id, pffqsurvey_id, -1, source_id))
+                # Immediately attach that survey to the specified sample
+                sample_repo = SampleRepo(self._transaction)
+                s = sample_repo.get_sample(account_id,
+                                           source_id,
+                                           pffqsurvey_ext_sample_id)
+
+                if s is None:
+                    raise KeyError(f"{pffqsurvey_ext_sample_id} does not exist")
+
+                cur.execute("INSERT INTO source_barcodes_surveys "
+                            "(barcode, survey_id) "
+                            "VALUES(%s, %s)", (s.barcode, pffqsurvey_id))
+
+                # And add it to the registry to keep track of the survey if
+                # user quits out then wants to resume the survey.
+                cur.execute("INSERT INTO pffqsurvey_registry("
+                            "account_id, source_id, pffq_survey_id, pffq_survey_url) "
+                            "VALUES(%s, %s, %s, %s)",
+                            (account_id, source_id, pffqsurvey_ext_sample_id,
+                             pffqsurvey_url))  # TODO DOJO need to define the pffqsurvey_url
+            else:
+                pffqsurvey_id = existing
+        return pffqsurvey_id
+
+    def get_pffqsurvey_id_if_exists(self, account_id, source_id,
+                                   pffqsurvey_ext_sample_id):
+        """Obtain a pffqsurvey ID if it exists"""
+        with self._transaction.cursor() as cur:
+            # Find an active pffqsurvey survey for this account+source+sample
+            # (deleted surveys are not active)
+            # TODO DOJO learn about sample_id 
+            cur.execute("SELECT pffq_survey_id FROM pffqsurvey_registry WHERE "
+                        "account_id=%s AND "
+                        "source_id=%s AND "
+                        "pffq_survey_id=%s AND "
+                        "deleted=false",
+                        (account_id, source_id, pffqsurvey_ext_sample_id))
+            rows = cur.fetchall()
+            if rows is None or len(rows) == 0:
+                return None
+            else:
+                return rows[0][0]
+
 
     def get_vioscreen_id_if_exists(self, account_id, source_id,
                                    vioscreen_ext_sample_id):

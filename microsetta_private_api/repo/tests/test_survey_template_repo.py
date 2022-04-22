@@ -121,6 +121,18 @@ class SurveyTemplateTests(unittest.TestCase):
                                             TEST2_SOURCE_ID,
                                             "asubject")
             t.rollback()
+    
+    def test_set_pffqsurvey_id_valid(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            
+            obs = template_repo.create_pffqsurvey_id(TEST2_ACCOUNT_ID,
+                                                     TEST2_SOURCE_ID,
+                                                     TEST2_SAMPLE_ID)
+            self.assertTrue(obs)
+            t.rollback()
+    
+
 
     def test_set_myfoodrepo_cannot_assign_new_id(self):
         with Transaction() as t:
