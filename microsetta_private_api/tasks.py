@@ -9,6 +9,7 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.qiita_repo import QiitaRepo
 from microsetta_private_api.localization import EN_US
+from microsetta_private_api.config_manager import SERVER_CONFIG
 import pandas as pd
 import tempfile
 import os
@@ -79,7 +80,7 @@ def update_qiita_metadata():
             error = [{'hardfail': detail.read()}, ]
 
         if len(error) > 0:
-            send_email("danielmcdonald@ucsd.edu", "pester_daniel",
+            send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
                        {"what": "qiita metadata push errors",
                         "content": json.dumps(error, indent=2)},
                        EN_US)

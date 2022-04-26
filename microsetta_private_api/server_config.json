@@ -6,6 +6,7 @@
   "ssl_cert_path": null,
   "ssl_key_path": null,
   "CAfile": null,
+  "pester_email": "pester@email.com",
   "interface_endpoint": "http://localhost:8083",
   "authrocket_url": "https://jubilant-smoke-a54b.e2.loginrocket.com",
   "celery_backend_uri": "redis://localhost:6379",

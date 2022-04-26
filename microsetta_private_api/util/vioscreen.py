@@ -538,7 +538,7 @@ def update_session_detail():
         # log what hopefully never occurs
         payload = ''.join(['%s : %s\n' % (repr(s), m)
                            for s, m in failed_sessions])
-        send_email("danielmcdonald@ucsd.edu", "pester_daniel",
+        send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
                    {"what": "Vioscreen sessions failed",
                     "content": payload},
                    EN_US)
@@ -599,7 +599,7 @@ def fetch_ffqs():
     if len(failed_ffqs) > 0 or len(unable_to_update_session) > 0:
         payload = ''.join(['%s : %s\n' % (repr(s), m)
                            for s, m in failed_ffqs + unable_to_update_session])
-        send_email("danielmcdonald@ucsd.edu", "pester_daniel",
+        send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
                    {"what": "Vioscreen ffq insert failed",
                     "content": payload},
                    EN_US)
