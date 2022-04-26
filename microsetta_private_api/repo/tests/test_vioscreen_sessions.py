@@ -226,9 +226,6 @@ class VioscreenSessions(unittest.TestCase):
             obs = r.get_missing_ffqs()
             self.assertNotIn(VIOSCREEN_USERNAME1, {o.username for o in obs})
 
-            obs = r.upsert_session(user1)
-            self.assertTrue(obs)
-
             # our users record is finished so we shouldn't get it back
             cur.execute("SELECT vio_id FROM ag.vioscreen_registry")
             exp = {r[0] for r in cur.fetchall()}
