@@ -412,7 +412,7 @@ RENAMES = (RenameHostWeight, RenameHostWeightUnits, RenameHostHeight,
 
 
 def apply_transforms(df, transforms, renames=RENAMES):
-    for rename in RENAMES:
+    for rename in renames:
         if rename.satisfies_requirements(df):
             df = rename.apply(df)
 
