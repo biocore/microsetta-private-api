@@ -16,6 +16,7 @@ BMI_ = 'host_body_mass_index'
 HOST_AGE = 'host_age'
 HOST_AGE_UNITS = 'host_age_units'
 HOST_AGE_UNIT_VALUE = 'years'
+HOST_AGE_NORMALIZED_YEARS = 'host_age_normalized_years'
 HOST_HEIGHT = 'host_height'
 HOST_HEIGHT_UNITS = 'host_height_units'
 HOST_WEIGHT = 'host_weight'
@@ -199,6 +200,15 @@ class HostAge(Transformer):
         series.loc[not_null_map] = td_as_year
 
         return series
+
+
+class HostAgeNormalizedYears(Transformer):
+    REQUIRED_COLUMNS = frozenset([HOST_AGE, ])
+    COLUMN_NAME = HOST_AGE_NORMALIZED_YEARS
+
+    @classmethod
+    def _transform(cls, df):
+        df[cls.COLUMN_NAME] = df[HOST_AGE]
 
 
 class Lifestage(Transformer):
@@ -392,7 +402,8 @@ class NormalizeWeight(Normalize):
 # transforms are order dependent as some entries (e.g., BMICat) depend
 # on the presence of a BMI column
 HUMAN_TRANSFORMS = (ConstantHostAgeUnits, HostAge, AgeCat, NormalizeWeight,
-                    NormalizeHeight, BMI, BMICat, AlcoholConsumption, Sex)
+                    NormalizeHeight, BMI, BMICat, AlcoholConsumption, Sex,
+                    HostAgeNormalizedYears)
 
 # mapping from our historical survey structure to EBI compliance
 # which should be correct for all host types
