@@ -14,6 +14,7 @@ from microsetta_private_api.repo.activation_repo import ActivationRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -775,3 +776,59 @@ def qiita_barcode_query(body, token_info):
     )
 
     return jsonify(qiita_data), 200
+
+
+def delete_account(account_id, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        acct_repo = AccountRepo(t)
+        src_repo = SourceRepo(t)
+        samp_repo = SampleRepo(t)
+        sar_repo = SurveyAnswersRepo(t)
+
+        acct = acct_repo.get_account(account_id)
+        if acct is None:
+            return jsonify(message="Account not found", code=404), 404
+        else:
+            # the account is already scrubbed so let's stop early
+            if acct.account_type == 'deleted':
+                return None, 204
+
+        sample_count = 0
+        sources = src_repo.get_sources_in_account(account_id)
+
+        for source in sources:
+            samples = samp_repo.get_samples_by_source(account_id, source.id)
+
+            has_samples = len(samples) > 0
+            sample_count += len(samples)
+
+            for sample in samples:
+                # we scrub rather than disassociate in the event that the
+                # sample is in our freezers but not with an up-to-date scan
+                samp_repo.scrub(account_id, source.id, sample.id)
+
+            surveys = sar_repo.list_answered_surveys(account_id, source.id)
+            if has_samples:
+                # if we have samples, we need to scrub survey / source
+                # free text
+                for survey_id in surveys:
+                    sar_repo.scrub(account_id, source.id, survey_id)
+                src_repo.scrub(account_id, source.id)
+            else:
+                # if we do not have associated samples, then the source
+                # is safe to delete
+                for survey_id in surveys:
+                    sar_repo.delete_answered_survey(account_id, survey_id)
+                src_repo.delete_source(account_id, source.id)
+
+        # an account is safe to delete if there are no associated samples
+        if sample_count > 0:
+            acct_repo.scrub(account_id)
+        else:
+            acct_repo.delete_account(account_id)
+
+        t.commit()
+
+    return None, 204

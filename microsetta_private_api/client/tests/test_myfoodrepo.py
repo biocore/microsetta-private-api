@@ -5,22 +5,20 @@ from microsetta_private_api.client.myfoodrepo import MFRClient, MFRException
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
+# The MFR URL and API key are encoded as github repository secrets.
+# Secrets are not passed when a fork issues a PR. This test will still
+# execute from master once a PR is merged.
+@skipIf(SERVER_CONFIG['myfoodrepo_url'] in ('', 'mfr_url_placeholder'),
+        "MFR secrets not provided")
 class MFRTests(TestCase):
     def setUp(self):
-        self.c = MFRClient('ucsd_test_ch')
+        self.c = MFRClient(SERVER_CONFIG['myfoodrepo_study'])
 
-    # The MFR URL and API key are encoded as github repository secrets.
-    # Secrets are not passed when a fork issues a PR. This test will still
-    # execute from master once a PR is merged.
-    @skipIf(SERVER_CONFIG['myfoodrepo_url'] in ('', 'mfr_url_placeholder'),
-            "MFR secrets not provided")
     def test_default_cohort(self):
         cohorts = self.c.cohorts()
         self.assertEqual(self.c.default_cohort,
                          cohorts.data.cohorts[0].codename)
 
-    @skipIf(SERVER_CONFIG['myfoodrepo_url'] in ('', 'mfr_url_placeholder'),
-            "MFR secrets not provided")
     def test_create_get_delete(self):
         cohorts = self.c.cohorts()
         self.assertTrue(len(cohorts.data.cohorts) >= 1)

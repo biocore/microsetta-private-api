@@ -17,7 +17,6 @@ from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from werkzeug.exceptions import NotFound
-from hashlib import sha512
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 
@@ -1155,11 +1154,7 @@ class AdminRepo(BaseRepo):
         if source is None:
             raise RepoException("Barcode is not associated with a source")
 
-        # TODO: This is my best understanding of how the data must be
-        #  transformed to get the host_subject_id, needs verification that it
-        #  generates the expected values for preexisting samples.
-        prehash = account_id + source.name.lower()
-        host_subject_id = sha512(prehash.encode()).hexdigest()
+        host_subject_id = source_repo.get_host_subject_id(source)
 
         survey_answers_repo = SurveyAnswersRepo(self._transaction)
         answer_ids = survey_answers_repo.list_answered_surveys_by_sample(
@@ -1229,17 +1224,14 @@ class AdminRepo(BaseRepo):
 
         return pulldown
 
-    def get_daklapack_articles(self):
+    def get_daklapack_articles(self, include_retired=False):
+        retired_constraint = "" if include_retired else "WHERE retired = False"
+        cmd = f"SELECT dak_article_id, dak_article_code, short_description, " \
+              f"detailed_description " \
+              f"FROM barcodes.daklapack_article {retired_constraint} " \
+              f"ORDER BY daklapack_article.dak_article_code;"
         with self._transaction.dict_cursor() as cur:
-            cur.execute(
-                "SELECT dak_article_id, dak_article_code, short_description, "
-                "num_2point5ml_etoh_tubes, num_7ml_etoh_tube, "
-                "num_neoteryx_kit, outer_sleeve, box, return_label, "
-                "compartment_bag, num_stool_collector, instructions, "
-                "registration_card, swabs, rigid_safety_bag "
-                "FROM "
-                "barcodes.daklapack_article "
-                "ORDER BY daklapack_article.dak_article_code;")
+            cur.execute(cmd)
             rows = cur.fetchall()
             return [dict(x) for x in rows]
 

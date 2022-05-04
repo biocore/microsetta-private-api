@@ -110,7 +110,9 @@ def retrieve_metadata(sample_barcodes, include_private=False):
         if st_errors is not None:
             error_report.append(st_errors)
         else:
-            df = _to_pandas_dataframe(fetched, survey_templates)
+            df_errors, df = _to_pandas_dataframe(fetched, survey_templates)
+            if df_errors:
+                error_report.extend(df_errors)
 
     if not include_private:
         df = drop_private_columns(df)
@@ -211,12 +213,18 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     pd.DataFrame
         The fully constructed sample metadata
     """
+    errors = []
     transformed = []
 
     multiselect_map = _construct_multiselect_map(survey_templates)
     for metadata in metadatas:
-        as_series = _to_pandas_series(metadata, multiselect_map)
-        transformed.append(as_series)
+        try:
+            as_series = _to_pandas_series(metadata, multiselect_map)
+        except RepoException as e:
+            barcode = metadata['sample_barcode']
+            errors.append({barcode: repr(e)})
+        else:
+            transformed.append(as_series)
 
     df = pd.DataFrame(transformed)
     df.index.name = 'sample_name'
@@ -255,7 +263,7 @@ def _to_pandas_dataframe(metadatas, survey_templates):
         df.loc[human_mask] = df.loc[human_mask].fillna(UNSPECIFIED)
     df.fillna(MISSING_VALUE, inplace=True)
 
-    return apply_transforms(df, HUMAN_TRANSFORMS)
+    return errors, apply_transforms(df, HUMAN_TRANSFORMS)
 
 
 def _construct_multiselect_map(survey_templates):

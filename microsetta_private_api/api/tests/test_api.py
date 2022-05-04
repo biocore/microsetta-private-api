@@ -321,10 +321,11 @@ def delete_dummy_accts():
                          kit_id=FAKE_KIT)
 
         for curr_acct_id in acct_ids:
-            sources = source_repo.get_sources_in_account(curr_acct_id)
+            sources = source_repo.get_sources_in_account(curr_acct_id,
+                                                         allow_revoked=True)
             for curr_source in sources:
                 source_samples = sample_repo.get_samples_by_source(
-                    curr_acct_id, curr_source.id)
+                    curr_acct_id, curr_source.id, allow_revoked=True)
                 sample_ids = [x.id for x in source_samples]
                 all_sample_ids.extend(sample_ids)
 
@@ -862,6 +863,192 @@ class AccountsTests(ApiTests):
 
 @pytest.mark.usefixtures("client")
 class AccountTests(ApiTests):
+    def test_account_scrub_success(self):
+        # setup an account with a source and sample
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        create_dummy_kit(dummy_acct_id, dummy_source_id)
+        _ = create_dummy_answered_survey(
+            dummy_acct_id, dummy_source_id, dummy_sample_id=MOCK_SAMPLE_ID)
+
+        base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
+            dummy_acct_id, dummy_source_id)
+        sample_url = "{0}/{1}".format(base_url, MOCK_SAMPLE_ID)
+
+        sample_body = {'sample_site': 'Stool',
+                       "sample_notes": "foobar",
+                       'sample_datetime': "2017-07-21T17:32:28Z"}
+
+        put_resp = self.client.put(
+            '%s?%s' % (sample_url, self.default_lang_querystring),
+            json=sample_body,
+            headers=self.dummy_auth
+        )
+        self.assertEqual(200, put_resp.status_code)
+
+        _ = create_dummy_acct(create_dummy_1=False,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+
+        # now let's scrub it
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (dummy_acct_id,),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(204, response.status_code)
+
+        # pull the account details
+        response = self.client.get(
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+
+        for k in DUMMY_ACCT_INFO:
+            if k in (KIT_NAME_KEY, 'language'):
+                continue
+            self.assertNotEqual(DUMMY_ACCT_INFO[k],
+                                response_obj[k])
+
+        # verify deleting is idempotent
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (dummy_acct_id,),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(204, response.status_code)
+
+        # pull the account details again
+        response = self.client.get(
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(200, response.status_code)
+        response_obj2 = json.loads(response.data)
+
+        self.assertEqual(response_obj, response_obj2)
+
+        # make sure we cannot pull the details as it is now revoked
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s?%s' %
+            (dummy_acct_id, dummy_source_id,
+             self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(404, response.status_code)
+
+        # trick the database to "unrevoke" the sample to allow us to verify
+        # the details are scrubbed
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""UPDATE ag.source
+                           SET date_revoked=NULL
+                           WHERE id=%s""",
+                        (dummy_source_id, ))
+            t.commit()
+
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s?%s' %
+            (dummy_acct_id, dummy_source_id,
+             self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+
+        self.assertEqual(response_obj['source_name'],
+                         'scrubbed')
+        self.assertEqual(response_obj['consent']['participant_email'],
+                         'scrubbed@microsetta.ucsd.edu')
+
+        # pull the sample details
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/samples/%s?%s' %
+            (dummy_acct_id, dummy_source_id, MOCK_SAMPLE_ID,
+             self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+        self.assertEqual(response_obj['sample_notes'], 'scrubbed')
+        self.assertEqual(response_obj['sample_site'],
+                         sample_body['sample_site'])
+
+        # strip the trailing "Z" which comes from the database... easier
+        # than loading into datetime
+        self.assertEqual(response_obj['sample_datetime'],
+                         sample_body['sample_datetime'][:-1])
+
+    def test_account_delete_without_samples(self):
+        # setup an account with a source and sample
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        _ = create_dummy_acct(create_dummy_1=False,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+
+        # now let's scrub it
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (dummy_acct_id,),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(204, response.status_code)
+
+        # verify it is deleted
+        response = self.client.get(
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(404, response.status_code)
+
+    def test_account_scrub_non_existant(self):
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (MISSING_ACCT_ID, ),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(401, response.status_code)
+
+        _ = create_dummy_acct(create_dummy_1=False,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (MISSING_ACCT_ID, ),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(404, response.status_code)
+
+    def test_account_scrub_non_admin(self):
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (dummy_acct_id, ),
+            headers=self.dummy_auth)
+
+        # check response code
+        self.assertEqual(401, response.status_code)
 
     # region account view/get tests
     def test_account_view_success(self):

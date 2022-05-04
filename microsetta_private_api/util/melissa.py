@@ -5,6 +5,7 @@ import urllib.parse
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.melissa_repo import MelissaRepo
 from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.exceptions import RepoException
 
 
 def verify_address(address_1, address_2=None, city=None, state=None,
@@ -20,7 +21,7 @@ def verify_address(address_1, address_2=None, city=None, state=None,
 
     if address_1 is None or len(address_1) < 1 or postal is None or\
             len(postal) < 1 or country is None or len(country) < 1:
-        raise Exception("Must include address_1, postal, and country fields")
+        raise KeyError("Must include address_1, postal, and country fields")
 
     with Transaction() as t:
         # The response codes we can treat as deliverable
@@ -50,7 +51,7 @@ def verify_address(address_1, address_2=None, city=None, state=None,
                                                    country)
 
             if record_id is None:
-                raise Exception("Failed to create record in database.")
+                raise RepoException("Failed to create record in database.")
 
             url_params = {"id": SERVER_CONFIG["melissa_license_key"],
                           "opt": "DeliveryLines:ON",
@@ -91,7 +92,7 @@ def verify_address(address_1, address_2=None, city=None, state=None,
 
                 codes = r_codes.split(",")
                 for code in codes:
-                    if(code in GOOD_CODES):
+                    if code in GOOD_CODES:
                         r_good = True
                         break
 
@@ -115,10 +116,10 @@ def verify_address(address_1, address_2=None, city=None, state=None,
                                                         r_longitude)
                 t.commit()
 
-                if(u_success is False):
+                if u_success is False:
                     exception_msg = "Failed to update results for Melissa "
                     exception_msg += "Address Query " + record_id
-                    raise Exception(exception_msg)
+                    raise ValueError(exception_msg)
 
                 return_dict = {"address_1": r_address_1,
                                "address_2": r_address_2,

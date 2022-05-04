@@ -123,7 +123,7 @@ class VioscreenGeneralTests(unittest.TestCase):
                                '"Session not found.","InnerMessages":'
                                '["Session with id = [foo] was not '
                                'found."]}\'\n')}
-        send_email.assert_called_once_with("danielmcdonald@ucsd.edu",
+        send_email.assert_called_once_with("pester@email.com",
                                            "pester_daniel",
                                            content,
                                            EN_US)

@@ -18,7 +18,8 @@ class MyFoodRepoTests(unittest.TestCase):
 
         subj_id = create_subj()
 
-        obs = client.read_subj(client.default_cohort, subj_id)
+        cohort = SERVER_CONFIG['myfoodrepo_cohort']
+        obs = client.read_subj(cohort, subj_id)
 
         obs_date = obs.data.subject.expired_at
         obs_date = parser.parse(obs_date)

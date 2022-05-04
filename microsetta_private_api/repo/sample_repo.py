@@ -228,7 +228,8 @@ class SampleRepo(BaseRepo):
             sample_row = cur.fetchone()
             return self._create_sample_obj(sample_row)
 
-    def get_samples_by_source(self, account_id, source_id):
+    def get_samples_by_source(self, account_id, source_id,
+                              allow_revoked=False):
         sql = "{0}{1}".format(
             self.PARTIAL_SQL,
             " WHERE"
@@ -242,7 +243,8 @@ class SampleRepo(BaseRepo):
                 raise NotFound("No such account")
 
             source_repo = SourceRepo(self._transaction)
-            if source_repo.get_source(account_id, source_id) is None:
+            if source_repo.get_source(account_id, source_id,
+                                      allow_revoked=allow_revoked) is None:
                 raise NotFound("No such source")
 
             cur.execute(sql, (account_id, source_id))
@@ -381,3 +383,48 @@ class SampleRepo(BaseRepo):
             if row is None:
                 return None
             return row[0]
+
+    def scrub(self, account_id, source_id, sample_id):
+        """Wipe out free text information for a sample
+
+        Parameters
+        ----------
+        account_id : str, uuid
+            The associated account ID to scrub
+        source_id : str, uuid
+            The associated source ID to scrub
+        sample_id : str, uuid
+            The associated sample ID to scrub
+
+        Raises
+        ------
+        RepoException
+            If the account / source is relation is bad
+            If the source / sample relation is bad
+            If the update fails for any reason
+
+        Returns
+        -------
+        True if the sample was scrubbed, will raise otherwise
+        """
+        notes = "scrubbed"
+        with self._transaction.cursor() as cur:
+            # verify our account / source relation is reasonable
+            cur.execute("""SELECT id
+                           FROM ag.source
+                           WHERE id=%s AND account_id=%s""",
+                        (source_id, account_id))
+            res = cur.fetchone()
+
+            if res is None:
+                raise RepoException("Invalid account / source relation")
+
+            cur.execute("""UPDATE ag_kit_barcodes
+                           SET notes=%s
+                           WHERE source_id=%s AND ag_kit_barcode_id=%s""",
+                        (notes, source_id, sample_id))
+
+            if cur.rowcount != 1:
+                raise RepoException("Invalid source / sample relation")
+            else:
+                return True

@@ -4,6 +4,7 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.campaign_repo import UserTransaction
 from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.localization import EN_US
+from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
 @celery.task(ignore_result=True)
@@ -46,7 +47,7 @@ def get_fundrazr_transactions(test_transaction=None):
     payload = f"Number added: {added}\nTotaling: ${amount}"
 
     try:
-        send_email("danielmcdonald@ucsd.edu", "pester_daniel",
+        send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
                    {"what": "FundRazr transactions added",
                     "content": payload},
                    EN_US)

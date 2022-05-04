@@ -726,6 +726,22 @@ class MigrationSupport:
             print("ALL THE LOGS (-Uncomment me-)")
             # print(all_errors)
 
+    @staticmethod
+    def migrate_96(TRN):
+        from microsetta_private_api.repo.source_repo import SourceRepo as sr
+
+        TRN.add("SELECT id, source_name FROM source")
+        rows = TRN.execute()[-1]
+
+        for r in rows:
+            hsi = sr.construct_host_subject_id(r[0], r[1])
+
+            TRN.add("""INSERT INTO source_host_subject_id
+                       (source_id, host_subject_id)
+                       VALUES (%s, %s)""",
+                    (r[0], hsi))
+        TRN.execute()
+
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
         "0050.sql": migrate_50.__func__,
@@ -736,6 +752,7 @@ class MigrationSupport:
         # as it depends on external state
         # "0082.sql": migrate_82.__func__
         # ...
+        "0096.sql": migrate_96.__func__,
     }
 
     @classmethod
