@@ -581,7 +581,7 @@ def fetch_ffqs():
         t.commit()
 
     with Transaction() as t:
-        vs = VioscreenRepo(t)
+        vs = VioscreenSessionRepo(t)
         ffqs_not_represented = vs.get_missing_ffqs()
 
     # fetch ffq data for sessions we don't yet have it from
