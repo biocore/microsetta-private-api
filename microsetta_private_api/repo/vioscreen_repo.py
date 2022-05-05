@@ -379,7 +379,8 @@ class VioscreenDietaryScoreRepo(BaseRepo):
             'FattyAcids': ('Fatty Acids', 0.0, 10.0),
             'RefinedGrains': ('Refined Grains', 0.0, 10.0),
             'Sodium': ('Sodium', 0.0, 10.0),
-            'EmptyCalories': ('Empty Calories', 0.0, 20.0),
+            'SaturatedFat': ('SaturatedFat', 0.0, 10.0),
+            'AddedSugars': ('AddedSugars', 0.0, 10.0),
             'TotalScore': ('Total HEI Score', 0.0, 100.0)},
         }
 
