@@ -208,7 +208,7 @@ class HostAgeNormalizedYears(Transformer):
 
     @classmethod
     def _transform(cls, df):
-        df[cls.COLUMN_NAME] = df[HOST_AGE]
+        return df[HOST_AGE]
 
 
 class Lifestage(Transformer):
