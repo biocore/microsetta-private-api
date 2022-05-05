@@ -403,7 +403,7 @@ class NormalizeWeight(Normalize):
 # on the presence of a BMI column
 HUMAN_TRANSFORMS = (ConstantHostAgeUnits, HostAge, AgeCat, NormalizeWeight,
                     NormalizeHeight, BMI, BMICat, AlcoholConsumption, Sex,
-                    HostAgeNormalizedYears)
+                    HostAgeNormalizedYears, Lifestage)
 
 # mapping from our historical survey structure to EBI compliance
 # which should be correct for all host types
