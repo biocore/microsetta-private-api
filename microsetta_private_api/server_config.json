@@ -39,5 +39,6 @@
   "fundrazr_key": "fundrazr_api_placeholder",
   "fundrazr_url": "fundrazr_url_placeholder",
   "fundrazr_organization": "fundrazr_org_placeholder",
-  "pffqsurvey_url": "pffqsurvey_url_placeholder"
+  "pffqsurvey_url": "https://www.nutriciaresearch.com/",
+  "pffq_study": "THDMI"
 }

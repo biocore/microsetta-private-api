@@ -126,9 +126,8 @@ class SurveyTemplateTests(unittest.TestCase):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
             
-            obs = template_repo.create_pffqsurvey_id(TEST2_ACCOUNT_ID,
-                                                     TEST2_SOURCE_ID,
-                                                     TEST2_SAMPLE_ID)
+            obs = template_repo.get_or_create_pffqsurvey_id(TEST2_ACCOUNT_ID,
+                                                            TEST2_SOURCE_ID)
             self.assertTrue(obs)
             t.rollback()
     

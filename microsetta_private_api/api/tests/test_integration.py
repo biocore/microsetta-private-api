@@ -362,7 +362,7 @@ class IntegrationTests(TestCase):
         # Survey status should not be in templates
         self.assertNotIn("survey_status", bobo_surveys[0])
         self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
-                             [1, 3, 4, 5, 6, 10001, 10002])
+                             [1, 3, 4, 5, 6, 10001, 10002, 10003])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
                              [2])
         self.assertListEqual([x["survey_template_id"] for x in env_surveys],
@@ -399,6 +399,23 @@ class IntegrationTests(TestCase):
         )
         check_response(resp)
         return bobo
+
+    def test_bobo_takes_pffq_survey(self):
+        bobo = self._bobo_to_claim_a_sample()
+
+        # take vioscreen
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/10003'
+            '?language_tag=en_US&vioscreen_ext_sample_id=%s'
+            '&survey_redirect_url=http://foo.bar' %
+            (ACCT_ID, bobo['source_id'], MOCK_SAMPLE_ID),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+        data = json.loads(resp.data)
+        url = data['survey_template_text']['url']
+        submitted_arguments = parse_qs(urlparse(url).query)
+        assert submitted_arguments['study'] == ['THDMI']
 
     def test_bobo_takes_vioscreen(self):
         bobo = self._bobo_to_claim_a_sample()
@@ -561,8 +578,8 @@ class IntegrationTests(TestCase):
         for bobo_survey in bobo_surveys:
             chosen_survey = bobo_survey["survey_template_id"]
 
-            # 10001 and 10002 are non-local surveys
-            if chosen_survey in (10001, 10002):
+            # 10001, 10002 and 10003 are non-local surveys
+            if chosen_survey in (10001, 10002, 10003):
                 continue
 
             resp = self.client.get(

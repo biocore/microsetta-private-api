@@ -11,7 +11,7 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
-from microsetta_private_api.util import vioscreen, myfoodrepo, vue_adapter
+from microsetta_private_api.util import polyphenol, vioscreen, myfoodrepo, vue_adapter
 from microsetta_private_api.util.vioscreen import VioscreenAdminAPI
 
 
@@ -37,7 +37,8 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [1, 3, 4, 5, 6,
                                      SurveyTemplateRepo.VIOSCREEN_ID,
-                                     SurveyTemplateRepo.MYFOODREPO_ID]]), 200
+                                     SurveyTemplateRepo.MYFOODREPO_ID,
+                                     SurveyTemplateRepo.PFFQSURVEY_ID]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200
@@ -114,6 +115,22 @@ def _remote_survey_url_myfoodrepo(transaction, account_id, source_id,
     return myfoodrepo.gen_survey_url(mfr_id)
 
 
+def _remote_survey_url_pffqsurvey(transaction, account_id, source_id,
+                                  language_tag):
+    # send it to https://www.nutriciaresearch.com/ 
+
+    # assumes an instance of Transaction is already available
+    st_repo = SurveyTemplateRepo(transaction)
+
+    # do we already have an id?
+    pffq_id = st_repo.get_pffqsurvey_id_if_exists(account_id, source_id)
+
+    if pffq_id is None:
+        pffq_id = polyphenol.gen_pffq_id()
+
+    return polyphenol.gen_survey_url(pffq_id)
+
+
 def read_survey_template(account_id, source_id, survey_template_id,
                          language_tag, token_info, survey_redirect_url=None,
                          vioscreen_ext_sample_id=None):
@@ -136,6 +153,11 @@ def read_survey_template(account_id, source_id, survey_template_id,
                                                    vioscreen_ext_sample_id)
             elif survey_template_id == SurveyTemplateRepo.MYFOODREPO_ID:
                 url = _remote_survey_url_myfoodrepo(t,
+                                                    account_id,
+                                                    source_id,
+                                                    language_tag)
+            elif survey_template_id == SurveyTemplateRepo.PFFQSURVEY_ID:
+                url = _remote_survey_url_pffqsurvey(t,
                                                     account_id,
                                                     source_id,
                                                     language_tag)

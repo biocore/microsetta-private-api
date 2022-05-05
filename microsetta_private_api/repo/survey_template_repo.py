@@ -1,3 +1,4 @@
+from microsetta_private_api.util import polyphenol
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
@@ -428,12 +429,10 @@ class SurveyTemplateRepo(BaseRepo):
         return vioscreen_id
 
 
-    def create_pffqsurvey_id(self, account_id, source_id,
-                            pffqsurvey_ext_sample_id):
-        # requires a pffqsurvey_ext_sample_id to exist
-        # it is possible the I need to create this locally in this app
-        # TODO: verify how the pffqsurvey_ext_sample_id is managed 
-        # (via external or internal )
+    def get_or_create_pffqsurvey_id(self, account_id, source_id):  
+        # notes: WE/ TMI , create the sample ID in our Microsetta app and 
+        # it gets sent to the Polyphenol APP/API
+
         with self._transaction.cursor() as cur:
             # This transaction scans for existing IDs,
             # then generates a new ID if none exist
@@ -443,14 +442,11 @@ class SurveyTemplateRepo(BaseRepo):
             # we lock the pffqsurvey_registry table
             self._transaction.lock_table("pffqsurvey_registry")
             # test if an existing ID is available
-            existing = self.get_pffqsurvey_id_if_exists(account_id, source_id,
-                                                       pffqsurvey_ext_sample_id)
-                    
-            pffqsurvey_url = SERVER_CONFIG['pffqsurvey_url']
+            existing = self.get_pffqsurvey_id_if_exists(account_id, source_id)
             if existing is None:
-                pffqsurvey_id = secrets.token_hex(8)
+                pffqsurvey_id = polyphenol.gen_pffq_id() 
+
                 # Put a survey with status -1 into ag_login_surveys
-                # TODO DOJO need to get the pffqsurvey_status detail verified (i.e. is it in the table?)
                 cur.execute("INSERT INTO ag_login_surveys("
                             "ag_login_id, "
                             "survey_id, "
@@ -458,43 +454,38 @@ class SurveyTemplateRepo(BaseRepo):
                             "source_id) "
                             "VALUES(%s, %s, %s, %s)",
                             (account_id, pffqsurvey_id, -1, source_id))
-                # Immediately attach that survey to the specified sample
-                sample_repo = SampleRepo(self._transaction)
-                s = sample_repo.get_sample(account_id,
-                                           source_id,
-                                           pffqsurvey_ext_sample_id)
 
-                if s is None:
-                    raise KeyError(f"{pffqsurvey_ext_sample_id} does not exist")
+                # NO SAMPLE is involved with the PFFQ Survey 
 
-                cur.execute("INSERT INTO source_barcodes_surveys "
-                            "(barcode, survey_id) "
-                            "VALUES(%s, %s)", (s.barcode, pffqsurvey_id))
+                # TODO need to build the proper URL such as:
+                # https://d83.bubble.is/site/caudalie-dev/?yid=testmx0209&country=es_mx&study=STUDY_NAME (From Danone docs)
+                
+                #lang = SERVER_CONFIG['LANG']  # TODO get country value (language)
+                lang = "en_us"  # TODO get country value (language)
+
+                pffqsurvey_url = f'SERVER_CONFIG["pffqsurvey_url"]?yid={pffqsurvey_id}&country={lang}&study={SERVER_CONFIG["pffq_study"]}'
 
                 # And add it to the registry to keep track of the survey if
                 # user quits out then wants to resume the survey.
                 cur.execute("INSERT INTO pffqsurvey_registry("
                             "account_id, source_id, pffq_survey_id, pffq_survey_url) "
                             "VALUES(%s, %s, %s, %s)",
-                            (account_id, source_id, pffqsurvey_ext_sample_id,
-                             pffqsurvey_url))  # TODO DOJO need to define the pffqsurvey_url
+                            (account_id, source_id, pffqsurvey_id,
+                             pffqsurvey_url)) 
             else:
                 pffqsurvey_id = existing
         return pffqsurvey_id
 
-    def get_pffqsurvey_id_if_exists(self, account_id, source_id,
-                                   pffqsurvey_ext_sample_id):
+    def get_pffqsurvey_id_if_exists(self, account_id, source_id):
         """Obtain a pffqsurvey ID if it exists"""
         with self._transaction.cursor() as cur:
-            # Find an active pffqsurvey survey for this account+source+sample
+            # Find an active pffqsurvey survey for this account+source+survey_id
             # (deleted surveys are not active)
-            # TODO DOJO learn about sample_id 
             cur.execute("SELECT pffq_survey_id FROM pffqsurvey_registry WHERE "
                         "account_id=%s AND "
                         "source_id=%s AND "
-                        "pffq_survey_id=%s AND "
                         "deleted=false",
-                        (account_id, source_id, pffqsurvey_ext_sample_id))
+                        (account_id, source_id))
             rows = cur.fetchall()
             if rows is None or len(rows) == 0:
                 return None
