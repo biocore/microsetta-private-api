@@ -128,7 +128,7 @@ def _remote_survey_url_pffqsurvey(transaction, account_id, source_id,
     if pffq_id is None:
         pffq_id = polyphenol.gen_pffq_id()
 
-    return polyphenol.gen_survey_url(pffq_id)
+    return polyphenol.gen_survey_url(pffq_id, language_tag)
 
 
 def read_survey_template(account_id, source_id, survey_template_id,

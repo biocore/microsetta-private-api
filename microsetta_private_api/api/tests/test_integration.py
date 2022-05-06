@@ -416,6 +416,7 @@ class IntegrationTests(TestCase):
         url = data['survey_template_text']['url']
         submitted_arguments = parse_qs(urlparse(url).query)
         assert submitted_arguments['study'] == ['THDMI']
+        assert submitted_arguments['country'] == ['en_us']
 
     def test_bobo_takes_vioscreen(self):
         bobo = self._bobo_to_claim_a_sample()

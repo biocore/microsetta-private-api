@@ -11,14 +11,18 @@ def gen_pffq_id():
     # generate the pffq id locally and return it as a string
     return str(uuid.uuid4())
 
+# Should the language_tag set it's default to en_us ?
+def gen_survey_url(pffq_id, language_tag=None):
+    ''' generate the pffq survey endpoint . The "handoff url arguments" for Danon composes: 
+    unique identifier,  country(lang) and study (THDMI)
+    '''
 
-def gen_survey_url(pffq_id, country=None, study=None):
-    # the "handoff url" for Danon composes: 
-    # unique identifier, language and country
-    if country is None:
-        country = "en_us"
-    if study is None:
-        study = SERVER_CONFIG['pffq_study']
+    if language_tag is None:
+        print(f'Error: there is no language tag set')
+        # TODO raise language_tag error 
+    else:
+        country = language_tag.lower()
+    study = SERVER_CONFIG['pffq_study']
     endpoint = SERVER_CONFIG['pffqsurvey_url']
     return endpoint + f'?yid={pffq_id}&country={country}&study={study}'
 
