@@ -11,7 +11,10 @@ def gen_pffq_id():
     # generate the pffq id locally and return it as a string
     return str(uuid.uuid4())
 
-# Should the language_tag set it's default to en_us ?
+
+# chicken and egg here. I need to create survey URL (via api _survey.py) BUT 
+# it NEEDS a pffqsurvey_id (in the URL form). Trouble is that it may not be available via the _survey.py code
+# RULE IS: transaction DB is done
 def gen_survey_url(pffq_id, language_tag=None):
     ''' generate the pffq survey endpoint . The "handoff url arguments" for Danon composes: 
     unique identifier,  country(lang) and study (THDMI)

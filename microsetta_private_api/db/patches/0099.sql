@@ -1,8 +1,8 @@
 CREATE TABLE ag.pffqsurvey_registry (
     account_id UUID NOT NULL,
     source_id UUID NULL,  -- nullable if deleted, derived from MPA source table
-    pffq_survey_id VARCHAR NOT NULL, -- PFFQ but TMI generated (return/sent payload) 
-    pffq_survey_url varchar NOT NULL,
+    pffq_survey_id UUID NOT NULL DEFAULT uuid_generate_v4() ,
+    pffq_survey_url varchar,
     deleted boolean NOT NULL DEFAULT false,
     creation_timestamp timestamptz NOT NULL DEFAULT NOW(),
     
