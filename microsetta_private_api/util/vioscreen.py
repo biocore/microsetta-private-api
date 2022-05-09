@@ -551,6 +551,8 @@ def update_session_detail():
 
 @celery.task(ignore_result=True)
 def fetch_ffqs():
+    MAX_FETCH_SIZE = 100
+
     vio_api = VioscreenAdminAPI(perform_async=False)
 
     # obtain our current unfinished sessions to check
@@ -579,12 +581,12 @@ def fetch_ffqs():
         t.commit()
 
     with Transaction() as t:
-        vs = VioscreenRepo(t)
+        vs = VioscreenSessionRepo(t)
         ffqs_not_represented = vs.get_missing_ffqs()
 
     # fetch ffq data for sessions we don't yet have it from
     failed_ffqs = []
-    for sess in ffqs_not_represented:
+    for sess in ffqs_not_represented[:MAX_FETCH_SIZE]:
         try:
             error, ffq = vio_api.get_ffq(sess.sessionId)
         except Exception as e:  # noqa
