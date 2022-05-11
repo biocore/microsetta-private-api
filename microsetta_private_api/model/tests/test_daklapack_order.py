@@ -158,7 +158,8 @@ class DaklapackOrderTests(TestCase):
         self.assertTrue(True)
 
     def test_validate_shipping_fail_bad_provider(self):
-        with self.assertRaisesRegex(ValueError, 'Unrecognized shipping provider'):
+        with self.assertRaisesRegex(
+                ValueError, 'Unrecognized shipping provider'):
             DaklapackOrder.validate_shipping('DHL', 'Ground')
 
     def test_validate_shipping_fail_bad_shipping_type(self):
