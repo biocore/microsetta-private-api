@@ -7,7 +7,7 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
 from microsetta_private_api.model.project import Project
 from microsetta_private_api.model.daklapack_order import DaklapackOrder, \
-    ORDER_ID_KEY, SUBMITTER_ACCT_KEY, ADDR_DICT_KEY
+    ORDER_ID_KEY, SUBMITTER_ACCT_KEY, ADDR_DICT_KEY, SHIPPING_TYPES_BY_PROVIDER
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.activation_repo import ActivationRepo
@@ -398,6 +398,12 @@ def get_daklapack_articles(token_info):
         admin_repo = AdminRepo(t)
         dak_article_dicts = admin_repo.get_daklapack_articles()
         return jsonify(dak_article_dicts), 200
+
+
+def get_daklapack_shipping_options(token_info):
+    validate_admin_access(token_info)
+
+    return jsonify(SHIPPING_TYPES_BY_PROVIDER), 200
 
 
 def query_email_stats(body, token_info):

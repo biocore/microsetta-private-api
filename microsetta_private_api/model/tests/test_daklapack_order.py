@@ -9,6 +9,8 @@ DUMMY_DAK_ORDER_ID = '7ed917ef-0c4d-431a-9aa0-0a1f4f41f44b'
 DUMMY_PROJ_ID_LIST = [1, 12]
 DUMMY_DAK_ORDER_DESC = "test daklapack order"
 DUMMY_PLANNED_SEND_DATE = date(2032, 2, 9).strftime(DaklapackOrder.DATE_FORMAT)
+DUMMY_SHIPPING_PROVIDER = "Freight"
+DUMMY_SHIPPING_TYPE = "Default"
 DUMMY_DAK_ARTICLE_CODE = '350102'
 DUMMY_ADDRESSES = [{
     'firstName': 'Jane',
@@ -68,8 +70,8 @@ def make_dummies(include_fedex_refs=False, include_planned_send_date=False):
              'companyName': submitter_name
              },
         "plannedSendDate": "",
-        'shippingProvider': 'FedEx',
-        'shippingType': 'FEDEX_2_DAY',
+        'shippingProvider': DUMMY_SHIPPING_PROVIDER,
+        'shippingType': DUMMY_SHIPPING_TYPE,
         'shippingProviderMetadata': []
     }
 
@@ -117,6 +119,8 @@ class DaklapackOrderTests(TestCase):
             daklapack_order_id=DUMMY_DAK_ORDER_ID,
             article_code=DUMMY_DAK_ARTICLE_CODE,
             address=DUMMY_ADDRESSES[0],
+            shipping_provider=DUMMY_SHIPPING_PROVIDER,
+            shipping_type=DUMMY_SHIPPING_TYPE,
             fedex_ref_1=DUMMY_FEDEX_REFS[0],
             fedex_ref_2=DUMMY_FEDEX_REFS[1],
             fedex_ref_3=DUMMY_FEDEX_REFS[2],
@@ -136,8 +140,27 @@ class DaklapackOrderTests(TestCase):
             daklapack_order_id=DUMMY_DAK_ORDER_ID,
             article_code=DUMMY_DAK_ARTICLE_CODE,
             address=DUMMY_ADDRESSES[0],
+            shipping_provider=DUMMY_SHIPPING_PROVIDER,
+            shipping_type=DUMMY_SHIPPING_TYPE,
             quantity=2)
 
         self._compare_base_orders(dummy_acct, dummy_order_struct, real_out)
         self.assertEqual(None, real_out.description)
         self.assertEqual(None, real_out.planned_send_date)
+
+    def test_validate_shipping_pass(self):
+        DaklapackOrder.validate_shipping(DUMMY_SHIPPING_PROVIDER,
+                                         DUMMY_SHIPPING_TYPE)
+        DaklapackOrder.validate_shipping('FedEx', 'GROUND_HOME_DELIVERY')
+        DaklapackOrder.validate_shipping('USPS', 'Default')
+        DaklapackOrder.validate_shipping('USPS', 'FIRST_CLASS')
+        # if nothing above errored, the test passes
+        self.assertTrue(True)
+
+    def test_validate_shipping_fail_bad_provider(self):
+        with self.assertRaisesRegex(ValueError, 'Unrecognized shipping provider'):
+            DaklapackOrder.validate_shipping('DHL', 'Ground')
+
+    def test_validate_shipping_fail_bad_shipping_type(self):
+        with self.assertRaisesRegex(ValueError, 'Shipping type '):
+            DaklapackOrder.validate_shipping('FedEx', 'SuperSpeedy')

@@ -2231,6 +2231,19 @@ paths:
               schema:
                 type: array
 
+  '/admin/daklapack_shipping':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_daklapack_shipping_options
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: Return lists of acceptable Daklapack shipping types keyed by shipping provider
+          content:
+            application/json:
+              schema:
+                type: object
+
   '/admin/daklapack_orders':
     post:
       operationId: microsetta_private_api.admin.admin_impl.create_daklapack_orders
@@ -2256,6 +2269,10 @@ paths:
                   type: array
                   items:
                     type: object
+                shipping_provider:
+                  type: string
+                shipping_type:
+                  type: string
                 description:
                   type: string
                   nullable: true
