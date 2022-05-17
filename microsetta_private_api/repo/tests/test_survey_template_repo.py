@@ -141,7 +141,6 @@ class SurveyTemplateTests(unittest.TestCase):
             error_string = MLTerror.args[0]
             self.assertEqual(error_string, 'There is no language tag set')
 
-
     def test_set_myfoodrepo_cannot_assign_new_id(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
