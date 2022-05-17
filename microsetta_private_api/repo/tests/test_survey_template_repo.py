@@ -125,10 +125,8 @@ class SurveyTemplateTests(unittest.TestCase):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
             pffq_id = uuid.uuid4()
-
-            created_row_uuid = template_repo.create_pffqsurvey_entry(TEST2_ACCOUNT_ID,
-                                                        TEST2_SOURCE_ID,
-                                                        pffq_id)
+            created_row_uuid = template_repo.create_pffqsurvey_entry(
+                TEST2_ACCOUNT_ID, TEST2_SOURCE_ID, pffq_id)
             self.assertEqual(pffq_id, created_row_uuid)
             t.rollback()
 
