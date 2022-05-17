@@ -427,8 +427,7 @@ class IntegrationTests(TestCase):
             check_response(resp)
         except Exception as error:
             print(f'got err as: {error}')
-    '''    
-        
+    '''
     def test_bobo_takes_vioscreen(self):
         bobo = self._bobo_to_claim_a_sample()
 

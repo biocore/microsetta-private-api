@@ -11,10 +11,14 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
-from microsetta_private_api.util import polyphenol, vioscreen, myfoodrepo, vue_adapter
+from microsetta_private_api.util import (polyphenol,
+                                         vioscreen,
+                                         myfoodrepo,
+                                         vue_adapter)
 from microsetta_private_api.util.vioscreen import VioscreenAdminAPI
 import uuid
 import psycopg2.extras
+
 
 def read_survey_templates(account_id, source_id, language_tag, token_info):
     _validate_account_access(token_info, account_id)
@@ -118,7 +122,7 @@ def _remote_survey_url_myfoodrepo(transaction, account_id, source_id,
 
 def _remote_survey_url_pffqsurvey(transaction, account_id, source_id,
                                   language_tag):
-    # send it to https://www.nutriciaresearch.com/ 
+    # send it to https://www.nutriciaresearch.com/
 
     # assumes an instance of Transaction is already available
     st_repo = SurveyTemplateRepo(transaction)
@@ -130,14 +134,12 @@ def _remote_survey_url_pffqsurvey(transaction, account_id, source_id,
         psycopg2.extras.register_uuid()
         pffq_id = uuid.uuid4()
         st_repo.create_pffqsurvey_entry(account_id, source_id, pffq_id)
-    st_repo.set_pffqsurvey_id_into_ag_login_surveys(account_id, source_id, pffq_id)
+    st_repo.set_pffqsurvey_id_into_ag_login_surveys(account_id, source_id,
+                                                    pffq_id)
     pffq_url = polyphenol.gen_survey_url(pffq_id, language_tag)
-    st_repo.update_url_pffqsurvey_registry(pffq_url, pffq_id) 
+    st_repo.update_url_pffqsurvey_registry(pffq_url, pffq_id)
 
     return pffq_url
-    
-
-    
 
 
 def read_survey_template(account_id, source_id, survey_template_id,

@@ -1,5 +1,3 @@
-import re
-from microsetta_private_api.util import polyphenol
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
@@ -279,14 +277,15 @@ class SurveyTemplateRepo(BaseRepo):
                 return True
             else:
                 return False
-    
+
     def update_url_pffqsurvey_registry(self, pffq_url, pffq_id):
         """ Update the pffqsurvery_registry with the url"""
         with self._transaction.cursor() as cur:
-            cur.execute("""UPDATE pffqsurvey_registry SET pffq_survey_url = %s WHERE pffq_survey_id = %s""", 
+            cur.execute("""UPDATE pffqsurvey_registry SET pffq_survey_url = %s
+                        WHERE pffq_survey_id = %s""",
                         (pffq_url, pffq_id))
             return True
-    
+
     def create_pffqsurvey_entry(self, account_id, source_id, pffq_id):
         """Create a pffqsurvey entry
 
@@ -306,7 +305,7 @@ class SurveyTemplateRepo(BaseRepo):
             # myfoodrepo_registry. to ensure workers see accurate state,
             # we lock the table prior to our slot and update check forcing
             # the effort in this method to be serial.
-            
+
             psycopg2.extras.register_uuid()
             cur.execute("""INSERT INTO pffqsurvey_registry (account_id,
                                                             source_id,
@@ -314,8 +313,6 @@ class SurveyTemplateRepo(BaseRepo):
                             VALUES (%s, %s, %s)""",
                         (account_id, source_id, pffq_id))
         return pffq_id
-            
-
 
     def set_myfoodrepo_id(self, account_id, source_id, mfr_id):
         """Set the MyFoodRepo ID of a registry entry
@@ -467,8 +464,9 @@ class SurveyTemplateRepo(BaseRepo):
                 vioscreen_id = existing
         return vioscreen_id
 
-    def set_pffqsurvey_id_into_ag_login_surveys(self, account_id, source_id, pffq_id):
-        # notes: WE/ TMI , create the sample ID in our Microsetta app and 
+    def set_pffqsurvey_id_into_ag_login_surveys(self, account_id, source_id,
+                                                pffq_id):
+        # notes: WE/ TMI , create the sample ID in our Microsetta app and
         # it gets sent to the Polyphenol APP/API
 
         with self._transaction.cursor() as cur:
@@ -487,7 +485,8 @@ class SurveyTemplateRepo(BaseRepo):
     def get_pffqsurvey_id_if_exists(self, account_id, source_id):
         """Obtain a pffqsurvey ID if it exists"""
         with self._transaction.cursor() as cur:
-            # Find an active pffqsurvey survey for this account+source+survey_id
+            # Find an active pffqsurvey survey for this
+            # account+source+survey_id
             # (deleted surveys are not active)
             cur.execute("SELECT pffq_survey_id FROM pffqsurvey_registry WHERE "
                         "account_id=%s AND "
