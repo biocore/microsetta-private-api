@@ -3,14 +3,19 @@ import uuid
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
+class MissingLangTagError(Exception):
+    def __init__(self, errstr):
+        self.error_string = errstr
+
+    def __repr__(self,):
+        return r'%s' % self.error_string
+
+
 def gen_pffq_id():
     # generate the pffq id locally and return it as a string
     return str(uuid.uuid4())
 
 
-# chicken and egg here. I need to create survey URL (via api _survey.py) BUT
-# it NEEDS a pffqsurvey_id (in the URL form). Trouble is that it may not be
-# available via the _survey.py code
 # RULE IS: transaction DB is done
 def gen_survey_url(pffq_id, language_tag=None):
     ''' generate the pffq survey endpoint . The "handoff url arguments"
@@ -18,8 +23,7 @@ def gen_survey_url(pffq_id, language_tag=None):
     '''
 
     if language_tag is None:
-        print('Error: there is no language tag set')
-        # TODO raise language_tag error
+        raise MissingLangTagError('There is no language tag set')
     else:
         country = language_tag.lower()
     study = SERVER_CONFIG['pffq_study']

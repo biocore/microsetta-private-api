@@ -3,6 +3,7 @@ import uuid
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
+from microsetta_private_api.util import polyphenol
 from psycopg2.errors import ForeignKeyViolation
 
 # test identifiers with a vio ID
@@ -129,6 +130,17 @@ class SurveyTemplateTests(unittest.TestCase):
                 TEST2_ACCOUNT_ID, TEST2_SOURCE_ID, pffq_id)
             self.assertEqual(pffq_id, created_row_uuid)
             t.rollback()
+
+    def test_polyphenol_missing_lang_tag(self):
+        """testing missing lang tag error"""
+
+        try:
+            pffq_id = uuid.uuid4()
+            polyphenol.gen_survey_url(pffq_id)
+        except polyphenol.MissingLangTagError as MLTerror:
+            error_string = MLTerror.args[0]
+            self.assertEqual(error_string, 'There is no language tag set')
+
 
     def test_set_myfoodrepo_cannot_assign_new_id(self):
         with Transaction() as t:
