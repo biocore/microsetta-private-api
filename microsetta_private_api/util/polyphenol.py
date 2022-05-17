@@ -4,9 +4,6 @@ import uuid
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
-
-# TODO DOJO learn how to use LANGUAGE_SUPPORT for localization and language
-
 def gen_pffq_id():
     # generate the pffq id locally and return it as a string
     return str(uuid.uuid4())

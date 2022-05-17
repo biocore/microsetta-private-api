@@ -6,6 +6,7 @@ from microsetta_private_api.repo.transaction import Transaction
 from psycopg2.errors import ForeignKeyViolation
 
 
+
 # test identifiers with a vio ID
 TEST1_ACCOUNT_ID = "80c327ca-a5c7-4c7f-b64b-b219d9ff0b47"
 TEST1_SOURCE_ID = None
@@ -125,13 +126,13 @@ class SurveyTemplateTests(unittest.TestCase):
     def test_set_pffqsurvey_id_valid(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
+            pffq_id = uuid.uuid4()
             
-            obs = template_repo.get_or_create_pffqsurvey_id(TEST2_ACCOUNT_ID,
-                                                            TEST2_SOURCE_ID)
+            obs = template_repo.create_pffqsurvey_entry(TEST2_ACCOUNT_ID,
+                                                            TEST2_SOURCE_ID,
+                                                            pffq_id)
             self.assertTrue(obs)
             t.rollback()
-    
-
 
     def test_set_myfoodrepo_cannot_assign_new_id(self):
         with Transaction() as t:

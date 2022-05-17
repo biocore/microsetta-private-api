@@ -15,6 +15,7 @@ from microsetta_private_api.model.survey_template_trigger import \
         SurveyTemplateTrigger
 import copy
 import secrets
+import psycopg2.extras
 
 from microsetta_private_api.repo.sample_repo import SampleRepo
 
@@ -305,11 +306,14 @@ class SurveyTemplateRepo(BaseRepo):
             # myfoodrepo_registry. to ensure workers see accurate state,
             # we lock the table prior to our slot and update check forcing
             # the effort in this method to be serial.
+            
+            psycopg2.extras.register_uuid()
             cur.execute("""INSERT INTO pffqsurvey_registry (account_id,
                                                             source_id,
                                                             pffq_survey_id)
                             VALUES (%s, %s, %s)""",
                         (account_id, source_id, pffq_id))
+        return pffq_id
             
 
 
@@ -463,56 +467,6 @@ class SurveyTemplateRepo(BaseRepo):
                 vioscreen_id = existing
         return vioscreen_id
 
-    '''
-    # TODO add language_tag as parameter
-    def get_or_create_pffqsurvey_id(self, account_id, source_id):  
-        # notes: WE/ TMI , create the sample ID in our Microsetta app and 
-        # it gets sent to the Polyphenol APP/API
-
-        with self._transaction.cursor() as cur:
-            # This transaction scans for existing IDs,
-            # then generates a new ID if none exist
-            # test if an existing ID is available
-            existing = self.get_pffqsurvey_id_if_exists(account_id, source_id)
-            if existing is None:
-                #pffqsurvey_id = polyphenol.gen_pffq_id() 
-
-                # TODO DOJO need to create the new entry (auto-generation of pffqsurvey_id UUID)
-
-                # in the pffqsurvey_registry 
-                # Put a survey with status -1 into ag_login_surveys
-                cur.execute("INSERT INTO ag_login_surveys("
-                            "ag_login_id, "
-                            "survey_id, "
-                            "vioscreen_status, "
-                            "source_id) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, pffqsurvey_id, -1, source_id))
-
-                # NO SAMPLE is involved with the PFFQ Survey 
-
-                # TODO need to build the proper URL such as:
-                # https://d83.bubble.is/site/caudalie-dev/?yid=testmx0209&country=es_mx&study=STUDY_NAME (From Danone docs)
-                
-                #lang = SERVER_CONFIG['LANG']  # TODO get country value (language)
-                lang = "en_us"  # TODO get country value (language)
-                # TODO use polyphenol to generate the pffq URL
-                pffqsurvey_url = f'SERVER_CONFIG["pffqsurvey_url"]?yid={pffqsurvey_id}&country={lang}&study={SERVER_CONFIG["pffq_study"]}'
-                pffqsurvey_url = polyphenol.gen_survey_url(pffq_id=)  #TODO need to get the pffqsurvey_id
-
-                # And add it to the registry to keep track of the survey if
-                # user quits out then wants to resume the survey.
-                # NOTE: this will need a DB:COMMIT via the Transaction (do this in the API) in order to persist it into the DB table
-                cur.execute("INSERT INTO pffqsurvey_registry("
-                            "account_id, source_id, pffq_survey_id, pffq_survey_url) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, source_id, pffqsurvey_id,
-                             pffqsurvey_url)) 
-            else:
-                pffqsurvey_id = existing
-        return pffqsurvey_id
-    '''
-
     def set_pffqsurvey_id_into_ag_login_surveys(self, account_id, source_id, pffq_id):
         # notes: WE/ TMI , create the sample ID in our Microsetta app and 
         # it gets sent to the Polyphenol APP/API
@@ -530,9 +484,6 @@ class SurveyTemplateRepo(BaseRepo):
                         "VALUES(%s, %s, %s, %s)",
                         (account_id, pffq_id, -1, source_id))
 
-            
-
-
     def get_pffqsurvey_id_if_exists(self, account_id, source_id):
         """Obtain a pffqsurvey ID if it exists"""
         with self._transaction.cursor() as cur:
@@ -548,7 +499,6 @@ class SurveyTemplateRepo(BaseRepo):
                 return None
             else:
                 return rows[0][0]
-
 
     def get_vioscreen_id_if_exists(self, account_id, source_id,
                                    vioscreen_ext_sample_id):

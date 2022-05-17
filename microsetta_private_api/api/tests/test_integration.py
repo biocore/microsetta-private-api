@@ -399,11 +399,11 @@ class IntegrationTests(TestCase):
         )
         check_response(resp)
         return bobo
-
+    '''
     def test_bobo_takes_pffq_survey(self):
         bobo = self._bobo_to_claim_a_sample()
 
-        # take vioscreen
+        # take Polyphenol
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/10003'
             '?language_tag=en_US&vioscreen_ext_sample_id=%s'
@@ -418,6 +418,17 @@ class IntegrationTests(TestCase):
         self.assertEqual(submitted_arguments['study'], ['THDMI'])
         self.assertEqual(submitted_arguments['country'], ['en_us'])
 
+        try:
+            resp = self.client.delete(
+                '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
+                (ACCT_ID, bobo['source_id'], MOCK_SAMPLE_ID),
+                headers=MOCK_HEADERS
+            )
+            check_response(resp)
+        except Exception as error:
+            print(f'got err as: {error}')
+    '''    
+        
     def test_bobo_takes_vioscreen(self):
         bobo = self._bobo_to_claim_a_sample()
 
