@@ -12,20 +12,57 @@ HEIGHT_UNITS = 'height_units'
 BIRTH_YEAR = 'birth_year'
 BIRTH_MONTH = 'birth_month'
 COLLECTION_TIMESTAMP = 'collection_timestamp'
-BMI_ = 'bmi'
-AGE_YEARS = 'age_years'
+BMI_ = 'host_body_mass_index'
+HOST_AGE = 'host_age'
+HOST_AGE_UNITS = 'host_age_units'
+HOST_AGE_UNIT_VALUE = 'years'
+HOST_AGE_NORMALIZED_YEARS = 'host_age_normalized_years'
+HOST_HEIGHT = 'host_height'
+HOST_HEIGHT_UNITS = 'host_height_units'
+HOST_WEIGHT = 'host_weight'
+HOST_WEIGHT_UNITS = 'host_weight_units'
+LIFESTAGE = 'lifestage'
 AGE_CAT = 'age_cat'
 BMI_CAT = 'bmi_cat'
 INCHES = 'inches'
-CENTIMETERS = 'centimeters'
+CENTIMETERS = 'cm'
 POUNDS = 'pounds'
-KILOGRAMS = 'kilograms'
+KILOGRAMS = 'kg'
 ALCOHOL_CONSUMPTION = 'alcohol_consumption'
 ALCOHOL_FREQUENCY = 'alcohol_frequency'
 SEX = 'sex'
 GENDER = 'gender'
 ANONYMIZED_NAME = 'anonymized_name'
 SAMPLE_NAME = 'sample_name'
+
+
+def _normalizer(df, focus_col, units_col, units_value, factor):
+    # get our columns
+    focus = pd.to_numeric(df[focus_col], errors='coerce')
+    units = df[units_col]
+
+    # operate on a copy as to retain non-unit focus values (e.g., values
+    # already expressed as centimeters
+    result = focus.copy()
+
+    # anything negative is weird so kill it
+    result[result < 0] = None
+
+    # figure out what positions are safe to operate on
+    not_null_map = Transformer.not_null_map(result, units)
+
+    # take entries like where either focus or units are null and kill them
+    result.loc[not_null_map[~not_null_map].index] = None
+
+    # reduce to only those safe to operate on
+    focus_not_null = result[not_null_map]
+    units_not_null = units[not_null_map]
+    focus_adj = focus_not_null.loc[units_not_null == units_value]
+
+    # adjust the indices that need adjustment
+    result.loc[focus_adj.index] = focus_adj * factor
+
+    return result
 
 
 class Transformer:
@@ -60,15 +97,60 @@ class Transformer:
                          name=cls.COLUMN_NAME)
 
 
+class Rename:
+    SRC = None
+    DST = None
+
+    @classmethod
+    def satisfies_requirements(cls, df):
+        return cls.SRC in df.columns and cls.DST not in df.columns
+
+    @classmethod
+    def apply(cls, df):
+        return df.rename(columns={cls.SRC: cls.DST})
+
+
+class Constant(Transformer):
+    REQUIRED_COLUMNS = None
+    COLUMN_NAME = None
+    VALUE = None
+
+    @classmethod
+    def satisfies_requirements(cls, df):
+        return cls.REQUIRED_COLUMNS.issubset(set(df.columns))
+
+    @classmethod
+    def _transform(cls, df):
+        series = cls.basis(df.index)
+        return series.fillna(cls.VALUE)
+
+
+class Normalize(Transformer):
+    FOCUS_COL = None
+    FOCUS_UNITS = None
+    UNITS_COL = None
+    FACTOR = None
+
+    @classmethod
+    def _transform(cls, df):
+        return _normalizer(df, cls.FOCUS_COL, cls.UNITS_COL, cls.FOCUS_UNITS,
+                           cls.FACTOR)
+
+
+####
+# Begin definition of the different transformation objects
+####
+
+
 class BMI(Transformer):
-    REQUIRED_COLUMNS = frozenset([WEIGHT_KG, HEIGHT_CM])
+    REQUIRED_COLUMNS = frozenset([HOST_WEIGHT, HOST_HEIGHT])
     COLUMN_NAME = BMI_
 
     @classmethod
     def _transform(cls, df):
         # weight in kilograms / (height in meters)^2
-        weight = pd.to_numeric(df[WEIGHT_KG], errors='coerce')
-        height = pd.to_numeric(df[HEIGHT_CM], errors='coerce')
+        weight = pd.to_numeric(df[HOST_WEIGHT], errors='coerce')
+        height = pd.to_numeric(df[HOST_HEIGHT], errors='coerce')
         height /= 100  # covert to meters
         height *= height  #
 
@@ -81,10 +163,10 @@ class BMI(Transformer):
         return series
 
 
-class AgeYears(Transformer):
+class HostAge(Transformer):
     REQUIRED_COLUMNS = frozenset([BIRTH_YEAR, BIRTH_MONTH,
                                   COLLECTION_TIMESTAMP])
-    COLUMN_NAME = AGE_YEARS
+    COLUMN_NAME = HOST_AGE
 
     @classmethod
     def _transform(cls, df):
@@ -120,8 +202,43 @@ class AgeYears(Transformer):
         return series
 
 
+class HostAgeNormalizedYears(Transformer):
+    REQUIRED_COLUMNS = frozenset([HOST_AGE, ])
+    COLUMN_NAME = HOST_AGE_NORMALIZED_YEARS
+
+    @classmethod
+    def _transform(cls, df):
+        return df[HOST_AGE]
+
+
+class Lifestage(Transformer):
+    REQUIRED_COLUMNS = frozenset([HOST_AGE, ])
+    COLUMN_NAME = LIFESTAGE
+
+    @classmethod
+    def _transform(cls, df):
+        # this bounds are what was used by microsetta-processing
+        bounds = [("Infant", 0, 3),
+                  ("Child", 3, 13),
+                  ("Teen", 13, 20),
+                  ("Adult", 20, 70),
+                  ("Elderly", 70, 123)]
+
+        age_years = pd.to_numeric(df[HOST_AGE], errors='coerce')
+        lifestage = cls.basis(df.index)
+
+        for label, lower, upper in bounds:
+            # this bounds checking is consistent with that used for metadata
+            # pulldown in labadmin where the lowerbound is inclusive and
+            # upperbound is exclusive.
+            positions = (age_years >= lower) & (age_years < upper)
+            lifestage.loc[positions] = label
+
+        return lifestage
+
+
 class AgeCat(Transformer):
-    REQUIRED_COLUMNS = frozenset([AGE_YEARS, ])
+    REQUIRED_COLUMNS = frozenset([HOST_AGE, ])
     COLUMN_NAME = AGE_CAT
 
     @classmethod
@@ -138,7 +255,7 @@ class AgeCat(Transformer):
                   ('60s', 60, 70),
                   ('70+', 70, 123)]
 
-        age_years = pd.to_numeric(df[AGE_YEARS], errors='coerce')
+        age_years = pd.to_numeric(df[HOST_AGE], errors='coerce')
         age_cat = cls.basis(df.index)
 
         for label, lower, upper in bounds:
@@ -230,80 +347,75 @@ class Sex(Transformer):
         return series
 
 
-def _normalizer(df, focus_col, units_col, units_value, factor):
-    # get our columns
-    focus = pd.to_numeric(df[focus_col], errors='coerce')
-    units = df[units_col]
-
-    # operate on a copy as to retain non-unit focus values (e.g., values
-    # already expressed as centimeters
-    result = focus.copy()
-
-    # anything negative is weird so kill it
-    result[result < 0] = None
-
-    # figure out what positions are safe to operate on
-    not_null_map = Transformer.not_null_map(result, units)
-
-    # take entries like where either focus or units are null and kill them
-    result.loc[not_null_map[~not_null_map].index] = None
-
-    # reduce to only those safe to operate on
-    focus_not_null = result[not_null_map]
-    units_not_null = units[not_null_map]
-    focus_adj = focus_not_null.loc[units_not_null == units_value]
-
-    # adjust the indices that need adjustment
-    result.loc[focus_adj.index] = focus_adj * factor
-
-    return result
+class RenameHostWeight(Rename):
+    SRC = WEIGHT_KG
+    DST = HOST_WEIGHT
 
 
-class _Normalize(Transformer):
-    FOCUS_COL = None
-    FOCUS_UNITS = None
-    UNITS_COL = None
-    FACTOR = None
-
-    @classmethod
-    def _transform(cls, df):
-        return _normalizer(df, cls.FOCUS_COL, cls.UNITS_COL, cls.FOCUS_UNITS,
-                           cls.FACTOR)
+class RenameHostWeightUnits(Rename):
+    SRC = WEIGHT_UNITS
+    DST = HOST_WEIGHT_UNITS
 
 
-class NormalizeHeight(_Normalize):
-    REQUIRED_COLUMNS = frozenset([HEIGHT_UNITS, HEIGHT_CM])
-    COLUMN_NAME = HEIGHT_CM
+class RenameHostHeight(Rename):
+    SRC = HEIGHT_CM
+    DST = HOST_HEIGHT
+
+
+class RenameHostHeightUnits(Rename):
+    SRC = HEIGHT_UNITS
+    DST = HOST_HEIGHT_UNITS
+
+
+class ConstantHostAgeUnits(Constant):
+    REQUIRED_COLUMNS = frozenset([HOST_AGE, ])
+    COLUMN_NAME = HOST_AGE_UNITS
+    VALUE = HOST_AGE_UNIT_VALUE
+
+
+class NormalizeHeight(Normalize):
+    REQUIRED_COLUMNS = frozenset([HOST_HEIGHT, HOST_HEIGHT_UNITS])
+    COLUMN_NAME = HOST_HEIGHT
 
     # after normalization to centimeters, we need to also update the
     # height_units column to reflect these values are now centimeters
-    EXISTING_UNITS_COL_UPDATE = (HEIGHT_UNITS, CENTIMETERS)
-    FOCUS_COL = HEIGHT_CM
-    UNITS_COL = HEIGHT_UNITS
+    EXISTING_UNITS_COL_UPDATE = (HOST_HEIGHT_UNITS, CENTIMETERS)
+    FOCUS_COL = HOST_HEIGHT
+    UNITS_COL = HOST_HEIGHT_UNITS
     FOCUS_UNITS = INCHES
     FACTOR = 2.54
 
 
-class NormalizeWeight(_Normalize):
-    REQUIRED_COLUMNS = frozenset([WEIGHT_UNITS, WEIGHT_KG])
-    COLUMN_NAME = WEIGHT_KG
+class NormalizeWeight(Normalize):
+    REQUIRED_COLUMNS = frozenset([HOST_WEIGHT_UNITS, HOST_WEIGHT])
+    COLUMN_NAME = HOST_WEIGHT
 
     # after normalization to kilograms, we need to also update the
     # weight_units column to reflect these values are now in kg
-    EXISTING_UNITS_COL_UPDATE = (WEIGHT_UNITS, KILOGRAMS)
-    FOCUS_COL = WEIGHT_KG
+    EXISTING_UNITS_COL_UPDATE = (HOST_WEIGHT_UNITS, KILOGRAMS)
+    FOCUS_COL = HOST_WEIGHT
     FOCUS_UNITS = POUNDS
-    UNITS_COL = WEIGHT_UNITS
+    UNITS_COL = HOST_WEIGHT_UNITS
     FACTOR = (1 / 2.20462)
 
 
 # transforms are order dependent as some entries (e.g., BMICat) depend
 # on the presence of a BMI column
-HUMAN_TRANSFORMS = (AgeYears, AgeCat, NormalizeWeight, NormalizeHeight,
-                    BMI, BMICat, AlcoholConsumption, Sex)
+HUMAN_TRANSFORMS = (ConstantHostAgeUnits, HostAge, AgeCat, NormalizeWeight,
+                    NormalizeHeight, BMI, BMICat, AlcoholConsumption, Sex,
+                    HostAgeNormalizedYears, Lifestage)
+
+# mapping from our historical survey structure to EBI compliance
+# which should be correct for all host types
+RENAMES = (RenameHostWeight, RenameHostWeightUnits, RenameHostHeight,
+           RenameHostHeightUnits)
 
 
-def apply_transforms(df, transforms):
+def apply_transforms(df, transforms, renames=RENAMES):
+    for rename in renames:
+        if rename.satisfies_requirements(df):
+            df = rename.apply(df)
+
     for transform in transforms:
         if transform.satisfies_requirements(df):
             # note: not using df.apply here as casts are needed on a
@@ -320,13 +432,13 @@ def apply_transforms(df, transforms):
             # NOTE: this operation can either change AN EXISTING column in the
             # DataFrame or ADD a column. Both are valid. Operations such as
             # the creation of "age_years" will CREATE a new column, whereas
-            # the normalization of "height_cm" will MODIFY an existing one.
+            # the normalization of "host_height" will MODIFY an existing one.
             df[transform.COLUMN_NAME] = series
 
             # update a an existing column if the transform needs to. An example
             # is with height, where once values are normalized to centimeters
-            # within the height_cm column, we need to then also modify the
-            # height_units column for all non-null height_cm entries as they
+            # within the host_height column, we need to then also modify the
+            # height_units column for all non-null host_height entries as they
             # are assured to be centimeters.
             if transform.EXISTING_UNITS_COL_UPDATE is not None:
                 column, value = transform.EXISTING_UNITS_COL_UPDATE

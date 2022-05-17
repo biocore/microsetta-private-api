@@ -543,7 +543,7 @@ def update_session_detail():
         # log what hopefully never occurs
         payload = ''.join(['%s : %s\n' % (repr(s), m)
                            for s, m in failed_sessions])
-        send_email("danielmcdonald@ucsd.edu", "pester_daniel",
+        send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
                    {"what": "Vioscreen sessions failed",
                     "content": payload},
                    EN_US)
@@ -551,6 +551,8 @@ def update_session_detail():
 
 @celery.task(ignore_result=True)
 def fetch_ffqs():
+    MAX_FETCH_SIZE = 100
+
     vio_api = VioscreenAdminAPI(perform_async=False)
 
     # obtain our current unfinished sessions to check
@@ -558,25 +560,53 @@ def fetch_ffqs():
         r = VioscreenSessionRepo(t)
         not_represented = r.get_unfinished_sessions()
 
-    failed_sessions = []
-    for idx, sess in enumerate(not_represented, 1):
-        # Out of caution, we'll wrap the external resource interaction within
-        # a blanket try/except
+    # collect sessions to update
+    unable_to_update_session = []
+    updated_sessions = []
+    for sess in enumerate(not_represented):
+        # update session status information
         try:
-            ffq = vio_api.get_ffq(sess.sessionId)
+            session_detail = vio_api.session_detail(sess)
+        except:  # noqa
+            unable_to_update_session.append(sess)
+        else:
+            updated_sessions.append(session_detail)
+
+    # perform the update after we collect everything to reduce teh length of
+    # time we hold the transaction open
+    with Transaction() as t:
+        r = VioscreenSessionRepo(t)
+        for session_detail in updated_sessions:
+            r.upsert_session(session_detail)
+        t.commit()
+
+    with Transaction() as t:
+        vs = VioscreenSessionRepo(t)
+        ffqs_not_represented = vs.get_missing_ffqs()
+
+    # fetch ffq data for sessions we don't yet have it from
+    failed_ffqs = []
+    for sess in ffqs_not_represented[:MAX_FETCH_SIZE]:
+        try:
+            error, ffq = vio_api.get_ffq(sess.sessionId)
         except Exception as e:  # noqa
-            failed_sessions.append((sess.sessionId, str(e)))
+            failed_ffqs.append((sess.sessionId, str(e)))
             continue
 
-        with Transaction() as t:
-            vs = VioscreenRepo(t)
-            vs.insert_ffq(ffq)
-            t.commit()
+        if error:
+            failed_ffqs.append((sess.sessionId, repr(error)))
+        else:
+            # the call to get_ffq is long, and the data from many ffqs is
+            # large so let's insert as we go
+            with Transaction() as t:
+                vs = VioscreenRepo(t)
+                vs.insert_ffq(ffq)
+                t.commit()
 
-    if len(failed_sessions) > 0:
+    if len(failed_ffqs) > 0 or len(unable_to_update_session) > 0:
         payload = ''.join(['%s : %s\n' % (repr(s), m)
-                           for s, m in failed_sessions])
-        send_email("danielmcdonald@ucsd.edu", "pester_daniel",
+                           for s, m in failed_ffqs + unable_to_update_session])
+        send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
                    {"what": "Vioscreen ffq insert failed",
                     "content": payload},
                    EN_US)

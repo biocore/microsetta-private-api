@@ -1,7 +1,10 @@
 import unittest
-from microsetta_private_api.model.vioscreen import VioscreenSession
+from microsetta_private_api.model.vioscreen import (VioscreenSession,
+                                                    VioscreenPercentEnergy,
+                                                    VioscreenPercentEnergyComponent)  # noqa
 from microsetta_private_api.repo.transaction import Transaction
-from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
+from microsetta_private_api.repo.vioscreen_repo import (VioscreenSessionRepo,
+                                                        VioscreenPercentEnergyRepo)  # noqa
 from datetime import datetime
 from copy import copy
 
@@ -25,6 +28,14 @@ VIOSCREEN_SESSION = VioscreenSession(sessionId='a session',
                                      cultureCode='foo',
                                      created=_to_dt(1, 1, 1970),
                                      modified=_to_dt(1, 1, 1970))
+
+VIOSCREEN_PERCENT_ENERGY_COMPONENTS = [
+    VioscreenPercentEnergyComponent('%mfatot',
+                                    'foo', 'bar', '%', 10),
+]
+VIOSCREEN_PERCENT_ENERGY = \
+    VioscreenPercentEnergy(sessionId='a session',
+                           energy_components=VIOSCREEN_PERCENT_ENERGY_COMPONENTS)  # noqa
 
 
 class VioscreenSessions(unittest.TestCase):
@@ -180,6 +191,42 @@ class VioscreenSessions(unittest.TestCase):
             # one session is finished, and we only actually understand the
             # sematics of a single session anyway, so under our current
             # operating assumptions, this users FFQ is now complete
+            cur.execute("SELECT vio_id FROM ag.vioscreen_registry")
+            exp = {r[0] for r in cur.fetchall()}
+            obs = r.get_unfinished_sessions()
+            self.assertEqual({r.username for r in obs},
+                             exp - {VIOSCREEN_USERNAME1, })
+
+    def test_get_missing_ffqs(self):
+        with Transaction() as t:
+            cur = t.cursor()
+            r = VioscreenSessionRepo(t)
+            pr = VioscreenPercentEnergyRepo(t)
+
+            user1 = VIOSCREEN_SESSION.copy()
+            user1.username = VIOSCREEN_USERNAME1
+            r.upsert_session(user1)
+
+            # our user is not present as they do not have an enddate or
+            # finished status
+            obs = r.get_missing_ffqs()
+            self.assertNotIn(VIOSCREEN_USERNAME1, {o.username for o in obs})
+
+            user1.status = 'Finished'
+            user1.endDate = _to_dt(1, 1, 1971)
+            r.upsert_session(user1)
+
+            # our finished session does not have ffq data
+            obs = r.get_missing_ffqs()
+            self.assertIn(VIOSCREEN_USERNAME1, {o.username for o in obs})
+
+            # give our user a "completed" ffq
+            user1_pe = VIOSCREEN_PERCENT_ENERGY
+            pr.insert_percent_energy(user1_pe)
+            obs = r.get_missing_ffqs()
+            self.assertNotIn(VIOSCREEN_USERNAME1, {o.username for o in obs})
+
+            # our users record is finished so we shouldn't get it back
             cur.execute("SELECT vio_id FROM ag.vioscreen_registry")
             exp = {r[0] for r in cur.fetchall()}
             obs = r.get_unfinished_sessions()
