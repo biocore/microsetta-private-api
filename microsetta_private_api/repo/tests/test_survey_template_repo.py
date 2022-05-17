@@ -126,10 +126,10 @@ class SurveyTemplateTests(unittest.TestCase):
             template_repo = SurveyTemplateRepo(t)
             pffq_id = uuid.uuid4()
 
-            obs = template_repo.create_pffqsurvey_entry(TEST2_ACCOUNT_ID,
+            created_row_uuid = template_repo.create_pffqsurvey_entry(TEST2_ACCOUNT_ID,
                                                         TEST2_SOURCE_ID,
                                                         pffq_id)
-            self.assertTrue(obs)
+            self.assertEqual(pffq_id, created_row_uuid)
             t.rollback()
 
     def test_set_myfoodrepo_cannot_assign_new_id(self):
