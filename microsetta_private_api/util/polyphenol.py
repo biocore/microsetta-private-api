@@ -1,5 +1,3 @@
-import uuid
-
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
@@ -9,11 +7,6 @@ class MissingLangTagError(Exception):
 
     def __repr__(self,):
         return r'%s' % self.error_string
-
-
-def gen_pffq_id():
-    # generate the pffq id locally and return it as a string
-    return str(uuid.uuid4())
 
 
 # RULE IS: transaction DB is done

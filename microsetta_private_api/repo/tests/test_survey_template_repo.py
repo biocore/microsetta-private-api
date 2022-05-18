@@ -128,10 +128,6 @@ class SurveyTemplateTests(unittest.TestCase):
             created_row_uuid = template_repo.create_pffqsurvey_entry(
                 TEST2_ACCOUNT_ID, TEST2_SOURCE_ID)
             try:
-                print(type(created_row_uuid))
-                print(dir(created_row_uuid))
-                print(created_row_uuid.version)
-                print(created_row_uuid)
                 uuid.UUID(str(created_row_uuid), version=4)
                 self.assertTrue(True)
             except ValueError:
