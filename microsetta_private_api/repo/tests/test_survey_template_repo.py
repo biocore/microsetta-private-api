@@ -125,10 +125,18 @@ class SurveyTemplateTests(unittest.TestCase):
     def test_set_pffqsurvey_id_valid(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
-            pffq_id = uuid.uuid4()
             created_row_uuid = template_repo.create_pffqsurvey_entry(
-                TEST2_ACCOUNT_ID, TEST2_SOURCE_ID, pffq_id)
-            self.assertEqual(pffq_id, created_row_uuid)
+                TEST2_ACCOUNT_ID, TEST2_SOURCE_ID)
+            try:
+                print(type(created_row_uuid))
+                print(dir(created_row_uuid))
+                print(created_row_uuid.version)
+                print(created_row_uuid)
+                uuid.UUID(str(created_row_uuid), version=4)
+                self.assertTrue(True)
+            except ValueError:
+                print('Error')
+                self.assertTrue(False)
             t.rollback()
 
     def test_polyphenol_missing_lang_tag(self):

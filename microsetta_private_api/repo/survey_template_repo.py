@@ -3,6 +3,7 @@ from werkzeug.exceptions import NotFound
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api import localization
 from microsetta_private_api.repo.base_repo import BaseRepo
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.survey_template import SurveyTemplate, \
     SurveyTemplateLinkInfo
 from microsetta_private_api.model.survey_template_group import \
@@ -286,7 +287,7 @@ class SurveyTemplateRepo(BaseRepo):
                         (pffq_url, pffq_id))
             return True
 
-    def create_pffqsurvey_entry(self, account_id, source_id, pffq_id):
+    def create_pffqsurvey_entry(self, account_id, source_id):
         """Create a pffqsurvey entry
 
         Parameters
@@ -308,11 +309,14 @@ class SurveyTemplateRepo(BaseRepo):
 
             psycopg2.extras.register_uuid()
             cur.execute("""INSERT INTO pffqsurvey_registry (account_id,
-                                                            source_id,
-                                                            pffq_survey_id)
-                            VALUES (%s, %s, %s)""",
-                        (account_id, source_id, pffq_id))
-        return pffq_id
+                                                            source_id)
+                            VALUES (%s, %s) RETURNING pffq_survey_id""",
+                        (account_id, source_id))
+            pffqsurvey_id = cur.fetchone()[0]
+            if pffqsurvey_id is None:
+                raise RepoException("Error creating pffqsurvey entry")
+            else:
+                return pffqsurvey_id
 
     def set_myfoodrepo_id(self, account_id, source_id, mfr_id):
         """Set the MyFoodRepo ID of a registry entry
