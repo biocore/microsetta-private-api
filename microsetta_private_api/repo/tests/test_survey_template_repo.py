@@ -135,12 +135,24 @@ class SurveyTemplateTests(unittest.TestCase):
                 self.assertTrue(False)
             t.rollback()
 
+    def test_polyphenol_default_url_study(self):
+        """testing for default study as Microsetta"""
+
+        pffq_id = uuid.uuid4()
+        survey_url = polyphenol.gen_survey_url(pffq_id,
+                                               TEST2_ACCOUNT_ID,
+                                               TEST2_SOURCE_ID,
+                                               language_tag='us_en')
+        default_study = survey_url.split('=').pop()
+        self.assertEqual(default_study, 'Microsetta')
+
     def test_polyphenol_missing_lang_tag(self):
         """testing missing lang tag error"""
 
         try:
             pffq_id = uuid.uuid4()
-            polyphenol.gen_survey_url(pffq_id)
+            polyphenol.gen_survey_url(pffq_id,
+                                      TEST2_ACCOUNT_ID, TEST2_SOURCE_ID)
         except polyphenol.MissingLangTagError as MLTerror:
             error_string = MLTerror.args[0]
             self.assertEqual(error_string, 'There is no language tag set')

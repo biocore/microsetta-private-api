@@ -406,7 +406,7 @@ class IntegrationTests(TestCase):
         # take Polyphenol
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/10003'
-            '?language_tag=en_US&vioscreen_ext_sample_id=%s'
+            '?language_tag=en_US'
             '&survey_redirect_url=http://foo.bar' %
             (ACCT_ID, bobo['source_id'], MOCK_SAMPLE_ID),
             headers=MOCK_HEADERS
