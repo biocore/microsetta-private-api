@@ -271,7 +271,7 @@ class IntegrationTests(TestCase):
                     # be deleted (FK source_id in pffqsurvey_registry)
                     source_repo.delete_pffq_row(ACCT_ID, source.id)
                 except RepoException as repo_err:
-                    print(f'Repo error trying to delete pffq row {repo_err}')
+                    print(f'Repo error trying to delete row {repo_err}')
                 source_repo.delete_source(ACCT_ID, source.id)
             acct_repo.delete_account(ACCT_ID)
 
@@ -406,24 +406,6 @@ class IntegrationTests(TestCase):
         )
         check_response(resp)
         return bobo
-
-    def test_bobo_takes_pffq_survey_default_study(self):
-        # take Polyphenol survey and test for default study
-        # TODO get the source_id: try using
-        # HUMAND_ID
-        resp = self.client.get(
-            '/api/accounts/%s/sources/%s/survey_templates/10003'
-            '?language_tag=en_US'
-            '&survey_redirect_url=http://foo.bar' %
-            (ACCT_ID, HUMAN_ID),
-            headers=MOCK_HEADERS
-        )
-        check_response(resp)
-        data = json.loads(resp.data)
-        url = data['survey_template_text']['url']
-        submitted_arguments = parse_qs(urlparse(url).query)
-        self.assertEqual(submitted_arguments['study'], ['Microsetta'])
-        self.assertEqual(submitted_arguments['country'], ['en_us'])
 
     def test_bobo_takes_vioscreen(self):
         bobo = self._bobo_to_claim_a_sample()
@@ -1590,6 +1572,40 @@ class IntegrationTests(TestCase):
         self.assertIn("QQBritannia", str(resp_gb.data),
                       "String inserted into consent doc during test setup"
                       "not found (en_GB)")
+
+    def test_zbobo_takes_pffq_survey_default_study(self):
+        # take Polyphenol survey and test for default study
+        # TODO get the source_id: try using
+        # HUMAND_ID
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/10003'
+            '?language_tag=en_US'
+            '&survey_redirect_url=http://foo.bar' %
+            (ACCT_ID, HUMAN_ID),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+        data = json.loads(resp.data)
+        url = data['survey_template_text']['url']
+        submitted_arguments = parse_qs(urlparse(url).query)
+        self.assertEqual(submitted_arguments['study'], ['Microsetta'])
+        self.assertEqual(submitted_arguments['country'], ['en_us'])
+
+        # verify we err if we attempt to answer the survey. an "answer" here is
+        # undefined
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys'
+            '?language_tag=en_US' %
+            (ACCT_ID, HUMAN_ID),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "survey_template_id": 10003,
+                    "survey_text": {'key': 'stuff'}
+                }),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp, 404)
 
 
 def _create_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
