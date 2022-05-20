@@ -130,7 +130,8 @@ def _remote_survey_url_pffqsurvey(transaction, account_id, source_id,
 
     if pffq_id is None:
         pffq_id = st_repo.create_pffqsurvey_entry(account_id, source_id)
-    pffq_url = polyphenol.gen_survey_url(pffq_id, language_tag)
+    pffq_url = polyphenol.gen_survey_url(pffq_id, account_id, source_id,
+                                         language_tag)
     st_repo.update_url_pffqsurvey_registry(pffq_url, pffq_id)
     st_repo.set_pffqsurvey_id_into_ag_login_surveys(account_id, source_id,
                                                     pffq_id)
