@@ -25,13 +25,19 @@ def gen_survey_url(pffq_id, account_id, source_id, language_tag=None):
                                                     source_id)
         if len(samples) > 0:
             for s in samples:
-                if "THDMI" in s.sample_projects:
-                    study = 'THDMI'
-                elif "American Gut Project" in s.sample_projects:
-                    print('got AGP project')  # TODO remove this line
-                else:
-                    print('leave study as default')
+                for sample_project in s.sample_projects:
+                    # check if sample is associated with thdmi
+                    if sample_project.startswith('THDMI'):
+                        study = 'THDMI'
+                    else:
+                        print('leave study as default')
         else:
+            # TODO
+            '''Per Slack/Se Jin:
+                For THDMI Spain, we would just need to add additional
+                messaging that if they would like to take the polyphenol
+                survey, they should do so after claiming a sample.
+            '''
             pass  # leave as default study
     if language_tag is None:
         raise MissingLangTagError('There is no language tag set')
