@@ -5,6 +5,7 @@ import pytest
 import werkzeug
 from werkzeug.exceptions import Unauthorized
 from urllib.parse import urlparse, parse_qs
+from microsetta_private_api.exceptions import RepoException
 
 import microsetta_private_api.server
 from microsetta_private_api.localization import LANG_SUPPORT, \
@@ -265,6 +266,12 @@ class IntegrationTests(TestCase):
                 for survey_id in answers:
                     survey_answers_repo.delete_answered_survey(ACCT_ID,
                                                                survey_id)
+                try:
+                    # delete the pffq_survey_id so the the source can
+                    # be deleted (FK source_id in pffqsurvey_registry)
+                    source_repo.delete_pffq_row(ACCT_ID, source.id)
+                except RepoException as repo_err:
+                    print(f'Repo error trying to delete pffq row {repo_err}')
                 source_repo.delete_source(ACCT_ID, source.id)
             acct_repo.delete_account(ACCT_ID)
 
@@ -399,35 +406,25 @@ class IntegrationTests(TestCase):
         )
         check_response(resp)
         return bobo
-    '''
-    def test_bobo_takes_pffq_survey(self):
-        bobo = self._bobo_to_claim_a_sample()
 
-        # take Polyphenol
+    def test_bobo_takes_pffq_survey_default_study(self):
+        # take Polyphenol survey and test for default study
+        # TODO get the source_id: try using
+        # HUMAND_ID
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/10003'
             '?language_tag=en_US'
             '&survey_redirect_url=http://foo.bar' %
-            (ACCT_ID, bobo['source_id'], MOCK_SAMPLE_ID),
+            (ACCT_ID, HUMAN_ID),
             headers=MOCK_HEADERS
         )
         check_response(resp)
         data = json.loads(resp.data)
         url = data['survey_template_text']['url']
         submitted_arguments = parse_qs(urlparse(url).query)
-        self.assertEqual(submitted_arguments['study'], ['THDMI'])
+        self.assertEqual(submitted_arguments['study'], ['Microsetta'])
         self.assertEqual(submitted_arguments['country'], ['en_us'])
 
-        try:
-            resp = self.client.delete(
-                '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
-                (ACCT_ID, bobo['source_id'], MOCK_SAMPLE_ID),
-                headers=MOCK_HEADERS
-            )
-            check_response(resp)
-        except Exception as error:
-            print(f'got err as: {error}')
-    '''
     def test_bobo_takes_vioscreen(self):
         bobo = self._bobo_to_claim_a_sample()
 

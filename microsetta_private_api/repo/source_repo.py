@@ -202,6 +202,16 @@ class SourceRepo(BaseRepo):
                                     "are associated with it") from e
             raise RepoException("Error deleting source") from e
 
+    def delete_pffq_row(self, account_id, source_id):
+        try:
+            with self._transaction.cursor() as cur:
+                cur.execute("DELETE FROM pffqsurvey_registry WHERE source_id "
+                            " = %s AND account_id = %s",
+                            (source_id, account_id))
+                return cur.rowcount == 1
+        except psycopg2.errors.ForeignKeyViolation as e:
+            raise RepoException("Error deleting pffq row") from e
+
     def scrub(self, account_id, source_id):
         """Replace identifying information with scrubbed text
 
