@@ -29,6 +29,7 @@ def gen_survey_url(pffq_id, account_id, source_id, language_tag=None):
                     # check if sample is associated with thdmi
                     if sample_project.startswith('THDMI'):
                         study = 'THDMI'
+                        break
                     else:
                         print('leave study as default')
         else:

@@ -1573,15 +1573,18 @@ class IntegrationTests(TestCase):
                       "String inserted into consent doc during test setup"
                       "not found (en_GB)")
 
-    def test_zbobo_takes_pffq_survey_default_study(self):
+    # @pytest.mark.skip(reason="pffq test breaks the testing")
+    def test_bobo_takes_pffq_survey_default_study(self):
         # take Polyphenol survey and test for default study
         # TODO get the source_id: try using
         # HUMAND_ID
+        bobo = self._bobo_to_claim_a_sample()
+
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/10003'
             '?language_tag=en_US'
             '&survey_redirect_url=http://foo.bar' %
-            (ACCT_ID, HUMAN_ID),
+            (ACCT_ID, bobo['source_id']),
             headers=MOCK_HEADERS
         )
         check_response(resp)
