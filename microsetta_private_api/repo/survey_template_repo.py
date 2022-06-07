@@ -69,6 +69,12 @@ class SurveyTemplateRepo(BaseRepo):
             "MyFoodRepo Diet Tracking",
             "1.0",
             "remote"
+        ),
+        7: SurveyTemplateLinkInfo(
+            7,
+            "cooking oils and oxalate-rich foods",
+            "1.0",
+            "local"
         )
     }
 
