@@ -58,6 +58,12 @@ class SurveyTemplateRepo(BaseRepo):
             "1.0",
             "local"
         ),
+        7: SurveyTemplateLinkInfo(
+            7,
+            "cooking oils and oxalate-rich foods",
+            "1.0",
+            "local"
+        ),
         VIOSCREEN_ID: SurveyTemplateLinkInfo(
             VIOSCREEN_ID,
             "Vioscreen Food Frequency Questionnaire",
@@ -69,13 +75,8 @@ class SurveyTemplateRepo(BaseRepo):
             "MyFoodRepo Diet Tracking",
             "1.0",
             "remote"
-        ),
-        7: SurveyTemplateLinkInfo(
-            7,
-            "cooking oils and oxalate-rich foods",
-            "1.0",
-            "local"
         )
+       
     }
 
     def __init__(self, transaction):
