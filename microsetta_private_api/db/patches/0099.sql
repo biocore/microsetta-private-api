@@ -47,7 +47,7 @@ VALUES (242,
 
 
 INSERT INTO ag.survey_question (survey_question_id, american, british, question_shortname, retired, spanish, french, chinese) 
-VALUES (242,
+VALUES (243,
 'On average, how often do you consume oxalate-rich foods, such as spinach, Swiss chard, beetroot or beet greens, okra, quinoa, amaranth, buckwheat, wheat bran or germ, Bran cereal, chia seeds, rhubarb, dark chocolate or cocoa powder (>70%), and nuts such as almonds, peanuts, pecans, cashews, and hazelnuts?',
 'On average, how often do you consume oxalate-rich foods, such as spinach, Swiss chard, beetroot or beet greens, okra, quinoa, amaranth, buckwheat, wheat bran or germ, Bran cereal, chia seeds, rhubarb, dark chocolate or cocoa powder (>70%), and nuts such as almonds, peanuts, pecans, cashews, and hazelnuts?',
 'OILS_FREQUENCY_OXALATE',
@@ -58,7 +58,7 @@ VALUES (242,
 
 
 INSERT INTO ag.survey_question (survey_question_id, american, british, question_shortname, retired, spanish, french, chinese) 
-VALUES (243,
+VALUES (244,
 'In a given week, how often do you consume soy products such as textured vegetable protein, tofu, tempeh, soybean flour, soy nuts, soy butter, soybeans, and miso (i.e. fermented soy)?',
 'In a given week, how often do you consume soy products such as textured vegetable protein, tofu, tempeh, soybean flour, soy nuts, soy butter, soybeans, and miso (i.e. fermented soy)?',
 'OILS_FREQUENCY_SOY',
@@ -74,3 +74,48 @@ INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index)
 INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (6, 242, 1003);
 INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (6, 243, 1004);
 INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (6, 244, 1005);
+
+
+INSERT INTO ag.survey_question_response_type(survey_question_id, survey_response_type) VALUES (239, 'SINGLE');
+INSERT INTO ag.survey_question_response_type(survey_question_id, survey_response_type) VALUES (240, 'SINGLE');
+INSERT INTO ag.survey_question_response_type(survey_question_id, survey_response_type) VALUES (241, 'SINGLE');
+INSERT INTO ag.survey_question_response_type(survey_question_id, survey_response_type) VALUES (242, 'SINGLE');
+INSERT INTO ag.survey_question_response_type(survey_question_id, survey_response_type) VALUES (243, 'SINGLE');
+INSERT INTO ag.survey_question_response_type(survey_question_id, survey_response_type) VALUES (244, 'SINGLE');
+
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (239, 'Never', 0);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (239, 'Rarely (less than once/week)', 1);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (239, 'Occasionally (1-2 times/week)', 2);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (239, 'Regularly (3-5 times/week)', 3);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (239, 'Daily', 4);
+
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (240, 'Never', 0);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (240, 'Rarely (less than once/week)', 1);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (240, 'Occasionally (1-2 times/week)', 2);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (240, 'Regularly (3-5 times/week)', 3);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (240, 'Daily', 4);
+
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (241, 'Never', 0);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (241, 'Rarely (less than once/week)', 1);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (241, 'Occasionally (1-2 times/week)', 2);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (241, 'Regularly (3-5 times/week)', 3);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (241, 'Daily', 4);
+
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (242, 'Never', 0);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (242, 'Rarely (less than once/week)', 1);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (242, 'Occasionally (1-2 times/week)', 2);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (242, 'Regularly (3-5 times/week)', 3);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (242, 'Daily', 4);
+
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (243, 'Never', 0);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (243, 'Rarely (less than once/week)', 1);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (243, 'Occasionally (1-2 times/week)', 2);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (243, 'Regularly (3-5 times/week)', 3);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (243, 'Daily', 4);
+
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (244, 'Never', 0);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (244, 'Rarely (less than once/week)', 1);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (244, 'Occasionally (1-2 times/week)', 2);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (244, 'Regularly (3-5 times/week)', 3);
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (244, 'Daily', 4);
+
