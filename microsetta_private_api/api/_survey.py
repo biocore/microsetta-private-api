@@ -151,7 +151,8 @@ def read_survey_template(account_id, source_id, survey_template_id,
             return jsonify(info), 200
 
         # For local surveys, we generate the json representing the survey
-        survey_template = survey_template_repo.get_survey_template(survey_template_id, language_tag)
+        survey_template = survey_template_repo.get_survey_template(
+            survey_template_id, language_tag)
         info.survey_template_text = vue_adapter.to_vue_schema(survey_template)
 
         # TODO FIXME HACK: We need a better way to enforce validation on fields
