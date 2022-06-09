@@ -75,8 +75,7 @@ class SurveyTemplateRepo(BaseRepo):
             "MyFoodRepo Diet Tracking",
             "1.0",
             "remote"
-        )
-       
+        )  
     }
 
     def __init__(self, transaction):
