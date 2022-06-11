@@ -104,6 +104,8 @@ def fuzz_field(field, model):
         model[field['id']] = field['values'][0]
     if field['type'] == 'checklist':
         model[field['id']] = [field['values'][0]]
+    if field['type'] == "radios":
+        model[field['id']] = field['values'][0]
 
 
 def fuzz_form(form):
@@ -564,7 +566,7 @@ class IntegrationTests(TestCase):
             # 10001 and 10002 are non-local surveys
             if chosen_survey in (10001, 10002):
                 continue
-
+            
             resp = self.client.get(
                 '/api/accounts/%s/sources/%s/survey_templates/%s'
                 '?language_tag=en_US' %
@@ -572,7 +574,6 @@ class IntegrationTests(TestCase):
                 headers=MOCK_HEADERS
             )
             check_response(resp)
-
             model = fuzz_form(json.loads(resp.data)["survey_template_text"])
             resp = self.client.post(
                 '/api/accounts/%s/sources/%s/surveys?language_tag=en_US'
