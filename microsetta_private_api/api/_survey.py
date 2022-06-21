@@ -122,6 +122,9 @@ def _remote_survey_url_polyphenol_ffq(transaction, account_id, source_id,
                                       language_tag):
     st_repo = SurveyTemplateRepo(transaction)
 
+    # right now, ID won't exist
+    # future plans to allow surveys to behave more flexibly will use this
+    # functionality to allow participants to re-join in-progress surveys
     polyphenol_ffq_id, study = \
         st_repo.get_polyphenol_ffq_id_if_exists(account_id, source_id)
 
