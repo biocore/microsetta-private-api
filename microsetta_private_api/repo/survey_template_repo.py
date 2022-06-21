@@ -382,7 +382,7 @@ class SurveyTemplateRepo(BaseRepo):
         return maximum_slots
 
     def create_polyphenol_ffq_entry(self, account_id, source_id,
-                                     language_tag, study):
+                                    language_tag, study):
         """Return a newly created Polyphenol FFQ ID
 
         Parameters

@@ -119,7 +119,7 @@ def _remote_survey_url_myfoodrepo(transaction, account_id, source_id,
 
 
 def _remote_survey_url_polyphenol_ffq(transaction, account_id, source_id,
-                                       language_tag):
+                                      language_tag):
     st_repo = SurveyTemplateRepo(transaction)
 
     polyphenol_ffq_id, study = \

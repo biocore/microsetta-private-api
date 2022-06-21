@@ -54,12 +54,12 @@ class SurveyAnswersRepo(BaseRepo):
 
                 # see if it's the Polyphenol FFQ
                 try:
-                    survey_id_uuid = uuid.UUID(survey_answers_id)
+                    uuid.UUID(survey_answers_id)
                     cur.execute("""SELECT EXISTS (
                                    SELECT polyphenol_ffq_id
                                    FROM ag.polyphenol_ffq_registry
                                    WHERE polyphenol_ffq_id=%s)""",
-                                (survey_id_uuid, ))
+                                (survey_answers_id, ))
                     if cur.fetchone()[0] is True:
                         return SurveyTemplateRepo.POLYPHENOL_FFQ_ID, None
                 except ValueError:
@@ -338,13 +338,13 @@ class SurveyAnswersRepo(BaseRepo):
                         "account_id = %s AND myfoodrepo_id = %s",
                         (acct_id, survey_id))
             try:
-                survey_id_uuid = uuid.UUID(survey_id)
+                uuid.UUID(survey_id)
                 cur.execute("UPDATE polyphenol_ffq_registry SET "
                             "deleted = true, "
                             "source_id = NULL "
                             "WHERE "
                             "account_id = %s AND polyphenol_ffq_id = %s",
-                            (acct_id, survey_id_uuid))
+                            (acct_id, survey_id))
             except ValueError:
                 # Note: we don't care about the error, just means it's not
                 # the Polyphenol FFQ
@@ -409,14 +409,14 @@ class SurveyAnswersRepo(BaseRepo):
                         "myfoodrepo_id = %s",
                         (account_id, source_id, survey_id))
             try:
-                survey_id_uuid = uuid.UUID(survey_id)
+                uuid.UUID(survey_id)
                 cur.execute("UPDATE polyphenol_ffq_registry "
                             "SET deleted = true "
                             "WHERE "
                             "account_id = %s AND "
                             "source_id = %s AND "
                             "polyphenol_ffq_id = %s",
-                            (account_id, source_id, survey_id_uuid))
+                            (account_id, source_id, survey_id))
             except ValueError:
                 # Note: we don't care about the error, just means it's not
                 # the Polyphenol FFQ
