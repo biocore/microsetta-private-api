@@ -118,7 +118,7 @@ def _remote_survey_url_myfoodrepo(transaction, account_id, source_id,
     return myfoodrepo.gen_survey_url(mfr_id)
 
 
-def _remote_survey_url_polyphenol_ffq (transaction, account_id, source_id,
+def _remote_survey_url_polyphenol_ffq(transaction, account_id, source_id,
                                        language_tag):
     st_repo = SurveyTemplateRepo(transaction)
 
@@ -140,7 +140,7 @@ def _remote_survey_url_polyphenol_ffq (transaction, account_id, source_id,
             for s_p in s.sample_projects:
                 if s_p.startswith('THDMI'):
                     study = 'THDMI'
-                    break;
+                    break
 
         polyphenol_ffq_id = st_repo.create_polyphenol_ffq_entry(account_id,
                                                                 source_id,
@@ -148,6 +148,7 @@ def _remote_survey_url_polyphenol_ffq (transaction, account_id, source_id,
                                                                 study)
 
     return polyphenol_ffq.gen_ffq_url(polyphenol_ffq_id, study, language_tag)
+
 
 def read_survey_template(account_id, source_id, survey_template_id,
                          language_tag, token_info, survey_redirect_url=None,

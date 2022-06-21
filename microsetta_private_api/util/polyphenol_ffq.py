@@ -1,7 +1,7 @@
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
-def gen_ffq_url (polyphenol_ffq_id, study, language_tag):
+def gen_ffq_url(polyphenol_ffq_id, study, language_tag):
     language_tag = language_tag.lower()
 
     url = SERVER_CONFIG['polyphenol_ffq_url']

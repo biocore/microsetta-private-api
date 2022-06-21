@@ -381,7 +381,7 @@ class SurveyTemplateRepo(BaseRepo):
         maximum_slots = SERVER_CONFIG['myfoodrepo_slots']
         return maximum_slots
 
-    def create_polyphenol_ffq_entry (self, account_id, source_id,
+    def create_polyphenol_ffq_entry(self, account_id, source_id,
                                      language_tag, study):
         """Return a newly created Polyphenol FFQ ID
 
