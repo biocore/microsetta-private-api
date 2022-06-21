@@ -3,7 +3,8 @@ import uuid
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
-from psycopg2.errors import ForeignKeyViolation
+from psycopg2.errors import ForeignKeyViolation, InvalidTextRepresentation
+from microsetta_private_api.exceptions import RepoException
 
 
 # test identifiers with a vio ID
@@ -233,6 +234,51 @@ class SurveyTemplateTests(unittest.TestCase):
                                                             TEST1_SOURCE_ID)
             self.assertEqual(obs[0], "asubject")
             self.assertTrue(obs[1] is not None)
+
+    def test_create_polyphenol_ffq_entry_valid(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.create_polyphenol_ffq_entry(TEST1_ACCOUNT_ID,
+                                                            TEST1_SOURCE_ID,
+                                                            'en_US',
+                                                            'THDMI')
+            try:
+                uuid.UUID(obs)
+                valid_uuid_returned = True
+            except ValueError:
+                valid_uuid_returned = False
+            self.assertTrue(valid_uuid_returned)
+
+    def test_create_polyphenol_ffq_entry_invalid(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            with self.assertRaises(InvalidTextRepresentation):
+                obs = template_repo.create_polyphenol_ffq_entry(
+                    '',
+                    TEST1_SOURCE_ID,
+                    '',
+                    '')
+
+    def test_get_polyphenol_ffq_id_if_exists_true(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            test_pffq_id = \
+                template_repo.create_polyphenol_ffq_entry(TEST1_ACCOUNT_ID,
+                                                          TEST1_SOURCE_ID,
+                                                          'en_US',
+                                                          'THDMI')
+            obs = \
+                template_repo.get_polyphenol_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                              TEST1_SOURCE_ID)
+            self.assertEqual((test_pffq_id, 'THDMI'), obs)
+
+    def test_get_polyphenol_ffq_id_if_exists_false(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = \
+                template_repo.get_polyphenol_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                              TEST1_SOURCE_ID)
+            self.assertEqual(obs,(None,None))
 
     def test_create_vioscreen_id_valid(self):
         with Transaction() as t:

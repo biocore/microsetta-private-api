@@ -52,6 +52,15 @@ class SurveyAnswersRepo(BaseRepo):
                 if status is not None:
                     return SurveyTemplateRepo.VIOSCREEN_ID, status
 
+                # see if it's the Polyphenol FFQ
+                cur.execute("""SELECT EXISTS (
+                               SELECT polyphenol_ffq_id
+                               FROM ag.polyphenol_ffq_registry
+                               WHERE polyphenol_ffq_id=%s)""",
+                            (survey_answers_id, ))
+                if cur.fetchone()[0] is True:
+                    return SurveyTemplateRepo.POLYPHENOL_FFQ_ID, None
+
                 # see if it's myfoodrepo
                 cur.execute("""SELECT EXISTS (
                                    SELECT myfoodrepo_id
@@ -322,6 +331,12 @@ class SurveyAnswersRepo(BaseRepo):
                         "WHERE "
                         "account_id = %s AND myfoodrepo_id = %s",
                         (acct_id, survey_id))
+            cur.execute("UPDATE polyphenol_ffq_registry SET "
+                        "deleted = true, "
+                        "source_id = NULL "
+                        "WHERE "
+                        "account_id = %s AND polyphenol_ffq_id = %s",
+                        (acct_id, survey_id))
         return True
 
     def associate_answered_survey_with_sample(self, account_id, source_id,
@@ -365,7 +380,7 @@ class SurveyAnswersRepo(BaseRepo):
                         "barcode = %s AND "
                         "survey_id = %s",
                         (s.barcode, survey_id))
-            # Also delete from vioscreen and myfoodrepo registries
+            # Also delete from vioscreen, myfoodrepo and polyphenol registries
             cur.execute("UPDATE vioscreen_registry "
                         "SET deleted=true "
                         "WHERE "
@@ -380,6 +395,13 @@ class SurveyAnswersRepo(BaseRepo):
                         "account_id = %s AND "
                         "source_id = %s AND "
                         "myfoodrepo_id = %s",
+                        (account_id, source_id, survey_id))
+            cur.execute("UPDATE polyphenol_ffq_registry "
+                        "SET deleted = true "
+                        "WHERE "
+                        "account_id = %s AND "
+                        "source_id = %s AND "
+                        "polyphenol_ffq_id = %s",
                         (account_id, source_id, survey_id))
 
     def build_metadata_map(self):
