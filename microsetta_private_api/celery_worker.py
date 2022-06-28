@@ -5,5 +5,5 @@ from microsetta_private_api.admin.daklapack_polling import poll_dak_orders
 init_celery(celery, app.app)
 
 # Run any celery tasks that require initialization on worker start
-refresh_headers.delay()  # Initialize the vioscreen task with a token
+# refresh_headers.delay()  # Initialize the vioscreen task with a token
 poll_dak_orders.delay()  # check for orders

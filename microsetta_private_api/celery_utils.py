@@ -25,14 +25,14 @@ def init_celery(celery, app):
     # Set up "Celery Beat", events that run on a fixed time interval
     celery.conf.beat_schedule = {
         # Vioscreen tokens are good for an hour, refresh every 55 minutes
-        "refresh_vioscreen_token": {
-            "task": "microsetta_private_api.util.vioscreen.refresh_headers",
-            "schedule": 55 * 60
-        },
-        "update_vioscreen_sessions": {
-            "task": "microsetta_private_api.util.vioscreen.update_session_detail",  # noqa
-            "schedule": 60 * 60 * 24  # every 24 hours
-        },
+        # "refresh_vioscreen_token": {
+        #    "task": "microsetta_private_api.util.vioscreen.refresh_headers",
+        #    "schedule": 55 * 60
+        # },
+        # "update_vioscreen_sessions": {
+        #    "task": "microsetta_private_api.util.vioscreen.update_session_detail",  # noqa
+        #    "schedule": 60 * 60 * 24  # every 24 hours
+        # },
         "poll_daklapack_orders": {
             "task": "microsetta_private_api.admin.daklapack_polling.poll_dak_orders",  # noqa
             "schedule":  60 * 60 * 24  # every 24 hours
