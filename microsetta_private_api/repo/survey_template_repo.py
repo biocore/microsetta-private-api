@@ -13,6 +13,7 @@ from microsetta_private_api.model.survey_template_trigger import \
         SurveyTemplateTrigger
 import copy
 import secrets
+from microsetta_private_api.exceptions import RepoException
 
 from microsetta_private_api.repo.sample_repo import SampleRepo
 
@@ -21,6 +22,7 @@ class SurveyTemplateRepo(BaseRepo):
 
     VIOSCREEN_ID = 10001
     MYFOODREPO_ID = 10002
+    POLYPHENOL_FFQ_ID = 10003
     SURVEY_INFO = {
         1: SurveyTemplateLinkInfo(
             1,
@@ -67,6 +69,12 @@ class SurveyTemplateRepo(BaseRepo):
         MYFOODREPO_ID: SurveyTemplateLinkInfo(
             MYFOODREPO_ID,
             "MyFoodRepo Diet Tracking",
+            "1.0",
+            "remote"
+        ),
+        POLYPHENOL_FFQ_ID: SurveyTemplateLinkInfo(
+            POLYPHENOL_FFQ_ID,
+            "Polyphenol Food Frequency Questionnaire",
             "1.0",
             "remote"
         )
@@ -372,6 +380,75 @@ class SurveyTemplateRepo(BaseRepo):
         """
         maximum_slots = SERVER_CONFIG['myfoodrepo_slots']
         return maximum_slots
+
+    def create_polyphenol_ffq_entry(self, account_id, source_id,
+                                    language_tag, study):
+        """Return a newly created Polyphenol FFQ ID
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+        language_tag: str
+            The user's language tag
+        study: str
+            The study variable we'll pass to Danone's FFQ
+
+        Returns
+        -------
+        UUID
+            The newly created Polyphenol FFQ ID
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""INSERT INTO ag.polyphenol_ffq_registry
+                           (account_id, source_id, language_tag, study)
+                           VALUES (%s, %s, %s, %s)
+                           RETURNING polyphenol_ffq_id""",
+                        (account_id, source_id, language_tag, study))
+            polyphenol_ffq_id = cur.fetchone()[0]
+            if polyphenol_ffq_id is None:
+                raise RepoException("Error creating Polyphenol FFQ entry")
+            else:
+                # Put a survey into ag_login_surveys
+                cur.execute("INSERT INTO ag_login_surveys("
+                            "ag_login_id, "
+                            "survey_id, "
+                            "vioscreen_status, "
+                            "source_id) "
+                            "VALUES(%s, %s, %s, %s)",
+                            (account_id, polyphenol_ffq_id, None, source_id))
+
+                return polyphenol_ffq_id
+
+    def get_polyphenol_ffq_id_if_exists(self, account_id, source_id):
+        """Return a Polyphenol FFQ ID if one exists
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Returns
+        -------
+        (UUID, str) or (None, None)
+            The associated Polyphenol FFQ ID and study
+            It's impossible to find one without the other
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT polyphenol_ffq_id, study
+                           FROM ag.polyphenol_ffq_registry
+                           WHERE account_id=%s AND source_id=%s""",
+                        (account_id, source_id))
+            res = cur.fetchone()
+
+            if res is None:
+                return (None, None)
+            else:
+                return res
 
     def create_vioscreen_id(self, account_id, source_id,
                             vioscreen_ext_sample_id):
