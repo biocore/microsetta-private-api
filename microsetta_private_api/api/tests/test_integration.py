@@ -104,6 +104,8 @@ def fuzz_field(field, model):
         model[field['id']] = field['values'][0]
     if field['type'] == 'checklist':
         model[field['id']] = [field['values'][0]]
+    if field['type'] == "radios":
+        model[field['id']] = field['values'][0]
 
 
 def fuzz_form(form):
