@@ -37,7 +37,7 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [1, 3, 4, 5, 6,
+                           for x in [1, 3, 4, 5, 6, 7,
                                      SurveyTemplateRepo.VIOSCREEN_ID,
                                      SurveyTemplateRepo.MYFOODREPO_ID,
                                      SurveyTemplateRepo.POLYPHENOL_FFQ_ID]

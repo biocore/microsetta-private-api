@@ -60,6 +60,12 @@ class SurveyTemplateRepo(BaseRepo):
             "1.0",
             "local"
         ),
+        7: SurveyTemplateLinkInfo(
+            7,
+            "Cooking Oils and Oxalate-rich Foods",
+            "1.0",
+            "local"
+        ),
         VIOSCREEN_ID: SurveyTemplateLinkInfo(
             VIOSCREEN_ID,
             "Vioscreen Food Frequency Questionnaire",
