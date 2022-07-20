@@ -8,7 +8,8 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2021-06-10 13:58-0700\n"
-"PO-Revision-Date: 2021-06-11 17:03-0700\n"
+"PO-Revision-Date: 2022-07-20 13:33-0700\n"
+"Last-Translator: Edgar Diaz <ediaz@ucsd.edu>\n"
 "Language-Team: es_MX <LL@li.org>\n"
 "Language: es_MX\n"
 "MIME-Version: 1.0\n"
@@ -16,8 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.9.1\n"
-"Last-Translator: Edgar Diaz <ediaz@ucsd.edu>\n"
-"X-Generator: Poedit 3.0\n"
+"X-Generator: Poedit 3.1.1\n"
 
 #: templates/email/activation_email.jinja2:221
 msgid ""
@@ -25,7 +25,7 @@ msgid ""
 "will be shipping out your sample collection kit(s) soon."
 msgstr ""
 "Gracias por su interés y participación en The Microsetta Inititative. Pronto "
-"enviaremos su (s) kit (s) de recolección de muestras."
+"enviaremos su(s) kit(s) de recolección de muestras."
 
 #: templates/email/activation_email.jinja2:225
 msgid ""
@@ -36,19 +36,16 @@ msgstr ""
 "que pause su jornada. Puede registrarse ahora mismo para comenzar en "
 
 #: templates/email/activation_email.jinja2:225
-#, fuzzy
 msgid "using the following info:"
-msgstr "usando la siguiente información:"
+msgstr "utilizando la siguiente información:"
 
 #: templates/email/activation_email.jinja2:228
-#, fuzzy
 msgid "Email:"
 msgstr "Correo electrónico:"
 
 #: templates/email/activation_email.jinja2:229
-#, fuzzy
 msgid "Activation Code:"
-msgstr "Código de activación:"
+msgstr "Código de Activación:"
 
 #: templates/email/activation_email.jinja2:234
 msgid ""
@@ -70,22 +67,19 @@ msgstr "Si tiene alguna pregunta, por favor contáctenos a "
 #: templates/email/activation_email.jinja2:238
 #: templates/email/incorrect_sample_type.jinja2:239
 #: templates/email/sample_is_valid.jinja2:228
-#, fuzzy
 msgid "Thank you for supporting our project."
 msgstr "Gracias por apoyar nuestro proyecto."
 
 #: templates/email/activation_email.jinja2:242
 #: templates/email/incorrect_sample_type.jinja2:243
-#, fuzzy
 msgid "Sincerely,"
-msgstr "Atentamente,"
+msgstr "Cordialmente,"
 
 #: templates/email/activation_email.jinja2:245
 #: templates/email/incorrect_sample_type.jinja2:246
 #: templates/email/missing_sample_info.jinja2:273
 #: templates/email/no_associated_source.jinja2:276
 #: templates/email/sample_is_valid.jinja2:235
-#, fuzzy
 msgid "The Microsetta Team"
 msgstr "El equipo de Microsetta"
 
@@ -93,7 +87,6 @@ msgstr "El equipo de Microsetta"
 #: templates/email/missing_sample_info.jinja2:220
 #: templates/email/no_associated_source.jinja2:220
 #: templates/email/sample_is_valid.jinja2:220
-#, fuzzy
 msgid "Hello"
 msgstr "Hola"
 
@@ -106,12 +99,10 @@ msgstr ""
 "notamos que puede haber sido asignada incorrectamente."
 
 #: templates/email/incorrect_sample_type.jinja2:229
-#, fuzzy
 msgid "Marked"
-msgstr "Marcado"
+msgstr "Marcada"
 
 #: templates/email/incorrect_sample_type.jinja2:229
-#, fuzzy
 msgid "but appears to be"
 msgstr "pero parece ser"
 
@@ -193,7 +184,6 @@ msgstr ""
 
 #: templates/email/missing_sample_info.jinja2:272
 #: templates/email/no_associated_source.jinja2:275
-#, fuzzy
 msgid "Thank you,"
 msgstr "Gracias,"
 
@@ -226,7 +216,6 @@ msgstr ""
 "sitio web del participante haciendo clic o copiando el siguiente URL:"
 
 #: templates/email/no_associated_source.jinja2:245
-#, fuzzy
 msgid "Your account"
 msgstr "Su cuenta"
 
@@ -247,7 +236,6 @@ msgstr ""
 "la siguiente información para que podamos vincular la muestra a su fuente:"
 
 #: templates/email/no_associated_source.jinja2:272
-#, fuzzy
 msgid "If you have any questions, please reply to us at"
 msgstr "Si tiene alguna pregunta, por favor contáctenos a"
 
@@ -264,7 +252,6 @@ msgstr ""
 "actualización con un link a sus resultados."
 
 #: templates/email/sample_is_valid.jinja2:232
-#, fuzzy
 msgid "Kind regards,"
 msgstr "Saludos cordiales,"
 
