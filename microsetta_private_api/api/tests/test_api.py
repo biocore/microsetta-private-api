@@ -1802,6 +1802,37 @@ class SampleTests(ApiTests):
 
         # check response code
         self.assertEqual(200, post_resp.status_code)
+        # if sample date is less than 10 years
+        post_resp = self.client.put(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_datetime": "1990-07-21T17:32:28Z",
+                    "sample_notes": "Woowooooooo2",
+                    "sample_site": "Stool",
+                    "sample_project": "American Gut Project"
+                }),
+            headers=self.dummy_auth
+        )
+        # check response code
+        self.assertEqual(400, post_resp.status_code)
+
+        # if sample date is greater than 30 days
+        post_resp = self.client.put(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_datetime": "2200-07-21T17:32:28Z",
+                    "sample_notes": "Woowooooooo2",
+                    "sample_site": "Stool",
+                    "sample_project": "American Gut Project"
+                }),
+            headers=self.dummy_auth
+        )
+        # check response code
+        self.assertEqual(400, post_resp.status_code)
 
     def test_dissociate_sample_from_source_locked(self):
         dummy_acct_id, dummy_source_id = create_dummy_source(
