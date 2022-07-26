@@ -138,7 +138,7 @@ def update_sample_association(account_id, source_id, sample_id, body,
         now = datetime.now()
         lower_limit = datetime(now.year-10, now.month, now.day, now.hour, now.minute, now.second, now.microsecond, now.tzinfo)
         upper_limit = datetime(now.year, now.month + 1, now.day, now.hour, now.minute, now.second, now.microsecond, now.tzinfo)
-        if (sample_datetime < lower_limit) :
+        if (sample_datetime < lower_limit):
             raise BadRequest("Please select a date within the last 10 years.")
         if (sample_datetime > upper_limit):
             raise BadRequest("Please select a date within the next 30 days.")
