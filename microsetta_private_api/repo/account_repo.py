@@ -202,6 +202,25 @@ class AccountRepo(BaseRepo):
             # Unknown exception, re raise it.
             raise e
 
+    def request_remove_account(self, account_id):
+        with self._transaction.cursor() as cur:
+            sql = ("INSERT INTO delete_account_queue (account_id) VALUES"
+                   f" ('{account_id}')")
+            cur.execute(sql)
+            if cur.rowcount == 1:
+                self._transaction.commit()
+
+            return cur.rowcount == 1
+
+    def cancel_request_remove_account(self, account_id):
+        with self._transaction.cursor() as cur:
+            sql = (f"delete from delete_account_queue where account_id = '{account_id}'")
+            cur.execute(sql)
+            if cur.rowcount == 1:
+                self._transaction.commit()
+
+            return cur.rowcount == 1
+
     def delete_account(self, account_id):
         with self._transaction.cursor() as cur:
             cur.execute("DELETE FROM account WHERE account.id = %s",

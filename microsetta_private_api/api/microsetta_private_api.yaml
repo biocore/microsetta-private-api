@@ -168,6 +168,47 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/accounts/{account_id}/request/remove':
+    put:
+      operationId: microsetta_private_api.api.request_remove_account
+      tags:
+        - Account
+      summary: Request account to be removed
+      description: Request account to be removed
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '204':
+          description: Successfully requested for account to be removed
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
+    delete:
+      operationId: microsetta_private_api.api.cancel_request_remove_account
+      tags:
+        - Account
+      summary: Cancel request for account to be removed
+      description: Cancel request fo account to be removed
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      responses:
+        '204':
+          description: Successfully canceled request for account to be removed
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+         $ref: '#/components/responses/422UnprocessableEntity'
+
   '/accounts/{account_id}/email_match':
     get:
       operationId: microsetta_private_api.api.check_email_match
@@ -1920,7 +1961,7 @@ paths:
                 type: object
         '404':
           $ref: '#/components/responses/404NotFound'
-
+  
   '/admin/campaigns/list':
     get:
       operationId: microsetta_private_api.admin.admin_impl.list_campaigns
@@ -1937,6 +1978,43 @@ paths:
                 type: array
         '401':
           $ref: '#/components/responses/401Unauthorized'
+
+  '/admin/requests/account_removal/list':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.list_account_removal_requests
+      tags:
+        - Admin
+      summary: Return a list of all account removal requests
+      description: Return a list of all account removal requests
+      responses:
+        '200':
+          description: Array of account removal requests
+          content:
+            application/json:
+              schema:
+                type: array
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+    # TODO: Don't need these endpoints to end in list i think.
+    #'/admin/requests/account_removal/list':
+    #put:
+    #  operationId: microsetta_private_api.admin.admin_impl.cancel_account_removal_request
+    #  tags:
+    #    - Admin
+    #  summary: Cancel an existing account removal request
+    #  description: Cancel an existing account removal request
+    #  parameters:
+    #    - $ref: '#/components/parameters/account_id'
+    #  responses:
+    #    '200':
+    #      description: Successfully canceled account deletion
+    #      content:
+    #        application/json:
+    #          schema:
+    #            type: array
+    #    '401':
+    #      $ref: '#/components/responses/401Unauthorized'
 
   '/admin/scan/{sample_barcode}':
     post:

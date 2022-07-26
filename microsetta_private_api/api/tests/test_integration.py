@@ -1075,6 +1075,17 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 204)
 
+    def test_request_remove_account(self):
+        """
+            Submit request to delete account
+        """
+        resp = self.client.delete(
+            '/api/accounts/%s/request/remove' %
+            (ACCT_ID),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp, 200)
+
     def test_associate_sample_and_survey(self):
         """
             Submit a survey for a source
