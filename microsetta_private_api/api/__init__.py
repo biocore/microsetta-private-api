@@ -1,7 +1,7 @@
 from ._account import (
     find_accounts_for_login, register_account, claim_legacy_acct,
     read_account, update_account, check_email_match, _verify_jwt,
-    _verify_jwt_mock
+    _verify_jwt_mock, remove_request_account, cancel_remove_request_account
 )
 from ._consent import (
     render_consent_doc,
@@ -106,5 +106,7 @@ __all__ = [
     'get_campaign_information',
     'create_interested_user',
     'get_interested_user_address_update',
-    'put_interested_user_address_update'
+    'put_interested_user_address_update',
+    'remove_request_account',
+    'cancel_remove_request_account'
 ]
