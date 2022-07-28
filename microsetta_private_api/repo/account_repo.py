@@ -222,18 +222,14 @@ class AccountRepo(BaseRepo):
             cur.execute(sql)
 
             if cur.rowcount == 0:
-                raise ValueError("There are no users with the auth_sub "
-                                 f"'{auth_sub}'")
-            elif cur.rowcount > 1:
-                raise ValueError("There is more than one user with the "
-                                 f"auth_sub '{auth_sub}'")
+                return
 
+            # assume one and only one match
             admin_id = cur.fetchone()[0]
 
-            # log the action by the admin before removing the entry.
-
-            # get the timestamp of this request. if there are more than one,
-            # take the latest.
+            # get the timestamp of this request.
+            # if there are no matches then assume this deletion was not
+            # requested by a user.
             sql = ("select requested_on from delete_account_queue where "
                    f"account_id = '{account_id}'")
 
@@ -242,19 +238,21 @@ class AccountRepo(BaseRepo):
             timestamps = [x[0] for x in cur.fetchall()]
 
             if len(timestamps) == 0:
-                raise RuntimeError("Could not retrieve the timestamp for this"
-                                   " request")
+                return
 
+            # if there are multiple entries, use the latest.
             requested_on = timestamps[-1]
 
             # do not provide timestamp for this action; it will be recorded by
-            # the PostgreSQL.
+            # PostgreSQL.
             sql = ("INSERT INTO account_removal_log (account_id, admin_id, "
                    f"disposition, requested_on) VALUES ('{account_id}', "
                    f"'{admin_id}', '{disposition}', '{requested_on}')")
 
             cur.execute(sql)
 
+            # if we successfully obtained all paramters to populate the log,
+            # then it is likely a runtime error if the operation fails.
             if cur.rowcount != 1:
                 raise RuntimeError("Could not add entry to "
                                    "account_removal_log")
@@ -262,6 +260,7 @@ class AccountRepo(BaseRepo):
             # delete the entry from the delete_account_queue.
             sql = ("DELETE FROM delete_account_queue WHERE account_id = "
                    f"'{account_id}'")
+
             cur.execute(sql)
 
             if cur.rowcount != 1:
@@ -272,7 +271,7 @@ class AccountRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             try:
                 self._update_remove_log(account_id, auth_sub, 'ignored')
-            except ValueError as e:
+            except RuntimeError as e:
                 print(e)
                 return False
 
@@ -283,12 +282,14 @@ class AccountRepo(BaseRepo):
 
     def delete_account(self, account_id, auth_sub=None):
         with self._transaction.cursor() as cur:
-            # preserve legacy operation, but also enable logging when called
-            # by account_repo.delete_account().
+            # This method is called directly and via REST endpoint.
+            # In addition, not all endpoint calls are following a request by
+            #  a user to delete their account.
+            # Hence, update_remove_log() behavior is best-effort.
             if auth_sub is not None:
                 try:
                     self._update_remove_log(account_id, auth_sub, 'deleted')
-                except ValueError as e:
+                except RuntimeError as e:
                     print(e)
                     return False
 

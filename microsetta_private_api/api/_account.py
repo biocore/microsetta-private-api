@@ -151,6 +151,9 @@ def update_account(account_id, body, token_info):
 
 
 def request_remove_account(account_id, token_info):
+    # raises 401 if method fails
+    _validate_account_access(token_info, account_id)
+
     with Transaction() as t:
         acct_repo = AccountRepo(t)
         acct_repo.request_remove_account(account_id)
@@ -159,6 +162,9 @@ def request_remove_account(account_id, token_info):
 
 
 def cancel_request_remove_account(account_id, token_info):
+    # raises 401 if method fails
+    _validate_account_access(token_info, account_id)
+
     with Transaction() as t:
         acct_repo = AccountRepo(t)
         acct_repo.cancel_request_remove_account(account_id,
