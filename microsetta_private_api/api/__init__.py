@@ -1,7 +1,7 @@
 from ._account import (
     find_accounts_for_login, register_account, claim_legacy_acct,
-    read_account, update_account, check_email_match, request_remove_account,
-    cancel_request_remove_account, _verify_jwt, _verify_jwt_mock
+    read_account, update_account, check_email_match, _verify_jwt,
+    _verify_jwt_mock
 )
 from ._consent import (
     render_consent_doc,

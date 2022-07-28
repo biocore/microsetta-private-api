@@ -151,21 +151,18 @@ def update_account(account_id, body, token_info):
 
 
 def request_remove_account(account_id, token_info):
-    acc = _validate_account_access(token_info, account_id)
-
     with Transaction() as t:
         acct_repo = AccountRepo(t)
-        result = acct_repo.request_remove_account(account_id)
+        acct_repo.request_remove_account(account_id)
 
     return jsonify(code=200, message="Request Accepted"), 200
 
 
 def cancel_request_remove_account(account_id, token_info):
-    acc = _validate_account_access(token_info, account_id)
-
     with Transaction() as t:
         acct_repo = AccountRepo(t)
-        result = acct_repo.cancel_request_remove_account(account_id)
+        acct_repo.cancel_request_remove_account(account_id,
+                                                token_info['sub'])
 
     return jsonify(code=200, message="Request Accepted"), 200
 

@@ -19,7 +19,8 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
-from microsetta_private_api.repo.account_removal_requests_repo import AccountRemovalRequestsRepo
+from microsetta_private_api.repo.account_removal_requests_repo import\
+    AccountRemovalRequestsRepo
 from microsetta_private_api.repo.metadata_repo import retrieve_metadata
 from microsetta_private_api.tasks import send_email as celery_send_email,\
     per_sample_summary as celery_per_sample_summary
@@ -614,15 +615,6 @@ def list_account_removal_requests(token_info):
     return jsonify(requests), 200
 
 
-def cancel_account_removal_request(token_info):
-    validate_admin_access(token_info)
-
-    with Transaction() as t:
-        repo = AccountRemovalRequestsRepo(t)
-        requests = repo.get_all_account_removal_requests()
-    return jsonify(requests), 200
-
-
 def post_campaign_information(body, token_info):
     validate_admin_access(token_info)
 
@@ -846,7 +838,7 @@ def delete_account(account_id, token_info):
         if sample_count > 0:
             acct_repo.scrub(account_id)
         else:
-            acct_repo.delete_account(account_id)
+            acct_repo.delete_account(account_id, auth_sub=token_info['sub'])
 
         t.commit()
 

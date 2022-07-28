@@ -1996,26 +1996,6 @@ paths:
         '401':
           $ref: '#/components/responses/401Unauthorized'
 
-    # TODO: Don't need these endpoints to end in list i think.
-    #'/admin/requests/account_removal/list':
-    #put:
-    #  operationId: microsetta_private_api.admin.admin_impl.cancel_account_removal_request
-    #  tags:
-    #    - Admin
-    #  summary: Cancel an existing account removal request
-    #  description: Cancel an existing account removal request
-    #  parameters:
-    #    - $ref: '#/components/parameters/account_id'
-    #  responses:
-    #    '200':
-    #      description: Successfully canceled account deletion
-    #      content:
-    #        application/json:
-    #          schema:
-    #            type: array
-    #    '401':
-    #      $ref: '#/components/responses/401Unauthorized'
-
   '/admin/scan/{sample_barcode}':
     post:
       # Note: We might want to be able to differentiate system administrator operations

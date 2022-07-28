@@ -212,22 +212,93 @@ class AccountRepo(BaseRepo):
 
             return cur.rowcount == 1
 
-    def cancel_request_remove_account(self, account_id):
+    def _update_remove_log(self, account_id, auth_sub, disposition):
         with self._transaction.cursor() as cur:
-            sql = (f"delete from delete_account_queue where account_id = '{account_id}'")
-            cur.execute(sql)
-            if cur.rowcount == 1:
-                self._transaction.commit()
+            # the caller will only know the auth_sub of the admin that
+            # authorized this action. For logging purposes, we also want to
+            # record the id of the admin as well.
+            sql = f"SELECT id FROM account WHERE auth_sub = '{auth_sub}'"
 
+            cur.execute(sql)
+
+            if cur.rowcount == 0:
+                raise ValueError("There are no users with the auth_sub "
+                                 f"'{auth_sub}'")
+            elif cur.rowcount > 1:
+                raise ValueError("There is more than one user with the "
+                                 f"auth_sub '{auth_sub}'")
+
+            admin_id = cur.fetchone()[0]
+
+            # log the action by the admin before removing the entry.
+
+            # get the timestamp of this request. if there are more than one,
+            # take the latest.
+            sql = ("select requested_on from delete_account_queue where "
+                   f"account_id = '{account_id}'")
+
+            cur.execute(sql)
+
+            timestamps = [x[0] for x in cur.fetchall()]
+
+            if len(timestamps) == 0:
+                raise RuntimeError("Could not retrieve the timestamp for this"
+                                   " request")
+
+            requested_on = timestamps[-1]
+
+            # do not provide timestamp for this action; it will be recorded by
+            # the PostgreSQL.
+            sql = ("INSERT INTO account_removal_log (account_id, admin_id, "
+                   f"disposition, requested_on) VALUES ('{account_id}', "
+                   f"'{admin_id}', '{disposition}', '{requested_on}')")
+
+            cur.execute(sql)
+
+            if cur.rowcount != 1:
+                raise RuntimeError("Could not add entry to "
+                                   "account_removal_log")
+
+            # delete the entry from the delete_account_queue.
+            sql = ("DELETE FROM delete_account_queue WHERE account_id = "
+                   f"'{account_id}'")
+            cur.execute(sql)
+
+            if cur.rowcount != 1:
+                raise RuntimeError("Could not delete entry from "
+                                   "delete_account_queue")
+
+    def cancel_request_remove_account(self, account_id, auth_sub):
+        with self._transaction.cursor() as cur:
+            try:
+                self._update_remove_log(account_id, auth_sub, 'ignored')
+            except ValueError as e:
+                print(e)
+                return False
+
+            self._transaction.commit()
+
+            # assume commit() updates cur.rowcount.
             return cur.rowcount == 1
 
-    def delete_account(self, account_id):
+    def delete_account(self, account_id, auth_sub=None):
         with self._transaction.cursor() as cur:
+            # preserve legacy operation, but also enable logging when called
+            # by account_repo.delete_account().
+            if auth_sub is not None:
+                try:
+                    self._update_remove_log(account_id, auth_sub, 'deleted')
+                except ValueError as e:
+                    print(e)
+                    return False
+
             cur.execute("DELETE FROM account WHERE account.id = %s",
                         (account_id,))
+
             return cur.rowcount == 1
 
     def delete_account_by_email(self, email):
+        # note that logging like above is not supported by this method.
         with self._transaction.cursor() as cur:
             cur.execute("DELETE FROM account WHERE account.email = %s",
                         (email,))
