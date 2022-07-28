@@ -136,10 +136,13 @@ def update_sample_association(account_id, source_id, sample_id, body,
         except ValueError:
             raise BadRequest("Invalid sample_datetime")
         n = datetime.now()
+        sd = sample_datetime
         lower_limit = datetime(n.year-10, n.month, n.day, n.hour,
-                               n.minute, n.second, n.microsecond, n.tzinfo)
+                               n.minute, n.second, n.microsecond, sd.tzinfo)
         upper_limit = datetime(n.year, n.month + 1, n.day, n.hour,
-                               n.minute, n.second, n.microsecond, n.tzinfo)
+                               n.minute, n.second, n.microsecond, sd.tzinfo)
+        lower_limit = fromisotime(lower_limit)
+        upper_limit = fromisotime(upper_limit)
         if (sample_datetime < lower_limit):
             raise BadRequest("Please select a date within the last 10 years.")
         if (sample_datetime > upper_limit):
