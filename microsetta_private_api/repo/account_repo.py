@@ -208,6 +208,29 @@ class AccountRepo(BaseRepo):
                         (account_id,))
             return cur.rowcount == 1
 
+    def request_remove_account(self, account_id):
+        with self._transaction.cursor() as cur:
+            try:
+                sql = ("INSERT INTO delete_account_queue (account_id) VALUES"
+                       f" ('{account_id}')")
+                cur.execute(sql)
+            except psycopg2.errors.UniqueViolation:
+                raise RepoException("Account is already in removal queue")
+
+            if cur.rowcount == 1:
+                self._transaction.commit()
+
+            return cur.rowcount == 1
+
+    def check_request_remove_account(self, account_id):
+        with self._transaction.cursor() as cur:
+            sql = ("SELECT count(id) from delete_account_queue where "
+                   f"account_id = '{account_id}'")
+            cur.execute(sql)
+            count = cur.fetchone()[0]
+
+            return False if count == 0 else True
+
     def delete_account_by_email(self, email):
         with self._transaction.cursor() as cur:
             cur.execute("DELETE FROM account WHERE account.email = %s",
