@@ -41,6 +41,7 @@ from microsetta_private_api.model.vioscreen import (
 )
 from microsetta_private_api.api.tests.test_integration import \
     _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
+from dateutil.relativedelta import relativedelta
 
 
 # region helper methods
@@ -1746,6 +1747,44 @@ class SampleTests(ApiTests):
                                      headers=make_headers(FAKE_TOKEN_ADMIN))
         self.assertEqual(201, post_resp.status_code)
 
+        # if sample date is less than 10 years
+        now = datetime.now()
+        delta = relativedelta(year=now.year-11)
+        date = now+delta
+        post_resp = self.client.put(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_datetime":  date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "sample_notes": "Woowooooooo2",
+                    "sample_site": "Stool",
+                    "sample_project": "American Gut Project"
+                }),
+            headers=self.dummy_auth
+        )
+        # check response code
+        self.assertEqual(400, post_resp.status_code)
+
+        # if sample date is greater than 30 days
+        now = datetime.now()
+        delta = relativedelta(month=now.month+2)
+        date = now+delta
+        post_resp = self.client.put(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_datetime": date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "sample_notes": "Woowooooooo2",
+                    "sample_site": "Stool",
+                    "sample_project": "American Gut Project"
+                }),
+            headers=self.dummy_auth
+        )
+        # check response code
+        self.assertEqual(400, post_resp.status_code)
+
         # attempt to continue editing as a regular user, should succeed
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),
@@ -1802,37 +1841,6 @@ class SampleTests(ApiTests):
 
         # check response code
         self.assertEqual(200, post_resp.status_code)
-        # if sample date is less than 10 years
-        post_resp = self.client.put(
-            '%s?%s' % (base_url, self.default_lang_querystring),
-            content_type='application/json',
-            data=json.dumps(
-                {
-                    "sample_datetime": "1990-07-21T17:32:28Z",
-                    "sample_notes": "Woowooooooo2",
-                    "sample_site": "Stool",
-                    "sample_project": "American Gut Project"
-                }),
-            headers=self.dummy_auth
-        )
-        # check response code
-        self.assertEqual(400, post_resp.status_code)
-
-        # if sample date is greater than 30 days
-        post_resp = self.client.put(
-            '%s?%s' % (base_url, self.default_lang_querystring),
-            content_type='application/json',
-            data=json.dumps(
-                {
-                    "sample_datetime": "2200-07-21T17:32:28Z",
-                    "sample_notes": "Woowooooooo2",
-                    "sample_site": "Stool",
-                    "sample_project": "American Gut Project"
-                }),
-            headers=self.dummy_auth
-        )
-        # check response code
-        self.assertEqual(400, post_resp.status_code)
 
     def test_dissociate_sample_from_source_locked(self):
         dummy_acct_id, dummy_source_id = create_dummy_source(
