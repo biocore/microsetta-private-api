@@ -8,7 +8,7 @@ from ._consent import (
 )
 from ._source import (
     create_source, read_source, update_source, delete_source,
-    read_sources, create_human_source_from_consent
+    read_sources, create_human_source_from_consent, check_duplicate_source_name_email
 )
 from ._survey import (
     read_survey_template, read_survey_templates, read_answered_survey,
@@ -71,6 +71,7 @@ __all__ = [
     'update_source',
     'delete_source',
     'read_sources',
+    'check_duplicate_source_name_email',
     'create_human_source_from_consent',
     'read_survey_template',
     'read_survey_templates',

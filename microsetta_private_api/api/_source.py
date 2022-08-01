@@ -3,9 +3,8 @@ from datetime import date
 
 from flask import jsonify
 
-from microsetta_private_api.api._account import \
-    _validate_account_access
-from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG
+from microsetta_private_api.api._account import _validate_account_access
+from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG, DUPLICATE_SOURCE_AND_EMAIL
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.repo.source_repo import SourceRepo
@@ -155,3 +154,16 @@ def create_human_source_from_consent(account_id, body, token_info):
     # NB: Don't expect to handle errors 404, 422 in this function; expect to
     # farm out to `create_source`
     return create_source(account_id, source, token_info)
+
+
+def check_duplicate_source_name_email(account_id, body):
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        source_name = body['participant_name']
+        email = body['participant_email']
+        source = source_repo.get_duplicate_source_name_email(
+            account_id, source_name, email)
+        if source['source_duplicate']:
+            source["message"] = DUPLICATE_SOURCE_AND_EMAIL
+
+        return jsonify(source), 200
