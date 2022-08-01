@@ -224,12 +224,26 @@ class AccountRepo(BaseRepo):
 
     def check_request_remove_account(self, account_id):
         with self._transaction.cursor() as cur:
-            sql = ("SELECT count(id) from delete_account_queue where "
+            sql = ("SELECT count(id) FROM delete_account_queue WHERE "
                    f"account_id = '{account_id}'")
             cur.execute(sql)
             count = cur.fetchone()[0]
 
             return False if count == 0 else True
+
+    def cancel_request_remove_account(self, account_id):
+        if self.check_request_remove_account(account_id):
+            with self._transaction.cursor() as cur:
+                sql = ("DELETE FROM delete_account_queue WHERE account_id = "
+                       f"'{account_id}'")
+                cur.execute(sql)
+
+                if cur.rowcount == 1:
+                    self._transaction.commit()
+
+                return cur.rowcount == 1
+        else:
+            raise RepoException("Account is not in removal queue")
 
     def delete_account_by_email(self, email):
         with self._transaction.cursor() as cur:

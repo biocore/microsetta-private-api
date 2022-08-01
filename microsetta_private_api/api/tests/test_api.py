@@ -1274,6 +1274,89 @@ class AccountTests(ApiTests):
         self.assertEqual(response.status_code, 404)
     # endregion account/email_match tests
 
+    def test_request_account_removal(self):
+        # create a dummy account and then confirm it is not present in the
+        # delete-queue.
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        response = self.client.get(
+            f'/api/accounts/{dummy_acct_id}/request/remove',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertFalse(json.loads(response.data)['status'])
+
+        # submit a request for this account to be removed. Verify it is now
+        # present in the queue.
+
+        response = self.client.put(
+            f'/api/accounts/{dummy_acct_id}/request/remove',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Request Accepted")
+
+        response = self.client.get(
+            f'/api/accounts/{dummy_acct_id}/request/remove',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertTrue(json.loads(response.data)['status'])
+
+        # try to request a second time. Verify that an error is returned
+        # instead.
+
+        response = self.client.put(
+            f'/api/accounts/{dummy_acct_id}/request/remove',
+            headers=self.dummy_auth)
+
+        self.assertEqual(422, response.status_code)
+
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Account is already in removal queue")
+
+        # attempt to remove the account id from the account removal queue
+        # and cancel the deletion.
+
+        response = self.client.delete(
+            f'/api/accounts/{dummy_acct_id}/request/remove',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Request Accepted")
+
+        # attempt to remove the account id again and confirm that an error
+        # is returned.
+
+        response = self.client.delete(
+            f'/api/accounts/{dummy_acct_id}/request/remove',
+            headers=self.dummy_auth)
+
+        self.assertEqual(422, response.status_code)
+
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Account is not in removal queue")
+
+        # attempt to check an account that no longer is in the removal queue
+        # and confirm the return status. Attempt to query an invalid account
+        # id and confirm thee return status.
+
+        response = self.client.get(('/api/accounts/0a2dff3c-ec0e-4d97-b469-'
+                                    'bd4af678dcef/request/remove'),
+                                   headers=self.dummy_auth)
+
+        self.assertEqual(404, response.status_code)
+
+        results = json.loads(response.data)
+        self.assertIn('detail', results)
+        self.assertEqual(results['detail'], 'Account not found')
+
 
 @pytest.mark.usefixtures("client")
 class SourceTests(ApiTests):
