@@ -19,6 +19,7 @@ from microsetta_private_api.qiita import qclient
 
 from flask import current_app as app
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 
 def read_sample_associations(account_id, source_id, token_info):
@@ -136,15 +137,15 @@ def update_sample_association(account_id, source_id, sample_id, body,
         except ValueError:
             raise BadRequest("Invalid sample_datetime")
         n = datetime.now()
-        sd = sample_datetime
-        lower_limit = datetime(n.year-10, n.month, n.day, n.hour,
-                               n.minute, n.second, n.microsecond, sd.tzinfo)
-        upper_limit = datetime(n.year, n.month + 1, n.day, n.hour,
-                               n.minute, n.second, n.microsecond, sd.tzinfo)
-        if (sample_datetime < lower_limit):
-            raise BadRequest("Please select a date within the last 10 years.")
-        if (sample_datetime > upper_limit):
-            raise BadRequest("Please select a date within the next 30 days.")
+        delta = relativedelta(year=n.year-10)
+        n = n+delta
+        lower_limit = n+delta
+        n = datetime.now()
+        delta = relativedelta(month=n.month+1)
+        n = n+delta
+        upper_limit = n+delta
+        if sample_datetime < lower_limit or sample_datetime > upper_limit:
+            raise BadRequest('Invalid sample date')
         # sample_site will not be present if its environmental. this will
         # default to None if the key is not present
         sample_site = body.get('sample_site')
