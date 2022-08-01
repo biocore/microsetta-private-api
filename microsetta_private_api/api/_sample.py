@@ -136,11 +136,11 @@ def update_sample_association(account_id, source_id, sample_id, body,
             sample_datetime = fromisotime(sample_datetime)
         except ValueError:
             raise BadRequest("Invalid sample_datetime")
-        n = datetime.now()
+        n = datetime.now(sample_datetime.tzinfo)
         delta = relativedelta(year=n.year-10)
         n = n+delta
         lower_limit = n+delta
-        n = datetime.now()
+        n = datetime.now(sample_datetime.tzinfo)
         delta = relativedelta(month=n.month+1)
         n = n+delta
         upper_limit = n+delta
