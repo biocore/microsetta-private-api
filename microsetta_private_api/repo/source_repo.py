@@ -267,7 +267,7 @@ class SourceRepo(BaseRepo):
                         "source "
                         "WHERE "
                         "source.account_id = %s AND "
-                        "source.participant_email = %s AND "
+                        "source.participant_email = %s OR "
                         "source.source_name = %s",
                         (account_id, email, source_name,))
             r = cur.fetchone()

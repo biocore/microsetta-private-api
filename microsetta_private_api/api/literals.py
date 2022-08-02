@@ -14,7 +14,7 @@ JWT_EMAIL_CLAIM_KEY = 'email'
 ACCT_NOT_FOUND_MSG = "Account not found"
 SRC_NOT_FOUND_MSG = "Source not found"
 INVALID_TOKEN_MSG = "Invalid token"
-DUPLICATE_SOURCE_AND_EMAIL = "It looks like you're creating a new source " \
+TRUE = "It looks like you're creating a new source " \
                              "that may be similar or the same as an " \
                              "existing source. If this is the same " \
                              "person as an existing source, please " \
