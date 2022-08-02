@@ -1,5 +1,4 @@
 {
-  "disable_authentication": "False",
   "endpoint": "http://localhost:8082",
   "port": 8082,
   "debug": true,

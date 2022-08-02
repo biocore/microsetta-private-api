@@ -35,7 +35,7 @@ from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
 from microsetta_private_api.qiita import qclient
 from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
-from microsetta_private_api.localization import EN_US
+# from microsetta_private_api.localization import EN_US
 
 
 def search_barcode(token_info, sample_barcode):
