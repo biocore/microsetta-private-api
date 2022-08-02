@@ -1326,7 +1326,7 @@ class AccountTests(ApiTests):
                          "Account is already in removal queue")
 
         # attempt to remove the account id from the account removal queue
-        # and cancel the deletion. XX
+        # and cancel the deletion.
 
         response = self.client.put(
             f'/api/admin/account_removal/{dummy_acct_id}',
