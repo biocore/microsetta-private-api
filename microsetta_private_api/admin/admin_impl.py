@@ -19,6 +19,7 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
+from microsetta_private_api.repo.removal_queue_repo import RemovalQueueRepo
 from microsetta_private_api.repo.metadata_repo import retrieve_metadata
 from microsetta_private_api.tasks import send_email as celery_send_email,\
     per_sample_summary as celery_per_sample_summary
@@ -604,6 +605,15 @@ def list_campaigns(token_info):
     return jsonify(campaigns), 200
 
 
+def list_removal_queue(token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        repo = RemovalQueueRepo(t)
+        requests = repo.get_all_account_removal_requests()
+    return jsonify(requests), 200
+
+
 def post_campaign_information(body, token_info):
     validate_admin_access(token_info)
 
@@ -832,3 +842,41 @@ def delete_account(account_id, token_info):
         t.commit()
 
     return None, 204
+
+
+def ignore_removal_request(account_id, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        acct_repo = AccountRepo(t)
+        try:
+            # remove the user from the queue, noting the admin who allowed it
+            # and the time the action was performed.
+            acct_repo.update_queue(account_id, token_info['sub'], 'ignored')
+        except RepoException as e:
+            raise e
+
+    return None, 204
+
+
+def allow_removal_request(account_id, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        acct_repo = AccountRepo(t)
+        try:
+            # remove the user from the queue, noting the admin who allowed it
+            # and the time the action was performed.
+            acct_repo.update_queue(account_id, token_info['sub'], 'deleted')
+        except RepoException as e:
+            raise e
+
+        # delete the user
+        result = delete_account(account_id, token_info)
+
+        # send the user an email
+        # args = ['user@somedomain.edu', 'activation', [], 'EN_US']
+        # celery_send_email.apply_async(args=args)
+
+        #return result
+        return None, 204

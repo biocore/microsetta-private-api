@@ -245,6 +245,49 @@ class AccountRepo(BaseRepo):
         else:
             raise RepoException("Account is not in removal queue")
 
+    def update_queue(self, account_id, admin_sub, disposition):
+        if self.check_request_remove_account(account_id):
+            with self._transaction.cursor() as cur:
+                # preserve the time the account removal was requested by the
+                # user.
+                sql = ("SELECT requested_on FROM delete_account_queue WHERE "
+                       f"account_id = '{account_id}'")
+                cur.execute(sql)
+                requested_on = cur.fetchone()[0]
+
+                # get the account id of the admin that authorized this account
+                # to be deleted.
+                sql = ("SELECT id FROM account WHERE auth_sub = "
+                       f"'{admin_sub}'")
+                cur.execute(sql)
+                admin_id = cur.fetchone()[0]
+
+                if not admin_id:
+                    admin_id = 'xxxxxxxx-xxxx-xxxx-89d8-efd2f371b66c'
+
+                # add an entry to the log detailing who deleted the account,
+                # why, and when.
+
+                sql = ("INSERT INTO account_removal_log (account_id, admin_id,"
+                       f" disposition, requested_on) VALUES ('{account_id}', "
+                       f"'{admin_id}', '{disposition}', '{requested_on}')")
+                cur.execute(sql)
+
+                # we don't expect the first two commands to fail. However,
+                # the insert should be confirmed.
+                if cur.rowcount != 1:
+                    raise RepoException("Failed to insert entry into log.")
+
+                # delete the entry from queue. account_delete() will fail
+                # w/out this.
+                sql = ("DELETE FROM delete_account_queue WHERE account_id = "
+                       f"'{account_id}'")
+                cur.execute(sql)
+
+                self._transaction.commit()
+        else:
+            raise RepoException("Account is not in removal queue")
+
     def delete_account_by_email(self, email):
         with self._transaction.cursor() as cur:
             cur.execute("DELETE FROM account WHERE account.email = %s",
