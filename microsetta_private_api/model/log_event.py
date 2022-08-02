@@ -46,6 +46,8 @@ class EventSubtype(Enum):
     EMAIL_PER_PROJECT_SUMMARY = "per_project_summary"
     # for addresses that Melissa deems invalid
     EMAIL_ADDRESS_INVALID = "address_invalid"
+    # notify a user when their account has been deleted
+    EMAIL_ACCOUNT_DELETED = 'account_deleted'
 
 
 class LogEvent(ModelBase):
