@@ -1748,7 +1748,7 @@ class SampleTests(ApiTests):
         self.assertEqual(201, post_resp.status_code)
 
         # if sample date is less than 10 years
-        now = datetime.now()
+        now = datetime.datetime.now()
         delta = relativedelta(year=now.year-11)
         date = now+delta
         post_resp = self.client.put(
@@ -1756,7 +1756,7 @@ class SampleTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "sample_datetime":  date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "sample_datetime": date.strftime("%Y-%m-%dT%H:%M:%SZ"),
                     "sample_notes": "Woowooooooo2",
                     "sample_site": "Stool",
                     "sample_project": "American Gut Project"
@@ -1767,7 +1767,7 @@ class SampleTests(ApiTests):
         self.assertEqual(400, post_resp.status_code)
 
         # if sample date is greater than 30 days
-        now = datetime.now()
+        now = datetime.datetime.now()
         delta = relativedelta(month=now.month+2)
         date = now+delta
         post_resp = self.client.put(
