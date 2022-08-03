@@ -1786,12 +1786,13 @@ class SampleTests(ApiTests):
         self.assertEqual(400, post_resp.status_code)
 
         # attempt to continue editing as a regular user, should succeed
+        date = datetime.datetime.now()
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),
             content_type='application/json',
             data=json.dumps(
                 {
-                    "sample_datetime": "2017-07-21T17:32:28Z",
+                    "sample_datetime": date.strftime("%Y-%m-%dT%H:%M:%SZ"),
                     "sample_notes": "Woowooooooo",
                     "sample_site": "Stool",
                     "sample_project": "American Gut Project"
@@ -1815,7 +1816,7 @@ class SampleTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "sample_datetime": "2020-07-21T17:32:28Z",
+                    "sample_datetime": date.strftime("%Y-%m-%dT%H:%M:%SZ"),
                     "sample_notes": "Woowooooooo2",
                     "sample_site": "Stool",
                     "sample_project": "American Gut Project"
@@ -1831,7 +1832,7 @@ class SampleTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "sample_datetime": "2020-07-21T17:32:28Z",
+                    "sample_datetime": date.strftime("%Y-%m-%dT%H:%M:%SZ"),
                     "sample_notes": "Woowooooooo3",
                     "sample_site": "Stool",
                     "sample_project": "American Gut Project"
