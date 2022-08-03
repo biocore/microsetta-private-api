@@ -212,7 +212,7 @@ class AccountRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             try:
                 sql = ("INSERT INTO delete_account_queue (account_id) VALUES"
-                       f" ('{account_id}')")
+                       " (%s)", (account_id,))
                 cur.execute(sql)
             except psycopg2.errors.UniqueViolation:
                 raise RepoException("Account is already in removal queue")
@@ -225,7 +225,7 @@ class AccountRepo(BaseRepo):
     def check_request_remove_account(self, account_id):
         with self._transaction.cursor() as cur:
             sql = ("SELECT count(id) FROM delete_account_queue WHERE "
-                   f"account_id = '{account_id}'")
+                   "account_id = %s", (account_id,))
             cur.execute(sql)
             count = cur.fetchone()[0]
 
@@ -234,8 +234,9 @@ class AccountRepo(BaseRepo):
     def cancel_request_remove_account(self, account_id):
         if self.check_request_remove_account(account_id):
             with self._transaction.cursor() as cur:
-                sql = ("DELETE FROM delete_account_queue WHERE account_id = "
-                       f"'{account_id}'")
+                sql = ("DELETE FROM delete_account_queue WHERE account_id "
+                       "= %s", (account_id,))
+
                 cur.execute(sql)
 
                 if cur.rowcount == 1:
@@ -251,26 +252,24 @@ class AccountRepo(BaseRepo):
                 # preserve the time the account removal was requested by the
                 # user.
                 sql = ("SELECT requested_on FROM delete_account_queue WHERE "
-                       f"account_id = '{account_id}'")
+                       "account_id = %s", (account_id,))
                 cur.execute(sql)
                 requested_on = cur.fetchone()[0]
 
                 # get the account id of the admin that authorized this account
                 # to be deleted.
-                sql = ("SELECT id FROM account WHERE auth_sub = "
-                       f"'{admin_sub}'")
+                sql = ("SELECT id FROM account WHERE auth_sub = %s",
+                       (admin_sub,))
                 cur.execute(sql)
                 admin_id = cur.fetchone()[0]
-
-                if not admin_id:
-                    admin_id = 'xxxxxxxx-xxxx-xxxx-89d8-efd2f371b66c'
 
                 # add an entry to the log detailing who deleted the account,
                 # why, and when.
 
                 sql = ("INSERT INTO account_removal_log (account_id, admin_id,"
-                       f" disposition, requested_on) VALUES ('{account_id}', "
-                       f"'{admin_id}', '{disposition}', '{requested_on}')")
+                       " disposition, requested_on) VALUES (%s, %s, %s, %s)",
+                       (account_id, admin_id, disposition, requested_on))
+
                 cur.execute(sql)
 
                 # we don't expect the first two commands to fail. However,
@@ -281,7 +280,7 @@ class AccountRepo(BaseRepo):
                 # delete the entry from queue. account_delete() will fail
                 # w/out this.
                 sql = ("DELETE FROM delete_account_queue WHERE account_id = "
-                       f"'{account_id}'")
+                       "%s", (account_id,))
                 cur.execute(sql)
 
                 self._transaction.commit()

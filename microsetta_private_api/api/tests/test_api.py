@@ -1289,8 +1289,10 @@ class AccountTests(ApiTests):
             f'/api/accounts/{dummy_acct_id}/removal_queue',
             headers=self.dummy_auth)
 
+        # Like similar functions, GET will return status-code 200 as long as
+        # the query was successful. Whether it is in the queue (True) or not
+        # (False) is stored in the response data under the 'status' key.
         self.assertEqual(200, response.status_code)
-
         self.assertFalse(json.loads(response.data)['status'])
 
         # submit a request for this account to be removed. Verify it is now
