@@ -19,7 +19,6 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
-from microsetta_private_api.repo.removal_queue_repo import RemovalQueueRepo
 from microsetta_private_api.repo.metadata_repo import retrieve_metadata
 from microsetta_private_api.tasks import send_email as celery_send_email,\
     per_sample_summary as celery_per_sample_summary
@@ -35,7 +34,7 @@ from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
 from microsetta_private_api.qiita import qclient
 from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
-# from microsetta_private_api.localization import EN_US
+from microsetta_private_api.repo.removal_queue_repo import RemovalQueueRepo
 
 
 def search_barcode(token_info, sample_barcode):
@@ -849,11 +848,11 @@ def ignore_removal_request(account_id, token_info):
     validate_admin_access(token_info)
 
     with Transaction() as t:
-        acct_repo = AccountRepo(t)
+        rq_repo = RemovalQueueRepo(t)
         try:
             # remove the user from the queue, noting the admin who allowed it
             # and the time the action was performed.
-            acct_repo.update_queue(account_id, token_info['sub'], 'ignored')
+            rq_repo.update_queue(account_id, token_info['sub'], 'ignored')
         except RepoException as e:
             raise e
 
@@ -865,26 +864,25 @@ def allow_removal_request(account_id, token_info):
 
     with Transaction() as t:
         acct_repo = AccountRepo(t)
+        rq_repo = RemovalQueueRepo(t)
 
         # get the email address and name of the user we're trying to delete
         # so we can send them a notificaiton email afterwards.
-        # account = acct_repo.get_account(account_id)
-        # user_email = account.email
-        # user_name = account.first_name
+        account = acct_repo.get_account(account_id)
+        user_email = account.email
+        user_name = account.first_name
+        language = account.language
 
         try:
             # remove the user from the queue, noting the admin who allowed it
             # and the time the action was performed.
-            acct_repo.update_queue(account_id, token_info['sub'], 'deleted')
+            rq_repo.update_queue(account_id, token_info['sub'], 'deleted')
         except RepoException as e:
             raise e
 
-        # send an email to the user. Since this is an async task, it doesn't
-        # matter whether it's sent before delete_account() or after.
-        # celery_send_email.apply_async(args=[user_email,
-        #                                     "account_deleted",
-        #                                     {"contact_name": user_name},
-        #                                     EN_US])
+        # send an email to the user.
+        #celery_send_email(user_email, "account_deleted",
+        #                  {"contact_name": user_name}, language)
 
         # delete the user
         return delete_account(account_id, token_info)

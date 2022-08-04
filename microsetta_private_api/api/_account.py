@@ -1,11 +1,8 @@
 import uuid
-
 import jwt
 from flask import jsonify
 from jwt import InvalidTokenError
-
 from werkzeug.exceptions import Unauthorized, Forbidden, NotFound
-
 from microsetta_private_api.api.literals import AUTHROCKET_PUB_KEY, \
     INVALID_TOKEN_MSG, JWT_ISS_CLAIM_KEY, JWT_SUB_CLAIM_KEY, \
     JWT_EMAIL_CLAIM_KEY, ACCT_NOT_FOUND_MSG, CRONJOB_PUB_KEY
@@ -148,39 +145,6 @@ def update_account(account_id, body, token_info):
         t.commit()
 
         return jsonify(acc.to_api()), 200
-
-
-def check_request_remove_account(account_id, token_info):
-    # raises 401 if method fails
-    _validate_account_access(token_info, account_id)
-
-    with Transaction() as t:
-        acct_repo = AccountRepo(t)
-        status = acct_repo.check_request_remove_account(account_id)
-        result = {'account_id': account_id, 'status': status}
-        return jsonify(result), 200
-
-
-def request_remove_account(account_id, token_info):
-    # raises 401 if method fails
-    _validate_account_access(token_info, account_id)
-
-    with Transaction() as t:
-        acct_repo = AccountRepo(t)
-        acct_repo.request_remove_account(account_id)
-
-    return jsonify(code=200, message="Request Accepted"), 200
-
-
-def cancel_request_remove_account(account_id, token_info):
-    # raises 401 if method fails
-    _validate_account_access(token_info, account_id)
-
-    with Transaction() as t:
-        acct_repo = AccountRepo(t)
-        acct_repo.cancel_request_remove_account(account_id)
-
-    return jsonify(code=200, message="Request Accepted"), 200
 
 
 JWT_SCHEMES = (

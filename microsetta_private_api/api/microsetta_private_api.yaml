@@ -1996,7 +1996,7 @@ paths:
               schema:
                 type: array
 
-  '/admin/requests/account_removal/list':
+  '/admin/account_removal/list':
     get:
       operationId: microsetta_private_api.admin.admin_impl.list_removal_queue
       tags:

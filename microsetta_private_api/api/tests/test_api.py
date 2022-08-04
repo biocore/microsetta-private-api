@@ -10,6 +10,7 @@ from dateutil.parser import isoparse
 from urllib.parse import urlencode
 from unittest import TestCase
 from math import isclose
+from uuid import uuid4
 import microsetta_private_api.server
 from microsetta_private_api import localization
 from microsetta_private_api.model.preparation import Preparation
@@ -1348,13 +1349,14 @@ class AccountTests(ApiTests):
         self.assertEqual(json.loads(response.data)['message'],
                          "Account is not in removal queue")
 
-        # attempt to check an account that no longer is in the removal queue
-        # and confirm the return status. Attempt to query an invalid account
-        # id and confirm thee return status.
+        # generate a random UUID4 value and assume that it is not a valid
+        # account number because of its statistical uniqueness. Attempt to
+        # query for an account w/this number and confirm that it will not be
+        # found.
 
-        response = self.client.get(('/api/accounts/0a2dff3c-ec0e-4d97-b469-'
-                                    'bd4af678dcef/removal_queue'),
-                                   headers=self.dummy_auth)
+        uri = '/api/accounts/%s/removal_queue' % uuid4()
+
+        response = self.client.get(uri, headers=self.dummy_auth)
 
         self.assertEqual(404, response.status_code)
 
@@ -1362,26 +1364,39 @@ class AccountTests(ApiTests):
         self.assertIn('detail', results)
         self.assertEqual(results['detail'], 'Account not found')
 
-        # push the account back onto the queue and attempt to delete the
-        # account. Then confirm that the account no longer exists.
+        # push the dummy_acct_id account back onto the queue and attempt to
+        # delete the account. Then confirm that the account no longer exists:
 
+        # mimic a user pressing the 'Delete Account' button in their
+        # accounts page. This will put the account_id for dummy_acct_id back
+        # in the queue.
         response = self.client.put(
             f'/api/accounts/{dummy_acct_id}/removal_queue',
             headers=self.dummy_auth)
 
+        # confirm that the operation was a success.
         self.assertEqual(200, response.status_code)
 
+        # Attempt to delete user dummy_acct_id using the account_removal
+        # endpoint. Note this endpoint wraps our standard account_delete()
+        # functionality; it deletes the id from the delete-queue and logs the
+        # deletion in a separate 'log' table, before calling account_delete().
         response = self.client.delete(
             f'/api/admin/account_removal/{dummy_acct_id}',
             headers=make_headers(FAKE_TOKEN_ADMIN))
 
+        # confirm that the operation was a success.
         self.assertEqual(204, response.status_code)
 
+        # if the operation was a success, use the same functionality we
+        # previously tested to confirm that the user we just deleted
+        # (dummy_acct_id) is no longer in the system.
         response = self.client.get(
             '/api/accounts/%s?%s' %
             (dummy_acct_id, self.default_lang_querystring),
             headers=make_headers(FAKE_TOKEN_ADMIN))
 
+        # confirm the user was not found.
         self.assertEqual(404, response.status_code)
 
 
