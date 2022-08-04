@@ -77,6 +77,7 @@ def _validate_account_access(token_info, account_id):
 
         return account
 
+
 def _validate_has_account(token_info):
     # Note this function is a duplicate of _validate_has_account() in
     # _account.py. TODO: Remove and replace
