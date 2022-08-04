@@ -168,7 +168,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/accounts/{account_id}/source_email_match':
+  '/accounts/{account_id}/check_duplicate_source':
     post:
       operationId: microsetta_private_api.api.check_duplicate_source_name_email
       tags:

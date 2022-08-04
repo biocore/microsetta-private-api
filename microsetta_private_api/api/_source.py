@@ -4,8 +4,7 @@ from datetime import date
 from flask import jsonify
 
 from microsetta_private_api.api._account import _validate_account_access
-from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG, \
-    TRUE
+from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.repo.source_repo import SourceRepo
@@ -164,7 +163,4 @@ def check_duplicate_source_name_email(account_id, body):
         email = body['participant_email']
         source = source_repo.get_duplicate_source_name_email(
             account_id, source_name, email)
-        if source['source_duplicate']:
-            source["message"] = TRUE
-
         return jsonify(source), 200
