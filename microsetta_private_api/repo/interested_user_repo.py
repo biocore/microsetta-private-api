@@ -19,27 +19,29 @@ class InterestedUserRepo(BaseRepo):
             cur.execute(
                 "INSERT INTO campaign.interested_users ("
                 "campaign_id, acquisition_source, first_name, last_name, "
-                "email, phone, address_1, address_2, city, state, "
+                "email, phone, address_1, address_2, address_3, city, state, "
                 "postal_code, country, latitude, longitude, confirm_consent, "
-                "ip_address, address_checked, address_valid, over_18, "
+                "ip_address, address_checked, address_valid, over_18, address_type, "
                 "creation_timestamp) "
                 "VALUES ("
                 "%s, %s, %s, %s, "
-                "%s, %s, %s, %s, %s, %s, "
+                "%s, %s, %s, %s, %s, %s, %s, "
                 "%s, %s, %s, %s, %s, "
-                "%s, %s, %s, %s, "
+                "%s, %s, %s, %s, %s, "
                 "NOW()) RETURNING interested_user_id",
                 (interested_user.campaign_id,
                  interested_user.acquisition_source,
                  interested_user.first_name, interested_user.last_name,
                  interested_user.email, interested_user.phone,
                  interested_user.address_1, interested_user.address_2,
+                 interested_user.address_3,
                  interested_user.city, interested_user.state,
                  interested_user.postal_code, interested_user.country,
                  interested_user.latitude, interested_user.longitude,
                  interested_user.confirm_consent, interested_user.ip_address,
                  interested_user.address_checked,
-                 interested_user.address_valid, interested_user.over_18)
+                 interested_user.address_valid, interested_user.over_18,
+                 interested_user.address_type)
             )
             interested_user_id = cur.fetchone()[0]
 

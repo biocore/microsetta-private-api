@@ -1523,6 +1523,8 @@ paths:
                   type: string
                 'address_2':
                   type: string
+                'address_3':
+                  type: string
                 'city':
                   type: string
                 'state':
@@ -1534,6 +1536,8 @@ paths:
                 'ip_address':
                   type: string
                 'over_18':
+                  type: string
+                'address_type':
                   type: string
               required:
                 - campaign_id
