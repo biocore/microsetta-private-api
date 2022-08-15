@@ -27,7 +27,7 @@ from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
 from microsetta_private_api.admin.daklapack_communication import \
     post_daklapack_orders
-# from microsetta_private_api import localization
+from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.admin.sample_summary import get_barcodes_for
 from microsetta_private_api.util.melissa import verify_address
@@ -281,10 +281,11 @@ def send_email(body, token_info):
         resolution_url = None
         contact_name = None
         activation_code = None
-        # language = localization.EN_US
+        language = localization.EN_US
         acct_repo = account_repo.AccountRepo(t)
-        account = acct_repo.get_account(account_id) 
-        language = account.language
+        account = acct_repo.get_account(account_id)
+        if account is not None:
+            language = account.language
 
         # Depending on issue type, determine what email to send to and
         # what account is involved, as well as what link to send user to
