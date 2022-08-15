@@ -1,3 +1,4 @@
+import gettext
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -83,7 +84,7 @@ class SendEmail:
         message['To'] = to
         message['From'] = from_ or cls.from_
         message['Reply-To'] = cls.reply_to
-        message['Subject'] = email_template.subject
+        message['Subject'] = gettext(email_template.subject)
 
         html = email_template.html.render(email_template_args or {})
         plain = html2text.html2text(html)
