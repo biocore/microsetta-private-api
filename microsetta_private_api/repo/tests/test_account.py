@@ -112,8 +112,8 @@ class AccountTests(unittest.TestCase):
                             "WHERE id = %s",
                             (ACCT_ID_1,))
                 r = cur.fetchone()
-                self.assertEqual(r['latitude'], RESULT_LAT)
-                self.assertEqual(r['longitude'], RESULT_LONG)
+                self.assertAlmostEqual(r['latitude'], RESULT_LAT, 9)
+                self.assertAlmostEqual(r['longitude'], RESULT_LONG, 9)
                 self.assertTrue(r['address_verified'])
                 self.assertFalse(r['cannot_geocode'])
 
