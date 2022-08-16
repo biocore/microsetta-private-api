@@ -1,5 +1,5 @@
 from enum import Enum
-from gettext import gettext
+from flask_babel import gettext
 from flask import render_template
 from werkzeug.exceptions import BadRequest
 from microsetta_private_api.model.log_event import EventType, EventSubtype
