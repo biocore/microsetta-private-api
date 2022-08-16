@@ -1624,12 +1624,16 @@ paths:
                   type: string
                 'address_2':
                   type: string
+                'address_3':
+                  type: string
                 'city':
                   type: string
                 'state':
                   type: string
                 'postal':
                   type: string
+                'address_type':
+                  type: boolean
               required:
                 - interested_user_id
                 - email

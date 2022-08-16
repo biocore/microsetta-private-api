@@ -39,7 +39,8 @@ def create_interested_user(body):
         try:
             # at this point, we don't particularly care if it's valid
             # we just care that it doesn't fail to execute
-            interested_user_repo.verify_address(interested_user_id)
+            # interested_user_repo.verify_address(interested_user_id)
+            pass
         except RepoException:
             return jsonify(
                 code=400,
@@ -120,6 +121,8 @@ def put_interested_user_address_update(body):
                 interested_user.address_checked = False
                 interested_user.address_1 = body['address_1']
                 interested_user.address_2 = body['address_2']
+                interested_user.address_3 = body.get('address_3', "")
+                interested_user.residential_address = body.get('address_type', "")
                 interested_user.city = body['city']
                 interested_user.state = body['state']
                 interested_user.postal_code = body['postal']

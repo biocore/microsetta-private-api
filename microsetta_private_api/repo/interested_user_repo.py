@@ -21,7 +21,7 @@ class InterestedUserRepo(BaseRepo):
                 "campaign_id, acquisition_source, first_name, last_name, "
                 "email, phone, address_1, address_2, address_3, city, state, "
                 "postal_code, country, latitude, longitude, confirm_consent, "
-                "ip_address, address_checked, address_valid, over_18, address_type, "
+                "ip_address, address_checked, address_valid, over_18, residential_address, "
                 "creation_timestamp) "
                 "VALUES ("
                 "%s, %s, %s, %s, "
@@ -41,7 +41,7 @@ class InterestedUserRepo(BaseRepo):
                  interested_user.confirm_consent, interested_user.ip_address,
                  interested_user.address_checked,
                  interested_user.address_valid, interested_user.over_18,
-                 interested_user.address_type)
+                 interested_user.residential_address)
             )
             interested_user_id = cur.fetchone()[0]
 
@@ -60,12 +60,14 @@ class InterestedUserRepo(BaseRepo):
                 "phone = %s, "
                 "address_1 = %s, "
                 "address_2 = %s, "
+                "address_3 = %s, "
                 "city = %s, "
                 "state = %s, "
                 "postal_code = %s, "
                 "country = %s, "
                 "address_checked = %s, "
                 "address_valid = %s, "
+                "residential_address = %s, "
                 "update_timestamp = NOW() "
                 "WHERE interested_user_id = %s",
                 (interested_user.first_name,
@@ -74,12 +76,14 @@ class InterestedUserRepo(BaseRepo):
                  interested_user.phone,
                  interested_user.address_1,
                  interested_user.address_2,
+                 interested_user.address_3,
                  interested_user.city,
                  interested_user.state,
                  interested_user.postal_code,
                  interested_user.country,
                  interested_user.address_checked,
                  interested_user.address_valid,
+                 interested_user.residential_address,
                  interested_user.interested_user_id)
             )
             return cur.rowcount == 1

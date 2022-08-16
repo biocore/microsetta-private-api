@@ -17,7 +17,7 @@ class InterestedUser(ModelBase):
         self.phone = kwargs.get('phone')
         self.address_1 = kwargs.get('address_1')
         self.address_2 = kwargs.get('address_2')
-        self.address_3 = kwargs.get('address_3')
+        self.address_3 = kwargs.get('address_3', False)
         self.city = kwargs.get('city')
         self.state = kwargs.get('state')
         self.postal_code = kwargs.get('postal_code')
@@ -34,7 +34,7 @@ class InterestedUser(ModelBase):
         self.converted_to_account_timestamp = \
             kwargs.get('converted_to_account_timestamp')
         self.over_18 = kwargs.get('over_18', False)
-        self.address_type = kwargs.get('address_type')
+        self.residential_address = kwargs.get('address_type')
 
     def to_api(self):
         return self.__dict__.copy()
