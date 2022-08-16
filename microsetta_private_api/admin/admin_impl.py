@@ -9,7 +9,6 @@ from microsetta_private_api.model.project import Project
 from microsetta_private_api.model.daklapack_order import DaklapackOrder, \
     ORDER_ID_KEY, SUBMITTER_ACCT_KEY, ADDR_DICT_KEY
 from microsetta_private_api.exceptions import RepoException
-from microsetta_private_api.repo import account_repo
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.activation_repo import ActivationRepo
 from microsetta_private_api.repo.event_log_repo import EventLogRepo
@@ -282,10 +281,6 @@ def send_email(body, token_info):
         contact_name = None
         activation_code = None
         language = localization.EN_US
-        acct_repo = account_repo.AccountRepo(t)
-        account = acct_repo.get_account(account_id)
-        if account is not None:
-            language = account.language
 
         # Depending on issue type, determine what email to send to and
         # what account is involved, as well as what link to send user to
