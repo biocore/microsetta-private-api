@@ -156,7 +156,8 @@ def create_human_source_from_consent(account_id, body, token_info):
     return create_source(account_id, source, token_info)
 
 
-def check_duplicate_source_name_email(account_id, body):
+def check_duplicate_source_name_email(account_id, body, token_info):
+    _validate_account_access(token_info, account_id)
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source_name = body['participant_name']
