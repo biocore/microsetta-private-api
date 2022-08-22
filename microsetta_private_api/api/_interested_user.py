@@ -121,8 +121,9 @@ def put_interested_user_address_update(body):
                 interested_user.address_1 = body['address_1']
                 interested_user.address_2 = body['address_2']
                 interested_user.address_3 = body.get('address_3', None)
-                interested_user.residential_address = body.get('residential_address', True)
-                Interested_user.phone = body.get('phone')
+                interested_user.residential_address = body.get(
+                    'residential_address', True)
+                interested_user.phone = body.get('phone')
                 interested_user.city = body['city']
                 interested_user.state = body['state']
                 interested_user.postal_code = body['postal']
