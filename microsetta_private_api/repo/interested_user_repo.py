@@ -94,11 +94,11 @@ class InterestedUserRepo(BaseRepo):
                 cur.execute(
                     "SELECT interested_user_id, campaign_id, "
                     "acquisition_source, first_name, last_name, email, phone, "
-                    "address_1, address_2, city, state, postal_code, country, "
+                    "address_1, address_2, address_3, city, state, postal_code, country, "
                     "latitude, longitude, confirm_consent, ip_address, "
                     "creation_timestamp, update_timestamp, address_checked, "
                     "address_valid, converted_to_account, "
-                    "converted_to_account_timestamp, over_18 "
+                    "converted_to_account_timestamp, over_18, residential_address "
                     "FROM campaign.interested_users "
                     "WHERE interested_user_id = %s",
                     (interested_user_id,)

@@ -1537,7 +1537,7 @@ paths:
                   type: string
                 'over_18':
                   type: string
-                'address_type':
+                'residential_address':
                   type: string
               required:
                 - campaign_id
@@ -1632,7 +1632,7 @@ paths:
                   type: string
                 'postal':
                   type: string
-                'address_type':
+                'residential_address':
                   type: boolean
               required:
                 - interested_user_id

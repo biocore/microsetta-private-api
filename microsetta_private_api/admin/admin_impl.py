@@ -118,11 +118,12 @@ def put_interested_user_by_id(token_info, iuid, body):
         user.address_valid = True
         user.address_1 = body['address_1']
         user.address_2 = body['address_2']
-        user.address_3 = body.get('address_3')
+        user.address_3 = body.get('address_3', None)
+        user.phone = body['phone']
         user.city = body['city']
         user.state = body['state']
         user.postal_code = body['postal']
-        user.residential_address = body.get('address_type')
+        user.residential_address = body.get('residential_address', True)
         update_success = \
             i_u_repo.update_interested_user(user)
 
