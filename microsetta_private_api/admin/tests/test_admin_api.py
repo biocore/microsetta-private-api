@@ -6,6 +6,8 @@ import json
 import microsetta_private_api.server
 from microsetta_private_api.model.account import Account, Address
 from microsetta_private_api.model.project import Project
+from microsetta_private_api.model.daklapack_order \
+    import SHIPPING_TYPES_BY_PROVIDER
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -17,7 +19,8 @@ from microsetta_private_api.admin.tests.test_admin_repo import \
     FIRST_LIVE_DAK_ARTICLE, delete_test_scan
 from microsetta_private_api.model.tests.test_daklapack_order import \
     DUMMY_PROJ_ID_LIST, DUMMY_DAK_ARTICLE_CODE, DUMMY_ADDRESSES, \
-    DUMMY_DAK_ORDER_DESC, DUMMY_PLANNED_SEND_DATE, DUMMY_FEDEX_REFS
+    DUMMY_DAK_ORDER_DESC, DUMMY_PLANNED_SEND_DATE, DUMMY_FEDEX_REFS, \
+    DUMMY_SHIPPING_PROVIDER, DUMMY_SHIPPING_TYPE
 
 
 DUMMY_PROJ_NAME = "test project"
@@ -727,6 +730,21 @@ class AdminApiTests(TestCase):
         finally:
             delete_test_scan(new_scan_id)
 
+    def test_get_daklapack_shipping_options(self):
+        # execute shipping options get
+        response = self.client.get(
+            "/api/admin/daklapack_shipping",
+            headers=MOCK_HEADERS
+        )
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        self.assertDictEqual(SHIPPING_TYPES_BY_PROVIDER, response_obj)
+
     def test_get_daklapack_articles(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
@@ -919,6 +937,8 @@ class AdminApiTests(TestCase):
             "project_ids": DUMMY_PROJ_ID_LIST,
             "article_code": DUMMY_DAK_ARTICLE_CODE,
             "addresses": DUMMY_ADDRESSES,
+            "shipping_provider": DUMMY_SHIPPING_PROVIDER,
+            "shipping_type": DUMMY_SHIPPING_TYPE,
             "description": DUMMY_DAK_ORDER_DESC,
             "fedex_ref_1": DUMMY_FEDEX_REFS[0],
             "fedex_ref_2": DUMMY_FEDEX_REFS[1],
@@ -943,6 +963,8 @@ class AdminApiTests(TestCase):
             "project_ids": DUMMY_PROJ_ID_LIST,
             "article_code": DUMMY_DAK_ARTICLE_CODE,
             "addresses": DUMMY_ADDRESSES,
+            "shipping_provider": DUMMY_SHIPPING_PROVIDER,
+            "shipping_type": DUMMY_SHIPPING_TYPE,
             "description": None,
             "fedex_ref_1": None,
             "fedex_ref_2": None,
