@@ -168,6 +168,43 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/accounts/{account_id}/check_duplicate_source':
+    post:
+      operationId: microsetta_private_api.api.check_duplicate_source_name_email
+      tags:
+        - Account
+      summary: Get information about duplicate source
+      description: Get information about  duplicate source
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                participant_name: # Field is named participant_name, but contents are used to fill source's name
+                  $ref: '#/components/schemas/source_name'
+                participant_email:
+                  $ref: '#/components/schemas/participant_email'
+              required:
+                    - participant_name
+                    - participant_email
+      responses:
+        '200':
+          description: Successfully returned source information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source_match:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/accounts/{account_id}/email_match':
     get:
       operationId: microsetta_private_api.api.check_email_match

@@ -258,3 +258,19 @@ class SourceRepo(BaseRepo):
                 raise RepoException("Invalid source relation")
             else:
                 return True
+
+    def get_duplicate_source_name_email(self, account_id, source_name, email):
+
+        with self._transaction.dict_cursor() as cur:
+            cur.execute("SELECT " + SourceRepo.read_cols +
+                        " FROM "
+                        "source "
+                        "WHERE "
+                        "source.account_id = %s "
+                        "AND  (source.participant_email ILIKE %s OR"
+                        " source.source_name ILIKE %s)",
+                        (account_id, email, source_name,))
+            r = cur.fetchone()
+            if r is None:
+                return {'source_duplicate': False}
+            return {'source_duplicate': True}
