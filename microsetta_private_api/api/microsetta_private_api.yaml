@@ -1560,6 +1560,8 @@ paths:
                   type: string
                 'address_2':
                   type: string
+                'address_3':
+                  type: string
                 'city':
                   type: string
                 'state':
@@ -1571,6 +1573,8 @@ paths:
                 'ip_address':
                   type: string
                 'over_18':
+                  type: string
+                'residential_address':
                   type: string
               required:
                 - campaign_id
@@ -1657,12 +1661,16 @@ paths:
                   type: string
                 'address_2':
                   type: string
+                'address_3':
+                  type: string
                 'city':
                   type: string
                 'state':
                   type: string
                 'postal':
                   type: string
+                'residential_address':
+                  type: boolean
               required:
                 - interested_user_id
                 - email
