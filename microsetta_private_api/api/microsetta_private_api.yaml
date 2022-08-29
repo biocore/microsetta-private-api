@@ -1933,6 +1933,12 @@ paths:
           schema:
             type: string
         - in: query
+          name: address_3
+          description: Third line of address to verify
+          required: false
+          schema:
+            type: string
+        - in: query
           name: city
           description: City of address to verify
           required: false

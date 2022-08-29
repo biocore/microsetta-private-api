@@ -85,6 +85,7 @@ def get_interested_user_address_update(interested_user_id, email):
                         email=interested_user.email,
                         address_1=interested_user.address_1,
                         address_2=interested_user.address_2,
+                        address_3=interested_user.address_3,
                         city=interested_user.city,
                         state=interested_user.state,
                         postal_code=interested_user.postal_code,
@@ -120,10 +121,10 @@ def put_interested_user_address_update(body):
                 interested_user.address_checked = False
                 interested_user.address_1 = body['address_1']
                 interested_user.address_2 = body['address_2']
-                interested_user.address_3 = body.get('address_3', None)
-                interested_user.residential_address = body.get(
-                    'residential_address', True)
-                interested_user.phone = body.get('phone')
+                interested_user.address_3 = body['address_3']
+                interested_user.residential_address = \
+                    body['residential_address']
+                interested_user.phone = body['phone']
                 interested_user.city = body['city']
                 interested_user.state = body['state']
                 interested_user.postal_code = body['postal']
