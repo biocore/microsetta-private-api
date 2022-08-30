@@ -30,7 +30,7 @@ class Account(ModelBase):
                 input_dict['address']['post_code'],
                 input_dict['address']['country_code']
             ),
-            input_dict['kit_name'],
+            "",
             input_dict['language']
         )
         return result
