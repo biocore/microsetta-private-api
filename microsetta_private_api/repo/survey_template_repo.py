@@ -111,7 +111,8 @@ class SurveyTemplateRepo(BaseRepo):
         tag_to_col = {
             localization.EN_US: "survey_question.american",
             localization.EN_GB: "survey_question.british",
-            localization.ES_MX: "survey_question.spanish"
+            localization.ES_MX: "survey_question.spanish",
+            localization.ES_ES: "survey_question.spain"
         }
 
         if language_tag not in tag_to_col:
@@ -205,7 +206,8 @@ class SurveyTemplateRepo(BaseRepo):
         tag_to_col = {
             localization.EN_US: "american",
             localization.EN_GB: "british",
-            localization.ES_MX: "spanish"
+            localization.ES_MX: "spanish",
+            localization.ES_ES: "spain"
         }
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
@@ -223,6 +225,7 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_US: "survey_response.american",
             localization.EN_GB: "survey_response.british",
             localization.ES_MX: "survey_response.spanish",
+            localization.ES_ES: "survey_response.spain",
         }
 
         with self._transaction.cursor() as cur:
