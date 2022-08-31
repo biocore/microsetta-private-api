@@ -23,6 +23,7 @@ class SurveyTemplateRepo(BaseRepo):
     VIOSCREEN_ID = 10001
     MYFOODREPO_ID = 10002
     POLYPHENOL_FFQ_ID = 10003
+    SPAIN_FFQ_ID = 10004
     SURVEY_INFO = {
         1: SurveyTemplateLinkInfo(
             1,
@@ -81,6 +82,12 @@ class SurveyTemplateRepo(BaseRepo):
         POLYPHENOL_FFQ_ID: SurveyTemplateLinkInfo(
             POLYPHENOL_FFQ_ID,
             "Polyphenol Food Frequency Questionnaire",
+            "1.0",
+            "remote"
+        ),
+        SPAIN_FFQ_ID: SurveyTemplateLinkInfo(
+            SPAIN_FFQ_ID,
+            "Spain Food Frequency Questionnaire",
             "1.0",
             "remote"
         )
@@ -458,6 +465,69 @@ class SurveyTemplateRepo(BaseRepo):
                 return (None, None)
             else:
                 return res
+
+    def create_spain_ffq_entry(self, account_id, source_id):
+        """Return a newly created Spain FFQ ID
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Returns
+        -------
+        UUID
+            The newly created Spain FFQ ID
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""INSERT INTO ag.spain_ffq_registry
+                           (account_id, source_id)
+                           VALUES (%s, %s)
+                           RETURNING spain_ffq_id""",
+                        (account_id, source_id))
+            spain_ffq_id = cur.fetchone()[0]
+            if spain_ffq_id is None:
+                raise RepoException("Error creating Spain FFQ entry")
+            else:
+                # Put a survey into ag_login_surveys
+                cur.execute("INSERT INTO ag_login_surveys("
+                            "ag_login_id, "
+                            "survey_id, "
+                            "vioscreen_status, "
+                            "source_id) "
+                            "VALUES(%s, %s, %s, %s)",
+                            (account_id, spain_ffq_id, None, source_id))
+
+                return spain_ffq_id
+
+    def get_spain_ffq_id_if_exists(self, account_id, source_id):
+        """Return a Spain FFQ ID if one exists
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Returns
+        -------
+        UUID or None
+            The associated Spain FFQ ID or None
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT spain_ffq_id
+                           FROM ag.spain_ffq_registry
+                           WHERE account_id=%s AND source_id=%s""",
+                        (account_id, source_id))
+            res = cur.fetchone()
+
+            if res is None:
+                return None
+            else:
+                return res[0]
 
     def create_vioscreen_id(self, account_id, source_id,
                             vioscreen_ext_sample_id):

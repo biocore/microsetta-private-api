@@ -55,3 +55,18 @@ UPDATE ag.survey_question SET spain = '¿Ha participado en la atención directa 
 UPDATE ag.survey_question SET spain = 'Describa la calidad de la evacuación. Utilice el siguiente cuadro a modo de referencia:<br/><img src="/static/img/es_es/bristol_stool.jpg" id="bristol-chart">' WHERE survey_question_id = 38;
 
 -- END SURVEY CHANGES FOR SPAIN
+
+-- BEGIN SPAIN FFQ
+CREATE TABLE ag.spain_ffq_registry (
+    spain_ffq_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    account_id UUID NOT NULL,
+    source_id UUID,
+    creation_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT fk_spain_ffq_registry_account FOREIGN KEY (account_id) REFERENCES ag.account(id),
+    CONSTRAINT fk_spain_ffq_registry_source FOREIGN KEY (source_id) REFERENCES ag.source (id)
+);
+
+CREATE INDEX spain_ffq_registry_source ON ag.spain_ffq_registry (account_id, source_id);
+-- END SPAIN FFQ
