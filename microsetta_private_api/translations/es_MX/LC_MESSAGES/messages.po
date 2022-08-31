@@ -8,7 +8,8 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2021-06-10 13:58-0700\n"
-"PO-Revision-Date: 2021-06-11 17:03-0700\n"
+"PO-Revision-Date: 2022-07-20 13:33-0700\n"
+"Last-Translator: Edgar Diaz <ediaz@ucsd.edu>\n"
 "Language-Team: es_MX <LL@li.org>\n"
 "Language: es_MX\n"
 "MIME-Version: 1.0\n"
@@ -16,39 +17,36 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.9.1\n"
-"Last-Translator: Edgar Diaz <ediaz@ucsd.edu>\n"
-"X-Generator: Poedit 3.0\n"
+"X-Generator: Poedit 3.1.1\n"
 
 #: templates/email/activation_email.jinja2:221
 msgid ""
 "Thank you for your interest and participation in The Microsetta Initiative. We "
 "will be shipping out your sample collection kit(s) soon."
 msgstr ""
-"Gracias por su interés y participación en The Microsetta Inititative. Pronto "
-"enviaremos su (s) kit (s) de recolección de muestras."
+"Gracias por su interés y participación en The Microsetta Initiative. "
+"Pronto le enviaremos su(s) kit(s) de recolección de muestras."
 
 #: templates/email/activation_email.jinja2:225
 msgid ""
 "The kit(s) may still be en route, but you don't have to pause your journey "
 "just yet.  You can sign up right now to get started at "
 msgstr ""
-"Es posible que el (los) kit (s) todavía estén en camino, pero no es necesario "
-"que pause su jornada. Puede registrarse ahora mismo para comenzar en "
+"Es posible que su(s) kit(s) aún estén en camino, pero no por eso tiene "
+"que pausar su participación. Usted puede registrarse ahora mismo para "
+"comenzar en "
 
 #: templates/email/activation_email.jinja2:225
-#, fuzzy
 msgid "using the following info:"
-msgstr "usando la siguiente información:"
+msgstr "utilizando la siguiente información:"
 
 #: templates/email/activation_email.jinja2:228
-#, fuzzy
 msgid "Email:"
 msgstr "Correo electrónico:"
 
 #: templates/email/activation_email.jinja2:229
-#, fuzzy
 msgid "Activation Code:"
-msgstr "Código de activación:"
+msgstr "Código de Activación:"
 
 #: templates/email/activation_email.jinja2:234
 msgid ""
@@ -56,36 +54,33 @@ msgid ""
 "up again, your kit(s) can be added to your existing account when the order "
 "arrives."
 msgstr ""
-"¿No es su primera incursión en el microbioma? No hay problema, no es necesario "
-"que se registre nuevamente, su(s) kit(s) se puede(n) agregar a su cuenta "
-"existente cuando llegue el pedido."
+"¿No es tu primera incursión en el microbioma? No hay problema, no "
+"necesita registrarse nuevamente, su(s) kit(s) se pueden agregar a su "
+"cuenta existente cuando le llegue su equipo."
 
 #: templates/email/activation_email.jinja2:238
 #: templates/email/incorrect_sample_type.jinja2:239
 #: templates/email/missing_sample_info.jinja2:269
 #: templates/email/sample_is_valid.jinja2:228
 msgid "If you have any questions, please reply to us at "
-msgstr "Si tiene alguna pregunta, por favor contáctenos a "
+msgstr "Si tiene alguna pregunta, por favor envíenos un mensaje a "
 
 #: templates/email/activation_email.jinja2:238
 #: templates/email/incorrect_sample_type.jinja2:239
 #: templates/email/sample_is_valid.jinja2:228
-#, fuzzy
 msgid "Thank you for supporting our project."
 msgstr "Gracias por apoyar nuestro proyecto."
 
 #: templates/email/activation_email.jinja2:242
 #: templates/email/incorrect_sample_type.jinja2:243
-#, fuzzy
 msgid "Sincerely,"
-msgstr "Atentamente,"
+msgstr "Cordialmente,"
 
 #: templates/email/activation_email.jinja2:245
 #: templates/email/incorrect_sample_type.jinja2:246
 #: templates/email/missing_sample_info.jinja2:273
 #: templates/email/no_associated_source.jinja2:276
 #: templates/email/sample_is_valid.jinja2:235
-#, fuzzy
 msgid "The Microsetta Team"
 msgstr "El equipo de Microsetta"
 
@@ -93,7 +88,6 @@ msgstr "El equipo de Microsetta"
 #: templates/email/missing_sample_info.jinja2:220
 #: templates/email/no_associated_source.jinja2:220
 #: templates/email/sample_is_valid.jinja2:220
-#, fuzzy
 msgid "Hello"
 msgstr "Hola"
 
@@ -102,16 +96,14 @@ msgid ""
 "We recently received the following microbiome sample from you and noticed that "
 "it might have been incorrectly labeled."
 msgstr ""
-"Recientemente recibimos la siguiente muestra de microbioma de su parte y "
-"notamos que puede haber sido asignada incorrectamente."
+"Recientemente recibimos su muestra de microbioma y creemos que podría "
+"haber sido etiquetada incorrectamente."
 
 #: templates/email/incorrect_sample_type.jinja2:229
-#, fuzzy
 msgid "Marked"
-msgstr "Marcado"
+msgstr "Marcada"
 
 #: templates/email/incorrect_sample_type.jinja2:229
-#, fuzzy
 msgid "but appears to be"
 msgstr "pero parece ser"
 
@@ -121,17 +113,18 @@ msgid ""
 "can begin processing it to ensure that your sample is sequenced correctly. If "
 "you know the sample type then please reply to this email"
 msgstr ""
-"Nuestro laboratorio necesita verificar el tipo de muestra que envió antes de "
-"poder comenzar su procesamiento para garantizar que su muestra sea secuenciada "
-"correctamente. Si conoce el tipo de muestra, responda a este correo electrónico"
+"Nuestro laboratorio necesitará verificar el tipo de muestra que usted "
+"envió antes de que puedan comenzar a procesarla para garantizar que su "
+"muestra sea secuenciada correctamente. Si conoce el tipo de muestra, por "
+"favor responda a este correo electrónico"
 
 #: templates/email/incorrect_sample_type.jinja2:236
 msgid ""
 "with this information. We will then update your profile so the collection can "
 "be appropriately associated."
 msgstr ""
-"con esta información. Así actualizaremos su información para que la muestra se "
-"pueda asociar adecuadamente."
+"con esta información. Nosotros actualizaremos su perfil para que la "
+"muestra pueda ser asociada adecuadamente."
 
 #: templates/email/missing_sample_info.jinja2:224
 msgid ""
@@ -143,11 +136,12 @@ msgid ""
 "below to view the collection information."
 msgstr ""
 "Gracias por su interés y participación en The Microsetta Initiative. Le "
-"escribimos porque encontramos un problema al procesar su muestra, y "
-"agradeceríamos su ayuda para resolver este problema. Para asegurarnos de que "
-"tenemos la información correcta, le pedimos que confirme el tipo de muestra "
-"que envió y la fecha y hora de recolección con nuestro equipo. Haga clic en el "
-"URL a continuación para ver la información de recolección."
+"estamos escribiendo ya que hemos encontrado un problema al procesar su "
+"muestra y agradeceríamos su ayuda para resolver este asunto. Para estar "
+"seguros de que tenemos la información correcta, requerimos que confirme "
+"el tipo de muestra que envío y la fecha y hora de recolección con "
+"nuestro equipo. Por favor, haga clic en el siguiente URL para ver la "
+"información de la muestra."
 
 #: templates/email/missing_sample_info.jinja2:236
 msgid "Based on what we can see, we think the collection type is:"
@@ -161,12 +155,12 @@ msgid ""
 "regulations. Not to worry - by replying to this email our team is ready to "
 "assist you with updating the following information."
 msgstr ""
-"Requerimos esta información para procesar la muestra de acuerdo con nuestro "
-"protocolo de investigación en seres humanos. Por lo tanto, la edición de la "
-"información de la cuenta en línea está actualmente bloqueada como medida "
-"preventiva para garantizar que cumplamos con las regulaciones. No se preocupe: "
-"al responder a este correo electrónico, nuestro equipo está listo para "
-"ayudarlo a actualizar la siguiente información."
+"Requerimos esta información para poder procesar su muestra de acuerdo "
+"con nuestro protocolo de investigación en seres humanos. Por lo tanto, "
+"la edición de la información de su cuenta está actualmente bloqueada "
+"como medida preventiva para garantizar que cumplamos con las "
+"regulaciones. No necesita responder a este correo electrónico, nuestro "
+"equipo está listo para ayudarlo a actualizar la siguiente información."
 
 #: templates/email/missing_sample_info.jinja2:254
 #: templates/email/no_associated_source.jinja2:263
@@ -176,7 +170,7 @@ msgstr "Fecha de recolección"
 #: templates/email/missing_sample_info.jinja2:255
 #: templates/email/no_associated_source.jinja2:264
 msgid "Collection time"
-msgstr "Hora de recogida"
+msgstr "Hora de recolección"
 
 #: templates/email/missing_sample_info.jinja2:256
 #: templates/email/no_associated_source.jinja2:265
@@ -188,14 +182,8 @@ msgid ""
 "Once we have these details, we will update the record so the specimen can be "
 "processed appropriately."
 msgstr ""
-"Una vez tengamos estos detalles, actualizaremos el registro para que la "
-"muestra se pueda procesar adecuadamente."
-
-#: templates/email/missing_sample_info.jinja2:272
-#: templates/email/no_associated_source.jinja2:275
-#, fuzzy
-msgid "Thank you,"
-msgstr "Gracias,"
+"Una vez que tengamos estos detalles, actualizaremos el registro para que "
+"la muestra pueda ser procesada adecuadamente."
 
 #: templates/email/no_associated_source.jinja2:224
 msgid ""
@@ -204,16 +192,16 @@ msgid ""
 "would appreciate your assistance in helping to resolve this matter."
 msgstr ""
 "Gracias por su interés y participación en The Microsetta Initiative. Le "
-"escribimos porque hemos encontrado un problema al procesar su muestra y "
-"agradeceríamos su ayuda para resolver este asunto."
+"estamos escribiendo ya que hemos encontrado un problema al procesar su "
+"muestra, y agradeceríamos su ayuda para resolver este asunto."
 
 #: templates/email/no_associated_source.jinja2:226
 msgid ""
 "Specifically, the following sample sent to the lab needs more information to "
 "be included before it can be processed:"
 msgstr ""
-"Específicamente, la siguiente muestra enviada al laboratorio necesita mas "
-"información antes de que pueda ser procesada:"
+"Específicamente, la siguiente muestra enviada al laboratorio necesita "
+"más información para ser incluida antes de que pueda ser procesada:"
 
 #: templates/email/no_associated_source.jinja2:238
 msgid ""
@@ -221,12 +209,12 @@ msgid ""
 "human subjects research protocol. Please log back into the participant website "
 "by clicking or copying the following URL:"
 msgstr ""
-"Requerimos esta información para procesar esta muestra de acuerdo con nuestro "
-"protocolo de investigación en seres humanos. Vuelva a iniciar sesión en el "
-"sitio web del participante haciendo clic o copiando el siguiente URL:"
+"Requerimos esta información para procesar este espécimen de acuerdo con "
+"nuestro protocolo de investigación en seres humanos. Por favor vuelva a "
+"iniciar sesión en el sitio web del participante haciendo clic o copiando "
+"el siguiente URL:"
 
 #: templates/email/no_associated_source.jinja2:245
-#, fuzzy
 msgid "Your account"
 msgstr "Su cuenta"
 
@@ -235,19 +223,20 @@ msgid ""
 "After accessing your account using the above URL, you will need to create a "
 "source by clicking on one of the buttons under the \"Sources\" section."
 msgstr ""
-"Después de acceder a su cuenta utilizando el URL anterior, deberá crear una "
-"fuente haciendo clic en uno de los botones en la sección \"Fuentes\"."
+"Después de acceder a su cuenta utilizando el URL anterior, deberá crear "
+"una fuente haciendo clic en uno de los botones debajo de la selección de "
+"“Fuentes”."
 
 #: templates/email/no_associated_source.jinja2:258
 msgid ""
 "Once a source has been created, please reply to this email with the following "
 "information so that we can link the collection to your source:"
 msgstr ""
-"Una vez que se haya creado una fuente, responda a este correo electrónico con "
-"la siguiente información para que podamos vincular la muestra a su fuente:"
+"Una vez que se haya creado una fuente, por favor responda a este correo "
+"electrónico con la siguiente información para que podamos vincular la "
+"muestra a su fuente:"
 
 #: templates/email/no_associated_source.jinja2:272
-#, fuzzy
 msgid "If you have any questions, please reply to us at"
 msgstr "Si tiene alguna pregunta, por favor contáctenos a"
 
@@ -258,13 +247,13 @@ msgid ""
 "queue. Samples are processed within 1 – 3 months. Once sequenced, you will "
 "receive an update with a link to your results."
 msgstr ""
-"Gracias por su interés y participación en The Microsetta Iniciativa. Hemos "
-"recibido su muestra de microbioma y ahora está en linea de procesamiento. "
-"Muestras son procesada en 1 - 3 meses. Una vez secuenciada, recibirá una "
-"actualización con un link a sus resultados."
+"Gracias por su interés y participación en The Microsetta Initiative. "
+"Hemos recibido la muestra de su microbioma, y ahora está en la línea de "
+"procesamiento. Las muestras se procesan de 1 a 3 meses. Una vez que sea "
+"secuenciada, recibirá una notificación con un enlace para ver sus "
+"resultados."
 
 #: templates/email/sample_is_valid.jinja2:232
-#, fuzzy
 msgid "Kind regards,"
 msgstr "Saludos cordiales,"
 

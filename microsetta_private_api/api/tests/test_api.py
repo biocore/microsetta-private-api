@@ -42,6 +42,7 @@ from microsetta_private_api.model.vioscreen import (
 )
 from microsetta_private_api.api.tests.test_integration import \
     _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
+from dateutil.relativedelta import relativedelta
 
 
 # region helper methods
@@ -1871,13 +1872,52 @@ class SampleTests(ApiTests):
                                      headers=make_headers(FAKE_TOKEN_ADMIN))
         self.assertEqual(201, post_resp.status_code)
 
-        # attempt to continue editing as a regular user, should succeed
+        # if sample date is less than 10 years
+        now = datetime.datetime.now()
+        delta = relativedelta(year=now.year-11)
+        date = now+delta
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),
             content_type='application/json',
             data=json.dumps(
                 {
-                    "sample_datetime": "2017-07-21T17:32:28Z",
+                    "sample_datetime": date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "sample_notes": "Woowooooooo2",
+                    "sample_site": "Stool",
+                    "sample_project": "American Gut Project"
+                }),
+            headers=self.dummy_auth
+        )
+        # check response code
+        self.assertEqual(400, post_resp.status_code)
+
+        # if sample date is greater than 30 days
+        now = datetime.datetime.now()
+        delta = relativedelta(month=now.month+2)
+        date = now+delta
+        post_resp = self.client.put(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_datetime": date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "sample_notes": "Woowooooooo2",
+                    "sample_site": "Stool",
+                    "sample_project": "American Gut Project"
+                }),
+            headers=self.dummy_auth
+        )
+        # check response code
+        self.assertEqual(400, post_resp.status_code)
+
+        # attempt to continue editing as a regular user, should succeed
+        date = datetime.datetime.now()
+        post_resp = self.client.put(
+            '%s?%s' % (base_url, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_datetime": date.strftime("%Y-%m-%dT%H:%M:%SZ"),
                     "sample_notes": "Woowooooooo",
                     "sample_site": "Stool",
                     "sample_project": "American Gut Project"
@@ -1901,7 +1941,7 @@ class SampleTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "sample_datetime": "2020-07-21T17:32:28Z",
+                    "sample_datetime": date.strftime("%Y-%m-%dT%H:%M:%SZ"),
                     "sample_notes": "Woowooooooo2",
                     "sample_site": "Stool",
                     "sample_project": "American Gut Project"
@@ -1917,7 +1957,7 @@ class SampleTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "sample_datetime": "2020-07-21T17:32:28Z",
+                    "sample_datetime": date.strftime("%Y-%m-%dT%H:%M:%SZ"),
                     "sample_notes": "Woowooooooo3",
                     "sample_site": "Stool",
                     "sample_project": "American Gut Project"

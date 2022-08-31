@@ -18,6 +18,8 @@ from microsetta_private_api.admin.admin_impl import token_grants_admin_access
 from microsetta_private_api.qiita import qclient
 
 from flask import current_app as app
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 
 def read_sample_associations(account_id, source_id, token_info):
@@ -134,7 +136,11 @@ def update_sample_association(account_id, source_id, sample_id, body,
             sample_datetime = fromisotime(sample_datetime)
         except ValueError:
             raise BadRequest("Invalid sample_datetime")
-
+        curdate = datetime.now(sample_datetime.tzinfo)
+        lower_limit = curdate + relativedelta(years=-10)
+        upper_limit = curdate + relativedelta(months=+1)
+        if sample_datetime < lower_limit or sample_datetime > upper_limit:
+            raise BadRequest('Invalid sample date')
         # sample_site will not be present if its environmental. this will
         # default to None if the key is not present
         sample_site = body.get('sample_site')
