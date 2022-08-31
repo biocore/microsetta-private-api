@@ -1500,7 +1500,7 @@ class VioscreenFoodConsumptionRepo(BaseRepo):
                 return None
 
     def _get_code_info(self, code):
-        """Obtain the detail about a particular food consumption component by its code
+        """Obtain detail from a food consumption component by its code
 
         Parameters
         ----------

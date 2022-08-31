@@ -863,15 +863,7 @@ def allow_removal_request(account_id, token_info):
     validate_admin_access(token_info)
 
     with Transaction() as t:
-        acct_repo = AccountRepo(t)
         rq_repo = RemovalQueueRepo(t)
-
-        # get the email address and name of the user we're trying to delete
-        # so we can send them a notificaiton email afterwards.
-        account = acct_repo.get_account(account_id)
-        user_email = account.email
-        user_name = account.first_name
-        language = account.language
 
         try:
             # remove the user from the queue, noting the admin who allowed it
@@ -879,10 +871,6 @@ def allow_removal_request(account_id, token_info):
             rq_repo.update_queue(account_id, token_info['sub'], 'deleted')
         except RepoException as e:
             raise e
-
-        # send an email to the user.
-        celery_send_email(user_email, "account_deleted",
-                          {"contact_name": user_name}, language)
 
         # delete the user
         return delete_account(account_id, token_info)
