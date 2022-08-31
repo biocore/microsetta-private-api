@@ -631,7 +631,7 @@ class IntegrationTests(TestCase):
         for bobo_survey in bobo_surveys:
             chosen_survey = bobo_survey["survey_template_id"]
 
-            # 10001, 10002, and 10003 are non-local surveys
+            # 10001, 10002, 10003, and 10004 are non-local surveys
             if chosen_survey in (10001, 10002, 10003, 10004):
                 continue
 
