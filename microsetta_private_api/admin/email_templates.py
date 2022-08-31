@@ -68,13 +68,6 @@ class EmailMessage(Enum):
         EventType.EMAIL,
         EventSubtype.EMAIL_ADDRESS_INVALID
     )
-    account_deleted = (
-        "Your account has been deleted",
-        "email/account_deleted.jinja2",
-        ("contact_name", ),
-        EventType.EMAIL,
-        EventSubtype.EMAIL_ACCOUNT_DELETED
-    )
 
     def __init__(self, subject, html, required, event_type, event_sub):
         self.subject = subject
