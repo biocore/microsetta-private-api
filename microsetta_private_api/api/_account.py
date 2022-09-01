@@ -64,9 +64,7 @@ def register_account(body, token_info):
     account_obj = Account.from_dict(body, token_info[JWT_ISS_CLAIM_KEY],
                                     token_info[JWT_SUB_CLAIM_KEY])
 
-
     with Transaction() as t:
-
         acct_repo = AccountRepo(t)
         acct_repo.create_account(account_obj)
         new_acct = acct_repo.get_account(new_acct_id)
@@ -81,7 +79,6 @@ def register_account(body, token_info):
 def read_account(account_id, token_info):
     acc = _validate_account_access(token_info, account_id)
     return jsonify(acc.to_api()), 200
-
 
 def check_email_match(account_id, token_info):
     acc = _validate_account_access(token_info, account_id)
