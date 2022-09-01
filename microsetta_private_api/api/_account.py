@@ -12,8 +12,6 @@ from microsetta_private_api.api.literals import AUTHROCKET_PUB_KEY, \
 from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.repo.account_repo import AccountRepo
-#from microsetta_private_api.repo.activation_repo import ActivationRepo
-#from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.config_manager import SERVER_CONFIG
 

@@ -735,7 +735,6 @@ class AccountsTests(ApiTests):
              DUMMY_ACCT_INFO,
              skip_fields=["first_name"])
 
-
     def test_accounts_create_fail_422(self):
         """Return 422 if provided email is in use in db."""
 
