@@ -100,7 +100,7 @@ DUMMY_ACCT_INFO3 = {
         "street": "123 Main St. E. Apt. 2"
     },
     "email": TEST_EMAIL,
-    "first_name": "xyz",
+    "first_name": None,
     "last_name": "Doe",
     "language": "en_US",
     KIT_NAME_KEY: ""
