@@ -38,11 +38,11 @@ def create_interested_user(body):
     # NOTE 2022-09-01: Disabling address verification for interested users as
     # Melissa seems to be throwing false negatives for Spain. Will revisit
     # in the future.
-    #with Transaction() as t:
+    # with Transaction() as t:
     #    interested_user_repo = InterestedUserRepo(t)
     #    try:
-            # at this point, we don't particularly care if it's valid
-            # we just care that it doesn't fail to execute
+    #        at this point, we don't particularly care if it's valid
+    #        we just care that it doesn't fail to execute
     #        interested_user_repo.verify_address(interested_user_id)
     #    except RepoException:
     #        return jsonify(
