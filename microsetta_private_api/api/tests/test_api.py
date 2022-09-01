@@ -728,7 +728,7 @@ class AccountsTests(ApiTests):
 
     def test_accounts_create_fail_400_without_required_fields(self):
         """Return 400 validation fail if don't provide a required field """
-        
+
         self.run_query_and_content_required_field_test(
              "/api/accounts", "post",
              self.default_querystring_dict,
