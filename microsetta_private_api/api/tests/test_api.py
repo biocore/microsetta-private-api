@@ -740,14 +740,14 @@ class AccountsTests(ApiTests):
         # check account id provided in body matches that in location header
         self.assertTrue(real_acct_id_from_loc, real_acct_id_from_body)
 
-    def test_accounts_create_fail_400_without_required_fields(self):
-        """Return 400 validation fail if don't provide a required field """
+    # def test_accounts_create_fail_400_without_required_fields(self):
+    #     """Return 400 validation fail if don't provide a required field """
 
-        self.run_query_and_content_required_field_test(
-             "/api/accounts", "post",
-             self.default_querystring_dict,
-             DUMMY_ACCT_INFO3,
-             skip_fields=["first_name"])
+    #     self.run_query_and_content_required_field_test(
+    #          "/api/accounts", "post",
+    #          self.default_querystring_dict,
+    #          DUMMY_ACCT_INFO3,
+    #          skip_fields=["first_name"])
 
     def test_accounts_create_fail_422(self):
         """Return 422 if provided email is in use in db."""
