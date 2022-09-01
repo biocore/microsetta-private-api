@@ -91,6 +91,20 @@ DUMMY_ACCT_INFO_2 = {
     "language": "en_US",
     KIT_NAME_KEY: ""
 }
+DUMMY_ACCT_INFO3 = {
+    "address": {
+        "city": "Springfield",
+        "country_code": "US",
+        "post_code": "12345",
+        "state": "CA",
+        "street": "123 Main St. E. Apt. 2"
+    },
+    "email": TEST_EMAIL,
+    "first_name": "xyz",
+    "last_name": "Doe",
+    "language": "en_US",
+    KIT_NAME_KEY: ""
+}
 DUMMY_ACCT_ADMIN = {
     "address": {
         "city": "Oberlin",
@@ -732,7 +746,7 @@ class AccountsTests(ApiTests):
         self.run_query_and_content_required_field_test(
              "/api/accounts", "post",
              self.default_querystring_dict,
-             DUMMY_ACCT_INFO,
+             DUMMY_ACCT_INFO3,
              skip_fields=["first_name"])
 
     def test_accounts_create_fail_422(self):
