@@ -54,7 +54,7 @@ Aproximadamente 2-4 meses después de haber recibido su muestra, se le notificar
 <li><strong>REMESA</strong>: El pago se enviará a través de PayPal a través del sitio web de FundRazr. No se requiere ningún pago si la participación es a través de un estudio patrocinado.</li>
 </ol></li>
 <li><strong>TÉRMINO DEL ACUERDO</strong>: Este Acuerdo entrará en vigencia a partir de la fecha de envío del pago a FundRazr.</li>
-<li><strong>CONTACTO DEL OFICINA DE CONTRATOS DE UCSD</strong>:<br /> 
+<li><strong>CONTACTO DEL OFICINA DE CONTRATOS DE UCSD</strong>:<br />
 Universidad de California, San Diego<br />
 9500 Gilman Drive Mail Stop 0934<br />
 La Jolla, California 92093-0934<br />
