@@ -80,6 +80,7 @@ def read_account(account_id, token_info):
     acc = _validate_account_access(token_info, account_id)
     return jsonify(acc.to_api()), 200
 
+
 def check_email_match(account_id, token_info):
     acc = _validate_account_access(token_info, account_id)
 
