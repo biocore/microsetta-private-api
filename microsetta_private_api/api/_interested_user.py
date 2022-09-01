@@ -34,19 +34,23 @@ def create_interested_user(body):
     # opening a new transaction for address verification so we don't lose the
     # interested user record if something unexpected happens during address
     # verification
-    with Transaction() as t:
-        interested_user_repo = InterestedUserRepo(t)
-        try:
+
+    # NOTE 2022-09-01: Disabling address verification for interested users as
+    # Melissa seems to be throwing false negatives for Spain. Will revisit
+    # in the future.
+    #with Transaction() as t:
+    #    interested_user_repo = InterestedUserRepo(t)
+    #    try:
             # at this point, we don't particularly care if it's valid
             # we just care that it doesn't fail to execute
-            interested_user_repo.verify_address(interested_user_id)
-        except RepoException:
-            return jsonify(
-                code=400,
-                message="Failed to verify address."
-            ), 400
+    #        interested_user_repo.verify_address(interested_user_id)
+    #    except RepoException:
+    #        return jsonify(
+    #            code=400,
+    #            message="Failed to verify address."
+    #        ), 400
 
-        t.commit()
+    #    t.commit()
 
     return jsonify(user_id=interested_user_id), 200
 
