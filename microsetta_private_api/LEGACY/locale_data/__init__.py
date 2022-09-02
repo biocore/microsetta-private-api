@@ -11,7 +11,7 @@ from __future__ import division
 
 
 available_locales = set([
-    'american_gut', 'british_gut', 'spanish_gut', 'spain_gut'])
+    'american_gut', 'british_gut', 'spanish_gut', 'spain_spanish_gut'])
 
 
 media_locale = {
