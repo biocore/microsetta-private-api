@@ -7,16 +7,40 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-06-10 13:58-0700\n"
+"POT-Creation-Date: 2022-09-01 20:49-0700\n"
 "PO-Revision-Date: 2021-06-03 17:28-0700\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en_US\n"
 "Language-Team: en_US <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.9.1\n"
+"Generated-By: Babel 2.10.3\n"
+
+#: admin/email_templates.py:22
+msgid "Welcome to The Microsetta Initiative"
+msgstr ""
+
+#: admin/email_templates.py:29
+msgid "Your Microsetta Initiative status update: attention needed"
+msgstr ""
+
+#: admin/email_templates.py:37 admin/email_templates.py:67
+msgid "Your Microsetta Initiative status update: information needed"
+msgstr ""
+
+#: admin/email_templates.py:45
+msgid "Your Microsetta Initiative status update and next steps"
+msgstr ""
+
+#: admin/email_templates.py:52
+msgid "Your Microsetta Initiative status update: critical information needed"
+msgstr ""
+
+#: admin/email_templates.py:60
+msgid "[PESTER] a thing happened"
+msgstr ""
 
 #: templates/email/activation_email.jinja2:221
 msgid ""
@@ -68,6 +92,7 @@ msgid "Sincerely,"
 msgstr ""
 
 #: templates/email/activation_email.jinja2:245
+#: templates/email/address_invalid.jinja2:250
 #: templates/email/incorrect_sample_type.jinja2:246
 #: templates/email/missing_sample_info.jinja2:273
 #: templates/email/no_associated_source.jinja2:276
@@ -75,11 +100,43 @@ msgstr ""
 msgid "The Microsetta Team"
 msgstr ""
 
+#: templates/email/address_invalid.jinja2:220
 #: templates/email/incorrect_sample_type.jinja2:220
 #: templates/email/missing_sample_info.jinja2:220
 #: templates/email/no_associated_source.jinja2:220
 #: templates/email/sample_is_valid.jinja2:220
 msgid "Hello"
+msgstr ""
+
+#: templates/email/address_invalid.jinja2:224
+msgid ""
+"Thank you for your interest and participation in The Microsetta "
+"Initiative. We are writing as we've encountered an issue processing your "
+"transaction, and we would appreciate your assistance in helping to "
+"resolve this matter."
+msgstr ""
+
+#: templates/email/address_invalid.jinja2:226
+msgid ""
+"Specifically, we were unable to verify the address to which you requested"
+" we ship you kit(s)."
+msgstr ""
+
+#: templates/email/address_invalid.jinja2:232
+msgid ""
+"To resolve this issue and ensure we have a valid shipping address, please"
+" click the following link or copy and paste the URL into your browser:"
+msgstr ""
+
+#: templates/email/address_invalid.jinja2:246
+#: templates/email/no_associated_source.jinja2:272
+msgid "If you have any questions, please reply to us at"
+msgstr ""
+
+#: templates/email/address_invalid.jinja2:249
+#: templates/email/missing_sample_info.jinja2:272
+#: templates/email/no_associated_source.jinja2:275
+msgid "Thank you,"
 msgstr ""
 
 #: templates/email/incorrect_sample_type.jinja2:224
@@ -154,11 +211,6 @@ msgid ""
 " be processed appropriately."
 msgstr ""
 
-#: templates/email/missing_sample_info.jinja2:272
-#: templates/email/no_associated_source.jinja2:275
-msgid "Thank you,"
-msgstr ""
-
 #: templates/email/no_associated_source.jinja2:224
 msgid ""
 "Thank you for your interest and participation in The Microsetta "
@@ -169,8 +221,8 @@ msgstr ""
 
 #: templates/email/no_associated_source.jinja2:226
 msgid ""
-">Specifically, the following sample sent to the lab needs more "
-"information to be included before it can be processed:"
+"Specifically, the following sample sent to the lab needs more information"
+" to be included before it can be processed:"
 msgstr ""
 
 #: templates/email/no_associated_source.jinja2:238
@@ -195,10 +247,6 @@ msgstr ""
 msgid ""
 "Once a source has been created, please reply to this email with the "
 "following information so that we can link the collection to your source:"
-msgstr ""
-
-#: templates/email/no_associated_source.jinja2:272
-msgid "If you have any questions, please reply to us at"
 msgstr ""
 
 #: templates/email/sample_is_valid.jinja2:224
@@ -226,7 +274,7 @@ msgstr ""
 #~ " are assessed. We cannot process the"
 #~ " collection until the type is "
 #~ "verified. If you know the type "
-#~ "then please communicate with us at \n"
+#~ "then please communicate with us at \n\n"
 #~ msgstr ""
 
 #~ msgid ""
@@ -291,5 +339,12 @@ msgstr ""
 #~ " We have received your microbiome "
 #~ "collection, and it is now in the"
 #~ " processing queue."
+#~ msgstr ""
+
+#~ msgid ""
+#~ ">Specifically, the following sample sent "
+#~ "to the lab needs more information "
+#~ "to be included before it can be"
+#~ " processed:"
 #~ msgstr ""
 
