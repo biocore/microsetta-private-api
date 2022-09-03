@@ -29,6 +29,7 @@ UPDATE ag.survey_response SET spain_spanish = 'aumentó más de 10 libras (5kg)'
 UPDATE ag.survey_response SET spain_spanish = 'se redujo más de 10 libras (5kg)' WHERE american = 'Decreased more than 10 pounds';
 UPDATE ag.survey_response SET spain_spanish = 'Alubias fermentadas/miso/natto' WHERE american = 'Fermented beans/Miso/Natto';
 UPDATE ag.survey_response SET spain_spanish = 'Pocos días a la semana' WHERE american = 'A few days per week';
+UPDATE ag.survey_response SET spain_spanish = 'No en absoluto' WHERE american = 'Not at all';
 
 UPDATE ag.survey_question SET spain_spanish = 'Por lo general, ¿cuántas veces a la semana cocina y come comidas caseras? (Excluya las comidas listas para consumir, como la pizza, fideos instantaneos, croquetas, empanaillas)' WHERE survey_question_id = 57;
 UPDATE ag.survey_question SET spain_spanish = 'Por lo general, ¿cuántas veces a la semana come alimentos precocinados o listos para consumir (p. ej., pizzas, fideos instantaneos, croquetas, empanadillas)?' WHERE survey_question_id = 58;
@@ -54,6 +55,7 @@ UPDATE ag.survey_question SET spain_spanish = 'Durante las últimas 2 semanas, �
 UPDATE ag.survey_question SET spain_spanish = '¿Ha participado en la atención directa al paciente que involucre pacientes con COVID-19 confirmados en los últimos 7 días?' WHERE survey_question_id = 227;
 UPDATE ag.survey_question SET spain_spanish = 'Describa la calidad de la evacuación. Utilice el siguiente cuadro a modo de referencia:<br/><img src="/static/img/es_es/bristol_stool.jpg" id="bristol-chart">' WHERE survey_question_id = 38;
 
+UPDATE ag.survey_group SET spain_spanish = 'Alimentos fermentados' WHERE american = 'Fermented Foods';
 -- END SURVEY CHANGES FOR SPAIN
 
 -- BEGIN SPAIN FFQ

@@ -186,8 +186,9 @@ class SurveyTemplateRepo(BaseRepo):
                 triggers = self._get_question_triggers(question_id)
 
                 # Quick  fix to correctly sort country names in Spanish
-                if language_tag == localization.ES_MX and \
-                        (question_id == 110 or question_id == 148):
+                if (language_tag == localization.ES_MX or language_tag ==
+                    localization.ES_ES) and (question_id == 110 or
+                                             question_id == 148):
                     responses[1:len(responses)] = \
                         sorted(responses[1:len(responses)])
 
