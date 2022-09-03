@@ -1933,6 +1933,12 @@ paths:
           schema:
             type: string
         - in: query
+          name: address_3
+          description: Third line of address to verify
+          required: false
+          schema:
+            type: string
+        - in: query
           name: city
           description: City of address to verify
           required: false
@@ -2705,7 +2711,7 @@ components:
       example: "standard"
     language:
       type: string
-      enum: ["en_US", "es_MX"]
+      enum: ["en_US", "es_MX", "es_ES"]
       example: "en_US"
     creation_time:
       type: string
