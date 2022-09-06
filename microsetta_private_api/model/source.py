@@ -35,7 +35,7 @@ class HumanInfo:
         self.age_range = age_range
 
     def to_api(self):
-        consent = { "age_range": self.age_range}
+        consent = {"age_range": self.age_range}
 
         if self.is_juvenile:
             consent.update({
@@ -77,10 +77,10 @@ class Source(ModelBase):
 
     def to_api(self):
         result = {
-                    "source_type": self.source_type,
-                    "source_name": self.name,
-                    "source_id": self.id
-                 }
+            "source_type": self.source_type,
+            "source_name": self.name,
+            "source_id": self.id
+        }
 
         result.update(self.source_data.to_api())
         return result

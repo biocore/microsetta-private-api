@@ -231,7 +231,6 @@ class SourceRepo(BaseRepo):
 
         name = "scrubbed"
         description = "scrubbed"
-        email = "scrubbed@microsetta.ucsd.edu"
         parent1_name = "scrubbed"
         parent2_name = "scrubbed"
         assent_obtainer = "scrubbed"
