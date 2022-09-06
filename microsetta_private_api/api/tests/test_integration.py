@@ -664,7 +664,6 @@ class IntegrationTests(TestCase):
                 "email": FAKE_EMAIL,
                 "first_name": "Jane",
                 "last_name": "Doe",
-                # "kit_name": "jb_qhxqe",
                 "language": "en_US"
             })
 

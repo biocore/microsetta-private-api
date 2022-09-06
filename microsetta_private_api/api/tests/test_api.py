@@ -697,8 +697,6 @@ class ApiTests(TestCase):
         expected_dict[ACCT_TYPE_KEY] = ACCT_TYPE_VAL
         expected_dict[CREATION_TIME_KEY] = real_creation_time
         expected_dict[UPDATE_TIME_KEY] = real_update_time
-        print(expected_dict)
-        print(response_obj)
         self.assertEqual(expected_dict, response_obj)
 
         return real_acct_id_from_body
