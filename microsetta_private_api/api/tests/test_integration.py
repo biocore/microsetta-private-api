@@ -940,7 +940,6 @@ class IntegrationTests(TestCase):
             data=json.dumps(
                 {"age_range": "18-plus",
                  "participant_name": "Joe Schmoe",
-                 "participant_email": "joe@schmoe.com",
                  "parent_1_name": "Mr. Schmoe",
                  "parent_2_name": "Mrs. Schmoe",
                  "deceased_parent": 'false',
@@ -987,7 +986,6 @@ class IntegrationTests(TestCase):
             data=json.dumps(
                 {"age_range": "18-plus",
                  "participant_name": "Joe Schmoe",
-                 "participant_email": "joe@schmoe.com",
                  "parent_1_name": "Mr. Schmoe",
                  "parent_2_name": "Mrs. Schmoe",
                  "deceased_parent": 'false',
