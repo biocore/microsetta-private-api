@@ -182,7 +182,7 @@ class IntegrationTests(TestCase):
                 ACCT_ID,
                 Source.SOURCE_TYPE_HUMAN,
                 "Bo",
-                HumanInfo("bo@bo.com", False, None, None,
+                HumanInfo(False, None, None,
                           False, datetime.datetime.utcnow(), None,
                           "Mr. Obtainer",
                           "18-plus")

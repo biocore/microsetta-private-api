@@ -46,7 +46,7 @@ def per_sample(project, barcodes, strip_sampleid):
             vio_id = None
 
             if source is not None and source_type == Source.SOURCE_TYPE_HUMAN:
-                source_email = source.source_data.email
+                source_email = None
 
                 vio_id = template_repo.get_vioscreen_id_if_exists(account.id,
                                                                   source.id,

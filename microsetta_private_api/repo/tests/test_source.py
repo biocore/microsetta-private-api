@@ -14,7 +14,7 @@ HUMAN_SOURCE = Source('ffffffff-ffff-cccc-aaaa-aaaaaaaaaaaa',
                       ACCOUNT_ID,
                       Source.SOURCE_TYPE_HUMAN,
                       'test person',
-                      HumanInfo('foo@bar.com', False,
+                      HumanInfo(False,
                                 None, None, None,
                                 datetime.datetime.now(),
                                 None, None, '18-plus'))
@@ -72,8 +72,8 @@ class SourceRepoTests(unittest.TestCase):
                                 allow_revoked=True)
 
             self.assertNotEqual(obs.name, HUMAN_SOURCE.name)
-            self.assertNotEqual(obs.source_data.email,
-                                HUMAN_SOURCE.source_data.email)
+            # self.assertNotEqual(obs.source_data.email,
+            #                     HUMAN_SOURCE.source_data.email)
 
             self.assertTrue(obs.source_data.date_revoked is not None)
 
