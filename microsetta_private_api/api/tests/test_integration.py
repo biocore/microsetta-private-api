@@ -173,7 +173,6 @@ class IntegrationTests(TestCase):
                               12345,
                               "US"
                           ),
-                          "fakekit",
                           "en_US")
             acct_repo.create_account(acc)
 
@@ -737,7 +736,6 @@ class IntegrationTests(TestCase):
                 "email": "foo@baz.com",
                 "first_name": "Dan",
                 "last_name": "H",
-                "kit_name": "fakekit",
                 "language": "en_US"
             }
 
@@ -752,10 +750,8 @@ class IntegrationTests(TestCase):
         # accounts table without changing the email in the authorization causes
         # authorization errors (as it should)
         the_email = regular_data["email"]
-        kit_name = regular_data['kit_name']
         fuzzy_data = fuzz(regular_data)
         fuzzy_data['email'] = the_email
-        fuzzy_data['kit_name'] = kit_name
         fuzzy_data['language'] = regular_data["language"]
 
         # submit an invalid account type

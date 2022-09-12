@@ -74,8 +74,7 @@ DUMMY_ACCT_INFO = {
     "email": TEST_EMAIL,
     "first_name": "Jane",
     "last_name": "Doe",
-    "language": "en_US",
-    KIT_NAME_KEY: ""
+    "language": "en_US"
 }
 DUMMY_ACCT_INFO_2 = {
     "address": {
@@ -88,8 +87,7 @@ DUMMY_ACCT_INFO_2 = {
     "email": TEST_EMAIL_2,
     "first_name": "Obie",
     "last_name": "Dobie",
-    "language": "en_US",
-    KIT_NAME_KEY: ""
+    "language": "en_US"
 }
 DUMMY_ACCT_INFO3 = {
     "address": {
@@ -102,8 +100,7 @@ DUMMY_ACCT_INFO3 = {
     "email": TEST_EMAIL,
     "first_name": "",
     "last_name": "Doe",
-    "language": "en_US",
-    KIT_NAME_KEY: ""
+    "language": "en_US"
 }
 DUMMY_ACCT_ADMIN = {
     "address": {
@@ -467,7 +464,6 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['post_code'],
                 input_obj['address']['country_code']
             ),
-            "",
             input_obj['language']
         )
     else:
@@ -906,12 +902,6 @@ class AccountTests(ApiTests):
         self.assertEqual(200, response.status_code)
         response_obj = json.loads(response.data)
 
-        for k in DUMMY_ACCT_INFO:
-            if k in (KIT_NAME_KEY, 'language'):
-                continue
-            self.assertNotEqual(DUMMY_ACCT_INFO[k],
-                                response_obj[k])
-
         # verify deleting is idempotent
         response = self.client.delete(
             '/api/accounts/%s' %
@@ -1101,11 +1091,8 @@ class AccountTests(ApiTests):
 
     # region account update/put tests
     @staticmethod
-    def make_updated_acct_dict(keep_kit_name=False):
+    def make_updated_acct_dict():
         result = copy.deepcopy(DUMMY_ACCT_INFO)
-
-        if not keep_kit_name:
-            result.pop(KIT_NAME_KEY)
 
         result["address"] = {
             "city": "Oakland",
@@ -1121,7 +1108,7 @@ class AccountTests(ApiTests):
         """Successfully update existing account"""
         dummy_acct_id = create_dummy_acct()
 
-        changed_acct_dict = self.make_updated_acct_dict(keep_kit_name=True)
+        changed_acct_dict = self.make_updated_acct_dict()
 
         # create post input json
         input_json = json.dumps(changed_acct_dict)

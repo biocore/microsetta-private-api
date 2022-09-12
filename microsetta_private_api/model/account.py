@@ -30,7 +30,6 @@ class Account(ModelBase):
                 input_dict['address']['post_code'],
                 input_dict['address']['country_code']
             ),
-            "",
             input_dict['language']
         )
         return result
@@ -38,8 +37,8 @@ class Account(ModelBase):
     def __init__(self, account_id, email,
                  account_type, auth_issuer, auth_sub,
                  first_name, last_name,
-                 address, created_with_kit_id,
-                 language,
+                 address, created_with_kit_id=None,
+                 language=None,
                  creation_time=None, update_time=None):
         self.id = account_id
         self.email = email
