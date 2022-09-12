@@ -15,7 +15,6 @@ from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 from microsetta_private_api.util import vioscreen, myfoodrepo, vue_adapter, \
     polyphenol_ffq
 from microsetta_private_api.util.vioscreen import VioscreenAdminAPI
-from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
 def read_survey_templates(account_id, source_id, language_tag, token_info):
@@ -41,8 +40,7 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
                            for x in [1, 3, 4, 5, 6, 7,
                                      SurveyTemplateRepo.VIOSCREEN_ID,
                                      SurveyTemplateRepo.MYFOODREPO_ID,
-                                     SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
-                                     SurveyTemplateRepo.SPAIN_FFQ_ID]
+                                     SurveyTemplateRepo.POLYPHENOL_FFQ_ID]
                             ]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
@@ -52,21 +50,19 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
 
 
 def _remote_survey_url_vioscreen(transaction, account_id, source_id,
-                                 language_tag, survey_redirect_url,
-                                 vioscreen_ext_sample_id):
+                                 language_tag, survey_redirect_url):
     # assumes an instance of Transaction is already available
     acct_repo = AccountRepo(transaction)
     survey_template_repo = SurveyTemplateRepo(transaction)
 
-    if vioscreen_ext_sample_id:
+    #if vioscreen_ext_sample_id:
         # User is about to start a vioscreen survey for this sample
         # record this in the database.
-        db_vioscreen_id = survey_template_repo.create_vioscreen_id(
-            account_id, source_id, vioscreen_ext_sample_id
-        )
-    else:
-        raise ValueError("Vioscreen Template requires "
-                         "vioscreen_ext_sample_id parameter.")
+    db_vioscreen_id = survey_template_repo.create_vioscreen_id(
+            account_id, source_id)
+    # else:
+    #     raise ValueError("Vioscreen Template requires "
+    #                      "vioscreen_ext_sample_id parameter.")
 
     (birth_year, gender, height, weight) = \
         survey_template_repo.fetch_user_basic_physiology(
@@ -155,23 +151,8 @@ def _remote_survey_url_polyphenol_ffq(transaction, account_id, source_id,
     return polyphenol_ffq.gen_ffq_url(polyphenol_ffq_id, study, language_tag)
 
 
-def _remote_survey_url_spain_ffq(transaction, account_id, source_id):
-    st_repo = SurveyTemplateRepo(transaction)
-
-    # right now, ID won't exist
-    # future plans to allow surveys to behave more flexibly will use this
-    # functionality to allow participants to re-join in-progress surveys
-    spain_ffq_id = st_repo.get_spain_ffq_id_if_exists(account_id, source_id)
-
-    if spain_ffq_id is None:
-        st_repo.create_spain_ffq_entry(account_id, source_id)
-
-    return SERVER_CONFIG['spain_ffq_url']
-
-
 def read_survey_template(account_id, source_id, survey_template_id,
-                         language_tag, token_info, survey_redirect_url=None,
-                         vioscreen_ext_sample_id=None):
+                         language_tag, token_info, survey_redirect_url=None):
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
@@ -187,8 +168,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
                                                    account_id,
                                                    source_id,
                                                    language_tag,
-                                                   survey_redirect_url,
-                                                   vioscreen_ext_sample_id)
+                                                   survey_redirect_url)
             elif survey_template_id == SurveyTemplateRepo.MYFOODREPO_ID:
                 url = _remote_survey_url_myfoodrepo(t,
                                                     account_id,
@@ -199,10 +179,6 @@ def read_survey_template(account_id, source_id, survey_template_id,
                                                         account_id,
                                                         source_id,
                                                         language_tag)
-            elif survey_template_id == SurveyTemplateRepo.SPAIN_FFQ_ID:
-                url = _remote_survey_url_spain_ffq(t,
-                                                   account_id,
-                                                   source_id)
             else:
                 raise ValueError(f"Cannot generate URL for survey "
                                  f"{survey_template_id}")
