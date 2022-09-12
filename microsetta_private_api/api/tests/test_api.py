@@ -112,7 +112,6 @@ DUMMY_HUMAN_SOURCE = {
                 'source_name': 'Bo',
                 'source_type': 'human',
                 'consent': {
-                    # 'participant_email': 'bo@bo.com',
                     'age_range': "18-plus"
                 },
             }
@@ -968,8 +967,6 @@ class AccountTests(ApiTests):
 
         self.assertEqual(response_obj['source_name'],
                          'scrubbed')
-        # self.assertEqual(response_obj['consent']['participant_email'],
-        #                  'scrubbed@microsetta.ucsd.edu')
 
         # pull the sample details
         response = self.client.get(

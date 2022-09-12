@@ -72,8 +72,6 @@ class SourceRepoTests(unittest.TestCase):
                                 allow_revoked=True)
 
             self.assertNotEqual(obs.name, HUMAN_SOURCE.name)
-            # self.assertNotEqual(obs.source_data.email,
-            #                     HUMAN_SOURCE.source_data.email)
 
             self.assertTrue(obs.source_data.date_revoked is not None)
 
