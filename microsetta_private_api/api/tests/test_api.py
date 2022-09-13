@@ -695,7 +695,9 @@ class ApiTests(TestCase):
         expected_dict[UPDATE_TIME_KEY] = real_update_time
         self.assertEqual(expected_dict, response_obj)
 
+        print("**************************************")
         print(str(expected_dict))
+        print("++++++++++++++++++++++++++++++")
         print(str(response_obj))
         return real_acct_id_from_body
 
