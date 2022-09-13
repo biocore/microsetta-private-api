@@ -799,6 +799,7 @@ class IntegrationTests(TestCase):
 
         acc.pop('creation_time')
         acc.pop('update_time')
+        acc.pop('kit_name')
         regular_data['account_type'] = 'standard'
         regular_data["account_id"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 
