@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from urllib import response
 
 import pytest
 import werkzeug
@@ -695,6 +696,8 @@ class ApiTests(TestCase):
         expected_dict[UPDATE_TIME_KEY] = real_update_time
         self.assertEqual(expected_dict, response_obj)
 
+        print(str(expected_dict))
+        print(str(response_obj))
         return real_acct_id_from_body
 
 
