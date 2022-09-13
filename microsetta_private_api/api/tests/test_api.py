@@ -1,5 +1,4 @@
 from unittest.mock import patch
-from urllib import response
 
 import pytest
 import werkzeug
