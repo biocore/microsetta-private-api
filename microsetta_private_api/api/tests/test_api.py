@@ -74,7 +74,8 @@ DUMMY_ACCT_INFO = {
     "email": TEST_EMAIL,
     "first_name": "Jane",
     "last_name": "Doe",
-    "language": "en_US"
+    "language": "en_US",
+    "kit_name": None
 }
 DUMMY_ACCT_INFO_2 = {
     "address": {
@@ -87,7 +88,8 @@ DUMMY_ACCT_INFO_2 = {
     "email": TEST_EMAIL_2,
     "first_name": "Obie",
     "last_name": "Dobie",
-    "language": "en_US"
+    "language": "en_US",
+    "kit_name": None
 }
 DUMMY_ACCT_INFO3 = {
     "address": {
@@ -100,7 +102,8 @@ DUMMY_ACCT_INFO3 = {
     "email": TEST_EMAIL,
     "first_name": "",
     "last_name": "Doe",
-    "language": "en_US"
+    "language": "en_US",
+    "kit_name": None,
 }
 DUMMY_ACCT_ADMIN = {
     "address": {
