@@ -45,8 +45,8 @@ class AccountRepo(BaseRepo):
             r['account_type'], r['auth_issuer'], r['auth_sub'],
             r['first_name'], r['last_name'],
             AccountRepo._row_to_addr(r),
-            r['created_with_kit_id'],
             r['preferred_language'],
+            r['created_with_kit_id'],
             r['creation_time'], r['update_time'])
 
     @staticmethod

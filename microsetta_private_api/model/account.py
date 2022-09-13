@@ -37,8 +37,8 @@ class Account(ModelBase):
     def __init__(self, account_id, email,
                  account_type, auth_issuer, auth_sub,
                  first_name, last_name,
-                 address, created_with_kit_id=None,
-                 language=None,
+                 address, language,
+                 created_with_kit_id=None,
                  creation_time=None, update_time=None):
         self.id = account_id
         self.email = email
