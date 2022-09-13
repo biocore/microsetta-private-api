@@ -75,7 +75,6 @@ DUMMY_ACCT_INFO = {
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
-    "kit_name": "None"
 }
 DUMMY_ACCT_INFO_2 = {
     "address": {
@@ -89,7 +88,6 @@ DUMMY_ACCT_INFO_2 = {
     "first_name": "Obie",
     "last_name": "Dobie",
     "language": "en_US",
-    "kit_name": "None"
 }
 DUMMY_ACCT_INFO3 = {
     "address": {
@@ -103,7 +101,6 @@ DUMMY_ACCT_INFO3 = {
     "first_name": "",
     "last_name": "Doe",
     "language": "en_US",
-    "kit_name": "None"
 }
 DUMMY_ACCT_ADMIN = {
     "address": {
@@ -674,6 +671,7 @@ class ApiTests(TestCase):
                                           dummy_acct_dict=None):
         if dummy_acct_dict is None:
             dummy_acct_dict = DUMMY_ACCT_INFO
+        response_obj.pop('kit_name')
 
         # check expected additional fields/values appear in response body:
         # Note that "d.get()" returns none if key not found, doesn't throw err
