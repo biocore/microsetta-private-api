@@ -38,4 +38,3 @@ UPDATE ag.account SET created_with_kit_id=subquery.kit_id
 UPDATE ag.account SET created_with_kit_id=''
     WHERE created_with_kit_id IS NULL;
 
-ALTER TABLE ag.account ALTER COLUMN created_with_kit_id SET NOT NULL;
