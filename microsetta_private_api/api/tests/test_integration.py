@@ -784,6 +784,7 @@ class IntegrationTests(TestCase):
         fuzzy_data["account_id"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
         acc.pop('creation_time')
         acc.pop('update_time')
+        acc.pop('kit_name')
         self.assertDictEqual(fuzzy_data, acc, "Check Fuzz Account Match")
 
         # Attempt to restore back to old data.
