@@ -75,7 +75,7 @@ DUMMY_ACCT_INFO = {
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
-    "kit_name": None
+    "kit_name": "None"
 }
 DUMMY_ACCT_INFO_2 = {
     "address": {
@@ -89,7 +89,7 @@ DUMMY_ACCT_INFO_2 = {
     "first_name": "Obie",
     "last_name": "Dobie",
     "language": "en_US",
-    "kit_name": None
+    "kit_name": "None"
 }
 DUMMY_ACCT_INFO3 = {
     "address": {
@@ -103,7 +103,7 @@ DUMMY_ACCT_INFO3 = {
     "first_name": "",
     "last_name": "Doe",
     "language": "en_US",
-    "kit_name": None,
+    "kit_name": "None"
 }
 DUMMY_ACCT_ADMIN = {
     "address": {
@@ -701,7 +701,7 @@ class ApiTests(TestCase):
         print("++++++++++++++++++++++++++++++")
         print(str(response_obj))
         self.assertEqual(expected_dict, response_obj)
-        
+
         return real_acct_id_from_body
 
 
