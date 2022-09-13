@@ -41,12 +41,10 @@ def per_sample(project, barcodes, strip_sampleid):
             source = diag['source']
 
             account_email = None if account is None else account.email
-            source_email = None
             source_type = None if source is None else source.source_type
             vio_id = None
 
             if source is not None and source_type == Source.SOURCE_TYPE_HUMAN:
-                source_email = None
 
                 vio_id = template_repo.get_vioscreen_id_if_exists(account.id,
                                                                   source.id,
@@ -75,7 +73,6 @@ def per_sample(project, barcodes, strip_sampleid):
                 "project": project,
                 "source-type": source_type,
                 "site-sampled": sample_site,
-                "source-email": source_email,
                 "account-email": account_email,
                 "vioscreen_username": vio_id,
                 "ffq-taken": ffq_taken,
