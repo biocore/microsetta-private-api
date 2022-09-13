@@ -742,6 +742,7 @@ class IntegrationTests(TestCase):
         # Hard to guess these two, so let's pop em out
         acc.pop("creation_time")
         acc.pop("update_time")
+        acc.pop('kit_name')
         self.assertDictEqual(acc, regular_data, "Check Initial Account Match")
 
         regular_data.pop("account_id")
