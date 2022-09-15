@@ -55,14 +55,10 @@ def _remote_survey_url_vioscreen(transaction, account_id, source_id,
     acct_repo = AccountRepo(transaction)
     survey_template_repo = SurveyTemplateRepo(transaction)
 
-    #if vioscreen_ext_sample_id:
-        # User is about to start a vioscreen survey for this sample
-        # record this in the database.
+    # User is about to start a vioscreen survey
+    # record this in the database.
     db_vioscreen_id = survey_template_repo.create_vioscreen_id(
             account_id, source_id)
-    # else:
-    #     raise ValueError("Vioscreen Template requires "
-    #                      "vioscreen_ext_sample_id parameter.")
 
     (birth_year, gender, height, weight) = \
         survey_template_repo.fetch_user_basic_physiology(
