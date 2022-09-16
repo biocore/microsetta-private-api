@@ -922,7 +922,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/session':
     get:
-      operationId: microsetta_private_api.api.read_sample_vioscreen_session
+      operationId: microsetta_private_api.api.read_vioscreen_session
       tags:
         - Vioscreen
       summary: Get information about a Vioscreen session associated with a sample
@@ -948,7 +948,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/percentenergy':
     get:
-      operationId: microsetta_private_api.api.read_sample_vioscreen_percent_energy
+      operationId: microsetta_private_api.api.read_vioscreen_percent_energy
       tags:
         - Vioscreen
       summary: Get information about a Vioscreen percent energy associated with a sample
@@ -974,7 +974,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/dietaryscore':
     get:
-      operationId: microsetta_private_api.api.read_sample_vioscreen_dietary_score
+      operationId: microsetta_private_api.api.read_vioscreen_dietary_score
       tags:
         - Vioscreen
       summary: Get information about a Vioscreen dietary score associated with a sample
@@ -1000,7 +1000,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/supplements':
     get:
-      operationId: microsetta_private_api.api.read_sample_vioscreen_supplements
+      operationId: microsetta_private_api.api.read_vioscreen_supplements
       tags:
         - Vioscreen
       summary: Get information about a Vioscreen supplements associated with a sample
@@ -1026,7 +1026,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/foodcomponents':
     get:
-      operationId: microsetta_private_api.api.read_sample_vioscreen_food_components
+      operationId: microsetta_private_api.api.read_vioscreen_food_components
       tags:
         - Vioscreen
       summary: Get information about a Vioscreen food components associated with a sample
@@ -1052,7 +1052,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/eatingpatterns':
     get:
-      operationId: microsetta_private_api.api.read_sample_vioscreen_eating_patterns
+      operationId: microsetta_private_api.api.read_vioscreen_eating_patterns
       tags:
         - Vioscreen
       summary: Get information about a Vioscreen eating patterns associated with a sample
@@ -1078,7 +1078,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/mpeds':
     get:
-      operationId: microsetta_private_api.api.read_sample_vioscreen_mpeds
+      operationId: microsetta_private_api.api.read_vioscreen_mpeds
       tags:
         - Vioscreen
       summary: Get information about a Vioscreen mpeds associated with a sample
@@ -1104,7 +1104,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/foodconsumption':
     get:
-      operationId: microsetta_private_api.api.read_sample_vioscreen_food_consumption
+      operationId: microsetta_private_api.api.read_vioscreen_food_consumption
       tags:
         - Vioscreen
       summary: Get information about a Vioscreen food consumption associated with a sample
