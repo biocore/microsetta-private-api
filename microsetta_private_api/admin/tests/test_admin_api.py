@@ -1041,8 +1041,6 @@ class AdminApiTests(TestCase):
         exp_status = [None, 'no-associated-source', 'sample-is-valid']
         self.assertEqual([v['sample-status'] for v in response_obj],
                          exp_status)
-        n_src = sum([v['source-email'] is not None for v in response_obj])
-        self.assertEqual(n_src, 1)
 
     def test_query_barcode_stats_project_barcodes_with_strip(self):
         barcodes = ['000010307', '000023344', '000036855']
@@ -1067,8 +1065,6 @@ class AdminApiTests(TestCase):
         exp_status = [None, 'no-associated-source', 'sample-is-valid']
         self.assertEqual([v['sample-status'] for v in response_obj],
                          exp_status)
-        n_src = sum([v['source-email'] is not None for v in response_obj])
-        self.assertEqual(n_src, 1)
 
     def test_send_email(self):
         def mock_func(*args, **kwargs):

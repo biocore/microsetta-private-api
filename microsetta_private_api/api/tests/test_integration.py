@@ -182,7 +182,7 @@ class IntegrationTests(TestCase):
                 ACCT_ID,
                 Source.SOURCE_TYPE_HUMAN,
                 "Bo",
-                HumanInfo("bo@bo.com", False, None, None,
+                HumanInfo(False, None, None,
                           False, datetime.datetime.utcnow(), None,
                           "Mr. Obtainer",
                           "18-plus")
@@ -974,7 +974,6 @@ class IntegrationTests(TestCase):
             data=json.dumps(
                 {"age_range": "18-plus",
                  "participant_name": "Joe Schmoe",
-                 "participant_email": "joe@schmoe.com",
                  "parent_1_name": "Mr. Schmoe",
                  "parent_2_name": "Mrs. Schmoe",
                  "deceased_parent": 'false',
@@ -1021,7 +1020,6 @@ class IntegrationTests(TestCase):
             data=json.dumps(
                 {"age_range": "18-plus",
                  "participant_name": "Joe Schmoe",
-                 "participant_email": "joe@schmoe.com",
                  "parent_1_name": "Mr. Schmoe",
                  "parent_2_name": "Mrs. Schmoe",
                  "deceased_parent": 'false',
