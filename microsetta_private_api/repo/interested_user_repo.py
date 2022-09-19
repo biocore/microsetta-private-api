@@ -28,7 +28,7 @@ class InterestedUserRepo(BaseRepo):
                 "%s, %s, %s, %s, "
                 "%s, %s, %s, %s, %s, %s, %s, "
                 "%s, %s, %s, %s, %s, "
-                "%s, %s, %s, %s, "
+                "%s, %s, %s, %s, %s, "
                 "NOW()) RETURNING interested_user_id",
                 (interested_user.campaign_id,
                  interested_user.acquisition_source,
