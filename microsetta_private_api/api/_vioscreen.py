@@ -11,14 +11,13 @@ from microsetta_private_api.repo.vioscreen_repo import (
 )
 
 
-def _get_session_by_account_details(account_id, source_id, sample_id):
+def _get_session_by_account_details(account_id, source_id):
     with Transaction() as t:
         surv_temp = SurveyTemplateRepo(t)
         vio_sess = VioscreenSessionRepo(t)
 
         vio_username = surv_temp.get_vioscreen_id_if_exists(account_id,
-                                                            source_id,
-                                                            sample_id)
+                                                            source_id)
         if vio_username is None:
             return True, (jsonify(code=404, message="Username not found"), 404)
 
@@ -29,26 +28,22 @@ def _get_session_by_account_details(account_id, source_id, sample_id):
         return False, vioscreen_session
 
 
-def read_sample_vioscreen_session(account_id, source_id,
-                                  sample_id, token_info):
+def read_vioscreen_session(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = _get_session_by_account_details(account_id,
-                                                                  source_id,
-                                                                  sample_id)
+                                                                  source_id)
     if is_error:
         return vioscreen_session
 
     return jsonify(vioscreen_session[0].to_api()), 200
 
 
-def read_sample_vioscreen_percent_energy(account_id, source_id,
-                                         sample_id, token_info):
+def read_vioscreen_percent_energy(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = _get_session_by_account_details(account_id,
-                                                                  source_id,
-                                                                  sample_id)
+                                                                  source_id)
     if is_error:
         return vioscreen_session
 
@@ -63,13 +58,11 @@ def read_sample_vioscreen_percent_energy(account_id, source_id,
         return jsonify(vioscreen_percent_energy.to_api()), 200
 
 
-def read_sample_vioscreen_dietary_score(account_id, source_id,
-                                        sample_id, token_info):
+def read_vioscreen_dietary_score(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = _get_session_by_account_details(account_id,
-                                                                  source_id,
-                                                                  sample_id)
+                                                                  source_id)
     if is_error:
         return vioscreen_session
 
@@ -84,13 +77,11 @@ def read_sample_vioscreen_dietary_score(account_id, source_id,
         return jsonify([vds.to_api() for vds in vioscreen_dietary_scores]), 200
 
 
-def read_sample_vioscreen_supplements(account_id, source_id,
-                                      sample_id, token_info):
+def read_vioscreen_supplements(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = _get_session_by_account_details(account_id,
-                                                                  source_id,
-                                                                  sample_id)
+                                                                  source_id)
     if is_error:
         return vioscreen_session
 
@@ -105,13 +96,11 @@ def read_sample_vioscreen_supplements(account_id, source_id,
         return jsonify(vioscreen_supplements.to_api()), 200
 
 
-def read_sample_vioscreen_food_components(account_id, source_id,
-                                          sample_id, token_info):
+def read_vioscreen_food_components(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = _get_session_by_account_details(account_id,
-                                                                  source_id,
-                                                                  sample_id)
+                                                                  source_id)
     if is_error:
         return vioscreen_session
 
@@ -126,13 +115,11 @@ def read_sample_vioscreen_food_components(account_id, source_id,
         return jsonify(vioscreen_food_components.to_api()), 200
 
 
-def read_sample_vioscreen_eating_patterns(account_id, source_id,
-                                          sample_id, token_info):
+def read_vioscreen_eating_patterns(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = _get_session_by_account_details(account_id,
-                                                                  source_id,
-                                                                  sample_id)
+                                                                  source_id)
     if is_error:
         return vioscreen_session
 
@@ -147,12 +134,11 @@ def read_sample_vioscreen_eating_patterns(account_id, source_id,
         return jsonify(vioscreen_eating_patterns.to_api()), 200
 
 
-def read_sample_vioscreen_mpeds(account_id, source_id, sample_id, token_info):
+def read_vioscreen_mpeds(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = _get_session_by_account_details(account_id,
-                                                                  source_id,
-                                                                  sample_id)
+                                                                  source_id)
     if is_error:
         return vioscreen_session
 
@@ -166,13 +152,11 @@ def read_sample_vioscreen_mpeds(account_id, source_id, sample_id, token_info):
         return jsonify(vioscreen_mpeds.to_api()), 200
 
 
-def read_sample_vioscreen_food_consumption(account_id, source_id,
-                                           sample_id, token_info):
+def read_vioscreen_food_consumption(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = _get_session_by_account_details(account_id,
-                                                                  source_id,
-                                                                  sample_id)
+                                                                  source_id)
     if is_error:
         return vioscreen_session
 
