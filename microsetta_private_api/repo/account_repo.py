@@ -234,7 +234,6 @@ class AccountRepo(BaseRepo):
                 try:
                     melissa_response = verify_address(r['street'],
                                                       "",
-                                                      "",
                                                       r['city'],
                                                       r['state'],
                                                       r['post_code'],

@@ -23,7 +23,6 @@ class SurveyTemplateRepo(BaseRepo):
     VIOSCREEN_ID = 10001
     MYFOODREPO_ID = 10002
     POLYPHENOL_FFQ_ID = 10003
-    SPAIN_FFQ_ID = 10004
     SURVEY_INFO = {
         1: SurveyTemplateLinkInfo(
             1,
@@ -84,12 +83,6 @@ class SurveyTemplateRepo(BaseRepo):
             "Polyphenol Food Frequency Questionnaire",
             "1.0",
             "remote"
-        ),
-        SPAIN_FFQ_ID: SurveyTemplateLinkInfo(
-            SPAIN_FFQ_ID,
-            "Spain Food Frequency Questionnaire",
-            "1.0",
-            "remote"
         )
     }
 
@@ -118,8 +111,7 @@ class SurveyTemplateRepo(BaseRepo):
         tag_to_col = {
             localization.EN_US: "survey_question.american",
             localization.EN_GB: "survey_question.british",
-            localization.ES_MX: "survey_question.spanish",
-            localization.ES_ES: "survey_question.spain_spanish"
+            localization.ES_MX: "survey_question.spanish"
         }
 
         if language_tag not in tag_to_col:
@@ -186,9 +178,8 @@ class SurveyTemplateRepo(BaseRepo):
                 triggers = self._get_question_triggers(question_id)
 
                 # Quick  fix to correctly sort country names in Spanish
-                if (language_tag == localization.ES_MX or language_tag ==
-                    localization.ES_ES) and (question_id == 110 or
-                                             question_id == 148):
+                if language_tag == localization.ES_MX and \
+                        (question_id == 110 or question_id == 148):
                     responses[1:len(responses)] = \
                         sorted(responses[1:len(responses)])
 
@@ -214,8 +205,7 @@ class SurveyTemplateRepo(BaseRepo):
         tag_to_col = {
             localization.EN_US: "american",
             localization.EN_GB: "british",
-            localization.ES_MX: "spanish",
-            localization.ES_ES: "spain_spanish"
+            localization.ES_MX: "spanish"
         }
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +

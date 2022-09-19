@@ -67,21 +67,6 @@ class SurveyAnswersRepo(BaseRepo):
                     # the Polyphenol FFQ
                     pass
 
-                # see if it's the Spain FFQ
-                try:
-                    uuid.UUID(survey_answers_id)
-                    cur.execute("""SELECT EXISTS (
-                                   SELECT spain_ffq_id
-                                   FROM ag.spain_ffq_registry
-                                   WHERE spain_ffq_id=%s)""",
-                                (survey_answers_id, ))
-                    if cur.fetchone()[0] is True:
-                        return SurveyTemplateRepo.SPAIN_FFQ_ID, None
-                except ValueError:
-                    # Note: we don't care about the error, just means it's not
-                    # the Spain FFQ
-                    pass
-
                 # see if it's myfoodrepo
                 cur.execute("""SELECT EXISTS (
                                    SELECT myfoodrepo_id
@@ -364,18 +349,6 @@ class SurveyAnswersRepo(BaseRepo):
                 # Note: we don't care about the error, just means it's not
                 # the Polyphenol FFQ
                 pass
-            try:
-                uuid.UUID(survey_id)
-                cur.execute("UPDATE spain_ffq_registry SET "
-                            "deleted = true, "
-                            "source_id = NULL "
-                            "WHERE "
-                            "account_id = %s AND spain_ffq_id = %s",
-                            (acct_id, survey_id))
-            except ValueError:
-                # Note: we don't care about the error, just means it's not
-                # the Spain FFQ
-                pass
         return True
 
     def associate_answered_survey_with_sample(self, account_id, source_id,
@@ -419,8 +392,7 @@ class SurveyAnswersRepo(BaseRepo):
                         "barcode = %s AND "
                         "survey_id = %s",
                         (s.barcode, survey_id))
-            # Also delete from vioscreen, myfoodrepo, polyphenol, and Spain
-            # registries
+            # Also delete from vioscreen, myfoodrepo and polyphenol registries
             cur.execute("UPDATE vioscreen_registry "
                         "SET deleted=true "
                         "WHERE "
@@ -448,19 +420,6 @@ class SurveyAnswersRepo(BaseRepo):
             except ValueError:
                 # Note: we don't care about the error, just means it's not
                 # the Polyphenol FFQ
-                pass
-            try:
-                uuid.UUID(survey_id)
-                cur.execute("UPDATE spain_ffq_registry "
-                            "SET deleted = true "
-                            "WHERE "
-                            "account_id = %s AND "
-                            "source_id = %s AND "
-                            "spain_ffq_id = %s",
-                            (account_id, source_id, survey_id))
-            except ValueError:
-                # Note: we don't care about the error, just means it's not
-                # the Spain FFQ
                 pass
 
     def build_metadata_map(self):

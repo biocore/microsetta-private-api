@@ -149,7 +149,6 @@ class InterestedUserRepoTests(unittest.TestCase):
         test_verify_address.return_value = {
             "address_1": ADDRESS_1,
             "address_2": ADDRESS_2,
-            "address_3": "",
             "city": CITY,
             "state": STATE,
             "postal": POSTAL,
@@ -182,7 +181,6 @@ class InterestedUserRepoTests(unittest.TestCase):
         test_verify_address.return_value = {
             "address_1": ADDRESS_1,
             "address_2": ADDRESS_2,
-            "address_3": "",
             "city": CITY,
             "state": STATE,
             "postal": POSTAL,

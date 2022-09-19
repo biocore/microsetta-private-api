@@ -91,7 +91,6 @@ class AccountTests(unittest.TestCase):
         test_verify_address.return_value = {
             "address_1": DUMMY_ACCT_INFO_1['address']['street'],
             "address_2": "",
-            "address_3": "",
             "city": DUMMY_ACCT_INFO_1['address']['city'],
             "state": DUMMY_ACCT_INFO_1['address']['state'],
             "postal": DUMMY_ACCT_INFO_1['address']['post_code'],
@@ -123,7 +122,6 @@ class AccountTests(unittest.TestCase):
         test_verify_address.return_value = {
             "address_1": DUMMY_ACCT_INFO_1['address']['street'],
             "address_2": "",
-            "address_3": "",
             "city": DUMMY_ACCT_INFO_1['address']['city'],
             "state": DUMMY_ACCT_INFO_1['address']['state'],
             "postal": DUMMY_ACCT_INFO_1['address']['post_code'],
