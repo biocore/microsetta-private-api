@@ -170,7 +170,7 @@ paths:
 
   '/accounts/{account_id}/check_duplicate_source':
     post:
-      perationId: microsetta_private_api.api.check_duplicate_source_name
+      operationId: microsetta_private_api.api.check_duplicate_source_name
       tags:
         - Account
       summary: Get information about duplicate source
