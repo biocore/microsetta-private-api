@@ -222,7 +222,7 @@ class SurveyTemplateRepo(BaseRepo):
         tag_to_col = {
             localization.EN_US: "survey_response.american",
             localization.EN_GB: "survey_response.british",
-            localization.ES_MX: "survey_response.spanish"
+            localization.ES_MX: "survey_response.spanish",
         }
 
         with self._transaction.cursor() as cur:

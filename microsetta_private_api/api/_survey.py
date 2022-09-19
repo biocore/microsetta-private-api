@@ -40,7 +40,7 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
                            for x in [1, 3, 4, 5, 6, 7,
                                      SurveyTemplateRepo.VIOSCREEN_ID,
                                      SurveyTemplateRepo.MYFOODREPO_ID,
-                                      SurveyTemplateRepo.POLYPHENOL_FFQ_ID]
+                                     SurveyTemplateRepo.POLYPHENOL_FFQ_ID]
                             ]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
@@ -174,7 +174,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
                 url = _remote_survey_url_polyphenol_ffq(t,
                                                         account_id,
                                                         source_id,
-                                                        language_tag)                                          
+                                                        language_tag)
             else:
                 raise ValueError(f"Cannot generate URL for survey "
                                  f"{survey_template_id}")
