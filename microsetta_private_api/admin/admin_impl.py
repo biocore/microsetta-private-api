@@ -598,8 +598,8 @@ def address_verification(address_1=None, address_2=None,
             country is None or len(country) < 1:
         raise Exception("Must include address_1, postal, and country")
 
-    melissa_response = verify_address(address_1, address_2, city,
-                                      state, postal, country)
+    melissa_response = verify_address(address_1, address_2, city, state,
+                                      postal, country)
 
     return jsonify(melissa_response), 200
 

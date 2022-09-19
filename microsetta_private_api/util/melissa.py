@@ -47,7 +47,7 @@ def verify_address(address_1, address_2=None, city=None, state=None,
             return return_dict
         else:
             record_id = melissa_repo.create_record(address_1, address_2,
-                                                     city, state, postal,
+                                                   city, state, postal,
                                                    country)
 
             if record_id is None:

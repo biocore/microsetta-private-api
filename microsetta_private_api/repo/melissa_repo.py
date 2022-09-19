@@ -146,4 +146,4 @@ class MelissaRepo(BaseRepo):
                         (source_url, result_raw, result_codes, result_good,
                          formatted_address, address_1, address_2, city, state,
                          postal, country, latitude, longitude, record_id))
-            return cur.rowcount == 1
+            return cur.rowcount == 1            
