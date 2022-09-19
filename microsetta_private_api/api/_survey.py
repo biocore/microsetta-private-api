@@ -396,4 +396,3 @@ def read_myfoodrepo_available_slots():
     resp = jsonify(code=200, number_of_available_slots=available,
                    total_number_of_slots=total)
     return resp, 200
-    
