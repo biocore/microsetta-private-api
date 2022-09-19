@@ -22,10 +22,11 @@ class InterestedUserRepo(BaseRepo):
                 "email, phone, address_1, address_2, address_3, city, state, "
                 "postal_code, country, latitude, longitude, confirm_consent, "
                 "ip_address, address_checked, address_valid, over_18, "
+                "residential_address, "
                 "creation_timestamp) "
                 "VALUES ("
                 "%s, %s, %s, %s, "
-                "%s, %s, %s, %s, %s, %s, "
+                "%s, %s, %s, %s, %s, %s, %s, "
                 "%s, %s, %s, %s, %s, "
                 "%s, %s, %s, %s, "
                 "NOW()) RETURNING interested_user_id",
@@ -101,7 +102,6 @@ class InterestedUserRepo(BaseRepo):
                     "address_valid, converted_to_account, "
                     "converted_to_account_timestamp, over_18, "
                     "residential_address "
-                    "converted_to_account_timestamp, over_18 "
                     "FROM campaign.interested_users "
                     "WHERE interested_user_id = %s",
                     (interested_user_id,)
