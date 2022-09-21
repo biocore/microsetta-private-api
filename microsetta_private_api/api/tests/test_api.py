@@ -89,19 +89,6 @@ DUMMY_ACCT_INFO_2 = {
     "last_name": "Dobie",
     "language": "en_US",
 }
-DUMMY_ACCT_INFO3 = {
-    "address": {
-        "city": "Springfield",
-        "country_code": "US",
-        "post_code": "12345",
-        "state": "CA",
-        "street": "123 Main St. E. Apt. 2"
-    },
-    "email": TEST_EMAIL,
-    "first_name": "",
-    "last_name": "Doe",
-    "language": "en_US",
-}
 DUMMY_ACCT_ADMIN = {
     "address": {
         "city": "Oberlin",
