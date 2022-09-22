@@ -18,8 +18,12 @@ jsonify = json.dumps
 # the vioscreen survey currently cannot be fetched from the database
 # there seems to be some detached survey IDs -- see 000089779
 # that account has a long and unusual history though
-TEMPLATES_TO_IGNORE = {10001, None}
+# Adding the MyFoodRepo, Polyphenol FFQ, and Spain FFQs to the
+# ignore list.
+TEMPLATES_TO_IGNORE = {10001, 10002, 10003, 10004, None}
 
+# Adding questions from Cooking Oils & Oxalate-rich Foods survey
+# to ignore list as they don't exist in Qiita
 EBI_REMOVE = ['ABOUT_YOURSELF_TEXT', 'ANTIBIOTIC_CONDITION',
               'ANTIBIOTIC_MED', 'PM_NAME', 'PM_EMAIL',
               'BIRTH_MONTH', 'CAT_CONTACT', 'CAT_LOCATION',
@@ -37,7 +41,10 @@ EBI_REMOVE = ['ABOUT_YOURSELF_TEXT', 'ANTIBIOTIC_CONDITION',
               'COVID_SYMPTOMS_OTHER', 'FERMENTED_CONSUMED_OTHER',
               'FERMENTED_OTHER', 'FERMENTED_PRODUCE_COMMERCIAL_OTHER',
               'FERMENTED_PRODUCE_PERSONAL_OTHER',
-              'OTHER_ANIMALS_FREE_TEXT']
+              'OTHER_ANIMALS_FREE_TEXT', 'OILS_FREQUENCY_VEGETABLE',
+              'OILS_FREQUENCY_ANIMAL', 'OILS_FREQUENCY_OTHER',
+              'OILS_FREQUENCY_MARGARINE', 'OILS_FREQUENCY_OXALATE'
+              'OILS_FREQUENCY_SOY']
 
 
 def drop_private_columns(df):
