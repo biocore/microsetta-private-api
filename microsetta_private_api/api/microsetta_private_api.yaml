@@ -168,6 +168,43 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/accounts/{account_id}/check_duplicate_source':
+    post:
+      operationId: microsetta_private_api.api.check_duplicate_source_name_email
+      tags:
+        - Account
+      summary: Get information about duplicate source
+      description: Get information about  duplicate source
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                participant_name: # Field is named participant_name, but contents are used to fill source's name
+                  $ref: '#/components/schemas/source_name'
+                participant_email:
+                  $ref: '#/components/schemas/participant_email'
+              required:
+                    - participant_name
+                    - participant_email
+      responses:
+        '200':
+          description: Successfully returned source information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source_match:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/accounts/{account_id}/email_match':
     get:
       operationId: microsetta_private_api.api.check_email_match
@@ -1523,6 +1560,8 @@ paths:
                   type: string
                 'address_2':
                   type: string
+                'address_3':
+                  type: string
                 'city':
                   type: string
                 'state':
@@ -1534,6 +1573,8 @@ paths:
                 'ip_address':
                   type: string
                 'over_18':
+                  type: string
+                'residential_address':
                   type: string
               required:
                 - campaign_id
@@ -1620,12 +1661,16 @@ paths:
                   type: string
                 'address_2':
                   type: string
+                'address_3':
+                  type: string
                 'city':
                   type: string
                 'state':
                   type: string
                 'postal':
                   type: string
+                'residential_address':
+                  type: boolean
               required:
                 - interested_user_id
                 - email
@@ -1884,6 +1929,12 @@ paths:
         - in: query
           name: address_2
           description: Second line of address to verify (e.g. apartment, suite, floor)
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: address_3
+          description: Third line of address to verify
           required: false
           schema:
             type: string
@@ -2660,7 +2711,7 @@ components:
       example: "standard"
     language:
       type: string
-      enum: ["en_US", "es_MX"]
+      enum: ["en_US", "es_MX", "es_ES"]
       example: "en_US"
     creation_time:
       type: string

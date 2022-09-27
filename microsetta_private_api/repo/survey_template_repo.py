@@ -13,6 +13,7 @@ from microsetta_private_api.model.survey_template_trigger import \
         SurveyTemplateTrigger
 import copy
 import secrets
+from microsetta_private_api.exceptions import RepoException
 
 from microsetta_private_api.repo.sample_repo import SampleRepo
 
@@ -21,6 +22,8 @@ class SurveyTemplateRepo(BaseRepo):
 
     VIOSCREEN_ID = 10001
     MYFOODREPO_ID = 10002
+    POLYPHENOL_FFQ_ID = 10003
+    SPAIN_FFQ_ID = 10004
     SURVEY_INFO = {
         1: SurveyTemplateLinkInfo(
             1,
@@ -58,6 +61,12 @@ class SurveyTemplateRepo(BaseRepo):
             "1.0",
             "local"
         ),
+        7: SurveyTemplateLinkInfo(
+            7,
+            "Cooking Oils and Oxalate-rich Foods",
+            "1.0",
+            "local"
+        ),
         VIOSCREEN_ID: SurveyTemplateLinkInfo(
             VIOSCREEN_ID,
             "Vioscreen Food Frequency Questionnaire",
@@ -67,6 +76,18 @@ class SurveyTemplateRepo(BaseRepo):
         MYFOODREPO_ID: SurveyTemplateLinkInfo(
             MYFOODREPO_ID,
             "MyFoodRepo Diet Tracking",
+            "1.0",
+            "remote"
+        ),
+        POLYPHENOL_FFQ_ID: SurveyTemplateLinkInfo(
+            POLYPHENOL_FFQ_ID,
+            "Polyphenol Food Frequency Questionnaire",
+            "1.0",
+            "remote"
+        ),
+        SPAIN_FFQ_ID: SurveyTemplateLinkInfo(
+            SPAIN_FFQ_ID,
+            "Spain Food Frequency Questionnaire",
             "1.0",
             "remote"
         )
@@ -97,7 +118,8 @@ class SurveyTemplateRepo(BaseRepo):
         tag_to_col = {
             localization.EN_US: "survey_question.american",
             localization.EN_GB: "survey_question.british",
-            localization.ES_MX: "survey_question.spanish"
+            localization.ES_MX: "survey_question.spanish",
+            localization.ES_ES: "survey_question.spain_spanish"
         }
 
         if language_tag not in tag_to_col:
@@ -164,8 +186,9 @@ class SurveyTemplateRepo(BaseRepo):
                 triggers = self._get_question_triggers(question_id)
 
                 # Quick  fix to correctly sort country names in Spanish
-                if language_tag == localization.ES_MX and \
-                        (question_id == 110 or question_id == 148):
+                if (language_tag == localization.ES_MX or language_tag ==
+                    localization.ES_ES) and (question_id == 110 or
+                                             question_id == 148):
                     responses[1:len(responses)] = \
                         sorted(responses[1:len(responses)])
 
@@ -191,7 +214,8 @@ class SurveyTemplateRepo(BaseRepo):
         tag_to_col = {
             localization.EN_US: "american",
             localization.EN_GB: "british",
-            localization.ES_MX: "spanish"
+            localization.ES_MX: "spanish",
+            localization.ES_ES: "spain_spanish"
         }
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
@@ -209,6 +233,7 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_US: "survey_response.american",
             localization.EN_GB: "survey_response.british",
             localization.ES_MX: "survey_response.spanish",
+            localization.ES_ES: "survey_response.spain_spanish",
         }
 
         with self._transaction.cursor() as cur:
@@ -372,6 +397,138 @@ class SurveyTemplateRepo(BaseRepo):
         """
         maximum_slots = SERVER_CONFIG['myfoodrepo_slots']
         return maximum_slots
+
+    def create_polyphenol_ffq_entry(self, account_id, source_id,
+                                    language_tag, study):
+        """Return a newly created Polyphenol FFQ ID
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+        language_tag: str
+            The user's language tag
+        study: str
+            The study variable we'll pass to Danone's FFQ
+
+        Returns
+        -------
+        UUID
+            The newly created Polyphenol FFQ ID
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""INSERT INTO ag.polyphenol_ffq_registry
+                           (account_id, source_id, language_tag, study)
+                           VALUES (%s, %s, %s, %s)
+                           RETURNING polyphenol_ffq_id""",
+                        (account_id, source_id, language_tag, study))
+            polyphenol_ffq_id = cur.fetchone()[0]
+            if polyphenol_ffq_id is None:
+                raise RepoException("Error creating Polyphenol FFQ entry")
+            else:
+                # Put a survey into ag_login_surveys
+                cur.execute("INSERT INTO ag_login_surveys("
+                            "ag_login_id, "
+                            "survey_id, "
+                            "vioscreen_status, "
+                            "source_id) "
+                            "VALUES(%s, %s, %s, %s)",
+                            (account_id, polyphenol_ffq_id, None, source_id))
+
+                return polyphenol_ffq_id
+
+    def get_polyphenol_ffq_id_if_exists(self, account_id, source_id):
+        """Return a Polyphenol FFQ ID if one exists
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Returns
+        -------
+        (UUID, str) or (None, None)
+            The associated Polyphenol FFQ ID and study
+            It's impossible to find one without the other
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT polyphenol_ffq_id, study
+                           FROM ag.polyphenol_ffq_registry
+                           WHERE account_id=%s AND source_id=%s""",
+                        (account_id, source_id))
+            res = cur.fetchone()
+
+            if res is None:
+                return (None, None)
+            else:
+                return res
+
+    def create_spain_ffq_entry(self, account_id, source_id):
+        """Return a newly created Spain FFQ ID
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Returns
+        -------
+        UUID
+            The newly created Spain FFQ ID
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""INSERT INTO ag.spain_ffq_registry
+                           (account_id, source_id)
+                           VALUES (%s, %s)
+                           RETURNING spain_ffq_id""",
+                        (account_id, source_id))
+            spain_ffq_id = cur.fetchone()[0]
+            if spain_ffq_id is None:
+                raise RepoException("Error creating Spain FFQ entry")
+            else:
+                # Put a survey into ag_login_surveys
+                cur.execute("INSERT INTO ag_login_surveys("
+                            "ag_login_id, "
+                            "survey_id, "
+                            "vioscreen_status, "
+                            "source_id) "
+                            "VALUES(%s, %s, %s, %s)",
+                            (account_id, spain_ffq_id, None, source_id))
+
+                return spain_ffq_id
+
+    def get_spain_ffq_id_if_exists(self, account_id, source_id):
+        """Return a Spain FFQ ID if one exists
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Returns
+        -------
+        UUID or None
+            The associated Spain FFQ ID or None
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT spain_ffq_id
+                           FROM ag.spain_ffq_registry
+                           WHERE account_id=%s AND source_id=%s""",
+                        (account_id, source_id))
+            res = cur.fetchone()
+
+            if res is None:
+                return None
+            else:
+                return res[0]
 
     def create_vioscreen_id(self, account_id, source_id,
                             vioscreen_ext_sample_id):

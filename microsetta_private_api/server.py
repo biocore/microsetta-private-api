@@ -9,7 +9,7 @@ from flask_babel import Babel
 
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.celery_utils import celery, init_celery
-from microsetta_private_api.localization import EN_US, ES_MX
+from microsetta_private_api.localization import EN_US, ES_MX, ES_ES
 
 
 """
@@ -85,7 +85,7 @@ def build_app():
         if not flask.has_request_context():
             return EN_US
 
-        return request.accept_languages.best_match([EN_US, ES_MX],
+        return request.accept_languages.best_match([EN_US, ES_ES, ES_MX],
                                                    default=EN_US)
 
     init_celery(celery, app.app)

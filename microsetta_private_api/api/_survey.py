@@ -6,13 +6,16 @@ from microsetta_private_api.api._account import \
     _validate_account_access
 from microsetta_private_api.model.source import Source
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
-from microsetta_private_api.util import vioscreen, myfoodrepo, vue_adapter
+from microsetta_private_api.util import vioscreen, myfoodrepo, vue_adapter, \
+    polyphenol_ffq
 from microsetta_private_api.util.vioscreen import VioscreenAdminAPI
+from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
 def read_survey_templates(account_id, source_id, language_tag, token_info):
@@ -35,9 +38,12 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [1, 3, 4, 5, 6,
+                           for x in [1, 3, 4, 5, 6, 7,
                                      SurveyTemplateRepo.VIOSCREEN_ID,
-                                     SurveyTemplateRepo.MYFOODREPO_ID]]), 200
+                                     SurveyTemplateRepo.MYFOODREPO_ID,
+                                     SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                                     SurveyTemplateRepo.SPAIN_FFQ_ID]
+                            ]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200
@@ -114,6 +120,55 @@ def _remote_survey_url_myfoodrepo(transaction, account_id, source_id,
     return myfoodrepo.gen_survey_url(mfr_id)
 
 
+def _remote_survey_url_polyphenol_ffq(transaction, account_id, source_id,
+                                      language_tag):
+    st_repo = SurveyTemplateRepo(transaction)
+
+    # right now, ID won't exist
+    # future plans to allow surveys to behave more flexibly will use this
+    # functionality to allow participants to re-join in-progress surveys
+    polyphenol_ffq_id, study = \
+        st_repo.get_polyphenol_ffq_id_if_exists(account_id, source_id)
+
+    if polyphenol_ffq_id is None:
+        # The Polyphenol FFQ belongs to Danone and they're interested in
+        # tracking results that come from their sponsored studies
+        # separately from other samples. We pass 'THDMI' as the study for
+        # THDMI samples and 'Microsetta' for all other samples. Therefore,
+        # we need to determine if the source has any THDMI-associated samples.
+        # Without investing significant developer effort to build a category
+        # system around projects, a basic text search is the best compromise.
+        study = 'Microsetta'
+        sample_repo = SampleRepo(transaction)
+        samples = sample_repo.get_samples_by_source(account_id, source_id)
+        for s in samples:
+            for s_p in s.sample_projects:
+                if s_p.startswith('THDMI'):
+                    study = 'THDMI'
+                    break
+
+        polyphenol_ffq_id = st_repo.create_polyphenol_ffq_entry(account_id,
+                                                                source_id,
+                                                                language_tag,
+                                                                study)
+
+    return polyphenol_ffq.gen_ffq_url(polyphenol_ffq_id, study, language_tag)
+
+
+def _remote_survey_url_spain_ffq(transaction, account_id, source_id):
+    st_repo = SurveyTemplateRepo(transaction)
+
+    # right now, ID won't exist
+    # future plans to allow surveys to behave more flexibly will use this
+    # functionality to allow participants to re-join in-progress surveys
+    spain_ffq_id = st_repo.get_spain_ffq_id_if_exists(account_id, source_id)
+
+    if spain_ffq_id is None:
+        st_repo.create_spain_ffq_entry(account_id, source_id)
+
+    return SERVER_CONFIG['spain_ffq_url']
+
+
 def read_survey_template(account_id, source_id, survey_template_id,
                          language_tag, token_info, survey_redirect_url=None,
                          vioscreen_ext_sample_id=None):
@@ -139,6 +194,15 @@ def read_survey_template(account_id, source_id, survey_template_id,
                                                     account_id,
                                                     source_id,
                                                     language_tag)
+            elif survey_template_id == SurveyTemplateRepo.POLYPHENOL_FFQ_ID:
+                url = _remote_survey_url_polyphenol_ffq(t,
+                                                        account_id,
+                                                        source_id,
+                                                        language_tag)
+            elif survey_template_id == SurveyTemplateRepo.SPAIN_FFQ_ID:
+                url = _remote_survey_url_spain_ffq(t,
+                                                   account_id,
+                                                   source_id)
             else:
                 raise ValueError(f"Cannot generate URL for survey "
                                  f"{survey_template_id}")

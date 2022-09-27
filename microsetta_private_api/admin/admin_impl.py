@@ -118,9 +118,12 @@ def put_interested_user_by_id(token_info, iuid, body):
         user.address_valid = True
         user.address_1 = body['address_1']
         user.address_2 = body['address_2']
+        user.address_3 = body.get('address_3', None)
+        user.phone = body['phone']
         user.city = body['city']
         user.state = body['state']
         user.postal_code = body['postal']
+        user.residential_address = body.get('residential_address', True)
         update_success = \
             i_u_repo.update_interested_user(user)
 
@@ -588,15 +591,15 @@ def search_activation(token_info, email_query=None, code_query=None):
         return jsonify([i.to_api() for i in infos]), 200
 
 
-def address_verification(address_1=None, address_2=None,
+def address_verification(address_1=None, address_2=None, address_3=None,
                          city=None, state=None, postal=None, country=None):
     if address_1 is None or len(address_1) < 1 or \
             postal is None or len(postal) < 1 or \
             country is None or len(country) < 1:
         raise Exception("Must include address_1, postal, and country")
 
-    melissa_response = verify_address(address_1, address_2, city, state,
-                                      postal, country)
+    melissa_response = verify_address(address_1, address_2, address_3, city,
+                                      state, postal, country)
 
     return jsonify(melissa_response), 200
 
