@@ -381,3 +381,16 @@ class SurveyTemplateTests(unittest.TestCase):
                                                            TEST2_SOURCE_ID,
                                                            TEST2_SAMPLE_ID)
             self.assertEqual(obs, None)
+
+    def test_get_vioscreen_sample_to_user(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.get_vioscreen_sample_to_user()
+
+        # manually checked from ag_test.ag.vioscreen_registry table
+        tests = [('e0a110de-7c0c-4a5f-a17d-19426a9d41df', 'b98c5ac966b754ff'),
+                 ('23271264-7918-4572-98cd-7405fc907c59', '8fecc8f34a133eb8'),
+                 ('7b387f96-1c6d-4edd-ad68-b179d6f846e7', '52abc2ea83c08b96')]
+        for sample, user in tests:
+            self.assertEqual(obs.get(sample), user)
+

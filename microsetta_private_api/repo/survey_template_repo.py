@@ -530,6 +530,15 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return res[0]
 
+    def get_vioscreen_sample_to_user(self):
+        """Obtain a mapping of sample ID to vioscreen user"""
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT sample_id, vio_id
+                           FROM ag.vioscreen_registry
+                           WHERE sample_id IS NOT NULL
+                               AND vio_id IS NOT NULL""")
+            return {r[0]: r[1] for r in cur.fetchall()}
+
     def create_vioscreen_id(self, account_id, source_id,
                             vioscreen_ext_sample_id):
         with self._transaction.cursor() as cur:
