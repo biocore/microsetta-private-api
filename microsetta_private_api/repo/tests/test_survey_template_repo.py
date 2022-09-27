@@ -393,4 +393,3 @@ class SurveyTemplateTests(unittest.TestCase):
                  ('7b387f96-1c6d-4edd-ad68-b179d6f846e7', '52abc2ea83c08b96')]
         for sample, user in tests:
             self.assertEqual(obs.get(sample), user)
-
