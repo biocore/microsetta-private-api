@@ -173,7 +173,6 @@ class IntegrationTests(TestCase):
                               12345,
                               "US"
                           ),
-                          "fakekit",
                           "en_US")
             acct_repo.create_account(acc)
 
@@ -664,7 +663,6 @@ class IntegrationTests(TestCase):
                 "email": FAKE_EMAIL,
                 "first_name": "Jane",
                 "last_name": "Doe",
-                "kit_name": "jb_qhxqe",
                 "language": "en_US"
             })
 
@@ -738,13 +736,13 @@ class IntegrationTests(TestCase):
                 "email": "foo@baz.com",
                 "first_name": "Dan",
                 "last_name": "H",
-                "kit_name": "fakekit",
                 "language": "en_US"
             }
 
         # Hard to guess these two, so let's pop em out
         acc.pop("creation_time")
         acc.pop("update_time")
+        acc.pop('kit_name')
         self.assertDictEqual(acc, regular_data, "Check Initial Account Match")
 
         regular_data.pop("account_id")
@@ -753,10 +751,8 @@ class IntegrationTests(TestCase):
         # accounts table without changing the email in the authorization causes
         # authorization errors (as it should)
         the_email = regular_data["email"]
-        kit_name = regular_data['kit_name']
         fuzzy_data = fuzz(regular_data)
         fuzzy_data['email'] = the_email
-        fuzzy_data['kit_name'] = kit_name
         fuzzy_data['language'] = regular_data["language"]
 
         # submit an invalid account type
@@ -788,6 +784,7 @@ class IntegrationTests(TestCase):
         fuzzy_data["account_id"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
         acc.pop('creation_time')
         acc.pop('update_time')
+        acc.pop('kit_name')
         self.assertDictEqual(fuzzy_data, acc, "Check Fuzz Account Match")
 
         # Attempt to restore back to old data.
@@ -804,6 +801,7 @@ class IntegrationTests(TestCase):
 
         acc.pop('creation_time')
         acc.pop('update_time')
+        acc.pop('kit_name')
         regular_data['account_type'] = 'standard'
         regular_data["account_id"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 
