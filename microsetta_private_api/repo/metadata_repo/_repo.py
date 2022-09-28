@@ -189,19 +189,26 @@ def _fetch_survey_template(template_id):
         observed, the survey responses should not be considered valid.
     """
     with Transaction() as t:
+        error = None
+
         survey_template_repo = SurveyTemplateRepo(t)
         info = survey_template_repo.get_survey_template_link_info(
             template_id)
 
         # For local surveys, we generate the json representing the survey
-        survey_template = survey_template_repo.get_survey_template(
-            template_id, "en_US")
-        survey_template_text = vue_adapter.to_vue_schema(survey_template)
+        try:
+            survey_template = survey_template_repo.get_survey_template(
+                template_id, "en_US")
+        except NotFound as e:
+            error = e
 
-        info = info.to_api(None, None)
-        info['survey_template_text'] = survey_template_text
+        if error is None:
+            survey_template_text = vue_adapter.to_vue_schema(survey_template)
 
-        return info, None
+            info = info.to_api(None, None)
+            info['survey_template_text'] = survey_template_text
+
+        return info, error
 
 
 def _to_pandas_dataframe(metadatas, survey_templates):
