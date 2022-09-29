@@ -188,7 +188,7 @@ def _store_sent_kits_for_article(
                                  f"{curr_barcode}")
 
             # DON'T change this to "is_multi_item" bc False != None here
-            if is_multi_item == False:
+            if is_multi_item is False:
                 raise ValueError(MULTI_ITEM_ERR_MSG)
             else:
                 is_multi_item = True
@@ -213,7 +213,7 @@ def _store_sent_kits_for_article(
 
     # if we found out above that this scannable_kit_items is for only one kit;
     # DON'T change this to "is_multi_item" bc False != None here
-    if is_multi_item == False:
+    if is_multi_item is False:
         curr_kit_info = _store_single_sent_kit(
             admin_repo, order_proj_ids, order_id, outbound_fedex_code,
             inbound_fedex_code, address_dict, scannable_kit_items)

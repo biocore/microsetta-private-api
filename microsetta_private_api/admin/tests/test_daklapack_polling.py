@@ -16,13 +16,14 @@ def make_test_response(status_code, json_dict):
 
 
 class DaklapackPollingTests(AdminTests):
-    TWO_INSTANCE_ARTICLE = {"articleCode": "350201",
-         "total": 2,
-         "new": 0,
-         "inProduction": 0,
-         "sent": 2,
-         "errors": 0,
-         "articles": [
+    TWO_INSTANCE_ARTICLE = {
+        "articleCode": "350201",
+        "total": 2,
+        "new": 0,
+        "inProduction": 0,
+        "sent": 2,
+        "errors": 0,
+        "articles": [
              {"internalId": "729f7149-4889-42b3-8368-1b68284d5b95",
               "articleCode": "350201",
               "status": "Sent",
@@ -864,7 +865,8 @@ class DaklapackPollingTests(AdminTests):
                 'box_id': 'MULTI_BOX_1',
                 'address': {'firstName': 'THDMI',
                             'lastName': 'Spain',
-                            'address1': '500 West Main St', 'insertion': '',
+                            'address1': '500 West Main St',
+                            'insertion': '',
                             'address2': 'Suite 2', 'postalCode': '07481',
                             'city': 'Wyckoff', 'state': 'NJ',
                             'country': 'USA', 'countryCode': 'US',
