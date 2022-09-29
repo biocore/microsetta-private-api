@@ -266,7 +266,7 @@ def _store_single_sent_kit(admin_repo, order_proj_ids, order_id,
         # contains scannable items, on to infinity.  HOWEVER, microsetta
         # DOES NOT support that level of nesting, so if it is present, error.
         curr_subitems = curr_scannable.get(CONTAINER_ITEMS_KEY)
-        if curr_subitems and len(curr_subitems)>0:
+        if curr_subitems and len(curr_subitems) > 0:
             raise ValueError(MULTI_ITEM_ERR_MSG)
 
         # figure out what *kind* of barcoded thing this is and capture
