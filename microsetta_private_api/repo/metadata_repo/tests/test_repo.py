@@ -168,13 +168,7 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertEqual(errors, None)
 
     def test_fetch_survey_template_remote(self):
-        exp = {'survey_id': None,
-               'survey_status': None,
-               'survey_template_id': 10001,
-               'survey_template_title':
-                   'Vioscreen Food Frequency Questionnaire',
-               'survey_template_type': 'remote',
-               'survey_template_version': '1.0'}
+        # attempt to fetch info for Vioscreen survey
         survey, errors = _fetch_survey_template(10001)
 
         # verify that _fetch_survey_template returns an error, reflecting
