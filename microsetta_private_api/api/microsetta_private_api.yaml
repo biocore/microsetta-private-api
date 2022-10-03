@@ -910,7 +910,7 @@ paths:
           # NB: This error would cover the case where you can't dissociate it bc it was already processed
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/session':
+  '/accounts/{account_id}/sources/{source_id}/vioscreen/session':
     get:
       operationId: microsetta_private_api.api.read_vioscreen_session
       tags:
@@ -920,7 +920,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        # - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
           description: Successfully returned session information
@@ -962,7 +962,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/dietaryscore':
+  '/accounts/{account_id}/sources/{source_id}/vioscreen/dietaryscore':
     get:
       operationId: microsetta_private_api.api.read_vioscreen_dietary_score
       tags:
@@ -972,7 +972,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        # - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
           description: Successfully returned dietary score information
@@ -988,7 +988,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/supplements':
+  '/accounts/{account_id}/sources/{source_id}/vioscreen/supplements':
     get:
       operationId: microsetta_private_api.api.read_vioscreen_supplements
       tags:
@@ -998,7 +998,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+       # - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
           description: Successfully returned supplements information
@@ -1040,7 +1040,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/eatingpatterns':
+  '/accounts/{account_id}/sources/{source_id}/vioscreen/eatingpatterns':
     get:
       operationId: microsetta_private_api.api.read_vioscreen_eating_patterns
       tags:
@@ -1050,7 +1050,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        # - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
           description: Successfully returned eating patterns information
@@ -1066,7 +1066,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/mpeds':
+  '/accounts/{account_id}/sources/{source_id}/vioscreen/mpeds':
     get:
       operationId: microsetta_private_api.api.read_vioscreen_mpeds
       tags:
@@ -1076,7 +1076,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        # - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
           description: Successfully returned mpeds information

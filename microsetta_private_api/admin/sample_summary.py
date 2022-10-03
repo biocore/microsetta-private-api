@@ -47,8 +47,7 @@ def per_sample(project, barcodes, strip_sampleid):
             if source is not None and source_type == Source.SOURCE_TYPE_HUMAN:
 
                 vio_id = template_repo.get_vioscreen_id_if_exists(account.id,
-                                                                  source.id,
-                                                                  sample.id)
+                                                                  source.id)
 
             # at least one sample has been observed that "is_microsetta",
             # described in the barcodes.project_barcode table, but which is

@@ -2101,8 +2101,7 @@ class VioscreenTests(ApiTests):
 
     def _url_constructor(self):
         return (f'/api/accounts/{self.acct_id}'
-                f'/sources/{self.src_id}'
-                f'/samples/{self.samp_id}')
+                f'/sources/{self.src_id}')
 
     def test_get_sample_vioscreen_session_200(self):
         vioscreen_session = VioscreenSession(
