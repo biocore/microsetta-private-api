@@ -177,9 +177,6 @@ class MetadataUtilTests(unittest.TestCase):
                'survey_template_version': '1.0'}
         survey, errors = _fetch_survey_template(10001)
 
-        # concern here is that this key exists, not its content
-        survey.pop('survey_template_text')
-
         # verify that we obtained data, but also that we returned an error
         # this reflects a remote survey, for which we can't extract local data
         self.assertEqual(survey, exp)
