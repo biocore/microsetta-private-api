@@ -936,7 +936,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/percentenergy':
+  '/accounts/{account_id}/sources/{source_id}/vioscreen/percentenergy':
     get:
       operationId: microsetta_private_api.api.read_vioscreen_percent_energy
       tags:
@@ -946,7 +946,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        # - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
           description: Successfully returned percent energy information
@@ -1014,7 +1014,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/foodcomponents':
+  '/accounts/{account_id}/sources/{source_id}/vioscreen/foodcomponents':
     get:
       operationId: microsetta_private_api.api.read_vioscreen_food_components
       tags:
@@ -1024,7 +1024,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        # - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
           description: Successfully returned food components information
@@ -1092,7 +1092,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/vioscreen/foodconsumption':
+  '/accounts/{account_id}/sources/{source_id}/vioscreen/foodconsumption':
     get:
       operationId: microsetta_private_api.api.read_vioscreen_food_consumption
       tags:
@@ -1102,7 +1102,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        # - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
           description: Successfully returned food consumption information
