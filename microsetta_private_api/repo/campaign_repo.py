@@ -2,6 +2,7 @@ import psycopg2
 import json
 
 from microsetta_private_api.client.fundrazr import FundrazrClient
+from microsetta_private_api.model.activation_code import ActivationCode
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.campaign import Campaign, payment_from_db
 from microsetta_private_api.exceptions import RepoException
@@ -9,6 +10,7 @@ from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
 from microsetta_private_api.tasks import send_email
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.localization import EN_US
+from microsetta_private_api.util.util import PerksType
 
 
 class UnknownItem(psycopg2.errors.ForeignKeyViolation):
@@ -391,12 +393,40 @@ class FundRazrCampaignRepo(BaseRepo):
         perk : Item
             An instance of a campaign Item
         """
+        # TODO : Map these titles with the original titles
+        if perk.title == "FFQ":
+            perk_type = PerksType.FFQ
+            self.add_activation_code(campaign_id, perk.id)
+
+        elif perk.title == "FFQ_SAMPLE_KIT":
+            perk_type = PerksType.FFQ_KIT
+            self.add_activation_code(campaign_id, perk.id)
+
+        elif perk.title == "FFQ_ONE_YEAR":
+            perk_type = PerksType.FFQ_ONE_YEAR
+
         sql = ("""INSERT INTO campaign.fundrazr_perk
-                  (id, remote_campaign_id, title, price)
-                  VALUES (%s, %s, %s, %s)""",
-               (perk.id, campaign_id, perk.title, perk.price))
+                 (id, remote_campaign_id, title, price, perk_type)
+                 VALUES (%s, %s, %s, %s, %s)""",
+               (perk.id, campaign_id, perk.title, perk.price, perk_type))
 
         with self._transaction.cursor() as cur:
+            cur.execute(*sql)
+
+    def add_activation_code(self, campaign_id, perk_id):
+        code = ActivationCode.generate_code()
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT interested_user_id
+                          FROM campaign.interested_users
+                          WHERE campaign_id=%s)""",
+                        (campaign_id,))
+            res = cur.fetchone()[0]
+
+            sql = ("""INSERT INTO campaign.fundrazr_perk_activation_code
+                 (code, interested_user_id, perk_id)
+                 VALUES (%s, %s, %s)""",
+                   (code, res['interested_user_id'], perk_id))
+
             cur.execute(*sql)
 
 
@@ -526,7 +556,7 @@ class UserTransaction(BaseRepo):
         fields = ('id', 'interested_user_id', 'remote_campaign_id', 'created',
                   'amount', 'net_amount', 'currency', 'message',
                   'subscribed_to_updates', 'account_type', 'payer_first_name',
-                  'payer_last_name', 'payer_email', 'transaction_type')
+                  'payer_last_name', 'payer_email', 'status', 'transaction_type')
         data = (payment.transaction_id,
                 interested_user_id,
                 payment.campaign_id,
@@ -540,6 +570,7 @@ class UserTransaction(BaseRepo):
                 payment.payer_first_name,
                 payment.payer_last_name,
                 payment.payer_email,
+                payment.status,
                 self.TRN_TYPE_FUNDRAZR)
 
         placeholders = ', '.join(['%s'] * len(fields))

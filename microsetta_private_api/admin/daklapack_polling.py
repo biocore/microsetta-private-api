@@ -4,6 +4,7 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.admin import daklapack_communication as dc
 from microsetta_private_api.celery_utils import celery
+from microsetta_private_api.util.util import PerksType
 
 OUTBOUND_DEV_KEY = "outBoundDelivery"
 INBOUND_DEV_KEY = "inBoundDelivery"
@@ -142,8 +143,9 @@ def process_order_articles(admin_repo, order_id, status, create_date):
             if status == SENT_STATUS:
                 # (Per Daniel 2021-07-01, each instance of a daklapack article
                 # represents exactly one kit, no more or less.)
-                curr_output = _store_single_sent_kit(
-                    admin_repo, order_proj_ids, curr_article_instance)
+                if admin_repo.get_perk_type(order_id) in [PerksType.FFQ_KIT, PerksType.FFQ_ONE_YEAR]:
+                    curr_output = _store_single_sent_kit(
+                        admin_repo, order_proj_ids, curr_article_instance)
 
                 # able to assume there is only one kit uuid bc
                 # _store_single_sent_kit stores a single kit, by definition
