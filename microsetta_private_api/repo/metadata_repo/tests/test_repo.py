@@ -171,7 +171,8 @@ class MetadataUtilTests(unittest.TestCase):
         exp = {'survey_id': None,
                'survey_status': None,
                'survey_template_id': 10001,
-               'survey_template_title': 'Vioscreen Food Frequency Questionnaire',
+               'survey_template_title':
+                   'Vioscreen Food Frequency Questionnaire',
                'survey_template_type': 'remote',
                'survey_template_version': '1.0'}
         survey, errors = _fetch_survey_template(1)
