@@ -175,7 +175,7 @@ class MetadataUtilTests(unittest.TestCase):
                    'Vioscreen Food Frequency Questionnaire',
                'survey_template_type': 'remote',
                'survey_template_version': '1.0'}
-        survey, errors = _fetch_survey_template(1)
+        survey, errors = _fetch_survey_template(10001)
 
         # concern here is that this key exists, not its content
         survey.pop('survey_template_text')
