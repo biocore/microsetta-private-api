@@ -6,6 +6,6 @@ from microsetta_private_api.tasks import update_qiita_metadata
 init_celery(celery, app.app)
 
 # Run any celery tasks that require initialization on worker start
-#refresh_headers.delay()  # Initialize the vioscreen task with a token
-#poll_dak_orders.delay()  # check for orders
-update_qiita_metadata.delay()
+refresh_headers.delay()  # Initialize the vioscreen task with a token
+poll_dak_orders.delay()  # check for orders
+update_qiita_metadata.delay()  # run Qiita metadata push
