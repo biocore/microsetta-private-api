@@ -167,6 +167,23 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertEqual(survey, exp)
         self.assertEqual(errors, None)
 
+    def test_fetch_survey_template_remote(self):
+        exp = {'survey_id': None,
+               'survey_status': None,
+               'survey_template_id': 10001,
+               'survey_template_title': 'Vioscreen Food Frequency Questionnaire',
+               'survey_template_type': 'remote',
+               'survey_template_version': '1.0'}
+        survey, errors = _fetch_survey_template(1)
+
+        # concern here is that this key exists, not its content
+        survey.pop('survey_template_text')
+
+        # verify that we obtained data, but also that we returned an error
+        # this reflects a remote survey, for which we can't extract local data
+        self.assertEqual(survey, exp)
+        self.assertNotEqual(errors, None)
+
     def test_drop_private_columns(self):
         df = pd.DataFrame([[1, 2, 3], [4, 5, 6]],
                           columns=['pM_foo', 'okay', 'ABOUT_yourSELF_TEXT'])

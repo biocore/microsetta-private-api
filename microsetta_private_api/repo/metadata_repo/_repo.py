@@ -22,8 +22,10 @@ jsonify = json.dumps
 # ignore list.
 TEMPLATES_TO_IGNORE = {10001, 10002, 10003, 10004, None}
 
+# TODO 2022-10-03
 # Adding questions from Cooking Oils & Oxalate-rich Foods survey
-# to ignore list as they don't exist in Qiita
+# to ignore list as they don't exist in Qiita (OILS_*). We're blocked on
+# pushing them, pending an update to Qiita's API.
 EBI_REMOVE = ['ABOUT_YOURSELF_TEXT', 'ANTIBIOTIC_CONDITION',
               'ANTIBIOTIC_MED', 'PM_NAME', 'PM_EMAIL',
               'BIRTH_MONTH', 'CAT_CONTACT', 'CAT_LOCATION',
@@ -184,7 +186,7 @@ def _fetch_survey_template(template_id):
     -------
     dict
         The survey structure as returned from the private API
-    dict or None
+    string or None
         Any error information associated with the retreival. If an error is
         observed, the survey responses should not be considered valid.
     """
@@ -200,7 +202,7 @@ def _fetch_survey_template(template_id):
             survey_template = survey_template_repo.get_survey_template(
                 template_id, "en_US")
         except NotFound as e:
-            error = e
+            error = repr(e)
 
         if error is None:
             survey_template_text = vue_adapter.to_vue_schema(survey_template)
