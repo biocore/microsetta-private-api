@@ -177,9 +177,8 @@ class MetadataUtilTests(unittest.TestCase):
                'survey_template_version': '1.0'}
         survey, errors = _fetch_survey_template(10001)
 
-        # verify that we obtained data, but also that we returned an error
-        # this reflects a remote survey, for which we can't extract local data
-        self.assertEqual(survey, exp)
+        # verify that _fetch_survey_template returns an error, reflecting
+        # that it's a remote survey for which we can't extract local data
         self.assertNotEqual(errors, None)
 
     def test_drop_private_columns(self):
