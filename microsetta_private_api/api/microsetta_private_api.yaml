@@ -1128,6 +1128,26 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/admin/vioscreen/username_to_barcode':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_vioscreen_sample_to_user
+      tags:
+        - Vioscreen
+      summary: Obtain a mapping from Vioscreen username to associated barcode
+      description: Obtain a mapping from Vioscreen username to associated barcode
+      responses:
+        '200':
+          description: Successfully returned username mapping
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
   '/vioscreen/dietaryscore/type/{score_type}/code/{score_code}':
     get:
       operationId: microsetta_private_api.api.get_vioscreen_dietary_scores_by_component

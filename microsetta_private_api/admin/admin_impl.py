@@ -15,6 +15,7 @@ from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -841,3 +842,11 @@ def delete_account(account_id, token_info):
         t.commit()
 
     return None, 204
+
+
+def get_vioscreen_sample_to_user(token_info):
+    validate_admin_access(token_info)
+    with Transaction() as t:
+        st_repo = SurveyTemplateRepo(t)
+        data = st_repo.get_vioscreen_sample_to_user()
+    return jsonify(data), 200
