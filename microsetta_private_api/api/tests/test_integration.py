@@ -363,7 +363,7 @@ class IntegrationTests(TestCase):
         # Survey status should not be in templates
         self.assertNotIn("survey_status", bobo_surveys[0])
         self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
-                             [1, 3, 4, 5, 6, 7, 10001, 10002, 10003])
+                             [1, 3, 4, 5, 6, 7, 10001, 10002, 10003, 10004])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
                              [2])
         self.assertListEqual([x["survey_template_id"] for x in env_surveys],
@@ -569,6 +569,40 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 404)
 
+    @skipIf(SERVER_CONFIG['spain_ffq_url'] in ('', 'sffq_placeholder'),
+            "Spain FFQ secrets not provided")
+    def test_bobo_takes_spain_ffq(self):
+        bobo = self._bobo_to_claim_a_sample()
+
+        # take Spain FFQ
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/10004'
+            '?language_tag=es_ES' %
+            (ACCT_ID, bobo['source_id']),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+        data = json.loads(resp.data)
+        exp_start = SERVER_CONFIG['spain_ffq_url']
+        url = data['survey_template_text']['url']
+        self.assertTrue(url.startswith(exp_start))
+
+        # verify we err if we attempt to answer the survey. an "answer" here is
+        # undefined
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys'
+            '?language_tag=en_US' %
+            (ACCT_ID, bobo['source_id']),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "survey_template_id": 10004,
+                    "survey_text": {'key': 'stuff'}
+                }),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp, 404)
+
     def test_bobo_takes_all_local_surveys(self):
         """
            Check that a user can login to an account,
@@ -596,8 +630,8 @@ class IntegrationTests(TestCase):
         for bobo_survey in bobo_surveys:
             chosen_survey = bobo_survey["survey_template_id"]
 
-            # 10001, 10002, and 10003 are non-local surveys
-            if chosen_survey in (10001, 10002, 10003):
+            # 10001, 10002, 10003, and 10004 are non-local surveys
+            if chosen_survey in (10001, 10002, 10003, 10004):
                 continue
 
             resp = self.client.get(

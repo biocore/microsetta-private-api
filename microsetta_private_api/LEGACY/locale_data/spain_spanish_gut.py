@@ -70,6 +70,7 @@ Correo electrónico: researchadmin@ucsd.edu</li>
     'OBTAINER_NAME': 'Nombre de la persona que obtiene el consentimiento',
     'TEXT_I_HAVE_READ_PARENT': 'He leído (o alguien me ha leído) este formulario. Soy consciente de que se le está pidiendo a mi hijo que participe en un estudio de investigación. Acepto voluntariamente que mi hijo participe en este estudio',
     'PARTICIPANT_NAME': 'Nombre del participante',
+    'PARTICIPANT_EMAIL': 'Correo electrónico del participante',
     'PARTICIPANT_PARENT_1': 'Nombre del Padre de Familia / Guardian',
     'PARTICIPANT_PARENT_2': 'Nombre del padre / tutor del segundo padre',
     'PARTICIPANT_DECEASED_PARENTS': 'Uno de los padres / tutor ha fallecido o no puede dar su consentimiento',

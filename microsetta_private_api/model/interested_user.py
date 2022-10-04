@@ -17,7 +17,7 @@ class InterestedUser(ModelBase):
         self.phone = kwargs.get('phone')
         self.address_1 = kwargs.get('address_1')
         self.address_2 = kwargs.get('address_2')
-        self.address_3 = kwargs.get('address_3', None)
+        self.address_3 = kwargs.get('address_3')
         self.city = kwargs.get('city')
         self.state = kwargs.get('state')
         self.postal_code = kwargs.get('postal_code')

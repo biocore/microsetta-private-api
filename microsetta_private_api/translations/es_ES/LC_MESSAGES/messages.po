@@ -1,4 +1,4 @@
-# Spanish (Mexico) translations for PROJECT.
+# Spanish (Spain) translations for PROJECT.
 # Copyright (C) 2021 ORGANIZATION
 # This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2022-09-01 20:49-0700\n"
-"PO-Revision-Date: 2022-09-02 09:06-0700\n"
+"PO-Revision-Date: 2022-09-02 09:05-0700\n"
 "Last-Translator: Edgar Diaz <ediaz@ucsd.edu>\n"
 "Language-Team: es_MX <LL@li.org>\n"
 "Language: es_MX\n"
