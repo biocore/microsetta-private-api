@@ -20,29 +20,39 @@ def poll_dak_orders_for_perk():
             a_repo = AdminRepo(t)
             open_dak_order_ids = a_repo.get_perk_type3_orders()
             for order in open_dak_order_ids:
-                days_till_now = datetime.now() - order['planned_send_date'].strftime(DaklapackOrder.DATE_FORMAT)
-
-                # if last planned_send_date is 90 days older then it's time dispatch the next article create a new
-                # new daklapack order when last order delivered date reaches 90 days
+                days_till_now = datetime.now() - order['planned_send_date']\
+                    .strftime(DaklapackOrder.DATE_FORMAT)
+                # if last planned_send_date is 90 days older then it's
+                # time dispatch the next article create a new
+                # new daklapack order when last order delivered date
+                # reaches 90 days
                 # TODO: we don't know exact
-                #  response of dak_order, once we get the sample response we can change accordingly
+                #  response of dak_order, once we get the sample response
+                #  we can change accordingly
                 if days_till_now.days >= 90:
                     if order['no_of_kits'] <= 4:
-                        dak_orders_response = dc.get_daklapack_order_details(order['dak_order_id'])
+                        dak_orders_response = dc.get_daklapack_order_details(
+                            order['dak_order_id'])
 
                         order_struct = {
                             'articles': [
                                 {
-                                    'articleCode': '350102', # we have to map the correct article code
-                                    'addresses': dak_orders_response['articles']['addresses']
+                                    'articleCode': '350102',  # we have to
+                                    # map the correct article code
+                                    'addresses': dak_orders_response[
+                                        'articles']['addresses']
                                 }
                             ],
-                            'shippingProvider': dak_orders_response['shipping_provider'],
-                            'shippingType': dak_orders_response['shipping_type'],
-                            'shippingProviderMetadata': dak_orders_response['shipping_provider_metadata'],
+                            'shippingProvider': dak_orders_response
+                            ['shipping_provider'],
+                            'shippingType': dak_orders_response
+                            ['shipping_type'],
+                            'shippingProviderMetadata': dak_orders_response
+                            ['shipping_provider_metadata'],
                             "plannedSendDate": datetime.date.today()
                         }
-                        response_msg = _create_daklapack_order(order_struct, no_of_kits=order['no_of_kits'] + 1)
+                        response_msg = _create_daklapack_order(
+                            order_struct, no_of_kits=order['no_of_kits'] + 1)
     except Exception as outer_ex:
         response_msg["Code Error"] = str(outer_ex)
 

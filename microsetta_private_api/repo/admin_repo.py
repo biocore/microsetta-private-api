@@ -1353,20 +1353,23 @@ class AdminRepo(BaseRepo):
                 "SELECT campaign.fundrazr_perk.perk_type "
                 "FROM "
                 "campaign.fundrazr_daklapack_orders "
-                "INNER JOIN campaign.fundrazr_perk ON campaign.fundrazr_perk.id=campaign.fundrazr_daklapack_orders"
+                "INNER JOIN campaign.fundrazr_perk ON campaign"
+                ".fundrazr_perk.id=campaign.fundrazr_daklapack_orders"
                 ".fundrazr_transaction_perk_id "
                 "WHERE dak_order_id = %s "
                 (dak_order_id, ))
             return cur.fetchone()['perk_type']
 
     def get_perk_type3_orders(self):
-        # TODO: Need to get the exact status of the order status, currently using "Complete"
+        # TODO: Need to get the exact status of the order status, currently
+        #  using "Complete"
         with self._transaction.dict_cursor() as cur:
             cur.execute(
                 "SELECT t1.dak_order_id "
                 "FROM "
                 "barcodes.daklapack_order_by_perk_type AS t1"
-                "INNER JOIN barcodes.daklapack_order as t2 ON t1.dak_order_id=t2.daklapack_order"
+                "INNER JOIN barcodes.daklapack_order as t2 ON t1"
+                ".dak_order_id=t2.daklapack_order"
                 "WHERE t2.last_polling_status IN (%s) "
                 "OR t2.last_polling_status IS NULL "
                 "ORDER BY t2.last_polling_timestamp DESC;",

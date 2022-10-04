@@ -556,7 +556,8 @@ class UserTransaction(BaseRepo):
         fields = ('id', 'interested_user_id', 'remote_campaign_id', 'created',
                   'amount', 'net_amount', 'currency', 'message',
                   'subscribed_to_updates', 'account_type', 'payer_first_name',
-                  'payer_last_name', 'payer_email', 'status', 'transaction_type')
+                  'payer_last_name', 'payer_email', 'status',
+                  'transaction_type')
         data = (payment.transaction_id,
                 interested_user_id,
                 payment.campaign_id,

@@ -143,7 +143,8 @@ def process_order_articles(admin_repo, order_id, status, create_date):
             if status == SENT_STATUS:
                 # (Per Daniel 2021-07-01, each instance of a daklapack article
                 # represents exactly one kit, no more or less.)
-                if admin_repo.get_perk_type(order_id) in [PerksType.FFQ_KIT, PerksType.FFQ_ONE_YEAR]:
+                if admin_repo.get_perk_type(order_id) in \
+                        [PerksType.FFQ_KIT, PerksType.FFQ_ONE_YEAR]:
                     curr_output = _store_single_sent_kit(
                         admin_repo, order_proj_ids, curr_article_instance)
 

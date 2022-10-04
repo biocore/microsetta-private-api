@@ -567,7 +567,8 @@ def _create_daklapack_order(order_dict, no_of_kits=1):
 
         # write order to db
         admin_repo = AdminRepo(t)
-        order_id = admin_repo.create_daklapack_order(daklapack_order, no_of_kits)
+        order_id = admin_repo.create_daklapack_order(daklapack_order,
+                                                     no_of_kits)
         t.commit()
 
     status_msg = {"order_address":
