@@ -18,8 +18,14 @@ jsonify = json.dumps
 # the vioscreen survey currently cannot be fetched from the database
 # there seems to be some detached survey IDs -- see 000089779
 # that account has a long and unusual history though
-TEMPLATES_TO_IGNORE = {10001, None}
+# Adding the MyFoodRepo, Polyphenol FFQ, and Spain FFQs to the
+# ignore list.
+TEMPLATES_TO_IGNORE = {10001, 10002, 10003, 10004, None}
 
+# TODO 2022-10-03
+# Adding questions from Cooking Oils & Oxalate-rich Foods survey
+# to ignore list as they don't exist in Qiita (OILS_*). We're blocked on
+# pushing them, pending an update to Qiita's API.
 EBI_REMOVE = ['ABOUT_YOURSELF_TEXT', 'ANTIBIOTIC_CONDITION',
               'ANTIBIOTIC_MED', 'PM_NAME', 'PM_EMAIL',
               'BIRTH_MONTH', 'CAT_CONTACT', 'CAT_LOCATION',
@@ -37,7 +43,10 @@ EBI_REMOVE = ['ABOUT_YOURSELF_TEXT', 'ANTIBIOTIC_CONDITION',
               'COVID_SYMPTOMS_OTHER', 'FERMENTED_CONSUMED_OTHER',
               'FERMENTED_OTHER', 'FERMENTED_PRODUCE_COMMERCIAL_OTHER',
               'FERMENTED_PRODUCE_PERSONAL_OTHER',
-              'OTHER_ANIMALS_FREE_TEXT']
+              'OTHER_ANIMALS_FREE_TEXT', 'OILS_FREQUENCY_VEGETABLE',
+              'OILS_FREQUENCY_ANIMAL', 'OILS_FREQUENCY_OTHER',
+              'OILS_FREQUENCY_MARGARINE', 'OILS_FREQUENCY_OXALATE'
+              'OILS_FREQUENCY_SOY']
 
 
 def drop_private_columns(df):
@@ -177,24 +186,31 @@ def _fetch_survey_template(template_id):
     -------
     dict
         The survey structure as returned from the private API
-    dict or None
+    string or None
         Any error information associated with the retreival. If an error is
         observed, the survey responses should not be considered valid.
     """
     with Transaction() as t:
+        error = None
+
         survey_template_repo = SurveyTemplateRepo(t)
         info = survey_template_repo.get_survey_template_link_info(
             template_id)
 
         # For local surveys, we generate the json representing the survey
-        survey_template = survey_template_repo.get_survey_template(
-            template_id, "en_US")
-        survey_template_text = vue_adapter.to_vue_schema(survey_template)
+        try:
+            survey_template = survey_template_repo.get_survey_template(
+                template_id, "en_US")
+        except NotFound as e:
+            error = repr(e)
 
-        info = info.to_api(None, None)
-        info['survey_template_text'] = survey_template_text
+        if error is None:
+            survey_template_text = vue_adapter.to_vue_schema(survey_template)
 
-        return info, None
+            info = info.to_api(None, None)
+            info['survey_template_text'] = survey_template_text
+
+        return info, error
 
 
 def _to_pandas_dataframe(metadatas, survey_templates):
