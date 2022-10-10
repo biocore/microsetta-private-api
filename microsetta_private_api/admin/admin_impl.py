@@ -15,6 +15,7 @@ from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -592,15 +593,15 @@ def search_activation(token_info, email_query=None, code_query=None):
         return jsonify([i.to_api() for i in infos]), 200
 
 
-def address_verification(address_1=None, address_2=None,
+def address_verification(address_1=None, address_2=None, address_3=None,
                          city=None, state=None, postal=None, country=None):
     if address_1 is None or len(address_1) < 1 or \
             postal is None or len(postal) < 1 or \
             country is None or len(country) < 1:
         raise Exception("Must include address_1, postal, and country")
 
-    melissa_response = verify_address(address_1, address_2, city, state,
-                                      postal, country)
+    melissa_response = verify_address(address_1, address_2, address_3, city,
+                                      state, postal, country)
 
     return jsonify(melissa_response), 200
 
@@ -842,3 +843,11 @@ def delete_account(account_id, token_info):
         t.commit()
 
     return None, 204
+
+
+def get_vioscreen_sample_to_user(token_info):
+    validate_admin_access(token_info)
+    with Transaction() as t:
+        st_repo = SurveyTemplateRepo(t)
+        data = st_repo.get_vioscreen_sample_to_user()
+    return jsonify(data), 200

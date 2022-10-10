@@ -150,6 +150,16 @@ class AdminApiTests(TestCase):
         self.client.__exit__(None, None, None)
         teardown_test_data()
 
+    def test_vioscreen_samples_to_barcodes(self):
+        response = self.client.get(
+            '/api/admin/vioscreen/username_to_barcode',
+            headers=MOCK_HEADERS
+        )
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+        self.assertEqual(response_obj['000031536'],
+                         'b98c5ac966b754ff')
+
     def _test_project_create_success(self, project_info):
         input_json = json.dumps(project_info)
 
