@@ -570,7 +570,6 @@ Email: researchadmin@ucsd.edu</li>
     'OBTAINER_NAME': 'Name of person obtaining assent',
     'TEXT_I_HAVE_READ_PARENT': 'I have read (or someone has read to me) this form. I am aware that I am being asked to provide consent for my child to be in a research study. I voluntarily agree to allow my child to participate in this study. I understand how my child’s personal data will be processed, my related rights, and that I consent to the processing of my child’s sample and data as provided in this document.',
     'PARTICIPANT_NAME': 'Participant name',
-    'PARTICIPANT_EMAIL': 'Participant email',
     'PARTICIPANT_PARENT_1': 'Parent/Guardian name',
     'PARTICIPANT_PARENT_2': 'Parent/Guardian name of second parent',
     'PARTICIPANT_DECEASED_PARENTS': 'One parent/guardian is deceased or unable to consent',

@@ -15,6 +15,13 @@ SENT_STATUS = "Sent"
 ERROR_STATUS = "Error"
 ARCHIVE_STATUS = "Archived"
 CODE_ERROR = "Code Error"
+BARCODE_KEY = "barcode"
+CONTAINER_KEY = "Container-content"
+CONTAINER_ITEMS_KEY = "containerItems"
+TYPE_KEY = "type"
+SINGLE_KIT_TYPES = [BOX_TYPE, REGISTRATION_CARD_TYPE]
+SINGLE_KIT_TYPES.extend(COLLECTION_DEVICE_TYPES)
+MULTI_ITEM_ERR_MSG = "Found multi-item content in a single-kit item"
 
 
 @celery.task(ignore_result=False)
@@ -125,8 +132,7 @@ def process_order_articles(admin_repo, order_id, status, create_date):
         order_proj_ids = admin_repo.get_projects_for_dak_order(order_id)
 
     # call daklapack api to get detailed info on this single order
-    dak_orders_response = dc.get_daklapack_order_details(
-        order_id)
+    dak_orders_response = dc.get_daklapack_order_details(order_id)
 
     # loop over each kind of "daklapack article" in this order;
     # NOTE that although the daklapack api allows >1 type of article (i.e.,
@@ -152,32 +158,88 @@ def process_order_articles(admin_repo, order_id, status, create_date):
                 # _store_single_sent_kit stores a single kit, by definition
                 kit_uuid = curr_output["created"][0]["kit_uuid"]
                 admin_repo.set_kit_uuids_for_dak_order(order_id, [kit_uuid])
+                curr_output = _store_sent_kits_for_article(
+                    admin_repo, order_proj_ids, order_id,
+                    curr_article_instance)
             elif status == ERROR_STATUS:
-                curr_output = _gather_article_error_info(
+                single_output = _gather_article_error_info(
                     order_id, create_date, curr_article_instance)
+                curr_output = [single_output]
             else:
                 raise ValueError(f"Order {order_id} has an unexpected status: "
                                  f"{status}")
 
-            per_article_outputs.append(curr_output)
+            per_article_outputs.extend(curr_output)
         # next article instance
     # next article type
 
     return per_article_outputs
 
 
-def _prevent_overwrite(old_val, new_val, val_type):
-    if old_val is not None:
-        raise ValueError(f"For type '{val_type}, cannot overwrite first value "
-                         f"found ('{old_val}') with additional value "
-                         f"'{new_val}'")
-    return new_val
+def _store_sent_kits_for_article(
+        admin_repo, order_proj_ids, order_id, single_article_dict):
+
+    created_kits = []
+    is_multi_item = None
+
+    outbound_fedex_code, inbound_fedex_code, address_dict = _get_article_info(
+        single_article_dict)
+
+    # for each "thing" in a kit
+    # for each "scannable item" (i.e., barcoded thing) in a kit
+    scannable_kit_items = single_article_dict["scannableKitItems"]
+    for curr_scannable in scannable_kit_items:
+        # figure out what *kind* of barcoded thing this is and capture
+        # its barcode to the right field if it is a kind we care about
+        curr_scannable_type = curr_scannable[TYPE_KEY]
+
+        if curr_scannable_type == CONTAINER_KEY:
+            curr_barcode = curr_scannable[BARCODE_KEY]
+            if curr_barcode != "NoLabel":
+                raise ValueError(f"Unexpected barcode for {CONTAINER_KEY}: "
+                                 f"{curr_barcode}")
+
+            # DON'T change this to "is_multi_item" bc False != None here
+            if is_multi_item is False:
+                raise ValueError(MULTI_ITEM_ERR_MSG)
+            else:
+                is_multi_item = True
+
+            curr_items = curr_scannable[CONTAINER_ITEMS_KEY]
+            for curr_item in curr_items:
+                curr_item_details = curr_item["containerItemDetails"]
+                # ok, NOW we should be at the level of a single kit
+                curr_kit_info = _store_single_sent_kit(
+                    admin_repo, order_proj_ids, order_id, outbound_fedex_code,
+                    inbound_fedex_code, address_dict, curr_item_details)
+                created_kits.append(curr_kit_info)
+
+        elif curr_scannable_type in SINGLE_KIT_TYPES:
+            is_multi_item = False
+
+            # in theory, at this point I could break from the loop, but I'm
+            # continuing to loop over all the kit items so I can detect if
+            # single-item and multi-item info are both present (which is Bad)
+        # end if
+    # next scannable kit item
+
+    # if we found out above that this scannable_kit_items is for only one kit;
+    # DON'T change this to "is_multi_item" bc False != None here
+    if is_multi_item is False:
+        curr_kit_info = _store_single_sent_kit(
+            admin_repo, order_proj_ids, order_id, outbound_fedex_code,
+            inbound_fedex_code, address_dict, scannable_kit_items)
+        created_kits.append(curr_kit_info)
+
+    if len(created_kits) == 0:
+        raise ValueError(f"Unable to find any kits in order {order_id}, "
+                         f"article internal id "
+                         f"{single_article_dict['internalId']}")
+
+    return created_kits
 
 
-def _store_single_sent_kit(admin_repo, order_proj_ids, single_article_dict):
-    device_barcodes = []
-    kit_name = box_id = None
-
+def _get_article_info(single_article_dict):
     # Gather info on address and outbound/inbound fedex tracking
     # numbers for this particular article instance (i.e., kit).
     # Per Edgar and Daniel, some kits:
@@ -200,19 +262,29 @@ def _store_single_sent_kit(admin_repo, order_proj_ids, single_article_dict):
 
     address_dict = single_article_dict["sendInformation"]
 
-    # for each "scannable item" (i.e., barcoded thing) in a kit
-    scannable_kit_items = single_article_dict["scannableKitItems"]
-    for curr_scannable in scannable_kit_items:
+    return outbound_fedex_code, inbound_fedex_code, address_dict
+
+
+def _store_single_sent_kit(admin_repo, order_proj_ids, order_id,
+                           outbound_fedex_code, inbound_fedex_code,
+                           address_dict, items_list):
+
+    device_barcodes = []
+    kit_name = box_id = None
+
+    for curr_scannable in items_list:
         # NB: the scannable item can theoretically have a lot of internal
         # complexity, like a populated containerItems list that itself
         # contains scannable items, on to infinity.  HOWEVER, microsetta
-        # has defined each article to equal exactly one kit, so it should
-        # not be necessary to dig into that.
+        # DOES NOT support that level of nesting, so if it is present, error.
+        curr_subitems = curr_scannable.get(CONTAINER_ITEMS_KEY)
+        if curr_subitems and len(curr_subitems) > 0:
+            raise ValueError(MULTI_ITEM_ERR_MSG)
 
         # figure out what *kind* of barcoded thing this is and capture
         # its barcode to the right field if it is a kind we care about
-        curr_scannable_type = curr_scannable["type"]
-        curr_barcode = curr_scannable["barcode"]
+        curr_scannable_type = curr_scannable[TYPE_KEY]
+        curr_barcode = curr_scannable[BARCODE_KEY]
         if curr_scannable_type in COLLECTION_DEVICE_TYPES:
             device_barcodes.append(curr_barcode)
         elif curr_scannable_type == BOX_TYPE:
@@ -220,8 +292,10 @@ def _store_single_sent_kit(admin_repo, order_proj_ids, single_article_dict):
         elif curr_scannable_type == REGISTRATION_CARD_TYPE:
             kit_name = _prevent_overwrite(kit_name, curr_barcode,
                                           REGISTRATION_CARD_TYPE)
+        elif curr_scannable_type == CONTAINER_KEY:
+            raise ValueError(MULTI_ITEM_ERR_MSG)
         else:
-            # Daklapack barcodes this thing but we don't care about it
+            # Something we don't care about it
             continue  # to next scannable kit item
     # next scannable item
 
@@ -241,7 +315,19 @@ def _store_single_sent_kit(admin_repo, order_proj_ids, single_article_dict):
         raise ValueError(f"Expected exactly one kit created, "
                          f"found {len(created_kit_info['created'])}")
 
+    # can do [0] since just verified we created ONLY ONE KIT
+    kit_uuid = created_kit_info["created"][0]["kit_uuid"]
+    admin_repo.set_kit_uuids_for_dak_order(order_id, [kit_uuid])
+
     return created_kit_info
+
+
+def _prevent_overwrite(old_val, new_val, val_type):
+    if old_val is not None:
+        raise ValueError(f"For type '{val_type}, cannot overwrite first value "
+                         f"found ('{old_val}') with additional value "
+                         f"'{new_val}'")
+    return new_val
 
 
 def _gather_article_error_info(order_id, create_date, curr_article_instance):

@@ -76,7 +76,6 @@ DUMMY_ACCT_INFO = {
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
-    KIT_NAME_KEY: EXISTING_KIT_NAME
 }
 DUMMY_ACCT_INFO_2 = {
     "address": {
@@ -90,7 +89,6 @@ DUMMY_ACCT_INFO_2 = {
     "first_name": "Obie",
     "last_name": "Dobie",
     "language": "en_US",
-    KIT_NAME_KEY: EXISTING_KIT_NAME_2
 }
 DUMMY_ACCT_ADMIN = {
     "address": {
@@ -112,7 +110,6 @@ DUMMY_HUMAN_SOURCE = {
                 'source_name': 'Bo',
                 'source_type': 'human',
                 'consent': {
-                    'participant_email': 'bo@bo.com',
                     'age_range': "18-plus"
                 },
             }
@@ -454,7 +451,6 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['post_code'],
                 input_obj['address']['country_code']
             ),
-            input_obj['kit_name'],
             input_obj['language']
         )
     else:
@@ -662,6 +658,7 @@ class ApiTests(TestCase):
                                           dummy_acct_dict=None):
         if dummy_acct_dict is None:
             dummy_acct_dict = DUMMY_ACCT_INFO
+        response_obj.pop('kit_name')
 
         # check expected additional fields/values appear in response body:
         # Note that "d.get()" returns none if key not found, doesn't throw err
@@ -724,34 +721,6 @@ class AccountsTests(ApiTests):
 
         # check account id provided in body matches that in location header
         self.assertTrue(real_acct_id_from_loc, real_acct_id_from_body)
-
-    def test_accounts_create_fail_400_without_required_fields(self):
-        """Return 400 validation fail if don't provide a required field """
-
-        self.run_query_and_content_required_field_test(
-            "/api/accounts", "post",
-            self.default_querystring_dict,
-            DUMMY_ACCT_INFO,
-            skip_fields=["kit_name"])
-
-    def test_accounts_create_fail_404(self):
-        """Return 404 if provided kit name is not found in db."""
-
-        # create post input json
-        input_obj = copy.deepcopy(DUMMY_ACCT_INFO)
-        input_obj[KIT_NAME_KEY] = MISSING_KIT_NAME
-        input_json = json.dumps(input_obj)
-
-        # execute accounts post (create)
-        response = self.client.post(
-            self.accounts_url,
-            content_type='application/json',
-            data=input_json,
-            headers=MOCK_HEADERS
-        )
-
-        # check response code
-        self.assertEqual(404, response.status_code)
 
     def test_accounts_create_fail_422(self):
         """Return 422 if provided email is in use in db."""
@@ -912,12 +881,6 @@ class AccountTests(ApiTests):
         self.assertEqual(200, response.status_code)
         response_obj = json.loads(response.data)
 
-        for k in DUMMY_ACCT_INFO:
-            if k in (KIT_NAME_KEY, 'language'):
-                continue
-            self.assertNotEqual(DUMMY_ACCT_INFO[k],
-                                response_obj[k])
-
         # verify deleting is idempotent
         response = self.client.delete(
             '/api/accounts/%s' %
@@ -968,8 +931,6 @@ class AccountTests(ApiTests):
 
         self.assertEqual(response_obj['source_name'],
                          'scrubbed')
-        self.assertEqual(response_obj['consent']['participant_email'],
-                         'scrubbed@microsetta.ucsd.edu')
 
         # pull the sample details
         response = self.client.get(
@@ -1107,11 +1068,8 @@ class AccountTests(ApiTests):
 
     # region account update/put tests
     @staticmethod
-    def make_updated_acct_dict(keep_kit_name=False):
+    def make_updated_acct_dict():
         result = copy.deepcopy(DUMMY_ACCT_INFO)
-
-        if not keep_kit_name:
-            result.pop(KIT_NAME_KEY)
 
         result["address"] = {
             "city": "Oakland",
@@ -1127,7 +1085,7 @@ class AccountTests(ApiTests):
         """Successfully update existing account"""
         dummy_acct_id = create_dummy_acct()
 
-        changed_acct_dict = self.make_updated_acct_dict(keep_kit_name=True)
+        changed_acct_dict = self.make_updated_acct_dict()
 
         # create post input json
         input_json = json.dumps(changed_acct_dict)

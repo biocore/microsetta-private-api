@@ -150,6 +150,16 @@ class AdminApiTests(TestCase):
         self.client.__exit__(None, None, None)
         teardown_test_data()
 
+    def test_vioscreen_samples_to_barcodes(self):
+        response = self.client.get(
+            '/api/admin/vioscreen/username_to_barcode',
+            headers=MOCK_HEADERS
+        )
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+        self.assertEqual(response_obj['000031536'],
+                         'b98c5ac966b754ff')
+
     def _test_project_create_success(self, project_info):
         input_json = json.dumps(project_info)
 
@@ -1041,8 +1051,6 @@ class AdminApiTests(TestCase):
         exp_status = [None, 'no-associated-source', 'sample-is-valid']
         self.assertEqual([v['sample-status'] for v in response_obj],
                          exp_status)
-        n_src = sum([v['source-email'] is not None for v in response_obj])
-        self.assertEqual(n_src, 1)
 
     def test_query_barcode_stats_project_barcodes_with_strip(self):
         barcodes = ['000010307', '000023344', '000036855']
@@ -1067,8 +1075,6 @@ class AdminApiTests(TestCase):
         exp_status = [None, 'no-associated-source', 'sample-is-valid']
         self.assertEqual([v['sample-status'] for v in response_obj],
                          exp_status)
-        n_src = sum([v['source-email'] is not None for v in response_obj])
-        self.assertEqual(n_src, 1)
 
     def test_send_email(self):
         def mock_func(*args, **kwargs):
