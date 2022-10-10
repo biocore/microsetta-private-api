@@ -16,6 +16,7 @@ from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.util.util import PerksType
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
@@ -1235,7 +1236,7 @@ class AdminRepo(BaseRepo):
             rows = cur.fetchall()
             return [dict(x) for x in rows]
 
-    def create_daklapack_order(self, daklapack_order):
+    def create_daklapack_order(self, daklapack_order, no_of_kits=1):
         order_id = daklapack_order.id
 
         order_args = (
@@ -1266,6 +1267,27 @@ class AdminRepo(BaseRepo):
                          ' (dak_order_id, project_id) values %s'
             psycopg2.extras.execute_values(cur, insert_sql, project_ids_tuples,
                                            template=None, page_size=100)
+
+            # Add daklapck order details with perk on another table
+            # for handling the one year plan
+            order_args_limited = (
+                order_id,
+                daklapack_order.submitter_acct.id,
+                daklapack_order.planned_send_date,
+                daklapack_order.creation_timestamp,
+                daklapack_order.last_polling_status,
+                no_of_kits
+            )
+
+            if self.get_perk_type(order_id) == PerksType.FFQ_ONE_YEAR:
+                cur.execute(
+                    "INSERT INTO barcodes.daklapack_order_by_perk_type "
+                    "(dak_order_id, submitter_acct_id, "
+                    "planned_send_date, creation_timestamp, "
+                    "status, no_of_kits_send) "
+                    "VALUES (%s, %s, %s, %s, %s, %s)",
+                    (order_args_limited)
+                )
 
         return order_id
 
@@ -1307,6 +1329,15 @@ class AdminRepo(BaseRepo):
                 (last_polling_timestamp, last_polling_status, dak_order_id)
             )
 
+            cur.execute(
+                "UPDATE barcodes.daklapack_order_by_perk_type "
+                "SET "
+                "last_polling_timestamp = %s, "
+                "last_polling_status = %s "
+                "WHERE dak_order_id = %s",
+                (last_polling_timestamp, last_polling_status, dak_order_id)
+            )
+
     def set_kit_uuids_for_dak_order(self, dak_order_id, kit_uuids):
         kit_uuid_tuples = [(dak_order_id, i) for i in kit_uuids]
 
@@ -1315,3 +1346,33 @@ class AdminRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             psycopg2.extras.execute_values(cur, insert_sql, kit_uuid_tuples,
                                            template=None, page_size=100)
+
+    def get_perk_type(self, dak_order_id):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT campaign.fundrazr_perk.perk_type "
+                "FROM "
+                "campaign.fundrazr_daklapack_orders "
+                "INNER JOIN campaign.fundrazr_perk ON campaign"
+                ".fundrazr_perk.id=campaign.fundrazr_daklapack_orders"
+                ".fundrazr_transaction_perk_id "
+                "WHERE dak_order_id = %s "
+                (dak_order_id, ))
+            return cur.fetchone()['perk_type']
+
+    def get_perk_type3_orders(self):
+        # TODO: Need to get the exact status of the order status,
+        #  currently using "Complete"
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT t1.dak_order_id "
+                "FROM "
+                "barcodes.daklapack_order_by_perk_type AS t1"
+                "INNER JOIN barcodes.daklapack_order as t2 ON t1"
+                ".dak_order_id=t2.daklapack_order"
+                "WHERE t2.last_polling_status IN (%s) "
+                "OR t2.last_polling_status IS NULL "
+                "ORDER BY t2.last_polling_timestamp DESC;",
+                ("Complete"))
+            rows = cur.fetchall()
+            return [x[0] for x in rows]

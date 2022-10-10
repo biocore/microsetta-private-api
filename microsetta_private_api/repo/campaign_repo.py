@@ -4,11 +4,13 @@ import json
 from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.campaign import Campaign, payment_from_db
+from microsetta_private_api.model.activation_code import ActivationCode
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
 from microsetta_private_api.tasks import send_email
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.localization import EN_US
+from microsetta_private_api.util.util import PerksType
 
 
 class UnknownItem(psycopg2.errors.ForeignKeyViolation):
@@ -266,7 +268,6 @@ class CampaignRepo(BaseRepo):
             True if the user is part of the campaign
         """
         with self._transaction.cursor() as cur:
-
             cur.execute("""SELECT EXISTS (
                                SELECT account.email
                                FROM ag.account
@@ -291,7 +292,7 @@ class CampaignRepo(BaseRepo):
 
 class FundRazrCampaignRepo(BaseRepo):
     # 118 -> The Microsetta Initiative
-    _DEFAULT_PROJECT_ASSOCIATION = (118, )
+    _DEFAULT_PROJECT_ASSOCIATION = (118,)
 
     def campaign_exists(self, id_):
         """Test if a fundrazr campaign ID is known
@@ -311,7 +312,7 @@ class FundRazrCampaignRepo(BaseRepo):
                                SELECT internal_campaign_id
                                FROM campaign.transaction_source_to_campaign
                                WHERE remote_campaign_id=%s)""",
-                        (id_, ))
+                        (id_,))
             res = cur.fetchone()[0]
         return res
 
@@ -340,7 +341,7 @@ class FundRazrCampaignRepo(BaseRepo):
             res = cur.fetchone()[0]
         return res
 
-    def insert_campaign(self, campaign_obj, assoc_projects=None):
+    def insert_campaign(self, campaign_obj, assoc_projects=None, payment=None):
         """Add a fundrazr campaign and its items to the database
 
         NOTE: we *do not* know associated projects other than default to
@@ -379,9 +380,9 @@ class FundRazrCampaignRepo(BaseRepo):
 
         for item in campaign_obj.items:
             if not self.item_exists(campaign_obj.campaign_id, item.id):
-                self.add_perk_to_campaign(campaign_obj.campaign_id, item)
+                self.add_perk_to_campaign(campaign_obj, item, payment=payment)
 
-    def add_perk_to_campaign(self, campaign_id, perk):
+    def add_perk_to_campaign(self, campaign_id, perk, payment=None):
         """Add a fundazr perk to a campaign
 
         Parameters
@@ -391,12 +392,62 @@ class FundRazrCampaignRepo(BaseRepo):
         perk : Item
             An instance of a campaign Item
         """
+        # TODO : Map these titles with the original titles
+        if perk.title == "FFQ":
+            perk_type = PerksType.FFQ
+            self.add_activation_code(campaign_id, perk.id, payment=payment)
+
+        elif perk.title == "FFQ_SAMPLE_KIT":
+            perk_type = PerksType.FFQ_KIT
+            self.add_activation_code(campaign_id, perk.id, payment=payment)
+
+        elif perk.title == "FFQ_ONE_YEAR":
+            perk_type = PerksType.FFQ_ONE_YEAR
+
+        else:  # default case
+            perk_type = PerksType.FFQ
+
         sql = ("""INSERT INTO campaign.fundrazr_perk
-                  (id, remote_campaign_id, title, price)
-                  VALUES (%s, %s, %s, %s)""",
-               (perk.id, campaign_id, perk.title, perk.price))
+                 (id, remote_campaign_id, title, price, perk_type)
+                 VALUES (%s, %s, %s, %s, %s)""",
+               (perk.id, campaign_id, perk.title, perk.price, perk_type))
 
         with self._transaction.cursor() as cur:
+            cur.execute(*sql)
+
+    def add_activation_code(self, campaign_id, perk_id, payment=None):
+        code = ActivationCode.generate_code()
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT id
+                          FROM ag.account
+                          WHERE email=%s)""",
+                        (payment.payer_email,))
+            res = cur.fetchone()[0]
+
+            if not res:
+                account_id = res['id']
+                # send mail to the user, who is already not in the system yet
+                sign_up_url = SERVER_CONFIG["interface_endpoint"] + \
+                    "/create_account"
+
+                try:
+                    send_email(payment.payer_email,
+                               "new_signup_mail",
+                               {"payer_name": payment.payer_name,
+                                "activation_code": code,
+                                "sign_up_url": sign_up_url,
+
+                                }),
+                except Exception as e:
+                    print(str(e))
+            else:
+                account_id = ''
+
+            sql = ("""INSERT INTO campaign.fundrazr_perk_activation_code
+                 (code, campaign_id, perk_id, account_id)
+                 VALUES (%s, %s, %s)""",
+                   (code, campaign_id, perk_id, account_id))
+
             cur.execute(*sql)
 
 
@@ -477,14 +528,14 @@ class UserTransaction(BaseRepo):
             campaign = fc.campaign(payment.campaign_id)
             # TODO: expose a means to modify associated projects,
             # but for right now, just default to microsetta
-            cr.insert_campaign(campaign)
+            cr.insert_campaign(campaign, payment=payment)
 
         # determine the internal campaign the payment is associated with
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT internal_campaign_id
                            FROM campaign.transaction_source_to_campaign
                            WHERE remote_campaign_id = %s""",
-                        (payment.campaign_id, ))
+                        (payment.campaign_id,))
             res = cur.fetchone()
             internal_campaign_id = res[0]
 
@@ -526,7 +577,8 @@ class UserTransaction(BaseRepo):
         fields = ('id', 'interested_user_id', 'remote_campaign_id', 'created',
                   'amount', 'net_amount', 'currency', 'message',
                   'subscribed_to_updates', 'account_type', 'payer_first_name',
-                  'payer_last_name', 'payer_email', 'transaction_type')
+                  'payer_last_name', 'payer_email', 'status',
+                  'transaction_type')
         data = (payment.transaction_id,
                 interested_user_id,
                 payment.campaign_id,
@@ -540,6 +592,7 @@ class UserTransaction(BaseRepo):
                 payment.payer_first_name,
                 payment.payer_last_name,
                 payment.payer_email,
+                payment.status,
                 self.TRN_TYPE_FUNDRAZR)
 
         placeholders = ', '.join(['%s'] * len(fields))
@@ -714,7 +767,7 @@ class UserTransaction(BaseRepo):
                               WHERE id IN %s
                               ORDER BY created DESC
                               """,
-                           (tuple(ids), ))
+                           (tuple(ids),))
         with self._transaction.dict_cursor() as cur:
             cur.execute(*transaction_sql)
             trn_data = cur.fetchall()
@@ -739,7 +792,7 @@ class UserTransaction(BaseRepo):
                                ON fp.id=ftp.perk_id
                             WHERE ftp.transaction_id IN %s
                             GROUP BY ftp.transaction_id""",
-                         (tuple(fundrazr_ids), ))
+                         (tuple(fundrazr_ids),))
             with self._transaction.dict_cursor() as cur:
                 cur.execute(*items_sql)
 

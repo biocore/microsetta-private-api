@@ -170,6 +170,7 @@ class Payment(ModelBase):
                  claimed_items=None,
                  payer_email=None,
                  contact_email=None,
+                 status=None,
                  **kwargs):
         self.transaction_id = transaction_id
         self.created = created
@@ -186,6 +187,7 @@ class Payment(ModelBase):
         self.subscribe_to_updates = subscribe_to_updates
         self.phone_number = phone_number
         self.message = message
+        self.status = status
         self.interested_user_id = interested_user_id
 
         if claimed_items is None:

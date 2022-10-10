@@ -3,6 +3,12 @@ from flask.json import JSONEncoder
 from dateutil.parser import isoparse
 
 
+class PerksType:
+    FFQ = 'FFQ'
+    FFQ_KIT = 'FFQ_KIT'
+    FFQ_ONE_YEAR = 'FFQ_ONE_YEAR'
+
+
 class JsonifyDefaultEncoder(JSONEncoder):
     def default(self, o):
         return json_converter(o)

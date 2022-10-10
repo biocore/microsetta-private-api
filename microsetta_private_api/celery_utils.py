@@ -41,6 +41,10 @@ def init_celery(celery, app):
             "task": "microsetta_private_api.tasks.update_qiita_metadata",  # noqa
             "schedule":  60 * 60 * 24  # every 24 hours
         },
+        "poll_daklapack_orders_for_perk": {
+            "task": "microsetta_private_api.admin.daklapack_polling.poll_dak_orders_for_perk",  # noqa
+            "schedule": 60 * 60 * 24  # every 24 hours
+        },
         # "fetch_ffqs": {
         #     "task": "microsetta_private_api.util.vioscreen.fetch_ffqs",
         #     "schedule":  60 * 60 * 24  # every 24 hours

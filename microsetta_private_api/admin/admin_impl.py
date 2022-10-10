@@ -541,7 +541,7 @@ def create_daklapack_orders(body, token_info):
     return response
 
 
-def _create_daklapack_order(order_dict):
+def _create_daklapack_order(order_dict, no_of_kits=1):
     order_dict[ORDER_ID_KEY] = str(uuid.uuid4())
 
     with Transaction() as t:
@@ -567,7 +567,8 @@ def _create_daklapack_order(order_dict):
 
         # write order to db
         admin_repo = AdminRepo(t)
-        order_id = admin_repo.create_daklapack_order(daklapack_order)
+        order_id = admin_repo.create_daklapack_order(daklapack_order,
+                                                     no_of_kits)
         t.commit()
 
     status_msg = {"order_address":
