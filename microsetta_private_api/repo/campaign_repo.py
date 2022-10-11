@@ -380,7 +380,7 @@ class FundRazrCampaignRepo(BaseRepo):
 
         for item in campaign_obj.items:
             if not self.item_exists(campaign_obj.campaign_id, item.id):
-                self.add_perk_to_campaign(campaign_obj, item, payment=payment)
+                self.add_perk_to_campaign(campaign_obj.campaign_id, item, payment=payment)
 
     def add_perk_to_campaign(self, campaign_id, perk, payment=None):
         """Add a fundazr perk to a campaign

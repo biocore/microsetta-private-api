@@ -1329,15 +1329,6 @@ class AdminRepo(BaseRepo):
                 (last_polling_timestamp, last_polling_status, dak_order_id)
             )
 
-            cur.execute(
-                "UPDATE barcodes.daklapack_order_by_perk_type "
-                "SET "
-                "last_polling_timestamp = %s, "
-                "last_polling_status = %s "
-                "WHERE dak_order_id = %s",
-                (last_polling_timestamp, last_polling_status, dak_order_id)
-            )
-
     def set_kit_uuids_for_dak_order(self, dak_order_id, kit_uuids):
         kit_uuid_tuples = [(dak_order_id, i) for i in kit_uuids]
 
@@ -1358,7 +1349,7 @@ class AdminRepo(BaseRepo):
                 ".fundrazr_transaction_perk_id "
                 "WHERE dak_order_id = %s "
                 (dak_order_id, ))
-            return cur.fetchone()['perk_type']
+            return cur.fetchone()
 
     def get_perk_type3_orders(self):
         # TODO: Need to get the exact status of the order status,
