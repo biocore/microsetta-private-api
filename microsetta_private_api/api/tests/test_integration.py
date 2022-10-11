@@ -259,7 +259,9 @@ class IntegrationTests(TestCase):
             cur.execute("DELETE FROM myfoodrepo_registry "
                         "WHERE account_id=%s",
                         (ACCT_ID,))
-
+            cur.execute("DELETE FROM vioscreen_registry "
+                        "WHERE account_id=%s",
+                        (ACCT_ID,))
             survey_answers_repo = SurveyAnswersRepo(t)
             for source in source_repo.get_sources_in_account(ACCT_ID):
                 answers = survey_answers_repo.list_answered_surveys(ACCT_ID,
