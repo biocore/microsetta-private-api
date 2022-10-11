@@ -278,6 +278,44 @@ class SurveyTemplateTests(unittest.TestCase):
                                                               TEST1_SOURCE_ID)
             self.assertEqual(obs, (None, None))
 
+    def test_create_spain_ffq_entry_valid(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.create_spain_ffq_entry(TEST1_ACCOUNT_ID,
+                                                       TEST1_SOURCE_ID)
+            try:
+                uuid.UUID(obs)
+                valid_uuid_returned = True
+            except ValueError:
+                valid_uuid_returned = False
+            self.assertTrue(valid_uuid_returned)
+
+    def test_create_spain_ffq_entry_invalid(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            with self.assertRaises(InvalidTextRepresentation):
+                template_repo.create_spain_ffq_entry('',
+                                                     TEST1_SOURCE_ID)
+
+    def test_get_spain_ffq_id_if_exists_true(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            test_sffq_id = \
+                template_repo.create_spain_ffq_entry(TEST1_ACCOUNT_ID,
+                                                     TEST1_SOURCE_ID)
+            obs = \
+                template_repo.get_spain_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                         TEST1_SOURCE_ID)
+            self.assertEqual(test_sffq_id, obs)
+
+    def test_get_spain_ffq_id_if_exists_false(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = \
+                template_repo.get_spain_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                         TEST1_SOURCE_ID)
+            self.assertEqual(obs, None)
+
     def test_create_vioscreen_id_valid(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
@@ -328,3 +366,19 @@ class SurveyTemplateTests(unittest.TestCase):
             obs = template_repo.get_vioscreen_id_if_exists(TEST2_ACCOUNT_ID,
                                                            TEST2_SOURCE_ID)
             self.assertEqual(obs, None)
+
+    def test_get_vioscreen_sample_to_user(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.get_vioscreen_sample_to_user()
+
+        # manually checked using
+        # select barcode, sample_id, vio_id
+        # from ag.vioscreen_registry
+        #    join ag.ag_kit_barcodes on sample_id=ag_kit_barcode_id
+        # limit 10;
+        tests = [('000031536', 'b98c5ac966b754ff'),
+                 ('000020495', '8fecc8f34a133eb8'),
+                 ('000023245', '52abc2ea83c08b96')]
+        for sample, user in tests:
+            self.assertEqual(obs.get(sample), user)
