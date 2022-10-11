@@ -167,6 +167,14 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertEqual(survey, exp)
         self.assertEqual(errors, None)
 
+    def test_fetch_survey_template_remote(self):
+        # attempt to fetch info for Vioscreen survey
+        survey, errors = _fetch_survey_template(10001)
+
+        # verify that _fetch_survey_template returns an error, reflecting
+        # that it's a remote survey for which we can't extract local data
+        self.assertNotEqual(errors, None)
+
     def test_drop_private_columns(self):
         df = pd.DataFrame([[1, 2, 3], [4, 5, 6]],
                           columns=['pM_foo', 'okay', 'ABOUT_yourSELF_TEXT'])
