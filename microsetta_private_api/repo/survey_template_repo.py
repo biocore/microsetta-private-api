@@ -228,6 +228,81 @@ class SurveyTemplateRepo(BaseRepo):
                 return None
             return row[0]
 
+    def get_survey_responses(self, login_id, survey_id, latest_only=True):
+        # get the total number of questions in the survey.
+        sql = f"""select a.survey_id,
+                  count(b.survey_group) from
+                  ag.surveys a,
+                  ag.group_questions b where
+                  a.survey_group = b.survey_group and
+                  survey_id = {survey_id} group by survey_id"""
+
+        total_count = None
+
+        with self._transaction.cursor() as cur:
+            cur.execute(sql)
+            total_count = cur.fetchone()[1]
+
+        # If this query is too slow, adding indexes to the following may
+        # improve performance:
+        # ag.ag_login_surveys.ag_login_id
+        # ag.survey_answers.survey_question_id
+        # ag.surveys.survey_id
+
+        # Note the view form of this query is substantially slower as it has
+        # to unnecessarily merge on all users and all surveys.
+        sql = f"""select a.survey_id,
+                  a.survey_question_id,
+                  a.response,
+                  b.display_index,
+                  c.source_id,
+                  c.creation_time from
+                  ag.survey_answers as a,
+                  ag.group_questions b,
+                  ag.ag_login_surveys c where
+                  c.ag_login_id = '{login_id}' and
+                  b.survey_group in
+                  (select survey_group from ag.surveys where survey_id =
+                  {survey_id}) and
+                  a.survey_question_id = b.survey_question_id and
+                  c.survey_id = a.survey_id order by
+                  creation_time desc, display_index asc"""
+
+        with self._transaction.cursor() as cur:
+            # dict_cursor() isn't returning rows as dicts.
+            # another option is to return a tuple of lists, rather than a
+            # list of dicts.
+            cur.execute(sql)
+            rows = cur.fetchall()
+
+            results = {}
+            for row in rows:
+                survey_id = row[0]
+                if survey_id not in results:
+                    results[survey_id] = {'survey_id': row[0],
+                                          'source_id': row[4],
+                                          'timestamp': str(row[5]),
+                                          'responses': []}
+
+                r = {'survey_question_id': row[1], 'response': row[2],
+                     'display_index': int(row[3])}
+
+                results[survey_id]['responses'].append(r)
+
+            # turn the nested dict into a list of dicts sorted by insertion
+            # order. (Python 3.6+)
+            results = [results[x] for x in results]
+
+            # calculate the percentage of each survey completed against the
+            # _current_ total number of questions in the survey.
+            for result in results:
+                pc = len(result['responses'])/total_count
+                pc = "{0:.2f}%".format(pc * 100)
+
+                result['percentage_completed'] = pc
+
+        return results
+
     def _get_question_valid_responses(self, survey_question_id, language_tag):
         tag_to_col = {
             localization.EN_US: "survey_response.american",
