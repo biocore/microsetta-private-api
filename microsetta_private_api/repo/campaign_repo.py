@@ -27,18 +27,35 @@ class CampaignRepo(BaseRepo):
 
     @staticmethod
     def _campaign_to_row(c):
-        return (c.campaign_id, c.title, c.instructions, c.header_image,
-                c.permitted_countries, c.language_key,
-                c.accepting_participants, '',
-                c.language_key_alt, c.title_alt, c.instructions_alt)
+        return (
+            c.campaign_id,
+            c.title,
+            c.instructions,
+            c.header_image,
+            c.permitted_countries,
+            c.language_key,
+            c.accepting_participants,
+            "",
+            c.language_key_alt,
+            c.title_alt,
+            c.instructions_alt,
+        )
 
     def _row_to_campaign(self, r):
-        associated_projects = ", ".join(self._get_projects(r['campaign_id']))
-        return Campaign(r['campaign_id'], r['title'], r['instructions'],
-                        r['header_image'], r['permitted_countries'],
-                        r['language_key'], r['accepting_participants'],
-                        associated_projects, r['language_key_alt'],
-                        r['title_alt'], r['instructions_alt'])
+        associated_projects = ", ".join(self._get_projects(r["campaign_id"]))
+        return Campaign(
+            r["campaign_id"],
+            r["title"],
+            r["instructions"],
+            r["header_image"],
+            r["permitted_countries"],
+            r["language_key"],
+            r["accepting_participants"],
+            associated_projects,
+            r["language_key_alt"],
+            r["title_alt"],
+            r["instructions_alt"],
+        )
 
     def _get_projects(self, campaign_id):
         with self._transaction.cursor() as cur:
@@ -55,7 +72,7 @@ class CampaignRepo(BaseRepo):
                 "barcodes.project.project_id "
                 "WHERE "
                 "campaign.campaigns.campaign_id = %s",
-                (campaign_id,)
+                (campaign_id,),
             )
 
             project_rows = cur.fetchall()
@@ -76,18 +93,18 @@ class CampaignRepo(BaseRepo):
 
     def create_campaign(self, **kwargs):
         # required parameters to create a campaign
-        title = kwargs['title']
-        associated_projects = kwargs['associated_projects']
+        title = kwargs["title"]
+        associated_projects = kwargs["associated_projects"]
 
         # optional parameters when creating a campaign
-        instructions = kwargs.get('instructions')
-        permitted_countries = kwargs.get('permitted_countries')
-        language_key = kwargs.get('language_key')
-        accepting_participants = kwargs.get('accepting_participants')
-        language_key_alt = kwargs.get('language_key_alt')
-        title_alt = kwargs.get('title_alt')
-        instructions_alt = kwargs.get('instructions_alt')
-        extension = kwargs.get('extension')
+        instructions = kwargs.get("instructions")
+        permitted_countries = kwargs.get("permitted_countries")
+        language_key = kwargs.get("language_key")
+        accepting_participants = kwargs.get("accepting_participants")
+        language_key_alt = kwargs.get("language_key_alt")
+        title_alt = kwargs.get("title_alt")
+        instructions_alt = kwargs.get("instructions_alt")
+        extension = kwargs.get("extension")
 
         with self._transaction.cursor() as cur:
             cur.execute(
@@ -97,9 +114,16 @@ class CampaignRepo(BaseRepo):
                 "instructions_alt) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s) "
                 "RETURNING campaign_id",
-                (title, instructions, permitted_countries, language_key,
-                 accepting_participants, language_key_alt, title_alt,
-                 instructions_alt)
+                (
+                    title,
+                    instructions,
+                    permitted_countries,
+                    language_key,
+                    accepting_participants,
+                    language_key_alt,
+                    title_alt,
+                    instructions_alt,
+                ),
             )
             campaign_id = cur.fetchone()[0]
 
@@ -110,7 +134,7 @@ class CampaignRepo(BaseRepo):
                     "INSERT INTO campaign.campaigns_projects ("
                     "campaign_id,project_id"
                     ") VALUES (%s, %s) ",
-                    [(campaign_id, pid) for pid in associated_projects]
+                    [(campaign_id, pid) for pid in associated_projects],
                 )
 
                 self.update_header_image(campaign_id, extension)
@@ -118,22 +142,22 @@ class CampaignRepo(BaseRepo):
 
     def update_campaign(self, **kwargs):
         # required parameters to update a campaign
-        campaign_id = kwargs['campaign_id']
-        title = kwargs['title']
+        campaign_id = kwargs["campaign_id"]
+        title = kwargs["title"]
 
         # not permitted to update associated projects
-        if 'associated_projects' in kwargs:
+        if "associated_projects" in kwargs:
             raise RepoException("Modifying associated projects not allowed")
 
         # optional parameters to update a campaign
-        instructions = kwargs.get('instructions')
-        permitted_countries = kwargs.get('permitted_countries')
-        language_key = kwargs.get('language_key')
-        accepting_participants = kwargs.get('accepting_participants')
-        language_key_alt = kwargs.get('language_key_alt')
-        title_alt = kwargs.get('title_alt')
-        instructions_alt = kwargs.get('instructions_alt')
-        extension = kwargs.get('extension')
+        instructions = kwargs.get("instructions")
+        permitted_countries = kwargs.get("permitted_countries")
+        language_key = kwargs.get("language_key")
+        accepting_participants = kwargs.get("accepting_participants")
+        language_key_alt = kwargs.get("language_key_alt")
+        title_alt = kwargs.get("title_alt")
+        instructions_alt = kwargs.get("instructions_alt")
+        extension = kwargs.get("extension")
 
         with self._transaction.cursor() as cur:
             cur.execute(
@@ -142,9 +166,17 @@ class CampaignRepo(BaseRepo):
                 "accepting_participants = %s, language_key_alt = %s, "
                 "title_alt = %s, instructions_alt = %s "
                 "WHERE campaign_id = %s",
-                (title, instructions, permitted_countries, language_key,
-                 accepting_participants, language_key_alt, title_alt,
-                 instructions_alt, campaign_id)
+                (
+                    title,
+                    instructions,
+                    permitted_countries,
+                    language_key,
+                    accepting_participants,
+                    language_key_alt,
+                    title_alt,
+                    instructions_alt,
+                    campaign_id,
+                ),
             )
 
             self.update_header_image(campaign_id, extension)
@@ -160,7 +192,7 @@ class CampaignRepo(BaseRepo):
                     "accepting_participants, "
                     "language_key_alt, title_alt, instructions_alt "
                     "FROM campaign.campaigns WHERE campaign_id = %s",
-                    (campaign_id,)
+                    (campaign_id,),
                 )
                 r = cur.fetchone()
                 if r is None:
@@ -180,7 +212,7 @@ class CampaignRepo(BaseRepo):
                 cur.execute(
                     "UPDATE campaign.campaigns SET header_image = %s "
                     "WHERE campaign_id = %s",
-                    (header_image, campaign_id)
+                    (header_image, campaign_id),
                 )
 
         return True
@@ -212,17 +244,20 @@ class CampaignRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             # scenario (1)
-            cur.execute("""SELECT EXISTS (
+            cur.execute(
+                """SELECT EXISTS (
                                SELECT email
                                FROM campaign.interested_users
                                WHERE email=%s
                                    AND campaign_id=%s)""",
-                        (email, campaign_id))
+                (email, campaign_id),
+            )
             if cur.fetchone()[0] is True:
                 return True
 
             # scenario (2)
-            cur.execute("""SELECT EXISTS (
+            cur.execute(
+                """SELECT EXISTS (
                                SELECT email
                                FROM ag.account
                                INNER JOIN barcodes.barcode
@@ -233,7 +268,8 @@ class CampaignRepo(BaseRepo):
                                    USING (project_id)
                                WHERE email=%s
                                    AND campaign_id=%s)""",
-                        (email, campaign_id))
+                (email, campaign_id),
+            )
 
             if cur.fetchone()[0] is True:
                 return True
@@ -268,7 +304,8 @@ class CampaignRepo(BaseRepo):
             True if the user is part of the campaign
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT EXISTS (
+            cur.execute(
+                """SELECT EXISTS (
                                SELECT account.email
                                FROM ag.account
                                INNER JOIN ag.source
@@ -282,7 +319,8 @@ class CampaignRepo(BaseRepo):
                                WHERE account.id=%s
                                    AND source.id=%s
                                    AND campaign_id=%s)""",
-                        (account_id, source_id, campaign_id))
+                (account_id, source_id, campaign_id),
+            )
 
             if cur.fetchone()[0] is True:
                 return True
@@ -308,11 +346,13 @@ class FundRazrCampaignRepo(BaseRepo):
             True if the campaign is known in our database
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT EXISTS (
+            cur.execute(
+                """SELECT EXISTS (
                                SELECT internal_campaign_id
                                FROM campaign.transaction_source_to_campaign
                                WHERE remote_campaign_id=%s)""",
-                        (id_,))
+                (id_,),
+            )
             res = cur.fetchone()[0]
         return res
 
@@ -332,12 +372,14 @@ class FundRazrCampaignRepo(BaseRepo):
             True if the item is part of the queried campaign in our database
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT EXISTS (
+            cur.execute(
+                """SELECT EXISTS (
                                SELECT id
                                FROM campaign.fundrazr_perk
                                WHERE remote_campaign_id=%s
                                    AND id=%s)""",
-                        (campaign_id, item_id))
+                (campaign_id, item_id),
+            )
             res = cur.fetchone()[0]
         return res
 
@@ -363,24 +405,28 @@ class FundRazrCampaignRepo(BaseRepo):
 
         if not self.campaign_exists(campaign_obj.campaign_id):
             if campaign_obj.title not in known:
-                new_ = cr.create_campaign(title=campaign_obj.title,
-                                          associated_projects=assoc_projects)
+                new_ = cr.create_campaign(
+                    title=campaign_obj.title, associated_projects=assoc_projects
+                )
                 internal_campaign_id = new_.campaign_id
             else:
                 internal_campaign_id = known[campaign_obj.title]
 
-            sql = ("""INSERT INTO campaign.transaction_source_to_campaign
+            sql = (
+                """INSERT INTO campaign.transaction_source_to_campaign
                       (remote_campaign_id, internal_campaign_id, currency)
                       VALUES (%s, %s, %s)""",
-                   (campaign_obj.campaign_id, internal_campaign_id,
-                    campaign_obj.currency))
+                (campaign_obj.campaign_id, internal_campaign_id, campaign_obj.currency),
+            )
 
             with self._transaction.cursor() as cur:
                 cur.execute(*sql)
 
         for item in campaign_obj.items:
             if not self.item_exists(campaign_obj.campaign_id, item.id):
-                self.add_perk_to_campaign(campaign_obj.campaign_id, item, payment=payment)
+                self.add_perk_to_campaign(
+                    campaign_obj.campaign_id, item, payment=payment
+                )
 
     def add_perk_to_campaign(self, campaign_id, perk, payment=None):
         """Add a fundazr perk to a campaign
@@ -407,10 +453,12 @@ class FundRazrCampaignRepo(BaseRepo):
         else:  # default case
             perk_type = PerksType.FFQ
 
-        sql = ("""INSERT INTO campaign.fundrazr_perk
+        sql = (
+            """INSERT INTO campaign.fundrazr_perk
                  (id, remote_campaign_id, title, price, perk_type)
                  VALUES (%s, %s, %s, %s, %s)""",
-               (perk.id, campaign_id, perk.title, perk.price, perk_type))
+            (perk.id, campaign_id, perk.title, perk.price, perk_type),
+        )
 
         with self._transaction.cursor() as cur:
             cur.execute(*sql)
@@ -418,41 +466,46 @@ class FundRazrCampaignRepo(BaseRepo):
     def add_activation_code(self, campaign_id, perk_id, payment=None):
         code = ActivationCode.generate_code()
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT id
+            cur.execute(
+                """SELECT id
                           FROM ag.account
                           WHERE email=%s)""",
-                        (payment.payer_email,))
+                (payment.payer_email,),
+            )
             res = cur.fetchone()[0]
 
             if not res:
-                account_id = res['id']
+                account_id = res["id"]
                 # send mail to the user, who is already not in the system yet
-                sign_up_url = SERVER_CONFIG["interface_endpoint"] + \
-                    "/create_account"
+                sign_up_url = SERVER_CONFIG["interface_endpoint"] + "/create_account"
 
                 try:
-                    send_email(payment.payer_email,
-                               "new_signup_mail",
-                               {"payer_name": payment.payer_name,
-                                "activation_code": code,
-                                "sign_up_url": sign_up_url,
-
-                                }),
+                    send_email(
+                        payment.payer_email,
+                        "new_signup_mail",
+                        {
+                            "payer_name": payment.payer_name,
+                            "activation_code": code,
+                            "sign_up_url": sign_up_url,
+                        },
+                    ),
                 except Exception as e:
                     print(str(e))
             else:
-                account_id = ''
+                account_id = ""
 
-            sql = ("""INSERT INTO campaign.fundrazr_perk_activation_code
+            sql = (
+                """INSERT INTO campaign.fundrazr_perk_activation_code
                  (code, campaign_id, perk_id, account_id)
                  VALUES (%s, %s, %s)""",
-                   (code, campaign_id, perk_id, account_id))
+                (code, campaign_id, perk_id, account_id),
+            )
 
             cur.execute(*sql)
 
 
 class UserTransaction(BaseRepo):
-    TRN_TYPE_FUNDRAZR = 'fundrazr'
+    TRN_TYPE_FUNDRAZR = "fundrazr"
 
     def add_transaction(self, payment):
         """Adds a received transaction to the database
@@ -494,17 +547,22 @@ class UserTransaction(BaseRepo):
             cn = payment.payer_first_name + " " + payment.payer_last_name
 
             # casting str to avoid concatenation error
-            resolution_url = SERVER_CONFIG["interface_endpoint"] + \
-                "/update_address?uid=" + str(interested_user_id) + \
-                "&email=" + payment.contact_email
+            resolution_url = (
+                SERVER_CONFIG["interface_endpoint"]
+                + "/update_address?uid="
+                + str(interested_user_id)
+                + "&email="
+                + payment.contact_email
+            )
             try:
                 # TODO - will need to add actual language flag to the email
                 # Fundrazr doesn't provide a language flag, defer for now
-                send_email(payment.contact_email,
-                           "address_invalid",
-                           {"contact_name": cn,
-                            "resolution_url": resolution_url},
-                           EN_US)
+                send_email(
+                    payment.contact_email,
+                    "address_invalid",
+                    {"contact_name": cn, "resolution_url": resolution_url},
+                    EN_US,
+                )
             except:  # noqa
                 # try our best to email
                 pass
@@ -532,10 +590,12 @@ class UserTransaction(BaseRepo):
 
         # determine the internal campaign the payment is associated with
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT internal_campaign_id
+            cur.execute(
+                """SELECT internal_campaign_id
                            FROM campaign.transaction_source_to_campaign
                            WHERE remote_campaign_id = %s""",
-                        (payment.campaign_id,))
+                (payment.campaign_id,),
+            )
             res = cur.fetchone()
             internal_campaign_id = res[0]
 
@@ -543,28 +603,51 @@ class UserTransaction(BaseRepo):
         address = shipping.address if shipping is not None else None
 
         if shipping is None:
-            data = (internal_campaign_id, payment.payer_first_name,
-                    payment.payer_last_name, payment.contact_email,
-                    payment.phone_number)
-            fields = ('campaign_id', 'first_name', 'last_name', 'email',
-                      'phone')
+            data = (
+                internal_campaign_id,
+                payment.payer_first_name,
+                payment.payer_last_name,
+                payment.contact_email,
+                payment.phone_number,
+            )
+            fields = ("campaign_id", "first_name", "last_name", "email", "phone")
         else:
-            data = (internal_campaign_id, shipping.first_name,
-                    shipping.last_name, payment.contact_email,
-                    payment.phone_number, address.street, address.street2,
-                    address.city, address.country_code, address.state,
-                    address.post_code)
-            fields = ('campaign_id', 'first_name', 'last_name', 'email',
-                      'phone', 'address_1', 'address_2', 'city', 'country',
-                      'state', 'postal_code')
+            data = (
+                internal_campaign_id,
+                shipping.first_name,
+                shipping.last_name,
+                payment.contact_email,
+                payment.phone_number,
+                address.street,
+                address.street2,
+                address.city,
+                address.country_code,
+                address.state,
+                address.post_code,
+            )
+            fields = (
+                "campaign_id",
+                "first_name",
+                "last_name",
+                "email",
+                "phone",
+                "address_1",
+                "address_2",
+                "city",
+                "country",
+                "state",
+                "postal_code",
+            )
 
-        placeholders = ', '.join(['%s'] * len(fields))
-        fields_formatted = ', '.join(fields)
-        sql = (f"""INSERT INTO campaign.interested_users
+        placeholders = ", ".join(["%s"] * len(fields))
+        fields_formatted = ", ".join(fields)
+        sql = (
+            f"""INSERT INTO campaign.interested_users
                    ({fields_formatted})
                    VALUES ({placeholders})
                    RETURNING interested_user_id""",
-               data)
+            data,
+        )
 
         with self._transaction.cursor() as cur:
             cur.execute(*sql)
@@ -574,29 +657,43 @@ class UserTransaction(BaseRepo):
 
     def _add_transaction_fundrazr(self, payment, interested_user_id):
         items = payment.claimed_items
-        fields = ('id', 'interested_user_id', 'remote_campaign_id', 'created',
-                  'amount', 'net_amount', 'currency', 'message',
-                  'subscribed_to_updates', 'account_type', 'payer_first_name',
-                  'payer_last_name', 'payer_email', 'status',
-                  'transaction_type')
-        data = (payment.transaction_id,
-                interested_user_id,
-                payment.campaign_id,
-                payment.created,
-                payment.amount,
-                payment.net_amount,
-                payment.currency,
-                payment.message,
-                payment.subscribe_to_updates,
-                payment.account,
-                payment.payer_first_name,
-                payment.payer_last_name,
-                payment.payer_email,
-                payment.status,
-                self.TRN_TYPE_FUNDRAZR)
+        fields = (
+            "id",
+            "interested_user_id",
+            "remote_campaign_id",
+            "created",
+            "amount",
+            "net_amount",
+            "currency",
+            "message",
+            "subscribed_to_updates",
+            "account_type",
+            "payer_first_name",
+            "payer_last_name",
+            "payer_email",
+            "status",
+            "transaction_type",
+        )
+        data = (
+            payment.transaction_id,
+            interested_user_id,
+            payment.campaign_id,
+            payment.created,
+            payment.amount,
+            payment.net_amount,
+            payment.currency,
+            payment.message,
+            payment.subscribe_to_updates,
+            payment.account,
+            payment.payer_first_name,
+            payment.payer_last_name,
+            payment.payer_email,
+            payment.status,
+            self.TRN_TYPE_FUNDRAZR,
+        )
 
-        placeholders = ', '.join(['%s'] * len(fields))
-        fields_formatted = ', '.join(fields)
+        placeholders = ", ".join(["%s"] * len(fields))
+        fields_formatted = ", ".join(fields)
 
         # historical perks may not be represented by the database
         # as the list of perks (directly) associated with a campaign
@@ -609,33 +706,42 @@ class UserTransaction(BaseRepo):
                     cr.add_perk_to_campaign(payment.campaign_id, item)
 
         with self._transaction.cursor() as cur:
-            cur.execute(f"""INSERT INTO campaign.transaction
+            cur.execute(
+                f"""INSERT INTO campaign.transaction
                             ({fields_formatted})
                             VALUES ({placeholders})""",
-                        data)
+                data,
+            )
 
             if items is not None:
-                inserts = [(payment.transaction_id, i.id, i.quantity)
-                           for i in items]
+                inserts = [(payment.transaction_id, i.id, i.quantity) for i in items]
 
                 try:
-                    cur.executemany("""INSERT INTO
+                    cur.executemany(
+                        """INSERT INTO
                                            campaign.fundrazr_transaction_perk
                                        (transaction_id, perk_id, quantity)
                                        VALUES (%s, %s, %s)""",
-                                    inserts)
+                        inserts,
+                    )
                 except psycopg2.errors.ForeignKeyViolation:
                     # this would indicate a synchronization issue, where
                     # fundrazr knows of a perk which we do not
                     detail = [i.to_api() for i in items]
-                    raise UnknownItem(f"One or more perks are unknown:\n"
-                                      f"{json.dumps(detail, indent=2)}")
+                    raise UnknownItem(
+                        f"One or more perks are unknown:\n"
+                        f"{json.dumps(detail, indent=2)}"
+                    )
 
         return True
 
-    def most_recent_transaction(self, transaction_source=None,
-                                campaign_id=None, include_anonymous=False,
-                                email=None):
+    def most_recent_transaction(
+        self,
+        transaction_source=None,
+        campaign_id=None,
+        include_anonymous=False,
+        email=None,
+    ):
         """Return the latest transaction
 
         campaign_id : str, optional
@@ -653,19 +759,29 @@ class UserTransaction(BaseRepo):
         Payment or None
             Constructed Payment instance of the most recent transaction
         """
-        trns = self.get_transactions(transaction_source=transaction_source,
-                                     campaign_id=campaign_id,
-                                     include_anonymous=include_anonymous,
-                                     email=email, most_recent=True)
+        trns = self.get_transactions(
+            transaction_source=transaction_source,
+            campaign_id=campaign_id,
+            include_anonymous=include_anonymous,
+            email=email,
+            most_recent=True,
+        )
         if len(trns) > 0:
             return trns[0]
         else:
             return None
 
-    def get_transactions(self, before=None, after=None, transaction_id=None,
-                         email=None, transaction_source=None,
-                         campaign_id=None, include_anonymous=False,
-                         most_recent=False):
+    def get_transactions(
+        self,
+        before=None,
+        after=None,
+        transaction_id=None,
+        email=None,
+        transaction_source=None,
+        campaign_id=None,
+        include_anonymous=False,
+        most_recent=False,
+    ):
         """Somewhat flexible getter for transactions
 
         Parameters
@@ -713,30 +829,32 @@ class UserTransaction(BaseRepo):
             data.append(transaction_source)
 
         if include_anonymous:
-            anonymous_join = 'LEFT'
+            anonymous_join = "LEFT"
         else:
-            anonymous_join = 'INNER'
+            anonymous_join = "INNER"
 
         if len(clauses) > 0:
-            clauses = 'WHERE ' + ' AND '.join(clauses)
+            clauses = "WHERE " + " AND ".join(clauses)
             data = tuple(data)
         else:
-            clauses = ''
+            clauses = ""
             data = None
 
         if most_recent:
-            limit_or_not = 'ORDER BY created DESC LIMIT 1'
+            limit_or_not = "ORDER BY created DESC LIMIT 1"
         else:
-            limit_or_not = ''
+            limit_or_not = ""
 
-        sql = (f"""SELECT id
+        sql = (
+            f"""SELECT id
                    FROM campaign.transaction t
                    JOIN campaign.transaction_source_to_campaign tstc
                        USING (remote_campaign_id)
                    {anonymous_join} JOIN campaign.interested_users
                        USING (interested_user_id)
                    {clauses} {limit_or_not}""",
-               data)
+            data,
+        )
 
         with self._transaction.cursor() as cur:
             cur.execute(*sql)
@@ -750,7 +868,8 @@ class UserTransaction(BaseRepo):
     def _payments_from_transactions(self, ids):
         """Construct a payment instance from a transaction ID"""
         # first obtain general transaction information
-        transaction_sql = ("""SELECT iu.first_name as shipping_first_name,
+        transaction_sql = (
+            """SELECT iu.first_name as shipping_first_name,
                                      iu.last_name as shipping_last_name,
                                      iu.email as contact_email,
                                      iu.phone as phone_number,
@@ -767,7 +886,8 @@ class UserTransaction(BaseRepo):
                               WHERE id IN %s
                               ORDER BY created DESC
                               """,
-                           (tuple(ids),))
+            (tuple(ids),),
+        )
         with self._transaction.dict_cursor() as cur:
             cur.execute(*transaction_sql)
             trn_data = cur.fetchall()
@@ -775,14 +895,18 @@ class UserTransaction(BaseRepo):
         trn_data = [dict(r) for r in trn_data]
 
         # determine if we have fundrazr data
-        fundrazr_ids = [row['id'] for row in trn_data
-                        if row['transaction_type'] == self.TRN_TYPE_FUNDRAZR]
+        fundrazr_ids = [
+            row["id"]
+            for row in trn_data
+            if row["transaction_type"] == self.TRN_TYPE_FUNDRAZR
+        ]
 
         # ...and if so, pull out the respective perk information
         if len(fundrazr_ids) > 0:
             # we have to jump through hoops with array_agg in order to get a
             # mixed data type return back :/
-            items_sql = ("""SELECT ftp.transaction_id,
+            items_sql = (
+                """SELECT ftp.transaction_id,
                                    ARRAY_AGG(array[fp.title,
                                                    ftp.quantity::VARCHAR,
                                                    fp.id])
@@ -792,19 +916,20 @@ class UserTransaction(BaseRepo):
                                ON fp.id=ftp.perk_id
                             WHERE ftp.transaction_id IN %s
                             GROUP BY ftp.transaction_id""",
-                         (tuple(fundrazr_ids),))
+                (tuple(fundrazr_ids),),
+            )
             with self._transaction.dict_cursor() as cur:
                 cur.execute(*items_sql)
 
                 fundrazr_data = {}
                 for row in cur.fetchall():
                     tid, perks = row
-                    fundrazr_data[tid] = [{'title': p[0],
-                                           'quantity': int(p[1]),
-                                           'id': p[2]}
-                                          for p in perks]
+                    fundrazr_data[tid] = [
+                        {"title": p[0], "quantity": int(p[1]), "id": p[2]}
+                        for p in perks
+                    ]
 
             for entry in trn_data:
-                entry['fundrazr_perks'] = fundrazr_data.get(entry['id'])
+                entry["fundrazr_perks"] = fundrazr_data.get(entry["id"])
 
         return [payment_from_db(data) for data in trn_data]
