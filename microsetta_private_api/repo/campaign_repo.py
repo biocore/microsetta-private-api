@@ -406,7 +406,8 @@ class FundRazrCampaignRepo(BaseRepo):
         if not self.campaign_exists(campaign_obj.campaign_id):
             if campaign_obj.title not in known:
                 new_ = cr.create_campaign(
-                    title=campaign_obj.title, associated_projects=assoc_projects
+                    title=campaign_obj.title,
+                    associated_projects=assoc_projects
                 )
                 internal_campaign_id = new_.campaign_id
             else:
@@ -416,7 +417,8 @@ class FundRazrCampaignRepo(BaseRepo):
                 """INSERT INTO campaign.transaction_source_to_campaign
                       (remote_campaign_id, internal_campaign_id, currency)
                       VALUES (%s, %s, %s)""",
-                (campaign_obj.campaign_id, internal_campaign_id, campaign_obj.currency),
+                (campaign_obj.campaign_id, internal_campaign_id,
+                 campaign_obj.currency),
             )
 
             with self._transaction.cursor() as cur:
@@ -477,7 +479,8 @@ class FundRazrCampaignRepo(BaseRepo):
             if not res:
                 account_id = res["id"]
                 # send mail to the user, who is already not in the system yet
-                sign_up_url = SERVER_CONFIG["interface_endpoint"] + "/create_account"
+                sign_up_url = SERVER_CONFIG["interface_endpoint"] + \
+                    "/create_account"
 
                 try:
                     send_email(
@@ -610,7 +613,8 @@ class UserTransaction(BaseRepo):
                 payment.contact_email,
                 payment.phone_number,
             )
-            fields = ("campaign_id", "first_name", "last_name", "email", "phone")
+            fields = ("campaign_id", "first_name", "last_name",
+                      "email", "phone")
         else:
             data = (
                 internal_campaign_id,
@@ -714,7 +718,8 @@ class UserTransaction(BaseRepo):
             )
 
             if items is not None:
-                inserts = [(payment.transaction_id, i.id, i.quantity) for i in items]
+                inserts = [(payment.transaction_id, i.id, i.quantity)
+                           for i in items]
 
                 try:
                     cur.executemany(
