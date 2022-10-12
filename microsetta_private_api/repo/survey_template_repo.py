@@ -276,14 +276,25 @@ class SurveyTemplateRepo(BaseRepo):
             rows = cur.fetchall()
 
             results = {}
+            count = 0
             for row in rows:
                 survey_id = row[0]
                 if survey_id not in results:
+                    count += 1
+                    if latest_only and count > 1:
+                        # if the client is requesting only the responses of
+                        # the last survey, then don't process the rest of
+                        # them.
+                        break
+
+                    # add the new entry to results
                     results[survey_id] = {'survey_id': row[0],
                                           'source_id': row[4],
                                           'timestamp': str(row[5]),
                                           'responses': []}
 
+                # new survey_id or not, append the response to the list of
+                # responses for that survey_id.
                 r = {'survey_question_id': row[1], 'response': row[2],
                      'display_index': int(row[3])}
 

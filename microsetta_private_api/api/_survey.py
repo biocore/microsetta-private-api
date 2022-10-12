@@ -177,9 +177,6 @@ def read_survey_template(account_id, source_id, survey_template_id,
     with Transaction() as t:
         survey_template_repo = SurveyTemplateRepo(t)
 
-        results = survey_template_repo.get_survey_responses(account_id,
-                                                            survey_template_id)
-
         info = survey_template_repo.get_survey_template_link_info(
             survey_template_id)
         remote_surveys = set(survey_template_repo.remote_surveys())
@@ -246,7 +243,23 @@ def read_survey_template(account_id, source_id, survey_template_id,
                 if field.id in client_side_validation:
                     field.set(**client_side_validation[field.id])
 
-        info.previous_responses = results
+        results = survey_template_repo.get_survey_responses(account_id,
+                                                            survey_template_id,
+                                                            latest_only=True)
+
+        if results:
+            # get_survey_responses() returns a list of dicts whether
+            # latest_only is True or False. We only need the values.
+            results = results[0]['responses']
+            results = {str(v['survey_question_id']):
+                       v['response'] for v in results}
+
+            # modify info with previous results before returning to client.
+            for group in info.survey_template_text.groups:
+                for field in group.fields:
+                    previous_response = results[field.inputName]
+                    if previous_response:
+                        field.default = previous_response
 
         return jsonify(info), 200
 
