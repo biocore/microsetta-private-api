@@ -1341,14 +1341,19 @@ class AdminRepo(BaseRepo):
     def get_perk_type(self, dak_order_id):
         with self._transaction.dict_cursor() as cur:
             cur.execute(
-                "SELECT campaign.fundrazr_perk.perk_type "
-                "FROM "
-                "campaign.fundrazr_daklapack_orders "
-                "INNER JOIN campaign.fundrazr_perk ON campaign"
-                ".fundrazr_perk.id=campaign.fundrazr_daklapack_orders"
-                ".fundrazr_transaction_perk_id "
-                "WHERE dak_order_id = %s "
-                (dak_order_id, ))
+                "SELECT fp.perk_type "
+                "FROM campaign.fundrazr_daklapack_orders fdo "
+                "INNER JOIN campaign.fundrazr_transaction_perk ftp "
+                "ON "
+                "ftp.id = "
+                "fdo.fundrazr_transaction_perk_id "
+                "INNER JOIN campaign.fundrazr_perk fp "
+                "ON "
+                "fp.id = "
+                "ftp.perk_id "
+                "WHERE "
+                "fdo.dak_order_id = %s ",
+                (dak_order_id,))
             return cur.fetchone()
 
     def get_perk_type3_orders(self):
