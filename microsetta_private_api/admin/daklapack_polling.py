@@ -126,6 +126,7 @@ def _process_single_order(curr_order_id, curr_status, curr_creation_date):
 def process_order_articles(admin_repo, order_id, status, create_date):
     per_article_outputs = []
     order_proj_ids = None
+    curr_output = ""
 
     if status == SENT_STATUS:
         # get projects this order belongs to (needed later for kit creation)
