@@ -397,3 +397,57 @@ class SurveyTemplateTests(unittest.TestCase):
                  ('000023245', '52abc2ea83c08b96')]
         for sample, user in tests:
             self.assertEqual(obs.get(sample), user)
+
+    def test_get_survey_results(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+
+            login_id = 'd8592c74-7da1-2135-e040-8a80115d6401'
+
+            # get only the latest responses: implicit latest_only=True
+            obs = template_repo.get_survey_responses(login_id, 1)
+
+            # erase the timestamp as it's dependent on db init.
+            for response in obs:
+                response['timestamp'] = ''
+
+            # the expected latest response
+            exp = [{
+                "survey_id": "4b1af551332dc84e",
+                "source_id": "eaa28e49-95e4-4e39-ad9e-2b89ae6a1e78",
+                "timestamp": "",
+                "responses": [
+                    {
+                        "survey_question_id": 52,
+                        "response": "Unspecified",
+                        "display_index": -2
+                    },
+                    {
+                        "survey_question_id": 97,
+                        "response": "Unspecified",
+                        "display_index": -1
+                    }
+                ],
+                "percentage_completed": "1.44%"
+            }
+            ]
+
+            self.assertEqual(obs, exp)
+
+            # repeat the test, except return all responses.
+            obs = template_repo.get_survey_responses(login_id, 1,
+                                                     latest_only=False)
+
+            for response in obs:
+                response['timestamp'] = ''
+
+            # results should be equal, since there is only one
+            # survey in the population data.
+            self.assertEqual(obs, exp)
+
+            # non-existent login_id should return empty list.
+            login_id = 'abc92c74-7da1-2135-e040-8a80115d6401'
+
+            obs = template_repo.get_survey_responses(login_id, 1)
+
+            self.assertEqual(obs, [])
