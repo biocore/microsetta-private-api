@@ -408,13 +408,15 @@ class SurveyTemplateTests(unittest.TestCase):
             obs = template_repo.get_survey_responses(login_id, 1)
 
             # erase the timestamp as it's dependent on db init.
+            # source_id is also dynamic.
             for response in obs:
                 response['timestamp'] = ''
+                response['source_id'] = ''
 
             # the expected latest response
             exp = [{
                 "survey_id": "4b1af551332dc84e",
-                "source_id": "eaa28e49-95e4-4e39-ad9e-2b89ae6a1e78",
+                "source_id": "",
                 "timestamp": "",
                 "responses": [
                     {
@@ -440,6 +442,7 @@ class SurveyTemplateTests(unittest.TestCase):
 
             for response in obs:
                 response['timestamp'] = ''
+                response['source_id'] = ''
 
             # results should be equal, since there is only one
             # survey in the population data.
