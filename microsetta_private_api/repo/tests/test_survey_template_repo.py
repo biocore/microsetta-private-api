@@ -444,9 +444,9 @@ class SurveyTemplateTests(unittest.TestCase):
                 response['timestamp'] = ''
                 response['source_id'] = ''
 
-            # results should be equal, since there is only one
-            # survey in the population data.
-            self.assertEqual(obs, exp)
+            # results should not be equal. Additional surveys from other
+            # tests will have been taken.
+            self.assertNotEqual(obs, exp)
 
             # non-existent login_id should return empty list.
             login_id = 'abc92c74-7da1-2135-e040-8a80115d6401'
