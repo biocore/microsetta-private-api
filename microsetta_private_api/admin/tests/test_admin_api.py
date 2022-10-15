@@ -6,6 +6,8 @@ import json
 import microsetta_private_api.server
 from microsetta_private_api.model.account import Account, Address
 from microsetta_private_api.model.project import Project
+from microsetta_private_api.model.daklapack_order \
+    import SHIPPING_TYPES_BY_PROVIDER
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -17,7 +19,8 @@ from microsetta_private_api.admin.tests.test_admin_repo import \
     FIRST_LIVE_DAK_ARTICLE, delete_test_scan
 from microsetta_private_api.model.tests.test_daklapack_order import \
     DUMMY_PROJ_ID_LIST, DUMMY_DAK_ARTICLE_CODE, DUMMY_ADDRESSES, \
-    DUMMY_DAK_ORDER_DESC, DUMMY_PLANNED_SEND_DATE, DUMMY_FEDEX_REFS
+    DUMMY_DAK_ORDER_DESC, DUMMY_PLANNED_SEND_DATE, DUMMY_FEDEX_REFS, \
+    DUMMY_SHIPPING_PROVIDER, DUMMY_SHIPPING_TYPE
 
 
 DUMMY_PROJ_NAME = "test project"
@@ -146,6 +149,16 @@ class AdminApiTests(TestCase):
     def tearDown(self):
         self.client.__exit__(None, None, None)
         teardown_test_data()
+
+    def test_vioscreen_samples_to_barcodes(self):
+        response = self.client.get(
+            '/api/admin/vioscreen/username_to_barcode',
+            headers=MOCK_HEADERS
+        )
+        self.assertEqual(200, response.status_code)
+        response_obj = json.loads(response.data)
+        self.assertEqual(response_obj['000031536'],
+                         'b98c5ac966b754ff')
 
     def _test_project_create_success(self, project_info):
         input_json = json.dumps(project_info)
@@ -727,6 +740,21 @@ class AdminApiTests(TestCase):
         finally:
             delete_test_scan(new_scan_id)
 
+    def test_get_daklapack_shipping_options(self):
+        # execute shipping options get
+        response = self.client.get(
+            "/api/admin/daklapack_shipping",
+            headers=MOCK_HEADERS
+        )
+
+        # check response code
+        self.assertEqual(200, response.status_code)
+
+        # load the response body
+        response_obj = json.loads(response.data)
+
+        self.assertDictEqual(SHIPPING_TYPES_BY_PROVIDER, response_obj)
+
     def test_get_daklapack_articles(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
@@ -919,6 +947,8 @@ class AdminApiTests(TestCase):
             "project_ids": DUMMY_PROJ_ID_LIST,
             "article_code": DUMMY_DAK_ARTICLE_CODE,
             "addresses": DUMMY_ADDRESSES,
+            "shipping_provider": DUMMY_SHIPPING_PROVIDER,
+            "shipping_type": DUMMY_SHIPPING_TYPE,
             "description": DUMMY_DAK_ORDER_DESC,
             "fedex_ref_1": DUMMY_FEDEX_REFS[0],
             "fedex_ref_2": DUMMY_FEDEX_REFS[1],
@@ -943,6 +973,8 @@ class AdminApiTests(TestCase):
             "project_ids": DUMMY_PROJ_ID_LIST,
             "article_code": DUMMY_DAK_ARTICLE_CODE,
             "addresses": DUMMY_ADDRESSES,
+            "shipping_provider": DUMMY_SHIPPING_PROVIDER,
+            "shipping_type": DUMMY_SHIPPING_TYPE,
             "description": None,
             "fedex_ref_1": None,
             "fedex_ref_2": None,
@@ -1019,8 +1051,6 @@ class AdminApiTests(TestCase):
         exp_status = [None, 'no-associated-source', 'sample-is-valid']
         self.assertEqual([v['sample-status'] for v in response_obj],
                          exp_status)
-        n_src = sum([v['source-email'] is not None for v in response_obj])
-        self.assertEqual(n_src, 1)
 
     def test_query_barcode_stats_project_barcodes_with_strip(self):
         barcodes = ['000010307', '000023344', '000036855']
@@ -1045,8 +1075,6 @@ class AdminApiTests(TestCase):
         exp_status = [None, 'no-associated-source', 'sample-is-valid']
         self.assertEqual([v['sample-status'] for v in response_obj],
                          exp_status)
-        n_src = sum([v['source-email'] is not None for v in response_obj])
-        self.assertEqual(n_src, 1)
 
     def test_send_email(self):
         def mock_func(*args, **kwargs):

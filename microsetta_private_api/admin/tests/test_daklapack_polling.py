@@ -16,14 +16,14 @@ def make_test_response(status_code, json_dict):
 
 
 class DaklapackPollingTests(AdminTests):
-    ARTICLES_INFO = {"articles": [
-        {"articleCode": "350201",
-         "total": 2,
-         "new": 0,
-         "inProduction": 0,
-         "sent": 2,
-         "errors": 0,
-         "articles": [
+    TWO_INSTANCE_ARTICLE = {
+        "articleCode": "350201",
+        "total": 2,
+        "new": 0,
+        "inProduction": 0,
+        "sent": 2,
+        "errors": 0,
+        "articles": [
              {"internalId": "729f7149-4889-42b3-8368-1b68284d5b95",
               "articleCode": "350201",
               "status": "Sent",
@@ -114,7 +114,9 @@ class DaklapackPollingTests(AdminTests):
               "outBoundDelivery": {"code": "Tracking Code 2"},
               "code": None, "plannedSendDate": None
               }  # end article instance
-         ]},  # end "articles" (instance) list, single article (type) entry
+         ]}  # end "articles" (instance) list, single article (type) entry
+    ARTICLES_INFO = {"articles": [
+        TWO_INSTANCE_ARTICLE,
         {"articleCode": "350100",
          "total": 1,
          "new": 0,
@@ -159,6 +161,140 @@ class DaklapackPollingTests(AdminTests):
               }  # end article instance
          ]}  # end "articles" (instance) list, single article (type) entry
     ]}  # end "articles" (type) list, outer dict
+
+    MULTI_ITEM_ARTICLES_INFO = {"articles": [
+        TWO_INSTANCE_ARTICLE,
+        {
+          "articleCode": "351200460",
+          "total": 1,
+          "new": 0,
+          "inProduction": 0,
+          "sent": 1,
+          "errors": 0,
+          "articles": [
+            {
+              "internalId": "fbe01c9c-ac76-437f-a944-1c9f4da7a8b7",
+              "articleCode": "351200460",
+              "status": "Sent",
+              "description": "",
+              "sendInformation": {
+                "firstName": "THDMI",
+                "lastName": "Spain",
+                "address1": "500 West Main St",
+                "insertion": "",
+                "address2": "Suite 2",
+                "postalCode": "07481",
+                "city": "Wyckoff",
+                "state": "NJ",
+                "country": "USA",
+                "countryCode": "US",
+                "phone": "(858) 555-1212",
+                "companyName": "Cassidy Symons"
+              },
+              "shippingProvider": {
+                "name": "Freight",
+                "shippingType": "Default",
+                "shippingProviderMetadata": []
+              },
+              "scannableKitItems": [
+                {
+                  "type": "ShippingLabelOutbound",
+                  "barcode": "20220922053001949",
+                  "expirationDate": None,
+                  "itemCount": 0,
+                  "containerItems": []
+                },
+                {
+                  "type": "Container-content",
+                  "barcode": "NoLabel",
+                  "expirationDate": None,
+                  "itemCount": 40,
+                  "containerItems": [
+                    {
+                      "stockId": 30616625,
+                      "containerItemDetails": [
+                        {
+                          "type": "KitId",
+                          "barcode": "MULTI_BAR_1",
+                          "expirationDate": None,
+                          "itemCount": 0,
+                          "containerItems": []
+                        },
+                        {
+                          "type": "BoxId",
+                          "barcode": "MULTI_BOX_1",
+                          "expirationDate": None,
+                          "itemCount": 0,
+                          "containerItems": []
+                        },
+                        {
+                          "type": "Tube",
+                          "barcode": "MULTI_TUBE_1",
+                          "expirationDate": None,
+                          "itemCount": 0,
+                          "containerItems": []
+                        },
+                        {
+                          "type": "InstructionCard",
+                          "barcode": "R2-SP",
+                          "expirationDate": None,
+                          "itemCount": 0,
+                          "containerItems": []
+                        }
+                      ],
+                      "inboundDelivery": {
+                        "code": ""
+                      }
+                    },
+                    {
+                      "stockId": 30616627,
+                      "containerItemDetails": [
+                        {
+                          "type": "KitId",
+                          "barcode": "MULTI_KIT_2",
+                          "expirationDate": None,
+                          "itemCount": 0,
+                          "containerItems": []
+                        },
+                        {
+                          "type": "BoxId",
+                          "barcode": "MULTI_BOX_2",
+                          "expirationDate": None,
+                          "itemCount": 0,
+                          "containerItems": []
+                        },
+                        {
+                          "type": "Tube",
+                          "barcode": "MULTI_TUBE_2",
+                          "expirationDate": None,
+                          "itemCount": 0,
+                          "containerItems": []
+                        },
+                        {
+                          "type": "InstructionCard",
+                          "barcode": "R2-SP",
+                          "expirationDate": None,
+                          "itemCount": 0,
+                          "containerItems": []
+                        }
+                      ],
+                      "inboundDelivery": {
+                        "code": ""
+                      }
+                    }
+                  ]
+                }
+              ],
+              "inBoundDelivery": None,
+              "outBoundDelivery": {
+                "code": ""
+              },
+              "code": None,
+              "plannedSendDate": None
+            }
+          ]
+        }
+      ]}
 
     @staticmethod
     def _delete_dak_orders_to_kits(t, kit_ids):
@@ -688,6 +824,82 @@ class DaklapackPollingTests(AdminTests):
         finally:
             self._delete_kits_and_dak_orders_to_kits(registration_card_ids)
 
+    def test_process_order_articles_nested_sent_status(self):
+        expected_out = [
+            {'created': [
+                {'kit_id': 'ABCR',
+                 'address': {'firstName': 'Natalia J Phillips',
+                             'lastName': '',
+                             'address1': '2166  Chapmans Lane',
+                             'insertion': '',
+                             'address2': '', 'postalCode': '88103',
+                             'city': 'Clovis', 'state': 'NM',
+                             'country': 'USA', 'countryCode': 'US',
+                             'phone': '505-784-5252',
+                             'companyName': 'Jane Doe'},
+                 'box_id': 'ABCX',
+                 'outbound_fedex_tracking': 'Tracking Code 1',
+                 'inbound_fedex_tracking': 'Tracking Code 2',
+                 'sample_barcodes': ['ABCT', 'ABCN']
+                 },
+            ]},
+            {'created': [
+                {'kit_id': 'ABCR2',
+                 'box_id': 'ABCX2',
+                 'address': {'firstName': 'Natalia J Phillips',
+                             'lastName': '',
+                             'address1': '2166  Chapmans Lane',
+                             'insertion': '',
+                             'address2': '', 'postalCode': '88103',
+                             'city': 'Clovis', 'state': 'NM',
+                             'country': 'USA', 'countryCode': 'US',
+                             'phone': '505-784-5252',
+                             'companyName': 'Jane Doe'},
+                 'outbound_fedex_tracking': 'Tracking Code 2',
+                 'inbound_fedex_tracking': None,
+                 'sample_barcodes': ['ABCT2', 'ABCN2']
+                 }
+            ]},
+            {'created': [
+               {'kit_id': 'MULTI_BAR_1',
+                'box_id': 'MULTI_BOX_1',
+                'address': {'firstName': 'THDMI',
+                            'lastName': 'Spain',
+                            'address1': '500 West Main St',
+                            'insertion': '',
+                            'address2': 'Suite 2', 'postalCode': '07481',
+                            'city': 'Wyckoff', 'state': 'NJ',
+                            'country': 'USA', 'countryCode': 'US',
+                            'phone': '(858) 555-1212',
+                            'companyName': 'Cassidy Symons'
+                            },
+                'outbound_fedex_tracking': '',
+                'inbound_fedex_tracking': None,
+                'sample_barcodes': ['MULTI_TUBE_1']
+                }
+            ]},
+            {'created': [
+                {'kit_id': 'MULTI_KIT_2',
+                 'box_id': 'MULTI_BOX_2',
+                 'address': {'firstName': 'THDMI',
+                             'lastName': 'Spain',
+                             'address1': '500 West Main St',
+                             'insertion': '',
+                             'address2': 'Suite 2', 'postalCode': '07481',
+                             'city': 'Wyckoff', 'state': 'NJ',
+                             'country': 'USA', 'countryCode': 'US',
+                             'phone': '(858) 555-1212',
+                             'companyName': 'Cassidy Symons'
+                             },
+                 'outbound_fedex_tracking': '',
+                 'inbound_fedex_tracking': None,
+                 'sample_barcodes': ['MULTI_TUBE_2']
+                 }
+            ]}
+        ]
+        self._test_process_order_articles_sent_status(
+            expected_out, self.MULTI_ITEM_ARTICLES_INFO)
+
     def test_process_order_articles_sent_status(self):
         expected_out = [
             {'created': [
@@ -742,7 +954,10 @@ class DaklapackPollingTests(AdminTests):
                  }
             ]}
         ]
+        self._test_process_order_articles_sent_status(
+            expected_out, self.ARTICLES_INFO)
 
+    def _test_process_order_articles_sent_status(self, expected_out, articles):
         with Transaction() as t:
             dummy_orders = self.make_dummy_dak_orders(t)
             an_order_id = dummy_orders[0][0]
@@ -754,7 +969,7 @@ class DaklapackPollingTests(AdminTests):
             with patch("microsetta_private_api.admin.daklapack_communication."
                        "get_daklapack_order_details") as mock_dak_order_info:
                 mock_dak_order_info.side_effect = [make_test_response(
-                    200, self.ARTICLES_INFO)]
+                    200, articles)]
 
                 real_out = process_order_articles(
                     admin_repo, an_order_id, "Sent",

@@ -16,7 +16,6 @@ def _source_to_row(s):
            s.account_id,
            s.source_type,
            s.name,
-           getattr(d, 'email', None),
            getattr(d, 'is_juvenile', None),
            getattr(d, 'parent1_name', None),
            getattr(d, 'parent2_name', None),
@@ -31,7 +30,6 @@ def _source_to_row(s):
 
 def _row_to_human_info(r):
     return HumanInfo(
-        r['participant_email'],
         r['is_juvenile'],
         r['parent_1_name'],
         r['parent_2_name'],
@@ -67,14 +65,14 @@ class SourceRepo(BaseRepo):
         super().__init__(transaction)
 
     read_cols = "id, account_id, " \
-                "source_type, source_name, participant_email, " \
+                "source_type, source_name, " \
                 "is_juvenile, parent_1_name, parent_2_name, " \
                 "deceased_parent, date_signed, date_revoked, " \
                 "assent_obtainer, age_range, description, " \
                 "creation_time, update_time"
 
     write_cols = "id, account_id, source_type, " \
-                 "source_name, participant_email, " \
+                 "source_name, " \
                  "is_juvenile, parent_1_name, parent_2_name, " \
                  "deceased_parent, date_signed, date_revoked, " \
                  "assent_obtainer, age_range, description"
@@ -155,7 +153,7 @@ class SourceRepo(BaseRepo):
             cur.execute("INSERT INTO source (" + SourceRepo.write_cols + ") "
                         "VALUES("
                         "%s, %s, %s, "
-                        "%s, %s, "
+                        "%s, "
                         "%s, %s, %s, "
                         "%s, %s, %s, "
                         "%s, %s, %s)",
@@ -233,7 +231,6 @@ class SourceRepo(BaseRepo):
 
         name = "scrubbed"
         description = "scrubbed"
-        email = "scrubbed@microsetta.ucsd.edu"
         parent1_name = "scrubbed"
         parent2_name = "scrubbed"
         assent_obtainer = "scrubbed"
@@ -242,7 +239,6 @@ class SourceRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             cur.execute("""UPDATE source
                            SET source_name = %s,
-                               participant_email = %s,
                                description = %s,
                                parent_1_name = %s,
                                parent_2_name = %s,
@@ -250,7 +246,7 @@ class SourceRepo(BaseRepo):
                                assent_obtainer = %s,
                                update_time = %s
                            WHERE id = %s""",
-                        (name, email, description, parent1_name, parent2_name,
+                        (name, description, parent1_name, parent2_name,
                          date_revoked, assent_obtainer, date_revoked,
                          source_id))
 
@@ -258,3 +254,18 @@ class SourceRepo(BaseRepo):
                 raise RepoException("Invalid source relation")
             else:
                 return True
+
+    def get_duplicate_source_name(self, account_id, source_name):
+
+        with self._transaction.dict_cursor() as cur:
+            cur.execute("SELECT " + SourceRepo.read_cols +
+                        " FROM "
+                        "source "
+                        "WHERE "
+                        "source.account_id = %s "
+                        "AND source.source_name ILIKE %s ",
+                        (account_id, source_name))
+            r = cur.fetchone()
+            if r is None:
+                return {'source_duplicate': False}
+            return {'source_duplicate': True}

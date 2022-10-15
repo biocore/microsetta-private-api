@@ -168,6 +168,40 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/accounts/{account_id}/check_duplicate_source':
+    post:
+      operationId: microsetta_private_api.api.check_duplicate_source_name
+      tags:
+        - Account
+      summary: Get information about duplicate source
+      description: Get information about  duplicate source
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                participant_name: # Field is named participant_name, but contents are used to fill source's name
+                  $ref: '#/components/schemas/source_name'
+              required:
+                    - participant_name
+      responses:
+        '200':
+          description: Successfully returned source information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source_match:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/accounts/{account_id}/email_match':
     get:
       operationId: microsetta_private_api.api.check_email_match
@@ -1049,6 +1083,26 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/admin/vioscreen/username_to_barcode':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_vioscreen_sample_to_user
+      tags:
+        - Vioscreen
+      summary: Obtain a mapping from Vioscreen username to associated barcode
+      description: Obtain a mapping from Vioscreen username to associated barcode
+      responses:
+        '200':
+          description: Successfully returned username mapping
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
   '/vioscreen/dietaryscore/type/{score_type}/code/{score_code}':
     get:
       operationId: microsetta_private_api.api.get_vioscreen_dietary_scores_by_component
@@ -1481,6 +1535,8 @@ paths:
                   type: string
                 'address_2':
                   type: string
+                'address_3':
+                  type: string
                 'city':
                   type: string
                 'state':
@@ -1492,6 +1548,8 @@ paths:
                 'ip_address':
                   type: string
                 'over_18':
+                  type: string
+                'residential_address':
                   type: string
               required:
                 - campaign_id
@@ -1578,12 +1636,16 @@ paths:
                   type: string
                 'address_2':
                   type: string
+                'address_3':
+                  type: string
                 'city':
                   type: string
                 'state':
                   type: string
                 'postal':
                   type: string
+                'residential_address':
+                  type: boolean
               required:
                 - interested_user_id
                 - email
@@ -1842,6 +1904,12 @@ paths:
         - in: query
           name: address_2
           description: Second line of address to verify (e.g. apartment, suite, floor)
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: address_3
+          description: Third line of address to verify
           required: false
           schema:
             type: string
@@ -2189,6 +2257,19 @@ paths:
               schema:
                 type: array
 
+  '/admin/daklapack_shipping':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_daklapack_shipping_options
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: Return lists of acceptable Daklapack shipping types keyed by shipping provider
+          content:
+            application/json:
+              schema:
+                type: object
+
   '/admin/daklapack_orders':
     post:
       operationId: microsetta_private_api.admin.admin_impl.create_daklapack_orders
@@ -2214,6 +2295,10 @@ paths:
                   type: array
                   items:
                     type: object
+                shipping_provider:
+                  type: string
+                shipping_type:
+                  type: string
                 description:
                   type: string
                   nullable: true
@@ -2601,7 +2686,7 @@ components:
       example: "standard"
     language:
       type: string
-      enum: ["en_US", "es_MX"]
+      enum: ["en_US", "es_MX", "es_ES"]
       example: "en_US"
     creation_time:
       type: string
@@ -2807,10 +2892,6 @@ components:
       type: string
       enum: [human, animal, environmental]
       example: human
-    participant_email:
-      type: string
-      format: email
-      example: "mdoe@example.com"
     age_range:
       type: string
       enum: ["0-6", "7-12", "13-17", "18-plus", "legacy"]
@@ -2863,8 +2944,6 @@ components:
         consent:
           type: object
           properties:
-            participant_email:
-              $ref: '#/components/schemas/participant_email'
             age_range:
               $ref: '#/components/schemas/age_range'
             child_info:
@@ -3169,14 +3248,12 @@ components:
         source_name: "Nell Doe"
         source_type: human
         consent:
-          participant_email: "nell@example.com"
           age_range: "18-plus"
     human_child_source:
       value:
         source_name: "K. Doe"
         source_type: human
         consent:
-          participant_email: "kd@kidsmail.com"
           age_range: "7-12"
           child_info:
             parent_1_name: "Maman Doe"
@@ -3194,7 +3271,6 @@ components:
         source_name: "Nell Doe"
         source_type: human
         consent:
-          participant_email: "nell@example.com"
           age_range: "18-plus"
     human_child_source_w_id:
       value:
@@ -3202,7 +3278,6 @@ components:
         source_name: "K. Doe"
         source_type: human
         consent:
-          participant_email: "kd@kidsmail.com"
           age_range: "7-12"
           child_info:
             parent_1_name: "Maman Doe"

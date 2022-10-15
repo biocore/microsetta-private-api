@@ -13,6 +13,34 @@ PLANNED_SEND_DATE_KEY = 'planned_send_date'
 DESCRIPTION_KEY = 'description'
 SUBMITTER_ACCT_KEY = "submitter_acct"
 QUANTITY_KEY = "quantity"
+SHIPPING_PROVIDER_KEY = "shipping_provider"
+FEDEX_PROVIDER = "FedEx"
+FREIGHT_PROVIDER = "Freight"
+TRANSSMART_PROVIDER = "TransSmart"
+USPS_PROVIDER = "USPS"
+SHIPPING_PROVIDERS = [FEDEX_PROVIDER, FREIGHT_PROVIDER, TRANSSMART_PROVIDER,
+                      USPS_PROVIDER]
+SHIPPING_TYPE_KEY = "shipping_type"
+DEFAULT_SHIPPING = "Default"
+FEDEX_2DAY_SHIPPING = "FEDEX_2_DAY"
+FEDEX_GROUND_SHIPPING = "FEDEX_GROUND"
+FEDEX_GROUND_HOME_SHIPPING = "GROUND_HOME_DELIVERY"
+FEDEX_PRIORITY_OVERNIGHT_SHIPPING = "PRIORITY_OVERNIGHT"
+FEDEX_STANDARD_OVERNIGHT_SHIPPING = "STANDARD_OVERNIGHT"
+USPS_PRIORITY_SHIPPING = "PRIORITY"
+USPS_PRIORITY_EXPRESS_SHIPPING = "PRIORITY_EXPRESS"
+USPS_FIRST_CLASS_SHIPPING = "FIRST_CLASS"
+SHIPPING_TYPES_BY_PROVIDER = {
+    FEDEX_PROVIDER: [DEFAULT_SHIPPING, FEDEX_2DAY_SHIPPING,
+                     FEDEX_GROUND_SHIPPING,
+                     FEDEX_GROUND_HOME_SHIPPING,
+                     FEDEX_PRIORITY_OVERNIGHT_SHIPPING,
+                     FEDEX_STANDARD_OVERNIGHT_SHIPPING],
+    FREIGHT_PROVIDER: [DEFAULT_SHIPPING],
+    TRANSSMART_PROVIDER: [DEFAULT_SHIPPING],
+    USPS_PROVIDER: [DEFAULT_SHIPPING, USPS_PRIORITY_EXPRESS_SHIPPING,
+                    USPS_PRIORITY_SHIPPING, USPS_FIRST_CLASS_SHIPPING]
+}
 
 
 class DaklapackOrder:
@@ -59,6 +87,18 @@ class DaklapackOrder:
         return self._last_polling_timestamp
 
     @classmethod
+    def validate_shipping(cls, shipping_provider, shipping_type):
+        if shipping_provider not in SHIPPING_PROVIDERS:
+            raise ValueError(f"Unrecognized shipping provider "
+                             f"'{shipping_provider}'")
+
+        valid_shipping_types = SHIPPING_TYPES_BY_PROVIDER[shipping_provider]
+        if shipping_type not in valid_shipping_types:
+            raise ValueError(f"Shipping type '{shipping_type}' is "
+                             f"unrecognized for shipping provider "
+                             f"'{shipping_provider}'")
+
+    @classmethod
     def from_api(cls, **kwargs):
         curr_timestamp = None
         # note: api can't set last_polling_status and last_polling_timestamp:
@@ -81,6 +121,10 @@ class DaklapackOrder:
         article_code = kwargs[DAK_ARTICLE_CODE_KEY]
         address_dict = kwargs[ADDR_DICT_KEY]
         quantity = kwargs[QUANTITY_KEY]
+        shipping_provider = kwargs[SHIPPING_PROVIDER_KEY]
+        shipping_type = kwargs[SHIPPING_TYPE_KEY]
+
+        cls.validate_shipping(shipping_provider, shipping_type)
 
         # optional: fedex reference fields
         fedex_refs_dicts_list = []
@@ -123,8 +167,8 @@ class DaklapackOrder:
             ],
             "plannedSendDate": planned_send_str,
             ADDR_DICT_KEY: str_addr_dict,
-            "shippingProvider": "FedEx",
-            "shippingType": "FEDEX_2_DAY",
+            "shippingProvider": shipping_provider,
+            "shippingType": shipping_type,
             "shippingProviderMetadata": fedex_refs_dicts_list
         }
 
