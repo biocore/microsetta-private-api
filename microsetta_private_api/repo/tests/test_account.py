@@ -91,6 +91,7 @@ class AccountTests(unittest.TestCase):
         test_verify_address.return_value = {
             "address_1": DUMMY_ACCT_INFO_1['address']['street'],
             "address_2": "",
+            "address_3": "",
             "city": DUMMY_ACCT_INFO_1['address']['city'],
             "state": DUMMY_ACCT_INFO_1['address']['state'],
             "postal": DUMMY_ACCT_INFO_1['address']['post_code'],
@@ -112,8 +113,8 @@ class AccountTests(unittest.TestCase):
                             "WHERE id = %s",
                             (ACCT_ID_1,))
                 r = cur.fetchone()
-                self.assertEqual(r['latitude'], RESULT_LAT)
-                self.assertEqual(r['longitude'], RESULT_LONG)
+                self.assertAlmostEqual(r['latitude'], RESULT_LAT, 9)
+                self.assertAlmostEqual(r['longitude'], RESULT_LONG, 9)
                 self.assertTrue(r['address_verified'])
                 self.assertFalse(r['cannot_geocode'])
 
@@ -122,6 +123,7 @@ class AccountTests(unittest.TestCase):
         test_verify_address.return_value = {
             "address_1": DUMMY_ACCT_INFO_1['address']['street'],
             "address_2": "",
+            "address_3": "",
             "city": DUMMY_ACCT_INFO_1['address']['city'],
             "state": DUMMY_ACCT_INFO_1['address']['state'],
             "postal": DUMMY_ACCT_INFO_1['address']['post_code'],

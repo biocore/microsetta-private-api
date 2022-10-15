@@ -7,7 +7,7 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.model.log_event import LogEvent
 from microsetta_private_api.model.project import Project
 from microsetta_private_api.model.daklapack_order import DaklapackOrder, \
-    ORDER_ID_KEY, SUBMITTER_ACCT_KEY, ADDR_DICT_KEY
+    ORDER_ID_KEY, SUBMITTER_ACCT_KEY, ADDR_DICT_KEY, SHIPPING_TYPES_BY_PROVIDER
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.activation_repo import ActivationRepo
@@ -15,6 +15,7 @@ from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -118,9 +119,12 @@ def put_interested_user_by_id(token_info, iuid, body):
         user.address_valid = True
         user.address_1 = body['address_1']
         user.address_2 = body['address_2']
+        user.address_3 = body.get('address_3', None)
+        user.phone = body['phone']
         user.city = body['city']
         user.state = body['state']
         user.postal_code = body['postal']
+        user.residential_address = body.get('residential_address', True)
         update_success = \
             i_u_repo.update_interested_user(user)
 
@@ -400,6 +404,12 @@ def get_daklapack_articles(token_info):
         return jsonify(dak_article_dicts), 200
 
 
+def get_daklapack_shipping_options(token_info):
+    validate_admin_access(token_info)
+
+    return jsonify(SHIPPING_TYPES_BY_PROVIDER), 200
+
+
 def query_email_stats(body, token_info):
     validate_admin_access(token_info)
 
@@ -582,15 +592,15 @@ def search_activation(token_info, email_query=None, code_query=None):
         return jsonify([i.to_api() for i in infos]), 200
 
 
-def address_verification(address_1=None, address_2=None,
+def address_verification(address_1=None, address_2=None, address_3=None,
                          city=None, state=None, postal=None, country=None):
     if address_1 is None or len(address_1) < 1 or \
             postal is None or len(postal) < 1 or \
             country is None or len(country) < 1:
         raise Exception("Must include address_1, postal, and country")
 
-    melissa_response = verify_address(address_1, address_2, city, state,
-                                      postal, country)
+    melissa_response = verify_address(address_1, address_2, address_3, city,
+                                      state, postal, country)
 
     return jsonify(melissa_response), 200
 
@@ -832,3 +842,11 @@ def delete_account(account_id, token_info):
         t.commit()
 
     return None, 204
+
+
+def get_vioscreen_sample_to_user(token_info):
+    validate_admin_access(token_info)
+    with Transaction() as t:
+        st_repo = SurveyTemplateRepo(t)
+        data = st_repo.get_vioscreen_sample_to_user()
+    return jsonify(data), 200
