@@ -214,57 +214,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  add_human_title:
-                    type: string
-                    example: Add a New Human Source
-                  sel_age_range:
-                    type: string
-                    example: Select age range of participant
-                  age_0_6:
-                    type: string
-                  age_7_12:
-                    type: string
-                  age_12_17:
-                    type: string
-                  age_18:
-                    type: string
-                  consent_your_child:
-                    type: string
-                  participation_agreement:
-                    type: string
-                  exhibit_a:
-                    type: string
-                  bill_of_rights:
-                    type: string
-                  text_i_have_read_parent:
-                    type: string
-                  participant_name:
-                    type: string
-                  participant_email:
-                    type: string
-                  participant_parent_1:
-                    type: string
-                  participant_parent_2:
-                    type: string
-                  participant_deceased_parents:
-                    type: string
-                  assent_7_12:
-                    type: string
-                  text_i_have_read_simplified:
-                    type: string
-                  person_attaining_assent:
-                    type: string
-                  text_assent_witness:
-                    type: string
-                  obtainer_name:
-                    type: string
-                  assent_13_17:
-                    type: string
-                  text_i_have_read_1:
-                    type: string
-                  consent_18:
-                    type: string
-
+                  participant_form:
+                    type: object
+                  consent_documents:
+                    type: array
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':
@@ -300,6 +253,11 @@ paths:
                   example: 'true'
                 obtainer_name:
                   $ref: '#/components/schemas/obtainer_name'
+                consent_type:
+                  $ref: '#/components/schemas/consent_type'
+                consent_id:
+                  $ref: '#/components/schemas/consent_id'
+                  
               required:
                 - age_range
                 - participant_name
@@ -2869,6 +2827,10 @@ components:
     obtainer_name:
       type: string
       example: "Professor X"
+    consent_id:
+      type: string
+    consent_type:
+      type: string
     nonhuman_source:
       type: object
       properties:
