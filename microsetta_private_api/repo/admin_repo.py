@@ -16,7 +16,6 @@ from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
-from microsetta_private_api.util.util import PerksType
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
@@ -1236,7 +1235,7 @@ class AdminRepo(BaseRepo):
             rows = cur.fetchall()
             return [dict(x) for x in rows]
 
-    def create_daklapack_order(self, daklapack_order, no_of_kits=1):
+    def create_daklapack_order(self, daklapack_order):
         order_id = daklapack_order.id
 
         order_args = (
@@ -1267,28 +1266,6 @@ class AdminRepo(BaseRepo):
                          ' (dak_order_id, project_id) values %s'
             psycopg2.extras.execute_values(cur, insert_sql, project_ids_tuples,
                                            template=None, page_size=100)
-
-            # Add daklapck order details with perk on another table
-            # for handling the one year plan
-            order_args_limited = (
-                order_id,
-                daklapack_order.submitter_acct.id,
-                daklapack_order.planned_send_date,
-                daklapack_order.creation_timestamp,
-                daklapack_order.last_polling_status,
-                no_of_kits
-            )
-
-            if self.get_perk_type(order_id) == PerksType.FFQ_ONE_YEAR:
-                cur.execute(
-                    "INSERT INTO barcodes.daklapack_order_by_perk_type "
-                    "(dak_order_id, submitter_acct_id, "
-                    "planned_send_date, creation_timestamp, "
-                    "status, no_of_kits_send) "
-                    "VALUES (%s, %s, %s, %s, %s, %s)",
-                    (order_args_limited)
-                )
-
         return order_id
 
     def get_unfinished_daklapack_order_ids(self):
