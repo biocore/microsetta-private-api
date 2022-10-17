@@ -580,7 +580,7 @@ class SurveyTemplateRepo(BaseRepo):
                         "ag_login_surveys.creation_time "
                         "FROM vioscreen_registry "
                         "INNER JOIN ag_login_surveys "
-                        "ON vioscreen_registry.vio_id = " 
+                        "ON vioscreen_registry.vio_id = "
                         "ag_login_surveys.survey_id "
                         "WHERE vioscreen_registry.account_id = %s "
                         "AND vioscreen_registry.source_id = %s "
