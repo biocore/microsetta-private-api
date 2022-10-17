@@ -576,14 +576,17 @@ class SurveyTemplateRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             # Find an active vioscreen survey for this account+source
             # (deleted surveys are not active)
-            cur.execute("""SELECT DISTINCT vioscreen_registry.vio_id, ag_login_surveys.creation_time 
-                           FROM vioscreen_registry
-                           INNER JOIN ag_login_surveys ON vioscreen_registry.vio_id = ag_login_surveys.survey_id
-                           WHERE vioscreen_registry.account_id = %s
-                           AND vioscreen_registry.source_id = %s
-                           AND deleted=false
-                           GROUP BY vioscreen_registry.vio_id, ag_login_surveys.creation_time
-                           ORDER BY ag_login_surveys.creation_time DESC """,
+            cur.execute("SELECT DISTINCT vioscreen_registry.vio_id, "
+                        "ag_login_surveys.creation_time "
+                        "FROM vioscreen_registry "
+                        "INNER JOIN ag_login_surveys "
+                        "ON vioscreen_registry.vio_id = ag_login_surveys.survey_id "
+                        "WHERE vioscreen_registry.account_id = %s "
+                        "AND vioscreen_registry.source_id = %s "
+                        "AND deleted=false "
+                        "GROUP BY vioscreen_registry.vio_id, "
+                        "ag_login_surveys.creation_time "
+                        "ORDER BY ag_login_surveys.creation_time DESC ",
                         (account_id, source_id))
             rows = cur.fetchall()
             if rows is None or len(rows) == 0:
