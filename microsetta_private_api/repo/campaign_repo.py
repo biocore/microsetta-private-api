@@ -1,6 +1,7 @@
 import psycopg2
 import json
 import datetime
+import uuid
 from dateutil.relativedelta import relativedelta
 
 from microsetta_private_api.client.fundrazr import FundrazrClient
@@ -472,7 +473,7 @@ class FundRazrCampaignRepo(BaseRepo):
                         (payment.contact_email,))
             res = cur.fetchone()
 
-            if not res:
+            if res:
                 account_id = res['id']
 
             else:
@@ -491,8 +492,7 @@ class FundRazrCampaignRepo(BaseRepo):
                 except Exception as e:
                     print(str(e))
 
-            self.add_activation_code(account_id, campaign_id, perk.id, code,
-                                     payment=payment)
+            self.add_activation_code(account_id, campaign_id, perk.id, code)
 
             subscription_add_sql = ("""INSERT INTO campaign.subscriptions
                        (submitter_acct_id, transaction_id, no_of_kits, status)
@@ -531,6 +531,17 @@ class FundRazrCampaignRepo(BaseRepo):
                                                       planned_send_date,
                                                       'PENDING'))
                         cur.execute(*subscription_shipment_sql)
+
+            cur.execute(*sql)
+
+    def add_activation_code(self, account_id, campaign_id, perk_id, code):
+        if not account_id:
+            account_id = str(uuid.uuid4())
+        with self._transaction.cursor() as cur:
+            sql = ("""INSERT INTO campaign.fundrazr_perk_activation_code
+                  (code, campaign_id, perk_id, account_id)
+                  VALUES (%s, %s, %s, %s)""",
+                   (code, campaign_id, perk_id, account_id))
 
             cur.execute(*sql)
 
@@ -735,7 +746,8 @@ class UserTransaction(BaseRepo):
             cr = FundRazrCampaignRepo(self._transaction)
             for item in items:
                 if not cr.item_exists(payment.campaign_id, item.id):
-                    cr.add_perk_to_campaign(payment.campaign_id, item, payment=payment)
+                    cr.add_perk_to_campaign(payment.campaign_id, item,
+                                            payment=payment)
 
         with self._transaction.cursor() as cur:
             cur.execute(

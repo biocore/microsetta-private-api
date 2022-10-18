@@ -56,15 +56,20 @@ ALTER TABLE IF EXISTS campaign.subscription_shipment
 
 CREATE TABLE IF NOT EXISTS campaign.fundrazr_perk_activation_code
 (
-    id character varying COLLATE pg_catalog."default" NOT NULL,
     code character varying COLLATE pg_catalog."default" NOT NULL,
-    interested_user_id uuid,
     perk_id character varying COLLATE pg_catalog."default",
-    CONSTRAINT fundrazr_perk_activation_code_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_fundrazr_perk_code FOREIGN KEY (interested_user_id)
-        REFERENCES campaign.interested_users (interested_user_id) MATCH SIMPLE
+    account_id uuid,
+    campaign_id character varying COLLATE pg_catalog."default",
+    CONSTRAINT account_id_fk FOREIGN KEY (account_id)
+        REFERENCES ag.account (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
+        ON DELETE NO ACTION
+        NOT VALID,
+    CONSTRAINT campaign_id_fk FOREIGN KEY (campaign_id)
+        REFERENCES campaign.transaction_source_to_campaign (remote_campaign_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        NOT VALID,
     CONSTRAINT fk_fundrazr_perk_id FOREIGN KEY (perk_id)
         REFERENCES campaign.fundrazr_perk (id) MATCH SIMPLE
         ON UPDATE NO ACTION
