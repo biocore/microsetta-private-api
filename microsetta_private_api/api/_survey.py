@@ -249,7 +249,9 @@ def read_survey_template(account_id, source_id, survey_template_id,
 
         if results:
             # get_survey_responses() returns a list of dicts whether
-            # latest_only is True or False. We only need the values.
+            # latest_only is True or False. We only want the values and the
+            # percentage of questions answered for the _latest_ response.
+            info.percentage_completed = results[0]['percentage_completed']
             results = results[0]['responses']
             results = {str(v['survey_question_id']):
                        v['response'] for v in results}
