@@ -468,7 +468,7 @@ class FundRazrCampaignRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT id
                               FROM ag.account
-                              WHERE email=%s)""",
+                              WHERE email=%s""",
                         (payment.contact_email,))
             res = cur.fetchone()
 
@@ -735,7 +735,7 @@ class UserTransaction(BaseRepo):
             cr = FundRazrCampaignRepo(self._transaction)
             for item in items:
                 if not cr.item_exists(payment.campaign_id, item.id):
-                    cr.add_perk_to_campaign(payment.campaign_id, item)
+                    cr.add_perk_to_campaign(payment.campaign_id, item, payment=payment)
 
         with self._transaction.cursor() as cur:
             cur.execute(

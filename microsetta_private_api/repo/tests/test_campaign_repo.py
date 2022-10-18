@@ -621,7 +621,7 @@ class FundrazrCampaignTests(unittest.TestCase):
         with Transaction() as t:
             c = FundRazrCampaignRepo(t)
             c.insert_campaign(self.campaign_without_item, [1, ])
-            c.add_perk_to_campaign('c2', self.perk)
+            c.add_perk_to_campaign('c2', self.perk, self.obj6)
             self.assertTrue(c.item_exists('c2', 'i2'))
 
 
