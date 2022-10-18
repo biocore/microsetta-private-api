@@ -275,8 +275,6 @@ paths:
                   $ref: '#/components/schemas/age_range'
                 participant_name:  # Field is named participant_name, but contents are used to fill source's name
                   $ref: '#/components/schemas/source_name'
-                participant_email:
-                  $ref: '#/components/schemas/participant_email'
                 parent_1_name:
                   $ref: '#/components/schemas/parent_1_name'
                 parent_2_name:
@@ -295,7 +293,6 @@ paths:
               required:
                 - age_range
                 - participant_name
-                - participant_email
       responses:
         '201':
           description: Successfully created new human source based on consent form
@@ -348,13 +345,11 @@ paths:
                   source_name: "Ophelia Doe"
                   source_type: human
                   consent:
-                    participant_email: "nunnery@example.com"
                     age_range: "18-plus"
                 - source_id: "df077cd7-f2c7-42e4-b8ed-9c7e9dd47ce5"
                   source_name: "P. Doe"
                   source_type: human
                   consent:
-                    participant_email: "pomegranate@example.com"
                     age_range: "0-6"
                     child_info:
                       parent_1_name: "Demeter Doe"

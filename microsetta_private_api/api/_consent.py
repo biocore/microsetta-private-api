@@ -52,7 +52,7 @@ def sign_consent_document(account_id, body, token_info):
         signature_id = str(uuid.uuid4())
 
         consent_sign = ConsentSignature.from_dict(body, signature_id)
-        consent_repo.sign_consent(consent_sign)
+        consent_repo.sign_consent(account_id, consent_sign)
         t.commit()
 
         response = jsonify({})

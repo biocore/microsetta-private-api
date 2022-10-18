@@ -63,12 +63,12 @@ def create_source(account_id, body, token_info):
 
     consent_body = {
                     "consent_id" : body["consent_id"],
-                    "source_id" : new_source.source_id,
+                    "source_id" : s.id,
                     "date_time" : datetime.now(),
-                    "parent_1_name" : body["parent_1_name"],
-                    "parent_2_name" : body["parent_2_name"],
-                    "deceased_parent" : body["deceased_parent"],
-                    "assent_obtainer" : body["assent_obtainer"]
+                    "parent_1_name" : body['parent_1_name'], #getattr(body, "parent_1_name", None),
+                    "parent_2_name" : body['parent_2_name'],
+                    "deceased_parent" : body['deceased_parent'],
+                    "assent_obtainer" : body['assent_obtainer']
                     }
     
     sign_consent_document(account_id, consent_body, token_info)
@@ -153,10 +153,32 @@ def create_human_source_from_consent(account_id, body, token_info):
     source = {
         'source_type': Source.SOURCE_TYPE_HUMAN,
         'source_name': body['participant_name'],
+        'consent_id' : body['consent_id'],
+        'consent_type' : body['consent_type'],
         'consent': {
             'age_range': body['age_range']
         }
     }
+
+    if "deceased_parent" in body:
+        source["deceased_parent"] = body["deceased_parent"]
+    else:
+        source["deceased_parent"] = None
+
+    if "parent_1_name" in body:
+        source.update({'parent_1_name': body['parent_1_name']})
+    else:
+        source.update({'parent_1_name': None})
+
+    if "parent_2_name" in body:
+        source.update({'parent_2_name': body['parent_2_name']})
+    else:
+        source.update({'parent_2_name': None})
+
+    if "assent_obtainer" in body:
+        source.update({'assent_obtainer': body['assent_obtainer']})
+    else:
+        source.update({'assent_obtainer': None})
 
     deceased_parent_key = 'deceased_parent'
     child_keys = {'parent_1_name', 'parent_2_name', deceased_parent_key,

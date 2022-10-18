@@ -26,10 +26,10 @@ def _consent_signature_to_row(s):
             s.consent_id,
             s.source_id,
             s.date_time,
-            getattr(s, 'parent_1_name', None),
-            getattr(s, 'parent_2_name', None),
-            getattr(s, 'deceased_parent', None),
-            getattr(s, 'assent_obtainer', None)
+            s.parent_1_name,
+            s.parent_2_name, 
+            s.deceased_parent, 
+            s.assent_obtainer 
     )
 
     return row
@@ -58,11 +58,11 @@ class ConsentRepo(BaseRepo):
 
     signature_read_cols = "signature_id, consent_id, " \
                 "source_id, date_time, parent_1_name, " \
-                "parent_2_name, deceased_parent, accsent_obtainer"
+                "parent_2_name, deceased_parent, assent_obtainer"
     
     signature_write_cols = "signature_id, consent_id, " \
                 "source_id, date_time, parent_1_name, " \
-                "parent_2_name, deceased_parent, accsent_obtainer"
+                "parent_2_name, deceased_parent, assent_obtainer"
 
     def get_all_consent_documents(self):
         consent_docs = []
@@ -90,14 +90,14 @@ class ConsentRepo(BaseRepo):
                 return _row_to_consent_document(r)
 
 
-    def sign_consent(self, consent_signature):
+    def sign_consent(self, account_id, consent_signature):
         with self._transaction.cursor() as cur:
             consentRepo = ConsentRepo(self._transaction)
-            if consentRepo.get_document(consent_signature.consent_id) is None:
+            if consentRepo.get_consent_document(consent_signature.consent_id) is None:
                 raise NotFound("Consent Document does not exist!")
 
             sourceRepo = SourceRepo(self._transaction)
-            if sourceRepo.get_source(consent_signature.source_id) is None:
+            if sourceRepo.get_source(account_id, consent_signature.source_id) is None:
                 raise NotFound("Source does not exist!")
             
             cur.execute("INSERT INTO consent_audit (" + ConsentRepo.signature_write_cols + ") "
