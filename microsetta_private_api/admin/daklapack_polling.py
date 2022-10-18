@@ -154,7 +154,6 @@ def process_order_articles(admin_repo, order_id, status, create_date):
                 # TODO Once the UI ready need uncomment the line 155, 156
                 # if admin_repo.get_perk_type(order_id) in\
                 #         [PerksType.FFQ_KIT, PerksType.FFQ_ONE_YEAR]:
-                # TODO
                 curr_output = _store_single_sent_kit(
                         admin_repo, order_proj_ids, curr_article_instance)
 

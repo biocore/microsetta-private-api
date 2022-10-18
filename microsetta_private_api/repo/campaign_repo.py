@@ -12,7 +12,6 @@ from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
 from microsetta_private_api.tasks import send_email
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.localization import EN_US
-from microsetta_private_api.util.util import PerksType
 
 
 class UnknownItem(psycopg2.errors.ForeignKeyViolation):
@@ -432,109 +431,108 @@ class FundRazrCampaignRepo(BaseRepo):
                     campaign_obj.campaign_id, item, payment=payment
                 )
 
+    def add_perk_to_campaign(self, campaign_id, perk, payment=None):
+        """Add a fundazr perk to a campaign
 
-def add_perk_to_campaign(self, campaign_id, perk, payment=None):
-    """Add a fundazr perk to a campaign
+        Parameters
+        ----------
+        campaign_id : str
+            A fundrazr campaign ID
+        perk : Item
+            An instance of a campaign Item
+        """
+        no_of_kits = 0
+        # TODO : Map these titles with the original titles
+        if perk.title == "FFQ":
+            perk_type = SERVER_CONFIG["Perks_type_ffq"]
 
-    Parameters
-    ----------
-    campaign_id : str
-        A fundrazr campaign ID
-    perk : Item
-        An instance of a campaign Item
-    """
-    no_of_kits = 0
-    # TODO : Map these titles with the original titles
-    if perk.title == "FFQ":
-        perk_type = SERVER_CONFIG["Perks_type_ffq"]
+        elif perk.title == "FFQ_SAMPLE_KIT":
+            perk_type = SERVER_CONFIG["Perks_type_ffq_kit"]
+            no_of_kits = 1
 
-    elif perk.title == "FFQ_SAMPLE_KIT":
-        perk_type = SERVER_CONFIG["Perks_type_ffq_kit"]
-        no_of_kits = 1
+        elif perk.title == "FFQ_ONE_YEAR":
 
-    elif perk.title == "FFQ_ONE_YEAR":
+            perk_type = SERVER_CONFIG["Perks_type_ffq_one_year"]
+            no_of_kits = 3
 
-        perk_type = SERVER_CONFIG["Perks_type_ffq_one_year"]
-        no_of_kits = 3
+        else:  # default case
+            perk_type = SERVER_CONFIG["Perks_type_ffq"]
 
-    else:  # default case
-        perk_type = PerksType.FFQ
+        sql = ("""INSERT INTO campaign.fundrazr_perk
+                     (id, remote_campaign_id, title, price, perk_type)
+                     VALUES (%s, %s, %s, %s, %s)""",
+               (perk.id, campaign_id, perk.title, perk.price, perk_type))
 
-    sql = ("""INSERT INTO campaign.fundrazr_perk
-                 (id, remote_campaign_id, title, price, perk_type)
-                 VALUES (%s, %s, %s, %s, %s)""",
-           (perk.id, campaign_id, perk.title, perk.price, perk_type))
+        # Add subscription details
+        code = ActivationCode.generate_code()
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT id
+                              FROM ag.account
+                              WHERE email=%s)""",
+                        (payment.contact_email,))
+            res = cur.fetchone()
 
-    # Add subscription details
-    code = ActivationCode.generate_code()
-    with self._transaction.cursor() as cur:
-        cur.execute("""SELECT id
-                          FROM ag.account
-                          WHERE email=%s)""",
-                    (payment.contact_email,))
-        res = cur.fetchone()
+            if not res:
+                account_id = res['id']
 
-        if not res:
-            account_id = res['id']
+            else:
+                account_id = ''
+                # send mail to the user, who is already not in the system yet
+                sign_up_url = SERVER_CONFIG["interface_endpoint"] +\
+                    "/create_account"
 
-        else:
-            account_id = ''
-            # send mail to the user, who is already not in the system yet
-            sign_up_url = SERVER_CONFIG["interface_endpoint"] +\
-                "/create_account"
+                try:
+                    send_email(payment.contact_email,
+                               "new_sigup_mail",
+                               {"payer_name": payment.payer_name,
+                                "activation_code": code,
+                                "sign_up_url": sign_up_url,
+                                }),
+                except Exception as e:
+                    print(str(e))
 
-            try:
-                send_email(payment.contact_email,
-                           "new_sigup_mail",
-                           {"payer_name": payment.payer_name,
-                            "activation_code": code,
-                            "sign_up_url": sign_up_url,
-                            }),
-            except Exception as e:
-                print(str(e))
+            self.add_activation_code(account_id, campaign_id, perk.id, code,
+                                     payment=payment)
 
-        self.add_activation_code(account_id, campaign_id, perk.id, code,
-                                 payment=payment)
+            subscription_add_sql = ("""INSERT INTO campaign.subscriptions
+                       (submitter_acct_id, transaction_id, no_of_kits, status)
+                       VALUES (%s, %s, %s, %s)""",
+                                    (account_id, payment.transaction_id,
+                                     no_of_kits, 'ACTIVE'))
 
-        subscription_add_sql = ("""INSERT INTO campaign.subscriptions
-                   (submitter_acct_id, transaction_id, no_of_kits, status)
-                   VALUES (%s, %s, %s, %s)""",
-                                (account_id, payment.transaction_id,
-                                 no_of_kits, 'ACTIVE'))
+            cur.execute(*subscription_add_sql)
 
-        cur.execute(*subscription_add_sql)
+            if perk_type == SERVER_CONFIG["Perks_type_ffq"]:
 
-        if perk_type == SERVER_CONFIG["Perks_type_ffq"]:
-
-            if no_of_kits == 1:
-                subscription_shipment_sql = ("""INSERT INTO
-                       campaign.subscription_shipment
-                       subscription_id, planned_send_date, status)
-                       VALUES (%s, %s, %s)""",
-                                             (cur.lastrowid,
-                                              datetime.date.today(),
-                                              'PENDING'))
-
-                cur.execute(*subscription_shipment_sql)
-
-        if perk_type == SERVER_CONFIG["Perks_type_ffq_one_year"]:
-            subscription_id = cur.lastrowid
-            if no_of_kits == 3:
-                for i in range(no_of_kits + 1):
-                    today = datetime.date.today()
-                    first_quarter = relativedelta(months=4 * i)
-                    planned_send_date = today + first_quarter
-
+                if no_of_kits == 1:
                     subscription_shipment_sql = ("""INSERT INTO
-                       campaign.subscription_shipment
-                       subscription_id, planned_send_date, status)
-                       VALUES (%s, %s, %s)""",
-                                                 (subscription_id,
-                                                  planned_send_date,
+                           campaign.subscription_shipment
+                           subscription_id, planned_send_date, status)
+                           VALUES (%s, %s, %s)""",
+                                                 (cur.lastrowid,
+                                                  datetime.date.today(),
                                                   'PENDING'))
+
                     cur.execute(*subscription_shipment_sql)
 
-        cur.execute(*sql)
+            if perk_type == SERVER_CONFIG["Perks_type_ffq_one_year"]:
+                subscription_id = cur.lastrowid
+                if no_of_kits == 3:
+                    for i in range(no_of_kits + 1):
+                        today = datetime.date.today()
+                        first_quarter = relativedelta(months=4 * i)
+                        planned_send_date = today + first_quarter
+
+                        subscription_shipment_sql = ("""INSERT INTO
+                           campaign.subscription_shipment
+                           subscription_id, planned_send_date, status)
+                           VALUES (%s, %s, %s)""",
+                                                     (subscription_id,
+                                                      planned_send_date,
+                                                      'PENDING'))
+                        cur.execute(*subscription_shipment_sql)
+
+            cur.execute(*sql)
 
 
 class UserTransaction(BaseRepo):
