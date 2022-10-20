@@ -463,6 +463,10 @@ class FundRazrCampaignRepo(BaseRepo):
                      (id, remote_campaign_id, title, price, perk_type)
                      VALUES (%s, %s, %s, %s, %s)""",
                (perk.id, campaign_id, perk.title, perk.price, perk_type))
+        if not payment:
+            contact_email = None
+        else:
+            contact_email = payment.contact_email
 
         # Add subscription details
         code = ActivationCode.generate_code()
@@ -470,21 +474,21 @@ class FundRazrCampaignRepo(BaseRepo):
             cur.execute("""SELECT id
                               FROM ag.account
                               WHERE email=%s""",
-                        (payment.contact_email,))
+                        (contact_email,))
             res = cur.fetchone()
 
             if res:
                 account_id = res['id']
 
             else:
-                account_id = ''
+                account_id = '00000000-0000-0000-0000-000000000000'
                 # send mail to the user, who is already not in the system yet
                 sign_up_url = SERVER_CONFIG["interface_endpoint"] +\
                     "/create_account"
 
                 try:
-                    send_email(payment.contact_email,
-                               "new_sigup_mail",
+                    send_email(contact_email,
+                               "new_signup_mail",
                                {"payer_name": payment.payer_name,
                                 "activation_code": code,
                                 "sign_up_url": sign_up_url,
