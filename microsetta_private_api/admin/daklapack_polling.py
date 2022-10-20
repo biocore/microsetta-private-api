@@ -125,7 +125,6 @@ def _process_single_order(curr_order_id, curr_status, curr_creation_date):
 
 def process_order_articles(admin_repo, order_id, status, create_date):
     per_article_outputs = []
-    curr_output = {}
     order_proj_ids = None
 
     if status == SENT_STATUS:
@@ -133,8 +132,7 @@ def process_order_articles(admin_repo, order_id, status, create_date):
         order_proj_ids = admin_repo.get_projects_for_dak_order(order_id)
 
     # call daklapack api to get detailed info on this single order
-    dak_orders_response = dc.get_daklapack_order_details(
-        order_id)
+    dak_orders_response = dc.get_daklapack_order_details(order_id)
 
     # loop over each kind of "daklapack article" in this order;
     # NOTE that although the daklapack api allows >1 type of article (i.e.,
@@ -149,28 +147,18 @@ def process_order_articles(admin_repo, order_id, status, create_date):
         # for each instance of this article kind in the order
         for curr_article_instance in article_instances:
             if status == SENT_STATUS:
-                # (Per Daniel 2021-07-01, each instance of a daklapack article
-                # represents exactly one kit, no more or less.)
-                # TODO Once the UI ready need uncomment the line 155, 156
-                # if admin_repo.get_perk_type(order_id) in\
-                #         [PerksType.FFQ_KIT, PerksType.FFQ_ONE_YEAR]:
-                curr_output = _store_single_sent_kit(
-                        admin_repo, order_proj_ids, curr_article_instance)
-
-                # able to assume there is only one kit uuid bc
-                # _store_single_sent_kit stores a single kit, by definition
-                if curr_output:
-                    kit_uuid = curr_output["created"][0]["kit_uuid"]
-                    admin_repo.set_kit_uuids_for_dak_order(order_id,
-                                                           [kit_uuid])
+                curr_output = _store_sent_kits_for_article(
+                    admin_repo, order_proj_ids, order_id,
+                    curr_article_instance)
             elif status == ERROR_STATUS:
-                curr_output = _gather_article_error_info(
+                single_output = _gather_article_error_info(
                     order_id, create_date, curr_article_instance)
+                curr_output = [single_output]
             else:
                 raise ValueError(f"Order {order_id} has an unexpected status: "
                                  f"{status}")
 
-            per_article_outputs.append(curr_output)
+            per_article_outputs.extend(curr_output)
         # next article instance
     # next article type
 
