@@ -492,7 +492,7 @@ class FundRazrCampaignRepo(BaseRepo):
                 except Exception as e:
                     print(str(e))
 
-            self.add_activation_code(account_id, campaign_id, perk.id, code)
+            # self.add_activation_code(account_id, campaign_id, perk.id, code)
 
             subscription_add_sql = ("""INSERT INTO campaign.subscriptions
                        (submitter_acct_id, transaction_id, no_of_kits, status)
