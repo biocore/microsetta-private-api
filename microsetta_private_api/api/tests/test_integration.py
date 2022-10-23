@@ -1010,8 +1010,6 @@ class IntegrationTests(TestCase):
         SOURCE_DATA.update({"consent_type": "Adult Consent - Data"})
         SOURCE_DATA.update({"consent_id": "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"})
 
-        print("truing to create new source")
-
         resp = self.client.post(
             '/api/accounts/%s/consent?language_tag=en_US' %
             (ACCT_ID,),
@@ -1020,21 +1018,15 @@ class IntegrationTests(TestCase):
             headers=MOCK_HEADERS
         )
         new_source = json.loads(resp.data)
-        print(new_source)
 
         consent_status= self.client.get(
             '/api/accounts/%s/source/%s/consent/%s' %
             (ACCT_ID, new_source["source_id"], "Data"),
             headers=MOCK_HEADERS)
 
-        print(consent_status)
         consent_res = json.loads(consent_status.data)
         
-        print("check if data ocnsent required")
-        
         self.assertTrue(consent_res["result"])
-
-        print("signing data consent")
 
         response = self.client.post(
             '/api/accounts/%s/source/%s/consent/%s' %
@@ -1042,10 +1034,10 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(SOURCE_DATA),
             headers=MOCK_HEADERS)
-        
-        print("data consent signed")
+    
 
         final_res = json.loads((response.data))
+
         
         self.assertEquals(201, response.status_code)
 
