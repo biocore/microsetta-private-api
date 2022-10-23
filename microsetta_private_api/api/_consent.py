@@ -49,21 +49,21 @@ def check_consent_signature(account_id, source_id, consent_type, token_info):
     return jsonify({"result": res}), 200
 
 
-def sign_consent_document(account_id, source_id, consent_type, body, token_info):
+def sign_consent_document(account_id, source_id, consent, body, token_info):
 
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         consent_repo = ConsentRepo(t)
-        signature_id = str(uuid.uuid4())
+        sign_id = str(uuid.uuid4())
 
-        consent_sign = ConsentSignature.from_dict(body, source_id, signature_id)
+        consent_sign = ConsentSignature.from_dict(body, source_id, sign_id)
         consent_repo.sign_consent(account_id, consent_sign)
         t.commit()
 
         response = jsonify({"result": True})
         response.status_code = 201
         response.headers['Location'] = '/api/accounts/%s' % \
-                                   (account_id)
+            (account_id)
 
         return response
