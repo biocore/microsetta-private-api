@@ -49,7 +49,7 @@ def check_consent_signature(account_id, source_id, consent_type, token_info):
     return jsonify({"result": res}), 200
 
 
-def sign_consent_document(account_id, source_id, consent, body, token_info):
+def sign_consent_document(account_id, source_id, consent_type, body, token_info):
 
     _validate_account_access(token_info, account_id)
 
