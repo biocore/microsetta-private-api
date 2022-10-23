@@ -318,6 +318,94 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/accounts/{account_id}/source/{source_id}/consent/{consent_type}':
+    get:
+      operationId: microsetta_private_api.api.check_consent_signature
+      tags:
+        - Consent
+      summary: Validate consent signature for source
+      description: Validate consent signature and respond if re-consent required
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#components/parameters/consent_type'
+      responses:
+        '200':
+          description: Consent Signature Status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+    post:
+      operationId: microsetta_private_api.api.sign_consent_document
+      tags:
+        - Sign Consent
+      summary: Used to sign all types of consent
+      description: Use to submit new consent
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#components/parameters/consent_type'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:  # each is a form field name
+                age_range:
+                  $ref: '#/components/schemas/age_range'
+                participant_name:  # Field is named participant_name, but contents are used to fill source's name
+                  $ref: '#/components/schemas/source_name'
+                parent_1_name:
+                  $ref: '#/components/schemas/parent_1_name'
+                parent_2_name:
+                  $ref: '#/components/schemas/parent_2_name'
+                deceased_parent:
+                  type: string
+                  enum: ['true', 'false']
+                  example: 'true'
+                obtainer_name:
+                  $ref: '#/components/schemas/obtainer_name'
+                consent_type:
+                  $ref: '#/components/schemas/consent_type'
+                consent_id:
+                  $ref: '#/components/schemas/consent_id'
+              required:
+                - age_range
+                - participant_name
+      responses:
+        '201':
+          description: Successfully signed a consent document
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
+
+
   '/accounts/{account_id}/sources':
     get:
       operationId: microsetta_private_api.api.read_sources
@@ -2559,6 +2647,13 @@ components:
       description: Food Components Code
       schema:
         $ref: '#/components/schemas/fc_code'
+
+    consent_type:
+      name: consent_type
+      in: path
+      description: Type of consent
+      schema:
+        $ref: '#/components/schemas/consent_type'
 
     # query parameters
     activation_code:

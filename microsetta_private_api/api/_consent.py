@@ -25,6 +25,7 @@ def render_consent_doc(account_id, language_tag, token_info):
 
     return jsonify(consent_form), 200
 
+
 def get_consent_doc(account_id, consent_id, token_info):
     _validate_account_access(token_info, account_id)
 
@@ -35,27 +36,32 @@ def get_consent_doc(account_id, consent_id, token_info):
 
     return jsonify(data), 200
 
+
 def check_consent_signature(account_id, source_id, consent_type, token_info):
     _validate_account_access(token_info, account_id)
 
+    res = False
+
     with Transaction() as t:
         consent_repo = ConsentRepo(t)
-        res = consent_repo.is_consent_signed(source_id, consent_type)
+        res = consent_repo.is_consent_required(source_id, consent_type)
 
-        return jsonify({"result" : res}), 200
-    
-def sign_consent_document(account_id, body, token_info):
+    return jsonify({"result":res}), 200
+
+
+def sign_consent_document(account_id, source_id, consent_type, body, token_info):
+
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         consent_repo = ConsentRepo(t)
         signature_id = str(uuid.uuid4())
 
-        consent_sign = ConsentSignature.from_dict(body, signature_id)
+        consent_sign = ConsentSignature.from_dict(body, source_id, signature_id)
         consent_repo.sign_consent(account_id, consent_sign)
         t.commit()
 
-        response = jsonify({})
+        response = jsonify({"result": True})
         response.status_code = 201
         response.headers['Location'] = '/api/accounts/%s' % \
                                    (account_id)

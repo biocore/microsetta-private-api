@@ -5,6 +5,8 @@ from ._account import (
 )
 from ._consent import (
     render_consent_doc,
+    check_consent_signature,
+    sign_consent_document
 )
 from ._source import (
     create_source, read_source, update_source, delete_source,
@@ -74,6 +76,8 @@ __all__ = [
     'read_sources',
     'check_duplicate_source_name',
     'create_human_source_from_consent',
+    'check_consent_signature',
+    'sign_consent_document',
     'read_survey_template',
     'read_survey_templates',
     'read_answered_survey',

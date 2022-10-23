@@ -186,6 +186,11 @@ FAKE_SAMPLES = [S1, S2, S3]
 FAKE_KIT = "12345678-aaaa-aaaa-aaaa-bbbbccccccce"
 FAKE_KIT_PW = "MockItToMe"
 
+DATA_CONSENT = "Data"
+BIOSPECIMEN_CONSENT = "Biospecimen"
+ADULT_DATA_CONSENT = "Adult Consent - Data"
+ADULT_BIOSPECIMEN_CONSENT = "Adult Consent - Biospecimen"
+
 
 def make_headers(fake_token):
     return {"Authorization": "Bearer %s" % fake_token}
@@ -1377,6 +1382,64 @@ class SourceTests(ApiTests):
         expected_val[SOURCE_ID_KEY] = real_src_id_from_body
         self.assertEqual(expected_val, response_obj)
     # endregion source update/put
+
+pytest.mark.usefixtures("client")
+class ConsentTests(ApiTests):
+    def sign_data_consent(self):
+        """Checks if data consent required for a source and sings the consent"""
+
+        #Create dummy source
+        dummy_acct_id, dummy_source_resp = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        error, consent_status, _= self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            headers=self.dummy_auth)
+        
+        self.assertTrue(consent_status["result"])
+
+        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        consent_data.update("consent_type", ADULT_DATA_CONSENT)
+        consent_data.update("consent_id", "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233")
+
+        error, response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+        
+        self.assertEquals(201, response.status_code)
+
+    def sign_biospecimen_consent(self):
+        """Checks if biospecimen consent required for a source and sings the consent"""
+
+        #Create dummy source
+        dummy_acct_id, dummy_source_resp = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        error, consent_status, _= self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], BIOSPECIMEN_CONSENT),
+            headers=self.dummy_auth)
+        
+        self.assertTrue(consent_status["result"])
+
+        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        consent_data.update("consent_type", ADULT_BIOSPECIMEN_CONSENT)
+        consent_data.update("consent_id", "6b1595a5-4003-4d0f-aa91-56947eaf2901")
+
+        error, response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], BIOSPECIMEN_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+        
+        self.assertEquals(201, response.status_code)
 
 
 @pytest.mark.usefixtures("client")
