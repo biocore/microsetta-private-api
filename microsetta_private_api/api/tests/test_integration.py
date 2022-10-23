@@ -1000,12 +1000,12 @@ class IntegrationTests(TestCase):
     def test_sign_consent(self):
 
         SOURCE_DATA = {"age_range": "18-plus",
-                        "participant_name": "Joe Schmoe",
-                        "parent_1_name": "",
-                        "parent_2_name": "",
-                        "deceased_parent": 'false',
-                        "obtainer_name": ""
-                    }
+                       "participant_name": "Joe Schmoe",
+                       "parent_1_name": "",
+                       "parent_2_name": "",
+                       "deceased_parent": 'false',
+                       "obtainer_name": ""
+                      }
 
         consent_doc_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
         SOURCE_DATA.update({"consent_type": "Adult Consent - Data"})
@@ -1036,7 +1036,7 @@ class IntegrationTests(TestCase):
             data=json.dumps(SOURCE_DATA),
             headers=MOCK_HEADERS)
 
-        self.assertEquals(201, response.status_code)
+        self.assertEqual(201, response.status_code)
 
     def test_delete_source(self):
         """
