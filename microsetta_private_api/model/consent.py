@@ -32,7 +32,7 @@ class ConsentDocument:
                     "consent_type" : self.consent_type,
                     "locale" : self.locale,
                     "document" : self.consent_content
-                 }
+                }
 
         return result
 

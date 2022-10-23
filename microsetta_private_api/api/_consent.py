@@ -46,7 +46,7 @@ def check_consent_signature(account_id, source_id, consent_type, token_info):
         consent_repo = ConsentRepo(t)
         res = consent_repo.is_consent_required(source_id, consent_type)
 
-    return jsonify({"result":res}), 200
+    return jsonify({"result": res}), 200
 
 
 def sign_consent_document(account_id, source_id, consent_type, body, token_info):
@@ -67,16 +67,3 @@ def sign_consent_document(account_id, source_id, consent_type, body, token_info)
                                    (account_id)
 
         return response
-
-
-# def render_consent_doc(account_id, language_tag, token_info):
-#     _validate_account_access(token_info, account_id)
-
-#     # NB: Do NOT need to explicitly pass account_id into template for
-#     # integration into form submission URL because form submit URL builds on
-#     # the base of the URL that called it (which includes account_id)
-
-#     localization_info = localization.LANG_SUPPORT[language_tag]
-#     content = localization_info[localization.NEW_PARTICIPANT_KEY]
-
-#     return jsonify(content), 200

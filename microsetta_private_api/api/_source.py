@@ -1,6 +1,5 @@
 import uuid
-from datetime import date, datetime
-
+from datetime import date
 from flask import jsonify
 
 from microsetta_private_api.api._account import _validate_account_access
@@ -10,8 +9,6 @@ from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
-from microsetta_private_api.api._consent import sign_consent_document
-from microsetta_private_api.repo.consent_repo import ConsentRepo
 
 
 def read_sources(account_id, token_info, source_type=None):
@@ -128,7 +125,6 @@ def delete_source(account_id, source_id, token_info):
 def create_human_source_from_consent(account_id, body, token_info):
     _validate_account_access(token_info, account_id)
 
-    
     # Must convert consent form body into object processable by create_source.
 
     # Not adding any error handling here because if 'participant_name' isn't

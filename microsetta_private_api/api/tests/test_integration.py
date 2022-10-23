@@ -1000,12 +1000,12 @@ class IntegrationTests(TestCase):
     def test_sign_consent(self):
 
         SOURCE_DATA =  {"age_range": "18-plus",
-                 "participant_name": "Joe Schmoe",
-                 "parent_1_name": "",
-                 "parent_2_name": "",
-                 "deceased_parent": 'false',
-                 "obtainer_name": ""
-                 }
+                "participant_name": "Joe Schmoe",
+                "parent_1_name": "",
+                "parent_2_name": "",
+                "deceased_parent": 'false',
+                "obtainer_name": ""
+                }
 
         SOURCE_DATA.update({"consent_type": "Adult Consent - Data"})
         SOURCE_DATA.update({"consent_id": "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"})
@@ -1019,13 +1019,13 @@ class IntegrationTests(TestCase):
         )
         new_source = json.loads(resp.data)
 
-        consent_status= self.client.get(
+        consent_status = self.client.get(
             '/api/accounts/%s/source/%s/consent/%s' %
             (ACCT_ID, new_source["source_id"], "Data"),
             headers=MOCK_HEADERS)
 
         consent_res = json.loads(consent_status.data)
-        
+
         self.assertTrue(consent_res["result"])
 
         response = self.client.post(
@@ -1034,10 +1034,6 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(SOURCE_DATA),
             headers=MOCK_HEADERS)
-    
-
-        final_res = json.loads((response.data))
-
         
         self.assertEquals(201, response.status_code)
 
