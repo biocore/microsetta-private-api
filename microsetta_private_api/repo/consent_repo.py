@@ -103,7 +103,8 @@ class ConsentRepo(BaseRepo):
             cur.execute("SELECT " + ConsentRepo.signature_read_cols + " FROM "
                         "ag.consent_audit INNER JOIN "
                         "ag.consent_documents ON "
-                        "consent_audit.consent_id = consent_documents.consent_id "
+                        "consent_audit.consent_id = "
+                        "consent_documents.consent_id "
                         "WHERE consent_audit.source_id = %s and "
                         "consent_documents.consent_type "
                         "LIKE %s ORDER BY sign_date DESC",

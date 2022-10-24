@@ -77,7 +77,7 @@ __all__ = [
     'check_duplicate_source_name',
     'create_human_source_from_consent',
     'check_consent_signature',
-    'sign_consent_document',
+    'sign_consent_doc',
     'read_survey_template',
     'read_survey_templates',
     'read_answered_survey',
