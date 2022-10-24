@@ -6,7 +6,7 @@ from ._account import (
 from ._consent import (
     render_consent_doc,
     check_consent_signature,
-    sign_consent_document
+    sign_consent_doc
 )
 from ._source import (
     create_source, read_source, update_source, delete_source,

@@ -1387,7 +1387,6 @@ class SourceTests(ApiTests):
 @pytest.mark.usefixtures("client")
 class ConsentTests(ApiTests):
 
-
     def sign_data_consent(self):
         """Checks data consent for a source and sings the consent"""
 

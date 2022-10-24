@@ -85,4 +85,4 @@ class ConsentSignature:
     def to_api(self):
         return {'signature_id': self.signature_id,
                 'consent_id': self.consent_id
-               }
+                }

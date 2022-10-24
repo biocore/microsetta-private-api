@@ -345,7 +345,7 @@ paths:
         '403':
           $ref: '#/components/responses/403Forbidden'
     post:
-      operationId: microsetta_private_api.api.sign_consent_document
+      operationId: microsetta_private_api.api.sign_consent_doc
       tags:
         - Sign Consent
       summary: Used to sign all types of consent
@@ -374,7 +374,7 @@ paths:
                   example: 'true'
                 obtainer_name:
                   $ref: '#/components/schemas/obtainer_name'
-                consent_type:
+                type:
                   $ref: '#/components/schemas/consent_type'
                 consent_id:
                   $ref: '#/components/schemas/consent_id'
