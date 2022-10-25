@@ -1001,10 +1001,10 @@ class IntegrationTests(TestCase):
 
         SOURCE_DATA = {"age_range": "18-plus",
                        "participant_name": "Joe Schmoe",
-                       "parent_1_name": "",
-                       "parent_2_name": "",
+                       "parent_1_name": "demo",
+                       "parent_2_name": "demo",
                        "deceased_parent": 'false',
-                       "obtainer_name": ""
+                       "obtainer_name": "demo"
                        }
 
         consent_doc_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
