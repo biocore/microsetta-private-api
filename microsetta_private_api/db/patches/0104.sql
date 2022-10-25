@@ -22,7 +22,7 @@ CREATE TABLE ag.consent_audit (
     FOREIGN KEY (consent_id) REFERENCES ag.consent_documents (consent_id)
 );
 
-
+INSERT INTO ag.account VALUES ('ecabc635-3df8-49ee-ae19-db3db03c4500', 'demo@demo.com', 'admin', '', '', 'demo', 'demo', 'demo', 'demo', 'IN', '46227', 'US', 65.01431, -12.88033, 0, NOW(), NOW(), 'bg_sutbg', 'en_US', 'false', 'false');
 INSERT INTO ag.consent_documents VALUES ('b8245ca9-e5ba-4f8f-a84a-887c0d6a2233', 'Adult Consent - Data', 'en_US',NOW(), 'This is a sample data consent for adults!', 1, 'ecabc635-3df8-49ee-ae19-db3db03c4500');
 INSERT INTO ag.consent_documents VALUES ('6b1595a5-4003-4d0f-aa91-56947eaf2901', 'Adult Consent - Biospecimen', 'en_US', NOW(), 'This is a sample biospecimen consent for adults!', 1, 'ecabc635-3df8-49ee-ae19-db3db03c4500');
 INSERT INTO ag.consent_documents VALUES ('d3e9fa0c-c2a6-4d5c-a926-2eaebbfb055e', 'Parental Consent - Data', 'en_US', NOW(), 'This is a sample data consent for parents!', 1, 'ecabc635-3df8-49ee-ae19-db3db03c4500');
