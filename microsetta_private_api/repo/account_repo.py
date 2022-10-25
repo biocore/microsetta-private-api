@@ -330,3 +330,12 @@ class AccountRepo(BaseRepo):
         account.address.post_code = 'scrubbed'
 
         return self.update_account(account) == 1
+
+    def add_accnt_subscription(self, account_id, email):
+        with self._transaction.cursor() as cur:
+            cur = cur.cursor()
+            cur.execute("""UPDATE campaign.fundrazr_perk_activation_code
+                           SET account_id=%s,
+                           WHERE email=%s""",
+                        (account_id, email))
+            cur.commit()

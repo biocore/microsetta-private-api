@@ -67,7 +67,8 @@ def register_account(body, token_info):
         acct_repo.create_account(account_obj)
         new_acct = acct_repo.get_account(new_acct_id)
         t.commit()
-
+    # Link the account in campaign subscription
+    acct_repo.add_accnt_subscription(new_acct_id, body['email'])
     response = jsonify(new_acct.to_api())
     response.status_code = 201
     response.headers['Location'] = '/api/accounts/%s' % new_acct_id

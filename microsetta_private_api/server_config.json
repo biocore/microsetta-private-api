@@ -42,7 +42,7 @@
   "fundrazr_organization": "fundrazr_org_placeholder",
   "polyphenol_ffq_url": "pffq_placeholder",
   "spain_ffq_url": "sffq_placeholder",
-  "Perks_type_ffq":"FFQ",
-  "Perks_type_ffq_kit":"FFQ_KIT",
-  "Perks_type_ffq_one_year":"FFQ_ONE_YEAR"
+  "Perks_type_ffq":"ffq",
+  "Perks_type_ffq_kit":"one kit",
+  "Perks_type_ffq_one_year":"kit subscription"
 }
