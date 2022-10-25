@@ -1006,7 +1006,7 @@ class IntegrationTests(TestCase):
                        "deceased_parent": 'false',
                        "obtainer_name": "demo"
                        }
-
+        print("===ENTERED SIGN CONSENT TEST===")
         consent_doc_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
         SOURCE_DATA.update({"consent_type": "Adult Consent - Data"})
         SOURCE_DATA.update({"consent_id": consent_doc_id})
