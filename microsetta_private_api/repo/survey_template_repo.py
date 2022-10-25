@@ -609,7 +609,7 @@ class SurveyTemplateRepo(BaseRepo):
                 return None
             else:
                 return rows
-    
+
     def fetch_user_basic_physiology(self, account_id, source_id):
         """Given an account and source ID, obtain basic physiology properties
 
