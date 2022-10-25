@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS campaign.fundrazr_perk_activation_code
     code character varying COLLATE pg_catalog."default" NOT NULL,
     perk_id character varying COLLATE pg_catalog."default",
     account_id uuid NOT NULL,
-    campaign_id character varying COLLATE pg_catalog."default",
+    campaign_id uuid NOT NULL,
     email character varying COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT fundrazr_perk_activation_code_pkey PRIMARY KEY (id),
     CONSTRAINT account_id_fk FOREIGN KEY (account_id)
