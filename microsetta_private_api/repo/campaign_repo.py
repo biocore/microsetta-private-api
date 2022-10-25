@@ -421,7 +421,7 @@ class FundRazrCampaignRepo(BaseRepo):
         if not payment:
             contact_email = None
         else:
-            contact_email = payment.contact_email
+            contact_email = payment.payer_email
 
         # Add subscription details
         code = ActivationCode.generate_code()
@@ -502,7 +502,7 @@ class FundRazrCampaignRepo(BaseRepo):
                       (code, campaign_id, perk_id, account_id, email)
                       VALUES (%s, %s, %s, %s, %s)""",
                        (code, campaign_id, perk_id, account_id,
-                        payment.contact_email))
+                        payment.payer_email))
 
                 cur.execute(*sql)
 
@@ -555,12 +555,12 @@ class UserTransaction(BaseRepo):
                 + "/update_address?uid="
                 + str(interested_user_id)
                 + "&email="
-                + payment.contact_email
+                + payment.payer_email
             )
             try:
                 # TODO - will need to add actual language flag to the email
                 # Fundrazr doesn't provide a language flag, defer for now
-                send_email(payment.contact_email,
+                send_email(payment.payer_email,
                            "address_invalid",
                            {"contact_name": cn,
                             "resolution_url": resolution_url},
@@ -605,13 +605,13 @@ class UserTransaction(BaseRepo):
 
         if shipping is None:
             data = (internal_campaign_id, payment.payer_first_name,
-                    payment.payer_last_name, payment.contact_email,
+                    payment.payer_last_name, payment.payer_email,
                     payment.phone_number)
             fields = ('campaign_id', 'first_name', 'last_name', 'email',
                       'phone')
         else:
             data = (internal_campaign_id, shipping.first_name,
-                    shipping.last_name, payment.contact_email,
+                    shipping.last_name, payment.payer_email,
                     payment.phone_number, address.street, address.street2,
                     address.city, address.country_code, address.state,
                     address.post_code)
