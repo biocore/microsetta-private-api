@@ -996,9 +996,9 @@ class IntegrationTests(TestCase):
         self.client.delete(loc + "?language_tag=en_US",
                            headers=MOCK_HEADERS
                            )
-
+    
     def test_sign_consent(self):
-
+ 
         SOURCE_DATA = {"age_range": "18-plus",
                        "participant_name": "Joe Schmoe",
                        "parent_1_name": "",
@@ -1035,6 +1035,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(SOURCE_DATA),
             headers=MOCK_HEADERS)
+        print(response)
 
         self.assertEqual(201, response.status_code)
 

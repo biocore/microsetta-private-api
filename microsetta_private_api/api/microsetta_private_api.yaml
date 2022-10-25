@@ -374,7 +374,7 @@ paths:
                   example: 'true'
                 obtainer_name:
                   $ref: '#/components/schemas/obtainer_name'
-                type:
+                consent_type:
                   $ref: '#/components/schemas/consent_type'
                 consent_id:
                   $ref: '#/components/schemas/consent_id'
