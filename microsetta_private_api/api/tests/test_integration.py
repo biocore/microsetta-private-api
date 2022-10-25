@@ -996,9 +996,9 @@ class IntegrationTests(TestCase):
         self.client.delete(loc + "?language_tag=en_US",
                            headers=MOCK_HEADERS
                            )
-    
+
     def test_sign_consent(self):
- 
+
         SOURCE_DATA = {"age_range": "18-plus",
                        "participant_name": "Joe Schmoe",
                        "parent_1_name": "",
