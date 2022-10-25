@@ -52,13 +52,15 @@ def check_consent_signature(account_id, source_id, consent_type, token_info):
 def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
 
     _validate_account_access(token_info, account_id)
-
+    print("FOUND CONSENT DOC")
     with Transaction() as t:
         consent_repo = ConsentRepo(t)
         sign_id = str(uuid.uuid4())
-
+        print("UUID GENERATED")
         consent_sign = ConsentSignature.from_dict(body, source_id, sign_id)
+        print("EXTRACTED CONSENT SIGNATURE FROM BODY")
         consent_repo.sign_consent(account_id, consent_sign)
+        print("SIGNED CONSENT DOCUMENT")
         t.commit()
 
         response = jsonify({"result": True})
