@@ -595,6 +595,21 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return rows[0][0]
 
+    def get_vioscreens(self, account_id, source_id):
+        """Obtain a vioscreen ID if it exists"""
+        with self._transaction.cursor() as cur:
+            # Find an active vioscreen survey for this account+source
+            # (deleted surveys are not active)
+            cur.execute("SELECT * FROM vioscreen_registry WHERE "
+                        "account_id=%s AND "
+                        "source_id=%s",
+                        (account_id, source_id))
+            rows = cur.fetchall()
+            if rows is None or len(rows) == 0:
+                return None
+            else:
+                return rows
+    
     def fetch_user_basic_physiology(self, account_id, source_id):
         """Given an account and source ID, obtain basic physiology properties
 
