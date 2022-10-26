@@ -70,6 +70,7 @@ CONSENT_DOC = {"consent_type": "Adult Consent - Data",
                "reconsent": 1
                }
 
+
 def mock_verify_func(token):
     if token == "boogabooga":
         return {
@@ -1034,12 +1035,11 @@ class IntegrationTests(TestCase):
         with Transaction() as t:
             acct_repo = AccountRepo(t)
 
-            # Set up test account with sources
             acc = Account.from_dict(DUMMY_ACCT, 
                                     "https://MOCKTEST.com",
                                     "DemoSub"
                                     )
-            print("account: "+ str(acc.to_api()))
+            print("account: " + str(acc.to_api()))
             acct_repo.create_account(acc)
 
         with Transaction() as t:
@@ -1049,7 +1049,7 @@ class IntegrationTests(TestCase):
                                                 CONSENT_DOC_ID
                                                 )
 
-            print("consent doc: "+ str(consent.to_api()))
+            print("consent doc: " + str(consent.to_api()))
             consent_repo.create_doc(consent)
 
         resp = self.client.post(

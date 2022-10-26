@@ -74,7 +74,7 @@ class ConsentRepo(BaseRepo):
 
     def create_doc(self, consent):
         with self._transaction.dict_cursor() as cur:
-            cur.execute("INSERT INTO ag.consent_documents (" + 
+            cur.execute("INSERT INTO ag.consent_documents (" +
                         ConsentRepo.doc_write_cols + ") "
                         "VALUES( %s, %s, %s, %s, %s, "
                         "%s, %s) ",
