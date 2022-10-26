@@ -577,7 +577,7 @@ class SurveyTemplateRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             # Find an active vioscreen survey for this account+source
             # (deleted surveys are not active)
-            if timestamp is not None :
+            if timestamp is not None:
                 cur.execute("SELECT DISTINCT vioscreen_registry.vio_id, "
                             "ag_login_surveys.creation_time "
                             "FROM vioscreen_registry "
