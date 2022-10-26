@@ -571,44 +571,45 @@ class SurveyTemplateRepo(BaseRepo):
                 vioscreen_id = existing
         return vioscreen_id
 
-    def get_vioscreen_id_if_exists(self, account_id, source_id):
+    def get_vioscreen_id_if_exists(self, account_id, source_id, timestamp=None):
         """Obtain a vioscreen ID if it exists"""
         with self._transaction.cursor() as cur:
             # Find an active vioscreen survey for this account+source
             # (deleted surveys are not active)
-            cur.execute("SELECT DISTINCT vioscreen_registry.vio_id, "
-                        "ag_login_surveys.creation_time "
-                        "FROM vioscreen_registry "
-                        "INNER JOIN ag_login_surveys "
-                        "ON vioscreen_registry.vio_id = "
-                        "ag_login_surveys.survey_id "
-                        "WHERE vioscreen_registry.account_id = %s "
-                        "AND vioscreen_registry.source_id = %s "
-                        "AND deleted=false "
-                        "GROUP BY vioscreen_registry.vio_id, "
-                        "ag_login_surveys.creation_time "
-                        "ORDER BY ag_login_surveys.creation_time DESC ",
-                        (account_id, source_id))
+            if(timestamp!=None):
+                cur.execute("SELECT DISTINCT vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "FROM vioscreen_registry "
+                            "INNER JOIN ag_login_surveys "
+                            "ON vioscreen_registry.vio_id = "
+                            "ag_login_surveys.survey_id "
+                            "WHERE vioscreen_registry.account_id = %s "
+                            "AND vioscreen_registry.source_id = %s "
+                            "AND deleted=false "
+                            "AND ag_login_surveys.creation_time >= %s"
+                            "GROUP BY vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "ORDER BY ag_login_surveys.creation_time DESC ",
+                            (account_id, source_id, timestamp))
+            else:
+                cur.execute("SELECT DISTINCT vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "FROM vioscreen_registry "
+                            "INNER JOIN ag_login_surveys "
+                            "ON vioscreen_registry.vio_id = "
+                            "ag_login_surveys.survey_id "
+                            "WHERE vioscreen_registry.account_id = %s "
+                            "AND vioscreen_registry.source_id = %s "
+                            "AND deleted=false "
+                            "GROUP BY vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "ORDER BY ag_login_surveys.creation_time DESC ",
+                            (account_id, source_id))
             rows = cur.fetchall()
             if rows is None or len(rows) == 0:
                 return None
             else:
                 return rows[0][0]
-
-    def get_vioscreens(self, account_id, source_id):
-        """Obtain a vioscreen ID if it exists"""
-        with self._transaction.cursor() as cur:
-            # Find an active vioscreen survey for this account+source
-            # (deleted surveys are not active)
-            cur.execute("SELECT * FROM vioscreen_registry WHERE "
-                        "account_id=%s AND "
-                        "source_id=%s",
-                        (account_id, source_id))
-            rows = cur.fetchall()
-            if rows is None or len(rows) == 0:
-                return None
-            else:
-                return rows
 
     def fetch_user_basic_physiology(self, account_id, source_id):
         """Given an account and source ID, obtain basic physiology properties
