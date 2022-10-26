@@ -5,7 +5,8 @@ import pytest
 import werkzeug
 from werkzeug.exceptions import Unauthorized
 from urllib.parse import urlparse, parse_qs
-
+from microsetta_private_api.repo.consent_repo import ConsentRepo
+from microsetta_private_api.model.consent import ConsentDocument
 import microsetta_private_api.server
 from microsetta_private_api.localization import LANG_SUPPORT, \
     NEW_PARTICIPANT_KEY, EN_US, EN_GB
@@ -48,6 +49,26 @@ MOCK_HEADERS = {"Authorization": "Bearer boogabooga"}
 MOCK_HEADERS_2 = {"Authorization": "Bearer woogawooga"}
 DUMMY_CONSENT_POST_URL = "http://test.com"
 
+DUMMY_ACCT = {
+              "id": "ecabc635-3df8-49ee-ae19-db3db03c1111",
+              "email": "demo@demo.com",
+              "first_name": "demo",
+              "last_name": "demo",
+              "address": {"street": "demo",
+                          "city": "demo",
+                          "state": "IN",
+                          "post_code": "46227",
+                          "country_code": "US"
+                          },
+              "language": "en_US"
+              }
+
+CONSENT_DOC_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2235"
+CONSENT_DOC = {"consent_type": "Adult Consent - Data",
+               "locale": "en_US",
+               "consent": "Adult Data Consent",
+               "reconsent": 1
+               }
 
 def mock_verify_func(token):
     if token == "boogabooga":
@@ -1007,9 +1028,29 @@ class IntegrationTests(TestCase):
                        "obtainer_name": "demo"
                        }
         print("===ENTERED SIGN CONSENT TEST===")
-        consent_doc_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
         SOURCE_DATA.update({"consent_type": "Adult Consent - Data"})
-        SOURCE_DATA.update({"consent_id": consent_doc_id})
+        SOURCE_DATA.update({"consent_id": CONSENT_DOC_ID})
+
+        with Transaction() as t:
+            acct_repo = AccountRepo(t)
+
+            # Set up test account with sources
+            acc = Account.from_dict(DUMMY_ACCT, 
+                                    "https://MOCKTEST.com",
+                                    "DemoSub"
+                                    )
+            print("account: "+ str(acc.to_api()))
+            acct_repo.create_account(acc)
+
+        with Transaction() as t:
+            consent_repo = ConsentRepo(t)
+            consent = ConsentDocument.from_dict(CONSENT_DOC,
+                                                DUMMY_ACCT.get("id"),
+                                                CONSENT_DOC_ID
+                                                )
+
+            print("consent doc: "+ str(consent.to_api()))
+            consent_repo.create_doc(consent)
 
         resp = self.client.post(
             '/api/accounts/%s/consent?language_tag=en_US' %

@@ -188,6 +188,7 @@ class AccountRepo(BaseRepo):
                             "%s, %s, %s, %s, %s, "
                             "%s)",
                             AccountRepo._account_to_row(account))
+                print("Affected account rows: " + str(cur.rowcount))
                 return cur.rowcount == 1
         except psycopg2.errors.UniqueViolation as e:
             if e.diag.constraint_name == 'idx_account_email':

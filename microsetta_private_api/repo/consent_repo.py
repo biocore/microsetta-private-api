@@ -11,7 +11,8 @@ def _consent_document_to_row(s):
            s.locale,
            s.date_time,
            s.consent_content,
-           s.account_id)
+           s.account_id,
+           s.reconsent)
     return row
 
 
@@ -22,7 +23,8 @@ def _row_to_consent_document(r):
         r["locale"],
         r["date_time"],
         r["consent_content"],
-        getattr(r, 'account_id', None))
+        getattr(r, 'account_id', None),
+        r["reconsent_required"])
 
 
 def _consent_signature_to_row(s):
@@ -56,11 +58,11 @@ class ConsentRepo(BaseRepo):
         super().__init__(transaction)
 
     doc_read_cols = "distinct on (consent_type) consent_id, consent_type, " \
-                    "locale, date_time, consent_content" \
+                    "locale, date_time, consent_content, reconsent_required" \
 
     doc_write_cols = "consent_id, consent_type, " \
                      "locale, date_time, consent_content, " \
-                     "account_id"
+                     "account_id, reconsent_required"
 
     signature_read_cols = "signature_id, consent_type, " \
                           "consent_audit.date_time AS sign_date, "\
@@ -69,6 +71,16 @@ class ConsentRepo(BaseRepo):
     signature_write_cols = "signature_id, consent_id, " \
                            "source_id, date_time, parent_1_name, " \
                            "parent_2_name, deceased_parent, assent_obtainer"
+
+    def create_doc(self, consent):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute("INSERT INTO ag.consent_documents (" + 
+                        ConsentRepo.doc_write_cols + ") "
+                        "VALUES( %s, %s, %s, %s, %s, "
+                        "%s, %s) ",
+                        _consent_document_to_row(consent))
+            print("affected doc rows: " + str(cur.rowcount))
+            return cur.rowcount == 1
 
     def get_all_consent_documents(self):
         consent_docs = []

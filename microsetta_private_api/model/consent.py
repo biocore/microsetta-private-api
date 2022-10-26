@@ -8,21 +8,23 @@ class ConsentDocument:
         locale = input_dict["locale"]
         date_time = datetime.now()
         consent = input_dict["consent"]
-
+        reconsent = input_dict["reconsent"]
         return ConsentDocument(
             consent_id, consent_type, locale,
-            date_time, consent, account_id
+            date_time, consent, account_id,
+            reconsent
         )
 
     def __init__(self, consent_id, consent_type, locale,
                  date_time, consent_content,
-                 account_id):
+                 account_id, reconsent):
         self.consent_id = consent_id
         self.consent_type = consent_type
         self.locale = locale
         self.date_time = date_time
         self.consent_content = consent_content
         self.account_id = account_id
+        self.reconsent = reconsent
 
     """To be written later!"""
     def to_api(self):
@@ -30,7 +32,8 @@ class ConsentDocument:
                     "consent_id": self.consent_id,
                     "consent_type": self.consent_type,
                     "locale": self.locale,
-                    "document": self.consent_content
+                    "document": self.consent_content,
+                    "reconsent_required": self.reconsent
                 }
 
         return result

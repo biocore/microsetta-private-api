@@ -6,8 +6,7 @@ CREATE TABLE ag.consent_documents (
     consent_content varchar NOT NULL,
     reconsent_required INT NOT NULL,
     account_id uuid NOT NULL,
-    PRIMARY KEY (consent_id),
-    FOREIGN KEY (account_id) REFERENCES ag.account (id)
+    PRIMARY KEY (consent_id)
 );
 CREATE TABLE ag.consent_audit (
     signature_id uuid NOT NULL DEFAULT uuid_generate_v4(),
