@@ -63,7 +63,7 @@ DUMMY_ACCT = {
               "language": "en_US"
               }
 
-CONSENT_DOC_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2235"
+CONSENT_DOC_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2281"
 CONSENT_DOC = {"consent_type": "Adult Consent - Data",
                "locale": "en_US",
                "consent": "Adult Data Consent",
@@ -1028,7 +1028,7 @@ class IntegrationTests(TestCase):
                        "deceased_parent": 'false',
                        "obtainer_name": "demo"
                        }
-        print("===ENTERED SIGN CONSENT TEST===")
+
         SOURCE_DATA.update({"consent_type": "Adult Consent - Data"})
         SOURCE_DATA.update({"consent_id": CONSENT_DOC_ID})
 
@@ -1039,7 +1039,6 @@ class IntegrationTests(TestCase):
                                                 CONSENT_DOC_ID
                                                 )
 
-            print("consent doc: " + str(consent.to_api()))
             consent_repo.create_doc(consent)
             t.commit()
 

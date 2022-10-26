@@ -79,8 +79,6 @@ class ConsentRepo(BaseRepo):
                         "VALUES( %s, %s, %s, %s, %s, "
                         "%s, %s) ",
                         _consent_document_to_row(consent))
-            print("affected doc rows: " + str(cur.rowcount))
-            print(cur.statusmessage)
             return cur.rowcount == 1
 
     def get_all_consent_documents(self):
@@ -103,7 +101,6 @@ class ConsentRepo(BaseRepo):
             cur.execute("SELECT " + ConsentRepo.doc_read_cols + " FROM "
                         "ag.consent_documents WHERE "
                         "ag.consent_documents.consent_id = %s", (consent_id,))
-            print(cur.statusmessage)
             r = cur.fetchone()
             if r is None:
                 return None
@@ -149,20 +146,17 @@ class ConsentRepo(BaseRepo):
     def sign_consent(self, account_id, consent_signature):
         with self._transaction.dict_cursor() as cur:
             consentRepo = ConsentRepo(self._transaction)
-            print("trying to extract consent id")
             consent_id = consent_signature.consent_id
-            print("consent id extracted: " + consent_id)
+
             if consentRepo.get_consent_document(consent_id) is None:
-                print("failed to find consent document")
                 raise NotFound("Consent Document does not exist!")
 
             sourceRepo = SourceRepo(self._transaction)
             source_id = consent_signature.source_id
-            print("source id extracted: " + source_id)
+
             if sourceRepo.get_source(account_id, source_id) is None:
-                print("failed to find source id")
                 raise NotFound("Source does not exist!")
-            print("inserterting data in consent audit")
+
             cur.execute("INSERT INTO consent_audit (" +
                         ConsentRepo.signature_write_cols + ") "
                         "VALUES("
@@ -170,5 +164,4 @@ class ConsentRepo(BaseRepo):
                         "%s, %s, %s, "
                         "%s, %s)",
                         _consent_signature_to_row(consent_signature))
-            print("affected rows: " + str(cur.rowcount))
             return cur.rowcount == 1
