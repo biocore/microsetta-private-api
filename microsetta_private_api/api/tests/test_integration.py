@@ -51,7 +51,7 @@ DUMMY_CONSENT_POST_URL = "http://test.com"
 
 DUMMY_ACCT = {
               "id": "ecabc635-3df8-49ee-ae19-db3db03c1111",
-              "email": "demo@demo.com",
+              "email": "demo@mytestaccount.com",
               "first_name": "demo",
               "last_name": "demo",
               "address": {"street": "demo",
