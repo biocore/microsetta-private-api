@@ -1033,16 +1033,6 @@ class IntegrationTests(TestCase):
         SOURCE_DATA.update({"consent_id": CONSENT_DOC_ID})
 
         with Transaction() as t:
-            acct_repo = AccountRepo(t)
-
-            acc = Account.from_dict(DUMMY_ACCT,
-                                    "https://MOCKTEST.com",
-                                    "DemoSub"
-                                    )
-            print("account: " + str(acc.to_api()))
-            acct_repo.create_account(acc)
-
-        with Transaction() as t:
             consent_repo = ConsentRepo(t)
             consent = ConsentDocument.from_dict(CONSENT_DOC,
                                                 DUMMY_ACCT.get("id"),
@@ -1051,6 +1041,7 @@ class IntegrationTests(TestCase):
 
             print("consent doc: " + str(consent.to_api()))
             consent_repo.create_doc(consent)
+            t.commit()
 
         resp = self.client.post(
             '/api/accounts/%s/consent?language_tag=en_US' %

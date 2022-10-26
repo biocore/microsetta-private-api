@@ -80,6 +80,7 @@ class ConsentRepo(BaseRepo):
                         "%s, %s) ",
                         _consent_document_to_row(consent))
             print("affected doc rows: " + str(cur.rowcount))
+            print(cur.statusmessage)
             return cur.rowcount == 1
 
     def get_all_consent_documents(self):
@@ -102,6 +103,7 @@ class ConsentRepo(BaseRepo):
             cur.execute("SELECT " + ConsentRepo.doc_read_cols + " FROM "
                         "ag.consent_documents WHERE "
                         "ag.consent_documents.consent_id = %s", (consent_id,))
+            print(cur.statusmessage)
             r = cur.fetchone()
             if r is None:
                 return None
