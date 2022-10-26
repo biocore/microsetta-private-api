@@ -571,12 +571,13 @@ class SurveyTemplateRepo(BaseRepo):
                 vioscreen_id = existing
         return vioscreen_id
 
-    def get_vioscreen_id_if_exists(self, account_id, source_id, timestamp=None):
+    def get_vioscreen_id_if_exists(self, account_id, source_id,
+                                   timestamp=None):
         """Obtain a vioscreen ID if it exists"""
         with self._transaction.cursor() as cur:
             # Find an active vioscreen survey for this account+source
             # (deleted surveys are not active)
-            if(timestamp!=None):
+            if(timestamp is not None):
                 cur.execute("SELECT DISTINCT vioscreen_registry.vio_id, "
                             "ag_login_surveys.creation_time "
                             "FROM vioscreen_registry "
