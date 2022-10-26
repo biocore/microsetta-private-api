@@ -1035,7 +1035,7 @@ class IntegrationTests(TestCase):
         with Transaction() as t:
             acct_repo = AccountRepo(t)
 
-            acc = Account.from_dict(DUMMY_ACCT, 
+            acc = Account.from_dict(DUMMY_ACCT,
                                     "https://MOCKTEST.com",
                                     "DemoSub"
                                     )
