@@ -44,8 +44,6 @@ class ConsentSignature:
     def from_dict(input_dict, source_id, signature_id):
         date_time = datetime.now()
 
-        print(input_dict["consent_id"])
-
         parent_name_1 = ""
         if "parent_1_name" in input_dict:
             parent_name_1 = input_dict["parent_1_name"]

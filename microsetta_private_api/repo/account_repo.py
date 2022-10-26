@@ -124,7 +124,7 @@ class AccountRepo(BaseRepo):
                 return AccountRepo._row_to_account(r)
 
     def get_account(self, account_id):
-        print("Account id recd: " + account_id)
+
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
                         "account "

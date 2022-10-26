@@ -1066,7 +1066,6 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(SOURCE_DATA),
             headers=MOCK_HEADERS)
-        print(response)
 
         self.assertEqual(201, response.status_code)
 
