@@ -100,8 +100,8 @@ class ConsentRepo(BaseRepo):
     def get_consent_document(self, consent_id):
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + ConsentRepo.doc_read_cols + " FROM "
-                        "consent_documents WHERE "
-                        "consent_documents.consent_id = %s", (consent_id,))
+                        "ag.consent_documents WHERE "
+                        "ag.consent_documents.consent_id = %s", (consent_id,))
             r = cur.fetchone()
             if r is None:
                 return None
@@ -128,7 +128,7 @@ class ConsentRepo(BaseRepo):
             else:
                 consent_doc_type = r["consent_type"]
                 cur.execute("SELECT date_time FROM "
-                            "consent_documents WHERE consent_type = %s "
+                            "ag.consent_documents WHERE consent_type = %s "
                             "ORDER BY date_time DESC LIMIT 1",
                             (consent_doc_type,))
 
