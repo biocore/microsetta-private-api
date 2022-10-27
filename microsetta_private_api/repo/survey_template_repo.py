@@ -344,6 +344,8 @@ class SurveyTemplateRepo(BaseRepo):
 
         This method is idempotent
 
+        This method deletes ALL surveys associated with an account and source
+
         Parameters
         ----------
         account_id : str, UUID
@@ -494,6 +496,35 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return res
 
+    def delete_polyphenol_ffq_entry(self, account_id, source_id):
+        """Intended for admin use, remove a Polyphenol FFQ entry
+
+        This method is idempotent.
+
+        This method deletes ALL surveys associated with an account and source
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+        """
+        with self._transaction.cursor() as cur:
+            existing, _ = self.get_polyphenol_ffq_id_if_exists(account_id,
+                                                               source_id)
+            if existing is not None:
+                cur.execute("""DELETE FROM ag.ag_login_surveys
+                               WHERE ag_login_id=%s
+                                   AND source_id=%s
+                                   AND survey_id=%s""",
+                            (account_id, source_id, existing))
+
+            cur.execute("""DELETE FROM ag.polyphenol_ffq_registry
+                           WHERE account_id=%s
+                               AND source_id=%s""",
+                        (account_id, source_id))
+
     def create_spain_ffq_entry(self, account_id, source_id):
         """Return a newly created Spain FFQ ID
 
@@ -561,6 +592,8 @@ class SurveyTemplateRepo(BaseRepo):
         """Intended for admin use, remove a Spain FFQ entry from the system
 
         This method is idempotent
+
+        This method deletes ALL surveys associated with an account and source
 
         Parameters
         ----------
