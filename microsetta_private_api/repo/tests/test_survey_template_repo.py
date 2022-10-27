@@ -127,6 +127,11 @@ class SurveyTemplateTests(unittest.TestCase):
             e, c = template_repo.get_myfoodrepo_id_if_exists(TEST2_ACCOUNT_ID,
                                                              TEST2_SOURCE_ID)
             self.assertEqual(e, None)
+
+            # make sure we can delete something that doesn't exist
+            template_repo.delete_myfoodrepo_entry(TEST2_ACCOUNT_ID,
+                                                  TEST2_SOURCE_ID)
+
             t.rollback()
 
     def test_set_myfoodrepo_id_valid(self):
@@ -296,6 +301,24 @@ class SurveyTemplateTests(unittest.TestCase):
                 template_repo.get_polyphenol_ffq_id_if_exists(TEST1_ACCOUNT_ID,
                                                               TEST1_SOURCE_ID)
             self.assertEqual(obs, (None, None))
+
+    def test_delete_spain_ffq_entry(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            template_repo.create_spain_ffq_entry(TEST1_ACCOUNT_ID,
+                                                 TEST1_SOURCE_ID)
+            obs = template_repo.get_spain_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                           TEST1_SOURCE_ID)
+            self.assertTrue(obs is not None)
+            template_repo.delete_spain_ffq_entry(TEST1_ACCOUNT_ID,
+                                                 TEST1_SOURCE_ID)
+            obs = template_repo.get_spain_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                           TEST1_SOURCE_ID)
+            self.assertTrue(obs is None)
+
+            # test we can delete something that doesn't exist
+            template_repo.delete_spain_ffq_entry(TEST1_ACCOUNT_ID,
+                                                 TEST1_SOURCE_ID)
 
     def test_create_spain_ffq_entry_valid(self):
         with Transaction() as t:
