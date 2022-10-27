@@ -36,7 +36,8 @@ from ._vioscreen import (
     get_vioscreen_dietary_scores_by_component,
     get_vioscreen_dietary_scores_descriptions,
     get_vioscreen_food_components_by_code,
-    get_vioscreen_food_components_descriptions
+    get_vioscreen_food_components_descriptions,
+    get_vioscreens
 )
 
 from ._campaign import (
@@ -108,5 +109,6 @@ __all__ = [
     'get_campaign_information',
     'create_interested_user',
     'get_interested_user_address_update',
-    'put_interested_user_address_update'
+    'put_interested_user_address_update',
+    'get_vioscreens'
 ]

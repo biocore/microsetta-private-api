@@ -1163,6 +1163,31 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/vioscreen/{account_id}/sources/{source_id}/vioscreen':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreens
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreens
+      description: Get information about Vioscreens
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+      responses:
+        '200':
+          description: Successfully returned vioscreens
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/vioscreen/dietaryscore/':
     get:
       operationId: microsetta_private_api.api.get_vioscreen_dietary_scores_descriptions

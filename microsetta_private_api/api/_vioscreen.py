@@ -4,7 +4,7 @@ from microsetta_private_api.api._account import \
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.vioscreen_repo import (
-    VioscreenSessionRepo, VioscreenPercentEnergyRepo,
+    VioscreenRepo, VioscreenSessionRepo, VioscreenPercentEnergyRepo,
     VioscreenDietaryScoreRepo, VioscreenSupplementsRepo,
     VioscreenFoodComponentsRepo, VioscreenEatingPatternsRepo,
     VioscreenMPedsRepo, VioscreenFoodConsumptionRepo
@@ -224,3 +224,15 @@ def get_vioscreen_food_components_descriptions(token_info):
             return jsonify(code=404, message="Food Components not found"), 404
 
         return jsonify(descriptions)
+
+
+def get_vioscreens(account_id, source_id):
+    """Obtain a vioscreen ID if it exists"""
+    with Transaction() as t:
+        vio_session = VioscreenRepo(t)
+        vioscreen_session = vio_session.get_vioscreen_session(account_id,
+                                                              source_id)
+        if vioscreen_session is None or len(vioscreen_session) == 0:
+            return jsonify(code=404, message="No vioscreens found"), 404
+        else:
+            return jsonify({"vioscreens": vioscreen_session})
