@@ -340,11 +340,13 @@ class SurveyTemplateRepo(BaseRepo):
                         (mfr_id, account_id, source_id))
 
     def delete_myfoodrepo(self, account_id, source_id):
-        """Intended for admin use, remove a MyFoodRepo entry from the system
+        """Intended for admin use, remove MyFoodRepo entries
 
         This method is idempotent
 
         This method deletes ALL surveys associated with an account and source
+
+        This is a hard delete, we REMOVE rows rather than setting a flag
 
         Parameters
         ----------
@@ -497,11 +499,13 @@ class SurveyTemplateRepo(BaseRepo):
                 return res
 
     def delete_polyphenol_ffq(self, account_id, source_id):
-        """Intended for admin use, remove a Polyphenol FFQ entry
+        """Intended for admin use, remove Polyphenol FFQ entries
 
         This method is idempotent.
 
         This method deletes ALL surveys associated with an account and source
+
+        This is a hard delete, we REMOVE rows rather than setting a flag
 
         Parameters
         ----------
@@ -589,11 +593,13 @@ class SurveyTemplateRepo(BaseRepo):
                 return res[0]
 
     def delete_spain_ffq(self, account_id, source_id):
-        """Intended for admin use, remove a Spain FFQ entry from the system
+        """Intended for admin use, remove Spain FFQ entries
 
         This method is idempotent
 
         This method deletes ALL surveys associated with an account and source
+
+        This is a hard delete, we REMOVE rows rather than setting a flag
 
         Parameters
         ----------
@@ -691,6 +697,59 @@ class SurveyTemplateRepo(BaseRepo):
                 return None
             else:
                 return rows[0][0]
+
+    def delete_vioscreen(self, account_id, source_id):
+        """Intended for admin use, remove Vioscreen entries from the system
+
+        This method is idempotent
+
+        This method deletes ALL surveys associated with an account and source
+
+        This is a hard delete, we REMOVE rows rather than setting a flag
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+        """
+        with self._transaction.cursor() as cur:
+            # get all vioscreen user names associated with the source
+            cur.execute("""SELECT vio_id
+                           FROM vioscreen_registry
+                           WHERE account_id=%s
+                               AND source_id=%s""",
+                        (account_id, source_id))
+            vio_ids = tuple([r[0] for r in cur.fetchall()])
+
+            if len(vio_ids) == 0:
+                return None
+
+            # get all sessions associated with the vio_ids
+            cur.execute("""SELECT sessionid
+                           FROM ag.vioscreen_sessions
+                           WHERE username IN %s""",
+                        (vio_ids, ))
+            sessions = tuple([r[0] for r in cur.fetchall()])
+
+            if len(sessions) > 0:
+                for tbl in ('dietaryscore', 'eatingpatterns', 'foodcomponents',
+                            'foodconsumption', 'foodconsumptioncomponents',
+                            'percentenergy', 'supplements', 'mpeds'):
+                    tbl = f'ag.vioscreen_{tbl}'
+                    cur.execute("DELETE FROM " + tbl + " " +
+                                "WHERE sessionid IN %s",
+                                (sessions, ))
+                cur.execute("""DELETE FROM ag.vioscreen_sessions
+                               WHERE sessionid IN %s""",
+                            (sessions, ))
+
+            cur.execute("""DELETE FROM ag.vioscreen_registry
+                           WHERE account_id = %s
+                               AND source_id = %s""",
+                        (account_id, source_id))
+
 
     def fetch_user_basic_physiology(self, account_id, source_id):
         """Given an account and source ID, obtain basic physiology properties
