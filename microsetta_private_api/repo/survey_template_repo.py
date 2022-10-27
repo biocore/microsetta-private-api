@@ -698,6 +698,35 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return rows[0][0]
 
+    def get_vioscreen_all_ids_if_exists(self, account_id, source_id):
+        """Obtain all vioscreen IDs for a source
+
+        This method captures all IDs including IDs with the "deleted"
+        flag set.
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Returns
+        tuple or None
+            The tuple of IDs or None of there are no associated IDs
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT vio_id
+                           FROM vioscreen_registry
+                           WHERE account_id = %s
+                               AND source_id = %s""",
+                        (account_id, source_id))
+            ids = tuple([r[0] for r in cur.fetchall()])
+            if len(ids) > 0:
+                return ids
+            else:
+                return None
+
     def delete_vioscreen(self, account_id, source_id):
         """Intended for admin use, remove Vioscreen entries from the system
 
@@ -863,3 +892,29 @@ class SurveyTemplateRepo(BaseRepo):
                 weight = None
 
         return (birth_year, gender, height, weight)
+
+    def has_external_surveys(self, account_id, source_id):
+        """Test whether a source has any external surveys associated
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Returns
+        -------
+        boolean
+            True indicates the user has an external survey associated, false
+            otherwise
+        """
+        getters = (self.get_myfoodrepo_id_if_exists,
+                   self.get_polyphenol_id_if_exists,
+                   self.get_spain_ffq_id_if_exists,
+                   self.get_vioscreen_all_ids_if_exists)
+
+        for get in getters:
+            if get(account_id, source_id):
+                return True
+        return False

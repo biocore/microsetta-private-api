@@ -429,6 +429,14 @@ class SurveyTemplateTests(unittest.TestCase):
                                                   TEST2_SOURCE_ID,
                                                   str(uuid.uuid4()))
 
+    def test_get_vioscreen_all_ids_if_exists_valid(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = \
+                template_repo.get_vioscreen_all_ids_if_exists(TEST1_ACCOUNT_ID,
+                                                              TEST1_SOURCE_ID)
+            self.assertEqual(obs, (TEST1_VIO_ID, ))
+
     def test_get_vioscreen_id_if_exists_valid(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
