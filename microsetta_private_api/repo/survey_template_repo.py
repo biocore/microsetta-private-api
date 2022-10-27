@@ -344,7 +344,8 @@ class SurveyTemplateRepo(BaseRepo):
 
         This method is idempotent
 
-        This method deletes ALL surveys associated with an account and source
+        This method deletes ALL MyFoodRepo surveys associated with an account
+        and source
 
         This is a hard delete, we REMOVE rows rather than setting a flag
 
@@ -503,7 +504,8 @@ class SurveyTemplateRepo(BaseRepo):
 
         This method is idempotent.
 
-        This method deletes ALL surveys associated with an account and source
+        This method deletes ALL Polyphenol FFQ surveys associated with an
+        account and source
 
         This is a hard delete, we REMOVE rows rather than setting a flag
 
@@ -596,7 +598,8 @@ class SurveyTemplateRepo(BaseRepo):
 
         This method is idempotent
 
-        This method deletes ALL surveys associated with an account and source
+        This method deletes ALL Spain FFQ surveys associated with an account
+        and source
 
         This is a hard delete, we REMOVE rows rather than setting a flag
 
@@ -731,7 +734,8 @@ class SurveyTemplateRepo(BaseRepo):
 
         This method is idempotent
 
-        This method deletes ALL surveys associated with an account and source
+        This method deletes ALL Vioscreen FFQ surveys associated with an
+        account and source
 
         This is a hard delete, we REMOVE rows rather than setting a flag
 
