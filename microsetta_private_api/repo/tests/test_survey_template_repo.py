@@ -110,6 +110,24 @@ class SurveyTemplateTests(unittest.TestCase):
                 exp = (1973, 'Male', None, None)
                 self.assertEqual(obs, exp)
 
+    def test_delete_myfoodrepo(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.create_myfoodrepo_entry(TEST2_ACCOUNT_ID,
+                                                        TEST2_SOURCE_ID)
+            template_repo.set_myfoodrepo_id(TEST2_ACCOUNT_ID,
+                                            TEST2_SOURCE_ID,
+                                           'foobar')
+            e, c = template_repo.get_myfoodrepo_id_if_exists(TEST2_ACCOUNT_ID,
+                                                             TEST2_SOURCE_ID)
+            self.assertEqual(e, 'foobar')
+            template_repo.delete_myfoodrepo_entry(TEST2_ACCOUNT_ID,
+                                                  TEST2_SOURCE_ID)
+
+            e, c = template_repo.get_myfoodrepo_id_if_exists(TEST2_ACCOUNT_ID,
+                                                             TEST2_SOURCE_ID)
+            self.assertEqual(e, None)
+
     def test_set_myfoodrepo_id_valid(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
