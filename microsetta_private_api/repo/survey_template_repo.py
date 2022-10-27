@@ -557,6 +557,33 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return res[0]
 
+    def delete_spain_ffq_entry(self, account_id, source_id):
+        """Intended for admin use, remove a Spain FFQ entry from the system
+
+        This method is idempotent
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+        """
+        with self._transaction.cursor() as cur:
+            existing = self.get_spain_ffq_id_if_exists(account_id,
+                                                       source_id)
+            if existing is not None:
+                cur.execute("""DELETE FROM ag.ag_login_surveys
+                               WHERE ag_login_id=%s
+                                   AND source_id=%s
+                                   AND survey_id=%s""",
+                            (account_id, source_id, existing))
+
+            cur.execute("""DELETE FROM ag.spain_ffq_registry
+                           WHERE account_id=%s
+                               AND source_id=%s""",
+                        (account_id, source_id))
+
     def get_vioscreen_sample_to_user(self):
         """Obtain a mapping of sample barcode to vioscreen user"""
         with self._transaction.cursor() as cur:
