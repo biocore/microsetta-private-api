@@ -333,13 +333,14 @@ def delete_dummy_accts():
                 all_sample_ids.extend(sample_ids)
 
                 # Dissociate any secondary surveys.
-                # IMPORTANT: the order of operations here matters. It is necessary
-                # to delete external surveys PRIOR to deleting survey answers
-                # as the survey answers deletion will set source_id to NULL
-                # for entries in the registries
+                # IMPORTANT: the order of operations here matters. It is
+                # necessary to delete external surveys PRIOR to deleting survey
+                # answers as the survey answers deletion will set source_id to
+                # NULL for entries in the registries
                 template_repo.delete_myfoodrepo(curr_acct_id, curr_source.id)
                 template_repo.delete_vioscreen(curr_acct_id, curr_source.id)
-                template_repo.delete_polyphenol_ffq(curr_acct_id, curr_source.id)
+                template_repo.delete_polyphenol_ffq(curr_acct_id,
+                                                    curr_source.id)
                 template_repo.delete_spain_ffq(curr_acct_id, curr_source.id)
 
                 # Dissociate all samples linked to this source from all
