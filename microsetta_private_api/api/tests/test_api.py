@@ -332,6 +332,16 @@ def delete_dummy_accts():
                 sample_ids = [x.id for x in source_samples]
                 all_sample_ids.extend(sample_ids)
 
+                # Dissociate any secondary surveys.
+                # IMPORTANT: the order of operations here matters. It is necessary
+                # to delete external surveys PRIOR to deleting survey answers
+                # as the survey answers deletion will set source_id to NULL
+                # for entries in the registries
+                template_repo.delete_myfoodrepo(curr_acct_id, curr_source.id)
+                template_repo.delete_vioscreen(curr_acct_id, curr_source.id)
+                template_repo.delete_polyphenol_ffq(curr_acct_id, curr_source.id)
+                template_repo.delete_spain_ffq(curr_acct_id, curr_source.id)
+
                 # Dissociate all samples linked to this source from all
                 # answered surveys linked to this source, then delete all
                 # answered surveys
@@ -344,12 +354,6 @@ def delete_dummy_accts():
                     sample_repo.dissociate_sample(curr_acct_id, curr_source.id,
                                                   curr_sample_id,
                                                   override_locked=True)
-
-                # Dissociate any secondary surveys
-                template_repo.delete_myfoodrepo(curr_acct_id, curr_source.id)
-                template_repo.delete_vioscreen_ffq(curr_acct_id, curr_source.id)
-                template_repo.delete_polyphenol_ffq(curr_acct_id, curr_source.id)
-                template_repo.delete_spain_ffq(curr_acct_id, curr_source.id)
 
                 # Finally, delete the source
                 source_repo.delete_source(curr_acct_id, curr_source.id)
@@ -1070,10 +1074,11 @@ class AccountTests(ApiTests):
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
 
-        # "take" the myfoodrepo survey
+        # "take" the polyphenol FFQ
         response = self.client.get(
-            '/api/accounts/%s/sources/%s/survey_templates/%s' %
-            (dummy_acct_id, dummy_source_id, SurveyTemplateRepo.MYFOODREPO_ID),
+            '/api/accounts/%s/sources/%s/survey_templates/%s?language_tag=en_us' %  # noqa
+            (dummy_acct_id, dummy_source_id,
+             SurveyTemplateRepo.POLYPHENOL_FFQ_ID),
             headers=self.dummy_auth)
 
         # now let's scrub it

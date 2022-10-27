@@ -523,7 +523,6 @@ class SurveyTemplateRepo(BaseRepo):
                                    AND source_id=%s
                                    AND survey_id=%s""",
                             (account_id, source_id, existing))
-
             cur.execute("""DELETE FROM ag.polyphenol_ffq_registry
                            WHERE account_id=%s
                                AND source_id=%s""",
