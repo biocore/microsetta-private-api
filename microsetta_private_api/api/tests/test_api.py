@@ -346,17 +346,10 @@ def delete_dummy_accts():
                                                   override_locked=True)
 
                 # Dissociate any secondary surveys
-                # TODO: write these
-                #template_repo.delete_myfoodrepo(curr_acct_id, curr_source.id)
-                #template_repo.delete_vioscreen_ffq(curr_acct_id, curr_source.id)
-                #template_repo.delete_polyphenol_ffq(curr_acct_id, curr_source.id)
-                #template_repo.delete_spain_ffq(curr_acct_id, curr_source.id)
-                # placeholder
-                cur = t.cursor()
-                cur.execute("""DELETE FROM ag.myfoodrepo_registry
-                               WHERE account_id=%s AND source_id=%s""",
-                            (curr_acct_id, curr_source.id))
-                cur.commit()
+                template_repo.delete_myfoodrepo(curr_acct_id, curr_source.id)
+                template_repo.delete_vioscreen_ffq(curr_acct_id, curr_source.id)
+                template_repo.delete_polyphenol_ffq(curr_acct_id, curr_source.id)
+                template_repo.delete_spain_ffq(curr_acct_id, curr_source.id)
 
                 # Finally, delete the source
                 source_repo.delete_source(curr_acct_id, curr_source.id)
