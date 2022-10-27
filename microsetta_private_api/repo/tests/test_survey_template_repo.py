@@ -483,3 +483,15 @@ class SurveyTemplateTests(unittest.TestCase):
                                                            TEST1_SOURCE_ID,
                                                            TEST1_SAMPLE_ID)
             self.assertEqual(obs, None)
+
+    def test_has_external_surveys(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+
+            obs = template_repo.has_external_surveys(TEST1_ACCOUNT_ID,
+                                                     TEST1_SOURCE_ID)
+            self.assertTrue(obs)
+
+            obs = template_repo.has_external_surveys(TEST2_ACCOUNT_ID,
+                                                     TEST2_SOURCE_ID)
+            self.assertFalse(obs)
