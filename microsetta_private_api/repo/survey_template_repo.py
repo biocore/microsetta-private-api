@@ -910,11 +910,19 @@ class SurveyTemplateRepo(BaseRepo):
             otherwise
         """
         getters = (self.get_myfoodrepo_id_if_exists,
-                   self.get_polyphenol_id_if_exists,
+                   self.get_polyphenol_ffq_id_if_exists,
                    self.get_spain_ffq_id_if_exists,
                    self.get_vioscreen_all_ids_if_exists)
 
         for get in getters:
-            if get(account_id, source_id):
-                return True
+            res = get(account_id, source_id)
+
+            # the if_exists methods are inconsistent in return type, yay
+            if isinstance(res, tuple):
+                if res[0] is not None:
+                    return True
+            else:
+                if res is not None:
+                    return True
+
         return False
