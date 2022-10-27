@@ -462,4 +462,24 @@ class SurveyTemplateTests(unittest.TestCase):
             self.assertEqual(obs.get(sample), user)
 
     def test_delete_vioscreen(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
 
+            obs = template_repo.get_vioscreen_id_if_exists(TEST1_ACCOUNT_ID,
+                                                           TEST1_SOURCE_ID,
+                                                           TEST1_SAMPLE_ID)
+            self.assertEqual(obs, TEST1_VIO_ID)
+
+            template_repo.delete_vioscreen(TEST1_ACCOUNT_ID,
+                                           TEST1_SOURCE_ID)
+
+            obs = template_repo.get_vioscreen_id_if_exists(TEST1_ACCOUNT_ID,
+                                                           TEST1_SOURCE_ID,
+                                                           TEST1_SAMPLE_ID)
+            self.assertEqual(obs, None)
+
+            # test we can delete something that doesn't exist
+            obs = template_repo.get_vioscreen_id_if_exists(TEST1_ACCOUNT_ID,
+                                                           TEST1_SOURCE_ID,
+                                                           TEST1_SAMPLE_ID)
+            self.assertEqual(obs, None)
