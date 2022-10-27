@@ -339,6 +339,33 @@ class SurveyTemplateRepo(BaseRepo):
                            WHERE account_id=%s AND source_id=%s""",
                         (mfr_id, account_id, source_id))
 
+    def delete_myfoodrepo_entry(self, account_id, source_id):
+        """Intended for admin use, remove a MyFoodRepo entry from the system
+
+        This method is idempotent
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+        """
+        with self._transaction.cursor() as cur:
+            existing, created = self.get_myfoodrepo_id_if_exists(account_id,
+                                                                 source_id)
+            if existing is not None:
+                cur.execute("""DELETE FROM ag.ag_login_surveys
+                               WHERE ag_login_id=%s
+                                   AND source_id=%s
+                                   AND survey_id=%s""",
+                            (account_id, source_id, existing))
+
+            cur.execute("""DELETE FROM ag.myfoodrepo_registry
+                           WHERE account_id=%s
+                               AND source_id=%s""",
+                        (account_id, source_id))
+
     def get_myfoodrepo_id_if_exists(self, account_id, source_id):
         """Return a MyFoodRepo ID if one exists
 
