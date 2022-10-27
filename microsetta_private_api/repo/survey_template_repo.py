@@ -339,7 +339,7 @@ class SurveyTemplateRepo(BaseRepo):
                            WHERE account_id=%s AND source_id=%s""",
                         (mfr_id, account_id, source_id))
 
-    def delete_myfoodrepo_entry(self, account_id, source_id):
+    def delete_myfoodrepo(self, account_id, source_id):
         """Intended for admin use, remove a MyFoodRepo entry from the system
 
         This method is idempotent
@@ -496,7 +496,7 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return res
 
-    def delete_polyphenol_ffq_entry(self, account_id, source_id):
+    def delete_polyphenol_ffq(self, account_id, source_id):
         """Intended for admin use, remove a Polyphenol FFQ entry
 
         This method is idempotent.
@@ -588,7 +588,7 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return res[0]
 
-    def delete_spain_ffq_entry(self, account_id, source_id):
+    def delete_spain_ffq(self, account_id, source_id):
         """Intended for admin use, remove a Spain FFQ entry from the system
 
         This method is idempotent
