@@ -750,7 +750,6 @@ class SurveyTemplateRepo(BaseRepo):
                                AND source_id = %s""",
                         (account_id, source_id))
 
-
     def fetch_user_basic_physiology(self, account_id, source_id):
         """Given an account and source ID, obtain basic physiology properties
 
