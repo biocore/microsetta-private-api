@@ -302,6 +302,27 @@ class SurveyTemplateTests(unittest.TestCase):
                                                               TEST1_SOURCE_ID)
             self.assertEqual(obs, (None, None))
 
+    def test_delete_polyphenol_ffq_entry(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            template_repo.create_polyphenol_ffq_entry(TEST1_ACCOUNT_ID,
+                                                      TEST1_SOURCE_ID,
+                                                      'en_US',
+                                                      'THDMI')
+            obs = \
+                template_repo.get_polyphenol_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                              TEST1_SOURCE_ID)
+            self.assertTrue(obs is not None)
+            template_repo.delete_polyphenol_ffq_entry(TEST1_ACCOUNT_ID,
+                                                     TEST1_SOURCE_ID)
+            obs = \
+                template_repo.get_polyphenol_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                              TEST1_SOURCE_ID)
+            self.assertTrue(obs is None)
+
+            # test we can delete something that doesn't exist
+            template_repo.delete_polyphenol_ffq_entry(TEST1_ACCOUNT_ID,
+                                                      TEST1_SOURCE_ID)
     def test_delete_spain_ffq_entry(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
