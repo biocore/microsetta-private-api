@@ -1069,6 +1069,15 @@ class IntegrationTests(TestCase):
 
         self.assertEqual(201, response.status_code)
 
+        with Transaction() as t:
+            with t.cursor() as cur:
+                cur.execute("DELETE FROM ag.consent_audit"
+                            " WHERE consent_id = %s", (CONSENT_DOC_ID,))
+                            
+                cur.execute("DELETE FROM ag.consent_documents"
+                      " WHERE consent_id = %s", (CONSENT_DOC_ID,))
+            t.commit()
+
     def test_delete_source(self):
         """
             Create a source, add a survey, delete the source

@@ -40,7 +40,7 @@ def get_consent_doc(account_id, consent_id, token_info):
 def check_consent_signature(account_id, source_id, consent_type, token_info):
     _validate_account_access(token_info, account_id)
 
-    res = False
+    res = True
 
     with Transaction() as t:
         consent_repo = ConsentRepo(t)
@@ -60,9 +60,9 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
         consent_repo.sign_consent(account_id, consent_sign)
         t.commit()
 
-        response = jsonify({"result": True})
-        response.status_code = 201
-        response.headers['Location'] = '/api/accounts/%s' % \
-            (account_id)
+    response = jsonify({"result": True})
+    response.status_code = 201
+    response.headers['Location'] = '/api/accounts/%s' % \
+        (account_id)
 
-        return response
+    return response

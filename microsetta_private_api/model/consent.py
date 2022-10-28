@@ -26,7 +26,6 @@ class ConsentDocument:
         self.account_id = account_id
         self.reconsent = reconsent
 
-    """To be written later!"""
     def to_api(self):
         result = {
                     "consent_id": self.consent_id,
@@ -44,21 +43,13 @@ class ConsentSignature:
     def from_dict(input_dict, source_id, signature_id):
         date_time = datetime.now()
 
-        parent_name_1 = ""
-        if "parent_1_name" in input_dict:
-            parent_name_1 = input_dict["parent_1_name"]
+        parent_name_1 = input_dict.get("parent_1_name", None)
 
-        parent_name_2 = ""
-        if "parent_2_name" in input_dict:
-            parent_name_2 = input_dict["parent_2_name"]
+        parent_name_2 = input_dict.get("parent_2_name", None)
 
-        deceased_parent = None
-        if "deceased_parent" in input_dict:
-            deceased_parent = input_dict["deceased_parent"]
+        deceased_parent = input_dict.get("deceased_parent", None)
 
-        assent_obtainer = None
-        if "assent_obtainer" in input_dict:
-            assent_obtainer = input_dict["assent_obtainer"]
+        assent_obtainer = input_dict.get("assent_obtainer", None)
 
         return ConsentSignature(
             signature_id,
@@ -85,5 +76,11 @@ class ConsentSignature:
 
     def to_api(self):
         return {'signature_id': self.signature_id,
-                'consent_id': self.consent_id
+                'consent_id': self.consent_id,
+                'source_id': self.source_id,
+                'date_time': self.date_time,
+                'parent_1_name': self.parent_1_name,
+                'parent_2_name': self.parent_2_name,
+                'deceased_parent': self.deceased_parent,
+                'assent_obtainer': self.assent_obtainer
                 }

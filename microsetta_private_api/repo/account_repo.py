@@ -129,7 +129,7 @@ class AccountRepo(BaseRepo):
             cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
                         "account "
                         "WHERE "
-                        "account.id = %s ", (account_id,))
+                        "account.id = %s", (account_id,))
             r = cur.fetchone()
             if r is None:
                 return None

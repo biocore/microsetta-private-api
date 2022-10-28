@@ -75,7 +75,7 @@ class ConsentRepo(BaseRepo):
     def create_doc(self, consent):
         with self._transaction.dict_cursor() as cur:
             cur.execute("INSERT INTO ag.consent_documents (" +
-                        ConsentRepo.doc_write_cols + ") "
+                        self.doc_write_cols + ") "
                         "VALUES( %s, %s, %s, %s, %s, "
                         "%s, %s) ",
                         _consent_document_to_row(consent))
@@ -85,20 +85,18 @@ class ConsentRepo(BaseRepo):
         consent_docs = []
 
         with self._transaction.dict_cursor() as cur:
-            cur.execute("SELECT " + ConsentRepo.doc_read_cols + " FROM "
+            cur.execute("SELECT " + self.doc_read_cols + " FROM "
                         "consent_documents ORDER BY consent_type DESC, "
                         "date_time DESC")
 
             r = cur.fetchall()
-
-            for index in range(0, len(r)):
-                consent_docs.append(_row_to_consent_document(r[index]))
+            consent_docs = [_row_to_consent_document(row) for row in r]
 
         return consent_docs
 
     def get_consent_document(self, consent_id):
         with self._transaction.dict_cursor() as cur:
-            cur.execute("SELECT " + ConsentRepo.doc_read_cols + " FROM "
+            cur.execute("SELECT " + self.doc_read_cols + " FROM "
                         "ag.consent_documents WHERE "
                         "ag.consent_documents.consent_id = %s", (consent_id,))
             r = cur.fetchone()
@@ -109,11 +107,9 @@ class ConsentRepo(BaseRepo):
 
     def is_consent_required(self, source_id, consent_type):
         with self._transaction.dict_cursor() as cur:
-            cur.execute("SELECT " + ConsentRepo.signature_read_cols + " FROM "
-                        "ag.consent_audit INNER JOIN "
-                        "ag.consent_documents ON "
-                        "consent_audit.consent_id = "
-                        "consent_documents.consent_id "
+            cur.execute("SELECT " + self.signature_read_cols + " FROM "
+                        "ag.consent_audit INNER JOIN ag.consent_documents "
+                        "USING (consent_id) "
                         "WHERE consent_audit.source_id = %s and "
                         "consent_documents.consent_type "
                         "LIKE %s ORDER BY sign_date DESC",
@@ -122,9 +118,7 @@ class ConsentRepo(BaseRepo):
             r = cur.fetchone()
             if r is None:
                 return True
-            elif r['reconsent_required'] == 0:
-                return False
-            else:
+            elif r['reconsent_required']:
                 consent_doc_type = r["consent_type"]
                 cur.execute("SELECT date_time FROM "
                             "ag.consent_documents WHERE consent_type = %s "
@@ -138,10 +132,9 @@ class ConsentRepo(BaseRepo):
                     sign_date = r["sign_date"]
                     doc_date = s["date_time"]
 
-                    if doc_date > sign_date:
-                        return True
-                    else:
-                        return False
+                    return doc_date > sign_date
+            else:
+                return r["reconsent_required"]
 
     def sign_consent(self, account_id, consent_signature):
         with self._transaction.dict_cursor() as cur:
@@ -158,7 +151,7 @@ class ConsentRepo(BaseRepo):
                 raise NotFound("Source does not exist!")
 
             cur.execute("INSERT INTO consent_audit (" +
-                        ConsentRepo.signature_write_cols + ") "
+                        self.signature_write_cols + ") "
                         "VALUES("
                         "%s, %s, %s, "
                         "%s, %s, %s, "
