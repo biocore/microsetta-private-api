@@ -572,13 +572,32 @@ class SurveyTemplateRepo(BaseRepo):
         return vioscreen_id
 
     def get_vioscreen_id_if_exists(self, account_id, source_id,
+                                   vioscreen_ext_sample_id=None,
+                                   registration_code=None,
                                    timestamp=None):
         """Obtain a vioscreen ID if it exists"""
         with self._transaction.cursor() as cur:
             # Find an active vioscreen survey for this account+source
             # (deleted surveys are not active)
-            if timestamp is not None:
-                cur.execute("SELECT DISTINCT vioscreen_registry.vio_id, "
+            if vioscreen_ext_sample_id is not None:
+                cur.execute("SELECT vio_id FROM "
+                            "vioscreen_registry WHERE "
+                            "account_id=%s AND "
+                            "source_id=%s AND "
+                            "sample_id=%s AND "
+                            "deleted=false",
+                            (account_id, source_id, vioscreen_ext_sample_id))
+            elif registration_code is not None:
+                cur.execute("SELECT vio_id FROM "
+                            "vioscreen_registry WHERE "
+                            "account_id=%s AND "
+                            "source_id=%s AND "
+                            "activation_code=%s AND "
+                            "deleted=false",
+                            (account_id, source_id, registration_code))
+            elif timestamp is not None:
+                cur.execute("SELECT DISTINCT "
+                            "vioscreen_registry.vio_id, "
                             "ag_login_surveys.creation_time "
                             "FROM vioscreen_registry "
                             "INNER JOIN ag_login_surveys "

@@ -1163,9 +1163,9 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/vioscreen/{account_id}/sources/{source_id}/vioscreen':
+  '/vioscreen/{account_id}/sources/{source_id}/vioscreen_sessions':
     get:
-      operationId: microsetta_private_api.api.get_vioscreens
+      operationId: microsetta_private_api.api.get_vioscreen_sessions
       tags:
         - Vioscreen
       summary: Get information about Vioscreens
@@ -1180,7 +1180,7 @@ paths:
             application/json:
               schema:
                 type:
-                  object
+                  array
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':

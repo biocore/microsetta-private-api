@@ -226,7 +226,7 @@ def get_vioscreen_food_components_descriptions(token_info):
         return jsonify(descriptions)
 
 
-def get_vioscreens(account_id, source_id):
+def get_vioscreen_sessions(account_id, source_id):
     """Obtain a vioscreen ID if it exists"""
     with Transaction() as t:
         vio_session = VioscreenRepo(t)
