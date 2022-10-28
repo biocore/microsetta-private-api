@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS campaign.subscriptions
    email VARCHAR NOT NULL,
    creation_timestamp timestamp with time zone,
    CONSTRAINT fk_acct_id FOREIGN KEY (submitter_acct_id) REFERENCES ag.account (id)
-)
+);
 
 CREATE TABLE IF NOT EXISTS campaign.subscription_shipment
 (
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS campaign.subscription_shipment
    creation_timestamp timestamp with time zone,
    status VARCHAR,
    CONSTRAINT fk_subscription_id FOREIGN KEY (subscription_id) REFERENCES campaign.subscriptions (id)
-)
+);
 
 CREATE TABLE IF NOT EXISTS campaign.fundrazr_perk_activation_code
 (
@@ -30,4 +30,4 @@ CREATE TABLE IF NOT EXISTS campaign.fundrazr_perk_activation_code
    CONSTRAINT account_id_fk FOREIGN KEY (account_id) REFERENCES ag.account (id),
    CONSTRAINT campaign_id_fk FOREIGN KEY (campaign_id) REFERENCES campaign.campaigns (campaign_id),
    CONSTRAINT fk_fundrazr_perk_id FOREIGN KEY (perk_id) REFERENCES campaign.fundrazr_perk (id)
-)
+);
