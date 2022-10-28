@@ -1,86 +1,33 @@
--- Table: barcodes.daklapack_order_by_perk_type
-
--- DROP TABLE IF EXISTS barcodes.daklapack_order_by_perk_type;
-
--- Table: campaign.subscriptions
-
--- DROP TABLE IF EXISTS campaign.subscriptions;
-
-
 CREATE TABLE IF NOT EXISTS campaign.subscriptions
 (
-    id character varying COLLATE pg_catalog."default" NOT NULL,
-    submitter_acct_id uuid,
-    transaction_id character varying COLLATE pg_catalog."default" NOT NULL,
-    no_of_kits character varying COLLATE pg_catalog."default" NOT NULL,
-    status character varying COLLATE pg_catalog."default",
-    creation_timestamp timestamp with time zone,
-    CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_acct_id FOREIGN KEY (submitter_acct_id)
-        REFERENCES ag.account (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+   submitter_acct_id UUID NOT NULL,
+   transaction_id VARCHAR NOT NULL,
+   no_of_kits VARCHAR NOT NULL,
+   status VARCHAR,
+   email VARCHAR NOT NULL,
+   creation_timestamp timestamp with time zone,
+   CONSTRAINT fk_acct_id FOREIGN KEY (submitter_acct_id) REFERENCES ag.account (id)
 )
-
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS campaign.subscriptions
-    OWNER to postgres;
-
--- Table: campaign.subscription_shipment
-
--- DROP TABLE IF EXISTS campaign.subscription_shipment;
 
 CREATE TABLE IF NOT EXISTS campaign.subscription_shipment
 (
-    id character varying COLLATE pg_catalog."default" NOT NULL,
-    subscription_id character varying COLLATE pg_catalog."default" NOT NULL,
-    planned_send_date date,
-    creation_timestamp timestamp with time zone,
-    status character varying COLLATE pg_catalog."default",
-    CONSTRAINT subscription_shipment_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_subscription_id FOREIGN KEY (subscription_id)
-        REFERENCES campaign.subscriptions (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+   subscription_id UUID NOT NULL,
+   planned_send_date date,
+   creation_timestamp timestamp with time zone,
+   status VARCHAR,
+   CONSTRAINT fk_subscription_id FOREIGN KEY (subscription_id) REFERENCES campaign.subscriptions (id)
 )
-
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS campaign.subscription_shipment
-    OWNER to postgres;
-
-
--- Table: campaign.fundrazr_perk_activation_code
-
--- DROP TABLE IF EXISTS campaign.fundrazr_perk_activation_code;
 
 CREATE TABLE IF NOT EXISTS campaign.fundrazr_perk_activation_code
 (
-    id character varying COLLATE pg_catalog."default" NOT NULL,
-    code character varying COLLATE pg_catalog."default" NOT NULL,
-    perk_id character varying COLLATE pg_catalog."default",
-    account_id uuid NOT NULL,
-    campaign_id uuid NOT NULL,
-    email character varying COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT fundrazr_perk_activation_code_pkey PRIMARY KEY (id),
-    CONSTRAINT account_id_fk FOREIGN KEY (account_id)
-        REFERENCES ag.account (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        NOT VALID,
-    CONSTRAINT campaign_id_fk FOREIGN KEY (campaign_id)
-        REFERENCES campaign.campaigns (campaign_id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        NOT VALID,
-    CONSTRAINT fk_fundrazr_perk_id FOREIGN KEY (perk_id)
-        REFERENCES campaign.fundrazr_perk (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+   code VARCHAR NOT NULL,
+   perk_id VARCHAR NOT NULL,
+   account_id uuid NOT NULL,
+   campaign_id uuid NOT NULL,
+   CONSTRAINT account_id_fk FOREIGN KEY (account_id) REFERENCES ag.account (id),
+   CONSTRAINT campaign_id_fk FOREIGN KEY (campaign_id) REFERENCES campaign.campaigns (campaign_id),
+   CONSTRAINT fk_fundrazr_perk_id FOREIGN KEY (perk_id) REFERENCES campaign.fundrazr_perk (id)
 )
-
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS campaign.fundrazr_perk_activation_code
-    OWNER to postgres;

@@ -334,8 +334,8 @@ class AccountRepo(BaseRepo):
     def add_accnt_subscription(self, account_id, email):
         with self._transaction.cursor() as cur:
             cur = cur.cursor()
-            cur.execute("""UPDATE campaign.fundrazr_perk_activation_code
-                           SET account_id=%s,
+            cur.execute("""UPDATE campaign.subscriptions
+                           SET submitter_acct_id=%s,
                            WHERE email=%s""",
                         (account_id, email))
             cur.commit()
