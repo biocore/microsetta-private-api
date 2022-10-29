@@ -52,15 +52,17 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
 
 
 def _remote_survey_url_vioscreen(transaction, account_id, source_id,
-                                 language_tag, survey_redirect_url):
+                                 language_tag, survey_redirect_url,
+                                 registration_code):
     # assumes an instance of Transaction is already available
     acct_repo = AccountRepo(transaction)
     survey_template_repo = SurveyTemplateRepo(transaction)
 
     # User is about to start a vioscreen survey
     # record this in the database.
-    db_vioscreen_id = survey_template_repo.create_vioscreen_id(
-            account_id, source_id)
+    db_vioscreen_id = survey_template_repo.create_vioscreen_id(account_id,
+                                                               source_id,
+                                                               registration_code)
 
     (birth_year, gender, height, weight) = \
         survey_template_repo.fetch_user_basic_physiology(
@@ -164,7 +166,8 @@ def _remote_survey_url_spain_ffq(transaction, account_id, source_id):
 
 
 def read_survey_template(account_id, source_id, survey_template_id,
-                         language_tag, token_info, survey_redirect_url=None):
+                         language_tag, token_info, survey_redirect_url=None,
+                         registration_code=None):
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
@@ -180,7 +183,8 @@ def read_survey_template(account_id, source_id, survey_template_id,
                                                    account_id,
                                                    source_id,
                                                    language_tag,
-                                                   survey_redirect_url)
+                                                   survey_redirect_url,
+                                                   registration_code)
             elif survey_template_id == SurveyTemplateRepo.MYFOODREPO_ID:
                 url = _remote_survey_url_myfoodrepo(t,
                                                     account_id,

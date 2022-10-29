@@ -599,7 +599,7 @@ paths:
         - $ref: '#/components/parameters/survey_template_id'
         - $ref: '#/components/parameters/language_tag'
         - $ref: '#/components/parameters/survey_redirect_url'
-        - $ref: '#/components/parameters/vioscreen_ext_sample_id'
+        - $ref: '#/components/parameters/registration_code'
       responses:
         '200':
           description: Successfully returned a specific survey template
@@ -920,7 +920,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        # - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/timestamp'
+      responses:
       responses:
         '200':
           description: Successfully returned session information
@@ -946,7 +949,9 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        # - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
           description: Successfully returned percent energy information
@@ -972,7 +977,9 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        # - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
           description: Successfully returned dietary score information
@@ -998,7 +1005,9 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-       # - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
           description: Successfully returned supplements information
@@ -1024,7 +1033,9 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        # - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
           description: Successfully returned food components information
@@ -1050,7 +1061,9 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        # - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
           description: Successfully returned eating patterns information
@@ -1076,7 +1089,9 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        # - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
           description: Successfully returned mpeds information
@@ -1102,7 +1117,9 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        # - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
           description: Successfully returned food consumption information
@@ -2676,6 +2693,12 @@ components:
       schema:
         $ref: '#/components/schemas/sample_id'
       required: False
+    registration_code:
+      name: registration_code
+      in: query
+      description: Identifies activation code for vioscreen sessions, indicates the user is being redirected using activation code
+      schema:
+        $ref: '#/components/schemas/activation_code'
 
     source_type:
       name: source_type
@@ -3280,6 +3303,9 @@ components:
     fc_code:
       type: string
       example: "acesupot"
+    activation_code:
+      type: string
+      example: "TMI-UV94L-97JN7-MWUFX"
 
     # error section
     Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/

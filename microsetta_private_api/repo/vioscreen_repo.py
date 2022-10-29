@@ -1658,7 +1658,7 @@ class VioscreenRepo(BaseRepo):
             return row[0]
 
     def get_vioscreen_sessions(self, account_id, source_id):
-        """Obtain a vioscreen session if it exists"""
+        """Obtain vioscreen sessions if it exists"""
         with self._transaction.cursor() as cur:
             # Find an active vioscreen for this account+source
             # (deleted surveys are not active)
