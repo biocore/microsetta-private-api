@@ -339,6 +339,38 @@ class SurveyTemplateRepo(BaseRepo):
                            WHERE account_id=%s AND source_id=%s""",
                         (mfr_id, account_id, source_id))
 
+    def delete_myfoodrepo(self, account_id, source_id):
+        """Intended for admin use, remove MyFoodRepo entries
+
+        This method is idempotent
+
+        This method deletes ALL MyFoodRepo surveys associated with an account
+        and source
+
+        This is a hard delete, we REMOVE rows rather than setting a flag
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+        """
+        with self._transaction.cursor() as cur:
+            existing, created = self.get_myfoodrepo_id_if_exists(account_id,
+                                                                 source_id)
+            if existing is not None:
+                cur.execute("""DELETE FROM ag.ag_login_surveys
+                               WHERE ag_login_id=%s
+                                   AND source_id=%s
+                                   AND survey_id=%s""",
+                            (account_id, source_id, existing))
+
+            cur.execute("""DELETE FROM ag.myfoodrepo_registry
+                           WHERE account_id=%s
+                               AND source_id=%s""",
+                        (account_id, source_id))
+
     def get_myfoodrepo_id_if_exists(self, account_id, source_id):
         """Return a MyFoodRepo ID if one exists
 
@@ -467,6 +499,37 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return res
 
+    def delete_polyphenol_ffq(self, account_id, source_id):
+        """Intended for admin use, remove Polyphenol FFQ entries
+
+        This method is idempotent.
+
+        This method deletes ALL Polyphenol FFQ surveys associated with an
+        account and source
+
+        This is a hard delete, we REMOVE rows rather than setting a flag
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+        """
+        with self._transaction.cursor() as cur:
+            existing, _ = self.get_polyphenol_ffq_id_if_exists(account_id,
+                                                               source_id)
+            if existing is not None:
+                cur.execute("""DELETE FROM ag.ag_login_surveys
+                               WHERE ag_login_id=%s
+                                   AND source_id=%s
+                                   AND survey_id=%s""",
+                            (account_id, source_id, existing))
+            cur.execute("""DELETE FROM ag.polyphenol_ffq_registry
+                           WHERE account_id=%s
+                               AND source_id=%s""",
+                        (account_id, source_id))
+
     def create_spain_ffq_entry(self, account_id, source_id):
         """Return a newly created Spain FFQ ID
 
@@ -529,6 +592,38 @@ class SurveyTemplateRepo(BaseRepo):
                 return None
             else:
                 return res[0]
+
+    def delete_spain_ffq(self, account_id, source_id):
+        """Intended for admin use, remove Spain FFQ entries
+
+        This method is idempotent
+
+        This method deletes ALL Spain FFQ surveys associated with an account
+        and source
+
+        This is a hard delete, we REMOVE rows rather than setting a flag
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+        """
+        with self._transaction.cursor() as cur:
+            existing = self.get_spain_ffq_id_if_exists(account_id,
+                                                       source_id)
+            if existing is not None:
+                cur.execute("""DELETE FROM ag.ag_login_surveys
+                               WHERE ag_login_id=%s
+                                   AND source_id=%s
+                                   AND survey_id=%s""",
+                            (account_id, source_id, existing))
+
+            cur.execute("""DELETE FROM ag.spain_ffq_registry
+                           WHERE account_id=%s
+                               AND source_id=%s""",
+                        (account_id, source_id))
 
     def get_vioscreen_sample_to_user(self):
         """Obtain a mapping of sample barcode to vioscreen user"""
@@ -604,6 +699,88 @@ class SurveyTemplateRepo(BaseRepo):
                 return None
             else:
                 return rows[0][0]
+
+    def get_vioscreen_all_ids_if_exists(self, account_id, source_id):
+        """Obtain all vioscreen IDs for a source
+
+        This method captures all IDs including IDs with the "deleted"
+        flag set.
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Returns
+        tuple or None
+            The tuple of IDs or None of there are no associated IDs
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT vio_id
+                           FROM vioscreen_registry
+                           WHERE account_id = %s
+                               AND source_id = %s""",
+                        (account_id, source_id))
+            ids = tuple([r[0] for r in cur.fetchall()])
+            if len(ids) > 0:
+                return ids
+            else:
+                return None
+
+    def delete_vioscreen(self, account_id, source_id):
+        """Intended for admin use, remove Vioscreen entries from the system
+
+        This method is idempotent
+
+        This method deletes ALL Vioscreen FFQ surveys associated with an
+        account and source
+
+        This is a hard delete, we REMOVE rows rather than setting a flag
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+        """
+        with self._transaction.cursor() as cur:
+            # get all vioscreen user names associated with the source
+            cur.execute("""SELECT vio_id
+                           FROM vioscreen_registry
+                           WHERE account_id=%s
+                               AND source_id=%s""",
+                        (account_id, source_id))
+            vio_ids = tuple([r[0] for r in cur.fetchall()])
+
+            if len(vio_ids) == 0:
+                return None
+
+            # get all sessions associated with the vio_ids
+            cur.execute("""SELECT sessionid
+                           FROM ag.vioscreen_sessions
+                           WHERE username IN %s""",
+                        (vio_ids, ))
+            sessions = tuple([r[0] for r in cur.fetchall()])
+
+            if len(sessions) > 0:
+                for tbl in ('dietaryscore', 'eatingpatterns', 'foodcomponents',
+                            'foodconsumption', 'foodconsumptioncomponents',
+                            'percentenergy', 'supplements', 'mpeds'):
+                    tbl = f'ag.vioscreen_{tbl}'
+                    cur.execute("DELETE FROM " + tbl + " " +
+                                "WHERE sessionid IN %s",
+                                (sessions, ))
+                cur.execute("""DELETE FROM ag.vioscreen_sessions
+                               WHERE sessionid IN %s""",
+                            (sessions, ))
+
+            cur.execute("""DELETE FROM ag.vioscreen_registry
+                           WHERE account_id = %s
+                               AND source_id = %s""",
+                        (account_id, source_id))
 
     def fetch_user_basic_physiology(self, account_id, source_id):
         """Given an account and source ID, obtain basic physiology properties
@@ -718,3 +895,37 @@ class SurveyTemplateRepo(BaseRepo):
                 weight = None
 
         return (birth_year, gender, height, weight)
+
+    def has_external_surveys(self, account_id, source_id):
+        """Test whether a source has any external surveys associated
+
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+        source_id : str, UUID
+            The source UUID
+
+        Returns
+        -------
+        boolean
+            True indicates the user has an external survey associated, false
+            otherwise
+        """
+        getters = (self.get_myfoodrepo_id_if_exists,
+                   self.get_polyphenol_ffq_id_if_exists,
+                   self.get_spain_ffq_id_if_exists,
+                   self.get_vioscreen_all_ids_if_exists)
+
+        for get in getters:
+            res = get(account_id, source_id)
+
+            # the if_exists methods are inconsistent in return type, yay
+            if isinstance(res, tuple):
+                if res[0] is not None:
+                    return True
+            else:
+                if res is not None:
+                    return True
+
+        return False
