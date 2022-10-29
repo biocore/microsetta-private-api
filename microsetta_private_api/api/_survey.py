@@ -60,9 +60,9 @@ def _remote_survey_url_vioscreen(transaction, account_id, source_id,
 
     # User is about to start a vioscreen survey
     # record this in the database.
-    db_vioscreen_id = survey_template_repo.create_vioscreen_id(account_id,
-                                                               source_id,
-                                                               registration_code)
+    db_vioscreen_id = \
+        survey_template_repo.create_vioscreen_id(account_id, source_id,
+                                                 registration_code)
 
     (birth_year, gender, height, weight) = \
         survey_template_repo.fetch_user_basic_physiology(

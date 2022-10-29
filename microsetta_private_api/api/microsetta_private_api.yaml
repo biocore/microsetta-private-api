@@ -2699,6 +2699,12 @@ components:
       description: Identifies activation code for vioscreen sessions, indicates the user is being redirected using activation code
       schema:
         $ref: '#/components/schemas/activation_code'
+    timestamp:
+      name: timestamp
+      in: query
+      description: Identifies activation code for vioscreen sessions, indicates the user is being redirected using activation code
+      schema:
+        $ref: '#/components/schemas/creation_time'
 
     source_type:
       name: source_type
