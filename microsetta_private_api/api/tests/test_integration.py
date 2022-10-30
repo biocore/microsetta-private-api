@@ -1067,13 +1067,10 @@ class IntegrationTests(TestCase):
             data=json.dumps(SOURCE_DATA),
             headers=MOCK_HEADERS)
 
-        self.assertEqual(201, response.status_code)
+        self.assertEqual(404, response.status_code)
 
         with Transaction() as t:
             with t.cursor() as cur:
-                cur.execute("DELETE FROM ag.consent_audit"
-                            " WHERE consent_id = %s", (CONSENT_DOC_ID,))
-
                 cur.execute("DELETE FROM ag.consent_documents"
                             " WHERE consent_id = %s", (CONSENT_DOC_ID,))
             t.commit()

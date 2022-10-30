@@ -7,6 +7,8 @@ from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.repo.consent_repo import ConsentRepo
+from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
 
@@ -102,22 +104,51 @@ def update_source(account_id, source_id, body, token_info):
         return jsonify(source.to_api()), 200
 
 
+# def delete_source(account_id, source_id, token_info):
+#     _validate_account_access(token_info, account_id)
+
+#     with Transaction() as t:
+#         source_repo = SourceRepo(t)
+#         survey_answers_repo = SurveyAnswersRepo(t)
+#         consent_repo = ConsentRepo(t)
+
+#         answers = survey_answers_repo.list_answered_surveys(account_id,
+#                                                             source_id)
+#         for survey_id in answers:
+#             survey_answers_repo.delete_answered_survey(account_id,
+#                                                        survey_id)
+
+#         if not source_repo.delete_source(account_id, source_id):
+#             return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
+#         # TODO: 422?
+#         t.commit()
+#         return '', 204
+
 def delete_source(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         source_repo = SourceRepo(t)
-        survey_answers_repo = SurveyAnswersRepo(t)
+        consent_repo = ConsentRepo(t)
+        samp_repo = SampleRepo(t)
+        sur_repo = SurveyAnswersRepo(t)
 
-        answers = survey_answers_repo.list_answered_surveys(account_id,
-                                                            source_id)
-        for survey_id in answers:
-            survey_answers_repo.delete_answered_survey(account_id,
-                                                       survey_id)
+        samples = samp_repo.get_samples_by_source(account_id, source_id)
+        for sample in samples:
+            # we scrub rather than disassociate in the event that the
+            # sample is in our freezers but not with an up-to-date scan
+            samp_repo.scrub(account_id, source_id, sample.id)
 
-        if not source_repo.delete_source(account_id, source_id):
-            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
-        # TODO: 422?
+        #fetch and scrub all surveys
+        surveys = sur_repo.list_answered_surveys(account_id, source_id)
+        for survey_id in surveys:
+            sur_repo.scrub(account_id, source_id, survey_id)
+
+        #scrub all consents accosiated with source
+        consent_repo.scrub(account_id, source_id)
+
+        #scrub the source
+        source_repo.scrub(account_id, source_id)
         t.commit()
         return '', 204
 

@@ -1,8 +1,10 @@
+from re import L
 from microsetta_private_api.model.consent import ConsentDocument
 from microsetta_private_api.model.consent import ConsentSignature
 from microsetta_private_api.repo.base_repo import BaseRepo
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.exceptions import RepoException
 
 
 def _consent_document_to_row(s):
@@ -135,13 +137,38 @@ class ConsentRepo(BaseRepo):
                     return doc_date > sign_date
             else:
                 return r["reconsent_required"]
+    
+    def _is_valid_consent_sign(self, sign, doc):
+        res = True
+
+        parent_1 = sign.parent_1_name
+        parent_2 = sign.parent_2_name
+        obtainer = sign.assent_obtainer
+        deceased = sign.deceased_parent
+
+        con = ["Parental Consent", "Child Assent", "Teenage Assent"]
+
+        for v in con:
+            if v in doc.consent_type:
+                if None in (parent_1, parent_2, obtainer, deceased):
+                    res = False
+                    return res
+
+        for value in (parent_1, parent_2, obtainer, deceased):
+            if value != None:
+                res = False
+                return res
+
+        return res
 
     def sign_consent(self, account_id, consent_signature):
         with self._transaction.dict_cursor() as cur:
             consentRepo = ConsentRepo(self._transaction)
             consent_id = consent_signature.consent_id
 
-            if consentRepo.get_consent_document(consent_id) is None:
+            consent_doc = consentRepo.get_consent_document(consent_id)
+
+            if consent_doc is None:
                 raise NotFound("Consent Document does not exist!")
 
             sourceRepo = SourceRepo(self._transaction)
@@ -149,6 +176,10 @@ class ConsentRepo(BaseRepo):
 
             if sourceRepo.get_source(account_id, source_id) is None:
                 raise NotFound("Source does not exist!")
+
+            if not self._is_valid_consent_sign(consent_signature, consent_doc):
+                raise NotFound("Invalid consent signature!")
+
 
             cur.execute("INSERT INTO consent_audit (" +
                         self.signature_write_cols + ") "
@@ -158,3 +189,37 @@ class ConsentRepo(BaseRepo):
                         "%s, %s)",
                         _consent_signature_to_row(consent_signature))
             return cur.rowcount == 1
+
+    def scrub(self, account_id, source_id):
+
+        with self._transaction.dict_cursor() as cur:
+            sourceRepo = SourceRepo(self._transaction)
+            if sourceRepo.get_source(account_id, source_id) is None:
+                raise NotFound("Source does not exist!")
+
+            cur.execute("SELECT signature_id FROM ag.consent_audit"
+                        " WHERE source_id = %s", (source_id,))
+
+            rows = cur.fetchall()
+            docs = [row["signature_id"] for row in rows]
+
+            parent_1_name = "scrubbed"
+            parent_2_name = "scrubbed"
+            deceased_parent = None
+            assent_obtainer = "scrubbed"
+
+            for doc in docs:
+                cur.execute("UPDATE ag.consent_audit "
+                            "SET parent_1_name = %s,"
+                            " parent_2_name = %s,"
+                            " deceased_parent = %s,"
+                            " assent_obtainer = %s"
+                            " WHERE signature_id = %s",
+                            (parent_1_name, parent_2_name, 
+                            deceased_parent, assent_obtainer, 
+                            doc,))
+
+                if cur.rowcount != 1:
+                    raise RepoException("Failed to scrub consent signature")
+
+        return True
