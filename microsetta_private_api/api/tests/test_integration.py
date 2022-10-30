@@ -288,8 +288,8 @@ class IntegrationTests(TestCase):
                 for survey_id in answers:
                     survey_answers_repo.delete_answered_survey(ACCT_ID,
                                                                survey_id)
-                source_repo.delete_source(ACCT_ID, source.id)
-            acct_repo.delete_account(ACCT_ID)
+                source_repo.scrub(ACCT_ID, source.id)
+            acct_repo.scrub(ACCT_ID)
 
             t.commit()
 
