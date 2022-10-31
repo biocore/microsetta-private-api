@@ -12,8 +12,9 @@ from microsetta_private_api.repo.vioscreen_repo import (
 
 
 def _get_session_by_account_details(account_id, source_id,
-                                    sample_id, registration_code,
-                                    timestamp):
+                                    sample_id=None,
+                                    registration_code=None,
+                                    timestamp=None):
     with Transaction() as t:
         surv_temp = SurveyTemplateRepo(t)
         vio_sess = VioscreenSessionRepo(t)
@@ -34,9 +35,10 @@ def _get_session_by_account_details(account_id, source_id,
         return False, vioscreen_session
 
 
-def read_vioscreen_session(account_id, source_id, sample_id,
-                           registration_code,
-                           timestamp, token_info):
+def read_vioscreen_session(account_id, source_id, token_info,
+                           sample_id=None,
+                           registration_code=None,
+                           timestamp=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -51,9 +53,10 @@ def read_vioscreen_session(account_id, source_id, sample_id,
     return jsonify(vioscreen_session[0].to_api()), 200
 
 
-def read_vioscreen_percent_energy(account_id, source_id,
-                                  sample_id, registration_code,
-                                  timestamp, token_info):
+def read_vioscreen_percent_energy(account_id, source_id, token_info,
+                                  sample_id=None,
+                                  registration_code=None,
+                                  timestamp=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -76,9 +79,10 @@ def read_vioscreen_percent_energy(account_id, source_id,
         return jsonify(vioscreen_percent_energy.to_api()), 200
 
 
-def read_vioscreen_dietary_score(account_id, source_id,
-                                 sample_id, registration_code,
-                                 timestamp, token_info):
+def read_vioscreen_dietary_score(account_id, source_id, token_info,
+                                 sample_id=None,
+                                 registration_code=None,
+                                 timestamp=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -101,9 +105,10 @@ def read_vioscreen_dietary_score(account_id, source_id,
         return jsonify([vds.to_api() for vds in vioscreen_dietary_scores]), 200
 
 
-def read_vioscreen_supplements(account_id, source_id,
-                               sample_id, registration_code,
-                               timestamp, token_info):
+def read_vioscreen_supplements(account_id, source_id, token_info,
+                               sample_id=None,
+                               registration_code=None,
+                               timestamp=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -127,8 +132,10 @@ def read_vioscreen_supplements(account_id, source_id,
 
 
 def read_vioscreen_food_components(account_id, source_id,
-                                   sample_id, registration_code,
-                                   timestamp, token_info):
+                                   token_info,
+                                   sample_id=None,
+                                   registration_code=None,
+                                   timestamp=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -151,9 +158,10 @@ def read_vioscreen_food_components(account_id, source_id,
         return jsonify(vioscreen_food_components.to_api()), 200
 
 
-def read_vioscreen_eating_patterns(account_id, source_id,
-                                   sample_id, registration_code,
-                                   timestamp, token_info):
+def read_vioscreen_eating_patterns(account_id, source_id, token_info,
+                                   sample_id=None,
+                                   registration_code=None,
+                                   timestamp=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -176,9 +184,9 @@ def read_vioscreen_eating_patterns(account_id, source_id,
         return jsonify(vioscreen_eating_patterns.to_api()), 200
 
 
-def read_vioscreen_mpeds(account_id, source_id,
-                         sample_id, registration_code,
-                         timestamp, token_info):
+def read_vioscreen_mpeds(account_id, source_id, token_info,
+                         sample_id=None, registration_code=None,
+                         timestamp=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -200,9 +208,10 @@ def read_vioscreen_mpeds(account_id, source_id,
         return jsonify(vioscreen_mpeds.to_api()), 200
 
 
-def read_vioscreen_food_consumption(account_id, source_id,
-                                    sample_id, registration_code,
-                                    timestamp, token_info):
+def read_vioscreen_food_consumption(account_id, source_id, token_info,
+                                    sample_id=None,
+                                    registration_code=None,
+                                    timestamp=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \

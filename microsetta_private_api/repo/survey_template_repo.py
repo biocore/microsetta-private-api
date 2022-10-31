@@ -539,9 +539,8 @@ class SurveyTemplateRepo(BaseRepo):
             return {r[0]: r[1] for r in cur.fetchall()}
 
     def create_vioscreen_id(self, account_id, source_id,
-                            sample_id,
-                            registration_code,
-                            timestamp):
+                            sample_id=None,
+                            registration_code=None):
         with self._transaction.cursor() as cur:
             # This transaction scans for existing IDs,
             # then generates a new ID if none exist
@@ -553,8 +552,7 @@ class SurveyTemplateRepo(BaseRepo):
             # test if an existing ID is available
             existing = self.get_vioscreen_id_if_exists(account_id, source_id,
                                                        sample_id,
-                                                       registration_code,
-                                                       timestamp)
+                                                       registration_code)
             if existing is None:
                 vioscreen_id = secrets.token_hex(8)
                 # Put a survey with status -1 into ag_login_surveys
@@ -568,12 +566,20 @@ class SurveyTemplateRepo(BaseRepo):
 
                 # And add it to the registry to keep track of the survey if
                 # user quits out then wants to resume the survey.
-                cur.execute("INSERT INTO vioscreen_registry("
-                            "account_id, source_id, vio_id "
-                            "activation_code) "
-                            "VALUES(%s, %s, %s)",
-                            (account_id, source_id,
-                             vioscreen_id, registration_code))
+                if sample_id is not None:
+                    cur.execute("INSERT INTO vioscreen_registry("
+                                "account_id, source_id, vio_id "
+                                "sample_id) "
+                                "VALUES(%s, %s, %s)",
+                                (account_id, source_id,
+                                 vioscreen_id, sample_id))
+                elif registration_code is not None:
+                    cur.execute("INSERT INTO vioscreen_registry("
+                                "account_id, source_id, vio_id "
+                                "registration_code) "
+                                "VALUES(%s, %s, %s, %s)",
+                                (account_id, source_id,
+                                 vioscreen_id, registration_code))
             else:
                 vioscreen_id = existing
         return vioscreen_id

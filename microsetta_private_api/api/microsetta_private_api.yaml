@@ -599,6 +599,7 @@ paths:
         - $ref: '#/components/parameters/survey_template_id'
         - $ref: '#/components/parameters/language_tag'
         - $ref: '#/components/parameters/survey_redirect_url'
+        - $ref: '#/components/parameters/sample_id'
         - $ref: '#/components/parameters/registration_code'
       responses:
         '200':
@@ -2702,7 +2703,7 @@ components:
     timestamp:
       name: timestamp
       in: query
-      description: Identifies activation code for vioscreen sessions, indicates the user is being redirected using activation code
+      description: required creation time for vioscreen sessions
       schema:
         $ref: '#/components/schemas/creation_time'
 

@@ -53,7 +53,8 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
 
 def _remote_survey_url_vioscreen(transaction, account_id, source_id,
                                  language_tag, survey_redirect_url,
-                                 registration_code):
+                                 sample_id=None,
+                                 registration_code=None):
     # assumes an instance of Transaction is already available
     acct_repo = AccountRepo(transaction)
     survey_template_repo = SurveyTemplateRepo(transaction)
@@ -62,6 +63,7 @@ def _remote_survey_url_vioscreen(transaction, account_id, source_id,
     # record this in the database.
     db_vioscreen_id = \
         survey_template_repo.create_vioscreen_id(account_id, source_id,
+                                                 sample_id,
                                                  registration_code)
 
     (birth_year, gender, height, weight) = \
@@ -167,6 +169,7 @@ def _remote_survey_url_spain_ffq(transaction, account_id, source_id):
 
 def read_survey_template(account_id, source_id, survey_template_id,
                          language_tag, token_info, survey_redirect_url=None,
+                         sample_id=None,
                          registration_code=None):
     _validate_account_access(token_info, account_id)
 
@@ -184,6 +187,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
                                                    source_id,
                                                    language_tag,
                                                    survey_redirect_url,
+                                                   sample_id,
                                                    registration_code)
             elif survey_template_id == SurveyTemplateRepo.MYFOODREPO_ID:
                 url = _remote_survey_url_myfoodrepo(t,
