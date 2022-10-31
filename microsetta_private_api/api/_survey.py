@@ -59,6 +59,10 @@ def _remote_survey_url_vioscreen(transaction, account_id, source_id,
     acct_repo = AccountRepo(transaction)
     survey_template_repo = SurveyTemplateRepo(transaction)
 
+    if sample_id is None and registration_code is None:
+        return jsonify(code=400, message="Please pass sample id"
+                                         "or registration code"), 400
+
     # User is about to start a vioscreen survey
     # record this in the database.
     db_vioscreen_id = \
