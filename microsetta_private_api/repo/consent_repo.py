@@ -1,4 +1,3 @@
-from re import L
 from microsetta_private_api.model.consent import ConsentDocument
 from microsetta_private_api.model.consent import ConsentSignature
 from microsetta_private_api.repo.base_repo import BaseRepo
@@ -137,7 +136,7 @@ class ConsentRepo(BaseRepo):
                     return doc_date > sign_date
             else:
                 return r["reconsent_required"]
-    
+
     def _is_valid_consent_sign(self, sign, doc):
         res = True
 
@@ -155,7 +154,7 @@ class ConsentRepo(BaseRepo):
                     return res
 
         for value in (parent_1, parent_2, obtainer, deceased):
-            if value != None:
+            if value is not None:
                 res = False
                 return res
 
@@ -179,7 +178,6 @@ class ConsentRepo(BaseRepo):
 
             if not self._is_valid_consent_sign(consent_signature, consent_doc):
                 raise NotFound("Invalid consent signature!")
-
 
             cur.execute("INSERT INTO consent_audit (" +
                         self.signature_write_cols + ") "
@@ -215,9 +213,9 @@ class ConsentRepo(BaseRepo):
                             " deceased_parent = %s,"
                             " assent_obtainer = %s"
                             " WHERE signature_id = %s",
-                            (parent_1_name, parent_2_name, 
-                            deceased_parent, assent_obtainer, 
-                            doc,))
+                            (parent_1_name, parent_2_name,
+                             deceased_parent, assent_obtainer,
+                             doc,))
 
                 if cur.rowcount != 1:
                     raise RepoException("Failed to scrub consent signature")

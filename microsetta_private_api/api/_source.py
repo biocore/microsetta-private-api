@@ -139,15 +139,15 @@ def delete_source(account_id, source_id, token_info):
             # sample is in our freezers but not with an up-to-date scan
             samp_repo.scrub(account_id, source_id, sample.id)
 
-        #fetch and scrub all surveys
+        # fetch and scrub all surveys
         surveys = sur_repo.list_answered_surveys(account_id, source_id)
         for survey_id in surveys:
             sur_repo.scrub(account_id, source_id, survey_id)
 
-        #scrub all consents accosiated with source
+        # scrub all consents accosiated with source
         consent_repo.scrub(account_id, source_id)
 
-        #scrub the source
+        # scrub the source
         source_repo.scrub(account_id, source_id)
         t.commit()
         return '', 204

@@ -39,12 +39,13 @@ INVALID_SIGN = {"source_id": '4affcca2-1ca4-480d-88a4-b6dd2a3ba55b',
                 }
 
 MALFORMED_SIGN = {"source_id": '4affcca2-1ca4-480d-88a4-b6dd2a3ba55b',
-                "date_time": datetime.now(),
-                "parent_1_name": "demo",
-                "parent_2_name": "demo",
-                "deceased__parent": "false",
-                "assent_obtainer": "demo"
-                }
+                  "date_time": datetime.now(),
+                  "parent_1_name": "demo",
+                  "parent_2_name": "demo",
+                  "deceased__parent": "false",
+                  "assent_obtainer": "demo"
+                  }
+
 
 class ConsentRepoTests(unittest.TestCase):
     def test_sign_data_consent(self):
@@ -52,49 +53,49 @@ class ConsentRepoTests(unittest.TestCase):
             consentRepo = ConsentRepo(t)
             source = CORRECT_SIGN["source_id"]
             CORRECT_SIGN.update({"consent_id": ADULT_DATA_CONSENT})
-            sign = ConsentSignature.from_dict(CORRECT_SIGN, source, ADULT_DATA_CONSENT)
+            con = ADULT_DATA_CONSENT
+            sign = ConsentSignature.from_dict(CORRECT_SIGN, source, con)
             res = consentRepo.sign_consent(ACCT_ID, sign)
             self.assertTrue(res)
-
 
     def test_sign_biospecimen_consent(self):
         with Transaction() as t:
             consentRepo = ConsentRepo(t)
             source = CORRECT_SIGN["source_id"]
             CORRECT_SIGN.update({"consent_id": ADULT_BIO_CONSENT})
-            sign = ConsentSignature.from_dict(CORRECT_SIGN, source, ADULT_BIO_CONSENT)
+            con = ADULT_BIO_CONSENT
+            sign = ConsentSignature.from_dict(CORRECT_SIGN, source, con)
             res = consentRepo.sign_consent(ACCT_ID, sign)
             self.assertTrue(res)
-
 
     def test_sign_invalid_source_consent(self):
         with Transaction() as t:
             consentRepo = ConsentRepo(t)
-            source = INVALID_SOURCE_SIGN["source_id"]
+            src = INVALID_SOURCE_SIGN["source_id"]
             INVALID_SOURCE_SIGN.update({"consent_id": CHILD_DATA_CONSENT})
-            sign = ConsentSignature.from_dict(INVALID_SOURCE_SIGN, source, CHILD_DATA_CONSENT)
+            con = CHILD_DATA_CONSENT
+            sign = ConsentSignature.from_dict(INVALID_SOURCE_SIGN, src, con)
             with self.assertRaises(NotFound):
                 consentRepo.sign_consent(ACCT_ID, sign)
-
 
     def test_sign_invalid_consent(self):
         with Transaction() as t:
             consentRepo = ConsentRepo(t)
             source = INVALID_SIGN["source_id"]
-            sign = ConsentSignature.from_dict(INVALID_SIGN, source, CHILD_DATA_CONSENT)
+            con = CHILD_DATA_CONSENT
+            sign = ConsentSignature.from_dict(INVALID_SIGN, source, con)
             with self.assertRaises(NotFound):
                 consentRepo.sign_consent(ACCT_ID, sign)
-
 
     def test_sign_malformed_data(self):
         with Transaction() as t:
             consentRepo = ConsentRepo(t)
             source = MALFORMED_SIGN["source_id"]
             MALFORMED_SIGN.update({"consent_id": ADULT_DATA_CONSENT})
-            sign = ConsentSignature.from_dict(MALFORMED_SIGN, source, ADULT_DATA_CONSENT)
+            con = ADULT_DATA_CONSENT
+            sign = ConsentSignature.from_dict(MALFORMED_SIGN, source, con)
             with self.assertRaises(NotFound):
                 consentRepo.sign_consent(ACCT_ID, sign)
-
 
     def test_fetch_invalid_document(self):
         with Transaction() as t:
