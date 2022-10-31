@@ -131,6 +131,8 @@ class AccountRepo(BaseRepo):
                         "WHERE "
                         "account.id = %s", (account_id,))
             r = cur.fetchone()
+            print(">>>>>>>>>passed account id: " + account_id)
+            print(str(r))
             if r is None:
                 return None
             else:
