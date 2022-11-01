@@ -1858,7 +1858,7 @@ class SampleTests(ApiTests):
             headers=self.dummy_auth
         )
         # check response code
-        self.assertEqual(400, post_resp.status_code)
+        self.assertEqual(200, post_resp.status_code)
 
         # attempt to continue editing as a regular user, should succeed
         date = datetime.datetime.now()

@@ -7,6 +7,9 @@ from microsetta_private_api.repo.consent_repo import ConsentRepo
 from microsetta_private_api.model.consent import ConsentDocument, \
     ConsentSignature
 from microsetta_private_api.model.source import HumanInfo, Source
+from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.model.account import Account
+from microsetta_private_api.model.address import Address
 
 ADULT_DATA_CONSENT = "f3ad5967-7f39-431c-b0fa-906c8c96791b"
 ADULT_BIO_CONSENT = "cdcd461b-e903-46b6-b252-b2e672df24f4"
@@ -67,7 +70,26 @@ class ConsentRepoTests(unittest.TestCase):
     def test_sign_data_consent(self):
         with Transaction() as t:
             consentRepo = ConsentRepo(t)
+            acct_repo = AccountRepo(t)
             srcRepo = SourceRepo(t)
+
+            # Set up test account with sources
+            acc = Account(ACCT_ID,
+                          "foo@baz.com",
+                          "standard",
+                          "https://MOCKUNITTEST.com",
+                          "1234ThisIsNotARealSub",
+                          "Dan",
+                          "H",
+                          Address(
+                              "123 Dan Lane",
+                              "Danville",
+                              "CA",
+                              12345,
+                              "US"
+                          ),
+                          "en_US")
+            acct_repo.create_account(acc)
 
             source = CORRECT_SIGN["source_id"]
             srcRepo.create_source(Source(
@@ -94,6 +116,26 @@ class ConsentRepoTests(unittest.TestCase):
     def test_sign_biospecimen_consent(self):
         with Transaction() as t:
             consentRepo = ConsentRepo(t)
+            acct_repo = AccountRepo(t)
+
+            # Set up test account with sources
+            acc = Account(ACCT_ID,
+                          "foo@baz.com",
+                          "standard",
+                          "https://MOCKUNITTEST.com",
+                          "1234ThisIsNotARealSub",
+                          "Dan",
+                          "H",
+                          Address(
+                              "123 Dan Lane",
+                              "Danville",
+                              "CA",
+                              12345,
+                              "US"
+                          ),
+                          "en_US")
+            acct_repo.create_account(acc)
+
             srcRepo = SourceRepo(t)
             source = CORRECT_SIGN["source_id"]
 
