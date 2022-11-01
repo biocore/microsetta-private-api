@@ -76,7 +76,7 @@ class ConsentRepoTests(unittest.TestCase):
                 Source.SOURCE_TYPE_HUMAN,
                 "Dummy",
                 HumanInfo(False, None, None,
-                          False, datetime.datetime.utcnow(), None,
+                          False, datetime.utcnow(), None,
                           "Mr. Obtainer",
                           "18-plus")
             ))
@@ -103,7 +103,7 @@ class ConsentRepoTests(unittest.TestCase):
                 Source.SOURCE_TYPE_HUMAN,
                 "Dummy",
                 HumanInfo(False, None, None,
-                          False, datetime.datetime.utcnow(), None,
+                          False, datetime.utcnow(), None,
                           "Mr. Obtainer",
                           "18-plus")
             ))

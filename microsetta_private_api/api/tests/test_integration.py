@@ -1166,21 +1166,6 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 204)
 
-        # Remove the sample.
-        resp = self.client.delete(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
-            (ACCT_ID, source_id_from_obj, sample_id),
-            headers=MOCK_HEADERS
-        )
-        check_response(resp)
-
-        # Now delete the source (Hopefully successfully!
-        resp = self.client.delete(
-            loc + "?language_tag=en_US",
-            headers=MOCK_HEADERS
-        )
-        check_response(resp, 204)
-
     def test_associate_sample_and_survey(self):
         """
             Submit a survey for a source
