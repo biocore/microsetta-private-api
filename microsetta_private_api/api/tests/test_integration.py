@@ -1815,6 +1815,7 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 200)
 
+
 def _create_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
                      kit_id=KIT_ID, supplied_kit_id=SUPPLIED_KIT_ID):
 
