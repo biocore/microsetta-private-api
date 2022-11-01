@@ -1314,38 +1314,3 @@ class AdminRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             psycopg2.extras.execute_values(cur, insert_sql, kit_uuid_tuples,
                                            template=None, page_size=100)
-
-    def get_perk_type(self, dak_order_id):
-        with self._transaction.dict_cursor() as cur:
-            cur.execute(
-                "SELECT fp.perk_type "
-                "FROM campaign.fundrazr_daklapack_orders fdo "
-                "INNER JOIN campaign.fundrazr_transaction_perk ftp "
-                "ON "
-                "ftp.id = "
-                "fdo.fundrazr_transaction_perk_id "
-                "INNER JOIN campaign.fundrazr_perk fp "
-                "ON "
-                "fp.id = "
-                "ftp.perk_id "
-                "WHERE "
-                "fdo.dak_order_id = %s ",
-                (dak_order_id,))
-            return cur.fetchone()
-
-    def get_perk_type3_orders(self):
-        # TODO: Need to get the exact status of the order status,
-        #  currently using "Complete"
-        with self._transaction.dict_cursor() as cur:
-            cur.execute(
-                "SELECT t1.dak_order_id "
-                "FROM "
-                "barcodes.daklapack_order_by_perk_type AS t1"
-                "INNER JOIN barcodes.daklapack_order as t2 ON t1"
-                ".dak_order_id=t2.daklapack_order"
-                "WHERE t2.last_polling_status IN (%s) "
-                "OR t2.last_polling_status IS NULL "
-                "ORDER BY t2.last_polling_timestamp DESC;",
-                ("Complete"))
-            rows = cur.fetchall()
-            return [x[0] for x in rows]

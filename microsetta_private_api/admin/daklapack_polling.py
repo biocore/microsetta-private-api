@@ -4,7 +4,6 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.admin import daklapack_communication as dc
 from microsetta_private_api.celery_utils import celery
-# from microsetta_private_api.util.util import PerksType
 
 OUTBOUND_DEV_KEY = "outBoundDelivery"
 INBOUND_DEV_KEY = "inBoundDelivery"

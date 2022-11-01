@@ -2515,6 +2515,64 @@ paths:
                 items:
                   type: object
 
+  '/add_perk_type':
+    get:
+      operationId: microsetta_private_api.api.get_perk_type
+      tags:
+        - Campaigns
+      summary: Get perk type on provided perk_id
+      description: Get perk type information based on provided perk_id
+      parameters:
+        - in: query
+          name: perk_id
+          description: unique identifier of perk to get information for
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: perk type information
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      operationId: microsetta_private_api.api.add_perk_type_to_campaign
+      tags:
+        - Campaigns
+        - Admin
+      summary: Add perk type to campaign
+      description: Add perk type to campaign
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                'campaign_id':
+                  type: string
+                'perk_id':
+                  type: string
+                'contact_email':
+                  type: string
+                'transaction_id':
+                  type: string
+                'payer_name':
+                  type: string
+              required:
+                - campaign_id
+                - perk_id
+                - contact_email
+                - transaction_id
+                - payer_name
+      responses:
+        '200':
+          description: perk type information
+          content:
+            application/json:
+              schema:
+                type: object
+
 components:
   parameters:
     # path parameters

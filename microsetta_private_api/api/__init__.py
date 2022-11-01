@@ -43,6 +43,11 @@ from ._campaign import (
     get_campaign_information
 )
 
+from ._perk_type import (
+    add_perk_type_to_campaign,
+    get_perk_type
+)
+
 from ._interested_user import (
     create_interested_user, get_interested_user_address_update,
     put_interested_user_address_update
@@ -108,5 +113,7 @@ __all__ = [
     'get_campaign_information',
     'create_interested_user',
     'get_interested_user_address_update',
-    'put_interested_user_address_update'
+    'put_interested_user_address_update',
+    'add_perk_type_to_campaign',
+    'get_perk_type'
 ]
