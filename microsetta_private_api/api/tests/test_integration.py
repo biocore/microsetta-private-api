@@ -1223,7 +1223,7 @@ class IntegrationTests(TestCase):
                  "deceased_parent": 'false',
                  "obtainer_name": "MojoJojo"
                  }),
-            headers=MOCK_HEADERS
+            headers=MOCK_HEADERS_3
 
         )
         check_response(resp, 201)
@@ -1241,7 +1241,7 @@ class IntegrationTests(TestCase):
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en_US' %
             (account_id, source_id_from_obj, chosen_survey),
-            headers=MOCK_HEADERS
+            headers=MOCK_HEADERS_3
         )
         check_response(resp)
 
@@ -1255,14 +1255,14 @@ class IntegrationTests(TestCase):
                     'survey_template_id': chosen_survey,
                     'survey_text': model
                 }),
-            headers=MOCK_HEADERS
+            headers=MOCK_HEADERS_3
         )
         check_response(resp, 201)
 
         # claim a sample
         resp = self.client.get(
             '/api/kits/?language_tag=en_US&kit_name=%s' % SUPPLIED_KIT_ID,
-            headers=MOCK_HEADERS
+            headers=MOCK_HEADERS_3
         )
         check_response(resp)
 
@@ -1277,16 +1277,23 @@ class IntegrationTests(TestCase):
                 {
                     "sample_id": sample_id
                 }),
-            headers=MOCK_HEADERS
+            headers=MOCK_HEADERS_3
         )
         check_response(resp)
 
-        # Delete the newly created source. (Fail because sample associated)
+        # Scrub the newly created source
         resp = self.client.post(
             loc + "?language_tag=en_US",
-            headers=MOCK_HEADERS
+            headers=MOCK_HEADERS_3
         )
-        check_response(resp, 200)
+        check_response(resp, 201)
+
+        # Delete the newly created source
+        resp = self.client.delete(
+            loc + "?language_tag=en_US",
+            headers=MOCK_HEADERS_3
+        )
+        check_response(resp, 204)
 
     def test_associate_sample_and_survey(self):
         """
