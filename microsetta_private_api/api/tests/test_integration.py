@@ -1178,8 +1178,8 @@ class IntegrationTests(TestCase):
             acc = Account(account_id,
                           "foo@demo.com",
                           "standard",
-                          "https://MOCKUNITTEST.com",
-                          "1234ThisIsNotARealSub",
+                          "https://demotest.com",
+                          "DemoSub",
                           "Dan",
                           "H",
                           Address(
