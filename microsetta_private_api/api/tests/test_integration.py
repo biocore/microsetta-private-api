@@ -1286,7 +1286,7 @@ class IntegrationTests(TestCase):
             loc + "?language_tag=en_US",
             headers=MOCK_HEADERS_3
         )
-        check_response(resp, 201)
+        check_response(resp, 200)
 
         # Delete the newly created source
         resp = self.client.delete(
