@@ -1176,7 +1176,7 @@ class IntegrationTests(TestCase):
             accountRepo = AccountRepo(t)
 
             acc = Account(account_id,
-                          "foo@baz.com",
+                          "foo@demo.com",
                           "standard",
                           "https://MOCKUNITTEST.com",
                           "1234ThisIsNotARealSub",
