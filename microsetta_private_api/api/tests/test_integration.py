@@ -1191,6 +1191,7 @@ class IntegrationTests(TestCase):
                           ),
                           "en_US")
             accountRepo.create_account(acc)
+        t.commit()
 
         """To add a human source, we need to get consent"""
         resp = self.client.get(
