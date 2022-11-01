@@ -1288,6 +1288,8 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 200)
 
+        print(str(loc))
+
         # Delete the newly created source
         resp = self.client.delete(
             loc + "?language_tag=en_US",
