@@ -29,7 +29,7 @@ from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 import copy
 import microsetta_private_api.api
 
-ACCT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeefffffff1"
+ACCT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 NOT_ACCT_ID = "12341234-1234-1234-1234-123412341234"
 HUMAN_ID = "b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0"
 BOBO_FAVORITE_SURVEY_TEMPLATE = 1
@@ -270,7 +270,6 @@ class IntegrationTests(TestCase):
         with Transaction() as t:
             acct_repo = AccountRepo(t)
             source_repo = SourceRepo(t)
-            consent_repo = ConsentRepo(t)
             _remove_mock_kit(t)
 
             # since myfoodrepo is source not sample based,
@@ -289,7 +288,6 @@ class IntegrationTests(TestCase):
                 for survey_id in answers:
                     survey_answers_repo.delete_answered_survey(ACCT_ID,
                                                                survey_id)
-                print("--->REACHED HERE")
                 source_repo.delete_source(ACCT_ID, source.id)
             acct_repo.delete_account(ACCT_ID)
 

@@ -134,6 +134,7 @@ def delete_source(account_id, source_id, token_info):
         t.commit()
         return '', 204
 
+
 def scrub_source(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
 
