@@ -605,7 +605,7 @@ class SurveyTemplateRepo(BaseRepo):
                             "vioscreen_registry WHERE "
                             "account_id=%s AND "
                             "source_id=%s AND "
-                            "activation_code=%s AND "
+                            "registration_code=%s AND "
                             "deleted=false",
                             (account_id, source_id, registration_code))
             elif timestamp is not None:
