@@ -3310,7 +3310,7 @@ components:
     fc_code:
       type: string
       example: "acesupot"
-    activation_code:
+    registration_code:
       type: string
       example: "TMI-UV94L-97JN7-MWUFX"
 
