@@ -221,3 +221,15 @@ class ConsentRepo(BaseRepo):
                     raise RepoException("Failed to scrub consent signature")
 
         return True
+
+    def delete_signatures(self, account_id, source_id):
+
+        with self._transaction.dict_cursor() as cur:
+            sourceRepo = SourceRepo(self._transaction)
+            if sourceRepo.get_source(account_id, source_id) is None:
+                raise NotFound("Source does not exist!")
+
+            cur.execute("DELETE FROM ag.consent_audit WHERE "
+                        "source_id = %s", (source_id,))
+
+            return cur.rowcount >= 0
