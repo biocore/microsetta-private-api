@@ -12,12 +12,14 @@ TEST1_SOURCE_ID = None
 TEST1_SAMPLE_ID = "125a7cc5-41ae-44ef-983c-6f1a5213f668"
 TEST1_SURVEY_ID = None
 TEST1_VIO_ID = "1c689634cea0d11b"
+TEST1_REGISTRATION_CODE =  None
 
 
 # not in registry
 TEST2_ACCOUNT_ID = "735e1689-6976-4d96-9a33-7a19f06602bf"
 TEST2_SOURCE_ID = None
 TEST2_SAMPLE_ID = "7380bb81-7401-45bd-85a0-51001f5f5cf1"
+TEST2_REGISTRATION_CODE =  None
 
 
 # source IDs are not stable in the test database as these
@@ -328,13 +330,19 @@ class SurveyTemplateTests(unittest.TestCase):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
             obs1 = template_repo.create_vioscreen_id(TEST2_ACCOUNT_ID,
-                                                     TEST2_SOURCE_ID)
+                                                     TEST2_SOURCE_ID,
+                                                     TEST2_SAMPLE_ID,
+                                                     TEST2_REGISTRATION_CODE)
             obs2 = template_repo.create_vioscreen_id(TEST2_ACCOUNT_ID,
-                                                     TEST2_SOURCE_ID)
+                                                     TEST2_SOURCE_ID,
+                                                     TEST2_SAMPLE_ID,
+                                                     TEST2_REGISTRATION_CODE)
             self.assertEqual(obs1, obs2)
 
             obs = template_repo.create_vioscreen_id(TEST1_ACCOUNT_ID,
-                                                    TEST1_SOURCE_ID)
+                                                    TEST1_SOURCE_ID,
+                                                    TEST1_SAMPLE_ID,
+                                                    TEST1_REGISTRATION_CODE)
             self.assertEqual(obs, TEST1_VIO_ID)
             t.rollback()
 

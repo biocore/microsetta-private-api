@@ -2699,7 +2699,7 @@ components:
       in: query
       description: Identifies activation code for vioscreen sessions, indicates the user is being redirected using activation code
       schema:
-        $ref: '#/components/schemas/activation_code'
+        $ref: '#/components/schemas/registration_code'
     timestamp:
       name: timestamp
       in: query
