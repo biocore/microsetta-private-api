@@ -3,7 +3,7 @@ from datetime import datetime
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.consent_repo import ConsentRepo
-from microsetta_private_api.model.consent import ConsentSignature
+from microsetta_private_api.model.consent import ConsentDocument, ConsentSignature
 
 ADULT_DATA_CONSENT = "f3ad5967-7f39-431c-b0fa-906c8c96791b"
 ADULT_BIO_CONSENT = "cdcd461b-e903-46b6-b252-b2e672df24f4"
@@ -11,6 +11,18 @@ CHILD_DATA_CONSENT = "21cac84d-951d-470e-a001-463d9117f6b4"
 CHILD_BIO_CONSENT = "2840bec7-9dbe-4b51-808c-0c4e8f0ab2e4"
 INVALID_DOC_ID = 'ecabc635-3df8-49ee-ae19-db3db03c7393'
 ACCT_ID = 'ecabc635-3df8-49ee-ae19-db3db03c4500'
+
+DATA_DOC = {"consent_type": "Adult Consent - Data",
+            "locale": "en_US",
+            "consent": "Adult Data Consent",
+            "reconsent": '1'
+            }
+
+BIO_DOC = {"consent_type": "Adult Consent - Biospecimen",
+           "locale": "en_US",
+           "consent": "Adult Biospecimen Consent",
+           "reconsent": '1'
+           }
 
 CORRECT_SIGN = {"source_id": '4affcca2-1ca4-480d-88a4-b6dd2a3ba55b',
                 "date_time": datetime.now(),
@@ -51,6 +63,11 @@ class ConsentRepoTests(unittest.TestCase):
     def test_sign_data_consent(self):
         with Transaction() as t:
             consentRepo = ConsentRepo(t)
+
+            doc = ConsentDocument.from_dict(DATA_DOC, ACCT_ID,
+                                            ADULT_DATA_CONSENT)
+
+            consentRepo.create_doc(doc)
             source = CORRECT_SIGN["source_id"]
             CORRECT_SIGN.update({"consent_id": ADULT_DATA_CONSENT})
             con = ADULT_DATA_CONSENT
@@ -61,6 +78,11 @@ class ConsentRepoTests(unittest.TestCase):
     def test_sign_biospecimen_consent(self):
         with Transaction() as t:
             consentRepo = ConsentRepo(t)
+
+            doc = ConsentDocument.from_dict(BIO_DOC, ACCT_ID,
+                                            ADULT_BIO_CONSENT)
+
+            consentRepo.create_doc(doc)
             source = CORRECT_SIGN["source_id"]
             CORRECT_SIGN.update({"consent_id": ADULT_BIO_CONSENT})
             con = ADULT_BIO_CONSENT
