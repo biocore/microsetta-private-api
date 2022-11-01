@@ -290,7 +290,6 @@ class IntegrationTests(TestCase):
                     survey_answers_repo.delete_answered_survey(ACCT_ID,
                                                                survey_id)
                 print("--->REACHED HERE")
-                consent_repo.delete_signatures(ACCT_ID, source.id)
                 source_repo.delete_source(ACCT_ID, source.id)
             acct_repo.delete_account(ACCT_ID)
 

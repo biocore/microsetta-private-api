@@ -104,27 +104,37 @@ def update_source(account_id, source_id, body, token_info):
         return jsonify(source.to_api()), 200
 
 
-# def delete_source(account_id, source_id, token_info):
-#     _validate_account_access(token_info, account_id)
-
-#     with Transaction() as t:
-#         source_repo = SourceRepo(t)
-#         survey_answers_repo = SurveyAnswersRepo(t)
-#         consent_repo = ConsentRepo(t)
-
-#         answers = survey_answers_repo.list_answered_surveys(account_id,
-#                                                             source_id)
-#         for survey_id in answers:
-#             survey_answers_repo.delete_answered_survey(account_id,
-#                                                        survey_id)
-
-#         if not source_repo.delete_source(account_id, source_id):
-#             return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
-#         # TODO: 422?
-#         t.commit()
-#         return '', 204
-
 def delete_source(account_id, source_id, token_info):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        survey_answers_repo = SurveyAnswersRepo(t)
+        consent_repo = ConsentRepo(t)
+        samp_repo = SampleRepo(t)
+
+        samples = samp_repo.get_samples_by_source(account_id, source_id)
+        for sample in samples:
+            # we scrub rather than disassociate in the event that the
+            # sample is in our freezers but not with an up-to-date scan
+            samp_repo.dissociate_sample(account_id, source_id, sample.id)
+
+        answers = survey_answers_repo.list_answered_surveys(account_id,
+                                                            source_id)
+        for survey_id in answers:
+            survey_answers_repo.delete_answered_survey(account_id,
+                                                       survey_id)
+
+        # delete all consents accosiated with source
+        consent_repo.delete_signatures(account_id, source_id)
+
+        if not source_repo.delete_source(account_id, source_id):
+            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
+        # TODO: 422?
+        t.commit()
+        return '', 204
+
+def scrub_source(account_id, source_id, token_info):
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
