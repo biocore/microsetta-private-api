@@ -561,8 +561,7 @@ class UserTransaction(BaseRepo):
             cr = FundRazrCampaignRepo(self._transaction)
             for item in items:
                 if not cr.item_exists(payment.campaign_id, item.id):
-                    cr.add_perk_to_campaign(payment.campaign_id, item,
-                                            payment=payment)
+                    cr.add_perk_to_campaign(payment.campaign_id, item,)
 
         with self._transaction.cursor() as cur:
             cur.execute(f"""INSERT INTO campaign.transaction

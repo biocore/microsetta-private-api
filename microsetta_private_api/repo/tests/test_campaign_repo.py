@@ -580,12 +580,12 @@ class FundrazrCampaignTests(unittest.TestCase):
         self.campaign_without_item = FundRazrCampaign('c2', 'test2', 'usd',
                                                       None, None)
         self.perk = Item('zyx', 0, 'i2', 5)
-
-        obj6 = TRANSACTION_ONE_ITEM.copy()
-        obj6.transaction_id = 'obj6'
-        obj6.created = datetime.datetime(2016, 11, 1)
-        obj6.contact_email = 'obj6@foo.com'
-        self.obj6 = obj6
+        #
+        # obj6 = TRANSACTION_ONE_ITEM.copy()
+        # obj6.transaction_id = 'obj6'
+        # obj6.created = datetime.datetime(2016, 11, 1)
+        # obj6.contact_email = 'obj6@foo.com'
+        # self.obj6 = obj6
 
     def test_campaign_exists_doesnt_exist(self):
         with Transaction() as t:
@@ -595,19 +595,19 @@ class FundrazrCampaignTests(unittest.TestCase):
     def test_campaign_exists(self):
         with Transaction() as t:
             c = FundRazrCampaignRepo(t)
-            c.insert_campaign(self.campaign_with_item, [1, ], self.obj6)
+            c.insert_campaign(self.campaign_with_item, [1, ])
             self.assertTrue(c.campaign_exists('c1'))
 
     def test_item_exists_doesnt_exist(self):
         with Transaction() as t:
             c = FundRazrCampaignRepo(t)
-            c.insert_campaign(self.campaign_with_item, [1, ], self.obj6)
+            c.insert_campaign(self.campaign_with_item, [1, ])
             self.assertFalse(c.item_exists('c1', 'notpresent'))
 
     def test_item_exists(self):
         with Transaction() as t:
             c = FundRazrCampaignRepo(t)
-            c.insert_campaign(self.campaign_with_item, [1, ], self.obj6)
+            c.insert_campaign(self.campaign_with_item, [1, ])
             self.assertTrue(c.item_exists('c1', 'i1'))
 
     def test_insert_campaign_with_item(self):
@@ -620,14 +620,14 @@ class FundrazrCampaignTests(unittest.TestCase):
     def test_insert_campaign_without_item(self):
         with Transaction() as t:
             c = FundRazrCampaignRepo(t)
-            c.insert_campaign(self.campaign_without_item, [1, ], self.obj6)
+            c.insert_campaign(self.campaign_without_item, [1, ])
             self.assertTrue(c.campaign_exists('c2'))
 
     def test_add_perk_to_campaign(self):
         with Transaction() as t:
             c = FundRazrCampaignRepo(t)
-            c.insert_campaign(self.campaign_without_item, [1, ], self.obj6)
-            c.add_perk_to_campaign('c2', self.perk, self.obj6)
+            c.insert_campaign(self.campaign_without_item, [1, ])
+            c.add_perk_to_campaign('c2', self.perk)
             self.assertTrue(c.item_exists('c2', 'i2'))
 
 
