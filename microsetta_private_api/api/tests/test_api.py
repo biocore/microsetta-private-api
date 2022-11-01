@@ -1775,8 +1775,10 @@ class SampleTests(ApiTests):
         self.assertEqual(400, post_resp.status_code)
 
         # if sample date is greater than 30 days
-        now = datetime.datetime.now()
-        delta = relativedelta(month=now.month+2)
+        if now.month > 10:
+            delta = relativedelta(month=1, year=now.year + 1)
+        else:
+            delta = relativedelta(month=now.month + 2)
         date = now+delta
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),

@@ -580,12 +580,6 @@ class FundrazrCampaignTests(unittest.TestCase):
         self.campaign_without_item = FundRazrCampaign('c2', 'test2', 'usd',
                                                       None, None)
         self.perk = Item('zyx', 0, 'i2', 5)
-        #
-        # obj6 = TRANSACTION_ONE_ITEM.copy()
-        # obj6.transaction_id = 'obj6'
-        # obj6.created = datetime.datetime(2016, 11, 1)
-        # obj6.contact_email = 'obj6@foo.com'
-        # self.obj6 = obj6
 
     def test_campaign_exists_doesnt_exist(self):
         with Transaction() as t:
