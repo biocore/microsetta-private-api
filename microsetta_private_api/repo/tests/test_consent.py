@@ -1,9 +1,12 @@
 import unittest
-from datetime import datetime
+from datetime import datetime, date
 from werkzeug.exceptions import NotFound
+from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.consent_repo import ConsentRepo
-from microsetta_private_api.model.consent import ConsentDocument, ConsentSignature
+from microsetta_private_api.model.consent import ConsentDocument, \
+    ConsentSignature
+from microsetta_private_api.model.source import HumanInfo, Source
 
 ADULT_DATA_CONSENT = "f3ad5967-7f39-431c-b0fa-906c8c96791b"
 ADULT_BIO_CONSENT = "cdcd461b-e903-46b6-b252-b2e672df24f4"
@@ -29,7 +32,8 @@ CORRECT_SIGN = {"source_id": '4affcca2-1ca4-480d-88a4-b6dd2a3ba55b',
                 "parent_1_name": None,
                 "parent_2_name": None,
                 "deceased__parent":  None,
-                "assent_obtainer": None
+                "assent_obtainer": None,
+                "age_range": "18-plus"
                 }
 
 INVALID_SOURCE_SIGN = {"signature_id": '21cac84d-951d-470e-a001-463d911f1222',
@@ -63,6 +67,14 @@ class ConsentRepoTests(unittest.TestCase):
     def test_sign_data_consent(self):
         with Transaction() as t:
             consentRepo = ConsentRepo(t)
+            srcRepo = SourceRepo(t)
+
+            source_info = HumanInfo.from_dict(CORRECT_SIGN,
+                                              consent_date=date.today(),
+                                              date_revoked=None)
+            new_source = Source(CORRECT_SIGN["source_id"], ACCT_ID,
+                                "Human", source_info)
+            srcRepo.create_source(new_source)
 
             doc = ConsentDocument.from_dict(DATA_DOC, ACCT_ID,
                                             ADULT_DATA_CONSENT)
@@ -78,6 +90,14 @@ class ConsentRepoTests(unittest.TestCase):
     def test_sign_biospecimen_consent(self):
         with Transaction() as t:
             consentRepo = ConsentRepo(t)
+            srcRepo = SourceRepo(t)
+
+            source_info = HumanInfo.from_dict(CORRECT_SIGN,
+                                              consent_date=date.today(),
+                                              date_revoked=None)
+            new_source = Source(CORRECT_SIGN["source_id"], ACCT_ID,
+                                "Human", source_info)
+            srcRepo.create_source(new_source)
 
             doc = ConsentDocument.from_dict(BIO_DOC, ACCT_ID,
                                             ADULT_BIO_CONSENT)
