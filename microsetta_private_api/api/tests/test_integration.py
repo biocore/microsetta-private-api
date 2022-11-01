@@ -47,6 +47,7 @@ FAKE_EMAIL = "zbkhasdahl4wlnas@asdjgakljesgnoqe.com"
 
 MOCK_HEADERS = {"Authorization": "Bearer boogabooga"}
 MOCK_HEADERS_2 = {"Authorization": "Bearer woogawooga"}
+MOCK_HEADERS_3 = {"Authorization": "Bearer toogatooga"}
 DUMMY_CONSENT_POST_URL = "http://test.com"
 
 DUMMY_ACCT = {
@@ -85,6 +86,13 @@ def mock_verify_func(token):
             'email_verified': True,
             "iss": "https://MOCKUNITTEST.com",
             "sub": "ThisIsAlsoNotARealSub",
+        }
+    elif token == "toogatooga":
+        return {
+            "email": "foo@demo.com",
+            'email_verified': True,
+            "iss": "https://demotest.com",
+            "sub": "DemoSub",
         }
     else:
         raise Unauthorized("Neither boogabooga nor woogawooga")
@@ -1197,7 +1205,7 @@ class IntegrationTests(TestCase):
         resp = self.client.get(
             '/api/accounts/%s/consent?language_tag=en_US&consent_post_url=%s' %
             (account_id, DUMMY_CONSENT_POST_URL),
-            headers=MOCK_HEADERS
+            headers=MOCK_HEADERS_3
         )
         check_response(resp)
 
