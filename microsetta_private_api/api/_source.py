@@ -161,7 +161,7 @@ def scrub_source(account_id, source_id, token_info):
         # scrub the source
         source_repo.scrub(account_id, source_id)
         t.commit()
-        return '', 204
+        return jsonify({"result": True}), 200
 
 
 def create_human_source_from_consent(account_id, body, token_info):
