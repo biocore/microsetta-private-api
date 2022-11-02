@@ -3313,6 +3313,11 @@ components:
     registration_code:
       type: string
       example: "TMI-UV94L-97JN7-MWUFX"
+    creation_time:
+      type: string
+      readOnly: true
+      format: date-time
+      example: "2007-04-05T12:30-02:00"
 
     # error section
     Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/

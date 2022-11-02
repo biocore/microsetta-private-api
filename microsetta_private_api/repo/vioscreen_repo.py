@@ -1676,5 +1676,4 @@ class VioscreenRepo(BaseRepo):
                 for row in rows:
                     session = VioscreenSession(*row)
                     sessions.append(session)
-            return sessions
-
+                return sessions
