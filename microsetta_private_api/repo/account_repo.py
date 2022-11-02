@@ -338,4 +338,4 @@ class AccountRepo(BaseRepo):
                            SET submitter_acct_id=%s,
                            WHERE email=%s""",
                         (account_id, email))
-            cur.commit()
+            # cur.commit()
