@@ -570,7 +570,7 @@ class SurveyTemplateRepo(BaseRepo):
                     cur.execute("INSERT INTO vioscreen_registry("
                                 "account_id, source_id, vio_id "
                                 "sample_id) "
-                                "VALUES(%s, %s, %s)",
+                                "VALUES(%s, %s, %s, %s)",
                                 (account_id, source_id,
                                  vioscreen_id, sample_id))
                 elif registration_code is not None:
