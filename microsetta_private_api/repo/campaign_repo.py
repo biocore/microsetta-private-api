@@ -107,6 +107,9 @@ class CampaignRepo(BaseRepo):
             if campaign_id is None:
                 raise RepoException("Error inserting campaign into database")
             else:
+                # Python is assuming associated_project is a tuple.
+                # Convert to string so we can then convert to a list.
+                associated_projects = ','.join(associated_projects)
                 associated_projects = associated_projects.split(",")
                 cur.executemany(
                     "INSERT INTO campaign.campaigns_projects ("
