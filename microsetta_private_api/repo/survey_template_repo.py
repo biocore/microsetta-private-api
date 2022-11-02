@@ -25,6 +25,7 @@ class SurveyTemplateRepo(BaseRepo):
     POLYPHENOL_FFQ_ID = 10003
     SPAIN_FFQ_ID = 10004
     SURVEY_INFO = {
+        # For now, let's keep legacy survey info as well.
         1: SurveyTemplateLinkInfo(
             1,
             "Primary Questionnaire",
@@ -90,6 +91,78 @@ class SurveyTemplateRepo(BaseRepo):
             "Spain Food Frequency Questionnaire",
             "1.0",
             "remote"
+        ),
+        10: SurveyTemplateLinkInfo(
+            10,
+            "Basic Information",
+            "1.0",
+            "local"
+        ),
+        11: SurveyTemplateLinkInfo(
+            11,
+            "At Home",
+            "1.0",
+            "local"
+        ),
+        12: SurveyTemplateLinkInfo(
+            12,
+            "Lifestyle",
+            "1.0",
+            "local"
+        ),
+        13: SurveyTemplateLinkInfo(
+            13,
+            "Gut",
+            "1.0",
+            "local"
+        ),
+        14: SurveyTemplateLinkInfo(
+            14,
+            "General Health",
+            "1.0",
+            "local"
+        ),
+        15: SurveyTemplateLinkInfo(
+            15,
+            "Health Diagnosis",
+            "1.0",
+            "local"
+        ),
+        16: SurveyTemplateLinkInfo(
+            16,
+            "Allergies",
+            "1.0",
+            "local"
+        ),
+        17: SurveyTemplateLinkInfo(
+            17,
+            "Diet",
+            "1.0",
+            "local"
+        ),
+        18: SurveyTemplateLinkInfo(
+            18,
+            "Detailed Diet",
+            "1.0",
+            "local"
+        ),
+        19: SurveyTemplateLinkInfo(
+            19,
+            "Migraine",
+            "1.0",
+            "local"
+        ),
+        20: SurveyTemplateLinkInfo(
+            20,
+            "Surfers",
+            "1.0",
+            "local"
+        ),
+        21: SurveyTemplateLinkInfo(
+            21,
+            "COVID19 Questionnaire",
+            "1.0",
+            "local"
         )
     }
 
@@ -132,6 +205,7 @@ class SurveyTemplateRepo(BaseRepo):
                 "SELECT count(*) FROM surveys WHERE survey_id=%s",
                 (survey_id,)
             )
+
             if cur.fetchone()[0] == 0:
                 raise NotFound("No such survey")
 
@@ -170,6 +244,7 @@ class SurveyTemplateRepo(BaseRepo):
                 localized_text = r[2]
                 short_name = r[3]
                 response_type = r[4]
+
                 if group_id != cur_group_id:
                     if cur_group_id is not None:
                         group_localized_text = self._get_group_localized_text(
@@ -183,9 +258,10 @@ class SurveyTemplateRepo(BaseRepo):
 
                 responses = self._get_question_valid_responses(question_id,
                                                                language_tag)
+
                 triggers = self._get_question_triggers(question_id)
 
-                # Quick  fix to correctly sort country names in Spanish
+                # Quick fix to correctly sort country names in Spanish
                 if (language_tag == localization.ES_MX or language_tag ==
                     localization.ES_ES) and (question_id == 110 or
                                              question_id == 148):

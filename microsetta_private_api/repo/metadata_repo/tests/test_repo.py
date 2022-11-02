@@ -128,18 +128,18 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertEqual(obs, exp)
 
     def test_fetch_observed_survey_templates(self):
-        exp = {1: {'survey_id': None,
-                   'survey_status': None,
-                   'survey_template_id': 1,
-                   'survey_template_title': 'Primary Questionnaire',
-                   'survey_template_type': 'local',
-                   'survey_template_version': '1.0'},
-               2: {'survey_id': None,
-                   'survey_status': None,
-                   'survey_template_id': 2,
-                   'survey_template_title': 'Pet Information',
-                   'survey_template_type': 'local',
-                   'survey_template_version': '1.0'}}
+        exp = {10: {'survey_id': None,
+                    'survey_status': None,
+                    'survey_template_id': 10,
+                    'survey_template_title': 'Basic Information',
+                    'survey_template_type': 'local',
+                    'survey_template_version': '1.0'},
+               11: {'survey_id': None,
+                    'survey_status': None,
+                    'survey_template_id': 11,
+                    'survey_template_title': 'At Home',
+                    'survey_template_type': 'local',
+                    'survey_template_version': '1.0'}}
 
         obs, errors = _fetch_observed_survey_templates([self.raw_sample_1,
                                                         self.raw_sample_2])
@@ -152,11 +152,12 @@ class MetadataUtilTests(unittest.TestCase):
     def test_fetch_survey_template(self):
         exp = {'survey_id': None,
                'survey_status': None,
-               'survey_template_id': 1,
-               'survey_template_title': 'Primary Questionnaire',
+               'survey_template_id': 10,
+               'survey_template_title': 'Basic Information',
                'survey_template_type': 'local',
                'survey_template_version': '1.0'}
-        survey, errors = _fetch_survey_template(1)
+
+        survey, errors = _fetch_survey_template(10)
 
         # concern here is that this key exists, not its content
         survey.pop('survey_template_text')
