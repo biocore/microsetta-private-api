@@ -173,7 +173,7 @@ def _remote_survey_url_spain_ffq(transaction, account_id, source_id):
 
 def read_survey_template(account_id, source_id, survey_template_id,
                          language_tag, token_info, survey_redirect_url=None,
-                         sample_id=None,
+                         vioscreen_ext_sample_id=None,
                          registration_code=None):
     _validate_account_access(token_info, account_id)
 
@@ -191,7 +191,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
                                                    source_id,
                                                    language_tag,
                                                    survey_redirect_url,
-                                                   sample_id,
+                                                   vioscreen_ext_sample_id,
                                                    registration_code)
             elif survey_template_id == SurveyTemplateRepo.MYFOODREPO_ID:
                 url = _remote_survey_url_myfoodrepo(t,

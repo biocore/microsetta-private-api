@@ -568,14 +568,14 @@ class SurveyTemplateRepo(BaseRepo):
                 # user quits out then wants to resume the survey.
                 if sample_id is not None:
                     cur.execute("INSERT INTO vioscreen_registry("
-                                "account_id, source_id, vio_id "
+                                "account_id, source_id, vio_id, "
                                 "sample_id) "
                                 "VALUES(%s, %s, %s, %s)",
                                 (account_id, source_id,
                                  vioscreen_id, sample_id))
                 elif registration_code is not None:
                     cur.execute("INSERT INTO vioscreen_registry("
-                                "account_id, source_id, vio_id "
+                                "account_id, source_id, vio_id, "
                                 "registration_code) "
                                 "VALUES(%s, %s, %s, %s)",
                                 (account_id, source_id,
