@@ -6,6 +6,7 @@ from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
+from microsetta_private_api.tasks import send_email
 
 
 def create_interested_user(body):

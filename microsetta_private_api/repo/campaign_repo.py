@@ -29,7 +29,7 @@ class CampaignRepo(BaseRepo):
                 c.permitted_countries, c.language_key,
                 c.accepting_participants, '',
                 c.language_key_alt, c.title_alt, c.instructions_alt,
-                send_thdmi_confirmation)
+                c.send_thdmi_confirmation)
 
     def _row_to_campaign(self, r):
         associated_projects = ", ".join(self._get_projects(r['campaign_id']))
