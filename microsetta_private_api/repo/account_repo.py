@@ -332,10 +332,11 @@ class AccountRepo(BaseRepo):
         return self.update_account(account) == 1
 
     def add_accnt_subscription(self, account_id, email):
-        with self._transaction.cursor() as cur:
-            cur = cur.cursor()
-            cur.execute("""UPDATE campaign.subscriptions
-                           SET submitter_acct_id=%s,
-                           WHERE email=%s""",
-                        (account_id, email))
-            # cur.commit()
+        try:
+            with self._transaction.cursor() as cur:
+                cur.execute("""UPDATE campaign.subscriptions
+                               SET submitter_acct_id=%s,
+                               WHERE email=%s""",
+                            (account_id, email))
+        except Exception as e:
+            print(str(e))
