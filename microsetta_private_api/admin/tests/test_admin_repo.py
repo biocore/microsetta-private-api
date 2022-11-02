@@ -810,7 +810,7 @@ class AdminRepoTests(AdminTests):
                 admin_repo.get_survey_metadata("NOTABARCODE")
 
             meta = admin_repo.get_survey_metadata(BARCODE,
-                                                  survey_template_id=1)
+                                                  survey_template_id=17)
 
             self.assertEqual(meta['sample_barcode'], BARCODE)
             self.assertIn('host_subject_id', meta)
@@ -828,7 +828,7 @@ class AdminRepoTests(AdminTests):
             # And the meta survey should exist somewhere in all_meta
             found = False
             for survey in all_meta['survey_answers']:
-                if "1" in survey["response"] and \
+                if "17" in survey["response"] and \
                         survey["response"]["1"][0] == 'DIET_TYPE':
                     found = True
                     self.assertDictEqual(meta['survey_answers'][0],
