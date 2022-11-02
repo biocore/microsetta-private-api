@@ -9,7 +9,7 @@ from microsetta_private_api.celery_utils import celery
 @celery.task(ignore_result=False)
 def poll_dak_orders_for_perk():
     """
-    For perk one year subscription plan we have to send 4 kits in a year.
+    For perk one_year_subscription plan we have to send 4 kits in a year.
     Create a dacklapack order for each 4 kits in between 3 months.
     """
 
@@ -26,7 +26,7 @@ def poll_dak_orders_for_perk():
                 # new daklapack order when last order delivered date
                 # reaches 90 days.
                 if days_till_now.days >= 90:
-                    if shipment['no_of_kits'] <= 4:
+                    if shipment['no_of_kits_sent'] <= 4:
                         account = pt.get_account_details(shipment['email'])
                         order_struct = {
                             'articles': [
@@ -66,7 +66,7 @@ def poll_dak_orders_for_perk():
                 response_msg = _create_daklapack_order(order_struct)
                 if response_msg.order_success:
                     pt.update_shipment(shipment['subscription_id'],
-                                       shipment['no_of_kits'] - 1)
+                                       shipment['no_of_kits_sent'] - 1)
 
     except Exception as outer_ex:
         response_msg["Code Error"] = str(outer_ex)
