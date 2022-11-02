@@ -885,7 +885,8 @@ class AccountTests(ApiTests):
 
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, survey_template_id=17, dummy_sample_id=MOCK_SAMPLE_ID)
+            dummy_acct_id, dummy_source_id, survey_template_id=17,
+            dummy_sample_id=MOCK_SAMPLE_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
             dummy_acct_id, dummy_source_id)
@@ -1780,7 +1781,7 @@ class SampleTests(ApiTests):
         create_dummy_kit(dummy_acct_id, dummy_source_id,
                          associate_sample=True)
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id)
+            dummy_acct_id, dummy_source_id, survey_template_id=17)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples/{2}'.format(
             dummy_acct_id, dummy_source_id, MOCK_SAMPLE_ID)
@@ -1801,6 +1802,7 @@ class SampleTests(ApiTests):
         now = datetime.datetime.now()
         delta = relativedelta(year=now.year-11)
         date = now+delta
+
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),
             content_type='application/json',
@@ -1817,9 +1819,9 @@ class SampleTests(ApiTests):
         self.assertEqual(400, post_resp.status_code)
 
         # if sample date is greater than 30 days
+        # For most two month spans, the total number of days is 61.
         now = datetime.datetime.now()
-        delta = relativedelta(month=now.month+2)
-        date = now+delta
+        date = now + datetime.timedelta(days=61)
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),
             content_type='application/json',
