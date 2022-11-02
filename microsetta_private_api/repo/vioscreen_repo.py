@@ -1672,4 +1672,9 @@ class VioscreenRepo(BaseRepo):
             if rows is None or len(rows) == 0:
                 return None
             else:
-                return rows
+                sessions = []
+                for row in rows:
+                    session = VioscreenSession(*row)
+                    sessions.append(session)
+            return sessions
+
