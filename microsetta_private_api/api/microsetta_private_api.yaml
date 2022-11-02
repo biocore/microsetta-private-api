@@ -599,7 +599,7 @@ paths:
         - $ref: '#/components/parameters/survey_template_id'
         - $ref: '#/components/parameters/language_tag'
         - $ref: '#/components/parameters/survey_redirect_url'
-        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
       responses:
         '200':
@@ -921,7 +921,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
         - $ref: '#/components/parameters/timestamp'
       responses:
@@ -950,7 +950,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
         - $ref: '#/components/parameters/timestamp'
       responses:
@@ -978,7 +978,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
         - $ref: '#/components/parameters/timestamp'
       responses:
@@ -1006,7 +1006,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
         - $ref: '#/components/parameters/timestamp'
       responses:
@@ -1034,7 +1034,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
         - $ref: '#/components/parameters/timestamp'
       responses:
@@ -1062,7 +1062,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
         - $ref: '#/components/parameters/timestamp'
       responses:
@@ -1090,7 +1090,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
         - $ref: '#/components/parameters/timestamp'
       responses:
@@ -1118,7 +1118,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/sample_id'
+        - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
         - $ref: '#/components/parameters/timestamp'
       responses:
