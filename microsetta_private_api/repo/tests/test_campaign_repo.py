@@ -314,7 +314,7 @@ class CampaignRepoTests(unittest.TestCase):
             }
             campaign_repo = CampaignRepo(t)
             obs = campaign_repo.create_campaign(**new_campaign)
-            self.assertEqual(obs.associated_projects, "Project - qó1]øJçY\@")
+            self.assertEqual(obs.associated_projects, "Project - qó1]øJçY\\@")
             t.rollback()
 
         # verify that a comma-delimited string stores separate IDs
@@ -326,7 +326,7 @@ class CampaignRepoTests(unittest.TestCase):
             campaign_repo = CampaignRepo(t)
             obs = campaign_repo.create_campaign(**new_campaign)
             self.assertEqual(obs.associated_projects,
-                             "Project - qó1]øJçY\@, Project - ÅQ%PáiZ!š@")
+                             "Project - qó1]øJçY\\@, Project - ÅQ%PáiZ!š@")
             t.rollback()
 
         # verify that a list of strings stores separate IDs
@@ -338,7 +338,7 @@ class CampaignRepoTests(unittest.TestCase):
             campaign_repo = CampaignRepo(t)
             obs = campaign_repo.create_campaign(**new_campaign)
             self.assertEqual(obs.associated_projects,
-                             "Project - qó1]øJçY\@, Project - ÅQ%PáiZ!š@")
+                             "Project - qó1]øJçY\\@, Project - ÅQ%PáiZ!š@")
             t.rollback()
 
         # verify that a list of ints stores separate IDs
@@ -350,7 +350,7 @@ class CampaignRepoTests(unittest.TestCase):
             campaign_repo = CampaignRepo(t)
             obs = campaign_repo.create_campaign(**new_campaign)
             self.assertEqual(obs.associated_projects,
-                             "Project - qó1]øJçY\@, Project - ÅQ%PáiZ!š@")
+                             "Project - qó1]øJçY\\@, Project - ÅQ%PáiZ!š@")
             t.rollback()
 
     def test_get_campaign_by_id_valid(self):
