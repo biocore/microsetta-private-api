@@ -88,7 +88,7 @@ class CampaignRepo(BaseRepo):
         title_alt = kwargs.get('title_alt')
         instructions_alt = kwargs.get('instructions_alt')
         extension = kwargs.get('extension')
-        send_thdmi_confirmation = kwargs.get('send_thdmi_confirmation')
+        send_thdmi_confirmation = kwargs.get('send_thdmi_confirmation', False)
 
         with self._transaction.cursor() as cur:
             cur.execute(
