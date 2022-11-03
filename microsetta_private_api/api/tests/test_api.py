@@ -1799,7 +1799,7 @@ class SampleTests(ApiTests):
 
         # if sample date is less than 10 years
         now = datetime.datetime.now()
-        delta = relativedelta(year=now.year-11)
+        delta = relativedelta(years=now.year-11)
         date = now+delta
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),
@@ -1818,7 +1818,7 @@ class SampleTests(ApiTests):
 
         # if sample date is greater than 30 days
         now = datetime.datetime.now()
-        delta = relativedelta(month=now.month+2)
+        delta = relativedelta(months=now.month+2)
         date = now+delta
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),
