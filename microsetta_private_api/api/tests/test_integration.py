@@ -1040,7 +1040,7 @@ class IntegrationTests(TestCase):
                              "Couldn't parse source_id from loc header")
 
         # Part 1: Submit a survey
-        chosen_survey = BOBO_FAVORITE_SURVEY_TEMPLATE
+        chosen_survey = 10
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en_US' %
