@@ -42,8 +42,9 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
                                      SurveyTemplateRepo.VIOSCREEN_ID,
                                      SurveyTemplateRepo.MYFOODREPO_ID,
                                      SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
-                                     SurveyTemplateRepo.SPAIN_FFQ_ID]
-                            ]), 200
+                                     SurveyTemplateRepo.SPAIN_FFQ_ID,
+                                     10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+                                     20, 21]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200
@@ -178,6 +179,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
         survey_template_repo = SurveyTemplateRepo(t)
         info = survey_template_repo.get_survey_template_link_info(
             survey_template_id)
+
         remote_surveys = set(survey_template_repo.remote_surveys())
 
         # For external surveys, we generate links pointing out

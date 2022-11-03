@@ -632,7 +632,9 @@ class IntegrationTests(TestCase):
             chosen_survey = bobo_survey["survey_template_id"]
 
             # 10001, 10002, 10003, and 10004 are non-local surveys
-            if chosen_survey in (10001, 10002, 10003, 10004):
+            # surveys 1-7 are no longer present, and reformulated into 10-21.
+            if chosen_survey in (1, 2, 3, 4, 5, 6, 7, 10001, 10002, 10003,
+                                 10004):
                 continue
 
             resp = self.client.get(
