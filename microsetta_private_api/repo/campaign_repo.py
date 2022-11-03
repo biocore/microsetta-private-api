@@ -112,10 +112,7 @@ class CampaignRepo(BaseRepo):
                 if isinstance(associated_projects, tuple):
                     associated_projects = list(associated_projects)
                 elif isinstance(associated_projects, str):
-                    if "," in associated_projects:
-                        associated_projects = associated_projects.split(",")
-                    else:
-                        associated_projects = [associated_projects, ]
+                    associated_projects = associated_projects.split(",")
                 elif isinstance(associated_projects, int):
                     associated_projects = [associated_projects, ]
 
