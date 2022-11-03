@@ -31,24 +31,23 @@ def create_interested_user(body):
                 message="Failed to create interested user."
             ), 400
 
-        if interested_user_id:
-            campaign_repo = CampaignRepo(t)
-            campaign_info =\
-                campaign_repo.get_campaign_by_id(interested_user.campaign_id)
+        campaign_repo = CampaignRepo(t)
+        campaign_info =\
+            campaign_repo.get_campaign_by_id(interested_user.campaign_id)
 
-            if campaign_info.send_thdmi_confirmation:
-                try:
-                    # Send a confirmation email
-                    # TODO: Add more intelligent locale determination.
-                    # Punting on that since our current campaign use cases
-                    # are only a single language.
-                    send_email(interested_user.email,
-                               "submit_interest_confirmation",
-                               {"contact_name": interested_user.first_name},
-                               campaign_info.language_key)
-                except:  # noqa
-                    # try our best to email
-                    pass
+        if campaign_info.send_thdmi_confirmation:
+            try:
+                # Send a confirmation email
+                # TODO: Add more intelligent locale determination.
+                # Punting on that since our current campaign use cases
+                # are only a single language.
+                send_email(interested_user.email,
+                           "submit_interest_confirmation",
+                           {"contact_name": interested_user.first_name},
+                           campaign_info.language_key)
+            except:  # noqa
+                # try our best to email
+                pass
 
         t.commit()
 
