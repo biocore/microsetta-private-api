@@ -1809,8 +1809,9 @@ class IntegrationTests(TestCase):
         check_response(resp)
 
         # Scrub the newly created source
-        resp = self.client.post(
-            loc + "?language_tag=en_US",
+        resp = self.client.delete(
+           '/api/accounts/%s/sources/%s/scrub?language_tag=en_US'
+            % (account_id, source_id_from_obj),
             headers=MOCK_HEADERS_3
         )
         check_response(resp, 200)
