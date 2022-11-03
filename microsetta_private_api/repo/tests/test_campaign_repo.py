@@ -310,44 +310,47 @@ class CampaignRepoTests(unittest.TestCase):
         with Transaction() as t:
             new_campaign = {
                 "title": "Unique Campaign Name",
-                "associated_projects": "45"
+                "associated_projects": "46"
             }
             campaign_repo = CampaignRepo(t)
             obs = campaign_repo.create_campaign(**new_campaign)
-            self.assertEqual(obs.associated_projects, "45")
+            self.assertEqual(obs.associated_projects, "Project - qó1]øJçY\@")
             t.rollback()
 
         # verify that a comma-delimited string stores separate IDs
         with Transaction() as t:
             new_campaign = {
                 "title": "Unique Campaign Name",
-                "associated_projects": "45, 47"
+                "associated_projects": "46, 48"
             }
             campaign_repo = CampaignRepo(t)
             obs = campaign_repo.create_campaign(**new_campaign)
-            self.assertEqual(obs.associated_projects, "45, 47")
+            self.assertEqual(obs.associated_projects,
+                             "Project - qó1]øJçY\@, Project - ÅQ%PáiZ!š@")
             t.rollback()
 
         # verify that a list of strings stores separate IDs
         with Transaction() as t:
             new_campaign = {
                 "title": "Unique Campaign Name",
-                "associated_projects": ["45", "47"]
+                "associated_projects": ["46", "48"]
             }
             campaign_repo = CampaignRepo(t)
             obs = campaign_repo.create_campaign(**new_campaign)
-            self.assertEqual(obs.associated_projects, "45, 47")
+            self.assertEqual(obs.associated_projects,
+                             "Project - qó1]øJçY\@, Project - ÅQ%PáiZ!š@")
             t.rollback()
 
         # verify that a list of ints stores separate IDs
         with Transaction() as t:
             new_campaign = {
                 "title": "Unique Campaign Name",
-                "associated_projects": [45, 47]
+                "associated_projects": [46, 48]
             }
             campaign_repo = CampaignRepo(t)
             obs = campaign_repo.create_campaign(**new_campaign)
-            self.assertEqual(obs.associated_projects, "45, 47")
+            self.assertEqual(obs.associated_projects,
+                             "Project - qó1]øJçY\@, Project - ÅQ%PáiZ!š@")
             t.rollback()
 
     def test_get_campaign_by_id_valid(self):
