@@ -1597,6 +1597,7 @@ class SurveyTests(ApiTests):
                                                        'Diet')
         self._validate_survey_info(get_resp, exp_out, exp_model)
 
+    # CHARLIE
     def test_survey_create_success_empty(self):
         """Successfully create a new answered survey without any answers"""
         dummy_acct_id, dummy_source_id = create_dummy_source(
@@ -1609,14 +1610,17 @@ class SurveyTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
+                    'survey_template_id': 10,
                     'survey_text': {}
                 }),
             headers=self.dummy_auth
         )
 
         real_id_from_loc, get_resp = self._validate_survey_create(post_resp)
-        exp_out, exp_model = self._make_exp_survey_out({'108': ""}, real_id_from_loc, {})
+        exp_out, exp_model = self._make_exp_survey_out(real_id_from_loc,
+                                                       {'108': ''},
+                                                       10,
+                                                       'Basic Information')
         self._validate_survey_info(get_resp, exp_out, exp_model)
 
 
