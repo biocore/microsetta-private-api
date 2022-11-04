@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2022-11-01 16:48-0700\n"
-"PO-Revision-Date: 2022-11-03 22:58-0700\n"
+"PO-Revision-Date: 2022-11-04 10:48-0700\n"
 "Last-Translator: \n"
 "Language-Team: ja_JP <LL@li.org>\n"
 "Language: ja_JP\n"
@@ -21,7 +21,7 @@ msgstr ""
 
 #: admin/email_templates.py:22
 msgid "Welcome to The Microsetta Initiative"
-msgstr "マイクロゼッタ・イニシアティブへようこそ"
+msgstr "ヒューマン ダイエット＆マイクロバイオーム イニシアティブ"
 
 #: admin/email_templates.py:29
 msgid "Your Microsetta Initiative status update: attention needed"
@@ -318,8 +318,7 @@ msgstr ""
 msgid ""
 "We are also here to help! Our team is ready to assist you with any "
 "questions you may have. Please contact us at"
-msgstr ""
-"ご質問やご不明な点がございましたらmicrosetta@ucsd.edu.までお問い合せ下さい"
+msgstr "ご質問やご不明な点がございましたらお気軽にお問い合わせください"
 
 #: templates/email/submit_interest_confirmation.jinja2:245
 msgid "Tip"
