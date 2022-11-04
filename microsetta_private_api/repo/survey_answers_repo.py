@@ -554,7 +554,8 @@ class SurveyAnswersRepo(BaseRepo):
                                    FROM survey_answers_other
                                        JOIN survey_question_response_type
                                            USING (survey_question_id)
-                                   WHERE survey_response_type in ('TEXT', 'STRING')
+                                   WHERE survey_response_type in ('TEXT',
+                                   'STRING')
                                        AND survey_id=%s
                                    )""",
                         (text, survey_id, survey_id))

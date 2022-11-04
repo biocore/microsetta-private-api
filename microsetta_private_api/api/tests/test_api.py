@@ -121,19 +121,25 @@ DUMMY_CONSENT_DATE = datetime.datetime.strptime('Jun 1 2005', '%b %d %Y')
 
 PRIMARY_SURVEY_TEMPLATE_ID = 1  # primary survey
 DUMMY_ANSWERED_SURVEY_ID = "5935e83a-a726-49af-b6dc-d68f1eacca5b"
-# This is a model of a partially-filled survey that includes
+
+# This is a model of two partially-filled surveys that include
 # a single-select field, a multi-select field with multiple
 # entries selected, an input field required to be an integer,
 # an input field required to be single-line string, and a text field
-# including a line break
-DUMMY_SURVEY_ANSWERS_MODEL = {
-    '6': 'Yes',
-    '30': ['Red wine', 'Spirits/hard alcohol'],
-    '104': 'candy corn\ngreen m&ms',
-    '107': 'Female',
-    '108': 68,
-    '109': 'inches',
-    '115': 'K7G-2G8'}
+# including a line break.
+
+DUMMY_SURVEY_ANSWERS_10 = {
+        '108': '68',
+        '109': 'inches',
+        '115': 'K7G-2G8',
+        '502': 'Female',
+    }
+
+DUMMY_SURVEY_ANSWERS_17 = {
+        '6': 'Yes',
+        '104': 'candy corn\ngreen m&ms',
+        '433': ['Oat fiber', 'Apple fiber'],
+    }
 
 DUMMY_EMPTY_SAMPLE_INFO = {
     'accession_urls': [],
@@ -483,7 +489,7 @@ def create_dummy_answered_survey(dummy_acct_id, dummy_source_id,
                                  survey_model=None, dummy_sample_id=None):
 
     if survey_model is None:
-        survey_model = DUMMY_SURVEY_ANSWERS_MODEL
+        survey_model = DUMMY_SURVEY_ANSWERS_10
 
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
@@ -1485,7 +1491,7 @@ class SurveyTests(ApiTests):
         self.assertEqual(data['number_of_available_slots'],
                          data['total_number_of_slots'])
 
-    def _validate_survey_info(self, response, expected_output, expected_model):
+    def _validate_survey_info(self, response, exp_out, exp_model):
         # load the response body
         get_resp_obj = json.loads(response.data)
 
@@ -1493,13 +1499,13 @@ class SurveyTests(ApiTests):
         # database is not stable, so pop survey text value out and test it
         # separately
         observed_model = get_resp_obj.pop('survey_text')
-        self.assertEqual(expected_output, get_resp_obj)
 
-        # check dict keys
-        self.assertEqual(set(observed_model), set(expected_model))
+        self.assertEqual(exp_out, get_resp_obj)
+
+        self.assertEqual(set(observed_model), set(exp_model))
         for k in observed_model:
             obs = observed_model[k]
-            exp = expected_model[k]
+            exp = exp_model[k]
 
             if isinstance(obs, list):
                 obs = sorted(obs)
@@ -1526,24 +1532,21 @@ class SurveyTests(ApiTests):
         self.assertEqual(200, get_response.status_code)
         return real_id_from_loc, get_response
 
-    def _make_expected_survey_output(self, replacement_dict,
-                                     real_id_from_loc, base_dict=None):
-        if base_dict is None:
-            base_dict = DUMMY_SURVEY_ANSWERS_MODEL
-        expected_model = copy.deepcopy(base_dict)
-        for k, v in replacement_dict.items():
-            expected_model[k] = v
+    def _make_exp_survey_out(self, real_id_from_loc, base_dict,
+                             survey_template_id,
+                             survey_template_title):
+        exp_model = copy.deepcopy(base_dict)
 
-        expected_output = {
-            "survey_template_id": PRIMARY_SURVEY_TEMPLATE_ID,
+        exp_out = {
+            "survey_template_id": survey_template_id,
             "survey_status": None,
-            "survey_template_title": "Primary Questionnaire",
+            "survey_template_title": survey_template_title,
             "survey_template_version": "1.0",
             "survey_template_type": "local",
             "survey_id": real_id_from_loc,
         }
 
-        return expected_output, expected_model
+        return exp_out, exp_model
 
     def test_survey_create_success(self):
         """Successfully create a new answered survey"""
@@ -1557,16 +1560,42 @@ class SurveyTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
-                    'survey_text': DUMMY_SURVEY_ANSWERS_MODEL
+                    'survey_template_id': 10,
+                    'survey_text': DUMMY_SURVEY_ANSWERS_10
                 }),
             headers=self.dummy_auth
         )
 
         real_id_from_loc, get_resp = self._validate_survey_create(post_resp)
-        expected_output, expected_model = self._make_expected_survey_output(
-            {'108': '68'}, real_id_from_loc)
-        self._validate_survey_info(get_resp, expected_output, expected_model)
+        exp_out, exp_model = self._make_exp_survey_out(real_id_from_loc,
+                                                       DUMMY_SURVEY_ANSWERS_10,
+                                                       10,
+                                                       'Basic Information')
+        self._validate_survey_info(get_resp, exp_out, exp_model)
+
+        post_resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?%s'
+            % (dummy_acct_id, dummy_source_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': 17,
+                    'survey_text': DUMMY_SURVEY_ANSWERS_17
+                }),
+            headers=self.dummy_auth
+        )
+
+        # After the reorganization of the surveys, the set of questions was
+        # largely split into two surveys. Rather than find a single survey
+        # with all possible types, perform two create operations and validate
+        # them instead.
+        real_id_from_loc, get_resp = self._validate_survey_create(post_resp)
+
+        exp_out, exp_model = self._make_exp_survey_out(real_id_from_loc,
+                                                       DUMMY_SURVEY_ANSWERS_17,
+                                                       17,
+                                                       'Diet')
+        self._validate_survey_info(get_resp, exp_out, exp_model)
 
     def test_survey_create_success_empty(self):
         """Successfully create a new answered survey without any answers"""
@@ -1587,9 +1616,8 @@ class SurveyTests(ApiTests):
         )
 
         real_id_from_loc, get_resp = self._validate_survey_create(post_resp)
-        expected_output, expected_model = self._make_expected_survey_output(
-            {'108': ""}, real_id_from_loc, base_dict={})
-        self._validate_survey_info(get_resp, expected_output, expected_model)
+        exp_out, exp_model = self._make_exp_survey_out({'108': ""}, real_id_from_loc, {})
+        self._validate_survey_info(get_resp, exp_out, exp_model)
 
 
 @pytest.mark.usefixtures("client")
@@ -1705,7 +1733,7 @@ class SampleTests(ApiTests):
         self.assertEqual(200, get_response.status_code)
 
         # ensure there is precisely one survey associated with this sample
-        expected_output = [
+        exp_out = [
             {'survey_id': dummy_answered_survey_id,
              'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
              'survey_status': None,
@@ -1714,7 +1742,7 @@ class SampleTests(ApiTests):
              'survey_template_type': 'local'
              }]
         get_resp_obj = json.loads(get_response.data)
-        self.assertEqual(get_resp_obj, expected_output)
+        self.assertEqual(get_resp_obj, exp_out)
 
         # TODO: We should also have tests of associating a survey to a sample
         #  that fail with with a 401 for answered survey not found and
