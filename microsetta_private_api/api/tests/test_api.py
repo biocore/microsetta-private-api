@@ -2049,7 +2049,8 @@ class SampleTests(ApiTests):
             create_dummy_1=True)
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         dummy_answered_survey_id = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, dummy_sample_id=MOCK_SAMPLE_ID)
+            dummy_acct_id, dummy_source_id, survey_template_id=10,
+            dummy_sample_id=MOCK_SAMPLE_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
             dummy_acct_id, dummy_source_id)
