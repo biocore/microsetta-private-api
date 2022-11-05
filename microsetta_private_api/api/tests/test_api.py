@@ -1705,7 +1705,7 @@ class SampleTests(ApiTests):
             create_dummy_1=True)
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         dummy_answered_survey_id = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id)
+            dummy_acct_id, dummy_source_id, survey_template_id=10)
 
         base_url = '/api/accounts/{0}/sources/{1}'.format(
             dummy_acct_id, dummy_source_id)
@@ -1738,9 +1738,9 @@ class SampleTests(ApiTests):
         # ensure there is precisely one survey associated with this sample
         exp_out = [
             {'survey_id': dummy_answered_survey_id,
-             'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
+             'survey_template_id': 10,
              'survey_status': None,
-             'survey_template_title': "Primary Questionnaire",
+             'survey_template_title': "Basic Information",
              'survey_template_version': '1.0',
              'survey_template_type': 'local'
              }]
