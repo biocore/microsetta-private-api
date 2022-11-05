@@ -1597,7 +1597,6 @@ class SurveyTests(ApiTests):
                                                        'Diet')
         self._validate_survey_info(get_resp, exp_out, exp_model)
 
-    # CHARLIE
     def test_survey_create_success_empty(self):
         """Successfully create a new answered survey without any answers"""
         dummy_acct_id, dummy_source_id = create_dummy_source(
@@ -1760,7 +1759,7 @@ class SampleTests(ApiTests):
         create_dummy_kit(dummy_acct_id, dummy_source_id,
                          associate_sample=False)
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id)
+            dummy_acct_id, dummy_source_id,survey_template_id=10)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
             dummy_acct_id, dummy_source_id)
