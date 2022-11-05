@@ -107,7 +107,8 @@ class MetadataUtilTests(unittest.TestCase):
                                         'Unspecified'],
                                   '6': ['OTHER_SUPPLEMENT_FREQUENCY', 'No'],
                                   '123': ['SAMPLE2SPECIFIC', 'foobar'],
-                                  '433': ['FIBER_SUPPLEMENT_TYPES', ['Oat fiber', 'Apple fiber']]}}]}
+                                  '433': ['FIBER_SUPPLEMENT_TYPES', [
+                                          'Oat fiber', 'Apple fiber']]}}]}
 
         self.fake_survey_template1 = {
             'survey_template_text': MM({
