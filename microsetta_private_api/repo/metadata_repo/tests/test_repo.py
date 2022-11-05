@@ -32,6 +32,7 @@ class MM:
 
 class MetadataUtilTests(unittest.TestCase):
     def setUp(self):
+
         self.raw_sample_1 = {
                 'sample_barcode': '000004216',
                 'host_subject_id': 'foo',
@@ -84,6 +85,30 @@ class MetadataUtilTests(unittest.TestCase):
                                   '9': ['ALLERGIC_TO', ['baz',
                                                         'stuff']]}}]}
 
+        self.raw_sample_17 = {
+                'sample_barcode': 'XY0004216',
+                'host_subject_id': 'bar',
+                'account': MM({'id': 'baz'}),
+                'source': MM({'id': 'bonkers',
+                              'source_type': 'human'}),
+                "sample": MM({
+                    "sample_projects": ["American Gut Project"],
+                    "datetime_collected": "2013-10-15T09:30:00",
+                    "site": "Stool"
+                }),
+                'survey_answers': [
+                    {'template': 17,
+                     'response': {'1': ['DIET_TYPE', '["Vegan\nfoo"]'],
+                                  '2': ['MULTIVITAMIN', 'Yes'],
+                                  '3': ['PROBIOTIC_FREQUENCY', 'Unspecified'],
+                                  '4': ['VITAMIN_B_SUPPLEMENT_FREQUENCY',
+                                        'Unspecified'],
+                                  '5': ['VITAMIN_D_SUPPLEMENT_FREQUENCY',
+                                        'Unspecified'],
+                                  '6': ['OTHER_SUPPLEMENT_FREQUENCY', 'No'],
+                                  '123': ['SAMPLE2SPECIFIC', 'foobar'],
+                                  '433': ['FIBER_SUPPLEMENT_TYPES', ['Oat fiber', 'Apple fiber']]}}]}
+
         self.fake_survey_template1 = {
             'survey_template_text': MM({
                 'groups': [
@@ -128,24 +153,18 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertEqual(obs, exp)
 
     def test_fetch_observed_survey_templates(self):
-        exp = {10: {'survey_id': None,
+        exp = {17: {'survey_id': None,
                     'survey_status': None,
-                    'survey_template_id': 10,
-                    'survey_template_title': 'Basic Information',
-                    'survey_template_type': 'local',
-                    'survey_template_version': '1.0'},
-               11: {'survey_id': None,
-                    'survey_status': None,
-                    'survey_template_id': 11,
-                    'survey_template_title': 'At Home',
+                    'survey_template_id': 17,
+                    'survey_template_title': 'Diet',
                     'survey_template_type': 'local',
                     'survey_template_version': '1.0'}}
 
-        obs, errors = _fetch_observed_survey_templates([self.raw_sample_1,
-                                                        self.raw_sample_2])
+        obs, errors = _fetch_observed_survey_templates([self.raw_sample_17])
         # concern here is that this key exists, not its content
         for o in obs.values():
             o.pop('survey_template_text')
+
         self.assertEqual(obs, exp)
         self.assertEqual(errors, None)
 
