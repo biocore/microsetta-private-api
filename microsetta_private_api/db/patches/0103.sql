@@ -5,6 +5,7 @@ delete from ag.group_questions;
 delete from ag.survey_question where survey_question_id > 299;
 delete from ag.surveys;
 delete from ag.survey_group;
+delete from ag.survey_question_triggers;
 
 
 /* STEP 1: Modify text in existing questions to new standard. */
@@ -340,6 +341,9 @@ insert into ag.survey_question (survey_question_id, american, question_shortname
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (505, 'If you responded ""yes"", please select which disorder(s) from the following list:', 'mental_illness_type_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (506, 'If you responded ""Yes"", select which type of diabetes:', 'diabetes_type_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (507, 'Have you ever been diagnosed with cancer?', 'cancer_v2', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (508, 'Participant Name', 'RIS_PARTICIPANT_NAME', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (509, 'Are you genetically related?', 'RIS_IS_RELATED', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (510, 'Does this person live with you?', 'RIS_IS_LIVING_WITH', false);
 
 
 /* STEP 4: add the new list of categories to the database. */
@@ -374,7 +378,6 @@ insert into ag.surveys (survey_id, survey_group) values(21, -21);
 
 /* STEP 6: associate new and modified questions with a new survey_group, in the new order of appearance. */
 insert into ag.group_questions values(-10,111,1);
--- insert into ag.group_questions values(-10,112,2);
 insert into ag.group_questions values(-10,186,3);
 insert into ag.group_questions values(-10,493,4);
 insert into ag.group_questions values(-10,108,5);
@@ -383,7 +386,6 @@ insert into ag.group_questions values(-10,113,7);
 insert into ag.group_questions values(-10,110,8);
 insert into ag.group_questions values(-10,148,9);
 insert into ag.group_questions values(-10,115,10);
--- insert into ag.group_questions values(-10,14,);
 insert into ag.group_questions values(-10,492,11);
 insert into ag.group_questions values(-10,502,12);
 insert into ag.group_questions values(-10,189,13);
@@ -392,32 +394,28 @@ insert into ag.group_questions values(-11,313,1);
 insert into ag.group_questions values(-11,15,2);
 insert into ag.group_questions values(-11,19,3);
 insert into ag.group_questions values(-11,316,4);
-insert into ag.group_questions values(-11,17,5);
-insert into ag.group_questions values(-11,18,6);
-insert into ag.group_questions values(-11,319,7);
-insert into ag.group_questions values(-11,20,8);
--- insert into ag.group_questions values(-11,101,9);
-insert into ag.group_questions values(-11,501,9);
-insert into ag.group_questions values(-11,21,10);
--- insert into ag.group_questions values(-11,117,11);
-insert into ag.group_questions values(-11,503,11);
-insert into ag.group_questions values(-11,149,12);
-insert into ag.group_questions values(-11,150,13);
-insert into ag.group_questions values(-11,326,14);
--- insert into ag.group_questions values(-12,16,1);
+insert into ag.group_questions values(-11,508,5);
+insert into ag.group_questions values(-11,509,6);
+insert into ag.group_questions values(-11,510,7);
+insert into ag.group_questions values(-11,17,8);
+insert into ag.group_questions values(-11,18,9);
+insert into ag.group_questions values(-11,319,10);
+insert into ag.group_questions values(-11,20,11);
+insert into ag.group_questions values(-11,501,12);
+insert into ag.group_questions values(-11,21,13);
+insert into ag.group_questions values(-11,503,14);
+insert into ag.group_questions values(-11,149,15);
+insert into ag.group_questions values(-11,150,16);
+insert into ag.group_questions values(-11,326,17);
 insert into ag.group_questions values(-12,328,2);
 insert into ag.group_questions values(-12,24,3);
--- insert into ag.group_questions values(-12,25,4);
 insert into ag.group_questions values(-12,331,5);
 insert into ag.group_questions values(-12,332,6);
 insert into ag.group_questions values(-12,333,7);
 insert into ag.group_questions values(-12,334,8);
 insert into ag.group_questions values(-12,28,9);
 insert into ag.group_questions values(-12,29,10);
--- insert into ag.group_questions values(-12,30,11);
 insert into ag.group_questions values(-12,494,11);
--- insert into ag.group_questions values(-12,163,12);
--- insert into ag.group_questions values(-12,31,13);
 insert into ag.group_questions values(-12,495,13);
 insert into ag.group_questions values(-12,32,14);
 insert into ag.group_questions values(-12,33,15);
@@ -447,13 +445,11 @@ insert into ag.group_questions values(-13,364,10);
 insert into ag.group_questions values(-13,365,11);
 insert into ag.group_questions values(-14,50,1);
 insert into ag.group_questions values(-14,51,2);
--- insert into ag.group_questions values(-14,41,3);
 insert into ag.group_questions values(-14,497,3);
 insert into ag.group_questions values(-14,42,4);
 insert into ag.group_questions values(-14,370,5);
 insert into ag.group_questions values(-14,43,6);
 insert into ag.group_questions values(-14,156,7);
--- insert into ag.group_questions values(-14,88,8);
 insert into ag.group_questions values(-14,500,8);
 insert into ag.group_questions values(-14,374,9);
 insert into ag.group_questions values(-14,375,10);
@@ -476,12 +472,9 @@ insert into ag.group_questions values(-15,77,4);
 insert into ag.group_questions values(-15,87,5);
 insert into ag.group_questions values(-15,80,6);
 insert into ag.group_questions values(-15,89,7);
--- insert into ag.group_questions values(-15,153,8);
 insert into ag.group_questions values(-15,504,8);
--- insert into ag.group_questions values(-15,154,9);
 insert into ag.group_questions values(-15,505,9);
 insert into ag.group_questions values(-15,82,10);
--- insert into ag.group_questions values(-15,155,11);
 insert into ag.group_questions values(-15,506,11);
 insert into ag.group_questions values(-15,90,12);
 insert into ag.group_questions values(-15,92,13);
@@ -489,13 +482,11 @@ insert into ag.group_questions values(-15,60,14);
 insert into ag.group_questions values(-15,86,15);
 insert into ag.group_questions values(-15,94,16);
 insert into ag.group_questions values(-15,96,17);
--- insert into ag.group_questions values(-15,158,18);
 insert into ag.group_questions values(-15,507,18);
 insert into ag.group_questions values(-15,407,19);
 insert into ag.group_questions values(-15,408,20);
 insert into ag.group_questions values(-15,409,21);
 insert into ag.group_questions values(-15,410,22);
--- insert into ag.group_questions values(-15,81,23);
 insert into ag.group_questions values(-15,499,23);
 insert into ag.group_questions values(-15,106,24);
 insert into ag.group_questions values(-15,413,25);
@@ -506,7 +497,6 @@ insert into ag.group_questions values(-16,7,4);
 insert into ag.group_questions values(-16,8,5);
 insert into ag.group_questions values(-16,9,6);
 insert into ag.group_questions values(-17,1,1);
--- insert into ag.group_questions values(-17,162,2);
 insert into ag.group_questions values(-17,11,3);
 insert into ag.group_questions values(-17,423,4);
 insert into ag.group_questions values(-17,424,5);
@@ -522,7 +512,6 @@ insert into ag.group_questions values(-17,433,14);
 insert into ag.group_questions values(-17,434,15);
 insert into ag.group_questions values(-17,6,16);
 insert into ag.group_questions values(-17,104,17);
--- insert into ag.group_questions values(-17,55,18);
 insert into ag.group_questions values(-17,498,18);
 insert into ag.group_questions values(-18,56,1);
 insert into ag.group_questions values(-18,57,2);
@@ -559,7 +548,6 @@ insert into ag.group_questions values(-18,241,32);
 insert into ag.group_questions values(-18,242,33);
 insert into ag.group_questions values(-18,243,34);
 insert into ag.group_questions values(-18,244,35);
--- insert into ag.group_questions values(-18,76,36);
 insert into ag.group_questions values(-18,474,37);
 insert into ag.group_questions values(-18,475,38);
 insert into ag.group_questions values(-18,476,39);
@@ -1417,9 +1405,12 @@ insert into ag.survey_question_response(survey_question_id, response, display_in
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (153, 'Yes, diagnosed by a licensed mental health professional', 3);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (153, 'Yes, diagnosed by an alternative or complementary practitioner', 4);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (153, 'Self-diagnosed', 5);
-
-
-
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (509, 'Yes', 1);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (509, 'No', 2);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (509, 'Not sure', 3);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (510, 'Yes', 1);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (510, 'No', 2);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (510, 'Not sure', 3);
 
 -- recreate constraint
 alter table only ag.survey_question_response add constraint idx_survey_question_response unique (survey_question_id, display_index);
@@ -1427,7 +1418,10 @@ alter table only ag.survey_question_response add constraint idx_survey_question_
 
 /* STEP 9: Add response types for new questions. */
 insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (313, 'SINGLE');
-insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (316, 'SINGLE');
+insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (316, 'STRING');
+insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (508, 'STRING');
+insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (509, 'SINGLE');
+insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (510, 'SINGLE');
 insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (319, 'STRING');
 insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (326, 'SINGLE');
 insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (328, 'MULTIPLE');
@@ -1502,18 +1496,19 @@ insert into ag.survey_question_response_type (survey_question_id, survey_respons
 
 /* STEP 10 Add triggers for nested questions. */
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (149, 'Yes',150);
-
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (153, 'Self-diagnosed',154);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (153, 'Yes, diagnosed by a licensed mental health professional', 154);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (153, 'Yes, diagnosed by an alternative or complementary practitioner', 154);
-
-
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (158, 'Diagnosed by a medical professional (doctor, physician assistant)',407);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (158, 'Diagnosed by a medical professional (doctor, physician assistant)',408);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (158, 'Diagnosed by a medical professional (doctor, physician assistant)',409);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (158, 'Diagnosed by a medical professional (doctor, physician assistant)',410);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (17, 'One',18);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (18, 'Yes',319);
+insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (19, 'Yes',316);
+insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (19, 'Yes',508);
+insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (19, 'Yes',509);
+insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (19, 'Yes',510);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (20, 'Yes',101);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (21, 'Yes',117);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (24, 'Daily',25);
@@ -1570,4 +1565,3 @@ update ag.survey_question_response set display_index = display_index + 2 where s
 
 --re-enable constraint
 alter table only ag.survey_question_response add constraint idx_survey_question_response unique (survey_question_id, display_index);
-
