@@ -29,7 +29,7 @@ class CampaignRepo(BaseRepo):
                 c.permitted_countries, c.language_key,
                 c.accepting_participants, '',
                 c.language_key_alt, c.title_alt, c.instructions_alt,
-                c.send_thdmi_confirmation)
+                c.send_thdmi_confirmation, c.force_primary_language)
 
     def _row_to_campaign(self, r):
         associated_projects = ", ".join(self._get_projects(r['campaign_id']))
@@ -38,7 +38,8 @@ class CampaignRepo(BaseRepo):
                         r['language_key'], r['accepting_participants'],
                         associated_projects, r['language_key_alt'],
                         r['title_alt'], r['instructions_alt'],
-                        r['send_thdmi_confirmation'])
+                        r['send_thdmi_confirmation'],
+                        r['force_primary_language'])
 
     def _get_projects(self, campaign_id):
         with self._transaction.cursor() as cur:
@@ -68,7 +69,8 @@ class CampaignRepo(BaseRepo):
                 "SELECT campaign_id, title, instructions, header_image, "
                 "permitted_countries, language_key, accepting_participants, "
                 "language_key_alt, title_alt, "
-                "instructions_alt, send_thdmi_confirmation "
+                "instructions_alt, send_thdmi_confirmation, "
+                "force_primary_language "
                 "FROM campaign.campaigns ORDER BY title"
             )
             rows = cur.fetchall()
@@ -89,18 +91,21 @@ class CampaignRepo(BaseRepo):
         instructions_alt = kwargs.get('instructions_alt')
         extension = kwargs.get('extension')
         send_thdmi_confirmation = kwargs.get('send_thdmi_confirmation', False)
+        force_primary_language = kwargs.get('force_primary_language', False)
 
         with self._transaction.cursor() as cur:
             cur.execute(
                 "INSERT INTO campaign.campaigns (title, instructions, "
                 "permitted_countries, language_key, accepting_participants, "
                 "language_key_alt, title_alt, "
-                "instructions_alt, send_thdmi_confirmation) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                "instructions_alt, send_thdmi_confirmation, "
+                "force_primary_language) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
                 "RETURNING campaign_id",
                 (title, instructions, permitted_countries, language_key,
                  accepting_participants, language_key_alt, title_alt,
-                 instructions_alt, send_thdmi_confirmation)
+                 instructions_alt, send_thdmi_confirmation,
+                 force_primary_language)
             )
             campaign_id = cur.fetchone()[0]
 
@@ -145,6 +150,7 @@ class CampaignRepo(BaseRepo):
         instructions_alt = kwargs.get('instructions_alt')
         extension = kwargs.get('extension')
         send_thdmi_confirmation = kwargs.get('send_thdmi_confirmation')
+        force_primary_language = kwargs.get('force_primary_language')
 
         with self._transaction.cursor() as cur:
             cur.execute(
@@ -152,11 +158,12 @@ class CampaignRepo(BaseRepo):
                 "permitted_countries = %s, language_key = %s, "
                 "accepting_participants = %s, language_key_alt = %s, "
                 "title_alt = %s, instructions_alt = %s, "
-                "send_thdmi_confirmation = %s "
+                "send_thdmi_confirmation = %s, force_primary_language = %s "
                 "WHERE campaign_id = %s",
                 (title, instructions, permitted_countries, language_key,
                  accepting_participants, language_key_alt, title_alt,
-                 instructions_alt, send_thdmi_confirmation, campaign_id)
+                 instructions_alt, send_thdmi_confirmation,
+                 force_primary_language, campaign_id)
             )
 
             self.update_header_image(campaign_id, extension)
@@ -171,7 +178,7 @@ class CampaignRepo(BaseRepo):
                     "permitted_countries, language_key, "
                     "accepting_participants, "
                     "language_key_alt, title_alt, instructions_alt, "
-                    "send_thdmi_confirmation "
+                    "send_thdmi_confirmation, force_primary_language "
                     "FROM campaign.campaigns WHERE campaign_id = %s",
                     (campaign_id,)
                 )
