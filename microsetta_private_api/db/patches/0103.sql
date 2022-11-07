@@ -378,7 +378,6 @@ insert into ag.surveys (survey_id, survey_group) values(21, -21);
 
 /* STEP 6: associate new and modified questions with a new survey_group, in the new order of appearance. */
 insert into ag.group_questions values(-10,111,1);
-insert into ag.group_questions values(-10,186,3);
 insert into ag.group_questions values(-10,493,4);
 insert into ag.group_questions values(-10,108,5);
 insert into ag.group_questions values(-10,109,6);
@@ -388,7 +387,6 @@ insert into ag.group_questions values(-10,148,9);
 insert into ag.group_questions values(-10,115,10);
 insert into ag.group_questions values(-10,492,11);
 insert into ag.group_questions values(-10,502,12);
-insert into ag.group_questions values(-10,189,13);
 insert into ag.group_questions values(-10,22,14);
 insert into ag.group_questions values(-11,313,1);
 insert into ag.group_questions values(-11,15,2);

@@ -106,10 +106,45 @@ class SurveyAnswersRepo(BaseRepo):
                         "LEFT JOIN surveys USING (survey_group) "
                         "WHERE survey_question_id = %s",
                         (arbitrary_question_id,))
-
             survey_template_id = cur.fetchone()[0]
             # Can define statuses for our internal surveys later if we want
             return survey_template_id, None
+
+    def survey_template_ids2(self, survey_answers_ids,
+                             matching_template_id=None):
+        with self._transaction.cursor() as cur:
+            ids = [f"'{x}'" for x in survey_answers_ids]
+
+            cur.execute("SELECT survey_question_id FROM survey_answers WHERE "
+                        "survey_id in (%s)" % ','.join(ids))
+
+            survey_question_ids = [x[0] for x in cur.fetchall()]
+
+            cur.execute("SELECT survey_question_id FROM survey_answers_other "
+                        "WHERE survey_id in (%s)" % ','.join(ids))
+
+            survey_question_ids = set(survey_question_ids +
+                                      [x[0] for x in cur.fetchall()])
+
+            survey_question_ids = [f"{x}" for x in survey_question_ids]
+
+            if matching_template_id:
+                # raise an Error before embedding a string w/in sql.
+                matching_template_id = int(matching_template_id)
+                sql = ("SELECT distinct(survey_id) FROM group_questions LEFT "
+                       "JOIN surveys USING (survey_group) WHERE "
+                       "survey_question_id in (%s) and survey_id = %d order "
+                       "by survey_question_id" %
+                       (','.join(survey_question_ids), matching_template_id))
+            else:
+                sql = ("SELECT distinct(survey_id) FROM group_questions LEFT "
+                       "JOIN surveys USING (survey_group) WHERE "
+                       "survey_question_id in (%s) order by survey_id" %
+                       ','.join(survey_question_ids))
+
+            cur.execute(sql)
+
+            return [x[0] for x in cur.fetchall()]
 
     def list_answered_surveys(self, account_id, source_id):
         with self._transaction.cursor() as cur:
