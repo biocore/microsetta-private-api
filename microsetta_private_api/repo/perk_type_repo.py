@@ -57,7 +57,7 @@ class PerkTypeRepo(BaseRepo):
                 account_id = res['id']
 
             else:
-                account_id = '00000000-0000-0000-0000-000000000000'
+                account_id = 'aaaaaaaa-bbbb-cccc-dddd-eeeefffffffa'
 
             return account_id
 
