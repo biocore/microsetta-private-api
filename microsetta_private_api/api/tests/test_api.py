@@ -1831,7 +1831,7 @@ class SampleTests(ApiTests):
 
         # if sample date is less than 10 years
         now = datetime.datetime.now()
-        delta = relativedelta(year=now.year-11)
+        delta = relativedelta(years=now.year-11)
         date = now+delta
 
         post_resp = self.client.put(
