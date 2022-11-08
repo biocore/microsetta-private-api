@@ -225,12 +225,13 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertEqual(errors, None)
 
     def test_fetch_barcode_metadata(self):
-        obs, obs_errors = _fetch_barcode_metadata('000004216')
+        obs, obs_errors = _fetch_barcode_metadata('000001656')
 
         # verify we obtained metadata. it is not the responsibility of this
         # test to assert the structure of the metadata as that is the scope of
-        # the admin interfaces on the private API
-        self.assertEqual(obs['sample_barcode'], '000004216')
+        # the admion interfaces on the private API
+
+        self.assertEqual(obs['sample_barcode'], '000001656')
         self.assertEqual(obs_errors, None)
 
     def test_fetch_barcode_metadata_missing(self):

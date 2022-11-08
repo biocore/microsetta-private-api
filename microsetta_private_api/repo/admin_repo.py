@@ -1129,6 +1129,15 @@ class AdminRepo(BaseRepo):
             return [r[0] for r in cur.fetchall()]
 
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
+        '''
+        Return all surveys associated with a given barcode. If survey questions
+        have migrated to new survey templates since the survey was submitted,
+        multiple instances of the survey will be returned, one for each
+        associated survey template.
+        :param sample_barcode: A sample barcode.
+        :param survey_template_id: A survey template id to limit results to.
+        :return: A nested dict structure containing all answered surveys.
+        '''
         ids = self._get_ids_relevant_to_barcode(sample_barcode)
 
         if ids is None:
@@ -1156,44 +1165,43 @@ class AdminRepo(BaseRepo):
 
         host_subject_id = source_repo.get_host_subject_id(source)
 
-        survey_answers_repo = SurveyAnswersRepo(self._transaction)
-        answer_ids = survey_answers_repo.list_answered_surveys_by_sample(
-            account_id, source_id, sample_id)
+        survey_ans_repo = SurveyAnswersRepo(self._transaction)
+        a_ids = survey_ans_repo.list_answered_surveys_by_sample(
+                account_id, source_id, sample_id)
 
-        answer_to_template_map = {}
-        for answer_id in answer_ids:
-            template_id, status = survey_answers_repo.\
-                survey_template_id_and_status(answer_id)
-            answer_to_template_map[answer_id] = (template_id, status)
+        template_ids = survey_ans_repo.get_template_ids_from_survey_ids(a_ids)
 
-        # if a survey template is specified, filter the returned surveys
         if survey_template_id is not None:
-            # TODO: This schema is so awkward for this type of query...
-            answers = []
-            for answer_id in answer_ids:
-                if answer_to_template_map[answer_id][0] == survey_template_id:
-                    answers.append(answer_id)
-
-            if len(answers) == 0:
+            # extract just the template_ids for this check.
+            if survey_template_id not in [x[1] for x in template_ids]:
                 raise NotFound("This barcode is not associated with any "
                                "surveys matching this template id")
-            if len(answers) > 1:
-                #  I really hope this can't happen.  (x . x)
-                raise RepoException("This barcode is associated with more "
-                                    "than one survey matching this template"
-                                    " id")
-            answer_ids = answers
 
-        metadata_map = survey_answers_repo.build_metadata_map()
+            # since a user can now update/retake a survey, it's possible for
+            # a barcode to be associated with multiple survey_ids with the
+            # same survey_template_id. Hence, this is no longer an Error.
+
+            # filter out survey_id/survey_template_id pairs that aren't the
+            # optional survey_template_id.
+            template_ids = [x for x in template_ids
+                            if x[1] == survey_template_id]
+
+        metadata_map = survey_ans_repo.build_metadata_map()
 
         all_survey_answers = []
-        for answer_id in answer_ids:
-            answer_model = survey_answers_repo.get_answered_survey(
-                account_id,
-                source_id,
-                answer_id,
-                "en_US"
-            )
+        for answer_id, template_id in template_ids:
+            # Note that answered survey returned according to the survey_id
+            # passed to it. If template_ids contains multiple tuples beginning
+            # with the same survey_id (implying one or more questions in the
+            # answered survey have been moved to a new survey template), there
+            # will be multiple copies of the survey returned; one for each
+            # survey_template_id now associated with it. These legacy surveys
+            # will likely NOT contain all questions currently associated with
+            # the current survey_template_ids.
+            answer_model = survey_ans_repo.get_answered_survey(account_id,
+                                                               source_id,
+                                                               answer_id,
+                                                               "en_US")
 
             if answer_model is None:
                 # if answers are requested for a vioscreen survey
@@ -1208,8 +1216,9 @@ class AdminRepo(BaseRepo):
 
             all_survey_answers.append(
                 {
-                    "template": answer_to_template_map[answer_id][0],
-                    "survey_status": answer_to_template_map[answer_id][1],
+                    "template": template_id,
+                    # all survey statuses currently return None
+                    "survey_status": None,
                     "response": survey_answers
                 })
 

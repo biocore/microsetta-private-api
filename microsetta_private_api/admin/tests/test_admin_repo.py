@@ -826,14 +826,11 @@ class AdminRepoTests(AdminTests):
             self.assertGreater(len(all_meta['survey_answers']), 1)
 
             # And the meta survey should exist somewhere in all_meta
-            found = False
             for survey in all_meta['survey_answers']:
-                if "17" in survey["response"] and \
-                        survey["response"]["1"][0] == 'DIET_TYPE':
-                    found = True
-                    self.assertDictEqual(meta['survey_answers'][0],
-                                         survey)
-            self.assertTrue(found)
+                if survey['template'] == 17:
+                    break
+
+            self.assertDictEqual(meta['survey_answers'][0], survey)
 
     def _set_up_and_query_projects(self, t, include_stats, is_active_val):
         updated_dict = self._FULL_PROJECT_DICT.copy()

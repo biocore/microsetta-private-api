@@ -106,45 +106,124 @@ class SurveyAnswersRepo(BaseRepo):
                         "LEFT JOIN surveys USING (survey_group) "
                         "WHERE survey_question_id = %s",
                         (arbitrary_question_id,))
+
             survey_template_id = cur.fetchone()[0]
             # Can define statuses for our internal surveys later if we want
             return survey_template_id, None
 
-    def survey_template_ids2(self, survey_answers_ids,
-                             matching_template_id=None):
+    def get_template_ids_from_survey_ids(self, survey_ids):
+        '''
+        Generates a list of unique(survey_id, survey_template_id) tuples, one
+        for each survey_template represented by at least one question present
+        in the answered survey. If one or more questions answered in the
+        survey have been moved to a different template since that time, those
+        survey_template_ids will now appear in the results as well. A current
+        survey should have only one survey_template_id associated w/it. A
+        legacy survey might have several associated w/it as questions have
+        been migrated.
+
+        :param survey_ids: A list of survey ids.
+        :return: A list of (survey_id, survey_template_id) tuples.
+        '''
+        res = self._local_survey_template_ids_from_survey_ids(survey_ids)
+
+        # check to see if any of the survey ids are associated with a remote
+        # survey.
+        for survey_id in survey_ids:
+            res += self._remote_survey_template_id_from_survey_id(survey_id)
+
+        return res
+
+    def _remote_survey_template_id_from_survey_id(self, survey_id):
+        # VIOscreen
+        vioscreen_repo = VioscreenRepo(self._transaction)
+        status = vioscreen_repo._get_vioscreen_status(survey_id)
+        if status is not None:
+            return [(survey_id, SurveyTemplateRepo.VIOSCREEN_ID)]
+
         with self._transaction.cursor() as cur:
-            ids = [f"'{x}'" for x in survey_answers_ids]
+            # Polyphenol FFQ
+            try:
+                # If survey_id isn't a valid UUID, a ValueError will be
+                # raised.
+                uuid.UUID(survey_id)
+                cur.execute("SELECT EXISTS (SELECT polyphenol_ffq_id FROM "
+                            "ag.polyphenol_ffq_registry WHERE "
+                            "polyphenol_ffq_id='%s')" % survey_id)
 
-            cur.execute("SELECT survey_question_id FROM survey_answers WHERE "
-                        "survey_id in (%s)" % ','.join(ids))
+                if cur.fetchone()[0] is True:
+                    return [(survey_id, SurveyTemplateRepo.POLYPHENOL_FFQ_ID)]
+            except ValueError:
+                # not Polyphenol FFQ
+                pass
 
-            survey_question_ids = [x[0] for x in cur.fetchall()]
+            # Spain FFQ
+            try:
+                uuid.UUID(survey_id)
+                cur.execute("SELECT EXISTS (SELECT spain_ffq_id FROM "
+                            "ag.spain_ffq_registry WHERE spain_ffq_id='%s')" %
+                            survey_id)
 
-            cur.execute("SELECT survey_question_id FROM survey_answers_other "
-                        "WHERE survey_id in (%s)" % ','.join(ids))
+                if cur.fetchone()[0] is True:
+                    return [(survey_id, SurveyTemplateRepo.SPAIN_FFQ_ID)]
+            except ValueError:
+                # not Spain FFQ
+                pass
 
-            survey_question_ids = set(survey_question_ids +
-                                      [x[0] for x in cur.fetchall()])
+            # myfoodrepo
+            cur.execute("SELECT EXISTS (SELECT myfoodrepo_id FROM "
+                        "myfoodrepo_registry WHERE myfoodrepo_id='%s')" %
+                        survey_id)
 
-            survey_question_ids = [f"{x}" for x in survey_question_ids]
+            if cur.fetchone()[0] is True:
+                return [(survey_id, SurveyTemplateRepo.MYFOODREPO_ID)]
 
-            if matching_template_id:
-                # raise an Error before embedding a string w/in sql.
-                matching_template_id = int(matching_template_id)
-                sql = ("SELECT distinct(survey_id) FROM group_questions LEFT "
-                       "JOIN surveys USING (survey_group) WHERE "
-                       "survey_question_id in (%s) and survey_id = %d order "
-                       "by survey_question_id" %
-                       (','.join(survey_question_ids), matching_template_id))
-            else:
-                sql = ("SELECT distinct(survey_id) FROM group_questions LEFT "
-                       "JOIN surveys USING (survey_group) WHERE "
-                       "survey_question_id in (%s) order by survey_id" %
-                       ','.join(survey_question_ids))
+        return []
+
+    def _local_survey_template_ids_from_survey_ids(self, survey_ids):
+        '''
+        Generates a list of unique(survey_id, survey_template_id) tuples, one
+        for each survey_template represented by at least one question present
+        in the answered survey. If one or more questions answered in the
+        survey have been moved to a different template since that time, those
+        survey_template_ids will now appear in the results as well. A current
+        survey should have only one survey_template_id associated w/it. A
+        legacy survey might have several associated w/it as questions have
+        been migrated.
+
+        :param survey_ids: A list of survey ids.
+        :return: A list of (survey_id, survey_template_id) tuples.
+        '''
+        with self._transaction.cursor() as cur:
+            # note these ids are unique string ids, not integer ids.
+            ids = [f"'{x}'" for x in survey_ids]
+
+            sql = ("select a.barcode, a.survey_id, b.survey_question_id, "
+                   "c.survey_group, d.survey_id as survey_template_id from "
+                   "source_barcodes_surveys a, survey_answers b, "
+                   "group_questions c, surveys d where a.survey_id = "
+                   "b.survey_id and b.survey_question_id = "
+                   "c.survey_question_id and c.survey_group = d.survey_group"
+                   " and b.survey_id in (%s)" % ','.join(ids))
 
             cur.execute(sql)
 
-            return [x[0] for x in cur.fetchall()]
+            survey_template_ids = [(x[1], x[4]) for x in cur.fetchall()]
+
+            sql = ("select a.barcode, a.survey_id, b.survey_question_id, "
+                   "c.survey_group, d.survey_id as survey_template_id from "
+                   "source_barcodes_surveys a, survey_answers_other b, "
+                   "group_questions c, surveys d where a.survey_id = "
+                   "b.survey_id and b.survey_question_id = "
+                   "c.survey_question_id and c.survey_group = d.survey_group"
+                   " and b.survey_id in (%s)" % ','.join(ids))
+
+            cur.execute(sql)
+            survey_template_ids += [(x[1], x[4]) for x in cur.fetchall()]
+
+            survey_template_ids = list(set(survey_template_ids))
+
+            return survey_template_ids
 
     def list_answered_surveys(self, account_id, source_id):
         with self._transaction.cursor() as cur:
