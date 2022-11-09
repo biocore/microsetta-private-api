@@ -82,13 +82,14 @@ class ConsentRepo(BaseRepo):
                         _consent_document_to_row(consent))
             return cur.rowcount == 1
 
-    def get_all_consent_documents(self):
+    def get_all_consent_documents(self, tag):
         consent_docs = []
 
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + self.doc_read_cols + " FROM "
-                        "consent_documents ORDER BY consent_type DESC, "
-                        "date_time DESC")
+                        "consent_documents WHERE locale = %s"
+                        " ORDER BY consent_type DESC, "
+                        "date_time DESC", (tag,))
 
             r = cur.fetchall()
             consent_docs = [_row_to_consent_document(row) for row in r]

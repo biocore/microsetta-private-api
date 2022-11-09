@@ -19,7 +19,7 @@ def render_consent_doc(account_id, language_tag, token_info):
 
     with Transaction() as t:
         consent_repo = ConsentRepo(t)
-        documents = consent_repo.get_all_consent_documents()
+        documents = consent_repo.get_all_consent_documents(language_tag)
         data = [x.to_api() for x in documents]
         consent_form["CONSENT_DOCS"] = data
 
