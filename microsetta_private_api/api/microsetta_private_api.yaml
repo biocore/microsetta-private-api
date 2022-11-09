@@ -1472,6 +1472,8 @@ paths:
                   type: string
                 'extension':
                   type: string
+                'send_thdmi_confirmation':
+                  type: string
               required:
                 - title
                 - associated_projects
@@ -1520,6 +1522,8 @@ paths:
                 'instructions_alt':
                   type: string
                 'extension':
+                  type: string
+                'send_thdmi_confirmation':
                   type: string
               required:
                 - campaign_id
@@ -2721,7 +2725,7 @@ components:
       example: "standard"
     language:
       type: string
-      enum: ["en_US", "es_MX", "es_ES"]
+      enum: ["en_US", "es_MX", "es_ES", "ja_JP"]
       example: "en_US"
     creation_time:
       type: string
