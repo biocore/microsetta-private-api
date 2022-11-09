@@ -1824,7 +1824,7 @@ class SampleTests(ApiTests):
 
         # if sample date is less than 10 years
         now = datetime.datetime.now()
-        delta = relativedelta(year=now.year-11)
+        delta = relativedelta(years=now.year-11)
         date = now+delta
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),
@@ -1858,7 +1858,7 @@ class SampleTests(ApiTests):
             headers=self.dummy_auth
         )
         # check response code
-        self.assertEqual(200, post_resp.status_code)
+        self.assertEqual(400, post_resp.status_code)
 
         # attempt to continue editing as a regular user, should succeed
         date = datetime.datetime.now()
