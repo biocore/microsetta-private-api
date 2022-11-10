@@ -36,7 +36,7 @@ def get_consent_doc(account_id, consent_id, token_info):
         data = document.to_api()
 
     if len(data) == 0:
-        return jsonify(code=404, message=CONSENT_DOC_NOT_FOUND_MSG) , 404
+        return jsonify(code=404, message=CONSENT_DOC_NOT_FOUND_MSG), 404
 
     return jsonify(data), 200
 
@@ -62,7 +62,7 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
         try:
             consent_repo.sign_consent(account_id, consent_sign)
             t.commit()
-        except:
+        except Exception:
             return jsonify(code=404, message=CONSENT_DOC_NOT_FOUND_MSG), 404
 
     response = jsonify({"result": True})
