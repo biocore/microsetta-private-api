@@ -43,13 +43,10 @@ class ConsentSignature:
     def from_dict(input_dict, source_id, signature_id):
         date_time = datetime.now()
 
-        parent_name_1 = input_dict.get("parent_1_name", None)
-
-        parent_name_2 = input_dict.get("parent_2_name", None)
-
-        deceased_parent = input_dict.get("deceased_parent", None)
-
-        assent_obtainer = input_dict.get("assent_obtainer", None)
+        parent_name_1 = input_dict.get("parent_1_name")
+        parent_name_2 = input_dict.get("parent_2_name")
+        deceased_parent = input_dict.get("deceased_parent")
+        assent_obtainer = input_dict.get("assent_obtainer")
 
         return ConsentSignature(
             signature_id,

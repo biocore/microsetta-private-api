@@ -146,7 +146,7 @@ class ConsentRepo(BaseRepo):
         obtainer = sign.assent_obtainer
         deceased = sign.deceased_parent
 
-        con = ["Parental Consent", "Child Assent", "Teenage Assent"]
+        con = ["parent", "child", "adolescent"]
 
         for v in con:
             if v in doc.consent_type:

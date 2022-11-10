@@ -29,7 +29,7 @@ INSERT INTO ag.account
      VALUES ('000fc4cd-8fa4-db8b-e050-8a800c5d81b7', 'microsetta+consentdummy@ucsd.edu', 'standard', 'demo', 'demo', 'demo', 'demo', '46839', 'US', 'en_US', 'true', 'false');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adolescent Consent - Biospecimen', 'en_US', NOW(), '<p class="consent_title">
+    VALUES ('adolescent_biospecimen', 'en_US', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego</strong><br />
   Assent to Act as a Research Subject<br />
   (Ages 13-17 years)
@@ -140,7 +140,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adolescent Consent - Data', 'en_US', NOW(), '<p class="consent_title">
+    VALUES ('adolescent_data', 'en_US', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego</strong><br />
   Assent to Act as a Research Subject
   (Ages 13-17 years)
@@ -236,7 +236,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true', '000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adult Consent - Biospecimen', 'en_US', NOW(), '<p class="content_title">
+    VALUES ('adult_biospecimen', 'en_US', NOW(), '<p class="content_title">
   <strong>University of California, San Diego</strong><br />
   Consent to Act as a Research Subject
 </p>
@@ -367,7 +367,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adult Consent - Data', 'en_US', NOW(), '<p class="consent_title">
+    VALUES ('adult_data', 'en_US', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
   Consent to Act as a Research Subject</strong>
 </p>
@@ -489,7 +489,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Child Consent - Biospecimen', 'en_US', NOW(), '<p class="consent_title">
+    VALUES ('child_biospecimen', 'en_US', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego</strong><br />
   Assent to Act as a Research Subject<br />
   (Ages 7-12 years)
@@ -521,7 +521,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Child Consent - Data', 'en_US', NOW(), '<p class="consent_title">
+    VALUES ('child_data', 'en_US', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego</strong><br />
   Assent to Act as a Research Subject<br />
   (Ages 7-12 years)
@@ -555,7 +555,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 </p>', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Parent Consent - Biospecimen', 'en_US', NOW(), '<p class="consent_title">
+    VALUES ('parent_biospecimen', 'en_US', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego</strong><br />
   Parent Consent for Child to Act as a Research Subject
 </p>
@@ -696,7 +696,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Parent Consent - Data', 'en_US', NOW(), '<p class="consent_title">
+    VALUES ('parent_data', 'en_US', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego</strong><br />
   Parent Consent for Child to Act as a Research Subject
 </p>
@@ -807,7 +807,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adolescent Consent - Biospecimen', 'es_ES', NOW(), '<p class="consent_title">
+    VALUES ('adolescent_biospecimen', 'es_ES', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigaci�n<br />
     (Edades 13-17 a�os)</strong>
@@ -923,7 +923,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adolescent Consent - Data', 'es_ES', NOW(), '<p class="consent_title">
+    VALUES ('adolescent_data', 'es_ES', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigación<br />
     (Edades 13-17 años)</strong>
@@ -1019,7 +1019,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adult Consent - Biospecimen', 'es_ES', NOW(), '<p class="consent_title">
+    VALUES ('adult_biospecimen', 'es_ES', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigaci�n</strong>
 </p>
@@ -1150,7 +1150,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adult Consent - Data', 'es_ES', NOW(), '<p class="consent_title">
+    VALUES ('adult_data', 'es_ES', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigación</strong>
 </p>
@@ -1272,7 +1272,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Child Consent - Biospecimen', 'es_ES', NOW(), '<p class="consent_title">
+    VALUES ('child_biospecimen', 'es_ES', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigaci�n<br />
     (Edades 7-12 a�os)</strong>
@@ -1301,7 +1301,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Child Consent - Data', 'es_ES', NOW(), '<p class="consent_title">
+    VALUES ('child_data', 'es_ES', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigaci�n<br />
     (Edades 7-12 a�os)</strong>
@@ -1336,7 +1336,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Parent Consent - Biospecimen', 'es_ES', NOW(), '<p class="consent_title">
+    VALUES ('parent_biospecimen', 'es_ES', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento de los padres para que el niño actúe como sujeto de investigación</strong>
 </p>
@@ -1477,7 +1477,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Parent Consent - Data', 'es_ES', NOW(), '<p class="consent_title">
+    VALUES ('parent_data', 'es_ES', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento de los padres para que el niño actúe como sujeto de investigación</strong>
 </p>
@@ -1587,7 +1587,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adolescent Consent - Biospecimen', 'es_MX', NOW(), '<p class="consent_title">
+    VALUES ('adolescent_biospecimen', 'es_MX', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigaci�n<br />
     (Edades 13-17 a�os)</strong>
@@ -1703,7 +1703,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adolescent Consent - Data', 'es_MX', NOW(), '<p class="consent_title">
+    VALUES ('adolescent_data', 'es_MX', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigación<br />
     (Edades 13-17 años)</strong>
@@ -1799,7 +1799,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adult Consent - Biospecimen', 'es_MX', NOW(), '<p class="consent_title">
+    VALUES ('adult_biospecimen', 'es_MX', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigaci�n</strong>
 </p>
@@ -1929,7 +1929,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 </p>', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Adult Consent - Data', 'es_MX', NOW(), '<p class="consent_title">
+    VALUES ('adult_data', 'es_MX', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigación</strong>
 </p>
@@ -2051,7 +2051,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 ', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Child Consent - Biospecimen', 'es_MX', NOW(), '<p class="consent_title">
+    VALUES ('child_biospecimen', 'es_MX', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigaci�n<br />
     (Edades 7-12 a�os)</strong>
@@ -2079,7 +2079,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 </p>', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Child Consent - Data', 'es_MX', NOW(), '<p class="consent_title">
+    VALUES ('child_data', 'es_MX', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento para participar como sujeto de investigaci�n<br />
     (Edades 7-12 a�os)</strong>
@@ -2113,7 +2113,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 </p>', 'true','000fc4cd-8fa4-db8b-e050-8a800c5d81b7');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Parent Consent - Biospecimen', 'es_MX', NOW(), '<p class="consent_title">
+    VALUES ('parent_biospecimen', 'es_MX', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento de los padres para que el niño actúe como sujeto de investigación</strong>
 </p>
@@ -2254,7 +2254,7 @@ INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consen
 
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
-    VALUES ('Parent Consent - Data', 'es_MX', NOW(), '<p class="consent_title">
+    VALUES ('parent_data', 'es_MX', NOW(), '<p class="consent_title">
   <strong>University of California, San Diego<br />
     Consentimiento de los padres para que el niño actúe como sujeto de investigación</strong>
 </p>
