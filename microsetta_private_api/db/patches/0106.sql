@@ -26,7 +26,7 @@ INSERT INTO ag.account
     ("id", "email", "account_type", "first_name", "last_name",
      "street", "city", "post_code", "country_code", "preferred_language",
      "address_verified", "cannot_geocode")
-     VALUES ('000fc4cd-8fa4-db8b-e050-8a800c5d81b7', 'microsetta+consentdummy@ucsd.edu', 'standard', 'demo', 'demo', 'demo', 'demo', '46839', 'US', 'en_US', 'true', 'false');
+     VALUES ('000fc4cd-8fa4-db8b-e050-8a800c5d81b7', 'microsetta+consentdummy@ucsd.edu', 'standard', 'demo', 'demo', 'demo', 'demo', '46839', 'US', 'en_US', 'false', 'false');
 
 INSERT INTO ag.consent_documents ("consent_type", "locale", "date_time", "consent_content", "reconsent_required", "account_id")
     VALUES ('adolescent_biospecimen', 'en_US', NOW(), '<p class="consent_title">

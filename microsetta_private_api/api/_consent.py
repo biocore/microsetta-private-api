@@ -33,12 +33,12 @@ def get_consent_doc(account_id, consent_id, token_info):
     with Transaction() as t:
         consent_repo = ConsentRepo(t)
         document = consent_repo.get_consent_document(consent_id)
+
+    if document:
         data = document.to_api()
-
-    if len(data) == 0:
+        return jsonify(data), 200
+    else:
         return jsonify(code=404, message=CONSENT_DOC_NOT_FOUND_MSG), 404
-
-    return jsonify(data), 200
 
 
 def check_consent_signature(account_id, source_id, consent_type, token_info):
