@@ -744,19 +744,23 @@ class MigrationSupport:
 
     @staticmethod
     def migrate_105(TRN):
-        import json
         import uuid
 
         # generate the complete list of questions that should be present in a
         # given template instance. This information only needs to be generated
         # once.
-        TRN.add("select a.survey_id::varchar as survey_template_id, "
-                "b.survey_question_id, c.survey_response_type from surveys a, "
-                "group_questions b, survey_question_response_type c where "
-                "a.survey_group = b.survey_group and c.survey_question_id = "
-                "b.survey_question_id")
+        sql = ("select a.survey_id as survey_template_id, "
+               "b.survey_question_id, c.survey_response_type from ag.surveys "
+               "a, ag.group_questions b, ag.survey_question_response_type c "
+               "where a.survey_group = b.survey_group and c.survey_question_id"
+               " = b.survey_question_id")
+
         qlists = {}
-        for template_id, question_id, response_type in TRN.execute()[-1]:
+
+        TRN.add(sql)
+        rows = TRN.execute()[-1]
+
+        for template_id, question_id, response_type in rows:
             if template_id not in qlists:
                 qlists[template_id] = []
             qlists[template_id].append((question_id, response_type))
@@ -766,18 +770,26 @@ class MigrationSupport:
         # process every existing survey, one after the other.
         # gather all metadata needed for processing at a single time to reduce
         # number of queries.
-        TRN.add("select a.barcode, a.survey_id, b.source_id, b.creation_time,"
-                " b.ag_login_id from source_barcodes_surveys a left join "
-                "ag_login_surveys b on a.survey_id = b.survey_id")
-        for barcode, survey_id, source_id, ts, account_id in TRN.execute()[-1]:
+        sql = ("select a.barcode, a.survey_id, b.source_id, b.creation_time,"
+               " b.ag_login_id from ag.source_barcodes_surveys a left join "
+               "ag.ag_login_surveys b on a.survey_id = b.survey_id")
+
+        TRN.add(sql)
+        rows = TRN.execute()[-1]
+
+        for barcode, survey_id, source_id, ts, account_id in rows:
             # for each survey, gather all answers filled by the user.
             # Omit 'Unspecified' answers because they are the default.
             # We will generate these ourselves to fill out each new survey.
-            TRN.add("select survey_question_id, response from "
-                    "survey_answers where survey_id = '%s' and"
-                    " response != 'Unspecified'" % survey_id)
+            sql = ("select survey_question_id, response from "
+                   "ag.survey_answers where survey_id = '%s' and"
+                   " response != 'Unspecified'" % survey_id)
+
+            TRN.add(sql)
+            rows = TRN.execute()[-1]
+
             filled_ans = {}
-            for survey_question_id, response in TRN.execute()[-1]:
+            for survey_question_id, response in rows:
                 if survey_question_id not in filled_ans:
                     # questions may be single or multiple so assume the
                     # latter.
@@ -791,17 +803,19 @@ class MigrationSupport:
                 # for now, log them and move onto the next survey.
                 empty_surveys.append(survey_id)
                 continue
-    
-            # figure out which survey template every question in the legacy
-            # survey instance now belongs to. 
-            ids = ['%s' % x for x in survey_question_ids]
-            TRN.add("select a.survey_id as survey_template_id, "
-                    "b.survey_question_id from surveys a, group_questions"
-                    " b where a.survey_group = b.survey_group and "
-                    "b.survey_question_id in (%s)" % ','.join(ids))
 
-            results = TRN.execute()[-1]
-            found = [x[1] for x in results]
+            # figure out which survey template every question in the legacy
+            # survey instance now belongs to.
+            ids = ['%s' % x for x in survey_question_ids]
+            sql = ("select a.survey_id as survey_template_id, "
+                   "b.survey_question_id from ag.surveys a, ag.group_questions"
+                   " b where a.survey_group = b.survey_group and "
+                   "b.survey_question_id in (%s)" % ','.join(ids))
+
+            TRN.add(sql)
+            rows = TRN.execute()[-1]
+
+            found = [x[1] for x in rows]
             not_found = list(set(survey_question_ids) - set(found))
             if not_found:
                 # even retired questions should be in the retired group.
@@ -812,71 +826,113 @@ class MigrationSupport:
                                  " ag.group_questions: %s" %
                                  not_found)
             map_t2q = {}
-            for template_id, question_id in results:
+            for template_id, question_id in rows:
                 if template_id not in map_t2q:
-                    map_t2q[template_id] = question_id
+                    map_t2q[template_id] = []
+                map_t2q[template_id].append(question_id)
 
             # the keys of map_t2q are the set of new survey_template_ids
             # needed to create the required new survey instances. Not every
             # legacy survey is going to require generating all 11 new
             # surveys, for example.
             for survey_template_id in map_t2q:
-                answer_subset = [(x, filled_ans[x]) for x in map_t2q[survey_template_id] if x in filled_ans]
+                answer_subset = [(x, filled_ans[x]) for x in
+                                 map_t2q[survey_template_id] if
+                                 x in filled_ans]
 
                 # create a new survey with just the subset of the filled
                 # answers now associated with that template, and give it the
                 # same creation date as the legacy survey_id.
                 survey_answers = {}
+                survey_answer_types = {}
 
                 # initialize all questions to 'Unspecified'.
-                for question, qtype in qlists[str(survey_template_id)]:
+                for question, qtype in qlists[survey_template_id]:
                     if qtype == 'MULTIPLE':
-                        survey_answers[str(question)] = [('Unspecified', qtype)]
+                        survey_answers[question] = ['Unspecified']
+                        survey_answer_types[question] = 'MULTIPLE'
                     elif qtype == 'SINGLE':
-                        survey_answers[str(question)] = ('Unspecified', qtype)
+                        survey_answers[question] = 'Unspecified'
+                        survey_answer_types[question] = 'SINGLE'
                     else:
                         # assume STRING or TEXT type
-                        survey_answers[str(question)] = ('', qtype)
+                        survey_answers[question] = 'This string is empty.'
+                        if qtype not in ['STRING', 'TEXT']:
+                            raise ValueError("BAD TYPE: %s" % qtype)
+
+                        survey_answer_types[question] = qtype
 
                 # overwrite 'Unspecified' for all questions we have a response
                 # for.
-                for qid, response in answer_subset:
-                    qtype = survey_answers[str(qid)][1]
-                    if qtype == 'MULTIPLE':
+                for qid, responses in answer_subset:
+                    if survey_answer_types[qid] == 'MULTIPLE':
                         # overwrite response, but keep question type
                         # remove Unspecified here from the list
-                        survey_answers[str(qid)].append((response, qtype))
-                    elif qtype == 'SINGLE':
-                        survey_answers[str(qid)] = (response, qtype)
+                        for response in responses:
+                            survey_answers[qid].append(response)
+                        survey_answers[qid] = [x for x in survey_answers[qid]
+                                               if x != 'Unspecified']
                     else:
-                        # assume STRING or TEXT type
-                        survey_answers[str(qid)] = (response, qtype)
+                        # assume SINGLE, STRING or TEXT type
+                        survey_answers[qid] = responses[0]
 
+                # generate the unique survey_id this new survey will go by.
                 new_survey_id = str(uuid.uuid4())
 
-                TRN.add("INSERT INTO ag_login_surveys (ag_login_id, survey_id, source_id, creation_time) VALUES('%s', '%s', '%s', '%s')" % (account_id, new_survey_id, source_id, ts))
+                sql = ("INSERT INTO ag.ag_login_surveys (ag_login_id, "
+                       "survey_id, source_id, creation_time) VALUES('%s', "
+                       "'%s', '%s', '%s')" % (account_id, new_survey_id,
+                                              source_id, ts))
+                TRN.add(sql)
+
+                sql = ("INSERT INTO ag.source_barcodes_surveys (barcode, "
+                       "survey_id) VALUES('%s', '%s')" % (barcode,
+                                                          new_survey_id))
+                TRN.add(sql)
 
                 for qid in survey_answers:
-                    if type(survey_answers[qid]) is list:
-                        for response, qtype in survey_answers[qid]:
+                    if survey_answer_types[qid] == 'MULTIPLE':
+                        for response in survey_answers[qid]:
                             response = response.replace("'", "''")
-                            TRN.add("INSERT INTO survey_answers (survey_id, survey_question_id, response) VALUES('%s', '%s', '%s')" % (new_survey_id, qid, response))
+                            sql = ("INSERT INTO ag.survey_answers (survey_id, "
+                                   ":survey_question_id, response) VALUES('%s'"
+                                   ", '%s', '%s')" % (new_survey_id, qid,
+                                                      response))
+                            TRN.add(sql)
                     else:
                         # then this is a SINGLE STRING OR TEXT
-                        response, qtype = survey_answers[qid]
+                        response = survey_answers[qid]
                         response = response.replace("'", "''")
-                        if qtype == 'SINGLE':
-                            TRN.add("INSERT INTO survey_answers (survey_id, survey_question_id, response) VALUES('%s', '%s', '%s')" % (new_survey_id, qid, response))
+                        if survey_answer_types[qid] == 'SINGLE':
+                            sql = ("INSERT INTO ag.survey_answers (survey_id, "
+                                   "survey_question_id, response) VALUES('%s',"
+                                   " '%s', '%s')" % (new_survey_id, qid,
+                                                     response))
+                            TRN.add(sql)
                         else:
                             # assume STRING or TEXT
-                            TRN.add("INSERT INTO survey_answers_other (survey_id, survey_question_id, response) VALUES('%s', '%s', '%s')" % (new_survey_id, qid, response))
+                            sql = ("INSERT INTO ag.survey_answers_other "
+                                   "(survey_id, survey_question_id, response) "
+                                   "VALUES('%s', '%s', '%s')" % (new_survey_id,
+                                                                 qid,
+                                                                 response))
+                            TRN.add(sql)
+
+                # Delete old survey
+                sql = ("DELETE FROM ag.survey_answers where survey_id"
+                       " = '%s'" % survey_id)
+                TRN.add(sql)
+                sql = ("DELETE FROM ag.survey_answers_other where survey_id"
+                       " = '%s'" % survey_id)
+                TRN.add(sql)
+                sql = ("DELETE FROM ag.source_barcodes_surveys where survey_id"
+                       " = '%s'" % survey_id)
+                TRN.add(sql)
+                sql = ("DELETE FROM ag.ag_login_surveys where survey_id"
+                       " = '%s'" % survey_id)
+                TRN.add(sql)
 
                 TRN.execute()
-
-                # TODOS:
-                # localization
-                # associate new survey w/barcode and source
-                # delete old survey from ag_login_surveys, survey_answers, survey_answers_other, source_barcodes_surveys, etc.
 
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
