@@ -15,8 +15,6 @@ import copy
 import secrets
 from microsetta_private_api.exceptions import RepoException
 
-from microsetta_private_api.repo.sample_repo import SampleRepo
-
 
 class SurveyTemplateRepo(BaseRepo):
 
@@ -339,38 +337,6 @@ class SurveyTemplateRepo(BaseRepo):
                            WHERE account_id=%s AND source_id=%s""",
                         (mfr_id, account_id, source_id))
 
-    def delete_myfoodrepo(self, account_id, source_id):
-        """Intended for admin use, remove MyFoodRepo entries
-
-        This method is idempotent
-
-        This method deletes ALL MyFoodRepo surveys associated with an account
-        and source
-
-        This is a hard delete, we REMOVE rows rather than setting a flag
-
-        Parameters
-        ----------
-        account_id : str, UUID
-            The account UUID
-        source_id : str, UUID
-            The source UUID
-        """
-        with self._transaction.cursor() as cur:
-            existing, created = self.get_myfoodrepo_id_if_exists(account_id,
-                                                                 source_id)
-            if existing is not None:
-                cur.execute("""DELETE FROM ag.ag_login_surveys
-                               WHERE ag_login_id=%s
-                                   AND source_id=%s
-                                   AND survey_id=%s""",
-                            (account_id, source_id, existing))
-
-            cur.execute("""DELETE FROM ag.myfoodrepo_registry
-                           WHERE account_id=%s
-                               AND source_id=%s""",
-                        (account_id, source_id))
-
     def get_myfoodrepo_id_if_exists(self, account_id, source_id):
         """Return a MyFoodRepo ID if one exists
 
@@ -499,37 +465,6 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return res
 
-    def delete_polyphenol_ffq(self, account_id, source_id):
-        """Intended for admin use, remove Polyphenol FFQ entries
-
-        This method is idempotent.
-
-        This method deletes ALL Polyphenol FFQ surveys associated with an
-        account and source
-
-        This is a hard delete, we REMOVE rows rather than setting a flag
-
-        Parameters
-        ----------
-        account_id : str, UUID
-            The account UUID
-        source_id : str, UUID
-            The source UUID
-        """
-        with self._transaction.cursor() as cur:
-            existing, _ = self.get_polyphenol_ffq_id_if_exists(account_id,
-                                                               source_id)
-            if existing is not None:
-                cur.execute("""DELETE FROM ag.ag_login_surveys
-                               WHERE ag_login_id=%s
-                                   AND source_id=%s
-                                   AND survey_id=%s""",
-                            (account_id, source_id, existing))
-            cur.execute("""DELETE FROM ag.polyphenol_ffq_registry
-                           WHERE account_id=%s
-                               AND source_id=%s""",
-                        (account_id, source_id))
-
     def create_spain_ffq_entry(self, account_id, source_id):
         """Return a newly created Spain FFQ ID
 
@@ -593,50 +528,36 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return res[0]
 
-    def delete_spain_ffq(self, account_id, source_id):
-        """Intended for admin use, remove Spain FFQ entries
-
-        This method is idempotent
-
-        This method deletes ALL Spain FFQ surveys associated with an account
-        and source
-
-        This is a hard delete, we REMOVE rows rather than setting a flag
-
-        Parameters
-        ----------
-        account_id : str, UUID
-            The account UUID
-        source_id : str, UUID
-            The source UUID
-        """
-        with self._transaction.cursor() as cur:
-            existing = self.get_spain_ffq_id_if_exists(account_id,
-                                                       source_id)
-            if existing is not None:
-                cur.execute("""DELETE FROM ag.ag_login_surveys
-                               WHERE ag_login_id=%s
-                                   AND source_id=%s
-                                   AND survey_id=%s""",
-                            (account_id, source_id, existing))
-
-            cur.execute("""DELETE FROM ag.spain_ffq_registry
-                           WHERE account_id=%s
-                               AND source_id=%s""",
-                        (account_id, source_id))
-
-    def get_vioscreen_sample_to_user(self):
+    def get_vioscreen_sample_to_user(self, sample_id):
         """Obtain a mapping of sample barcode to vioscreen user"""
-        with self._transaction.cursor() as cur:
-            cur.execute("""SELECT barcode, vio_id
-                           FROM ag.vioscreen_registry
-                           JOIN ag.ag_kit_barcodes
-                               ON sample_id=ag_kit_barcode_id
-                           WHERE vio_id IS NOT NULL""")
-            return {r[0]: r[1] for r in cur.fetchall()}
+        if sample_id is not None:
+            with self._transaction.cursor() as cur:
+                cur.execute("""SELECT barcode, vio_id
+                            FROM ag.vioscreen_registry
+                            JOIN ag.ag_kit_barcodes
+                                ON sample_id=ag_kit_barcode_id
+                            WHERE vio_id IS NOT NULL""")
+                return {r[0]: r[1] for r in cur.fetchall()}
+        else:
+            with self._transaction.cursor() as cur:
+                cur.execute("""SELECT barcode, vio_id,
+                            (sample_date + sample_time) as datetime
+                            FROM ag.vioscreen_registry
+                            JOIN ag.ag_kit_barcodes
+                            ON sample_id=ag_kit_barcode_id
+                            where ag.ag_kit_barcodes.sample_date IS NOT NULL
+                            and ag.ag_kit_barcodes.sample_time IS NOT NULL
+                            and vio_id IS NOT NULL
+                            order by datetime desc""")
+        rows = cur.fetchall()
+        if rows is None or len(rows) == 0:
+            return None
+        else:
+            return rows[0][0]
 
     def create_vioscreen_id(self, account_id, source_id,
-                            vioscreen_ext_sample_id):
+                            sample_id=None,
+                            registration_code=None):
         with self._transaction.cursor() as cur:
             # This transaction scans for existing IDs,
             # then generates a new ID if none exist
@@ -647,7 +568,8 @@ class SurveyTemplateRepo(BaseRepo):
             self._transaction.lock_table("vioscreen_registry")
             # test if an existing ID is available
             existing = self.get_vioscreen_id_if_exists(account_id, source_id,
-                                                       vioscreen_ext_sample_id)
+                                                       sample_id,
+                                                       registration_code)
             if existing is None:
                 vioscreen_id = secrets.token_hex(8)
                 # Put a survey with status -1 into ag_login_surveys
@@ -658,129 +580,86 @@ class SurveyTemplateRepo(BaseRepo):
                             "source_id) "
                             "VALUES(%s, %s, %s, %s)",
                             (account_id, vioscreen_id, -1, source_id))
-                # Immediately attach that survey to the specified sample
-                sample_repo = SampleRepo(self._transaction)
-                s = sample_repo.get_sample(account_id,
-                                           source_id,
-                                           vioscreen_ext_sample_id)
-
-                if s is None:
-                    raise KeyError(f"{vioscreen_ext_sample_id} does not exist")
-
-                cur.execute("INSERT INTO source_barcodes_surveys "
-                            "(barcode, survey_id) "
-                            "VALUES(%s, %s)", (s.barcode, vioscreen_id))
 
                 # And add it to the registry to keep track of the survey if
                 # user quits out then wants to resume the survey.
-                cur.execute("INSERT INTO vioscreen_registry("
-                            "account_id, source_id, sample_id, vio_id) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, source_id, vioscreen_ext_sample_id,
-                             vioscreen_id))
+                if sample_id is not None:
+                    cur.execute("INSERT INTO vioscreen_registry("
+                                "account_id, source_id, vio_id, "
+                                "sample_id) "
+                                "VALUES(%s, %s, %s, %s)",
+                                (account_id, source_id,
+                                 vioscreen_id, sample_id))
+                elif registration_code is not None:
+                    cur.execute("INSERT INTO vioscreen_registry("
+                                "account_id, source_id, vio_id, "
+                                "registration_code) "
+                                "VALUES(%s, %s, %s, %s)",
+                                (account_id, source_id,
+                                 vioscreen_id, registration_code))
             else:
                 vioscreen_id = existing
         return vioscreen_id
 
     def get_vioscreen_id_if_exists(self, account_id, source_id,
-                                   vioscreen_ext_sample_id):
+                                   sample_id=None,
+                                   registration_code=None,
+                                   timestamp=None):
         """Obtain a vioscreen ID if it exists"""
         with self._transaction.cursor() as cur:
-            # Find an active vioscreen survey for this account+source+sample
+            # Find an active vioscreen survey for this account+source
             # (deleted surveys are not active)
-            cur.execute("SELECT vio_id FROM vioscreen_registry WHERE "
-                        "account_id=%s AND "
-                        "source_id=%s AND "
-                        "sample_id=%s AND "
-                        "deleted=false",
-                        (account_id, source_id, vioscreen_ext_sample_id))
+            if sample_id is not None:
+                cur.execute("SELECT vio_id FROM "
+                            "vioscreen_registry WHERE "
+                            "account_id=%s AND "
+                            "source_id=%s AND "
+                            "sample_id=%s AND "
+                            "deleted=false",
+                            (account_id, source_id, sample_id))
+            elif registration_code is not None:
+                cur.execute("SELECT vio_id FROM "
+                            "vioscreen_registry WHERE "
+                            "account_id=%s AND "
+                            "source_id=%s AND "
+                            "registration_code=%s AND "
+                            "deleted=false",
+                            (account_id, source_id, registration_code))
+            elif timestamp is not None:
+                cur.execute("SELECT DISTINCT "
+                            "vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "FROM vioscreen_registry "
+                            "INNER JOIN ag_login_surveys "
+                            "ON vioscreen_registry.vio_id = "
+                            "ag_login_surveys.survey_id "
+                            "WHERE vioscreen_registry.account_id = %s "
+                            "AND vioscreen_registry.source_id = %s "
+                            "AND deleted=false "
+                            "AND ag_login_surveys.creation_time >= %s"
+                            "GROUP BY vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "ORDER BY ag_login_surveys.creation_time DESC ",
+                            (account_id, source_id, timestamp))
+            else:
+                cur.execute("SELECT DISTINCT vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "FROM vioscreen_registry "
+                            "INNER JOIN ag_login_surveys "
+                            "ON vioscreen_registry.vio_id = "
+                            "ag_login_surveys.survey_id "
+                            "WHERE vioscreen_registry.account_id = %s "
+                            "AND vioscreen_registry.source_id = %s "
+                            "AND deleted=false "
+                            "GROUP BY vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "ORDER BY ag_login_surveys.creation_time DESC ",
+                            (account_id, source_id))
             rows = cur.fetchall()
             if rows is None or len(rows) == 0:
                 return None
             else:
                 return rows[0][0]
-
-    def get_vioscreen_all_ids_if_exists(self, account_id, source_id):
-        """Obtain all vioscreen IDs for a source
-
-        This method captures all IDs including IDs with the "deleted"
-        flag set.
-
-        Parameters
-        ----------
-        account_id : str, UUID
-            The account UUID
-        source_id : str, UUID
-            The source UUID
-
-        Returns
-        tuple or None
-            The tuple of IDs or None of there are no associated IDs
-        """
-        with self._transaction.cursor() as cur:
-            cur.execute("""SELECT vio_id
-                           FROM vioscreen_registry
-                           WHERE account_id = %s
-                               AND source_id = %s""",
-                        (account_id, source_id))
-            ids = tuple([r[0] for r in cur.fetchall()])
-            if len(ids) > 0:
-                return ids
-            else:
-                return None
-
-    def delete_vioscreen(self, account_id, source_id):
-        """Intended for admin use, remove Vioscreen entries from the system
-
-        This method is idempotent
-
-        This method deletes ALL Vioscreen FFQ surveys associated with an
-        account and source
-
-        This is a hard delete, we REMOVE rows rather than setting a flag
-
-        Parameters
-        ----------
-        account_id : str, UUID
-            The account UUID
-        source_id : str, UUID
-            The source UUID
-        """
-        with self._transaction.cursor() as cur:
-            # get all vioscreen user names associated with the source
-            cur.execute("""SELECT vio_id
-                           FROM vioscreen_registry
-                           WHERE account_id=%s
-                               AND source_id=%s""",
-                        (account_id, source_id))
-            vio_ids = tuple([r[0] for r in cur.fetchall()])
-
-            if len(vio_ids) == 0:
-                return None
-
-            # get all sessions associated with the vio_ids
-            cur.execute("""SELECT sessionid
-                           FROM ag.vioscreen_sessions
-                           WHERE username IN %s""",
-                        (vio_ids, ))
-            sessions = tuple([r[0] for r in cur.fetchall()])
-
-            if len(sessions) > 0:
-                for tbl in ('dietaryscore', 'eatingpatterns', 'foodcomponents',
-                            'foodconsumption', 'foodconsumptioncomponents',
-                            'percentenergy', 'supplements', 'mpeds'):
-                    tbl = f'ag.vioscreen_{tbl}'
-                    cur.execute("DELETE FROM " + tbl + " " +
-                                "WHERE sessionid IN %s",
-                                (sessions, ))
-                cur.execute("""DELETE FROM ag.vioscreen_sessions
-                               WHERE sessionid IN %s""",
-                            (sessions, ))
-
-            cur.execute("""DELETE FROM ag.vioscreen_registry
-                           WHERE account_id = %s
-                               AND source_id = %s""",
-                        (account_id, source_id))
 
     def fetch_user_basic_physiology(self, account_id, source_id):
         """Given an account and source ID, obtain basic physiology properties
@@ -895,37 +774,3 @@ class SurveyTemplateRepo(BaseRepo):
                 weight = None
 
         return (birth_year, gender, height, weight)
-
-    def has_external_surveys(self, account_id, source_id):
-        """Test whether a source has any external surveys associated
-
-        Parameters
-        ----------
-        account_id : str, UUID
-            The account UUID
-        source_id : str, UUID
-            The source UUID
-
-        Returns
-        -------
-        boolean
-            True indicates the user has an external survey associated, false
-            otherwise
-        """
-        getters = (self.get_myfoodrepo_id_if_exists,
-                   self.get_polyphenol_ffq_id_if_exists,
-                   self.get_spain_ffq_id_if_exists,
-                   self.get_vioscreen_all_ids_if_exists)
-
-        for get in getters:
-            res = get(account_id, source_id)
-
-            # the if_exists methods are inconsistent in return type, yay
-            if isinstance(res, tuple):
-                if res[0] is not None:
-                    return True
-            else:
-                if res is not None:
-                    return True
-
-        return False
