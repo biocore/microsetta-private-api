@@ -895,7 +895,7 @@ class MigrationSupport:
                         for response in survey_answers[qid]:
                             response = response.replace("'", "''")
                             sql = ("INSERT INTO ag.survey_answers (survey_id, "
-                                   ":survey_question_id, response) VALUES('%s'"
+                                   "survey_question_id, response) VALUES('%s'"
                                    ", '%s', '%s')" % (new_survey_id, qid,
                                                       response))
                             TRN.add(sql)
