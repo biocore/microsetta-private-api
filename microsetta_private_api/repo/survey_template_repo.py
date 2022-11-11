@@ -528,15 +528,32 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return res[0]
 
-    def get_vioscreen_sample_to_user(self):
+    def get_vioscreen_sample_to_user(self, sample_id):
         """Obtain a mapping of sample barcode to vioscreen user"""
-        with self._transaction.cursor() as cur:
-            cur.execute("""SELECT barcode, vio_id
-                           FROM ag.vioscreen_registry
-                           JOIN ag.ag_kit_barcodes
-                               ON sample_id=ag_kit_barcode_id
-                           WHERE vio_id IS NOT NULL""")
-            return {r[0]: r[1] for r in cur.fetchall()}
+        if sample_id is not None:
+            with self._transaction.cursor() as cur:
+                cur.execute("""SELECT barcode, vio_id
+                            FROM ag.vioscreen_registry
+                            JOIN ag.ag_kit_barcodes
+                                ON sample_id=ag_kit_barcode_id
+                            WHERE vio_id IS NOT NULL""")
+                return {r[0]: r[1] for r in cur.fetchall()}
+        else:
+            with self._transaction.cursor() as cur:
+                cur.execute("""SELECT barcode, vio_id,
+                            (sample_date + sample_time) as datetime
+                            FROM ag.vioscreen_registry
+                            JOIN ag.ag_kit_barcodes
+                            ON sample_id=ag_kit_barcode_id
+                            where ag.ag_kit_barcodes.sample_date IS NOT NULL
+                            and ag.ag_kit_barcodes.sample_time IS NOT NULL
+                            and vio_id IS NOT NULL
+                            order by datetime desc""")
+        rows = cur.fetchall()
+        if rows is None or len(rows) == 0:
+            return None
+        else:
+            return rows[0][0]
 
     def create_vioscreen_id(self, account_id, source_id,
                             sample_id=None,
