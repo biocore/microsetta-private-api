@@ -345,7 +345,6 @@ insert into ag.survey_question (survey_question_id, american, question_shortname
 
 
 /* STEP 4: add the new list of categories to the database. */
-insert into survey_group (group_order, american) values (-9, 'Retired Questions');
 insert into ag.survey_group (group_order, american) values (-10, 'Basic Information');
 insert into ag.survey_group (group_order, american) values (-11, 'At Home');
 insert into ag.survey_group (group_order, american) values (-12, 'Lifestyle');
@@ -361,7 +360,6 @@ insert into ag.survey_group (group_order, american) values (-21, 'COVID19 Questi
 
 
 /* STEP 5: once the categories have been added, they can be associated with survey ids.*/
-insert into ag.surveys (survey_id, survey_group) values(9, -9);
 insert into ag.surveys (survey_id, survey_group) values(10, -10);
 insert into ag.surveys (survey_id, survey_group) values(11, -11);
 insert into ag.surveys (survey_id, survey_group) values(12, -12);
@@ -376,99 +374,103 @@ insert into ag.surveys (survey_id, survey_group) values(20, -20);
 insert into ag.surveys (survey_id, survey_group) values(21, -21);
 
 
-/* STEP 6: associate new and modified questions with a new survey_group, in the new order of appearance. */
-insert into ag.group_questions values (-9, 10, 1);
-insert into ag.group_questions values (-9, 12, 2);
-insert into ag.group_questions values (-9, 13, 3);
-insert into ag.group_questions values (-9, 14, 4);
-insert into ag.group_questions values (-9, 23, 5);
-insert into ag.group_questions values (-9, 30, 6);
-insert into ag.group_questions values (-9, 31, 7);
-insert into ag.group_questions values (-9, 41, 8);
-insert into ag.group_questions values (-9, 52, 9);
-insert into ag.group_questions values (-9, 55, 10);
-insert into ag.group_questions values (-9, 63, 11);
-insert into ag.group_questions values (-9, 81, 12);
-insert into ag.group_questions values (-9, 88, 13);
-insert into ag.group_questions values (-9, 97, 14);
-insert into ag.group_questions values (-9, 98, 15);
-insert into ag.group_questions values (-9, 101, 16);
-insert into ag.group_questions values (-9, 103, 17);
-insert into ag.group_questions values (-9, 105, 18);
-insert into ag.group_questions values (-9, 107, 19);
-insert into ag.group_questions values (-9, 114, 20);
-insert into ag.group_questions values (-9, 116, 21);
-insert into ag.group_questions values (-9, 117, 22);
-insert into ag.group_questions values (-9, 118, 23);
-insert into ag.group_questions values (-9, 119, 24);
-insert into ag.group_questions values (-9, 120, 25);
-insert into ag.group_questions values (-9, 122, 26);
-insert into ag.group_questions values (-9, 127, 27);
-insert into ag.group_questions values (-9, 128, 28);
-insert into ag.group_questions values (-9, 129, 29);
-insert into ag.group_questions values (-9, 130, 30);
-insert into ag.group_questions values (-9, 131, 31);
-insert into ag.group_questions values (-9, 132, 32);
-insert into ag.group_questions values (-9, 133, 33);
-insert into ag.group_questions values (-9, 134, 34);
-insert into ag.group_questions values (-9, 135, 35);
-insert into ag.group_questions values (-9, 136, 36);
-insert into ag.group_questions values (-9, 137, 37);
-insert into ag.group_questions values (-9, 138, 38);
-insert into ag.group_questions values (-9, 139, 39);
-insert into ag.group_questions values (-9, 140, 40);
-insert into ag.group_questions values (-9, 141, 41);
-insert into ag.group_questions values (-9, 142, 42);
-insert into ag.group_questions values (-9, 143, 43);
-insert into ag.group_questions values (-9, 144, 44);
-insert into ag.group_questions values (-9, 145, 45);
-insert into ag.group_questions values (-9, 153, 46);
-insert into ag.group_questions values (-9, 154, 47);
-insert into ag.group_questions values (-9, 155, 48);
-insert into ag.group_questions values (-9, 158, 49);
-insert into ag.group_questions values (-9, 159, 50);
-insert into ag.group_questions values (-9, 160, 51);
-insert into ag.group_questions values (-9, 161, 52);
-insert into ag.group_questions values (-9, 164, 53);
-insert into ag.group_questions values (-9, 168, 54);
-insert into ag.group_questions values (-9, 170, 55);
-insert into ag.group_questions values (-9, 172, 56);
-insert into ag.group_questions values (-9, 173, 57);
-insert into ag.group_questions values (-9, 186, 58);
-insert into ag.group_questions values (-9, 187, 59);
-insert into ag.group_questions values (-9, 188, 60);
-insert into ag.group_questions values (-9, 189, 61);
-insert into ag.group_questions values (-9, 190, 62);
-insert into ag.group_questions values (-9, 191, 63);
-insert into ag.group_questions values (-9, 192, 64);
-insert into ag.group_questions values (-9, 193, 65);
-insert into ag.group_questions values (-9, 194, 66);
-insert into ag.group_questions values (-9, 195, 67);
-insert into ag.group_questions values (-9, 196, 68);
-insert into ag.group_questions values (-9, 197, 69);
-insert into ag.group_questions values (-9, 198, 70);
-insert into ag.group_questions values (-9, 199, 71);
-insert into ag.group_questions values (-9, 200, 72);
-insert into ag.group_questions values (-9, 201, 73);
-insert into ag.group_questions values (-9, 202, 74);
-insert into ag.group_questions values (-9, 203, 75);
-insert into ag.group_questions values (-9, 204, 76);
-insert into ag.group_questions values (-9, 205, 77);
-insert into ag.group_questions values (-9, 206, 78);
-insert into ag.group_questions values (-9, 207, 79);
-insert into ag.group_questions values (-9, 208, 80);
-insert into ag.group_questions values(-10,111,1);
-insert into ag.group_questions values(-10,112,2);
-insert into ag.group_questions values(-10,502,3);
-insert into ag.group_questions values(-10,108,4);
-insert into ag.group_questions values(-10,109,5);
-insert into ag.group_questions values(-10,113,6);
-insert into ag.group_questions values(-10,110,8);
-insert into ag.group_questions values(-10,148,9);
-insert into ag.group_questions values(-10,115,10);
-insert into ag.group_questions values(-10,492,11);
-insert into ag.group_questions values(-10,493,12);
-insert into ag.group_questions values(-10,22,13);
+/* STEP 6: associate new and modified questions with a new survey_group,
+in the new order of appearance.
+-- Retired questions must also be in a group for data migration and
+-- preservation purposes. For now, they are part of group 10
+-- (Basic Information). We will rely on filtering to not present them. */
+insert into ag.group_questions values (-10, 10, 1);
+insert into ag.group_questions values (-10, 12, 2);
+insert into ag.group_questions values (-10, 13, 3);
+insert into ag.group_questions values (-10, 14, 4);
+insert into ag.group_questions values (-10, 23, 5);
+insert into ag.group_questions values (-10, 30, 6);
+insert into ag.group_questions values (-10, 31, 7);
+insert into ag.group_questions values (-10, 41, 8);
+insert into ag.group_questions values (-10, 52, 9);
+insert into ag.group_questions values (-10, 55, 10);
+insert into ag.group_questions values (-10, 63, 11);
+insert into ag.group_questions values (-10, 81, 12);
+insert into ag.group_questions values (-10, 88, 13);
+insert into ag.group_questions values (-10, 97, 14);
+insert into ag.group_questions values (-10, 98, 15);
+insert into ag.group_questions values (-10, 101, 16);
+insert into ag.group_questions values (-10, 103, 17);
+insert into ag.group_questions values (-10, 105, 18);
+insert into ag.group_questions values (-10, 107, 19);
+insert into ag.group_questions values (-10, 114, 20);
+insert into ag.group_questions values (-10, 116, 21);
+insert into ag.group_questions values (-10, 117, 22);
+insert into ag.group_questions values (-10, 118, 23);
+insert into ag.group_questions values (-10, 119, 24);
+insert into ag.group_questions values (-10, 120, 25);
+insert into ag.group_questions values (-10, 122, 26);
+insert into ag.group_questions values (-10, 127, 27);
+insert into ag.group_questions values (-10, 128, 28);
+insert into ag.group_questions values (-10, 129, 29);
+insert into ag.group_questions values (-10, 130, 30);
+insert into ag.group_questions values (-10, 131, 31);
+insert into ag.group_questions values (-10, 132, 32);
+insert into ag.group_questions values (-10, 133, 33);
+insert into ag.group_questions values (-10, 134, 34);
+insert into ag.group_questions values (-10, 135, 35);
+insert into ag.group_questions values (-10, 136, 36);
+insert into ag.group_questions values (-10, 137, 37);
+insert into ag.group_questions values (-10, 138, 38);
+insert into ag.group_questions values (-10, 139, 39);
+insert into ag.group_questions values (-10, 140, 40);
+insert into ag.group_questions values (-10, 141, 41);
+insert into ag.group_questions values (-10, 142, 42);
+insert into ag.group_questions values (-10, 143, 43);
+insert into ag.group_questions values (-10, 144, 44);
+insert into ag.group_questions values (-10, 145, 45);
+insert into ag.group_questions values (-10, 153, 46);
+insert into ag.group_questions values (-10, 154, 47);
+insert into ag.group_questions values (-10, 155, 48);
+insert into ag.group_questions values (-10, 158, 49);
+insert into ag.group_questions values (-10, 159, 50);
+insert into ag.group_questions values (-10, 160, 51);
+insert into ag.group_questions values (-10, 161, 52);
+insert into ag.group_questions values (-10, 164, 53);
+insert into ag.group_questions values (-10, 168, 54);
+insert into ag.group_questions values (-10, 170, 55);
+insert into ag.group_questions values (-10, 172, 56);
+insert into ag.group_questions values (-10, 173, 57);
+insert into ag.group_questions values (-10, 186, 58);
+insert into ag.group_questions values (-10, 187, 59);
+insert into ag.group_questions values (-10, 188, 60);
+insert into ag.group_questions values (-10, 189, 61);
+insert into ag.group_questions values (-10, 190, 62);
+insert into ag.group_questions values (-10, 191, 63);
+insert into ag.group_questions values (-10, 192, 64);
+insert into ag.group_questions values (-10, 193, 65);
+insert into ag.group_questions values (-10, 194, 66);
+insert into ag.group_questions values (-10, 195, 67);
+insert into ag.group_questions values (-10, 196, 68);
+insert into ag.group_questions values (-10, 197, 69);
+insert into ag.group_questions values (-10, 198, 70);
+insert into ag.group_questions values (-10, 199, 71);
+insert into ag.group_questions values (-10, 200, 72);
+insert into ag.group_questions values (-10, 201, 73);
+insert into ag.group_questions values (-10, 202, 74);
+insert into ag.group_questions values (-10, 203, 75);
+insert into ag.group_questions values (-10, 204, 76);
+insert into ag.group_questions values (-10, 205, 77);
+insert into ag.group_questions values (-10, 206, 78);
+insert into ag.group_questions values (-10, 207, 79);
+insert into ag.group_questions values (-10, 208, 80);
+insert into ag.group_questions values(-10,111,81);
+insert into ag.group_questions values(-10,112,82);
+insert into ag.group_questions values(-10,502,83);
+insert into ag.group_questions values(-10,108,84);
+insert into ag.group_questions values(-10,109,85);
+insert into ag.group_questions values(-10,113,86);
+insert into ag.group_questions values(-10,110,87);
+insert into ag.group_questions values(-10,148,88);
+insert into ag.group_questions values(-10,115,89);
+insert into ag.group_questions values(-10,492,90);
+insert into ag.group_questions values(-10,493,91);
+insert into ag.group_questions values(-10,22,92);
 insert into ag.group_questions values(-11,313,1);
 insert into ag.group_questions values(-11,15,2);
 insert into ag.group_questions values(-11,19,3);
@@ -1653,3 +1655,7 @@ update ag.survey_question_response set display_index = display_index + 2 where s
 
 --re-enable constraint
 alter table only ag.survey_question_response add constraint idx_survey_question_response unique (survey_question_id, display_index);
+
+
+
+
