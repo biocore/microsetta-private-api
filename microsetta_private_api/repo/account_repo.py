@@ -124,9 +124,10 @@ class AccountRepo(BaseRepo):
                 return AccountRepo._row_to_account(r)
 
     def get_account(self, account_id):
+
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
-                        "account "
+                        "ag.account "
                         "WHERE "
                         "account.id = %s", (account_id,))
             r = cur.fetchone()
@@ -177,7 +178,7 @@ class AccountRepo(BaseRepo):
     def create_account(self, account):
         try:
             with self._transaction.cursor() as cur:
-                cur.execute("INSERT INTO account (" +
+                cur.execute("INSERT INTO ag.account (" +
                             AccountRepo.write_cols +
                             ") "
                             "VALUES("

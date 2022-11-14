@@ -5,7 +5,8 @@ import pytest
 import werkzeug
 from werkzeug.exceptions import Unauthorized
 from urllib.parse import urlparse, parse_qs
-
+from microsetta_private_api.repo.consent_repo import ConsentRepo
+from microsetta_private_api.model.consent import ConsentDocument
 import microsetta_private_api.server
 from microsetta_private_api.localization import LANG_SUPPORT, \
     NEW_PARTICIPANT_KEY, EN_US, EN_GB
@@ -46,7 +47,29 @@ FAKE_EMAIL = "zbkhasdahl4wlnas@asdjgakljesgnoqe.com"
 
 MOCK_HEADERS = {"Authorization": "Bearer boogabooga"}
 MOCK_HEADERS_2 = {"Authorization": "Bearer woogawooga"}
+MOCK_HEADERS_3 = {"Authorization": "Bearer toogatooga"}
 DUMMY_CONSENT_POST_URL = "http://test.com"
+
+DUMMY_ACCT = {
+              "id": "ecabc635-3df8-49ee-ae19-db3db03c1111",
+              "email": "demo@mytestaccount.com",
+              "first_name": "demo",
+              "last_name": "demo",
+              "address": {"street": "demo",
+                          "city": "demo",
+                          "state": "IN",
+                          "post_code": "46227",
+                          "country_code": "US"
+                          },
+              "language": "en_US"
+              }
+
+CONSENT_DOC_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2281"
+CONSENT_DOC = {"consent_type": "Adult Consent - Data",
+               "locale": "en_US",
+               "consent": "Adult Data Consent",
+               "reconsent": '1'
+               }
 
 
 def mock_verify_func(token):
@@ -63,6 +86,13 @@ def mock_verify_func(token):
             'email_verified': True,
             "iss": "https://MOCKUNITTEST.com",
             "sub": "ThisIsAlsoNotARealSub",
+        }
+    elif token == "toogatooga":
+        return {
+            "email": "foo@demo.com",
+            'email_verified': True,
+            "iss": "https://demotest.com",
+            "sub": "DemoSub",
         }
     else:
         raise Unauthorized("Neither boogabooga nor woogawooga")
@@ -999,6 +1029,62 @@ class IntegrationTests(TestCase):
                            headers=MOCK_HEADERS
                            )
 
+    def test_sign_consent(self):
+
+        SOURCE_DATA = {"age_range": "18-plus",
+                       "participant_name": "Joe Schmoe",
+                       "parent_1_name": "demo",
+                       "parent_2_name": "demo",
+                       "deceased_parent": 'false',
+                       "obtainer_name": "demo"
+                       }
+
+        SOURCE_DATA.update({"consent_type": "Adult Consent - Data"})
+        SOURCE_DATA.update({"consent_id": CONSENT_DOC_ID})
+
+        with Transaction() as t:
+            consent_repo = ConsentRepo(t)
+            consent = ConsentDocument.from_dict(CONSENT_DOC,
+                                                DUMMY_ACCT.get("id"),
+                                                CONSENT_DOC_ID
+                                                )
+
+            consent_repo.create_doc(consent)
+            t.commit()
+
+        resp = self.client.post(
+            '/api/accounts/%s/consent?language_tag=en_US' %
+            (ACCT_ID,),
+            content_type='application/json',
+            data=json.dumps(SOURCE_DATA),
+            headers=MOCK_HEADERS
+        )
+        new_source = json.loads(resp.data)
+
+        consent_status = self.client.get(
+            '/api/accounts/%s/source/%s/consent/%s' %
+            (ACCT_ID, new_source["source_id"], "Data"),
+            headers=MOCK_HEADERS)
+
+        consent_res = json.loads(consent_status.data)
+
+        self.assertTrue(consent_res["result"])
+
+        response = self.client.post(
+            '/api/accounts/%s/source/%s/consent/%s' %
+            (ACCT_ID, new_source["source_id"], "Data"),
+            content_type='application/json',
+            data=json.dumps(SOURCE_DATA),
+            headers=MOCK_HEADERS)
+
+        self.assertEqual(404, response.status_code)
+
+        with Transaction() as t:
+            with t.cursor() as cur:
+                cur.execute("DELETE FROM ag.consent_documents"
+                            " WHERE consent_id = %s", (CONSENT_DOC_ID,))
+            t.commit()
+
     def test_delete_source(self):
         """
             Create a source, add a survey, delete the source
@@ -1084,23 +1170,6 @@ class IntegrationTests(TestCase):
         check_response(resp)
 
         # Delete the newly created source. (Fail because sample associated)
-        resp = self.client.delete(
-            loc + "?language_tag=en_US",
-            headers=MOCK_HEADERS
-        )
-        check_response(resp, 422)
-        self.assertIn("sample", resp.json["message"],
-                      "Failure message should complain about samples")
-
-        # Remove the sample.
-        resp = self.client.delete(
-            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
-            (ACCT_ID, source_id_from_obj, sample_id),
-            headers=MOCK_HEADERS
-        )
-        check_response(resp)
-
-        # Now delete the source (Hopefully successfully!
         resp = self.client.delete(
             loc + "?language_tag=en_US",
             headers=MOCK_HEADERS
@@ -1633,6 +1702,121 @@ class IntegrationTests(TestCase):
         self.assertIn("QQBritannia", str(resp_gb.data),
                       "String inserted into consent doc during test setup"
                       "not found (en_GB)")
+
+    def test_scrub_source(self):
+        """
+            Create a dummy account, new source, add a survey, scrub the source
+        """
+        account_id = "aaaaaaaa-bbbb-cccc-dddd-eeeefffffffa"
+
+        with Transaction() as t:
+            accountRepo = AccountRepo(t)
+
+            acc = Account(account_id,
+                          "foo@demo.com",
+                          "standard",
+                          "https://demotest.com",
+                          "DemoSub",
+                          "Dan",
+                          "H",
+                          Address(
+                              "123 Dan Lane",
+                              "Danville",
+                              "CA",
+                              12345,
+                              "US"
+                          ),
+                          "en_US")
+            accountRepo.create_account(acc)
+            t.commit()
+
+        """To add a human source, we need to get consent"""
+        resp = self.client.get(
+            '/api/accounts/%s/consent?language_tag=en_US&consent_post_url=%s' %
+            (account_id, DUMMY_CONSENT_POST_URL),
+            headers=MOCK_HEADERS_3
+        )
+        check_response(resp)
+
+        # TODO: This should probably fail as it doesn't perfectly match one of
+        #  the four variants of consent that can be passed in.  Split it up?
+        resp = self.client.post(
+            '/api/accounts/%s/consent?language_tag=en_US' %
+            (account_id,),
+            content_type='application/json',
+            data=json.dumps(
+                {"age_range": "18-plus",
+                 "participant_name": "Joe Schmoe",
+                 "parent_1_name": "Mr. Schmoe",
+                 "parent_2_name": "Mrs. Schmoe",
+                 "deceased_parent": 'false',
+                 "obtainer_name": "MojoJojo"
+                 }),
+            headers=MOCK_HEADERS_3
+
+        )
+        check_response(resp, 201)
+        loc = resp.headers.get("Location")
+        url = werkzeug.urls.url_parse(loc)
+        source_id_from_loc = url.path.split('/')[-1]
+        new_source = json.loads(resp.data)
+        source_id_from_obj = new_source['source_id']
+        self.assertIsNotNone(source_id_from_loc,
+                             "Couldn't parse source_id from loc header")
+
+        # Part 1: Submit a survey
+        chosen_survey = BOBO_FAVORITE_SURVEY_TEMPLATE
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/%s'
+            '?language_tag=en_US' %
+            (account_id, source_id_from_obj, chosen_survey),
+            headers=MOCK_HEADERS_3
+        )
+        check_response(resp)
+
+        model = fuzz_form(json.loads(resp.data)["survey_template_text"])
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?language_tag=en_US'
+            % (account_id, source_id_from_obj),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': chosen_survey,
+                    'survey_text': model
+                }),
+            headers=MOCK_HEADERS_3
+        )
+        check_response(resp, 201)
+
+        # claim a sample
+        resp = self.client.get(
+            '/api/kits/?language_tag=en_US&kit_name=%s' % SUPPLIED_KIT_ID,
+            headers=MOCK_HEADERS_3
+        )
+        check_response(resp)
+
+        unused_samples = json.loads(resp.data)
+        sample_id = unused_samples[0]['sample_id']
+
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/samples?language_tag=en_US' %
+            (account_id, source_id_from_obj),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "sample_id": sample_id
+                }),
+            headers=MOCK_HEADERS_3
+        )
+        check_response(resp)
+
+        # Scrub the newly created source
+        resp = self.client.delete(
+           '/api/accounts/%s/sources/%s/scrub?language_tag=en_US' %
+           (account_id, source_id_from_obj),
+           headers=MOCK_HEADERS_3
+        )
+        check_response(resp, 200)
 
 
 def _create_mock_kit(transaction, barcodes=None, mock_sample_ids=None,

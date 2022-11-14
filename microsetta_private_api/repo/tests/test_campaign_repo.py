@@ -305,6 +305,54 @@ class CampaignRepoTests(unittest.TestCase):
             with self.assertRaises(ForeignKeyViolation):
                 campaign_repo.create_campaign(**campaign_bad_projects)
 
+    def test_create_campaign_projects_bug(self):
+        # verify that a two-digit number is treated as one project ID
+        with Transaction() as t:
+            new_campaign = {
+                "title": "Unique Campaign Name",
+                "associated_projects": "46"
+            }
+            campaign_repo = CampaignRepo(t)
+            obs = campaign_repo.create_campaign(**new_campaign)
+            self.assertEqual(obs.associated_projects, "Project - qó1]øJçY\\@")
+            t.rollback()
+
+        # verify that a comma-delimited string stores separate IDs
+        with Transaction() as t:
+            new_campaign = {
+                "title": "Unique Campaign Name",
+                "associated_projects": "46, 48"
+            }
+            campaign_repo = CampaignRepo(t)
+            obs = campaign_repo.create_campaign(**new_campaign)
+            self.assertEqual(obs.associated_projects,
+                             "Project - qó1]øJçY\\@, Project - ÅQ%PáiZ!š@")
+            t.rollback()
+
+        # verify that a list of strings stores separate IDs
+        with Transaction() as t:
+            new_campaign = {
+                "title": "Unique Campaign Name",
+                "associated_projects": ["46", "48"]
+            }
+            campaign_repo = CampaignRepo(t)
+            obs = campaign_repo.create_campaign(**new_campaign)
+            self.assertEqual(obs.associated_projects,
+                             "Project - qó1]øJçY\\@, Project - ÅQ%PáiZ!š@")
+            t.rollback()
+
+        # verify that a list of ints stores separate IDs
+        with Transaction() as t:
+            new_campaign = {
+                "title": "Unique Campaign Name",
+                "associated_projects": [46, 48]
+            }
+            campaign_repo = CampaignRepo(t)
+            obs = campaign_repo.create_campaign(**new_campaign)
+            self.assertEqual(obs.associated_projects,
+                             "Project - qó1]øJçY\\@, Project - ÅQ%PáiZ!š@")
+            t.rollback()
+
     def test_get_campaign_by_id_valid(self):
         # verify that it does not return None when using valid campaign_id
         with Transaction() as t:

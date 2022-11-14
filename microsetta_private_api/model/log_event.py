@@ -46,6 +46,8 @@ class EventSubtype(Enum):
     EMAIL_PER_PROJECT_SUMMARY = "per_project_summary"
     # for addresses that Melissa deems invalid
     EMAIL_ADDRESS_INVALID = "address_invalid"
+    # for confirmation emails of interested user signups
+    EMAIL_SUBMIT_INTEREST_CONFIRMATION = "submit_interest_confirmation"
 
 
 class LogEvent(ModelBase):

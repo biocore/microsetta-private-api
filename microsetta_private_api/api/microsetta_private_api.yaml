@@ -248,55 +248,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  add_human_title:
-                    type: string
-                    example: Add a New Human Source
-                  sel_age_range:
-                    type: string
-                    example: Select age range of participant
-                  age_0_6:
-                    type: string
-                  age_7_12:
-                    type: string
-                  age_12_17:
-                    type: string
-                  age_18:
-                    type: string
-                  consent_your_child:
-                    type: string
-                  participation_agreement:
-                    type: string
-                  exhibit_a:
-                    type: string
-                  bill_of_rights:
-                    type: string
-                  text_i_have_read_parent:
-                    type: string
-                  participant_name:
-                    type: string
-                  participant_parent_1:
-                    type: string
-                  participant_parent_2:
-                    type: string
-                  participant_deceased_parents:
-                    type: string
-                  assent_7_12:
-                    type: string
-                  text_i_have_read_simplified:
-                    type: string
-                  person_attaining_assent:
-                    type: string
-                  text_assent_witness:
-                    type: string
-                  obtainer_name:
-                    type: string
-                  assent_13_17:
-                    type: string
-                  text_i_have_read_1:
-                    type: string
-                  consent_18:
-                    type: string
-
+                  participant_form:
+                    type: object
+                  consent_documents:
+                    type: array
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':
@@ -330,6 +285,11 @@ paths:
                   example: 'true'
                 obtainer_name:
                   $ref: '#/components/schemas/obtainer_name'
+                consent_type:
+                  $ref: '#/components/schemas/consent_type'
+                consent_id:
+                  $ref: '#/components/schemas/consent_id'
+                  
               required:
                 - age_range
                 - participant_name
@@ -357,6 +317,94 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
+
+  '/accounts/{account_id}/source/{source_id}/consent/{consent_type}':
+    get:
+      operationId: microsetta_private_api.api.check_consent_signature
+      tags:
+        - Consent
+      summary: Validate consent signature for source
+      description: Validate consent signature and respond if re-consent required
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#components/parameters/consent_type'
+      responses:
+        '200':
+          description: Consent Signature Status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+    post:
+      operationId: microsetta_private_api.api.sign_consent_doc
+      tags:
+        - Sign Consent
+      summary: Used to sign all types of consent
+      description: Use to submit new consent
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#components/parameters/consent_type'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:  # each is a form field name
+                age_range:
+                  $ref: '#/components/schemas/age_range'
+                participant_name:  # Field is named participant_name, but contents are used to fill source's name
+                  $ref: '#/components/schemas/source_name'
+                parent_1_name:
+                  $ref: '#/components/schemas/parent_1_name'
+                parent_2_name:
+                  $ref: '#/components/schemas/parent_2_name'
+                deceased_parent:
+                  type: string
+                  enum: ['true', 'false']
+                  example: 'true'
+                obtainer_name:
+                  $ref: '#/components/schemas/obtainer_name'
+                consent_type:
+                  $ref: '#/components/schemas/consent_type'
+                consent_id:
+                  $ref: '#/components/schemas/consent_id'
+              required:
+                - age_range
+                - participant_name
+      responses:
+        '201':
+          description: Successfully signed a consent document
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+
+
 
   '/accounts/{account_id}/sources':
     get:
@@ -557,6 +605,40 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
           # NB: This would be returned if source cannot be deleted bc has a sample assigned to it
+
+  '/accounts/{account_id}/sources/{source_id}/scrub':
+    delete:
+      operationId: microsetta_private_api.api.scrub_source
+      tags:
+        - Source
+      summary: Scrub the source and return status
+      description: Scrub (alternate to delete) the source
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '201':
+          description: Successfully scrubbed the source
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
 
   '/accounts/{account_id}/sources/{source_id}/survey_templates':
     get:
@@ -1515,6 +1597,8 @@ paths:
                   type: string
                 'extension':
                   type: string
+                'send_thdmi_confirmation':
+                  type: string
               required:
                 - title
                 - associated_projects
@@ -1563,6 +1647,8 @@ paths:
                 'instructions_alt':
                   type: string
                 'extension':
+                  type: string
+                'send_thdmi_confirmation':
                   type: string
               required:
                 - campaign_id
@@ -2643,6 +2729,13 @@ components:
       schema:
         $ref: '#/components/schemas/fc_code'
 
+    consent_type:
+      name: consent_type
+      in: path
+      description: Type of consent
+      schema:
+        $ref: '#/components/schemas/consent_type'
+
     # query parameters
     activation_code:
       name: code
@@ -2778,7 +2871,7 @@ components:
       example: "standard"
     language:
       type: string
-      enum: ["en_US", "es_MX", "es_ES"]
+      enum: ["en_US", "es_MX", "es_ES", "ja_JP"]
       example: "en_US"
     creation_time:
       type: string
@@ -3000,6 +3093,10 @@ components:
     obtainer_name:
       type: string
       example: "Professor X"
+    consent_id:
+      type: string
+    consent_type:
+      type: string
     nonhuman_source:
       type: object
       properties:

@@ -18,6 +18,7 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.vioscreen_repo import (
     VioscreenSessionRepo, VioscreenPercentEnergyRepo,
@@ -186,6 +187,11 @@ FAKE_SAMPLES = [S1, S2, S3]
 FAKE_KIT = "12345678-aaaa-aaaa-aaaa-bbbbccccccce"
 FAKE_KIT_PW = "MockItToMe"
 
+DATA_CONSENT = "Data"
+BIOSPECIMEN_CONSENT = "Biospecimen"
+ADULT_DATA_CONSENT = "Adult Consent - Data"
+ADULT_BIOSPECIMEN_CONSENT = "Adult Consent - Biospecimen"
+
 
 def make_headers(fake_token):
     return {"Authorization": "Bearer %s" % fake_token}
@@ -308,6 +314,7 @@ def delete_dummy_accts():
         survey_answers_repo = SurveyAnswersRepo(t)
         sample_repo = SampleRepo(t)
         barcode_repo = BarcodeRepo(t)
+        template_repo = SurveyTemplateRepo(t)
 
         # Delete fake kit and barcode preps
         barcode_repo.delete_preparation(BC1, 1234)
@@ -326,6 +333,17 @@ def delete_dummy_accts():
                     curr_acct_id, curr_source.id, allow_revoked=True)
                 sample_ids = [x.id for x in source_samples]
                 all_sample_ids.extend(sample_ids)
+
+                # Dissociate any secondary surveys.
+                # IMPORTANT: the order of operations here matters. It is
+                # necessary to delete external surveys PRIOR to deleting survey
+                # answers as the survey answers deletion will set source_id to
+                # NULL for entries in the registries
+                template_repo.delete_myfoodrepo(curr_acct_id, curr_source.id)
+                template_repo.delete_vioscreen(curr_acct_id, curr_source.id)
+                template_repo.delete_polyphenol_ffq(curr_acct_id,
+                                                    curr_source.id)
+                template_repo.delete_spain_ffq(curr_acct_id, curr_source.id)
 
                 # Dissociate all samples linked to this source from all
                 # answered surveys linked to this source, then delete all
@@ -1012,6 +1030,43 @@ class AccountTests(ApiTests):
         # check response code
         self.assertEqual(401, response.status_code)
 
+    def test_account_scrub_no_samples_has_secondary_survey_bug(self):
+        # setup an account with a source and sample
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        _ = create_dummy_acct(create_dummy_1=False,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+
+        # "take" the polyphenol FFQ
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/%s?language_tag=en_us' %  # noqa
+            (dummy_acct_id, dummy_source_id,
+             SurveyTemplateRepo.POLYPHENOL_FFQ_ID),
+            headers=self.dummy_auth)
+
+        # now let's scrub it
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (dummy_acct_id,),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(204, response.status_code)
+
+        # verify deleting is idempotent. If the account was scrubbed, then
+        # we get a 204. If the account was deleted, we get a 404
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (dummy_acct_id,),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(204, response.status_code)
+
     # region account view/get tests
     def test_account_view_success(self):
         """Successfully view existing account"""
@@ -1380,6 +1435,68 @@ class SourceTests(ApiTests):
 
 
 @pytest.mark.usefixtures("client")
+class ConsentTests(ApiTests):
+
+    def sign_data_consent(self):
+        """Checks data consent for a source and sings the consent"""
+
+        dummy_acct_id, dummy_source_resp = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        consent_status = self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            headers=self.dummy_auth)
+
+        self.assertTrue(consent_status["result"])
+
+        CONSENT_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
+
+        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        consent_data.update("consent_type", ADULT_DATA_CONSENT)
+        consent_data.update("consent_id", CONSENT_ID)
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
+
+    def sign_biospecimen_consent(self):
+        """Checks biospecimen consent for a source and sings the consent"""
+
+        dummy_acct_id, source_resp = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        consent_status = self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, source_resp["source_id"], BIOSPECIMEN_CONSENT),
+            headers=self.dummy_auth)
+
+        self.assertTrue(consent_status["result"])
+
+        CONSENT_ID_BIO = "6b1595a5-4003-4d0f-aa91-56947eaf2901"
+
+        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        consent_data.update("consent_type", ADULT_BIOSPECIMEN_CONSENT)
+        consent_data.update("consent_id", CONSENT_ID_BIO)
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, source_resp["source_id"], BIOSPECIMEN_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
+
+
+@pytest.mark.usefixtures("client")
 class SurveyTests(ApiTests):
     def test_myfoodrepo_slots(self):
         get_resp = self.client.get('/api/slots/myfoodrepo/?language_tag=en_US',
@@ -1707,7 +1824,7 @@ class SampleTests(ApiTests):
 
         # if sample date is less than 10 years
         now = datetime.datetime.now()
-        delta = relativedelta(year=now.year-11)
+        delta = relativedelta(years=now.year-11)
         date = now+delta
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),

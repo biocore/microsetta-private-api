@@ -110,7 +110,7 @@ class SourceRepo(BaseRepo):
 
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + SourceRepo.read_cols + " FROM "
-                        "source "
+                        "ag.source "
                         "WHERE "
                         "source.id = %s AND "
                         "source.account_id = %s" + no_revoked,
@@ -190,7 +190,7 @@ class SourceRepo(BaseRepo):
                 cur.execute("DELETE FROM source_host_subject_id "
                             "WHERE source_id = %s",
                             (source_id, ))
-                cur.execute("DELETE FROM source WHERE source.id = %s AND "
+                cur.execute("DELETE FROM ag.source WHERE source.id = %s AND "
                             "source.account_id = %s",
                             (source_id, account_id))
                 return cur.rowcount == 1
