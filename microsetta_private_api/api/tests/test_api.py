@@ -891,7 +891,8 @@ class AccountTests(ApiTests):
 
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, survey_template_id=17,
+            dummy_acct_id, dummy_source_id,
+            survey_template_id=SurveyTemplateRepo.DIET_ID,
             dummy_sample_id=MOCK_SAMPLE_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
@@ -1579,7 +1580,7 @@ class SurveyTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': 17,
+                    'survey_template_id': SurveyTemplateRepo.DIET_ID,
                     'survey_text': DUMMY_SURVEY_ANSWERS_17
                 }),
             headers=self.dummy_auth
@@ -1593,7 +1594,7 @@ class SurveyTests(ApiTests):
 
         exp_out, exp_model = self._make_exp_survey_out(real_id_from_loc,
                                                        DUMMY_SURVEY_ANSWERS_17,
-                                                       17,
+                                                       SurveyTemplateRepo.DIET_ID,
                                                        'Diet')
         self._validate_survey_info(get_resp, exp_out, exp_model)
 
@@ -1812,7 +1813,9 @@ class SampleTests(ApiTests):
         create_dummy_kit(dummy_acct_id, dummy_source_id,
                          associate_sample=True)
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, survey_template_id=17)
+            dummy_acct_id,
+            dummy_source_id,
+            survey_template_id=SurveyTemplateRepo.DIET_ID,)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples/{2}'.format(
             dummy_acct_id, dummy_source_id, MOCK_SAMPLE_ID)

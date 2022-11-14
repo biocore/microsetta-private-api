@@ -43,8 +43,18 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
                                      SurveyTemplateRepo.MYFOODREPO_ID,
                                      SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                                      SurveyTemplateRepo.SPAIN_FFQ_ID,
-                                     10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-                                     20, 21]]), 200
+                                     SurveyTemplateRepo.BASIC_INFO_ID,
+                                     SurveyTemplateRepo.AT_HOME_ID,
+                                     SurveyTemplateRepo.LIFESTYLE_ID,
+                                     SurveyTemplateRepo.GUT_ID,
+                                     SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                                     SurveyTemplateRepo.HEALTH_DIAG_ID,
+                                     SurveyTemplateRepo.ALLERGIES_ID,
+                                     SurveyTemplateRepo.DIET_ID,
+                                     SurveyTemplateRepo.DETAILED_DIET_ID,
+                                     SurveyTemplateRepo.MIGRAINE_ID,
+                                     SurveyTemplateRepo.SURFERS_ID,
+                                     SurveyTemplateRepo.COVID19_ID]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200

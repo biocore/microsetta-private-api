@@ -27,6 +27,7 @@ from unittest import TestCase, skipIf
 from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 import copy
 import microsetta_private_api.api
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 
 ACCT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 NOT_ACCT_ID = "12341234-1234-1234-1234-123412341234"
@@ -365,7 +366,18 @@ class IntegrationTests(TestCase):
         self.assertNotIn("survey_status", bobo_surveys[0])
         self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
                              [1, 3, 4, 5, 6, 7, 10001, 10002, 10003, 10004,
-                              10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
+                              SurveyTemplateRepo.BASIC_INFO_ID,
+                              SurveyTemplateRepo.AT_HOME_ID,
+                              SurveyTemplateRepo.LIFESTYLE_ID,
+                              SurveyTemplateRepo.GUT_ID,
+                              SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                              SurveyTemplateRepo.HEALTH_DIAG_ID,
+                              SurveyTemplateRepo.ALLERGIES_ID,
+                              SurveyTemplateRepo.DIET_ID,
+                              SurveyTemplateRepo.DETAILED_DIET_ID,
+                              SurveyTemplateRepo.MIGRAINE_ID,
+                              SurveyTemplateRepo.SURFERS_ID,
+                              SurveyTemplateRepo.COVID19_ID])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
                              [2])
         self.assertListEqual([x["survey_template_id"] for x in env_surveys],
@@ -635,8 +647,19 @@ class IntegrationTests(TestCase):
             # 10001, 10002, 10003, and 10004 are non-local surveys
             # surveys 1-7 are no longer present, and reformulated into 10-21.
             if chosen_survey in (1, 2, 3, 4, 5, 6, 7, 10001, 10002, 10003,
-                                 10004, 10, 12, 13, 14, 15, 16, 17, 18, 19,
-                                 20, 21):
+                                 10004,
+                                 SurveyTemplateRepo.BASIC_INFO_ID,
+                                 SurveyTemplateRepo.AT_HOME_ID,
+                                 SurveyTemplateRepo.LIFESTYLE_ID,
+                                 SurveyTemplateRepo.GUT_ID,
+                                 SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                                 SurveyTemplateRepo.HEALTH_DIAG_ID,
+                                 SurveyTemplateRepo.ALLERGIES_ID,
+                                 SurveyTemplateRepo.DIET_ID,
+                                 SurveyTemplateRepo.DETAILED_DIET_ID,
+                                 SurveyTemplateRepo.MIGRAINE_ID,
+                                 SurveyTemplateRepo.SURFERS_ID,
+                                 SurveyTemplateRepo.COVID19_ID):
                 continue
 
             resp = self.client.get(

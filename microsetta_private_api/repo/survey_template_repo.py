@@ -24,6 +24,19 @@ class SurveyTemplateRepo(BaseRepo):
     MYFOODREPO_ID = 10002
     POLYPHENOL_FFQ_ID = 10003
     SPAIN_FFQ_ID = 10004
+    BASIC_INFO_ID = 10
+    AT_HOME_ID = 11
+    LIFESTYLE_ID = 12
+    GUT_ID = 13
+    GENERAL_HEALTH_ID = 14
+    HEALTH_DIAG_ID = 15
+    ALLERGIES_ID = 16
+    DIET_ID = 17
+    DETAILED_DIET_ID = 18
+    MIGRAINE_ID = 19
+    SURFERS_ID = 20
+    COVID19_ID = 21
+
     SURVEY_INFO = {
         # For now, let's keep legacy survey info as well.
         1: SurveyTemplateLinkInfo(
@@ -92,74 +105,74 @@ class SurveyTemplateRepo(BaseRepo):
             "1.0",
             "remote"
         ),
-        10: SurveyTemplateLinkInfo(
-            10,
+        BASIC_INFO_ID: SurveyTemplateLinkInfo(
+            BASIC_INFO_ID,
             "Basic Information",
             "1.0",
             "local"
         ),
-        11: SurveyTemplateLinkInfo(
-            11,
+        AT_HOME_ID: SurveyTemplateLinkInfo(
+            AT_HOME_ID,
             "At Home",
             "1.0",
             "local"
         ),
-        12: SurveyTemplateLinkInfo(
-            12,
+        LIFESTYLE_ID: SurveyTemplateLinkInfo(
+            LIFESTYLE_ID,
             "Lifestyle",
             "1.0",
             "local"
         ),
-        13: SurveyTemplateLinkInfo(
-            13,
+        GUT_ID: SurveyTemplateLinkInfo(
+            GUT_ID,
             "Gut",
             "1.0",
             "local"
         ),
-        14: SurveyTemplateLinkInfo(
-            14,
+        GENERAL_HEALTH_ID: SurveyTemplateLinkInfo(
+            GENERAL_HEALTH_ID,
             "General Health",
             "1.0",
             "local"
         ),
-        15: SurveyTemplateLinkInfo(
-            15,
+        HEALTH_DIAG_ID: SurveyTemplateLinkInfo(
+            HEALTH_DIAG_ID,
             "Health Diagnosis",
             "1.0",
             "local"
         ),
-        16: SurveyTemplateLinkInfo(
-            16,
+        ALLERGIES_ID: SurveyTemplateLinkInfo(
+            ALLERGIES_ID,
             "Allergies",
             "1.0",
             "local"
         ),
-        17: SurveyTemplateLinkInfo(
-            17,
+        DIET_ID: SurveyTemplateLinkInfo(
+            DIET_ID,
             "Diet",
             "1.0",
             "local"
         ),
-        18: SurveyTemplateLinkInfo(
-            18,
+        DETAILED_DIET_ID: SurveyTemplateLinkInfo(
+            DETAILED_DIET_ID,
             "Detailed Diet",
             "1.0",
             "local"
         ),
-        19: SurveyTemplateLinkInfo(
-            19,
+        MIGRAINE_ID: SurveyTemplateLinkInfo(
+            MIGRAINE_ID,
             "Migraine",
             "1.0",
             "local"
         ),
-        20: SurveyTemplateLinkInfo(
-            20,
+        SURFERS_ID: SurveyTemplateLinkInfo(
+            SURFERS_ID,
             "Surfers",
             "1.0",
             "local"
         ),
-        21: SurveyTemplateLinkInfo(
-            21,
+        COVID19_ID: SurveyTemplateLinkInfo(
+            COVID19_ID,
             "COVID19 Questionnaire",
             "1.0",
             "local"

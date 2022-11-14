@@ -16,6 +16,7 @@ from microsetta_private_api.repo.metadata_repo._repo import (
     _fetch_observed_survey_templates,
     _construct_multiselect_map,
     drop_private_columns)
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 
 
 class MM:
@@ -97,7 +98,7 @@ class MetadataUtilTests(unittest.TestCase):
                     "site": "Stool"
                 }),
                 'survey_answers': [
-                    {'template': 17,
+                    {'template': SurveyTemplateRepo.DIET_ID,
                      'response': {'1': ['DIET_TYPE', '["Vegan\nfoo"]'],
                                   '2': ['MULTIVITAMIN', 'Yes'],
                                   '3': ['PROBIOTIC_FREQUENCY', 'Unspecified'],
@@ -154,9 +155,9 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertEqual(obs, exp)
 
     def test_fetch_observed_survey_templates(self):
-        exp = {17: {'survey_id': None,
+        exp = {SurveyTemplateRepo.DIET_ID: {'survey_id': None,
                     'survey_status': None,
-                    'survey_template_id': 17,
+                    'survey_template_id': SurveyTemplateRepo.DIET_ID,
                     'survey_template_title': 'Diet',
                     'survey_template_type': 'local',
                     'survey_template_version': '1.0'}}
@@ -172,12 +173,12 @@ class MetadataUtilTests(unittest.TestCase):
     def test_fetch_survey_template(self):
         exp = {'survey_id': None,
                'survey_status': None,
-               'survey_template_id': 10,
+               'survey_template_id': SurveyTemplateRepo.BASIC_INFO_ID,
                'survey_template_title': 'Basic Information',
                'survey_template_type': 'local',
                'survey_template_version': '1.0'}
 
-        survey, errors = _fetch_survey_template(10)
+        survey, errors = _fetch_survey_template(SurveyTemplateRepo.BASIC_INFO_ID)
 
         # concern here is that this key exists, not its content
         survey.pop('survey_template_text')
