@@ -815,7 +815,8 @@ class AdminApiTests(TestCase):
                                     data=data,
                                     headers=MOCK_HEADERS)
         self.assertEqual(404, response.status_code)
-        data = json.dumps({'sample_barcodes': ['bad', '000004216']})
+
+        data = json.dumps({'sample_barcodes': ['bad', '000043062']})
         response = self.client.post('/api/admin/metadata/qiita-compatible',
                                     content_type='application/json',
                                     data=data,
