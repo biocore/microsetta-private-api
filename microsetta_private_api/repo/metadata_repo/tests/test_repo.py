@@ -156,11 +156,12 @@ class MetadataUtilTests(unittest.TestCase):
 
     def test_fetch_observed_survey_templates(self):
         exp = {SurveyTemplateRepo.DIET_ID: {'survey_id': None,
-                    'survey_status': None,
-                    'survey_template_id': SurveyTemplateRepo.DIET_ID,
-                    'survey_template_title': 'Diet',
-                    'survey_template_type': 'local',
-                    'survey_template_version': '1.0'}}
+                                            'survey_status': None,
+                                            'survey_template_id':
+                                                SurveyTemplateRepo.DIET_ID,
+                                            'survey_template_title': 'Diet',
+                                            'survey_template_type': 'local',
+                                            'survey_template_version': '1.0'}}
 
         obs, errors = _fetch_observed_survey_templates([self.raw_sample_17])
         # concern here is that this key exists, not its content
@@ -178,7 +179,8 @@ class MetadataUtilTests(unittest.TestCase):
                'survey_template_type': 'local',
                'survey_template_version': '1.0'}
 
-        survey, errors = _fetch_survey_template(SurveyTemplateRepo.BASIC_INFO_ID)
+        survey, errors = _fetch_survey_template(
+            SurveyTemplateRepo.BASIC_INFO_ID)
 
         # concern here is that this key exists, not its content
         survey.pop('survey_template_text')
