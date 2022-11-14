@@ -804,13 +804,13 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
 
-            BARCODE = '000004216'
+            BARCODE = '000043062'
 
             with self.assertRaises(NotFound):
                 admin_repo.get_survey_metadata("NOTABARCODE")
 
             meta = admin_repo.get_survey_metadata(BARCODE,
-                                                  survey_template_id=17)
+                                                  survey_template_id=10)
 
             self.assertEqual(meta['sample_barcode'], BARCODE)
             self.assertIn('host_subject_id', meta)
@@ -827,7 +827,7 @@ class AdminRepoTests(AdminTests):
 
             # And the meta survey should exist somewhere in all_meta
             for survey in all_meta['survey_answers']:
-                if survey['template'] == 17:
+                if survey['template'] == 10:
                     break
 
             self.assertDictEqual(meta['survey_answers'][0], survey)

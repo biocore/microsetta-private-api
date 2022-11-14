@@ -185,7 +185,8 @@ def qiita_compatible_metadata(token_info, include_private, body):
     # TODO: this call constructs transactions implicitly. It would be
     # better for the transaction to be established and passed in,
     # similar to how other "repo" objects are managed
-    df, errors = retrieve_metadata(samples, include_private=include_private)
+    df, errors = retrieve_metadata(samples, include_private=include_private,
+                                   omit_retired=True)
 
     if errors:
         return jsonify(code=404, message=str(errors)), 404

@@ -187,6 +187,15 @@ class SurveyTemplateRepo(BaseRepo):
     def get_survey_template_link_info(survey_id):
         return copy.deepcopy(SurveyTemplateRepo.SURVEY_INFO[survey_id])
 
+    def get_retired_questions(self):
+        with self._transaction.cursor() as cur:
+            cur.execute("select survey_question_id from survey_question where"
+                        " retired is true")
+
+            rows = cur.fetchall()
+
+            return [x[0] for x in rows]
+
     def get_survey_template(self, survey_id, language_tag):
         tag_to_col = {
             localization.EN_US: "survey_question.american",

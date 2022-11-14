@@ -14,7 +14,6 @@ import numpy as np
 import json
 jsonify = json.dumps
 
-
 # the vioscreen survey currently cannot be fetched from the database
 # there seems to be some detached survey IDs -- see 000089779
 # that account has a long and unusual history though
@@ -72,7 +71,8 @@ def drop_private_columns(df):
     return df.drop(columns=to_drop, inplace=False)
 
 
-def retrieve_metadata(sample_barcodes, include_private=False):
+def retrieve_metadata(sample_barcodes, include_private=False,
+                      omit_retired=False):
     """Retrieve all sample metadata for the provided barcodes
 
     Parameters
@@ -100,6 +100,12 @@ def retrieve_metadata(sample_barcodes, include_private=False):
     for sample_barcode in set(sample_barcodes):
         try:
             bc_md, errors = _fetch_barcode_metadata(sample_barcode)
+            if omit_retired:
+                retired_q = _fetch_retired_questions()
+                for template in bc_md['survey_answers']:
+                    template['response'] = {key: value for (key, value)
+                                            in template['response'].items()
+                                            if int(key) not in retired_q}
         except RepoException as e:
             errors = e.args[0]
         except NotFound as e:
@@ -119,6 +125,7 @@ def retrieve_metadata(sample_barcodes, include_private=False):
         if st_errors is not None:
             error_report.append(st_errors)
         else:
+
             df_errors, df = _to_pandas_dataframe(fetched, survey_templates)
             if df_errors:
                 error_report.extend(df_errors)
@@ -172,6 +179,12 @@ def _fetch_observed_survey_templates(sample_metadata):
             surveys[template_id] = survey
 
     return surveys, errors if errors else None
+
+
+def _fetch_retired_questions():
+    with Transaction() as t:
+        survey_template_repo = SurveyTemplateRepo(t)
+        return survey_template_repo.get_retired_questions()
 
 
 def _fetch_survey_template(template_id):

@@ -823,14 +823,16 @@ class AdminApiTests(TestCase):
         self.assertEqual(404, response.status_code)
 
     def test_metadata_qiita_compatible_valid(self):
-        data = json.dumps({'sample_barcodes': ['000004216', '000004213']})
+        data = json.dumps({'sample_barcodes': ['000069747', '000051101']})
+
         response = self.client.post('/api/admin/metadata/qiita-compatible',
                                     content_type='application/json',
                                     data=data,
                                     headers=MOCK_HEADERS)
+
         self.assertEqual(200, response.status_code)
         result = json.loads(response.data)
-        self.assertEqual(set(result.keys()), {'000004216', '000004213'})
+        self.assertEqual(set(result.keys()), {'000069747', '000051101'})
 
     def test_metadata_qiita_compatible_valid_private(self):
         data = json.dumps({'sample_barcodes': ['000004216', '000004213']})
