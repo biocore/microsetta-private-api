@@ -1026,11 +1026,7 @@ class IntegrationTests(TestCase):
     def test_sign_consent(self):
 
         SOURCE_DATA = {"age_range": "18-plus",
-                       "participant_name": "Joe Schmoe",
-                       "parent_1_name": None,
-                       "parent_2_name": None,
-                       "deceased_parent": None,
-                       "obtainer_name": None
+                       "participant_name": "Joe Schmoe"
                        }
 
         SOURCE_DATA.update({"consent_type": "adult_data"})
@@ -1099,11 +1095,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {"age_range": "18-plus",
-                 "participant_name": "Joe Schmoe",
-                 "parent_1_name": None,
-                 "parent_2_name": None,
-                 "deceased_parent": None,
-                 "obtainer_name": None
+                 "participant_name": "Joe Schmoe"
                  }),
             headers=MOCK_HEADERS
 
