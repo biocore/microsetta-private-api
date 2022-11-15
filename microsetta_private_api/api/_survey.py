@@ -262,6 +262,8 @@ def read_survey_template(account_id, source_id, survey_template_id,
                     previous_response = results[field.inputName]
                     if previous_response:
                         field.default = previous_response
+        else:
+            info.percentage_completed = '0.00%'
 
         return jsonify(info), 200
 

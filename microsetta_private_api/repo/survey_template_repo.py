@@ -228,14 +228,18 @@ class SurveyTemplateRepo(BaseRepo):
                 return None
             return row[0]
 
-    def get_survey_responses(self, login_id, survey_id, latest_only=True):
+    def get_survey_responses(self, login_id, survey_template_id, latest_only=True):
         # get the total number of questions in the survey.
-        sql = f"""select a.survey_id,
-                  count(b.survey_group) from
+        # for most tables a.survey_id is known as 'survey_template_id'.
+        # (These are the values 1-7 and later 10-21). Aliasing here for
+        # clarity.
+        sql = f"""select a.survey_id as survey_template_id,
+                  count(b.survey_question_id) from
                   ag.surveys a,
                   ag.group_questions b where
                   a.survey_group = b.survey_group and
-                  survey_id = {survey_id} group by survey_id"""
+                  survey_id = {survey_template_id} group by
+                  survey_template_id"""
 
         total_count = None
 
@@ -243,29 +247,24 @@ class SurveyTemplateRepo(BaseRepo):
             cur.execute(sql)
             total_count = cur.fetchone()[1]
 
-        # If this query is too slow, adding indexes to the following may
-        # improve performance:
-        # ag.ag_login_surveys.ag_login_id
-        # ag.survey_answers.survey_question_id
-        # ag.surveys.survey_id
+        # adding indexes to these individual columns may improve performance.
+        #     ag.survey_answers.survey_question_id
+        #     ag.surveys.survey_id
 
-        # Note the view form of this query is substantially slower as it has
-        # to unnecessarily merge on all users and all surveys.
-        sql = f"""select a.survey_id,
-                  a.survey_question_id,
-                  a.response,
-                  b.display_index,
-                  c.source_id,
-                  c.creation_time from
-                  ag.survey_answers as a,
-                  ag.group_questions b,
-                  ag.ag_login_surveys c where
-                  c.ag_login_id = '{login_id}' and
-                  b.survey_group in
-                  (select survey_group from ag.surveys where survey_id =
-                  {survey_id}) and
-                  a.survey_question_id = b.survey_question_id and
-                  c.survey_id = a.survey_id order by
+        sql = f"""select a.survey_id, a.survey_question_id, a.response,
+                  b.display_index, c.source_id, c.creation_time
+                  from ag.survey_answers as a, ag.group_questions b,
+                  ag.ag_login_surveys c, ag.surveys d where c.ag_login_id =
+                  '{login_id}' and d.survey_id = {survey_template_id} and
+                  a.survey_question_id = b.survey_question_id and c.survey_id
+                  = a.survey_id and d.survey_group = b.survey_group union
+                  select a.survey_id, a.survey_question_id, a.response,
+                  b.display_index, c.source_id, c.creation_time 
+                  from ag.survey_answers_other as a, ag.group_questions b,
+                  ag.ag_login_surveys c, ag.surveys d where c.ag_login_id =
+                  '{login_id}' and d.survey_id = {survey_template_id} and
+                  a.survey_question_id = b.survey_question_id and c.survey_id
+                  = a.survey_id and d.survey_group = b.survey_group order by
                   creation_time desc, display_index asc"""
 
         with self._transaction.cursor() as cur:
@@ -275,42 +274,41 @@ class SurveyTemplateRepo(BaseRepo):
             cur.execute(sql)
             rows = cur.fetchall()
 
-            results = {}
-            count = 0
-            for row in rows:
-                survey_id = row[0]
-                if survey_id not in results:
-                    count += 1
-                    if latest_only and count > 1:
-                        # if the client is requesting only the responses of
-                        # the last survey, then don't process the rest of
-                        # them.
-                        break
+        results = {}
+        count = 0
+        for (survey_id, question_id, response, display_idx, source_id, timestamp) in rows:
+            if survey_id not in results:
+                count += 1
+                if latest_only and count > 1:
+                    # if the client is requesting only the responses of
+                    # the last survey, then don't process the rest of
+                    # them.
+                    break
 
-                    # add the new entry to results
-                    results[survey_id] = {'survey_id': row[0],
-                                          'source_id': row[4],
-                                          'timestamp': str(row[5]),
-                                          'responses': []}
+                # add the new entry to results
+                results[survey_id] = {'survey_id': survey_id,
+                                      'source_id': source_id,
+                                      'timestamp': str(timestamp),
+                                      'responses': []}
 
-                # new survey_id or not, append the response to the list of
-                # responses for that survey_id.
-                r = {'survey_question_id': row[1], 'response': row[2],
-                     'display_index': int(row[3])}
+            # new survey_id or not, append the response to the list of
+            # responses for that survey_id.
+            r = {'survey_question_id': question_id, 'response': response,
+                 'display_index': int(display_idx)}
 
-                results[survey_id]['responses'].append(r)
+            results[survey_id]['responses'].append(r)
 
-            # turn the nested dict into a list of dicts sorted by insertion
-            # order. (Python 3.6+)
-            results = [results[x] for x in results]
+        # turn the nested dict into a list of dicts sorted by insertion
+        # order. (Python 3.6+)
+        results = [results[x] for x in results]
 
-            # calculate the percentage of each survey completed against the
-            # _current_ total number of questions in the survey.
-            for result in results:
-                pc = len(result['responses'])/total_count
-                pc = "{0:.2f}%".format(pc * 100)
+        # calculate the percentage of each survey completed against the
+        # _current_ total number of questions in the survey.
+        for result in results:
+            pc = len(result['responses'])/total_count
+            pc = "{0:.2f}%".format(pc * 100)
 
-                result['percentage_completed'] = pc
+            result['percentage_completed'] = pc
 
         return results
 
