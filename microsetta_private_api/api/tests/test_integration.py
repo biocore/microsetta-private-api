@@ -1071,6 +1071,8 @@ class IntegrationTests(TestCase):
 
         with Transaction() as t:
             with t.cursor() as cur:
+                cur.execute("DELETE FROM ag.consent_audit WHERE "
+                            "source_id = %s", (new_source["source_id"],))
                 cur.execute("DELETE FROM ag.consent_documents"
                             " WHERE consent_id = %s", (CONSENT_DOC_ID,))
             t.commit()
