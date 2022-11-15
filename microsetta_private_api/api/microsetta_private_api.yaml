@@ -1225,8 +1225,6 @@ paths:
         - Vioscreen
       summary: Obtain a mapping from Vioscreen username to associated barcode
       description: Obtain a mapping from Vioscreen username to associated barcode
-      parameters:
-        - $ref: '#/components/parameters/sample_id'
       responses:
         '200':
           description: Successfully returned username mapping
