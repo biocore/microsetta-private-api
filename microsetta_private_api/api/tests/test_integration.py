@@ -1067,7 +1067,7 @@ class IntegrationTests(TestCase):
             data=json.dumps(SOURCE_DATA),
             headers=MOCK_HEADERS)
 
-        self.assertEqual(404, response.status_code)
+        self.assertEqual(201, response.status_code)
 
         with Transaction() as t:
             with t.cursor() as cur:
