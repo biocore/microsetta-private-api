@@ -65,10 +65,10 @@ DUMMY_ACCT = {
               }
 
 CONSENT_DOC_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2281"
-CONSENT_DOC = {"consent_type": "Adult Consent - Data",
+CONSENT_DOC = {"consent_type": "adult_data",
                "locale": "en_US",
                "consent": "Adult Data Consent",
-               "reconsent": '1'
+               "reconsent_required": 'true'
                }
 
 
@@ -1002,10 +1002,10 @@ class IntegrationTests(TestCase):
             data=json.dumps(
                 {"age_range": "18-plus",
                  "participant_name": "Joe Schmoe",
-                 "parent_1_name": "Mr. Schmoe",
-                 "parent_2_name": "Mrs. Schmoe",
-                 "deceased_parent": 'false',
-                 "obtainer_name": "MojoJojo"
+                 "parent_1_name": None,
+                 "parent_2_name": None,
+                 "deceased_parent": None,
+                 "obtainer_name": None
                  }),
             headers=MOCK_HEADERS
 
@@ -1031,13 +1031,13 @@ class IntegrationTests(TestCase):
 
         SOURCE_DATA = {"age_range": "18-plus",
                        "participant_name": "Joe Schmoe",
-                       "parent_1_name": "demo",
-                       "parent_2_name": "demo",
-                       "deceased_parent": 'false',
-                       "obtainer_name": "demo"
+                       "parent_1_name": None,
+                       "parent_2_name": None,
+                       "deceased_parent": None,
+                       "obtainer_name": None
                        }
 
-        SOURCE_DATA.update({"consent_type": "Adult Consent - Data"})
+        SOURCE_DATA.update({"consent_type": "adult_data"})
         SOURCE_DATA.update({"consent_id": CONSENT_DOC_ID})
 
         with Transaction() as t:
@@ -1061,7 +1061,7 @@ class IntegrationTests(TestCase):
 
         consent_status = self.client.get(
             '/api/accounts/%s/source/%s/consent/%s' %
-            (ACCT_ID, new_source["source_id"], "Data"),
+            (ACCT_ID, new_source["source_id"], "data"),
             headers=MOCK_HEADERS)
 
         consent_res = json.loads(consent_status.data)
@@ -1070,7 +1070,7 @@ class IntegrationTests(TestCase):
 
         response = self.client.post(
             '/api/accounts/%s/source/%s/consent/%s' %
-            (ACCT_ID, new_source["source_id"], "Data"),
+            (ACCT_ID, new_source["source_id"], "data"),
             content_type='application/json',
             data=json.dumps(SOURCE_DATA),
             headers=MOCK_HEADERS)
@@ -1104,10 +1104,10 @@ class IntegrationTests(TestCase):
             data=json.dumps(
                 {"age_range": "18-plus",
                  "participant_name": "Joe Schmoe",
-                 "parent_1_name": "Mr. Schmoe",
-                 "parent_2_name": "Mrs. Schmoe",
-                 "deceased_parent": 'false',
-                 "obtainer_name": "MojoJojo"
+                 "parent_1_name": None,
+                 "parent_2_name": None,
+                 "deceased_parent": None,
+                 "obtainer_name": None
                  }),
             headers=MOCK_HEADERS
 
