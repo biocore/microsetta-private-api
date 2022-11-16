@@ -512,15 +512,24 @@ class SurveyTemplateTests(unittest.TestCase):
             obs = template_repo.get_survey_responses(login_id, 1,
                                                      latest_only=False)
 
+            # we expect one of the results to have a random UUID as a
+            # survey_id. We will replace all UUIDS with static strings
+            # for repeatability.
             exp_survey_ids = ["4b1af551332dc84e", "6244cdc1fe3e80e8",
                               "69b5e65bd670835d", "05f50f0e88600100",
-                              "0685bbd6-e667-4105-bc36-8af1942549f8",
+                              "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
                               "6102cf4c42928d47", "d80e24bc242dc889"]
 
             obs_survey_ids = [x['survey_id'] for x in obs]
+            obs_survey_ids = [x if len(x) == 16 else
+                              'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+                              for x in obs_survey_ids]
+
+            exp_survey_ids.sort()
+            obs_survey_ids.sort()
 
             # confirm that all surveys have been returned.
-            self.assertEqual(set(obs_survey_ids), set(exp_survey_ids))
+            self.assertEqual(obs_survey_ids, exp_survey_ids)
 
             # we expect a number of surveys to be returned, including the
             # three survey_ids below. We expect each survey_id below to
