@@ -71,6 +71,14 @@ class EmailMessage(Enum):
         EventType.EMAIL,
         EventSubtype.EMAIL_ADDRESS_INVALID
     )
+    submit_interest_confirmation = (
+        gettext(
+            "We received your sign-up"),
+        "email/submit_interest_confirmation.jinja2",
+        ("contact_name",),
+        EventType.EMAIL,
+        EventSubtype.EMAIL_SUBMIT_INTEREST_CONFIRMATION
+    )
 
     def __init__(self, subject, html, required, event_type, event_sub):
         self.subject = subject
