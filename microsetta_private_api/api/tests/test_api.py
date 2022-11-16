@@ -1819,7 +1819,8 @@ class SampleTests(ApiTests):
 
         # if sample date is greater than 30 days
         now = datetime.datetime.now()
-        date = now + datetime.timedelta(days=61)
+        delta = relativedelta(months=now.month+2)
+        date = now+delta
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),
             content_type='application/json',
