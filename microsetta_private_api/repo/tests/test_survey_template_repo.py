@@ -512,13 +512,53 @@ class SurveyTemplateTests(unittest.TestCase):
             obs = template_repo.get_survey_responses(login_id, 1,
                                                      latest_only=False)
 
-            for response in obs:
-                response['timestamp'] = ''
-                response['source_id'] = ''
+            exp_survey_ids = ["4b1af551332dc84e", "6244cdc1fe3e80e8",
+                              "69b5e65bd670835d", "05f50f0e88600100",
+                              "0685bbd6-e667-4105-bc36-8af1942549f8",
+                              "6102cf4c42928d47", "d80e24bc242dc889"]
 
-            # results should not be equal. Additional surveys from other
-            # tests will have been taken.
-            self.assertNotEqual(obs, exp)
+            obs_survey_ids = [x['survey_id'] for x in obs]
+
+            # confirm that all surveys have been returned.
+            self.assertEqual(set(obs_survey_ids), set(exp_survey_ids))
+
+            # we expect a number of surveys to be returned, including the
+            # three survey_ids below. We expect each survey_id below to
+            # include the response mapped below as one of its responses.
+            exp_responses = {"4b1af551332dc84e": {
+                                 "survey_question_id": 52,
+                                 "response": "Unspecified",
+                                 "display_index": -2},
+                             "6244cdc1fe3e80e8": {
+                                 "survey_question_id": 37,
+                                 "response": "Unspecified",
+                                 "display_index": 0},
+                             "69b5e65bd670835d": {
+                                 "survey_question_id": 107,
+                                 "response": "Unspecified",
+                                 "display_index": 0}
+                             }
+
+            # look for the three selected surveys in the results and scan
+            # the responses of each to locate the select survey_question_id
+            # and its response. Confirm that the responses are as expected.
+            count = 0
+            for result in obs:
+                keys = list(exp_responses.keys())
+                # once all three expected responses are found, skip the rest
+                # of the results in obs.
+                if count < 3 and result['survey_id'] in keys:
+                    exp = exp_responses[result["survey_id"]]
+                    for response in result['responses']:
+                        esqid = exp['survey_question_id']
+                        if response['survey_question_id'] == esqid:
+                            if response['response'] == exp['response']:
+                                count += 1
+                                # break after finding the expected response
+                                # for this survey
+                                break
+
+            self.assertEqual(count, 3)
 
             # non-existent login_id should return empty list.
             login_id = 'abc92c74-7da1-2135-e040-8a80115d6401'
