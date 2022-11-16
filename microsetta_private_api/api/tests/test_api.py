@@ -1660,7 +1660,8 @@ class SampleTests(ApiTests):
              'survey_status': None,
              'survey_template_title': "Primary Questionnaire",
              'survey_template_version': '1.0',
-             'survey_template_type': 'local'
+             'survey_template_type': 'local',
+             'percentage_completed': None
              }]
         get_resp_obj = json.loads(get_response.data)
         self.assertEqual(get_resp_obj, expected_output)

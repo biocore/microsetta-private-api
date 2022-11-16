@@ -368,7 +368,7 @@ def read_answered_survey_associations(account_id, source_id, sample_id,
             if template_id is None:
                 continue
             info = template_repo.get_survey_template_link_info(template_id)
-            resp_obj.append(info.to_api(answered_survey, status))
+            resp_obj.append(info.to_api(answered_survey, status, None))
 
         t.commit()
         return jsonify(resp_obj), 200
