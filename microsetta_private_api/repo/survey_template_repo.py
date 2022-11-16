@@ -715,8 +715,6 @@ class SurveyTemplateRepo(BaseRepo):
                             "AND vioscreen_registry.source_id = %s "
                             "AND deleted=false "
                             "AND ag_login_surveys.creation_time >= %s"
-                            "GROUP BY vioscreen_registry.vio_id, "
-                            "ag_login_surveys.creation_time "
                             "ORDER BY ag_login_surveys.creation_time DESC ",
                             (account_id, source_id, timestamp))
             else:
@@ -729,8 +727,6 @@ class SurveyTemplateRepo(BaseRepo):
                             "WHERE vioscreen_registry.account_id = %s "
                             "AND vioscreen_registry.source_id = %s "
                             "AND deleted=false "
-                            "GROUP BY vioscreen_registry.vio_id, "
-                            "ag_login_surveys.creation_time "
                             "ORDER BY ag_login_surveys.creation_time DESC ",
                             (account_id, source_id))
             rows = cur.fetchall()

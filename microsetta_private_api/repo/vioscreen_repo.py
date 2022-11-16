@@ -1662,11 +1662,11 @@ class VioscreenRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             # Find an active vioscreen for this account+source
             # (deleted surveys are not active)
-            cur.execute("SELECT * FROM vioscreen_sessions WHERE"
-                        "username IN"
-                        "(SELECT vio_id FROM vioscreen_registry WHERE "
-                        "account_id=%s AND "
-                        "source_id=%s)",
+            cur.execute("""SELECT vs.*
+                        FROM vioscreen_sessions vs
+                        JOIN vioscreen_registry vr
+                        ON vs.username = vr.vio_id
+                        WHERE account_id=%s AND source_id=%s)""",
                         (account_id, source_id))
             rows = cur.fetchall()
             if rows is None or len(rows) == 0:
