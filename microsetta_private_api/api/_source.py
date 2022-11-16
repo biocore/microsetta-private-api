@@ -203,5 +203,4 @@ def check_duplicate_source_name(account_id, body, token_info):
         source_name = body['participant_name']
         source = source_repo.get_duplicate_source_name(
             account_id, source_name)
-        print("check duplicate source responce: " + str(source))
         return jsonify(source), 200
