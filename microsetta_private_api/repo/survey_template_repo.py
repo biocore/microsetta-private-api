@@ -238,13 +238,17 @@ class SurveyTemplateRepo(BaseRepo):
         total_count = None
 
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT   a.survey_id AS survey_template_id, "
-                        "         count(b.survey_question_id) "
-                        "FROM     ag.surveys a, "
-                        "         ag.group_questions b "
-                        "WHERE    a.survey_group = b.survey_group "
-                        "AND      survey_id = %s "
-                        "GROUP BY survey_template_id", (survey_template_id,))
+            cur.execute("SELECT      survey_id AS survey_template_id, "
+                        "            count(survey_question_id) "
+                        "FROM "
+                        "            ag.surveys "
+                        "            JOIN ag.group_questions ON "
+                        "            surveys.survey_group = "
+                        "            group_questions.survey_group "
+                        "WHERE "
+                        "            survey_id = %s "
+                        "GROUP BY    survey_template_id",
+                        (survey_template_id,))
             total_count = cur.fetchone()[1]
 
         with self._transaction.cursor() as cur:
@@ -254,15 +258,16 @@ class SurveyTemplateRepo(BaseRepo):
                         "       b.display_index, "
                         "       c.source_id, "
                         "       c.creation_time "
-                        "FROM   ag.survey_answers AS a, "
-                        "       ag.group_questions b, "
-                        "       ag.ag_login_surveys c, "
-                        "       ag.surveys d "
-                        "WHERE  c.ag_login_id = '%s' "
+                        "FROM   ag.survey_answers a "
+                        "       JOIN ag.group_questions b "
+                        "         ON a.survey_question_id = "
+                        "            b.survey_question_id "
+                        "       JOIN ag.ag_login_surveys c "
+                        "         ON c.survey_id = a.survey_id "
+                        "       JOIN ag.surveys d "
+                        "         ON d.survey_group = b.survey_group "
+                        "WHERE  c.ag_login_id = %s "
                         "       AND d.survey_id = %s "
-                        "     AND a.survey_question_id = b.survey_question_id "
-                        "       AND c.survey_id = a.survey_id "
-                        "       AND d.survey_group = b.survey_group "
                         "UNION "
                         "SELECT a.survey_id, "
                         "       a.survey_question_id, "
@@ -270,20 +275,21 @@ class SurveyTemplateRepo(BaseRepo):
                         "       b.display_index, "
                         "       c.source_id, "
                         "       c.creation_time "
-                        "FROM   ag.survey_answers_other AS a, "
-                        "       ag.group_questions b, "
-                        "       ag.ag_login_surveys c, "
-                        "       ag.surveys d "
-                        "WHERE  c.ag_login_id = '%s' "
+                        "FROM   ag.survey_answers_other a "
+                        "       JOIN ag.group_questions b "
+                        "         ON a.survey_question_id = "
+                        "            b.survey_question_id "
+                        "       JOIN ag.ag_login_surveys c "
+                        "         ON c.survey_id = a.survey_id "
+                        "       JOIN ag.surveys d "
+                        "         ON d.survey_group = b.survey_group "
+                        "WHERE  c.ag_login_id = %s "
                         "       AND d.survey_id = %s "
-                        "     AND a.survey_question_id = b.survey_question_id "
-                        "       AND c.survey_id = a.survey_id "
-                        "       AND d.survey_group = b.survey_group "
                         "ORDER  BY creation_time DESC, "
-                        "          display_index ASC ", (login_id,
-                                                         survey_template_id,
-                                                         login_id,
-                                                         survey_template_id))
+                        "          display_index ASC", (login_id,
+                                                        survey_template_id,
+                                                        login_id,
+                                                        survey_template_id,))
             rows = cur.fetchall()
 
         results = {}
