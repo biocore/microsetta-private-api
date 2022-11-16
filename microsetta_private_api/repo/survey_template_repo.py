@@ -228,55 +228,72 @@ class SurveyTemplateRepo(BaseRepo):
                 return None
             return row[0]
 
-    def get_survey_responses(self, login_id, survey_template_id, latest_only=True):
+    def get_survey_responses(self, login_id, survey_template_id,
+                             latest_only=True):
         # get the total number of questions in the survey.
         # for most tables a.survey_id is known as 'survey_template_id'.
         # (These are the values 1-7 and later 10-21). Aliasing here for
         # clarity.
-        sql = f"""select a.survey_id as survey_template_id,
-                  count(b.survey_question_id) from
-                  ag.surveys a,
-                  ag.group_questions b where
-                  a.survey_group = b.survey_group and
-                  survey_id = {survey_template_id} group by
-                  survey_template_id"""
 
         total_count = None
 
         with self._transaction.cursor() as cur:
-            cur.execute(sql)
+            cur.execute("SELECT   a.survey_id AS survey_template_id, "
+                        "         count(b.survey_question_id) "
+                        "FROM     ag.surveys a, "
+                        "         ag.group_questions b "
+                        "WHERE    a.survey_group = b.survey_group "
+                        "AND      survey_id = %s "
+                        "GROUP BY survey_template_id", (survey_template_id,))
             total_count = cur.fetchone()[1]
 
-        # adding indexes to these individual columns may improve performance.
-        #     ag.survey_answers.survey_question_id
-        #     ag.surveys.survey_id
-
-        sql = f"""select a.survey_id, a.survey_question_id, a.response,
-                  b.display_index, c.source_id, c.creation_time
-                  from ag.survey_answers as a, ag.group_questions b,
-                  ag.ag_login_surveys c, ag.surveys d where c.ag_login_id =
-                  '{login_id}' and d.survey_id = {survey_template_id} and
-                  a.survey_question_id = b.survey_question_id and c.survey_id
-                  = a.survey_id and d.survey_group = b.survey_group union
-                  select a.survey_id, a.survey_question_id, a.response,
-                  b.display_index, c.source_id, c.creation_time 
-                  from ag.survey_answers_other as a, ag.group_questions b,
-                  ag.ag_login_surveys c, ag.surveys d where c.ag_login_id =
-                  '{login_id}' and d.survey_id = {survey_template_id} and
-                  a.survey_question_id = b.survey_question_id and c.survey_id
-                  = a.survey_id and d.survey_group = b.survey_group order by
-                  creation_time desc, display_index asc"""
-
         with self._transaction.cursor() as cur:
-            # dict_cursor() isn't returning rows as dicts.
-            # another option is to return a tuple of lists, rather than a
-            # list of dicts.
-            cur.execute(sql)
+            cur.execute("SELECT a.survey_id, "
+                        "       a.survey_question_id, "
+                        "       a.response, "
+                        "       b.display_index, "
+                        "       c.source_id, "
+                        "       c.creation_time "
+                        "FROM   ag.survey_answers AS a, "
+                        "       ag.group_questions b, "
+                        "       ag.ag_login_surveys c, "
+                        "       ag.surveys d "
+                        "WHERE  c.ag_login_id = '%s' "
+                        "       AND d.survey_id = %s "
+                        "     AND a.survey_question_id = b.survey_question_id "
+                        "       AND c.survey_id = a.survey_id "
+                        "       AND d.survey_group = b.survey_group "
+                        "UNION "
+                        "SELECT a.survey_id, "
+                        "       a.survey_question_id, "
+                        "       a.response, "
+                        "       b.display_index, "
+                        "       c.source_id, "
+                        "       c.creation_time "
+                        "FROM   ag.survey_answers_other AS a, "
+                        "       ag.group_questions b, "
+                        "       ag.ag_login_surveys c, "
+                        "       ag.surveys d "
+                        "WHERE  c.ag_login_id = '%s' "
+                        "       AND d.survey_id = %s "
+                        "     AND a.survey_question_id = b.survey_question_id "
+                        "       AND c.survey_id = a.survey_id "
+                        "       AND d.survey_group = b.survey_group "
+                        "ORDER  BY creation_time DESC, "
+                        "          display_index ASC ", (login_id,
+                                                         survey_template_id,
+                                                         login_id,
+                                                         survey_template_id))
             rows = cur.fetchall()
 
         results = {}
         count = 0
-        for (survey_id, question_id, response, display_idx, source_id, timestamp) in rows:
+        for (survey_id,
+             question_id,
+             response,
+             display_idx,
+             source_id,
+             timestamp) in rows:
             if survey_id not in results:
                 count += 1
                 if latest_only and count > 1:
