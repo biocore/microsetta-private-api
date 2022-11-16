@@ -526,7 +526,7 @@ class SurveyTemplateTests(unittest.TestCase):
             obs = template_repo.get_survey_responses(login_id, 1)
 
             self.assertEqual(obs, [])
-            
+
     def test_delete_vioscreen(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
