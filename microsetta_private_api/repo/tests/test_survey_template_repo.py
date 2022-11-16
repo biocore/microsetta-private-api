@@ -471,6 +471,8 @@ class SurveyTemplateTests(unittest.TestCase):
             self.assertEqual(obs.get(sample), user)
 
     def test_get_survey_results(self):
+        self.maxDiff = None
+
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
 
@@ -506,6 +508,12 @@ class SurveyTemplateTests(unittest.TestCase):
             }
             ]
 
+            # assert that only one survey was returned.
+            self.assertEqual(len(obs), 1)
+            # assert that the latest survey returned is as expected.
+            self.assertEqual(obs[0]['survey_id'], exp[0]['survey_id'])
+            # assert the metadata associated with '4b1af551332dc84e' is as
+            # expected.
             self.assertEqual(obs, exp)
 
             # repeat the test, except return all responses.
