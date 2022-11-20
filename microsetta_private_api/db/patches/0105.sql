@@ -1,33 +1,80 @@
-/* STEP 0: clean some tables and dependencies before repopulating.
-   All questions w/survey_question_id of 299 or
-   higher originate from this script and can be safely deleted. */
-delete from ag.group_questions;
-delete from ag.survey_question where survey_question_id > 299;
-delete from ag.surveys;
-delete from ag.survey_group;
+-- STEP 1: add survey_template_id to ag_login_surveys table and populate it.
+alter table ag.ag_login_surveys add column survey_template_id integer;
+create table ag.tmp_tbl1 as select a.survey_id, min(b.survey_question_id) from ag_login_surveys a join survey_answers b on a.survey_id = b.survey_id group by a.survey_id;
+create table ag.tmp_tbl2 as select survey_id, survey_group from ag.tmp_tbl1 a join group_questions b on a.min = b.survey_question_id;
+create table ag.tmp_tbl3 as select a.survey_id, b.survey_id as survey_template_id from ag.tmp_tbl2 a join surveys b on a.survey_group = b.survey_group;
+update ag.ag_login_surveys set survey_template_id = (select survey_template_id from ag.tmp_tbl3 where survey_id = ag_login_surveys.survey_id);
+drop table ag.tmp_tbl1;
+drop table ag.tmp_tbl2;
+drop table ag.tmp_tbl3;
+
+
+-- STEP 2: add retired column to surveys table and retire existing survey
+-- templates.
+alter table ag.surveys add column retired boolean default false;
+update ag.surveys set retired = false where survey_id < 10;
+
+
+-- STEP 3: add the new list of categories to the set of groups.
+-- These new groups will be 1:1 w/survey template_ids.
+insert into ag.survey_group (group_order, american) values (-10, 'Basic Information');
+insert into ag.survey_group (group_order, american) values (-11, 'At Home');
+insert into ag.survey_group (group_order, american) values (-12, 'Lifestyle');
+insert into ag.survey_group (group_order, american) values (-13, 'Gut');
+insert into ag.survey_group (group_order, american) values (-14, 'General Health');
+insert into ag.survey_group (group_order, american) values (-15, 'Health Diagnosis');
+insert into ag.survey_group (group_order, american) values (-16, 'Allergies');
+insert into ag.survey_group (group_order, american) values (-17, 'Diet');
+insert into ag.survey_group (group_order, american) values (-18, 'Detailed Diet');
+insert into ag.survey_group (group_order, american) values (-19, 'Migraine');
+insert into ag.survey_group (group_order, american) values (-20, 'Surfers v2');
+insert into ag.survey_group (group_order, american) values (-21, 'COVID19 Questionnaire v2');
+
+
+-- STEP 4: once the categories have been added, they can be associated with
+-- survey ids (survey_template_ids).
+insert into ag.surveys (survey_id, survey_group) values(10, -10);
+insert into ag.surveys (survey_id, survey_group) values(11, -11);
+insert into ag.surveys (survey_id, survey_group) values(12, -12);
+insert into ag.surveys (survey_id, survey_group) values(13, -13);
+insert into ag.surveys (survey_id, survey_group) values(14, -14);
+insert into ag.surveys (survey_id, survey_group) values(15, -15);
+insert into ag.surveys (survey_id, survey_group) values(16, -16);
+insert into ag.surveys (survey_id, survey_group) values(17, -17);
+insert into ag.surveys (survey_id, survey_group) values(18, -18);
+insert into ag.surveys (survey_id, survey_group) values(19, -19);
+insert into ag.surveys (survey_id, survey_group) values(20, -20);
+insert into ag.surveys (survey_id, survey_group) values(21, -21);
+
+
+-- STEP 5: remove existing triggers from the database. Otherwise, we will need
+-- a template_id column to record the trigger for when a question was a part
+-- of a retired survey/question as well as a current survey/question.
 delete from ag.survey_question_triggers;
+-- delete from ag.group_questions;
+--We're not going to delete existing entries from group_questions anymore.
+--Instead we'll add new associations. I think that should be okay since queries on group_questions
+--are by template_id, so it shouldn't mess up people's queries to have a question be in more than one template.
+--(As long as its retired).
+-- Just know that idx_human_survey_group_question_0 is on survey_question_id in the table so it's possible
+-- someone is expecting or querying on that value.
 
 
-/* STEP 1: Modify text in existing questions to new standard. */
+-- STEP 6: Modify text in existing questions to new standard.
 update ag.survey_question set american = 'Birth month' where survey_question_id = 111;
 update ag.survey_question set american = 'Birth year' where survey_question_id = 112;
--- update ag.survey_question set american = 'Biological sex assigned at birth' where survey_question_id = 107;
 update ag.survey_question set american = 'Height:' where survey_question_id = 108;
 update ag.survey_question set american = 'Weight:' where survey_question_id = 113;
 update ag.survey_question set american = 'Country of birth:' where survey_question_id = 110;
 update ag.survey_question set american = 'Country of residence:' where survey_question_id = 148;
 update ag.survey_question set american = 'Current ZIP code:' where survey_question_id = 115;
--- update ag.survey_question set american = 'Which of the following best describes you?' where survey_question_id = 14;
--- update ag.survey_question set american = 'What is your highest level of education?' where survey_question_id = 23;
 update ag.survey_question set american = 'Which is your dominant hand?' where survey_question_id = 22;
 update ag.survey_question set american = 'When did you move to your current location of residence (state)?' where survey_question_id = 15;
 update ag.survey_question set american = 'Are you related to any of the other participants in this study?' where survey_question_id = 19;
 update ag.survey_question set american = 'How many of the people you live with are not a part of your family?' where survey_question_id = 17;
 update ag.survey_question set american = 'Are any of your roommates participating in this study?' where survey_question_id = 18;
 update ag.survey_question set american = 'Do you have a dog(s)?' where survey_question_id = 20;
--- update ag.survey_question set american = 'Where does your dogs(s) mostly stay?' where survey_question_id = 101;
 update ag.survey_question set american = 'Do you have a cat(s)?' where survey_question_id = 21;
--- update ag.survey_question set american = 'Where does your cat(s) mostly stay?' where survey_question_id = 117;
 update ag.survey_question set american = 'Do you have other (non-dog or cat) pets at home?' where survey_question_id = 149;
 update ag.survey_question set american = 'What type(s) of pets?' where survey_question_id = 150;
 update ag.survey_question set american = 'I have traveled outside of the United States in the past _________.' where survey_question_id = 16;
@@ -35,9 +82,7 @@ update ag.survey_question set american = 'How often do you exercise?' where surv
 update ag.survey_question set american = 'Do you generally exercise indoors or outdoors?' where survey_question_id = 25;
 update ag.survey_question set american = 'How often do you smoke cigarettes?' where survey_question_id = 28;
 update ag.survey_question set american = 'How often do you drink alcohol?' where survey_question_id = 29;
--- update ag.survey_question set american = 'What type(s) of alcohol do you typically consume? Select all that apply.' where survey_question_id = 30;
 update ag.survey_question set american = 'How many alcoholic beverages do you usually have per sitting?' where survey_question_id = 163;
--- update ag.survey_question set american = 'How often do you brush your teeth?' where survey_question_id = 31;
 update ag.survey_question set american = 'How often do you floss your teeth?' where survey_question_id = 32;
 update ag.survey_question set american = 'How often do you wear facial cosmetics (includes the use of skin care products like sunscreen or moisturizer)?' where survey_question_id = 33;
 update ag.survey_question set american = 'Do you use deodorant or antiperspirant (antiperspirants generally contain aluminum)?' where survey_question_id = 34;
@@ -53,11 +98,9 @@ update ag.survey_question set american = 'Have you ever been diagnosed with infl
 update ag.survey_question set american = 'Have you ever been diagnosed with small intestinal bacterial overgrowth (SIBO)?' where survey_question_id = 78;
 update ag.survey_question set american = 'Were you born via cesarean section (C-section)?' where survey_question_id = 50;
 update ag.survey_question set american = 'How were you fed as an infant?' where survey_question_id = 51;
--- update ag.survey_question set american = 'Are you currently using some form of hormonal birth control?' where survey_question_id = 41;
 update ag.survey_question set american = 'Are you currently pregnant?' where survey_question_id = 42;
 update ag.survey_question set american = 'My weight has _________ within the last 6 months.' where survey_question_id = 43;
 update ag.survey_question set american = 'Do you have vivid and/or frightening dreams?' where survey_question_id = 156;
--- update ag.survey_question set american = 'Have you ever been diagnosed with a skin condition?' where survey_question_id = 88;
 update ag.survey_question set american = 'Do you currently take prescription medication for facial acne?' where survey_question_id = 47;
 update ag.survey_question set american = 'Do you use non-prescription products to control facial acne?' where survey_question_id = 48;
 update ag.survey_question set american = 'Do you currently take non-prescription or prescription medication for other conditions?' where survey_question_id = 49;
@@ -71,23 +114,18 @@ update ag.survey_question set american = 'Have you had your appendix removed?' w
 update ag.survey_question set american = 'Have you had a chickenpox infection (not the varicella vaccine)?' where survey_question_id = 46;
 update ag.survey_question set american = 'Have you been diagnosed with ADD/ADHD?' where survey_question_id = 85;
 update ag.survey_question set american = 'Have you been diagnosed with Alzheimer''s Disease/Dementia?' where survey_question_id = 84;
-update ag.survey_question set american = '"Have you been diagnosed with Asthma, Cystic fibrosis, COPD or other lung Disease?"' where survey_question_id = 93;
+update ag.survey_question set american = 'Have you been diagnosed with Asthma, Cystic fibrosis, COPD or other lung Disease?' where survey_question_id = 93;
 update ag.survey_question set american = 'Have you been diagnosed with Autism Spectrum Disorder or Condition (ASD/ASC)?' where survey_question_id = 77;
-update ag.survey_question set american = '"Have you been diagnosed with autoimmune disease such as Lupus (systemic lupus erythematosus), R.A. (rheumatoid arthritis), MS (multiple sclerosis), Hashimoto''s thyroiditis , or any other auto-immune disease?"' where survey_question_id = 87;
+update ag.survey_question set american = 'Have you been diagnosed with autoimmune disease such as Lupus (systemic lupus erythematosus), R.A. (rheumatoid arthritis), MS (multiple sclerosis), Hashimoto''s thyroiditis , or any other auto-immune disease?' where survey_question_id = 87;
 update ag.survey_question set american = 'Have you ever been diagnosed with Clostridium difficile (C. diff) infection?' where survey_question_id = 80;
-update ag.survey_question set american = '"Have you ever been diagnosed with coronary artery disease, heart disease, heart attack, or stroke?"' where survey_question_id = 89;
--- update ag.survey_question set american = 'Have you ever been diagnosed with mental health illness?' where survey_question_id = 153;
--- update ag.survey_question set american = '"If you responded ""yes"", please select which disorder(s) from the following list:"' where survey_question_id = 154;
+update ag.survey_question set american = 'Have you ever been diagnosed with coronary artery disease, heart disease, heart attack, or stroke?' where survey_question_id = 89;
 update ag.survey_question set american = 'Have you ever been diagnosed with diabetes?' where survey_question_id = 82;
--- update ag.survey_question set american = '"If you responded ""Yes"", select which type of diabetes:"' where survey_question_id = 155;
 update ag.survey_question set american = 'Have you ever been diagnosed with epilepsy or seizure disorder?' where survey_question_id = 90;
 update ag.survey_question set american = 'Have you ever been diagnosed with migraines?' where survey_question_id = 92;
 update ag.survey_question set american = 'Have you ever been diagnosed with kidney disease?' where survey_question_id = 60;
 update ag.survey_question set american = 'Have you ever been diagnosed with liver disease?' where survey_question_id = 86;
 update ag.survey_question set american = 'Have you ever been diagnosed with phenylketonuria?' where survey_question_id = 94;
 update ag.survey_question set american = 'Have you ever been diagnosed with thyroid disease?' where survey_question_id = 96;
--- update ag.survey_question set american = 'Have you ever been diagnosed with cancer?' where survey_question_id = 158;
--- update ag.survey_question set american = 'Have you ever been diagnosed with any other relevant clinical condition?' where survey_question_id = 81;
 update ag.survey_question set american = 'What condition(s)?' where survey_question_id = 106;
 update ag.survey_question set american = 'Do you have seasonal allergies?' where survey_question_id = 53;
 update ag.survey_question set american = 'Do you have any of the following non-food allergies? Select all that apply.' where survey_question_id = 54;
@@ -95,47 +133,46 @@ update ag.survey_question set american = 'Are you lactose intolerant?' where sur
 update ag.survey_question set american = 'Are you gluten intolerant?' where survey_question_id = 8;
 update ag.survey_question set american = 'What foods are you allergic to? Select all that apply.' where survey_question_id = 9;
 update ag.survey_question set american = 'How would you classify your diet?' where survey_question_id = 1;
-update ag.survey_question set american = '"If you eat a specialized diet, what type do you follow? Select all that apply."' where survey_question_id = 162;
+update ag.survey_question set american = 'If you eat a specialized diet, what type do you follow? Select all that apply.' where survey_question_id = 162;
 update ag.survey_question set american = 'Do you eat meat/dairy products from animals treated with antibiotics?' where survey_question_id = 11;
 update ag.survey_question set american = 'Are you taking a daily multivitamin?' where survey_question_id = 2;
 update ag.survey_question set american = 'How frequently do you take a probiotic?' where survey_question_id = 3;
-update ag.survey_question set american = '"How frequently do you take Vitamin B complex, folate or folic acid?"' where survey_question_id = 4;
+update ag.survey_question set american = 'How frequently do you take Vitamin B complex, folate or folic acid?' where survey_question_id = 4;
 update ag.survey_question set american = 'How frequently do you take a Vitamin D supplement?' where survey_question_id = 5;
 update ag.survey_question set american = 'Are you taking any other nutritional/herbal supplements?' where survey_question_id = 6;
 update ag.survey_question set american = 'What types of supplements?' where survey_question_id = 104;
--- update ag.survey_question set american = '"Are you an infant who receives most of your nutrition from breast milk or formula, or an adult who receives most (more than 75% of daily calories) of your nutrition from adult nutritional shakes (i.e. Ensure)?"' where survey_question_id = 55;
 update ag.survey_question set american = 'How often do you consume meat/eggs?' where survey_question_id = 56;
-update ag.survey_question set american = '"How often do you cook and consume home cooked meals? (Exclude ready-to-eat meals like boxed macaroni and cheese, ramen noodles, lean cuisine)"' where survey_question_id = 57;
-update ag.survey_question set american = '"How often do you consume ready-to-eat meals (e.g. macaroni and cheese, ramen noodles, lean cuisine)?"' where survey_question_id = 58;
-update ag.survey_question set american = '"How often do you eat food prepared at a restaurant, including carry-out/take-out?"' where survey_question_id = 59;
-update ag.survey_question set american = '"How often do you eat at least 2 servings of whole grains in a day? (1 serving = 1 slice of 100% whole grain bread; 1 cup whole grain cereal like Shredded Wheat, Wheaties, Grape Nuts, high fiber cereals, or oatmeal; 3-4 whole grain crackers; 1⁄2 cup brown rice or whole wheat pasta)"' where survey_question_id = 91;
+update ag.survey_question set american = 'How often do you cook and consume home cooked meals? (Exclude ready-to-eat meals like boxed macaroni and cheese, ramen noodles, lean cuisine)' where survey_question_id = 57;
+update ag.survey_question set american = 'How often do you consume ready-to-eat meals (e.g. macaroni and cheese, ramen noodles, lean cuisine)?' where survey_question_id = 58;
+update ag.survey_question set american = 'How often do you eat food prepared at a restaurant, including carry-out/take-out?' where survey_question_id = 59;
+update ag.survey_question set american = 'How often do you eat at least 2 servings of whole grains in a day? (1 serving = 1 slice of 100% whole grain bread; 1 cup whole grain cereal like Shredded Wheat, Wheaties, Grape Nuts, high fiber cereals, or oatmeal; 3-4 whole grain crackers; 1⁄2 cup brown rice or whole wheat pasta)' where survey_question_id = 91;
 update ag.survey_question set american = 'How often do you consume at least 2-3 servings of fruit in a day? (1 serving = 1⁄2 cup (1 serving = 1⁄2 cup fruit juice.)' where survey_question_id = 61;
-update ag.survey_question set american = '"How often do you consume at least 2-3 servings of starchy and non-starchy vegetables. Examples of starchy vegetables include white potatoes, corn, peas and cabbage. Examples of non-starchy vegetables include raw leafy greens, cucumbers, tomatoes, peppers, broccoli, and kale. (1 serving = 1⁄2 cup vegetables/potatoes; 1 cup leafy raw vegetables)"' where survey_question_id = 62;
-update ag.survey_question set american = '"How often do you consume beets (including raw, canned, pickled, or roasted)? (1 serving = 1 cup raw or cooked)"' where survey_question_id = 236;
-update ag.survey_question set american = '"How often do you eat plant-based sources of protein including tofu, tempeh, edamame, lentils, chickpeas, peanuts, almonds, walnuts, or quinoa?"' where survey_question_id = 237;
-update ag.survey_question set american = '"In an average week, how many different plants do you eat? For example - if you consume a can of soup that contains carrots, potatoes and onion, you can count this as 3 different plants; If you consume multi-grain bread, each different grain counts as a plant. Include all fruits in the total."' where survey_question_id = 146;
+update ag.survey_question set american = 'How often do you consume at least 2-3 servings of starchy and non-starchy vegetables. Examples of starchy vegetables include white potatoes, corn, peas and cabbage. Examples of non-starchy vegetables include raw leafy greens, cucumbers, tomatoes, peppers, broccoli, and kale. (1 serving = 1⁄2 cup vegetables/potatoes; 1 cup leafy raw vegetables)' where survey_question_id = 62;
+update ag.survey_question set american = 'How often do you consume beets (including raw, canned, pickled, or roasted)? (1 serving = 1 cup raw or cooked)' where survey_question_id = 236;
+update ag.survey_question set american = 'How often do you eat plant-based sources of protein including tofu, tempeh, edamame, lentils, chickpeas, peanuts, almonds, walnuts, or quinoa?' where survey_question_id = 237;
+update ag.survey_question set american = 'In an average week, how many different plants do you eat? For example - if you consume a can of soup that contains carrots, potatoes and onion, you can count this as 3 different plants; If you consume multi-grain bread, each different grain counts as a plant. Include all fruits in the total.' where survey_question_id = 146;
 update ag.survey_question set american = 'How often do you consume at least 2 servings of milk or cheese a day? (1 serving = 1 cup milk or yogurt; 11⁄2 - 2 ounces cheese)' where survey_question_id = 64;
-update ag.survey_question set american = '"How often do you consume milk substitutes (soy milk, lactose free milk, almond milk, etc.)?"' where survey_question_id = 65;
-update ag.survey_question set american = '"How often do you eat frozen desserts (ice cream/gelato/milkshakes, sherbet/sorbet, frozen yogurt, etc.)?"' where survey_question_id = 66;
+update ag.survey_question set american = 'How often do you consume milk substitutes (soy milk, lactose free milk, almond milk, etc.)?' where survey_question_id = 65;
+update ag.survey_question set american = 'How often do you eat frozen desserts (ice cream/gelato/milkshakes, sherbet/sorbet, frozen yogurt, etc.)?' where survey_question_id = 66;
 update ag.survey_question set american = 'How often do you eat red meat?' where survey_question_id = 67;
-update ag.survey_question set american = '"How often do you consume higher fat red meats like prime rib, T-bone steak, hamburger, ribs, bacon, etc.?"' where survey_question_id = 68;
+update ag.survey_question set american = 'How often do you consume higher fat red meats like prime rib, T-bone steak, hamburger, ribs, bacon, etc.?' where survey_question_id = 68;
 update ag.survey_question set american = 'How often do you consume chicken or turkey?' where survey_question_id = 69;
-update ag.survey_question set american = '"How often do you consume seafood (fish, shrimp, lobster, crab, etc.)?"' where survey_question_id = 70;
-update ag.survey_question set american = '"How often do you consume salted snacks (potato chips, nacho chips, corn chips, popcorn with butter, French fries etc.)?"' where survey_question_id = 71;
-update ag.survey_question set american = '"How often do you consume sugary sweets (cake, cookies, pastries, donuts, muffins, chocolate etc.)"' where survey_question_id = 72;
+update ag.survey_question set american = 'How often do you consume seafood (fish, shrimp, lobster, crab, etc.)?' where survey_question_id = 70;
+update ag.survey_question set american = 'How often do you consume salted snacks (potato chips, nacho chips, corn chips, popcorn with butter, French fries etc.)?' where survey_question_id = 71;
+update ag.survey_question set american = 'How often do you consume sugary sweets (cake, cookies, pastries, donuts, muffins, chocolate etc.)' where survey_question_id = 72;
 update ag.survey_question set american = 'How often do you cook with olive oil?' where survey_question_id = 73;
 update ag.survey_question set american = 'How often do you consume whole eggs (does not include egg beaters or just egg whites).' where survey_question_id = 74;
 update ag.survey_question set american = 'How often do you drink 16 ounces or more of sugar sweetened beverages such as non-diet soda or fruit drink/punch (not including 100 % fruit juice) in a day? (1 can of soda = 12 ounces)' where survey_question_id = 75;
 update ag.survey_question set american = 'How often do you consume beverages with non-nutritive or low-calorie sweeteners*?' where survey_question_id = 157;
-update ag.survey_question set american = '"How often do you cook with vegetable oils (excluding coconut and palm oil) such as corn, soy, canola (rapeseed), olive, peanut, avocado, safflower or sunflower?"' where survey_question_id = 239;
-update ag.survey_question set american = '"How often do you cook with lard, butter or ghee?"' where survey_question_id = 240;
-update ag.survey_question set american = '"How often do you use or cook with coconut, palm or palm kernel oil?"' where survey_question_id = 241;
+update ag.survey_question set american = 'How often do you cook with vegetable oils (excluding coconut and palm oil) such as corn, soy, canola (rapeseed), olive, peanut, avocado, safflower or sunflower?' where survey_question_id = 239;
+update ag.survey_question set american = 'How often do you cook with lard, butter or ghee?' where survey_question_id = 240;
+update ag.survey_question set american = 'How often do you use or cook with coconut, palm or palm kernel oil?' where survey_question_id = 241;
 update ag.survey_question set american = 'How often do you use or cook with margarine or (vegetable) shortening?' where survey_question_id = 242;
-update ag.survey_question set american = '"How often do you consume oxalate-rich foods, such as spinach, Swiss chard, beetroot or beet greens, okra, quinoa, amaranth, buckwheat, wheat bran or germ, Bran cereal, chia seeds, rhubarb, watermelon, dark chocolate or cocoa powder (>70%), and nuts such as almonds, peanuts pecans, cashews, and hazelnuts?"' where survey_question_id = 243;
-update ag.survey_question set american = '"How often do you consume soy products such as textured vegetable protein, tofu, tempeh, soybean flour, soy nuts, soy nut butter, soybeans, and miso (i.e. fermented soy)?"' where survey_question_id = 244;
+update ag.survey_question set american = 'How often do you consume oxalate-rich foods, such as spinach, Swiss chard, beetroot or beet greens, okra, quinoa, amaranth, buckwheat, wheat bran or germ, Bran cereal, chia seeds, rhubarb, watermelon, dark chocolate or cocoa powder (>70%), and nuts such as almonds, peanuts pecans, cashews, and hazelnuts?' where survey_question_id = 243;
+update ag.survey_question set american = 'How often do you consume soy products such as textured vegetable protein, tofu, tempeh, soybean flour, soy nuts, soy nut butter, soybeans, and miso (i.e. fermented soy)?' where survey_question_id = 244;
 update ag.survey_question set american = 'How often do you consume at least 1L (~32 ounces) of water in a day?' where survey_question_id = 76;
-update ag.survey_question set american = '"Excluding beer, wine, and alcohol, I have significantly increased (i.e. more than doubled) my intake of fermented foods in frequency or quantity within the last ____."' where survey_question_id = 166;
-update ag.survey_question set american = '"How often do you consume one or more servings of fermented vegetables or plant products? (1 serving = 1⁄2 cup sauerkraut, kimchi or fermented vegetable or 1 cup of kombucha)"' where survey_question_id = 165;
+update ag.survey_question set american = 'Excluding beer, wine, and alcohol, I have significantly increased (i.e. more than doubled) my intake of fermented foods in frequency or quantity within the last ____.' where survey_question_id = 166;
+update ag.survey_question set american = 'How often do you consume one or more servings of fermented vegetables or plant products? (1 serving = 1⁄2 cup sauerkraut, kimchi or fermented vegetable or 1 cup of kombucha)' where survey_question_id = 165;
 update ag.survey_question set american = 'Which of the following fermented foods/beverages do you consume more than once a week? Select all that apply and write in any that are not listed under ''Other''.' where survey_question_id = 167;
 update ag.survey_question set american = 'Do you produce any of the following fermented foods/beverages at home for personal consumption? Select all that apply and write in any that are not listed under ''Other''.' where survey_question_id = 169;
 update ag.survey_question set american = 'Do you produce any of the following fermented foods/beverages for commercial purposes? Select all that apply and write in any that are not listed under ''Other''.' where survey_question_id = 171;
@@ -152,36 +189,36 @@ update ag.survey_question set american = 'What stance are you?' where survey_que
 update ag.survey_question set american = 'What type of surfboard do you prefer?' where survey_question_id = 184;
 update ag.survey_question set american = 'What type of wax do you use?' where survey_question_id = 185;
 update ag.survey_question set american = 'What is your occupation?' where survey_question_id = 209;
-update ag.survey_question set american = '"Please think about your current level of well-being. When you think about well-being, think about your physical health, your emotional health, any challenges you are experiencing, the people in your life, and the opportunities or resources you have available to you. How would you describe your current level of well-being?"' where survey_question_id = 210;
+update ag.survey_question set american = 'Please think about your current level of well-being. When you think about well-being, think about your physical health, your emotional health, any challenges you are experiencing, the people in your life, and the opportunities or resources you have available to you. How would you describe your current level of well-being?' where survey_question_id = 210;
 update ag.survey_question set american = 'Have you been exposed to someone likely to have Coronavirus/COVID-19? (check all that apply)' where survey_question_id = 211;
 update ag.survey_question set american = 'Have you been suspected of having Coronavirus/COVID-19 infection?' where survey_question_id = 212;
 update ag.survey_question set american = 'Please provide date' where survey_question_id = 213;
 update ag.survey_question set american = 'Have you had any of the following symptoms? (check all that apply)' where survey_question_id = 214;
 update ag.survey_question set american = '' where survey_question_id = 215;
-update ag.survey_question set american = '"If yes to any symptoms above, did you stay home from work while symptomatic?"' where survey_question_id = 216;
+update ag.survey_question set american = 'If yes to any symptoms above, did you stay home from work while symptomatic?' where survey_question_id = 216;
 update ag.survey_question set american = 'Have any of the following happened to your family members because of Coronavirus/COVID-19? (check all that apply)' where survey_question_id = 217;
 update ag.survey_question set american = 'Have any of the following happened to you because of Coronavirus/COVID-19? (check all that apply)' where survey_question_id = 238;
-update ag.survey_question set american = '"How many times have you gone outside of your home for any reason including work (e.g., left your property to go to stores, parks, etc.)?"' where survey_question_id = 218;
-update ag.survey_question set american = '"Have you used shared ride services including Lyft, Uber or alternative forms of taxi?"' where survey_question_id = 219;
+update ag.survey_question set american = 'How many times have you gone outside of your home for any reason including work (e.g., left your property to go to stores, parks, etc.)?' where survey_question_id = 218;
+update ag.survey_question set american = 'Have you used shared ride services including Lyft, Uber or alternative forms of taxi?' where survey_question_id = 219;
 update ag.survey_question set american = 'Do you have any of the following chronic conditions (check all that apply):' where survey_question_id = 220;
-update ag.survey_question set american = '"Over the last 2 weeks, how often have you been bothered by little interest or pleasure in doing things?"' where survey_question_id = 221;
-update ag.survey_question set american = '"Over the last 2 weeks, how often have you been bothered by feeling down, depressed or hopeless?"' where survey_question_id = 222;
-update ag.survey_question set american = '"Over the last 2 weeks, how often have you been bothered by feeling nervous, anxious, or on edge?"' where survey_question_id = 223;
-update ag.survey_question set american = '"Over the last 2 weeks, how often have you been bothered by not being able to stop or control worrying?"' where survey_question_id = 224;
+update ag.survey_question set american = 'Over the last 2 weeks, how often have you been bothered by little interest or pleasure in doing things?' where survey_question_id = 221;
+update ag.survey_question set american = 'Over the last 2 weeks, how often have you been bothered by feeling down, depressed or hopeless?' where survey_question_id = 222;
+update ag.survey_question set american = 'Over the last 2 weeks, how often have you been bothered by feeling nervous, anxious, or on edge?' where survey_question_id = 223;
+update ag.survey_question set american = 'Over the last 2 weeks, how often have you been bothered by not being able to stop or control worrying?' where survey_question_id = 224;
 update ag.survey_question set american = 'Are you involved in patient care or work in a hospital / clinic setting?' where survey_question_id = 225;
 update ag.survey_question set american = 'Have you participated in direct patient care in the past seven days?' where survey_question_id = 226;
 update ag.survey_question set american = 'Have you participated in direct patient care involving a patient with confirmed COVID-19 within the past 7 days?' where survey_question_id = 227;
-update ag.survey_question set american = '"During any health care interactions with a COVID-19 patients,  how often were you able to wear PPE as recommended for the level of contact?"' where survey_question_id = 228;
+update ag.survey_question set american = 'During any health care interactions with a COVID-19 patients,  how often were you able to wear PPE as recommended for the level of contact?' where survey_question_id = 228;
 update ag.survey_question set american = 'Please rate the CURRENT (i.e. LAST 2 WEEKS) SEVERITY of any difficulty falling asleep.' where survey_question_id = 229;
 update ag.survey_question set american = 'Please rate the CURRENT (i.e. LAST 2 WEEKS) SEVERITY of any difficulty staying asleep.' where survey_question_id = 230;
 update ag.survey_question set american = 'Please rate the CURRENT (i.e. LAST 2 WEEKS) SEVERITY of any problems waking up too early.' where survey_question_id = 231;
 update ag.survey_question set american = 'How SATISFIED/DISSATISFIED are you with your CURRENT sleep pattern?' where survey_question_id = 232;
 update ag.survey_question set american = 'How NOTICEABLE to others do you think your sleep problem is in terms of impairing the quality of your life?' where survey_question_id = 233;
 update ag.survey_question set american = 'How WORRIED/DISTRESSED are you about your current sleep problem?' where survey_question_id = 234;
-update ag.survey_question set american = '"To what extent do you consider your sleep problem to INTERFERE with your daily functioning (e.g. daytime fatigue, mood, ability to function at work/daily chores, concentration, memory, mood, etc.) CURRENTLY?"' where survey_question_id = 235;
+update ag.survey_question set american = 'To what extent do you consider your sleep problem to INTERFERE with your daily functioning (e.g. daytime fatigue, mood, ability to function at work/daily chores, concentration, memory, mood, etc.) CURRENTLY?' where survey_question_id = 235;
 
 
-/* STEP 2: Retire questions that are no longer being used. */
+-- STEP 7: Retire questions that are no longer being used.
 update ag.survey_question set retired = true where survey_question_id = 14;
 update ag.survey_question set retired = true where survey_question_id = 23;
 update ag.survey_question set retired = true where survey_question_id = 30;
@@ -264,66 +301,64 @@ update ag.survey_question set retired = true where survey_question_id = 207;
 update ag.survey_question set retired = true where survey_question_id = 208;
 
 
-/* STEP 3: Add new questions into the database. */
+-- STEP 8: Add new questions into the database.
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (313, 'Which of the following best describes the area in which you live?', 'URBANIZATION_LEVEL', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (316, '"What is your relationship to those in this study who have voluntarily told you of their participation (e.g. partner, children)? Note that we will only use information that both parties provide. This information is useful because studies have shown that our genes affect our microbiome."', 'RELATIONSHIPS_IN_STUDY', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (316, 'What is your relationship to those in this study who have voluntarily told you of their participation (e.g. partner, children)? Note that we will only use information that both parties provide. This information is useful because studies have shown that our genes affect our microbiome.', 'RELATIONSHIPS_IN_STUDY', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (319, 'Who are your roommates who have voluntarily told you of their participation in this study? Note that we will only use information that both parties provide. This information is useful because studies have shown that the people we live with affect our microbiome.', 'ALL_ROOMMATES', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (326, 'Do you have frequent and regular contact with farm animals?', 'FARM_ANIMALS', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (328, 'Do you track any of the following using an app(s)? Select all that apply.', 'APP_TRACKER', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (331, 'What type of exercise do you typically do? Select all that apply.', 'TYPICAL_EXERCISE', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (332, 'What intensity of exercise do you typically do? Select all that apply.', 'EXERCISE_INTENSITY', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (333, 'How often do you take part in team sports?', 'TEAM_ACTIVITIES', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (334, '"When the season allows, how often do you garden or do yard work?"', 'GARDENING', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (344, '"On days you have school or work, what time do you get up in the morning?"', 'WEEKDAY_WAKE_TIME', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (345, '"On nights before you have school or work, what time do you go to bed? a. drop down of times in 30 min intervals"', 'WEEKDAY_SLEEP_TIME', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (346, '"On your off days (days when you do not have school or work), what time do you get up in the morning?"', 'WEEKEND_WAKE_TIME', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (347, '"On nights before your off days (days when you do not have school or work), what time do you go to bed?"', 'WEEKEND_SLEEP_TIME', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (334, 'When the season allows, how often do you garden or do yard work?', 'GARDENING', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (344, 'On days you have school or work, what time do you get up in the morning?', 'WEEKDAY_WAKE_TIME', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (345, 'On nights before you have school or work, what time do you go to bed? a. drop down of times in 30 min intervals', 'WEEKDAY_SLEEP_TIME', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (346, 'On your off days (days when you do not have school or work), what time do you get up in the morning?', 'WEEKEND_WAKE_TIME', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (347, 'On nights before your off days (days when you do not have school or work), what time do you go to bed?', 'WEEKEND_SLEEP_TIME', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (348, 'Do you have a job or some other situation that requires you to work and sleep during atypical hours (e.g. work between 10pm-6am and sleep between 9am-5pm)?', 'ATYPICAL_SLEEP_TIME', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (349, '"If you use light emitting electronic devices such as a phone or laptop right before bed, do you use it in night or dark mode?"', 'DARK_MODE_ON', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (350, '"Over the past week, how would you rate your sleep quality?"', 'SLEEP_QUALITY', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (349, 'If you use light emitting electronic devices such as a phone or laptop right before bed, do you use it in night or dark mode?', 'DARK_MODE_ON', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (350, 'Over the past week, how would you rate your sleep quality?', 'SLEEP_QUALITY', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (354, 'Do you surf in the ocean on a regular basis?', 'IS_SURFER', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (360, '"If you answered yes, which type of IBD do you have?"', 'IBD_DIAGNOSED_AS_TYPE', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (362, '"Over the last week, how frequently have you had abdominal pain or abdominal discomfort?"', 'FREQ_ABDOMINAL_PAIN', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (363, '"Over the last week, how frequently have you had abdominal bloating?"', 'FREQ_ABDOMINAL_BLOATING', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (364, '"Over the last week, how frequently have you had flatulence (passage of gas)?"', 'FREQ_FLATULENCE', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (365, '"Over the last week, how frequently have you had borborygmi / rumbling stomach?"', 'FREQ_RUMBLING_STOMACH', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (360, 'If you answered yes, which type of IBD do you have?', 'IBD_DIAGNOSED_AS_TYPE', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (362, 'Over the last week, how frequently have you had abdominal pain or abdominal discomfort?', 'FREQ_ABDOMINAL_PAIN', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (363, 'Over the last week, how frequently have you had abdominal bloating?', 'FREQ_ABDOMINAL_BLOATING', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (364, 'Over the last week, how frequently have you had flatulence (passage of gas)?', 'FREQ_FLATULENCE', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (365, 'Over the last week, how frequently have you had borborygmi / rumbling stomach?', 'FREQ_RUMBLING_STOMACH', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (370, 'Pregnancy due date:', 'PREGNANCY_DUE_DATE', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (374, 'What kind of skin condition have you been diagnosed with?', 'SKIN_CONDITION_TYPES', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (375, 'How was your skin condition diagnosed?', 'SKIN_CONDITION_DIAG', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (387, '"On a scale of 1 to 10, where 1 means you have ""little or no stress"" and 10 means you have ""a great deal of stress,"" how would you rate your average level of stress during the past month?"', 'STRESS_LEVEL', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (387, 'On a scale of 1 to 10, where 1 means you have little or no stress and 10 means you have a great deal of stress, how would you rate your average level of stress during the past month?', 'STRESS_LEVEL', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (407, 'Approximately when were you diagnosed?', 'CANCER_DIAGNOSED', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (408, 'Do you currently have cancer?', 'HAS_CANCER', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (409, 'Which kind of cancer(s) did you / do you have? Select all that apply.', 'CANCER_TYPES', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (410, 'Which types of treatment(s) did you take/user? Select all that apply.', 'CANCER_TREATMENTS', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (413, 'How was this diagnosed?', 'CONDITION_DIAGNOSIS', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (415, 'Do you take medication to relieve your symptoms?', 'TAKING_ALLERGY_MEDS', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (423, '"If you practice intermittent fasting, what type do you follow?"', 'FASTING_TYPE', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (423, 'If you practice intermittent fasting, what type do you follow?', 'FASTING_TYPE', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (424, 'Please list/describe any other special diet restrictions you follow that are not indicated above.', 'DIET_RESTRICTIONS', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (425, 'How many meals do you typically eat per day?', 'MEAL_COUNT', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (426, 'How many snacks do you typically eat per day?', 'SNACK_COUNT', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (427, 'When do you consume most of your daily calories?', 'PEAK_CONSUMPTION', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (428, 'At what time do you typically eat your last meal or snack before going to sleep?', 'LAST_MEAL_TIME', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (433, '"If you take a fiber supplement, what kind do you take? Select all that apply."', 'FIBER_SUPPLEMENT_TYPES', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (433, 'If you take a fiber supplement, what kind do you take? Select all that apply.', 'FIBER_SUPPLEMENT_TYPES', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (434, 'How frequently do you take a fiber supplement?', 'FREQ_FIBER_SUPPLEMENT', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (443, '"In an average week, how often do you eat foods that are fortified with high fiber content (e.g. Fiber One)?"', 'WEEKLY_FIBER_FORTIFIED_FOODS', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (443, 'In an average week, how often do you eat foods that are fortified with high fiber content (e.g. Fiber One)?', 'WEEKLY_FIBER_FORTIFIED_FOODS', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (462, 'How much do you typically consume in a sitting?', 'ARTIFICIAL_BEVERAGE_CONSUMPTION', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (463, 'How often do you consume foods containing non-nutritive or low-calorie sweeteners?', 'ARTIFICIAL_SWEETENERS_FOOD', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (464, '"If you answered yes to Question 24 and/or 25, what type of non-nutritive or low-calorie sweetner(s) do you consume on a regular basis? Select all that apply."', 'ARTIFICIAL_SWEETENER_TYPES', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (465, '"When you consume foods or beverages containing non-nutritive or low-calorie sweetners, do you tend to experience gastrointestinal disorders afterwards, such as gas, bloating, and/or diarrhea?"', 'ARTIFICIAL_GI_DISORDERS', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (466, '"If you answered yes to the previous question, what are the symptoms? Select all that apply."', 'ARTIFICIAL_GI_DISORDER_TYPES', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (474, '"At home, what is the main source of your plain, unflavored drinking water? This can include still or sparkling/carbonated water."', 'HOME_WATER_SOURCE', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (475, '"At home, do you apply additional treatment (not including filtering) to your drinking water prior to consumption (e.g., boiling, purification tablet, chlorine/bleach)?"', 'HOME_WATER_TREATMENT', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (476, '"When you''re outside the home, what is the main source of your plain unflavored drinking water? This can include still or sparkling/carbonated water."', 'OUTSIDE_WATER_SOURCE', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (477, '"When you''re outside the home, do you apply additional treatment to your drinking water prior to consumption (e.g., boiling, purification tablet, chlorine/bleach)?"', 'OUTSIDE_WATER_TREATMENT', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (464, 'If you answered yes to Question 24 and/or 25, what type of non-nutritive or low-calorie sweetner(s) do you consume on a regular basis? Select all that apply.', 'ARTIFICIAL_SWEETENER_TYPES', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (465, 'When you consume foods or beverages containing non-nutritive or low-calorie sweetners, do you tend to experience gastrointestinal disorders afterwards, such as gas, bloating, and/or diarrhea?', 'ARTIFICIAL_GI_DISORDERS', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (466, 'If you answered yes to the previous question, what are the symptoms? Select all that apply.', 'ARTIFICIAL_GI_DISORDER_TYPES', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (474, 'At home, what is the main source of your plain, unflavored drinking water? This can include still or sparkling/carbonated water.', 'HOME_WATER_SOURCE', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (475, 'At home, do you apply additional treatment (not including filtering) to your drinking water prior to consumption (e.g., boiling, purification tablet, chlorine/bleach)?', 'HOME_WATER_TREATMENT', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (476, 'When you''re outside the home, what is the main source of your plain unflavored drinking water? This can include still or sparkling/carbonated water.', 'OUTSIDE_WATER_SOURCE', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (477, 'When you''re outside the home, do you apply additional treatment to your drinking water prior to consumption (e.g., boiling, purification tablet, chlorine/bleach)?', 'OUTSIDE_WATER_TREATMENT', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (478, 'When did you start eating fermented foods?', 'FERMENTED_FOODS_START', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (485, 'How often do you experience migraines?', 'FREQ_MIGRAINES', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (486, '"Please rank the main factors that lead to your migraines, where “1” is most likely, “2” is second most likely, etc. If the factor does not cause migraines leave blank"', 'MIGRAINE_FACTORS', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (486, 'Please rank the main factors that lead to your migraines, where “1” is most likely, “2” is second most likely, etc. If the factor does not cause migraines leave blank', 'MIGRAINE_FACTORS', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (487, 'Of the following check all the symptoms you experience with a migraine:', 'MIGRAINE_SYMPTOMS', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (488, 'Do any of your first-degree relatives suffer from migraines?', 'RELATIVES_MIGRAINES', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (489, 'Do you take any migraine medication?', 'MIGRAINE_RX', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (490, 'Type/brand', 'MIGRAINE_RX_TYPES', false);
-
-
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (492, 'Which of the following best describes you?', 'RACE_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (493, 'What is your highest level of education?', 'LEVEL_OF_EDUCATION_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (494, 'What type(s) of alcohol do you typically consume? Select all that apply.', 'ALCOHOL_TYPES_v2', false);
@@ -336,49 +371,16 @@ insert into ag.survey_question (survey_question_id, american, question_shortname
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (502, 'Biological sex assigned at birth', 'GENDER_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (503, 'Where does your cats(s) mostly stay?', 'CAT_LOCATION_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (504, 'Have you ever been diagnosed with mental health illness?', 'mental_illness_v2', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (505, 'If you responded ""yes"", please select which disorder(s) from the following list:', 'mental_illness_type_v2', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (506, 'If you responded ""Yes"", select which type of diabetes:', 'diabetes_type_v2', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (505, 'If you responded "yes", please select which disorder(s) from the following list:', 'mental_illness_type_v2', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (506, 'If you responded "Yes", select which type of diabetes:', 'diabetes_type_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (507, 'Have you ever been diagnosed with cancer?', 'cancer_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (508, 'Participant Name', 'RIS_PARTICIPANT_NAME', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (509, 'Are you genetically related?', 'RIS_IS_RELATED', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (510, 'Does this person live with you?', 'RIS_IS_LIVING_WITH', false);
 
 
-/* STEP 4: add the new list of categories to the database. */
-insert into ag.survey_group (group_order, american) values (-10, 'Basic Information');
-insert into ag.survey_group (group_order, american) values (-11, 'At Home');
-insert into ag.survey_group (group_order, american) values (-12, 'Lifestyle');
-insert into ag.survey_group (group_order, american) values (-13, 'Gut');
-insert into ag.survey_group (group_order, american) values (-14, 'General Health');
-insert into ag.survey_group (group_order, american) values (-15, 'Health Diagnosis');
-insert into ag.survey_group (group_order, american) values (-16, 'Allergies');
-insert into ag.survey_group (group_order, american) values (-17, 'Diet');
-insert into ag.survey_group (group_order, american) values (-18, 'Detailed Diet');
-insert into ag.survey_group (group_order, american) values (-19, 'Migraine');
-insert into ag.survey_group (group_order, american) values (-20, 'Surfers');
-insert into ag.survey_group (group_order, american) values (-21, 'COVID19 Questionnaire');
-
-
-/* STEP 5: once the categories have been added, they can be associated with survey ids.*/
-insert into ag.surveys (survey_id, survey_group) values(10, -10);
-insert into ag.surveys (survey_id, survey_group) values(11, -11);
-insert into ag.surveys (survey_id, survey_group) values(12, -12);
-insert into ag.surveys (survey_id, survey_group) values(13, -13);
-insert into ag.surveys (survey_id, survey_group) values(14, -14);
-insert into ag.surveys (survey_id, survey_group) values(15, -15);
-insert into ag.surveys (survey_id, survey_group) values(16, -16);
-insert into ag.surveys (survey_id, survey_group) values(17, -17);
-insert into ag.surveys (survey_id, survey_group) values(18, -18);
-insert into ag.surveys (survey_id, survey_group) values(19, -19);
-insert into ag.surveys (survey_id, survey_group) values(20, -20);
-insert into ag.surveys (survey_id, survey_group) values(21, -21);
-
-
-/* STEP 6: associate new and modified questions with a new survey_group,
-in the new order of appearance.
--- Retired questions must also be in a group for data migration and
--- preservation purposes. For now, they are part of group 10
--- (Basic Information). We will rely on filtering to not present them. */
+-- STEP 9: associate new and modified questions with a new survey_group,
+-- in the new order of appearance. Move retired questions to group 10.
 insert into ag.group_questions values (-10, 10, 1);
 insert into ag.group_questions values (-10, 12, 2);
 insert into ag.group_questions values (-10, 13, 3);
@@ -692,8 +694,7 @@ insert into ag.group_questions values(-21,234,27);
 insert into ag.group_questions values(-21,235,28);
 
 
-/* STEP 7: Add new unique values to the set of legal survey responses.
-   This step is not idempotent. */
+-- STEP 7: Add new unique values to the set of legal survey responses.
 insert into ag.survey_response (american) values('0');
 insert into ag.survey_response (american) values('1-2 times/week');
 insert into ag.survey_response (american) values('10');
@@ -961,13 +962,12 @@ insert into ag.survey_response (american) values('both equally');
 insert into ag.survey_response (american) values('few times/month');
 insert into ag.survey_response (american) values('indoors');
 insert into ag.survey_response (american) values('outdoors');
-
 insert into ag.survey_response (american) values ('City (population is more than 100,000 and less than 1 million)');
+insert into ag.survey_response (american) values('2021');
+insert into ag.survey_response (american) values('2022');
 
 
-/* STEP 8: Add possible responses and their display order for all new multiple
-   choice questions. */
-
+-- STEP 8: Add possible responses and their display order for all new multiple choice questions.
 -- drop index to allow for updates
 alter table ag.survey_question_response drop constraint idx_survey_question_response;
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (313, 'Unspecified', 0);
@@ -1499,13 +1499,11 @@ insert into ag.survey_question_response(survey_question_id, response, display_in
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (510, 'Yes', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (510, 'No', 2);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (510, 'Not sure', 3);
-
 -- recreate constraint
 alter table only ag.survey_question_response add constraint idx_survey_question_response unique (survey_question_id, display_index);
 
 
-/* STEP 9: Add response types for new questions. */
--- 161 appears to have been missing
+-- STEP 9: Add response types for new questions.
 insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (161, 'SINGLE');
 insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (313, 'SINGLE');
 insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (316, 'STRING');
@@ -1584,7 +1582,7 @@ insert into ag.survey_question_response_type (survey_question_id, survey_respons
 insert into ag.survey_question_response_type (survey_question_id, survey_response_type) values (507, 'SINGLE');
 
 
-/* STEP 10 Add triggers for nested questions. */
+-- STEP 10 Add triggers for nested questions.
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (149, 'Yes',150);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (153, 'Self-diagnosed',154);
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (153, 'Yes, diagnosed by a licensed mental health professional', 154);
@@ -1636,26 +1634,10 @@ insert into ag.survey_question_triggers (survey_question_id, triggering_response
 insert into ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) values (500, 'Yes',375);
 
 
-/* We can't make this part idempotent because we can't delete these responses
-   and recreate them with different display_indexes. They are already used as
-   foreign keys for all previous responses. However we can alter display_index
-   values. */
-insert into ag.survey_response (american) values('2021');
-insert into ag.survey_response (american) values('2022');
-
--- drop index to allow display_index increment
+-- Add two years to existing set of valid responses for birth year.
 alter table ag.survey_question_response drop constraint idx_survey_question_response;
-
--- add 2 years to 112
 update ag.survey_question_response set display_index = -2 where response = 'Unspecified' and survey_question_id = 112;
 insert into ag.survey_question_response (survey_question_id, response, display_index) values (112, '2021', 0);
 insert into ag.survey_question_response (survey_question_id, response, display_index) values (112, '2022', -1);
 update ag.survey_question_response set display_index = display_index + 2 where survey_question_id = 112;
-
-
---re-enable constraint
 alter table only ag.survey_question_response add constraint idx_survey_question_response unique (survey_question_id, display_index);
-
-
-
-
