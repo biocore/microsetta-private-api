@@ -12,7 +12,7 @@ drop table ag.tmp_tbl3;
 -- STEP 2: add retired column to surveys table and retire existing survey
 -- templates.
 alter table ag.surveys add column retired boolean default false;
-update ag.surveys set retired = false where survey_id < 10;
+update ag.surveys set retired = true where survey_id < 10;
 
 
 -- STEP 3: add the new list of categories to the set of groups.

@@ -34,7 +34,6 @@ class SurveyAnswersRepo(BaseRepo):
                         "WHERE survey_id=%s "
                         "LIMIT 1",
                         (survey_answers_id,))
-
             rows = cur.fetchall()
 
             cur.execute("SELECT survey_id, survey_question_id "
@@ -104,7 +103,7 @@ class SurveyAnswersRepo(BaseRepo):
             cur.execute("SELECT surveys.survey_id FROM "
                         "group_questions "
                         "LEFT JOIN surveys USING (survey_group) "
-                        "WHERE survey_question_id = %s",
+                        "WHERE survey_question_id = %s and retired is false",
                         (arbitrary_question_id,))
 
             survey_template_id = cur.fetchone()[0]
