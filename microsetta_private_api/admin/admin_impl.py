@@ -542,6 +542,21 @@ def create_daklapack_orders(body, token_info):
     return response
 
 
+# We need an internal wrapper to create orders based on contributions coming
+# from Fundrazr without authenticating an admin user.
+# Do NOT expose an API endpoint for this.
+def create_daklapack_order_internal(order_dict):
+    # Since we've established the consent dummy as a stable account across
+    # dev, staging, and production, we'll continue to use that for internal purposes
+    with Transaction() as t:
+        account_repo = AccountRepo(t)
+        order_dict[SUBMITTER_ACCT_KEY] = account_repo.get_account(
+            "000fc4cd-8fa4-db8b-e050-8a800c5d81b7")
+
+    result = _create_daklapack_order(order_dict)
+    return result
+
+
 def _create_daklapack_order(order_dict):
     order_dict[ORDER_ID_KEY] = str(uuid.uuid4())
 

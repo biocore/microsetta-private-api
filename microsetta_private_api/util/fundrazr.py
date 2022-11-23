@@ -5,6 +5,8 @@ from microsetta_private_api.repo.campaign_repo import UserTransaction
 from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.localization import EN_US
 from microsetta_private_api.config_manager import SERVER_CONFIG
+import datetime
+import time
 
 
 @celery.task(ignore_result=True)
@@ -20,9 +22,12 @@ def get_fundrazr_transactions(test_transaction=None):
         latest = tr.most_recent_transaction(transaction_source=tr.TRN_TYPE_FUNDRAZR,  # noqa
                                             include_anonymous=True)
 
-        # if we do not have any transactions, we don't have anything recent
+        # We've decided that there's no reason to copy all of the old
+        # transactions into our database. In the absence of a prior
+        # transaction to work from, we'll start looking for data at 2022-11-15
         if latest is None:
-            unixtimestamp = None
+            relaunch_date = datetime.datetime(2022, 11, 15)
+            unixtimestamp = int(time.mktime(relaunch_date.timetuple()))
         else:
             unixtimestamp = latest.created_as_unixts()
 

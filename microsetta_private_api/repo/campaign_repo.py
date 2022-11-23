@@ -584,14 +584,15 @@ class UserTransaction(BaseRepo):
                         data)
 
             if items is not None:
-                inserts = [(payment.transaction_id, i.id, i.quantity)
+                inserts = [(payment.transaction_id, i.id, i.quantity, False)
                            for i in items]
 
                 try:
                     cur.executemany("""INSERT INTO
                                            campaign.fundrazr_transaction_perk
-                                       (transaction_id, perk_id, quantity)
-                                       VALUES (%s, %s, %s)""",
+                                       (transaction_id, perk_id, quantity,
+                                       processed)
+                                       VALUES (%s, %s, %s, %s)""",
                                     inserts)
                 except psycopg2.errors.ForeignKeyViolation:
                     # this would indicate a synchronization issue, where
