@@ -80,6 +80,6 @@ CREATE TABLE campaign.ffq_registration_codes (
 CREATE TABLE campaign.fundrazr_ffq_codes (
     fundrazr_transaction_perk_id UUID NOT NULL,
     ffq_registration_code VARCHAR NOT NULL,
-    CONSTRAINT fk_ftp_id FOREIGN KEY (fundrazr_transaction_perk_id) REFERENCES campaign.fundrazr_transaction_perk (id),
+    CONSTRAINT fk_ftp_id_ffq FOREIGN KEY (fundrazr_transaction_perk_id) REFERENCES campaign.fundrazr_transaction_perk (id),
     CONSTRAINT fk_ffq_code FOREIGN KEY (ffq_registration_code) REFERENCES campaign.ffq_registration_codes (ffq_registration_code)
 )
