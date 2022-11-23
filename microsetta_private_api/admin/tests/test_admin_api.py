@@ -836,7 +836,7 @@ class AdminApiTests(TestCase):
         self.assertEqual(set(result.keys()), {'000069747', '000051101'})
 
     def test_metadata_qiita_compatible_valid_private(self):
-        data = json.dumps({'sample_barcodes': ['000043062', '000023842']})
+        data = json.dumps({'sample_barcodes': ['000004216']})
         response = self.client.post('/api/admin/metadata/qiita-compatible'
                                     '?include_private=True',
                                     content_type='application/json',
@@ -844,9 +844,9 @@ class AdminApiTests(TestCase):
                                     headers=MOCK_HEADERS)
         self.assertEqual(200, response.status_code)
         result = json.loads(response.data)
-        self.assertEqual(set(result.keys()), {'000043062', '000023842'})
-        obs = {c.lower() for c in result['000043062']}
-        self.assertIn('allergic_to_peanuts', obs)
+        self.assertEqual(set(result.keys()), {'000004216'})
+        obs = {c.lower() for c in result['000004216']}
+        self.assertIn('about_yourself_text', obs)
 
     def test_metadata_qiita_compatible_valid_no_private(self):
         data = json.dumps({'sample_barcodes': ['000043062', '000023842']})

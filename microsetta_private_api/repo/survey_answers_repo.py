@@ -124,7 +124,7 @@ class SurveyAnswersRepo(BaseRepo):
         :param survey_ids: A list of survey ids.
         :return: A list of (survey_id, survey_template_id) tuples.
         '''
-        res = self._local_survey_template_ids_from_survey_ids(survey_ids)
+        res = self._local_survey_template_ids_from_survey_ids2(survey_ids)
 
         # check to see if any of the survey ids are associated with a remote
         # survey.
@@ -178,6 +178,18 @@ class SurveyAnswersRepo(BaseRepo):
                 return [(survey_id, SurveyTemplateRepo.MYFOODREPO_ID)]
 
         return []
+
+    def _local_survey_template_ids_from_survey_ids2(self, survey_ids):
+        with self._transaction.cursor() as cur:
+            # note these ids are unique string ids, not integer ids.
+            ids = [f"'{x}'" for x in survey_ids]
+
+            sql = ("select survey_id, survey_template_id from ag.ag_login_surveys where survey_id in (%s)" % ','.join(ids))
+
+            cur.execute(sql)
+
+            res = [(x[0], x[1]) for x in cur.fetchall()]
+            return res
 
     def _local_survey_template_ids_from_survey_ids(self, survey_ids):
         '''

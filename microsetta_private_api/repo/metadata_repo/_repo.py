@@ -19,6 +19,9 @@ jsonify = json.dumps
 # that account has a long and unusual history though
 # Adding the MyFoodRepo, Polyphenol FFQ, and Spain FFQs to the
 # ignore list.
+# do not add legacy template_ids (1-7) to this dict at this time.
+# there are users of this dict that process valid grabs on legacy template
+# dagta.
 TEMPLATES_TO_IGNORE = {10001, 10002, 10003, 10004, None}
 
 # TODO 2022-10-03
@@ -100,12 +103,16 @@ def retrieve_metadata(sample_barcodes, include_private=False,
     for sample_barcode in set(sample_barcodes):
         try:
             bc_md, errors = _fetch_barcode_metadata(sample_barcode)
-            if omit_retired:
-                retired_q = _fetch_retired_questions()
-                for template in bc_md['survey_answers']:
-                    template['response'] = {key: value for (key, value)
-                                            in template['response'].items()
-                                            if int(key) not in retired_q}
+
+            # we may not have situations at that require omitting
+            # retired. temporarily disabled this functionality. TODO
+            # evaluate and remove if not needed.
+            # if omit_retired:
+            #     retired_q = _fetch_retired_questions()
+            #     for template in bc_md['survey_answers']:
+            #         template['response'] = {key: value for (key, value)
+            #                                 in template['response'].items()
+            #                                 if int(key) not in retired_q}
         except RepoException as e:
             errors = e.args[0]
         except NotFound as e:
@@ -125,7 +132,8 @@ def retrieve_metadata(sample_barcodes, include_private=False,
         if st_errors is not None:
             error_report.append(st_errors)
         else:
-
+            # TODO: error is here. We have the right fetched data,
+            # but survey_templates is {}.
             df_errors, df = _to_pandas_dataframe(fetched, survey_templates)
             if df_errors:
                 error_report.extend(df_errors)
@@ -247,6 +255,7 @@ def _to_pandas_dataframe(metadatas, survey_templates):
 
     multiselect_map = _construct_multiselect_map(survey_templates)
     for metadata in metadatas:
+        # metadata is a dict representing a barcode's metadata.
         try:
             as_series = _to_pandas_series(metadata, multiselect_map)
         except RepoException as e:
@@ -315,6 +324,8 @@ def _construct_multiselect_map(survey_templates):
 
         for group in template_text.groups:
             for field in group.fields:
+                # some vues are apparently missing values property
+                # assert hasattr(field, 'values')
                 if not field.multi:
                     continue
 
@@ -411,6 +422,24 @@ def _to_pandas_series(metadata, multiselect_map):
         else:
             collected.add(template)
 
+            # TODO: test_metadata_qiita_compatible_valid_private() fails 
+            # on valid input (barcode 000004216). A legacy survey of type
+            # survey_template_id = 5 is attached this barcode. Most/all
+            # questions in 5 are sensitive (beginning w/'pm_'). Instead of
+            # filtering out these questions when the option is passed, and
+            # returning them when requested, both result sets are identical.
+            #
+            # This is because multiselect_map silently fails when a valid
+            # (template, qid) is not in multiselect_map. multiselect_map is
+            # created using vue-based information, but I think it could be
+            # done using backend information instead. Currently there is
+            # vue-related information for template 1, which has no pm_
+            # questions, but not template 5. All pm_ questions appear to be
+            # in template 5 and only template 5. Not sure how this test
+            # worked properly before but we will need to add vue-related
+            # metadata for template 5 or re-implement multiselect_map
+            # generation to not rely on it.
+
         for qid, (shortname, answer) in survey['response'].items():
             if (template, qid) in multiselect_map:
                 # if we have a question that is a multiselect
@@ -430,10 +459,19 @@ def _to_pandas_series(metadata, multiselect_map):
 
                     values.append('true')
                     index.append(specific_shortname)
-            else:
+
                 # free text fields from the API come down as ["foo"]
+                # TODO: In addition to free text, if a multiselect
+                # type value is not in multiselect_map, the strip()
+                # property will fail because answer is a still list not a
+                # string.
+                # answer = ','.join(answer)
                 values.append(answer.strip('[]"'))
                 index.append(shortname)
+            else:
+                # show silent fails when tuples are not in multiselect
+                # map.
+                print("%s, %s not in multiselect_map" % (template, qid))
 
     for variable, value in sample_invariants.items():
         index.append(variable)
