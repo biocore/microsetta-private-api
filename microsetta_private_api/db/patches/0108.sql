@@ -73,7 +73,7 @@ CREATE TABLE campaign.subscriptions_fulfillment (
 -- although it will not be tied to an email address.
 CREATE TABLE campaign.ffq_registration_codes (
     ffq_registration_code VARCHAR PRIMARY KEY,
-    registration_code_used TIMESTAMP -- Nullable => null = unused code
+    registration_code_used TIMESTAMP -- Nullable as null = unused code
 )
 
 -- Create a record of the fulfillment of FFQ codes relative to a transaction/perk combination.
