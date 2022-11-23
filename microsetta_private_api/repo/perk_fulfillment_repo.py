@@ -19,9 +19,9 @@ class PerkFulfillmentRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
 
-    def _row_to_subscription(self, r):
-        return Subscription(r['subscription_id'], r['transaction_id'],
-                            r['account_id'], r['cancelled'],)
+    @staticmethod
+    def _row_to_subscription(r):
+        return Subscription.from_dict(r)
 
     def find_perks_without_fulfillment_details(self):
         """If a perk isn't represented in our system at all, the transaction
@@ -532,7 +532,7 @@ class PerkFulfillmentRepo(BaseRepo):
             if row is None:
                 return None
             else:
-                return self._row_to_subscription(row)
+                return PerkFulfillmentRepo._row_to_subscription(row)
 
     def cancel_subscription(self, subscription_id):
         """Cancels a subscription and associated future fulfillments

@@ -450,11 +450,80 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
             row = cur.fetchone()
             self.assertEqual(row['ffq_count'], 3)
 
-    def test_get_subscription_by_id(self):
-        # create subscription
-        # retrieve it using transaction_id
-        # retrieve it using subscription_id
-        print("Hello")
+    @patch(
+        "microsetta_private_api.repo.perk_fulfillment_repo."
+        "create_daklapack_order_internal"
+    )
+    @patch("microsetta_private_api.repo.interested_user_repo.verify_address")
+    def test_get_subscription_by_id(
+            self,
+            verify_address_result,
+            test_daklapack_order_result
+    ):
+        test_daklapack_order_result.return_value = {
+            "order_address": "wedontcareaboutthis",
+            "order_success": True,
+            "order_id": DUMMY_ORDER_ID
+        }
+        verify_address_result.return_value = VERIFY_ADDRESS_DICT
+
+        # We're going to add a transaction for one subscription.
+        # We should observe one new record in the registration_codes,
+        # fundrazr_ffq_codes, fundrazr_daklapack_orders, and subscriptions
+        # tables. We should also observe eight new records in the
+        # subscriptions_fulfillment table.
+
+        # We have to mock out the actual Daklapack order since it's an
+        # external resource.
+        with Transaction() as t:
+            # create a dummy Daklapack order
+            acct_repo = AccountRepo(t)
+            submitter_acct = acct_repo.get_account(SUBMITTER_ID)
+
+            creation_timestamp = dateutil.parser.isoparse(
+                "2020-10-09T22:43:52.219328Z")
+            last_polling_timestamp = dateutil.parser.isoparse(
+                "2020-10-19T12:40:19.219328Z")
+            desc = "a description"
+            planned_send_date = datetime.date(2032, 2, 9)
+            last_status = "accepted"
+
+            # create dummy daklapack order object
+            input = DaklapackOrder(DUMMY_ORDER_ID, submitter_acct,
+                                   PROJECT_IDS, DUMMY_DAKLAPACK_ORDER, desc,
+                                   planned_send_date, creation_timestamp,
+                                   last_polling_timestamp, last_status)
+
+            # call create_daklapack_order
+            admin_repo = AdminRepo(t)
+            returned_id = admin_repo.create_daklapack_order(input)
+
+            ut = UserTransaction(t)
+            ut.add_transaction(TRANSACTION_ONE_SUBSCRIPTION)
+            pfr = PerkFulfillmentRepo(t)
+            res = pfr.process_pending_fulfillments()
+
+            # Confirm the fulfillment processed
+            self.assertEqual(len(res), 0)
+
+            cur = t.dict_cursor()
+
+            # We need to grab the subscription ID
+            cur.execute(
+                "SELECT s.subscription_id "
+                "FROM campaign.subscriptions s "
+                "INNER JOIN campaign.fundrazr_daklapack_orders fdo "
+                "ON s.fundrazr_transaction_perk_id = "
+                "fdo.fundrazr_transaction_perk_id AND fdo.dak_order_id = %s",
+                (returned_id, )
+            )
+            row = cur.fetchone()
+            subscription_id = row['subscription_id']
+
+            subscription = pfr.get_subscription_by_id(subscription_id)
+
+            # Confirm that we can retrieve the subscription by id
+            self.assertEqual(subscription.subscription_id, subscription_id)
 
     def _count_ffq_registration_codes(self, t):
         cur = t.cursor()
