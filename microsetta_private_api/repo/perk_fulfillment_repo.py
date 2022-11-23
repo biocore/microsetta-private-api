@@ -111,8 +111,9 @@ class PerkFulfillmentRepo(BaseRepo):
                                            row['dak_article_code'],
                                            False)
                     else:
-                        country = pycountry.countries.get(alpha_2=
-                                                          row['country'])
+                        country = pycountry.countries.get(
+                            alpha_2=row['country']
+                        )
                         country_name = country.name
 
                         projects =\
@@ -130,12 +131,13 @@ class PerkFulfillmentRepo(BaseRepo):
                             "countryCode": row['country'],
                             "phone": row['phone']
                         }
-                        status, return_val =\
-                           self._fulfill_kit(row['ftp_id'],
-                                             projects,
-                                             row['dak_article_code'],
-                                             1,
-                                             address_dict)
+                        status, return_val = self._fulfill_kit(
+                            row['ftp_id'],
+                            projects,
+                            row['dak_article_code'],
+                            1,
+                            address_dict
+                        )
                         if not status:
                             # Daklapack order failed, let the error percolate
                             error_report.append(return_val)
@@ -206,8 +208,9 @@ class PerkFulfillmentRepo(BaseRepo):
                         self._campaign_id_to_projects(row['campaign_id'])
 
                     if row['account_id']:
-                        country = pycountry.countries.get(alpha_2=
-                                                          row['a_country'])
+                        country = pycountry.countries.get(
+                            alpha_2=row['a_country']
+                        )
                         country_name = country.name
 
                         address_dict = {
@@ -224,8 +227,9 @@ class PerkFulfillmentRepo(BaseRepo):
                             "phone": row['a_phone']
                         }
                     else:
-                        country = pycountry.countries.get(alpha_2=
-                                                          row['country'])
+                        country = pycountry.countries.get(
+                            alpha_2=row['country']
+                        )
                         country_name = country.name
 
                         address_dict = {

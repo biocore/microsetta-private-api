@@ -547,7 +547,7 @@ def create_daklapack_orders(body, token_info):
 # Do NOT expose an API endpoint for this.
 def create_daklapack_order_internal(order_dict):
     # Since we've established the consent dummy as a stable account across
-    # dev, staging, and production, we'll continue to use that for internal purposes
+    # dev, staging, and production, we'll continue to use that internally
     with Transaction() as t:
         account_repo = AccountRepo(t)
         order_dict[SUBMITTER_ACCT_KEY] = account_repo.get_account(

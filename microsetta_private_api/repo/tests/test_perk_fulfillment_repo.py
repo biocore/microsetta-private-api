@@ -1,5 +1,4 @@
 import unittest
-from unittest import skipIf
 import datetime
 import uuid
 from unittest.mock import patch
@@ -118,7 +117,7 @@ TRANSACTION_FAKE_PERK = FundRazrPayment(
 DUMMY_ORDER_ID = str(uuid.uuid4())
 SUBMITTER_ID = "000fc4cd-8fa4-db8b-e050-8a800c5d81b7"
 SUBMITTER_NAME = "demo demo"
-PROJECT_IDS = [1,]
+PROJECT_IDS = [1, ]
 DUMMY_DAKLAPACK_ORDER = {
     'orderId': DUMMY_ORDER_ID,
     'articles': [
