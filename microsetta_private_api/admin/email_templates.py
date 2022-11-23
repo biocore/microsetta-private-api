@@ -79,6 +79,38 @@ class EmailMessage(Enum):
         EventType.EMAIL,
         EventSubtype.EMAIL_SUBMIT_INTEREST_CONFIRMATION
     )
+    thank_you_with_kit = (
+        gettext(
+            "Registration code & kit update!"),
+        "email/thank_you_with_kit.jinja2",
+        ("first_name", "registration_code", "interface_endpoint"),
+        EventType.EMAIL,
+        EventSubtype.EMAIL_THANK_YOU_WITH_KIT
+    )
+    thank_you_no_kit = (
+        gettext(
+            "Your questionnaire is ready!"),
+        "email/thank_you_no_kit.jinja2",
+        ("first_name", "registration_code", "interface_endpoint"),
+        EventType.EMAIL,
+        EventSubtype.EMAIL_THANK_YOU_NO_KIT
+    )
+    kit_tracking_number = (
+        gettext(
+            "Your Kit is on its way!"),
+        "email/kit_tracking_number.jinja2",
+        ("first_name", "tracking_number"),
+        EventType.EMAIL,
+        EventSubtype.EMAIL_KIT_TRACKING_NUMBER
+    )
+    subscription_ffq_code = (
+        gettext(
+            "Registration code & kit update!"),
+        "email/subscription_ffq_code.jinja2",
+        ("first_name", "tracking_number", "interface_endpoint"),
+        EventType.EMAIL,
+        EventSubtype.EMAIL_SUBSCRIPTION_FFQ_CODE
+    )
 
     def __init__(self, subject, html, required, event_type, event_sub):
         self.subject = subject

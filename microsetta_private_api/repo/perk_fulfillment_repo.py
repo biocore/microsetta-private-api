@@ -10,6 +10,9 @@ from microsetta_private_api.admin.admin_impl import\
 from microsetta_private_api.model.daklapack_order import FEDEX_PROVIDER,\
     FEDEX_2DAY_SHIPPING
 from microsetta_private_api.model.activation_code import ActivationCode
+from microsetta_private_api.tasks import send_email
+from microsetta_private_api.localization import EN_US
+from microsetta_private_api.config_manager import SERVER_CONFIG
 
 
 class PerkFulfillmentRepo(BaseRepo):
@@ -87,8 +90,34 @@ class PerkFulfillmentRepo(BaseRepo):
                         self._schedule_ffq(subscription_id, fulfillment_date,
                                            False)
                     else:
-                        self._fulfill_ffq(row['ftp_id'], row['first_name'],
-                                          row['payer_email'])
+                        registration_code = self._fulfill_ffq(
+                            row['ftp_id']
+                        )
+
+                        # If the perk is a kit or subscription, send thank you
+                        # email with kit content. Otherwise, send thank you
+                        # for FFQ only
+                        if row['kit_quantity'] > 0:
+                            template = "thank_you_with_kit"
+                        else:
+                            template = "thank_you_no_kit"
+
+                        try:
+                            send_email(
+                                row['payer_email'],
+                                template,
+                                {
+                                    "first_name": row['first_name'],
+                                    "registration_code": registration_code,
+                                    "interface_endpoint":
+                                        SERVER_CONFIG["interface_endpoint"]
+                                },
+                                EN_US
+                            )
+                        except:  # noqa
+                            # try our best to email
+                            pass
+
                         if row['ffq_quantity'] > 0 and\
                                 row['fulfillment_spacing_number'] > 0:
                             # If this is the first FFQ of a subscription,
@@ -194,15 +223,34 @@ class PerkFulfillmentRepo(BaseRepo):
             rows = cur.fetchall()
             for row in rows:
                 if row['fulfillment_type'] == "ffq":
+                    registration_code = self._fulfill_ffq(row['ftp_id'])
+
                     # If an account is linked to the subscription, we use
                     # that account's first name and email
                     if row['account_id']:
-                        self._fulfill_ffq(row['ftp_id'], row['a_first_name'],
-                                          row['a_email'])
+                        email = row['a_email']
+                        first_name = row['first_name']
                     # If no account, fall back to original Fundrazr data
                     else:
-                        self._fulfill_ffq(row['ftp_id'], row['iu_first_name'],
-                                          row['payer_email'])
+                        email = row['payer_email']
+                        first_name = row['iu_first_name']
+
+                    try:
+                        send_email(
+                            email,
+                            "subscription_ffq_code",
+                            {
+                                "first_name": first_name,
+                                "registration_code": registration_code,
+                                "interface_endpoint":
+                                    SERVER_CONFIG["interface_endpoint"]
+                            },
+                            EN_US
+                        )
+                    except:  # noqa
+                        # try our best to email
+                        pass
+
                 elif row['fulfillment_type'] == "kit":
                     projects = \
                         self._campaign_id_to_projects(row['campaign_id'])
@@ -294,8 +342,20 @@ class PerkFulfillmentRepo(BaseRepo):
             )
             rows = cur.fetchall()
             for r in rows:
-                print("Send tracking info!")
-                # send the email here
+                try:
+                    send_email(
+                        r['payer_email'],
+                        "kit_tracking_number",
+                        {
+                            "first_name": r['payer_first_name'],
+                            "tracking_number": r['outbound_fedex_tracking']
+                        },
+                        EN_US
+                    )
+                except:  # noqa
+                    # try our best to email
+                    pass
+
                 cur.execute(
                     "UPDATE campaign.fundrazr_daklapack_orders "
                     "SET tracking_sent = true "
@@ -332,7 +392,7 @@ class PerkFulfillmentRepo(BaseRepo):
                 )
             return True, result['order_id']
 
-    def _fulfill_ffq(self, ftp_id, first_name, email):
+    def _fulfill_ffq(self, ftp_id):
         code = ActivationCode.generate_code()
         with self._transaction.cursor() as cur:
             cur.execute(
@@ -347,7 +407,7 @@ class PerkFulfillmentRepo(BaseRepo):
                 ") VALUES (%s, %s)",
                 (ftp_id, code)
             )
-            # send the email here
+        return code
 
     def _schedule_kit(self, subscription_id, fulfillment_date,
                       dak_article_code, fulfilled):
