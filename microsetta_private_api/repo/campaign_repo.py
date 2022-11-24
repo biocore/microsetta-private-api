@@ -28,7 +28,8 @@ class CampaignRepo(BaseRepo):
         return (c.campaign_id, c.title, c.instructions, c.header_image,
                 c.permitted_countries, c.language_key,
                 c.accepting_participants, '',
-                c.language_key_alt, c.title_alt, c.instructions_alt)
+                c.language_key_alt, c.title_alt, c.instructions_alt,
+                c.send_thdmi_confirmation, c.force_primary_language)
 
     def _row_to_campaign(self, r):
         associated_projects = ", ".join(self._get_projects(r['campaign_id']))
@@ -36,7 +37,9 @@ class CampaignRepo(BaseRepo):
                         r['header_image'], r['permitted_countries'],
                         r['language_key'], r['accepting_participants'],
                         associated_projects, r['language_key_alt'],
-                        r['title_alt'], r['instructions_alt'])
+                        r['title_alt'], r['instructions_alt'],
+                        r['send_thdmi_confirmation'],
+                        r['force_primary_language'])
 
     def _get_projects(self, campaign_id):
         with self._transaction.cursor() as cur:
@@ -66,7 +69,8 @@ class CampaignRepo(BaseRepo):
                 "SELECT campaign_id, title, instructions, header_image, "
                 "permitted_countries, language_key, accepting_participants, "
                 "language_key_alt, title_alt, "
-                "instructions_alt "
+                "instructions_alt, send_thdmi_confirmation, "
+                "force_primary_language "
                 "FROM campaign.campaigns ORDER BY title"
             )
             rows = cur.fetchall()
@@ -86,24 +90,37 @@ class CampaignRepo(BaseRepo):
         title_alt = kwargs.get('title_alt')
         instructions_alt = kwargs.get('instructions_alt')
         extension = kwargs.get('extension')
+        send_thdmi_confirmation = kwargs.get('send_thdmi_confirmation', False)
+        force_primary_language = kwargs.get('force_primary_language', False)
 
         with self._transaction.cursor() as cur:
             cur.execute(
                 "INSERT INTO campaign.campaigns (title, instructions, "
                 "permitted_countries, language_key, accepting_participants, "
                 "language_key_alt, title_alt, "
-                "instructions_alt) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s) "
+                "instructions_alt, send_thdmi_confirmation, "
+                "force_primary_language) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
                 "RETURNING campaign_id",
                 (title, instructions, permitted_countries, language_key,
                  accepting_participants, language_key_alt, title_alt,
-                 instructions_alt)
+                 instructions_alt, send_thdmi_confirmation,
+                 force_primary_language)
             )
             campaign_id = cur.fetchone()[0]
 
             if campaign_id is None:
                 raise RepoException("Error inserting campaign into database")
             else:
+                # This code is not ideal but the various campaign creation
+                # methods pass several different datatypes in.
+                if isinstance(associated_projects, tuple):
+                    associated_projects = list(associated_projects)
+                elif isinstance(associated_projects, str):
+                    associated_projects = associated_projects.split(",")
+                elif isinstance(associated_projects, int):
+                    associated_projects = [associated_projects, ]
+
                 cur.executemany(
                     "INSERT INTO campaign.campaigns_projects ("
                     "campaign_id,project_id"
@@ -132,17 +149,21 @@ class CampaignRepo(BaseRepo):
         title_alt = kwargs.get('title_alt')
         instructions_alt = kwargs.get('instructions_alt')
         extension = kwargs.get('extension')
+        send_thdmi_confirmation = kwargs.get('send_thdmi_confirmation')
+        force_primary_language = kwargs.get('force_primary_language')
 
         with self._transaction.cursor() as cur:
             cur.execute(
                 "UPDATE campaign.campaigns SET title = %s, instructions = %s, "
                 "permitted_countries = %s, language_key = %s, "
                 "accepting_participants = %s, language_key_alt = %s, "
-                "title_alt = %s, instructions_alt = %s "
+                "title_alt = %s, instructions_alt = %s, "
+                "send_thdmi_confirmation = %s, force_primary_language = %s "
                 "WHERE campaign_id = %s",
                 (title, instructions, permitted_countries, language_key,
                  accepting_participants, language_key_alt, title_alt,
-                 instructions_alt, campaign_id)
+                 instructions_alt, send_thdmi_confirmation,
+                 force_primary_language, campaign_id)
             )
 
             self.update_header_image(campaign_id, extension)
@@ -156,7 +177,8 @@ class CampaignRepo(BaseRepo):
                     "SELECT campaign_id, title, instructions, header_image, "
                     "permitted_countries, language_key, "
                     "accepting_participants, "
-                    "language_key_alt, title_alt, instructions_alt "
+                    "language_key_alt, title_alt, instructions_alt, "
+                    "send_thdmi_confirmation, force_primary_language "
                     "FROM campaign.campaigns WHERE campaign_id = %s",
                     (campaign_id,)
                 )

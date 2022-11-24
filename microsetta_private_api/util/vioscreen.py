@@ -73,7 +73,7 @@ def gen_survey_url(user_id,
 
     # We'll default to the US version if there isn't a country specific one
     # available.
-    ffq = COUNTRY_CODE_TO_FFQ.get(country_code, 'US')
+    ffq = COUNTRY_CODE_TO_FFQ.get(country_code, '')
     if ffq == '':
         ffq = f"{regcode}"
     else:
