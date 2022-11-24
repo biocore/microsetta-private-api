@@ -35,6 +35,7 @@ from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
 from microsetta_private_api.qiita import qclient
 from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
+import csv
 
 
 def search_barcode(token_info, sample_barcode):
@@ -844,9 +845,10 @@ def delete_account(account_id, token_info):
     return None, 204
 
 
-def get_vioscreen_sample_to_user(token_info):
-    validate_admin_access(token_info)
-    with Transaction() as t:
-        st_repo = SurveyTemplateRepo(t)
-        data = st_repo.get_vioscreen_sample_to_user()
-    return jsonify(data), 200
+def bulk_scan(token_info, csv_input):
+    bulk_scan_dict = {}
+    reader = csv.reader(csv_input)
+    for line in reader:
+        if line[5]:
+            # we need to store each row in newly created table for bulk scan
+            bulk_scan_dict['']
