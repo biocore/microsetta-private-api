@@ -854,6 +854,13 @@ def delete_account(account_id, token_info):
     return None, 204
 
 
+def get_vioscreen_sample_to_user(token_info):
+    validate_admin_access(token_info)
+    with Transaction() as t:
+        st_repo = SurveyTemplateRepo(t)
+        data = st_repo.get_vioscreen_sample_to_user()
+    return jsonify(data), 200
+
 def bulk_scan(token_info, csv_input):
     bulk_scan_dict = {}
     reader = csv.reader(csv_input)
