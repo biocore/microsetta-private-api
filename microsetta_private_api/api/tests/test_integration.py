@@ -65,10 +65,10 @@ DUMMY_ACCT = {
               }
 
 CONSENT_DOC_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2281"
-CONSENT_DOC = {"consent_type": "Adult Consent - Data",
+CONSENT_DOC = {"consent_type": "adult_data",
                "locale": "en_US",
                "consent": "Adult Data Consent",
-               "reconsent": '1'
+               "reconsent": 'true'
                }
 
 
@@ -1001,11 +1001,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {"age_range": "18-plus",
-                 "participant_name": "Joe Schmoe",
-                 "parent_1_name": "Mr. Schmoe",
-                 "parent_2_name": "Mrs. Schmoe",
-                 "deceased_parent": 'false',
-                 "obtainer_name": "MojoJojo"
+                 "participant_name": "Joe Schmoe"
                  }),
             headers=MOCK_HEADERS
 
@@ -1030,14 +1026,10 @@ class IntegrationTests(TestCase):
     def test_sign_consent(self):
 
         SOURCE_DATA = {"age_range": "18-plus",
-                       "participant_name": "Joe Schmoe",
-                       "parent_1_name": "demo",
-                       "parent_2_name": "demo",
-                       "deceased_parent": 'false',
-                       "obtainer_name": "demo"
+                       "participant_name": "Joe Schmoe"
                        }
 
-        SOURCE_DATA.update({"consent_type": "Adult Consent - Data"})
+        SOURCE_DATA.update({"consent_type": "adult_data"})
         SOURCE_DATA.update({"consent_id": CONSENT_DOC_ID})
 
         with Transaction() as t:
@@ -1061,7 +1053,7 @@ class IntegrationTests(TestCase):
 
         consent_status = self.client.get(
             '/api/accounts/%s/source/%s/consent/%s' %
-            (ACCT_ID, new_source["source_id"], "Data"),
+            (ACCT_ID, new_source["source_id"], "data"),
             headers=MOCK_HEADERS)
 
         consent_res = json.loads(consent_status.data)
@@ -1070,15 +1062,17 @@ class IntegrationTests(TestCase):
 
         response = self.client.post(
             '/api/accounts/%s/source/%s/consent/%s' %
-            (ACCT_ID, new_source["source_id"], "Data"),
+            (ACCT_ID, new_source["source_id"], "data"),
             content_type='application/json',
             data=json.dumps(SOURCE_DATA),
             headers=MOCK_HEADERS)
 
-        self.assertEqual(404, response.status_code)
+        self.assertEqual(201, response.status_code)
 
         with Transaction() as t:
             with t.cursor() as cur:
+                cur.execute("DELETE FROM ag.consent_audit WHERE "
+                            "source_id = %s", (new_source["source_id"],))
                 cur.execute("DELETE FROM ag.consent_documents"
                             " WHERE consent_id = %s", (CONSENT_DOC_ID,))
             t.commit()
@@ -1103,11 +1097,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {"age_range": "18-plus",
-                 "participant_name": "Joe Schmoe",
-                 "parent_1_name": "Mr. Schmoe",
-                 "parent_2_name": "Mrs. Schmoe",
-                 "deceased_parent": 'false',
-                 "obtainer_name": "MojoJojo"
+                 "participant_name": "Joe Schmoe"
                  }),
             headers=MOCK_HEADERS
 

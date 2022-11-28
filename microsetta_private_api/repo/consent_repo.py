@@ -150,14 +150,15 @@ class ConsentRepo(BaseRepo):
 
         for v in con:
             if v in doc.consent_type:
-                if None in (parent_1, parent_2, obtainer, deceased):
+                if None in (parent_1, parent_2):
                     res = False
                     return res
 
-        for value in (parent_1, parent_2, obtainer, deceased):
-            if value is not None:
-                res = False
-                return res
+        if "adult" in doc.consent_type:
+            for value in (parent_1, parent_2, obtainer, deceased):
+                if value is not None:
+                    res = False
+                    return res
 
         return res
 
