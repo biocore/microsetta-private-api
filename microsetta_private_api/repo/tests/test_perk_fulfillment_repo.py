@@ -388,7 +388,7 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
             ut = UserTransaction(t)
             ut.add_transaction(TRANSACTION_ONE_SUBSCRIPTION)
             pfr = PerkFulfillmentRepo(t)
-            res = pfr.process_pending_fulfillments()
+            pfr.process_pending_fulfillments()
 
             cur = t.dict_cursor()
 
@@ -496,7 +496,7 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
             ut = UserTransaction(t)
             ut.add_transaction(TRANSACTION_ONE_SUBSCRIPTION)
             pfr = PerkFulfillmentRepo(t)
-            res = pfr.process_pending_fulfillments()
+            pfr.process_pending_fulfillments()
 
             cur = t.dict_cursor()
 
