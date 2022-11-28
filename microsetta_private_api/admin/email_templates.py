@@ -97,7 +97,7 @@ class EmailMessage(Enum):
     )
     kit_tracking_number = (
         gettext(
-            "Your Kit is on its way!"),
+            "Your kit is on its way!"),
         "email/kit_tracking_number.jinja2",
         ("first_name", "tracking_number"),
         EventType.EMAIL,

@@ -1,5 +1,7 @@
 from microsetta_private_api.model.model_base import ModelBase
 
+FULFILLMENT_ACCOUNT_ID = "000fc4cd-8fa4-db8b-e050-8a800c5d81b7"
+
 
 class Subscription(ModelBase):
     def __init__(self, **kwargs):

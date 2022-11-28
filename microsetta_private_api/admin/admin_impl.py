@@ -35,6 +35,7 @@ from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
 from microsetta_private_api.qiita import qclient
 from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
+from microsetta_private_api.model.subscription import FULFILLMENT_ACCOUNT_ID
 
 
 def search_barcode(token_info, sample_barcode):
@@ -551,7 +552,7 @@ def create_daklapack_order_internal(order_dict):
     with Transaction() as t:
         account_repo = AccountRepo(t)
         order_dict[SUBMITTER_ACCT_KEY] = account_repo.get_account(
-            "000fc4cd-8fa4-db8b-e050-8a800c5d81b7")
+            FULFILLMENT_ACCOUNT_ID)
 
     result = _create_daklapack_order(order_dict)
     return result
