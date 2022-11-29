@@ -184,7 +184,9 @@ class SurveyAnswersRepo(BaseRepo):
             # note these ids are unique string ids, not integer ids.
             ids = [f"'{x}'" for x in survey_ids]
 
-            sql = ("select survey_id, survey_template_id from ag.ag_login_surveys where survey_id in (%s)" % ','.join(ids))
+            sql = ("select survey_id, survey_template_id from "
+                   "ag.ag_login_surveys where survey_id in (%s)" %
+                   ','.join(ids))
 
             cur.execute(sql)
 

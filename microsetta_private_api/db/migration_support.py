@@ -744,7 +744,7 @@ class MigrationSupport:
 
     @staticmethod
     def migrate_107(TRN):
-        import uuid
+        # import uuid
 
         # TODO: For now, keep this stub of a migration method for the minimal
         # amount of migration we plan to do.
@@ -752,6 +752,9 @@ class MigrationSupport:
 
         TRN.add(sql)
         rows = TRN.execute()[-1]
+
+        for row in rows:
+            print(row)
 
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,

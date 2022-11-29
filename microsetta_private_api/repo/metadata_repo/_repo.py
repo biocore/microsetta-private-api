@@ -413,31 +413,13 @@ def _to_pandas_series(metadata, multiselect_map):
         template = survey['template']
 
         if template in collected:
-            # HACK: there exist some samples that have duplicate surveys. This is
-            # unusual and unexpected state in the database, and has so far only been
-            # observed only with the surfers survey. The hacky solution is to only
-            # gather the results once
+            # HACK: there exist some samples that have duplicate surveys. This
+            # is unusual and unexpected state in the database, and has so far
+            # only been observed only with the surfers survey. The hacky
+            # solution is to only gather the results once
             continue
 
         collected.add(template)
-
-        # TODO: test_metadata_qiita_compatible_valid_private() fails 
-        # on valid input (barcode 000004216). A legacy survey of type
-        # survey_template_id = 5 is attached this barcode. Most/all
-        # questions in 5 are sensitive (beginning w/'pm_'). Instead of
-        # filtering out these questions when the option is passed, and
-        # returning them when requested, both result sets are identical.
-        #
-        # This is because multiselect_map silently fails when a valid
-        # (template, qid) is not in multiselect_map. multiselect_map is
-        # created using vue-based information, but I think it could be
-        # done using backend information instead. Currently there is
-        # vue-related information for template 1, which has no pm_
-        # questions, but not template 5. All pm_ questions appear to be
-        # in template 5 and only template 5. Not sure how this test
-        # worked properly before but we will need to add vue-related
-        # metadata for template 5 or re-implement multiselect_map
-        # generation to not rely on it.
 
         for qid, (shortname, answer) in survey['response'].items():
             if (template, qid) in multiselect_map:
