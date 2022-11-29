@@ -764,7 +764,7 @@ class MigrationSupport:
         # "0082.sql": migrate_82.__func__
         # ...
         "0096.sql": migrate_96.__func__,
-        "0105.sql": migrate_107.__func__,
+        "0107.sql": migrate_107.__func__,
     }
 
     @classmethod

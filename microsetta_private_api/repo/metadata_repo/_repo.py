@@ -407,38 +407,37 @@ def _to_pandas_series(metadata, multiselect_map):
     values = [hsi, collection_timestamp]
     index = ['HOST_SUBJECT_ID', 'COLLECTION_TIMESTAMP']
 
-    # HACK: there exist some samples that have duplicate surveys. This is
-    # unusual and unexpected state in the database, and has so far only been
-    # observed only with the surfers survey. The hacky solution is to only
-    # gather the results once
     collected = set()
 
-    # TODO: denote sample projects
     for survey in metadata['survey_answers']:
         template = survey['template']
 
         if template in collected:
+            # HACK: there exist some samples that have duplicate surveys. This is
+            # unusual and unexpected state in the database, and has so far only been
+            # observed only with the surfers survey. The hacky solution is to only
+            # gather the results once
             continue
-        else:
-            collected.add(template)
 
-            # TODO: test_metadata_qiita_compatible_valid_private() fails 
-            # on valid input (barcode 000004216). A legacy survey of type
-            # survey_template_id = 5 is attached this barcode. Most/all
-            # questions in 5 are sensitive (beginning w/'pm_'). Instead of
-            # filtering out these questions when the option is passed, and
-            # returning them when requested, both result sets are identical.
-            #
-            # This is because multiselect_map silently fails when a valid
-            # (template, qid) is not in multiselect_map. multiselect_map is
-            # created using vue-based information, but I think it could be
-            # done using backend information instead. Currently there is
-            # vue-related information for template 1, which has no pm_
-            # questions, but not template 5. All pm_ questions appear to be
-            # in template 5 and only template 5. Not sure how this test
-            # worked properly before but we will need to add vue-related
-            # metadata for template 5 or re-implement multiselect_map
-            # generation to not rely on it.
+        collected.add(template)
+
+        # TODO: test_metadata_qiita_compatible_valid_private() fails 
+        # on valid input (barcode 000004216). A legacy survey of type
+        # survey_template_id = 5 is attached this barcode. Most/all
+        # questions in 5 are sensitive (beginning w/'pm_'). Instead of
+        # filtering out these questions when the option is passed, and
+        # returning them when requested, both result sets are identical.
+        #
+        # This is because multiselect_map silently fails when a valid
+        # (template, qid) is not in multiselect_map. multiselect_map is
+        # created using vue-based information, but I think it could be
+        # done using backend information instead. Currently there is
+        # vue-related information for template 1, which has no pm_
+        # questions, but not template 5. All pm_ questions appear to be
+        # in template 5 and only template 5. Not sure how this test
+        # worked properly before but we will need to add vue-related
+        # metadata for template 5 or re-implement multiselect_map
+        # generation to not rely on it.
 
         for qid, (shortname, answer) in survey['response'].items():
             if (template, qid) in multiselect_map:
@@ -459,19 +458,15 @@ def _to_pandas_series(metadata, multiselect_map):
 
                     values.append('true')
                     index.append(specific_shortname)
-
-                # free text fields from the API come down as ["foo"]
-                # TODO: In addition to free text, if a multiselect
-                # type value is not in multiselect_map, the strip()
-                # property will fail because answer is a still list not a
-                # string.
-                # answer = ','.join(answer)
-                values.append(answer.strip('[]"'))
-                index.append(shortname)
             else:
-                # show silent fails when tuples are not in multiselect
-                # map.
-                print("%s, %s not in multiselect_map" % (template, qid))
+                if '["' in answer and '"]' in answer:
+                    # process this STRING/TEXT value
+                    index.append(shortname)
+                    values.append(answer.replace('["', '').replace('"]', ''))
+                else:
+                    # process this SINGLE value
+                    index.append(shortname)
+                    values.append(answer)
 
     for variable, value in sample_invariants.items():
         index.append(variable)
