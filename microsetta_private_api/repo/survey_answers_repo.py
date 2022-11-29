@@ -148,7 +148,7 @@ class SurveyAnswersRepo(BaseRepo):
                 uuid.UUID(survey_id)
                 cur.execute("SELECT EXISTS (SELECT polyphenol_ffq_id FROM "
                             "ag.polyphenol_ffq_registry WHERE "
-                            "polyphenol_ffq_id='%s')" % survey_id)
+                            "polyphenol_ffq_id=%s)", (survey_id,))
 
                 if cur.fetchone()[0] is True:
                     return [(survey_id, SurveyTemplateRepo.POLYPHENOL_FFQ_ID)]
@@ -160,8 +160,8 @@ class SurveyAnswersRepo(BaseRepo):
             try:
                 uuid.UUID(survey_id)
                 cur.execute("SELECT EXISTS (SELECT spain_ffq_id FROM "
-                            "ag.spain_ffq_registry WHERE spain_ffq_id='%s')" %
-                            survey_id)
+                            "ag.spain_ffq_registry WHERE spain_ffq_id=%s)",
+                            (survey_id,))
 
                 if cur.fetchone()[0] is True:
                     return [(survey_id, SurveyTemplateRepo.SPAIN_FFQ_ID)]
@@ -171,8 +171,8 @@ class SurveyAnswersRepo(BaseRepo):
 
             # myfoodrepo
             cur.execute("SELECT EXISTS (SELECT myfoodrepo_id FROM "
-                        "myfoodrepo_registry WHERE myfoodrepo_id='%s')" %
-                        survey_id)
+                        "myfoodrepo_registry WHERE myfoodrepo_id=%s)",
+                        (survey_id,))
 
             if cur.fetchone()[0] is True:
                 return [(survey_id, SurveyTemplateRepo.MYFOODREPO_ID)]
@@ -184,9 +184,8 @@ class SurveyAnswersRepo(BaseRepo):
             # note these ids are unique string ids, not integer ids.
             ids = [f"'{x}'" for x in survey_ids]
 
-            sql = ("select survey_id, survey_template_id from "
-                   "ag.ag_login_surveys where survey_id in (%s)" %
-                   ','.join(ids))
+            sql = ("SELECT survey_id, survey_template_id FROM "
+                   "ag.ag_login_surveys WHERE survey_id IN %s", (ids,))
 
             cur.execute(sql)
 
@@ -217,7 +216,7 @@ class SurveyAnswersRepo(BaseRepo):
                    "group_questions c, surveys d where a.survey_id = "
                    "b.survey_id and b.survey_question_id = "
                    "c.survey_question_id and c.survey_group = d.survey_group"
-                   " and b.survey_id in (%s)" % ','.join(ids))
+                   " and b.survey_id in %s", (ids,))
 
             cur.execute(sql)
 
@@ -229,7 +228,7 @@ class SurveyAnswersRepo(BaseRepo):
                    "group_questions c, surveys d where a.survey_id = "
                    "b.survey_id and b.survey_question_id = "
                    "c.survey_question_id and c.survey_group = d.survey_group"
-                   " and b.survey_id in (%s)" % ','.join(ids))
+                   " and b.survey_id in %s", (ids,))
 
             cur.execute(sql)
             survey_template_ids += [(x[1], x[4]) for x in cur.fetchall()]

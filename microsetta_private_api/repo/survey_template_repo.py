@@ -192,7 +192,7 @@ class SurveyTemplateRepo(BaseRepo):
 
     def list_survey_ids(self):
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT DISTINCT survey_id from surveys")
+            cur.execute("SELECT DISTINCT survey_id FROM surveys")
             rows = cur.fetchall()
         return [x[0] for x in rows]
 
@@ -202,8 +202,8 @@ class SurveyTemplateRepo(BaseRepo):
 
     def get_retired_questions(self):
         with self._transaction.cursor() as cur:
-            cur.execute("select survey_question_id from survey_question where"
-                        " retired is true")
+            cur.execute("SELECT survey_question_id FROM survey_question WHERE"
+                        " retired IS true")
 
             rows = cur.fetchall()
 
