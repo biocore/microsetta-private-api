@@ -1121,7 +1121,7 @@ class AccountTests(ApiTests):
 
         # delete the source
         response = self.client.delete(
-            '/api/accounts/%s/sources/%s' %
+            '/api/accounts/%s/sources/%s?language_tag=en_us' %
             (dummy_acct_id, dummy_source_id),
             headers=self.dummy_auth
         )
@@ -1130,7 +1130,7 @@ class AccountTests(ApiTests):
 
         # confirm the source has been deleted
         response = self.client.get(
-            '/api/accounts/%s/sources/%s' %
+            '/api/accounts/%s/sources/%s?language_tag=en_us' %
             (dummy_acct_id, dummy_source_id),
             headers=self.dummy_auth
         )
