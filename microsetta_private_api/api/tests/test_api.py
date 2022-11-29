@@ -1125,6 +1125,8 @@ class AccountTests(ApiTests):
             (dummy_acct_id, dummy_source_id),
             headers=self.dummy_auth
         )
+        # check response code
+        self.assertEqual(204, response.status_code)
 
         # confirm the source has been deleted
         response = self.client.get(
