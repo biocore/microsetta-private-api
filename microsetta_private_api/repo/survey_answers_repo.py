@@ -182,12 +182,9 @@ class SurveyAnswersRepo(BaseRepo):
     def _local_survey_template_ids_from_survey_ids2(self, survey_ids):
         with self._transaction.cursor() as cur:
             # note these ids are unique string ids, not integer ids.
-            ids = [f"'{x}'" for x in survey_ids]
-
-            sql = ("SELECT survey_id, survey_template_id FROM "
-                   "ag.ag_login_surveys WHERE survey_id IN %s", (ids,))
-
-            cur.execute(sql)
+            cur.execute("SELECT survey_id, survey_template_id "
+                        "FROM ag.ag_login_surveys WHERE survey_id IN %s",
+                        (tuple(survey_ids),))
 
             res = [(x[0], x[1]) for x in cur.fetchall()]
             return res
@@ -208,7 +205,6 @@ class SurveyAnswersRepo(BaseRepo):
         '''
         with self._transaction.cursor() as cur:
             # note these ids are unique string ids, not integer ids.
-            ids = [f"'{x}'" for x in survey_ids]
 
             sql = ("select a.barcode, a.survey_id, b.survey_question_id, "
                    "c.survey_group, d.survey_id as survey_template_id from "
@@ -216,7 +212,7 @@ class SurveyAnswersRepo(BaseRepo):
                    "group_questions c, surveys d where a.survey_id = "
                    "b.survey_id and b.survey_question_id = "
                    "c.survey_question_id and c.survey_group = d.survey_group"
-                   " and b.survey_id in %s", (ids,))
+                   " and b.survey_id in %s", (tuple(survey_ids),))
 
             cur.execute(sql)
 
@@ -228,7 +224,7 @@ class SurveyAnswersRepo(BaseRepo):
                    "group_questions c, surveys d where a.survey_id = "
                    "b.survey_id and b.survey_question_id = "
                    "c.survey_question_id and c.survey_group = d.survey_group"
-                   " and b.survey_id in %s", (ids,))
+                   " and b.survey_id in %s", (tuple(survey_ids),))
 
             cur.execute(sql)
             survey_template_ids += [(x[1], x[4]) for x in cur.fetchall()]
