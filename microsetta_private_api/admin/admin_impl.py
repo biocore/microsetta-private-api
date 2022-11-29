@@ -807,7 +807,9 @@ def delete_account(account_id, token_info):
                 return None, 204
 
         sample_count = 0
-        account_has_external = False
+        account_has_external = template_repo.account_has_external_surveys(
+            account_id
+        )
         sources = src_repo.get_sources_in_account(account_id)
 
         for source in sources:
@@ -815,11 +817,10 @@ def delete_account(account_id, token_info):
 
             has_samples = len(samples) > 0
             sample_count += len(samples)
-            has_external = template_repo.has_external_surveys(account_id,
-                                                              source.id)
-
-            if has_external:
-                account_has_external = True
+            has_external = template_repo.source_has_external_surveys(
+                account_id,
+                source.id
+            )
 
             for sample in samples:
                 # we scrub rather than disassociate in the event that the

@@ -1101,6 +1101,60 @@ class AccountTests(ApiTests):
         # check response code
         self.assertEqual(204, response.status_code)
 
+    def test_account_scrub_has_secondary_survey_deleted_source_bug(self):
+        # setup an account with a source and sample
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        _ = create_dummy_acct(create_dummy_1=False,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+
+        # "take" the polyphenol FFQ
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/%s?language_tag=en_us' %  # noqa
+            (dummy_acct_id, dummy_source_id,
+             SurveyTemplateRepo.POLYPHENOL_FFQ_ID),
+            headers=self.dummy_auth)
+
+        # delete the source
+        response = self.client.delete(
+            '/api/accounts/%s/sources/%s' %
+            (dummy_acct_id, dummy_source_id),
+            headers=self.dummy_auth
+        )
+
+        # confirm the source has been deleted
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s' %
+            (dummy_acct_id, dummy_source_id),
+            headers=self.dummy_auth
+        )
+        # check response code
+        self.assertEqual(404, response.status_code)
+
+        # now let's scrub the account that has no source but is still attached
+        # to a polyphenol FFQ registry record
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (dummy_acct_id,),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(204, response.status_code)
+
+        # verify deleting is idempotent. If the account was scrubbed, then
+        # we get a 204. If the account was deleted, we get a 404
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (dummy_acct_id,),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(204, response.status_code)
+
     # region account view/get tests
     def test_account_view_success(self):
         """Successfully view existing account"""

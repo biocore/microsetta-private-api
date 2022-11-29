@@ -896,7 +896,7 @@ class SurveyTemplateRepo(BaseRepo):
 
         return (birth_year, gender, height, weight)
 
-    def has_external_surveys(self, account_id, source_id):
+    def source_has_external_surveys(self, account_id, source_id):
         """Test whether a source has any external surveys associated
 
         Parameters
@@ -929,3 +929,55 @@ class SurveyTemplateRepo(BaseRepo):
                     return True
 
         return False
+
+    def account_has_external_surveys(self, account_id):
+        """
+        Test whether an account has any exernal surveys associated, even if
+        the sources that took them have been deleted.
+        Parameters
+        ----------
+        account_id : str, UUID
+            The account UUID
+
+        Returns
+        -------
+        boolean
+            True indicates the user has an external survey associated, false
+            otherwise
+        """
+
+        account_has_external_surveys = False
+        with self._transaction.cursor() as cur:
+            cur.execute("""SELECT COUNT(*)
+                           FROM ag.myfoodrepo_registry
+                           WHERE account_id=%s""",
+                        (account_id,))
+            res = cur.fetchone()
+            if res[0] > 0:
+                account_has_external_surveys = True
+
+            cur.execute("""SELECT COUNT(*)
+                           FROM ag.polyphenol_ffq_registry
+                           WHERE account_id=%s""",
+                        (account_id,))
+            res = cur.fetchone()
+            if res[0] > 0:
+                account_has_external_surveys = True
+
+            cur.execute("""SELECT COUNT(*)
+                           FROM ag.spain_ffq_registry
+                           WHERE account_id=%s""",
+                        (account_id,))
+            res = cur.fetchone()
+            if res[0] > 0:
+                account_has_external_surveys = True
+
+            cur.execute("""SELECT COUNT(*)
+                           FROM ag.vioscreen_registry
+                           WHERE account_id=%s""",
+                        (account_id,))
+            res = cur.fetchone()
+            if res[0] > 0:
+                account_has_external_surveys = True
+
+        return account_has_external_surveys
