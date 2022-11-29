@@ -861,10 +861,15 @@ def get_vioscreen_sample_to_user(token_info):
         data = st_repo.get_vioscreen_sample_to_user()
     return jsonify(data), 200
 
-def bulk_scan(token_info, csv_input):
-    bulk_scan_dict = {}
-    reader = csv.reader(csv_input)
-    for line in reader:
-        if line[5]:
-            # we need to store each row in newly created table for bulk scan
-            bulk_scan_dict['']
+def bulk_scan_barcode(token_info, body):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        # admin_repo.update_bulk_scan_data(body)
+        valid_records = admin_repo.bulk_scan_barcodes(body)
+        t.commit()
+
+    response = jsonify({"records": valid_records})
+    response.status_code = 201
+    return response

@@ -2057,6 +2057,26 @@ paths:
               schema:
                 type: object
 
+  '/admin/bulk_scan':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.bulk_scan_barcode
+      tags:
+        - Admin
+      summary: bulk barcode scan
+      description: bulk barcode scan
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+      responses:
+        '201':
+          description: Successfully processed bulk barcode scans
+          content:
+            application/json:
+              schema:
+                type: object
+
   '/admin/metadata/samples/{sample_barcode}/surveys/{survey_template_id}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_single_survey

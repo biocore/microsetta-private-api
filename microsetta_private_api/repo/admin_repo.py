@@ -1096,6 +1096,55 @@ class AdminRepo(BaseRepo):
 
             return new_uuid
 
+
+
+    def bulk_scan_barcodes(self, scan_data):
+        records = self.get_valid_bulk_scan_records(scan_data)
+        with self._transaction.cursor() as cur:
+            for record in records:
+                new_uuid = str(uuid.uuid4())
+                args = (
+                    new_uuid,
+                    str(record.get('Date','')),
+                    str(record.get('Time','')),
+                    str(record.get('LocationCell','')),
+                    str(record.get('LocationColumn','')),
+                    str(record.get('LocationRow','')),
+                    str(record.get('TubeCode','')),
+                    str(record.get('RackID','')),
+                )
+
+                cur.execute(
+                    "INSERT INTO barcodes.bulk_barcode_scans "
+                    "(bulk_barcode_scan_id, scan_date, scan_time,"
+                    " location_cell, location_column, location_row, barcode, rack_id)"
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                    args
+                )
+        return records
+
+
+    def get_valid_bulk_scan_records(self, records):
+        columns = ["Date", "Time", "LocationCell", "LocationColumn",
+                   "LocationRow", "TubeCode", "RackID"]
+        valid_records = []
+        for record in records:
+            valid_record = True
+            for each in columns:
+                if each not in record:
+                    valid_record = False
+            if valid_record and record['TubeCode']:
+                sample_barcode = str(record['TubeCode'])
+                with self._transaction.cursor() as cur:
+                    cur.execute(
+                        "SELECT barcode FROM barcodes.barcode WHERE barcode=%s",
+                        (sample_barcode,)
+                    )
+                    if cur.rowcount == 1:
+                        valid_records.append(record)
+        return valid_records
+
+
     def search_barcode(self, sql_cond, cond_params):
         # Security Note:
         # Even with sql queries correctly escaped,
