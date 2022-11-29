@@ -1,9 +1,18 @@
 -- STEP 1: add survey_template_id to ag_login_surveys table and populate it.
 alter table ag.ag_login_surveys add column survey_template_id integer;
+-- create a table of survey_ids w/a single question_id associated w/that
+-- survey and survey template.
 create table ag.tmp_tbl1 as select a.survey_id, min(b.survey_question_id) from ag_login_surveys a join survey_answers b on a.survey_id = b.survey_id group by a.survey_id;
+-- replace the question_ids in the table above w/the survey_group those
+-- questions are associated with.
 create table ag.tmp_tbl2 as select survey_id, survey_group from ag.tmp_tbl1 a join group_questions b on a.min = b.survey_question_id;
+-- replace the group_ids in the table above w/the template_ids those groups
+-- are associated with.
 create table ag.tmp_tbl3 as select a.survey_id, b.survey_id as survey_template_id from ag.tmp_tbl2 a join surveys b on a.survey_group = b.survey_group;
+-- use the mapping of survey_ids to survey_template_ids to populate the
+-- new column of the existing table ag_login_surveys.
 update ag.ag_login_surveys set survey_template_id = (select survey_template_id from ag.tmp_tbl3 where survey_id = ag_login_surveys.survey_id);
+-- remove the temporary tables as they are no longer needed.
 drop table ag.tmp_tbl1;
 drop table ag.tmp_tbl2;
 drop table ag.tmp_tbl3;
@@ -145,13 +154,13 @@ update ag.survey_question set american = 'How often do you consume meat/eggs?' w
 update ag.survey_question set american = 'How often do you cook and consume home cooked meals? (Exclude ready-to-eat meals like boxed macaroni and cheese, ramen noodles, lean cuisine)' where survey_question_id = 57;
 update ag.survey_question set american = 'How often do you consume ready-to-eat meals (e.g. macaroni and cheese, ramen noodles, lean cuisine)?' where survey_question_id = 58;
 update ag.survey_question set american = 'How often do you eat food prepared at a restaurant, including carry-out/take-out?' where survey_question_id = 59;
-update ag.survey_question set american = 'How often do you eat at least 2 servings of whole grains in a day? (1 serving = 1 slice of 100% whole grain bread; 1 cup whole grain cereal like Shredded Wheat, Wheaties, Grape Nuts, high fiber cereals, or oatmeal; 3-4 whole grain crackers; 1⁄2 cup brown rice or whole wheat pasta)' where survey_question_id = 91;
-update ag.survey_question set american = 'How often do you consume at least 2-3 servings of fruit in a day? (1 serving = 1⁄2 cup (1 serving = 1⁄2 cup fruit juice.)' where survey_question_id = 61;
-update ag.survey_question set american = 'How often do you consume at least 2-3 servings of starchy and non-starchy vegetables. Examples of starchy vegetables include white potatoes, corn, peas and cabbage. Examples of non-starchy vegetables include raw leafy greens, cucumbers, tomatoes, peppers, broccoli, and kale. (1 serving = 1⁄2 cup vegetables/potatoes; 1 cup leafy raw vegetables)' where survey_question_id = 62;
+update ag.survey_question set american = 'How often do you eat at least 2 servings of whole grains in a day? (1 serving = 1 slice of 100% whole grain bread; 1 cup whole grain cereal like Shredded Wheat, Wheaties, Grape Nuts, high fiber cereals, or oatmeal; 3-4 whole grain crackers; 1/2 cup brown rice or whole wheat pasta)' where survey_question_id = 91;
+update ag.survey_question set american = 'How often do you consume at least 2-3 servings of fruit in a day? (1 serving = 1/2 cup (1 serving = 1/2 cup fruit juice.)' where survey_question_id = 61;
+update ag.survey_question set american = 'How often do you consume at least 2-3 servings of starchy and non-starchy vegetables. Examples of starchy vegetables include white potatoes, corn, peas and cabbage. Examples of non-starchy vegetables include raw leafy greens, cucumbers, tomatoes, peppers, broccoli, and kale. (1 serving = 1/2 cup vegetables/potatoes; 1 cup leafy raw vegetables)' where survey_question_id = 62;
 update ag.survey_question set american = 'How often do you consume beets (including raw, canned, pickled, or roasted)? (1 serving = 1 cup raw or cooked)' where survey_question_id = 236;
 update ag.survey_question set american = 'How often do you eat plant-based sources of protein including tofu, tempeh, edamame, lentils, chickpeas, peanuts, almonds, walnuts, or quinoa?' where survey_question_id = 237;
 update ag.survey_question set american = 'In an average week, how many different plants do you eat? For example - if you consume a can of soup that contains carrots, potatoes and onion, you can count this as 3 different plants; If you consume multi-grain bread, each different grain counts as a plant. Include all fruits in the total.' where survey_question_id = 146;
-update ag.survey_question set american = 'How often do you consume at least 2 servings of milk or cheese a day? (1 serving = 1 cup milk or yogurt; 11⁄2 - 2 ounces cheese)' where survey_question_id = 64;
+update ag.survey_question set american = 'How often do you consume at least 2 servings of milk or cheese a day? (1 serving = 1 cup milk or yogurt; 11/2 - 2 ounces cheese)' where survey_question_id = 64;
 update ag.survey_question set american = 'How often do you consume milk substitutes (soy milk, lactose free milk, almond milk, etc.)?' where survey_question_id = 65;
 update ag.survey_question set american = 'How often do you eat frozen desserts (ice cream/gelato/milkshakes, sherbet/sorbet, frozen yogurt, etc.)?' where survey_question_id = 66;
 update ag.survey_question set american = 'How often do you eat red meat?' where survey_question_id = 67;
@@ -172,7 +181,7 @@ update ag.survey_question set american = 'How often do you consume oxalate-rich 
 update ag.survey_question set american = 'How often do you consume soy products such as textured vegetable protein, tofu, tempeh, soybean flour, soy nuts, soy nut butter, soybeans, and miso (i.e. fermented soy)?' where survey_question_id = 244;
 update ag.survey_question set american = 'How often do you consume at least 1L (~32 ounces) of water in a day?' where survey_question_id = 76;
 update ag.survey_question set american = 'Excluding beer, wine, and alcohol, I have significantly increased (i.e. more than doubled) my intake of fermented foods in frequency or quantity within the last ____.' where survey_question_id = 166;
-update ag.survey_question set american = 'How often do you consume one or more servings of fermented vegetables or plant products? (1 serving = 1⁄2 cup sauerkraut, kimchi or fermented vegetable or 1 cup of kombucha)' where survey_question_id = 165;
+update ag.survey_question set american = 'How often do you consume one or more servings of fermented vegetables or plant products? (1 serving = 1/2 cup sauerkraut, kimchi or fermented vegetable or 1 cup of kombucha)' where survey_question_id = 165;
 update ag.survey_question set american = 'Which of the following fermented foods/beverages do you consume more than once a week? Select all that apply and write in any that are not listed under ''Other''.' where survey_question_id = 167;
 update ag.survey_question set american = 'Do you produce any of the following fermented foods/beverages at home for personal consumption? Select all that apply and write in any that are not listed under ''Other''.' where survey_question_id = 169;
 update ag.survey_question set american = 'Do you produce any of the following fermented foods/beverages for commercial purposes? Select all that apply and write in any that are not listed under ''Other''.' where survey_question_id = 171;
@@ -354,7 +363,7 @@ insert into ag.survey_question (survey_question_id, american, question_shortname
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (477, 'When you''re outside the home, do you apply additional treatment to your drinking water prior to consumption (e.g., boiling, purification tablet, chlorine/bleach)?', 'OUTSIDE_WATER_TREATMENT', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (478, 'When did you start eating fermented foods?', 'FERMENTED_FOODS_START', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (485, 'How often do you experience migraines?', 'FREQ_MIGRAINES', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (486, 'Please rank the main factors that lead to your migraines, where “1” is most likely, “2” is second most likely, etc. If the factor does not cause migraines leave blank', 'MIGRAINE_FACTORS', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (486, 'Please rank the main factors that lead to your migraines, where "1" is most likely, "2" is second most likely, etc. If the factor does not cause migraines leave blank', 'MIGRAINE_FACTORS', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (487, 'Of the following check all the symptoms you experience with a migraine:', 'MIGRAINE_SYMPTOMS', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (488, 'Do any of your first-degree relatives suffer from migraines?', 'RELATIVES_MIGRAINES', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (489, 'Do you take any migraine medication?', 'MIGRAINE_RX', false);
@@ -781,15 +790,15 @@ insert into ag.survey_response (american) values('Alternate day fasting');
 insert into ag.survey_response (american) values('Apple fiber');
 insert into ag.survey_response (american) values('Asian');
 insert into ag.survey_response (american) values('Aspartame');
-insert into ag.survey_response (american) values('Associate’s degree (e.g. AA, AS))');
+insert into ag.survey_response (american) values('Associate's degree (e.g. AA, AS))');
 insert into ag.survey_response (american) values('Aura');
-insert into ag.survey_response (american) values('Bachelor’s degree (e.g. BA, BS)');
+insert into ag.survey_response (american) values('Bachelor's degree (e.g. BA, BS)');
 insert into ag.survey_response (american) values('Balance training');
 insert into ag.survey_response (american) values('Bee stings');
 insert into ag.survey_response (american) values('Black or African American');
 insert into ag.survey_response (american) values('Bladder cancer');
-insert into ag.survey_response (american) values('Body pain where it shouldn’t exist;');
-insert into ag.survey_response (american) values('Bottled* purified water (does not indicate “spring water” or “natural mineral water” on the label)');
+insert into ag.survey_response (american) values('Body pain where it shouldn't exist;');
+insert into ag.survey_response (american) values('Bottled* purified water (does not indicate "spring water" or "natural mineral water" on the label)');
 insert into ag.survey_response (american) values('Brain cancer (includes gliomas and glioblastomas)');
 insert into ag.survey_response (american) values('Breast cancer');
 insert into ag.survey_response (american) values('Caffeine________');
@@ -798,14 +807,14 @@ insert into ag.survey_response (american) values('Cervical cancer');
 insert into ag.survey_response (american) values('Cholangiocarcinoma');
 insert into ag.survey_response (american) values('College degree');
 insert into ag.survey_response (american) values('Colon cancer');
-insert into ag.survey_response (american) values('Colonic Crohn’s disease');
+insert into ag.survey_response (american) values('Colonic Crohn's disease');
 insert into ag.survey_response (american) values('Constipation');
 insert into ag.survey_response (american) values('Currently in K-12');
 insert into ag.survey_response (american) values('Daily time-restricted eating (TRE)');
 insert into ag.survey_response (american) values('Depression______');
 insert into ag.survey_response (american) values('Diet');
 insert into ag.survey_response (american) values('Doctorate (eg. PhD, EdD)');
-insert into ag.survey_response (american) values('Don’t know');
+insert into ag.survey_response (american) values('Don't know');
 insert into ag.survey_response (american) values('Esophageal cancer');
 insert into ag.survey_response (american) values('Few times/month');
 insert into ag.survey_response (american) values('Few times/year');
@@ -834,16 +843,16 @@ insert into ag.survey_response (american) values('I do not take fiber supplement
 insert into ag.survey_response (american) values('I do not track any of my activities');
 insert into ag.survey_response (american) values('I do not use these devices before bed');
 insert into ag.survey_response (american) values('I don''t drink plain, unflavored water');
-insert into ag.survey_response (american) values('I don’t drink plain, unflavored water');
+insert into ag.survey_response (american) values('I don't drink plain, unflavored water');
 insert into ag.survey_response (american) values('I eat anything except red meat');
 insert into ag.survey_response (american) values('I eat anything with no exclusions (omnivore)');
 insert into ag.survey_response (american) values('I have not been outside of the United States in the past year');
 insert into ag.survey_response (american) values('I take a supplement, but do not know what kind');
 insert into ag.survey_response (american) values('I tend to have hard stool or have difficulty passing stool -- Types 1 and 2');
-insert into ag.survey_response (american) values('I tend to have loose or watery stool – Types 5, 6, and 7');
-insert into ag.survey_response (american) values('I tend to have normally formed stool – Types 3 and 4');
-insert into ag.survey_response (american) values('Ileal Crohn’s disease');
-insert into ag.survey_response (american) values('Ileal and Colonic Crohn’s disease');
+insert into ag.survey_response (american) values('I tend to have loose or watery stool - Types 5, 6, and 7');
+insert into ag.survey_response (american) values('I tend to have normally formed stool - Types 3 and 4');
+insert into ag.survey_response (american) values('Ileal Crohn's disease');
+insert into ag.survey_response (american) values('Ileal and Colonic Crohn's disease');
 insert into ag.survey_response (american) values('Immunotherapy');
 insert into ag.survey_response (american) values('In the afternoon');
 insert into ag.survey_response (american) values('In the evening');
@@ -858,7 +867,7 @@ insert into ag.survey_response (american) values('Liver cancer');
 insert into ag.survey_response (american) values('Lung cancer');
 insert into ag.survey_response (american) values('Lymphoma');
 insert into ag.survey_response (american) values('Malt liquor');
-insert into ag.survey_response (american) values('Master’s degree (e.g. MS, MA)');
+insert into ag.survey_response (american) values('Master's degree (e.g. MS, MA)');
 insert into ag.survey_response (american) values('Medications that contain barbiturates or opioids__________');
 insert into ag.survey_response (american) values('Melanoma (skin)');
 insert into ag.survey_response (american) values('Methylcellulose (e.g. Citrucel)');
@@ -941,7 +950,7 @@ insert into ag.survey_response (american) values('Wheat dextrin (e.g. Benefiber)
 insert into ag.survey_response (american) values('Within the last 10 years');
 insert into ag.survey_response (american) values('Within the last 5 years');
 insert into ag.survey_response (american) values('Within the last year');
-insert into ag.survey_response (american) values('Yes, I am taking the “pill”');
+insert into ag.survey_response (american) values('Yes, I am taking the "pill"');
 insert into ag.survey_response (american) values('Yes, I currently have cancer');
 insert into ag.survey_response (american) values('Yes, I take homeopathic medication');
 insert into ag.survey_response (american) values('Yes, I take over-the-counter medication');
@@ -1124,9 +1133,9 @@ insert into ag.survey_question_response(survey_question_id, response, display_in
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (354, 'Yes', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (354, 'No', 2);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (360, 'Unspecified', 0);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (360, 'Ileal Crohn’s disease', 1);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (360, 'Colonic Crohn’s disease', 2);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (360, 'Ileal and Colonic Crohn’s disease', 3);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (360, 'Ileal Crohn's disease', 1);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (360, 'Colonic Crohn's disease', 2);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (360, 'Ileal and Colonic Crohn's disease', 3);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (360, 'Ulcerative Colitis', 4);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (360, 'Microcolitis', 5);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (362, 'Unspecified', 0);
@@ -1332,13 +1341,13 @@ insert into ag.survey_question_response(survey_question_id, response, display_in
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'Natural mineral or spring water bottled* locally (i.e. in your country of residence)', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'Natural mineral or spring water bottled* in another country not in the European Union or the UK', 2);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'Natural mineral or spring water bottled* in another country in the European Union or the UK', 3);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'Bottled* purified water (does not indicate “spring water” or “natural mineral water” on the label)', 4);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'Bottled* purified water (does not indicate "spring water" or "natural mineral water" on the label)', 4);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'Tap water', 5);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'Filtered tap water (pitcher, faucet or under the sink water purifiers, reverse osmosis systems, water softener)', 6);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'Well water', 7);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'Not sure', 8);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'Other _____________', 9);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'I don’t drink plain, unflavored water', 10);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (474, 'I don't drink plain, unflavored water', 10);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (475, 'Unspecified', 0);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (475, 'Yes', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (475, 'No', 2);
@@ -1346,7 +1355,7 @@ insert into ag.survey_question_response(survey_question_id, response, display_in
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (476, 'Natural mineral or spring water bottled* locally (i.e. in your country of residence)', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (476, 'Natural mineral or spring water bottled* in another country not in the European Union or the UK', 2);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (476, 'Natural mineral or spring water bottled* in another country in the European Union or the UK', 3);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (476, 'Bottled* purified water (does not indicate “spring water” or “natural mineral water” on the label)', 4);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (476, 'Bottled* purified water (does not indicate "spring water" or "natural mineral water" on the label)', 4);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (476, 'Tap water', 5);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (476, 'Filtered tap water (pitcher, faucet or under the sink water purifiers, reverse osmosis systems, water softener)', 6);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (476, 'Well water', 7);
@@ -1377,7 +1386,7 @@ insert into ag.survey_question_response(survey_question_id, response, display_in
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (486, 'Nitrates__________', 7);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (486, 'Hormones__________', 8);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (487, 'Unspecified', 0);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (487, 'Body pain where it shouldn’t exist;', 1);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (487, 'Body pain where it shouldn't exist;', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (487, 'Photophobia (sensitivity to light);', 2);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (487, 'Phonophobia (sensitivity to sound);', 3);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (487, 'Nausea and/or vomiting;', 4);
@@ -1386,7 +1395,7 @@ insert into ag.survey_question_response(survey_question_id, response, display_in
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (488, 'Unspecified', 0);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (488, 'Yes', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (488, 'No', 2);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (488, 'Don’t know', 3);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (488, 'Don't know', 3);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (489, 'Unspecified', 0);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (489, 'Yes', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (489, 'No', 2);
@@ -1405,9 +1414,9 @@ insert into ag.survey_question_response(survey_question_id, response, display_in
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'High school diploma or GED equivalent', 3);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'College degree', 4);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'Vocational training', 5);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'Associate’s degree (e.g. AA, AS))', 6);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'Bachelor’s degree (e.g. BA, BS)', 7);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'Master’s degree (e.g. MS, MA)', 8);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'Associate's degree (e.g. AA, AS))', 6);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'Bachelor's degree (e.g. BA, BS)', 7);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'Master's degree (e.g. MS, MA)', 8);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'Professional degree (e.g. MD,DDS, DVM)', 9);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'Doctorate (eg. PhD, EdD)', 10);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (493, 'Other', 11);
@@ -1434,7 +1443,7 @@ insert into ag.survey_question_response(survey_question_id, response, display_in
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (495, 'Once a day', 3);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (495, 'Never', 4);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (497, 'Unspecified', 0);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (497, 'Yes, I am taking the “pill”', 1);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (497, 'Yes, I am taking the "pill"', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (497, 'Yes, I use an injected contraceptive', 2);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (497, 'Yes, I use a contraceptive patch', 3);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (497, 'Yes, I use a contraceptive vaginal ring', 4);
