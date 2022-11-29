@@ -745,16 +745,12 @@ class MigrationSupport:
     @staticmethod
     def migrate_107(TRN):
         # import uuid
-
         # TODO: For now, keep this stub of a migration method for the minimal
         # amount of migration we plan to do.
-        sql = ("select * from ag.ag_login_surveys")
-
-        TRN.add(sql)
-        rows = TRN.execute()[-1]
-
-        for row in rows:
-            print(row)
+        # sql = ("select * from ag.ag_login_surveys")
+        # TRN.add(sql)
+        # rows = TRN.execute()[-1]
+        pass
 
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
