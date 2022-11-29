@@ -866,7 +866,6 @@ def bulk_scan_barcode(token_info, body):
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-        # admin_repo.update_bulk_scan_data(body)
         valid_records = admin_repo.bulk_scan_barcodes(body)
         t.commit()
 
