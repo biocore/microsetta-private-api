@@ -539,7 +539,7 @@ class UserTransaction(BaseRepo):
 
         with self._transaction.cursor() as cur:
             cur.execute(*sql)
-            interested_user_id = cur.fetchone()
+            interested_user_id = cur.fetchone()[0]
 
         return interested_user_id
 
