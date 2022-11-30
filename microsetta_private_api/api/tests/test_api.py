@@ -2216,6 +2216,17 @@ class VioscreenTests(ApiTests):
                          vioscreen_session.sessionId)
         self.assertEqual(response_obj['status'], vioscreen_session.status)
 
+    def test_get_vioscreen_sessions_404(self):
+        url = (f'/vioscreen/{self.acct_id}'
+               f'/sources/{self.src_id}') + '/vioscreen_sessions'
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
+        self.assertEqual(get_response.status_code, 404)
+
     def test_get_sample_vioscreen_session_404(self):
         url = self._url_constructor() + '/vioscreen/session'
         _ = create_dummy_acct(create_dummy_1=True,
