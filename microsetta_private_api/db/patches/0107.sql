@@ -17,14 +17,14 @@ drop table ag.tmp_tbl1;
 drop table ag.tmp_tbl2;
 drop table ag.tmp_tbl3;
 -- add survey_template_ids for remote surveys
-update ag_login_surveys set survey_template_id = 10001 where survey_id in (select vio_id from vioscreen_registry);
-update ag_login_surveys set survey_template_id = 10002 where survey_id in (select myfoodrepo_id::text from myfoodrepo_registry);
-update ag_login_surveys set survey_template_id = 10003 where survey_id in (select polyphenol_ffq_id::text from polyphenol_ffq_registry);
-update ag_login_surveys set survey_template_id = 10004 where survey_id in (select spain_ffq_id::text from spain_ffq_registry);
+update ag.ag_login_surveys set survey_template_id = 10001 where survey_id in (select vio_id from vioscreen_registry);
+update ag.ag_login_surveys set survey_template_id = 10002 where survey_id in (select myfoodrepo_id::text from myfoodrepo_registry);
+update ag.ag_login_surveys set survey_template_id = 10003 where survey_id in (select polyphenol_ffq_id::text from polyphenol_ffq_registry);
+update ag.ag_login_surveys set survey_template_id = 10004 where survey_id in (select spain_ffq_id::text from spain_ffq_registry);
 -- survey_template_id should be filled for all rows. If not, there is an issue
 -- and this update should stop. Every survey should be associated w/a
 -- template_id.
-alter table ag_login_surveys alter column survey_template_id set not null;
+alter table ag.ag_login_surveys alter column survey_template_id set not null;
 
 
 -- STEP 2: add retired column to surveys table and retire existing survey
