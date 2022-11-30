@@ -743,7 +743,7 @@ class MigrationSupport:
         TRN.execute()
 
     @staticmethod
-    def migrate_107(TRN):
+    def migrate_108(TRN):
         # TODO: state goal of this migration here
 
         # import uuid
@@ -765,7 +765,7 @@ class MigrationSupport:
         # "0082.sql": migrate_82.__func__
         # ...
         "0096.sql": migrate_96.__func__,
-        "0107.sql": migrate_107.__func__,
+        "0108.sql": migrate_108.__func__,
     }
 
     @classmethod
