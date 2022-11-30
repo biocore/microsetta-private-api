@@ -355,9 +355,11 @@ class SurveyAnswersRepo(BaseRepo):
 
             # Log that the user submitted this survey
             cur.execute("INSERT INTO ag_login_surveys "
-                        "(ag_login_id, survey_id, source_id) "
-                        "VALUES(%s, %s, %s)",
-                        (ag_login_id, survey_answers_id, source_id))
+                        "(ag_login_id, survey_id, source_id, "
+                        "survey_template_id) "
+                        "VALUES(%s, %s, %s, %s)",
+                        (ag_login_id, survey_answers_id, source_id,
+                         survey_template_id))
 
             # Write each answer
             for survey_template_group in survey_template.groups:

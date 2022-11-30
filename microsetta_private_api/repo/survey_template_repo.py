@@ -427,9 +427,10 @@ class SurveyTemplateRepo(BaseRepo):
                         "ag_login_id, "
                         "survey_id, "
                         "vioscreen_status, "
-                        "source_id) "
-                        "VALUES(%s, %s, %s, %s)",
-                        (account_id, mfr_id, None, source_id))
+                        "source_id, "
+                        "survey_template_id) "
+                        "VALUES(%s, %s, %s, %s, %s)",
+                        (account_id, mfr_id, None, source_id, 10002))
 
             # Add to the myfoodrepo_registry
             cur.execute("""UPDATE myfoodrepo_registry
@@ -563,9 +564,11 @@ class SurveyTemplateRepo(BaseRepo):
                             "ag_login_id, "
                             "survey_id, "
                             "vioscreen_status, "
-                            "source_id) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, polyphenol_ffq_id, None, source_id))
+                            "source_id, "
+                            "survey_template_id) "
+                            "VALUES(%s, %s, %s, %s, %s)",
+                            (account_id, polyphenol_ffq_id, None, source_id,
+                             10003))
 
                 return polyphenol_ffq_id
 
@@ -658,9 +661,11 @@ class SurveyTemplateRepo(BaseRepo):
                             "ag_login_id, "
                             "survey_id, "
                             "vioscreen_status, "
-                            "source_id) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, spain_ffq_id, None, source_id))
+                            "source_id, "
+                            "survey_template_id) "
+                            "VALUES(%s, %s, %s, %s, %s)",
+                            (account_id, spain_ffq_id, None, source_id,
+                             10004))
 
                 return spain_ffq_id
 
@@ -753,9 +758,10 @@ class SurveyTemplateRepo(BaseRepo):
                             "ag_login_id, "
                             "survey_id, "
                             "vioscreen_status, "
-                            "source_id) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, vioscreen_id, -1, source_id))
+                            "source_id, "
+                            "survey_template_id) "
+                            "VALUES(%s, %s, %s, %s, %s)",
+                            (account_id, vioscreen_id, -1, source_id, 10001))
                 # Immediately attach that survey to the specified sample
                 sample_repo = SampleRepo(self._transaction)
                 s = sample_repo.get_sample(account_id,
