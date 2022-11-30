@@ -345,8 +345,9 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
 
                 # create dummy daklapack order object
                 input = DaklapackOrder(DUMMY_ORDER_ID, submitter_acct,
-                                       PROJECT_IDS, DUMMY_DAKLAPACK_ORDER, desc,
-                                       planned_send_date, creation_timestamp,
+                                       PROJECT_IDS, DUMMY_DAKLAPACK_ORDER,
+                                       desc, planned_send_date,
+                                       creation_timestamp,
                                        last_polling_timestamp, last_status)
 
                 # call create_daklapack_order
@@ -358,7 +359,8 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
 
                 cur = t.cursor()
 
-                # Confirm that the order populated into fundrazr_daklapack_orders
+                # Confirm that the order populated into
+                # fundrazr_daklapack_orders
                 cur.execute(
                     "SELECT COUNT(*) "
                     "FROM campaign.fundrazr_daklapack_orders "
@@ -395,7 +397,8 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
                 found_dak_error = False
                 for e in res:
                     if e.startswith(
-                            f"Error placing Daklapack order for ftp_id {ftp_id}"
+                            f"Error placing Daklapack order for ftp_id "
+                            f"{ftp_id}"
                     ):
                         found_dak_error = True
                 self.assertTrue(found_dak_error)
@@ -417,7 +420,10 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
                 self.assertEqual(new_ffq_r_c_count, exp_ffq_r_c_count)
 
                 new_fundrazr_ffq_count = self._count_fundrazr_ffq_codes(t)
-                self.assertEqual(new_fundrazr_ffq_count, exp_fundrazr_ffq_count)
+                self.assertEqual(
+                    new_fundrazr_ffq_count,
+                    exp_fundrazr_ffq_count
+                )
 
     @patch(
         "microsetta_private_api.repo.perk_fulfillment_repo."

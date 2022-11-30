@@ -23,6 +23,11 @@ CREATE TABLE campaign.fundrazr_perk_fulfillment_details (
     CONSTRAINT fk_perk_to_dak FOREIGN KEY (dak_article_code) REFERENCES barcodes.daklapack_article (dak_article_code)
 );
 
+INSERT INTO campaign.transaction_source_to_campaign
+    SELECT '57xV2' AS remote_campaign_id, campaign_id AS internal_campaign_id, 'usd' AS currency
+    FROM campaign.campaigns
+    WHERE title='The Microsetta Initiative';
+
 -- The API will pull down perks automatically, but we need it to exist so we can add the fullfilment info,
 -- so we're just going to insert them here
 

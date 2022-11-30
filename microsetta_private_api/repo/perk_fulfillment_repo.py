@@ -13,7 +13,6 @@ from microsetta_private_api.model.activation_code import ActivationCode
 from microsetta_private_api.tasks import send_email
 from microsetta_private_api.localization import EN_US
 from microsetta_private_api.config_manager import SERVER_CONFIG
-from microsetta_private_api.repo.transaction import Transaction
 
 
 class PerkFulfillmentRepo(BaseRepo):

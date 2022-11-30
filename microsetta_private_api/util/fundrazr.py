@@ -5,8 +5,6 @@ from microsetta_private_api.repo.campaign_repo import UserTransaction
 from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.localization import EN_US
 from microsetta_private_api.config_manager import SERVER_CONFIG
-import datetime
-import time
 
 
 @celery.task(ignore_result=True)
