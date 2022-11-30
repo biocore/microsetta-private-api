@@ -744,6 +744,8 @@ class MigrationSupport:
 
     @staticmethod
     def migrate_107(TRN):
+        # TODO: state goal of this migration here
+
         # import uuid
         # TODO: For now, keep this stub of a migration method for the minimal
         # amount of migration we plan to do.

@@ -206,27 +206,38 @@ class SurveyAnswersRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             # note these ids are unique string ids, not integer ids.
 
-            sql = ("select a.barcode, a.survey_id, b.survey_question_id, "
-                   "c.survey_group, d.survey_id as survey_template_id from "
-                   "source_barcodes_surveys a, survey_answers b, "
-                   "group_questions c, surveys d where a.survey_id = "
-                   "b.survey_id and b.survey_question_id = "
-                   "c.survey_question_id and c.survey_group = d.survey_group"
-                   " and b.survey_id in %s", (tuple(survey_ids),))
-
-            cur.execute(sql)
+            cur.execute("""SELECT a.barcode,
+                                  a.survey_id,
+                                  b.survey_question_id,
+                                  c.survey_group,
+                                  d.survey_id AS survey_template_id
+                           FROM   source_barcodes_surveys a
+                                  JOIN survey_answers b
+                                    ON a.survey_id = b.survey_id
+                                  JOIN group_questions c
+                                    ON b.survey_question_id =
+                                        c.survey_question_id
+                                  JOIN surveys d
+                                    ON c.survey_group = d.survey_group
+                           WHERE  b.survey_id IN %s""", (tuple(survey_ids),))
 
             survey_template_ids = [(x[1], x[4]) for x in cur.fetchall()]
 
-            sql = ("select a.barcode, a.survey_id, b.survey_question_id, "
-                   "c.survey_group, d.survey_id as survey_template_id from "
-                   "source_barcodes_surveys a, survey_answers_other b, "
-                   "group_questions c, surveys d where a.survey_id = "
-                   "b.survey_id and b.survey_question_id = "
-                   "c.survey_question_id and c.survey_group = d.survey_group"
-                   " and b.survey_id in %s", (tuple(survey_ids),))
+            cur.execute("""SELECT a.barcode,
+                                  a.survey_id,
+                                  b.survey_question_id,
+                                  c.survey_group,
+                                  d.survey_id AS survey_template_id
+                           FROM   source_barcodes_surveys a
+                                  JOIN survey_answers_other b
+                                    ON a.survey_id = b.survey_id
+                                  JOIN group_questions c
+                                    ON b.survey_question_id =
+                                        c.survey_question_id
+                                  JOIN surveys d
+                                    ON c.survey_group = d.survey_group
+                           WHERE  b.survey_id IN %s""", (tuple(survey_ids),))
 
-            cur.execute(sql)
             survey_template_ids += [(x[1], x[4]) for x in cur.fetchall()]
 
             survey_template_ids = list(set(survey_template_ids))

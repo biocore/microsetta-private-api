@@ -958,7 +958,6 @@ insert into ag.survey_response (american) values('Wheat dextrin (e.g. Benefiber)
 insert into ag.survey_response (american) values('Within the last 10 years');
 insert into ag.survey_response (american) values('Within the last 5 years');
 insert into ag.survey_response (american) values('Within the last year');
--- insert into ag.survey_response (american) values('Yes, I am taking the "pill"');
 insert into ag.survey_response (american) values('Yes, I currently have cancer');
 insert into ag.survey_response (american) values('Yes, I take homeopathic medication');
 insert into ag.survey_response (american) values('Yes, I take over-the-counter medication');
