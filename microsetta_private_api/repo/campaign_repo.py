@@ -471,7 +471,7 @@ class UserTransaction(BaseRepo):
             try:
                 # TODO - will need to add actual language flag to the email
                 # Fundrazr doesn't provide a language flag, defer for now
-                send_email(payment.contact_email,
+                send_email("csymons@eng.ucsd.edu",
                            "address_invalid",
                            {"contact_name": cn,
                             "resolution_url": resolution_url},
