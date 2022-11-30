@@ -13,6 +13,7 @@ from microsetta_private_api.model.activation_code import ActivationCode
 from microsetta_private_api.tasks import send_email
 from microsetta_private_api.localization import EN_US
 from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.repo.transaction import Transaction
 
 
 class PerkFulfillmentRepo(BaseRepo):
@@ -45,12 +46,33 @@ class PerkFulfillmentRepo(BaseRepo):
             else:
                 return [dict(r) for r in rows]
 
-    def process_pending_fulfillments(self):
-        """Find all purchased perks that have yet to be processed
-        and fulfill them"""
+    def get_pending_fulfillments(self):
+        with self._transaction.dict_cursor() as cur:
+            """Find all purchased perks that have yet to be processed """
+            cur.execute(
+                "SELECT ftp.id "
+                "FROM campaign.fundrazr_transaction_perk ftp "
+                "INNER JOIN campaign.transaction ft "
+                "ON ftp.transaction_id = ft.id "
+                "INNER JOIN campaign.interested_users iu "
+                "ON ft.interested_user_id = iu.interested_user_id "
+                "AND iu.address_valid = TRUE "
+                "WHERE ftp.processed = FALSE"
+            )
+            rows = cur.fetchall()
+            return [r['id'] for r in rows]
+
+    def process_pending_fulfillment(self, ftp_id):
+        """Process a single pending fulfillment"""
         error_report = []
 
         with self._transaction.dict_cursor() as cur:
+            # Lock the table to ensure that two concurrent operations
+            # can't fulfill the same row
+            self._transaction.lock_table("fundrazr_transaction_perk")
+
+            # Once the table is locked, verify that the row has not
+            # been processed and collect the necessary fields
             cur.execute(
                 "SELECT ftp.id ftp_id, ftp.transaction_id, ftp.perk_id, "
                 "ftp.quantity, ft.payer_email, fpfd.ffq_quantity, "
@@ -67,11 +89,11 @@ class PerkFulfillmentRepo(BaseRepo):
                 "INNER JOIN campaign.interested_users iu "
                 "ON ft.interested_user_id = iu.interested_user_id "
                 "AND iu.address_valid = true "
-                "WHERE ftp.processed = false"
+                "WHERE ftp.processed = FALSE AND ftp.id = %s",
+                (ftp_id, )
             )
-            rows = cur.fetchall()
-
-            for row in rows:
+            row = cur.fetchone()
+            if row is not None:
                 if self._is_subscription(row):
                     subscription_id = \
                         self._create_subscription(row['payer_email'],
@@ -99,7 +121,10 @@ class PerkFulfillmentRepo(BaseRepo):
                         subscription_id
                     )
                     if error_info is not None:
-                        error_report.append(error_info)
+                        error_report.append(
+                            f"Error sending FFQ email for ftp_id "
+                            f"{row['ftp_id']}: {error_info}"
+                        )
 
                 # Then, if there are more FFQs, schedule/fulfill them as
                 # appropriate based on fulfillment_spacing_number
@@ -111,8 +136,11 @@ class PerkFulfillmentRepo(BaseRepo):
                                 row['fulfillment_spacing_unit'],
                                 x
                             )
-                        self._schedule_ffq(subscription_id, fulfillment_date,
-                                           False)
+                        self._schedule_ffq(
+                            subscription_id,
+                            fulfillment_date,
+                            False
+                        )
                     else:
                         error_info = self._fulfill_ffq(
                             row['ftp_id'],
@@ -121,7 +149,10 @@ class PerkFulfillmentRepo(BaseRepo):
                             row['first_name']
                         )
                         if error_info is not None:
-                            error_report.append(error_info)
+                            error_report.append(
+                                f"Error sending FFQ email for ftp_id "
+                                f"{row['ftp_id']}: {error_info}"
+                            )
 
                 # If there are any kits attached to the perk, immediately
                 # fulfill the first one
@@ -133,7 +164,10 @@ class PerkFulfillmentRepo(BaseRepo):
                     )
                     if not status:
                         # Daklapack order failed, let the error percolate
-                        error_report.append(return_val)
+                        error_report.append(
+                            f"Error placing Daklapack order for ftp_id "
+                            f"{row['ftp_id']}: {return_val}"
+                        )
 
                 for x in range(1, row['kit_quantity']):
                     if row['fulfillment_spacing_number'] > 0:
@@ -154,7 +188,10 @@ class PerkFulfillmentRepo(BaseRepo):
                         )
                         if not status:
                             # Daklapack order failed, let the error percolate
-                            error_report.append(return_val)
+                            error_report.append(
+                                f"Error placing Daklapack order for ftp_id "
+                                f"{row['ftp_id']}: {return_val}"
+                            )
 
                 cur.execute(
                     "UPDATE campaign.fundrazr_transaction_perk "
@@ -165,10 +202,27 @@ class PerkFulfillmentRepo(BaseRepo):
 
         return error_report
 
-    def process_subscription_fulfillments(self):
+    def get_subscription_fulfillments(self):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT fulfillment_id "
+                "FROM campaigns.subscriptions_fulfillment "
+                "WHERE fulfilled = FALSE AND cancelled = FALSE "
+                "AND fulfillment_type <= CURRENT_DATE"
+            )
+            rows = cur.fetchall()
+            return [r['fulfillment_id'] for r in rows]
+
+    def process_subscription_fulfillment(self, fulfillment_id):
         error_report = []
 
         with self._transaction.dict_cursor() as cur:
+            # Lock the table to ensure that two concurrent operations
+            # can't fulfill the same row
+            self._transaction.lock_table("subscriptions_fulfillment")
+
+            # Once the table is locked, verify that the row has not
+            # been processed and collect the necessary fields
             cur.execute(
                 "SELECT sf.fulfillment_id, sf.fulfillment_type, "
                 "sf.dak_article_code, ftp.id ftp_id, ft.payer_email, "
@@ -191,10 +245,12 @@ class PerkFulfillmentRepo(BaseRepo):
                 "LEFT JOIN ag.account a"
                 "ON s.account_id = a.id"
                 "WHERE sf.fulfilled = FALSE AND sf.cancelled = FALSE "
-                "AND sf.fulfillment_date <= CURRENT_DATE"
+                "AND sf.fulfillment_date <= CURRENT_DATE "
+                "AND sf.fulfillment_id = %s",
+                (fulfillment_id, )
             )
-            rows = cur.fetchall()
-            for row in rows:
+            row = cur.fetchone()
+            if row is not None:
                 fulfillment_error = False
 
                 if row['fulfillment_type'] == "ffq":
@@ -216,14 +272,22 @@ class PerkFulfillmentRepo(BaseRepo):
                     )
                     if email_error is not None:
                         fulfillment_error = True
-                        error_report.append(email_error)
+                        error_report.append(
+                            f"Error sending FFQ email for subscription "
+                            f"fulfillment {row['fulfillment_id']}: "
+                            f"{email_error}"
+                        )
 
                 elif row['fulfillment_type'] == "kit":
                     status, return_val = \
                         self._fulfill_kit(row, 1)
                     if not status:
                         # Daklapack order failed, let the error percolate
-                        error_report.append(return_val)
+                        error_report.append(
+                            f"Error placing Daklapack order for subscription "
+                            f"fulfillment {row['fulfillment_id']}: "
+                            f"{return_val}"
+                        )
                 else:
                     fulfillment_error = True
                     error_report.append(
@@ -239,6 +303,8 @@ class PerkFulfillmentRepo(BaseRepo):
                         "WHERE fulfillment_id = %s",
                         (row['fulfillment_id'], )
                     )
+
+        return error_report
 
     def check_for_shipping_updates(self):
         """Find orders for which we have not provided a tracking number,
@@ -366,8 +432,8 @@ class PerkFulfillmentRepo(BaseRepo):
 
             return True, result['order_id']
 
-    def _fulfill_ffq(self, ftp_id, template, email, first_name,
-                     subscription_id=None):
+    def _fulfill_ffq(self, ftp_id, template, email,
+                     first_name, subscription_id=None):
         code = ActivationCode.generate_code()
         with self._transaction.cursor() as cur:
             # Insert the newly created registration code
@@ -427,7 +493,8 @@ class PerkFulfillmentRepo(BaseRepo):
                  False, fulfilled, False)
             )
 
-    def _schedule_ffq(self, subscription_id, fulfillment_date, fulfilled):
+    def _schedule_ffq(self, subscription_id, fulfillment_date,
+                      fulfilled):
         with self._transaction.cursor() as cur:
             cur.execute(
                 "INSERT INTO campaign.subscriptions_fulfillment ("
@@ -438,7 +505,8 @@ class PerkFulfillmentRepo(BaseRepo):
                  False, fulfilled, False)
             )
 
-    def _create_subscription(self, email, transaction_id, ftp_id):
+    def _create_subscription(self, email, transaction_id,
+                             ftp_id):
         """Create a subscription to schedule fulfillments for
 
         Parameters
@@ -458,6 +526,11 @@ class PerkFulfillmentRepo(BaseRepo):
 
         account_id = None
         cancelled = False
+
+        # AuthRocket automatically returns email addresses as lowercase, so
+        # we can safely perform matching by converting the search email. ILIKE
+        # is not a suitable solution, as it can return false positives.
+        email = email.lower()
 
         # If an account exists under the email of the participant that
         # contributed to Fundrazr, we link the subscription to that account.
@@ -504,7 +577,7 @@ class PerkFulfillmentRepo(BaseRepo):
                 "SELECT subscription_id, transaction_id, account_id, "
                 "cancelled "
                 "FROM campaign.subscriptions "
-                "WHERE account_id = %s",
+                "WHERE account_id = %s AND account_id IS NOT NULL",
                 (account_id,)
             )
             rows = cur.fetchall()
@@ -540,6 +613,62 @@ class PerkFulfillmentRepo(BaseRepo):
             else:
                 return PerkFulfillmentRepo._row_to_subscription(row)
 
+    def get_unclaimed_subscriptions_by_email(self, email):
+        """Find any subscriptions that are not yet attached to an account
+           based on the email address that obtained them
+
+        Parameters
+        ----------
+        email : str
+            An email address
+
+        Returns
+        -------
+        List of subscription_ids (UUID) or None
+            A list of subscription_ids if any exist for provided email.
+            Otherwise, None.
+        """
+
+        email = email.lower()
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT subscription_id "
+                "FROM campaign.subscriptions s "
+                "INNER JOIN campaign.transaction t "
+                "ON s.transaction_id = t.id "
+                "WHERE account_id IS NULL AND LOWER(t.payer_email) = %s",
+                (email, )
+            )
+            rows = cur.fetchall()
+            if rows is None:
+                return None
+            else:
+                return [r['subscription_id'] for r in rows]
+
+    def claim_unclaimed_subscription(self, subscription_id, account_id):
+        """Attach an account_id to a subscription that doesn't yet have one
+
+        Parameters
+        ----------
+        subscription_id : UUID
+            A subscription's ID
+        account_id : UUID
+            An account ID
+
+        Returns
+        -------
+        int
+            Number of rows affected
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "UPDATE campaign.subscriptions "
+                "SET account_id = %s "
+                "WHERE subscription_id = %s",
+                (account_id, subscription_id)
+            )
+            return cur.rowcount
+
     def cancel_subscription(self, subscription_id):
         """Cancels a subscription and associated future fulfillments
 
@@ -550,8 +679,8 @@ class PerkFulfillmentRepo(BaseRepo):
 
         Returns
         -------
-        True
-            The function completed
+        int
+            The number of records affected in campaign.subscription
         """
         with self._transaction.cursor() as cur:
             cur.execute(
@@ -560,12 +689,14 @@ class PerkFulfillmentRepo(BaseRepo):
                 "WHERE subscription_id = %s",
                 (subscription_id,)
             )
+            return_val = cur.rowcount
             cur.execute(
                 "UPDATE campaign.subscriptions_fulfillment "
                 "SET cancelled = true "
                 "WHERE subscription_id = %s ",
                 (subscription_id,)
             )
+            return return_val
 
     def _campaign_id_to_projects(self, campaign_id):
         with self._transaction.dict_cursor() as cur:
@@ -582,13 +713,14 @@ class PerkFulfillmentRepo(BaseRepo):
     def _future_fulfillment_date(self, spacing_number, spacing_unit,
                                  multiplier):
         cur_date = datetime.now()
+        spacing = abs(spacing_number)*multiplier
         if spacing_unit == "days":
             new_date = cur_date + relativedelta(
-                days=+(spacing_number*multiplier)
+                days=+spacing
             )
         elif spacing_unit == "months":
             new_date = cur_date + relativedelta(
-                months=+(spacing_number*multiplier)
+                months=+spacing
             )
         else:
             raise RepoException("Unknown "

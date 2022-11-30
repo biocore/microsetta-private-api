@@ -22,12 +22,8 @@ def get_fundrazr_transactions(test_transaction=None):
         latest = tr.most_recent_transaction(transaction_source=tr.TRN_TYPE_FUNDRAZR,  # noqa
                                             include_anonymous=True)
 
-        # We've decided that there's no reason to copy all of the old
-        # transactions into our database. In the absence of a prior
-        # transaction to work from, we'll start looking for data at 2022-11-15
         if latest is None:
-            relaunch_date = datetime.datetime(2022, 11, 15)
-            unixtimestamp = int(time.mktime(relaunch_date.timetuple()))
+            unixtimestamp = None
         else:
             unixtimestamp = latest.created_as_unixts()
 

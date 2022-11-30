@@ -9,10 +9,21 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 
 @celery.task(ignore_result=True)
 def fulfill_new_transactions():
+    error_report = []
+
     with Transaction() as t:
         pfr = PerkFulfillmentRepo(t)
-        error_report = pfr.process_pending_fulfillments()
-        t.commit()
+        ftp_ids = pfr.getpending_fulfillments()
+
+    for ftp_id in ftp_ids:
+        with Transaction() as t:
+            pfr = PerkFulfillmentRepo(t)
+            error_list = pfr.process_pending_fulfillment(ftp_id)
+            if len(error_list) > 0:
+                for error in error_list:
+                    error_report.append(error)
+
+            t.commit()
 
     if len(error_report) > 0:
         try:
@@ -27,10 +38,22 @@ def fulfill_new_transactions():
 
 @celery.task(ignore_result=True)
 def process_subscription_fulfillments():
+    error_report = []
+
     with Transaction() as t:
         pfr = PerkFulfillmentRepo(t)
-        error_report = pfr.process_subscription_fulfillments()
-        t.commit()
+        fulfillment_ids = pfr.get_subscription_fulfillments()
+
+    for fulfillment_id in fulfillment_ids:
+        with Transaction() as t:
+            pfr = PerkFulfillmentRepo(t)
+            error_list = pfr.process_subscription_fulfillment(fulfillment_id)
+
+            if len(error_list) > 0:
+                for error in error_list:
+                    error_report.append(error)
+
+            t.commit()
 
     if len(error_report) > 0:
         try:

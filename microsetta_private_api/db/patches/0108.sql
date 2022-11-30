@@ -25,18 +25,34 @@ CREATE TABLE campaign.fundrazr_perk_fulfillment_details (
 
 -- The API will pull down perks automatically, but we need it to exist so we can add the fullfilment info,
 -- so we're just going to insert them here
+
+-- Perk values for Fundrazr's production environment
 INSERT INTO campaign.fundrazr_perk
     (id, remote_campaign_id, title, price)
     VALUES ('3QeVd', '4Tqx5', 'Analyze Your Nutrition', 20),
            ('3QeW6', '4Tqx5', 'Explore Your Microbiome', 180),
            ('0QeXa', '4Tqx5', 'Follow Your Gut', 720);
 
+-- Perk values for Fundrazr's staging environment
+INSERT INTO campaign.fundrazr_perk
+    (id, remote_campaign_id, title, price)
+    VALUES ('13lja', '57xV2', 'Analyze Your Nutrition', 20),
+           ('93lk8', '57xV2', 'Explore Your Microbiome', 180),
+           ('13ll7', '57xV2', 'Follow Your Gut', 720);
+
 -- Insert the fulfillment info for the perks we're offering
+-- Production perks
 INSERT INTO campaign.fundrazr_perk_fulfillment_details
     (perk_id, ffq_quantity, kit_quantity, dak_article_code, fulfillment_spacing_number, fulfillment_spacing_unit)
     VALUES ('3QeVd', 1, 0, NULL, 0, NULL),
            ('3QeW6', 1, 1, '3510005E', 0, NULL),
            ('0QeXa', 4, 4, '3510005E', 3, 'months');
+-- Staging perks
+INSERT INTO campaign.fundrazr_perk_fulfillment_details
+    (perk_id, ffq_quantity, kit_quantity, dak_article_code, fulfillment_spacing_number, fulfillment_spacing_unit)
+    VALUES ('13lja', 1, 0, NULL, 0, NULL),
+           ('93lk8', 1, 1, '3510005E', 0, NULL),
+           ('13ll7', 4, 4, '3510005E', 3, 'months');
 
 -- Both the subscriptions and subscriptions_fulfillment tables will have cancelled flags to create
 -- an audit trail in the event someone contacts us to cancel scheduled shipments.

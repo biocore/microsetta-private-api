@@ -38,12 +38,7 @@ class FundRazrTests(TestCase):
 
             # staging has like 7 transactions, but let's not assume that'll be
             # true in perpetuity
-
-            # NOTE 11/23/2022 - Since we decided to not load old transactions,
-            # this test is temporarily failing. I'm commenting it out, rather
-            # than removing as it should be reactivated as soon as we have at
-            # least one new transaction.
-            # self.assertTrue(len(obs) > 0)
+            self.assertTrue(len(obs) > 0)
 
             # rerun to make sure we dont get more transactions, and that we
             # properly handle the lack of new transactions
