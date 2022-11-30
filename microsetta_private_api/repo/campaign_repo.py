@@ -1,6 +1,7 @@
 import psycopg2
 import json
 import datetime
+import pytz
 
 from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.repo.base_repo import BaseRepo
@@ -453,7 +454,7 @@ class UserTransaction(BaseRepo):
 
         # There's no reason to verify addresses and send emails for old
         # transactions, so we're only going to verify post-relaunch ones
-        add_ver_cutoff = datetime.datetime(2022, 11, 15)
+        add_ver_cutoff = datetime.datetime(2022, 11, 15, tzinfo=pytz.timezone('US/Pacific'))
         if payment.created >= add_ver_cutoff:
             # begin address verification
             i_u_repo = InterestedUserRepo(self._transaction)
