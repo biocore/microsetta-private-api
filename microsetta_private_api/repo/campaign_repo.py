@@ -1,5 +1,6 @@
 import psycopg2
 import json
+import datetime
 
 from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.repo.base_repo import BaseRepo
@@ -450,36 +451,40 @@ class UserTransaction(BaseRepo):
 
         interested_user_id = self._add_interested_user(payment)
 
-        # begin address verification
-        i_u_repo = InterestedUserRepo(self._transaction)
-        try:
-            valid_address = i_u_repo.verify_address(interested_user_id)
-        except RepoException:
-            # we shouldn't reach this point, but address wasn't verified
-            valid_address = False
-
-        # we specifically care if valid_address is False, as verify_address
-        # will return None if the user doesn't have a shipping address
-        # in this case, that implies a perk that doesn't require shipping
-        if valid_address is False:
-            cn = payment.payer_first_name + " " + payment.payer_last_name
-
-            # casting str to avoid concatenation error
-            resolution_url = SERVER_CONFIG["interface_endpoint"] + \
-                "/update_address?uid=" + str(interested_user_id) + \
-                "&email=" + payment.contact_email
+        # There's no reason to verify addresses and send emails for old
+        # transactions, so we're only going to verify post-relaunch ones
+        add_ver_cutoff = datetime.datetime(2022, 11, 15)
+        if payment.created >= add_ver_cutoff:
+            # begin address verification
+            i_u_repo = InterestedUserRepo(self._transaction)
             try:
-                # TODO - will need to add actual language flag to the email
-                # Fundrazr doesn't provide a language flag, defer for now
-                send_email("csymons@eng.ucsd.edu",
-                           "address_invalid",
-                           {"contact_name": cn,
-                            "resolution_url": resolution_url},
-                           EN_US)
-            except:  # noqa
-                # try our best to email
-                pass
-        # end address verification
+                valid_address = i_u_repo.verify_address(interested_user_id)
+            except RepoException:
+                # we shouldn't reach this point, but address wasn't verified
+                valid_address = False
+
+            # we specifically care if valid_address is False, as verify_address
+            # will return None if the user doesn't have a shipping address
+            # in this case, that implies a perk that doesn't require shipping
+            if valid_address is False:
+                cn = payment.payer_first_name + " " + payment.payer_last_name
+
+                # casting str to avoid concatenation error
+                resolution_url = SERVER_CONFIG["interface_endpoint"] + \
+                    "/update_address?uid=" + str(interested_user_id) + \
+                    "&email=" + payment.contact_email
+                try:
+                    # TODO - will need to add actual language flag to the email
+                    # Fundrazr doesn't provide a language flag, defer for now
+                    send_email("csymons@eng.ucsd.edu",
+                               "address_invalid",
+                               {"contact_name": cn,
+                                "resolution_url": resolution_url},
+                               EN_US)
+                except:  # noqa
+                    # try our best to email
+                    pass
+            # end address verification
 
         if payment.TRANSACTION_TYPE == self.TRN_TYPE_FUNDRAZR:
             return self._add_transaction_fundrazr(payment, interested_user_id)
