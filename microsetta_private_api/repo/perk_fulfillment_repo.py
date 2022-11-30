@@ -408,7 +408,7 @@ class PerkFulfillmentRepo(BaseRepo):
         result = {
             "order_address": "wedontcareaboutthis",
             "order_success": True,
-            "order_id": "2cb6702f-4fae-46a7-90e4-75524abdbe35"
+            "order_id": "52175f11-9589-41fd-aee3-b34d70541f8a"
         }
         if not result['order_success']:
             return False, result['daklapack_api_error_msg']

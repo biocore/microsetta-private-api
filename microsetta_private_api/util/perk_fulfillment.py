@@ -13,7 +13,7 @@ def fulfill_new_transactions():
 
     with Transaction() as t:
         pfr = PerkFulfillmentRepo(t)
-        ftp_ids = pfr.getpending_fulfillments()
+        ftp_ids = pfr.get_pending_fulfillments()
 
     for ftp_id in ftp_ids:
         with Transaction() as t:
