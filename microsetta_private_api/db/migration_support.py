@@ -744,15 +744,23 @@ class MigrationSupport:
 
     @staticmethod
     def migrate_108(TRN):
-        # TODO: state goal of this migration here
+        """
+        The goal of this migration is to use functionality developed and
+        tested in the test-framework to migrate all existing surveys from
+        retired templates to new ones, one barcode at a time.
+        """
 
-        # import uuid
-        # TODO: For now, keep this stub of a migration method for the minimal
-        # amount of migration we plan to do.
-        # sql = ("select * from ag.ag_login_surveys")
-        # TRN.add(sql)
-        # rows = TRN.execute()[-1]
-        pass
+        # these modules cant be imported at the top of the file
+        # (database isn't available yet).
+        from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+        from microsetta_private_api.repo.transaction import Transaction
+
+        # generate a list of all existing barcodes
+
+        # process each barcode using functionality from SurveyAnswersRepo.
+        with Transaction() as t:
+            survey_answers_repo = SurveyAnswersRepo(t)
+            pass
 
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,

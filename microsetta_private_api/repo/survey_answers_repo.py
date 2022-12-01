@@ -112,19 +112,18 @@ class SurveyAnswersRepo(BaseRepo):
 
     def get_template_ids_from_survey_ids(self, survey_ids):
         '''
-        Generates a list of unique(survey_id, survey_template_id) tuples, one
-        for each survey_template represented by at least one question present
-        in the answered survey. If one or more questions answered in the
-        survey have been moved to a different template since that time, those
-        survey_template_ids will now appear in the results as well. A current
-        survey should have only one survey_template_id associated w/it. A
-        legacy survey might have several associated w/it as questions have
-        been migrated.
-
+        returns a list of (template_id, survey_id) tuples.
         :param survey_ids: A list of survey ids.
         :return: A list of (survey_id, survey_template_id) tuples.
         '''
-        res = self._local_survey_template_ids_from_survey_ids2(survey_ids)
+        if not isinstance(survey_ids, list):
+            raise ValueError("survey_ids is not a list of survey ids")
+
+        if len(survey_ids) == 0 or '' in survey_ids or None in survey_ids:
+            raise ValueError("survey_ids is an empty list or contains invalid"
+                             " values")
+
+        res = self._local_survey_template_ids_from_survey_ids(survey_ids)
 
         # check to see if any of the survey ids are associated with a remote
         # survey.
@@ -132,6 +131,192 @@ class SurveyAnswersRepo(BaseRepo):
             res += self._remote_survey_template_id_from_survey_id(survey_id)
 
         return res
+
+    def migrate_responses(self, barcode):
+        '''
+        migrates filled answers from legacy surveys associated w/a barcode into current templates and saves them as new surveys.
+        :param survey_ids: A barcode.
+        :return: A list of (account_id, survey_id) tuples representing the new surveys.
+        '''
+        if barcode is None or barcode is '':
+            raise ValueError("invalid barcode")
+
+        # to keep _migrate_responses() simple, it generates a set of new
+        # templates based on latest responses of both retired and new
+        # surveys. If the user already has one or more surveys of the newer
+        # variety (for whatever reason), then we don't want to create migrated
+        # versions for those surveys as they'd be redundant.
+        results, all_meta = self._migrate_responses(barcode)
+
+        sql = """SELECT a.survey_template_id
+                 FROM   ag.ag_login_surveys a 
+                        JOIN ag.source_barcodes_surveys b 
+                          ON a.survey_id = b.survey_id 
+                 WHERE  survey_template_id NOT IN ( 1, 2, 3, 4, 
+                                                    5, 6, 7, 10000, 
+                                                    10001, 10002, 10003, 10004 ) 
+                        AND b.barcode = %s
+                 ORDER  BY survey_template_id"""
+
+        filter_flag = []
+
+        with self._transaction.cursor() as cur:
+            cur.execute(sql, (barcode,))
+
+            filter_flag = [str(x[0]) for x in cur.fetchall()]
+
+            # remove all redundant templates.
+            for template_id in set(filter_flag):
+                results.pop(template_id)
+
+            new_survey_ids = []
+
+            # submit each new survey to the system.
+            for template_id in results:
+                meta = all_meta[template_id]
+
+                new_survey_id = self.submit_answered_survey(meta['account_id'],
+                                                            meta['source_id'],
+                                                            localization.EN_US,
+                                                            template_id,
+                                                            results[template_id],
+                                                            creation_time=meta['creation_time'])
+
+                self.associate_answered_survey_with_sample(meta['account_id'],
+                                                           meta['source_id'],
+                                                           meta['sample_id'],
+                                                           new_survey_id)
+
+                new_survey_ids.append((meta['account_id'], new_survey_id))
+
+            return new_survey_ids
+
+    def _migrate_responses(self, barcode):
+        '''
+        Get all survey responses associated with a barcode and migrate them into new survey templates.
+        :param barcode: A barcode.
+        :return: A dict of filled survey_templates, A dict of survey metadata.
+        TODO: Union with survey_questions_other
+        '''
+        if barcode is None or barcode is '':
+            raise ValueError("invalid barcode")
+
+        sql = """SELECT
+                        a.survey_question_id, 
+                        a.response, 
+                        d.survey_id as survey_template_id, 
+                        e.ag_login_id as account_id,
+                        e.source_id, 
+                        e.creation_time,
+                        f.survey_response_type,
+						g.ag_kit_barcode_id as sample_id
+                 FROM   ag.survey_answers a 
+                        JOIN ag.source_barcodes_surveys b 
+                          ON a.survey_id = b.survey_id 
+                        JOIN ag.group_questions c 
+                          ON a.survey_question_id = c.survey_question_id 
+                        JOIN ag.surveys d 
+                          ON c.survey_group = d.survey_group 
+                        JOIN ag.ag_login_surveys e 
+                          ON a.survey_id = e.survey_id
+                        JOIN ag.survey_question_response_type f
+                          ON a.survey_question_id = f.survey_question_id
+						JOIN ag.ag_kit_barcodes g
+						  ON b.barcode = g.barcode
+                 WHERE  a.response != 'Unspecified' 
+                        AND b.barcode = %s
+                        AND d.retired = false
+                 ORDER  BY d.survey_id asc, e.creation_time asc"""
+
+        with self._transaction.cursor() as cur:
+            cur.execute(sql, (barcode,))
+
+            rows = cur.fetchall()
+
+            # create a set of empty templates to fill-in.
+            results = self._generate_empty_surveys()
+            dirty_flag = []
+            meta = {}
+
+            for row in rows:
+                question_id = str(row[0])
+                response = row[1]
+                template_id = str(row[2])
+                account_id = str(row[3])
+                source_id = str(row[4])
+                creation_time = row[5]
+                response_type = row[6]
+                sample_id = str(row[7])
+
+                # template n is now dirty.
+                dirty_flag.append(template_id)
+        
+                # responses are from earliest to latest thus older answers
+                # will be overwritten with newer ones as need be.
+                if response_type == 'MULTIPLE':
+                    results[template_id][question_id].append(response)
+                    try:
+                        # remove will raise an exception if 'Unspecified' has
+                        # already been removed. Handle this quietly.
+                        results[template_id][question_id].remove("Unspecified")
+                    except ValueError:
+                        pass
+                else:
+                    results[template_id][question_id] = response
+
+                meta[template_id] = {'creation_time': creation_time,
+                                     'account_id': account_id,
+                                     'sample_id': sample_id,
+                                     'source_id': source_id }
+
+            # remove all templates that remain empty.
+            for template_id in set(results.keys()) - set(dirty_flag):
+                results.pop(template_id)
+
+            return results, meta
+
+    def _generate_empty_surveys(self):
+        '''
+        Generate a set of empty templates for all non-retired surveys.
+        Fill in the responses with 'Unspecified' and similar as needed.
+        :return: A list of empty templates for all non-retired surveys.
+        TODO: Union with survey_questions_other
+        '''
+        sql = """SELECT a.survey_id, 
+                        b.survey_question_id, 
+                        c.survey_response_type 
+                 FROM   ag.surveys a 
+                        JOIN ag.group_questions b 
+                          ON a.survey_group = b.survey_group 
+                        JOIN ag.survey_question_response_type c 
+                          ON b.survey_question_id = c.survey_question_id 
+                        JOIN ag.survey_question d 
+                          ON d.survey_question_id = b.survey_question_id 
+                 WHERE  a.retired = false 
+                        AND d.retired = false 
+                 ORDER  BY survey_id, 
+                           survey_question_id"""
+
+        with self._transaction.cursor() as cur:
+            cur.execute(sql)
+
+            rows = cur.fetchall()
+
+            results = {}
+            for row in rows:
+                template_id = str(row[0])
+                question_id = str(row[1])
+                response_type = row[2]
+
+                if not template_id in results:
+                    results[template_id] = {}
+
+                if response_type == 'MULTIPLE':
+                    results[template_id][question_id] = ["Unspecified"]
+                else:
+                    results[template_id][question_id] = "Unspecified"
+
+            return results
 
     def _remote_survey_template_id_from_survey_id(self, survey_id):
         # VIOscreen
@@ -178,70 +363,14 @@ class SurveyAnswersRepo(BaseRepo):
 
         return []
 
-    def _local_survey_template_ids_from_survey_ids2(self, survey_ids):
+    def _local_survey_template_ids_from_survey_ids(self, survey_ids):
         with self._transaction.cursor() as cur:
             # note these ids are unique string ids, not integer ids.
             cur.execute("SELECT survey_id, survey_template_id "
                         "FROM ag.ag_login_surveys WHERE survey_id IN %s",
                         (tuple(survey_ids),))
 
-            res = [(x[0], x[1]) for x in cur.fetchall()]
-            return res
-
-    def _local_survey_template_ids_from_survey_ids(self, survey_ids):
-        '''
-        Generates a list of unique(survey_id, survey_template_id) tuples, one
-        for each survey_template represented by at least one question present
-        in the answered survey. If one or more questions answered in the
-        survey have been moved to a different template since that time, those
-        survey_template_ids will now appear in the results as well. A current
-        survey should have only one survey_template_id associated w/it. A
-        legacy survey might have several associated w/it as questions have
-        been migrated.
-
-        :param survey_ids: A list of survey ids.
-        :return: A list of (survey_id, survey_template_id) tuples.
-        '''
-        with self._transaction.cursor() as cur:
-            # note these ids are unique string ids, not integer ids.
-
-            cur.execute("""SELECT a.barcode,
-                                  a.survey_id,
-                                  b.survey_question_id,
-                                  c.survey_group,
-                                  d.survey_id AS survey_template_id
-                           FROM   source_barcodes_surveys a
-                                  JOIN survey_answers b
-                                    ON a.survey_id = b.survey_id
-                                  JOIN group_questions c
-                                    ON b.survey_question_id =
-                                        c.survey_question_id
-                                  JOIN surveys d
-                                    ON c.survey_group = d.survey_group
-                           WHERE  b.survey_id IN %s""", (tuple(survey_ids),))
-
-            survey_template_ids = [(x[1], x[4]) for x in cur.fetchall()]
-
-            cur.execute("""SELECT a.barcode,
-                                  a.survey_id,
-                                  b.survey_question_id,
-                                  c.survey_group,
-                                  d.survey_id AS survey_template_id
-                           FROM   source_barcodes_surveys a
-                                  JOIN survey_answers_other b
-                                    ON a.survey_id = b.survey_id
-                                  JOIN group_questions c
-                                    ON b.survey_question_id =
-                                        c.survey_question_id
-                                  JOIN surveys d
-                                    ON c.survey_group = d.survey_group
-                           WHERE  b.survey_id IN %s""", (tuple(survey_ids),))
-
-            survey_template_ids += [(x[1], x[4]) for x in cur.fetchall()]
-
-            survey_template_ids = list(set(survey_template_ids))
-
-            return survey_template_ids
+            return [(x[0], x[1]) for x in cur.fetchall()]
 
     def list_answered_surveys(self, account_id, source_id):
         with self._transaction.cursor() as cur:
@@ -339,7 +468,8 @@ class SurveyAnswersRepo(BaseRepo):
 
     def submit_answered_survey(self, ag_login_id, source_id,
                                language_tag, survey_template_id, survey_model,
-                               survey_answers_id=None):
+                               survey_answers_id=None,
+                               creation_time=None):
         # note that "ag_login_id" is the same as account_id
 
         # This is actually pretty complicated in the current schema:
@@ -362,14 +492,21 @@ class SurveyAnswersRepo(BaseRepo):
             survey_template_id, language_tag)
 
         with self._transaction.cursor() as cur:
-
             # Log that the user submitted this survey
-            cur.execute("INSERT INTO ag_login_surveys "
-                        "(ag_login_id, survey_id, source_id, "
-                        "survey_template_id) "
-                        "VALUES(%s, %s, %s, %s)",
-                        (ag_login_id, survey_answers_id, source_id,
-                         survey_template_id))
+            if creation_time:
+                cur.execute("INSERT INTO ag_login_surveys "
+                            "(ag_login_id, survey_id, source_id, "
+                            "creation_time, survey_template_id) "
+                            "VALUES(%s, %s, %s, %s, %s)",
+                            (ag_login_id, survey_answers_id, source_id,
+                             creation_time, survey_template_id))
+            else:
+                cur.execute("INSERT INTO ag_login_surveys "
+                            "(ag_login_id, survey_id, source_id, "
+                            "survey_template_id) "
+                            "VALUES(%s, %s, %s, %s)",
+                            (ag_login_id, survey_answers_id, source_id,
+                             survey_template_id))
 
             # Write each answer
             for survey_template_group in survey_template.groups:

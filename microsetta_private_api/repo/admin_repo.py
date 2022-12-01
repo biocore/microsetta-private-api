@@ -1128,14 +1128,13 @@ class AdminRepo(BaseRepo):
             )
             return [r[0] for r in cur.fetchall()]
 
-    def get_survey_metadata(self, sample_barcode, survey_template_id=None):
+    def get_survey_metadata(self, sample_barcode, survey_template_id=None,
+                            include_retired_templates=False):
         '''
-        Return all surveys associated with a given barcode. If survey questions
-        have migrated to new survey templates since the survey was submitted,
-        multiple instances of the survey will be returned, one for each
-        associated survey template.
+        Return all surveys associated with a given barcode.
         :param sample_barcode: A sample barcode.
         :param survey_template_id: A survey template id to limit results to.
+        :param include_retired_templates: Boolean.
         :return: A nested dict structure containing all answered surveys.
         '''
         ids = self._get_ids_relevant_to_barcode(sample_barcode)
@@ -1166,6 +1165,7 @@ class AdminRepo(BaseRepo):
         host_subject_id = source_repo.get_host_subject_id(source)
 
         survey_ans_repo = SurveyAnswersRepo(self._transaction)
+
         a_ids = survey_ans_repo.list_answered_surveys_by_sample(
                 account_id, source_id, sample_id)
 
@@ -1190,19 +1190,10 @@ class AdminRepo(BaseRepo):
 
         all_survey_answers = []
         for answer_id, template_id in template_ids:
-            # Note that answered survey returned according to the survey_id
-            # passed to it. If template_ids contains multiple tuples beginning
-            # with the same survey_id (implying one or more questions in the
-            # answered survey have been moved to a new survey template), there
-            # will be multiple copies of the survey returned; one for each
-            # survey_template_id now associated with it. These legacy surveys
-            # will likely NOT contain all questions currently associated with
-            # the current survey_template_ids.
             answer_model = survey_ans_repo.get_answered_survey(account_id,
                                                                source_id,
                                                                answer_id,
                                                                "en_US")
-
             if answer_model is None:
                 # if answers are requested for a vioscreen survey
                 # the answers model will comeback empty so let's
