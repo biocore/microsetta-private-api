@@ -59,7 +59,8 @@ class QiitaRepo(BaseRepo):
                                WHERE sample_status='sample-is-valid'
                                    AND site_sampled IS NOT NULL
                                    AND site_sampled != 'Please select...'
-                                   AND source_id IS NOT NULL""")
+                                   AND source_id IS NOT NULL
+                                   AND ag_kit_barcodes.barcode = 'DM2483944'""")
 
                 barcodes = {r[0] for r in cur.fetchall()}
         else:
