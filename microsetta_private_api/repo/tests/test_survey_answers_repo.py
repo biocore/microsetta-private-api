@@ -110,6 +110,11 @@ class SurveyAnswersTests(unittest.TestCase):
             # survey creation_time, etc.
             obs, obs_meta = sar._migrate_responses('000001040')
 
+            from json import dumps
+
+            print(dumps(obs, indent=2))
+            print(dumps(filled_surveys, indent=2))
+            
             self.assertDictEqual(obs, filled_surveys)
 
             # unfortunately, obs_meta only contains creation_time, source_id,
@@ -131,6 +136,7 @@ class SurveyAnswersTests(unittest.TestCase):
                 self.assertTrue(status, msg=msg)
 
             t.commit()
+            self.assertTrue(False)
 
     def test_get_template_ids_from_survey_ids(self):
         with Transaction() as t:
