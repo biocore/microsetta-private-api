@@ -249,7 +249,7 @@ insert into ag.survey_question (survey_question_id, american, question_shortname
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (349, 'If you use light emitting electronic devices such as a phone or laptop right before bed, do you use it in night or dark mode?', 'DARK_MODE_ON', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (350, 'Over the past week, how would you rate your sleep quality?', 'SLEEP_QUALITY', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (354, 'Do you surf in the ocean on a regular basis?', 'IS_SURFER', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (360, 'If you answered yes, which type of IBD do you have?', 'IBD_DIAGNOSED_AS_TYPE', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (360, 'If you answered "yes", which type of IBD do you have?', 'IBD_DIAGNOSED_AS_TYPE', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (362, 'Over the last week, how frequently have you had abdominal pain or abdominal discomfort?', 'FREQ_ABDOMINAL_PAIN', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (363, 'Over the last week, how frequently have you had abdominal bloating?', 'FREQ_ABDOMINAL_BLOATING', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (364, 'Over the last week, how frequently have you had flatulence (passage of gas)?', 'FREQ_FLATULENCE', false);
@@ -275,9 +275,9 @@ insert into ag.survey_question (survey_question_id, american, question_shortname
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (443, 'In an average week, how often do you eat foods that are fortified with high fiber content (e.g. Fiber One)?', 'WEEKLY_FIBER_FORTIFIED_FOODS', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (462, 'How much do you typically consume in a sitting?', 'ARTIFICIAL_BEVERAGE_CONSUMPTION', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (463, 'How often do you consume foods containing non-nutritive or low-calorie sweeteners?', 'ARTIFICIAL_SWEETENERS_FOOD', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (464, 'If you answered yes to Question 24 and/or 25, what type of non-nutritive or low-calorie sweetner(s) do you consume on a regular basis? Select all that apply.', 'ARTIFICIAL_SWEETENER_TYPES', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (464, 'If you answered "yes", to Question 24 and/or 25, what type of non-nutritive or low-calorie sweetner(s) do you consume on a regular basis? Select all that apply.', 'ARTIFICIAL_SWEETENER_TYPES', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (465, 'When you consume foods or beverages containing non-nutritive or low-calorie sweetners, do you tend to experience gastrointestinal disorders afterwards, such as gas, bloating, and/or diarrhea?', 'ARTIFICIAL_GI_DISORDERS', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (466, 'If you answered yes to the previous question, what are the symptoms? Select all that apply.', 'ARTIFICIAL_GI_DISORDER_TYPES', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (466, 'If you answered "yes", to the previous question, what are the symptoms? Select all that apply.', 'ARTIFICIAL_GI_DISORDER_TYPES', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (474, 'At home, what is the main source of your plain, unflavored drinking water? This can include still or sparkling/carbonated water.', 'HOME_WATER_SOURCE', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (475, 'At home, do you apply additional treatment (not including filtering) to your drinking water prior to consumption (e.g., boiling, purification tablet, chlorine/bleach)?', 'HOME_WATER_TREATMENT', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (476, 'When you''re outside the home, what is the main source of your plain unflavored drinking water? This can include still or sparkling/carbonated water.', 'OUTSIDE_WATER_SOURCE', false);
@@ -302,7 +302,7 @@ insert into ag.survey_question (survey_question_id, american, question_shortname
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (503, 'Where does your cats(s) mostly stay?', 'CAT_LOCATION_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (504, 'Have you ever been diagnosed with mental health illness?', 'mental_illness_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (505, 'If you responded "yes", please select which disorder(s) from the following list:', 'mental_illness_type_v2', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (506, 'If you responded "Yes", select which type of diabetes:', 'diabetes_type_v2', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (506, 'If you responded "yes", select which type of diabetes:', 'diabetes_type_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (507, 'Have you ever been diagnosed with cancer?', 'cancer_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (508, 'Participant Name', 'RIS_PARTICIPANT_NAME', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (509, 'Are you genetically related?', 'RIS_IS_RELATED', false);
@@ -886,10 +886,10 @@ insert into ag.survey_response (american) values('Yes, diagnosed by an alternati
 insert into ag.survey_response (american) values('Yes, diagnosed by an alternative or complementary practitioner');
 insert into ag.survey_response (american) values('Yes, diagnosed with celiac disease');
 insert into ag.survey_response (american) values('Yes, diagnosed with gluten allergy (anti-gluten IgG), but not celiac disease');
-insert into ag.survey_response (american) values('both equally');
+insert into ag.survey_response (american) values('Both equally');
 insert into ag.survey_response (american) values('few times/month');
-insert into ag.survey_response (american) values('indoors');
-insert into ag.survey_response (american) values('outdoors');
+--insert into ag.survey_response (american) values('Indoors');
+--insert into ag.survey_response (american) values('Outdoors');
 insert into ag.survey_response (american) values ('City (population is more than 100,000 and less than 1 million)');
 insert into ag.survey_response (american) values('2021');
 insert into ag.survey_response (american) values('2022');
@@ -1379,9 +1379,9 @@ insert into ag.survey_question_response(survey_question_id, response, display_in
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (500, 'Yes', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (500, 'No', 2);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (501, 'Unspecified', 0);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (501, 'indoors', 1);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (501, 'outdoors', 2);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (501, 'both equally', 3);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (501, 'Indoors', 1);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (501, 'Outdoors', 2);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (501, 'Both equally', 3);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (502, 'Unspecified', 0);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (502, 'Female', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (502, 'Male', 2);
@@ -1389,9 +1389,9 @@ insert into ag.survey_question_response(survey_question_id, response, display_in
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (502, 'Not sure', 4);
 
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (503, 'Unspecified', 0);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (503, 'indoors', 1);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (503, 'outdoors', 2);
-insert into ag.survey_question_response(survey_question_id, response, display_index) values (503, 'both equally', 3);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (503, 'Indoors', 1);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (503, 'Outdoors', 2);
+insert into ag.survey_question_response(survey_question_id, response, display_index) values (503, 'Both equally', 3);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (504, 'Unspecified', 0);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (504, 'No, I do not have this condition', 1);
 insert into ag.survey_question_response(survey_question_id, response, display_index) values (504, 'Yes, diagnosed by a licensed mental health professional', 2);

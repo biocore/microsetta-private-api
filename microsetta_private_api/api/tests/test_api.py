@@ -18,7 +18,9 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
-from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
+from microsetta_private_api.repo.survey_template_repo import (
+    SurveyTemplateRepo as st_repo
+)
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.vioscreen_repo import (
     VioscreenSessionRepo, VioscreenPercentEnergyRepo,
@@ -318,7 +320,7 @@ def delete_dummy_accts():
         survey_answers_repo = SurveyAnswersRepo(t)
         sample_repo = SampleRepo(t)
         barcode_repo = BarcodeRepo(t)
-        template_repo = SurveyTemplateRepo(t)
+        template_repo = st_repo(t)
 
         # Delete fake kit and barcode preps
         barcode_repo.delete_preparation(BC1, 1234)
@@ -892,7 +894,7 @@ class AccountTests(ApiTests):
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         _ = create_dummy_answered_survey(
             dummy_acct_id, dummy_source_id,
-            survey_template_id=SurveyTemplateRepo.DIET_ID,
+            survey_template_id=st_repo.DIET_ID,
             dummy_sample_id=MOCK_SAMPLE_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
@@ -1087,7 +1089,7 @@ class AccountTests(ApiTests):
         response = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s?language_tag=en_us' %  # noqa
             (dummy_acct_id, dummy_source_id,
-             SurveyTemplateRepo.POLYPHENOL_FFQ_ID),
+             st_repo.POLYPHENOL_FFQ_ID),
             headers=self.dummy_auth)
 
         # now let's scrub it
@@ -1561,7 +1563,7 @@ class SurveyTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': 10,
+                    'survey_template_id': st_repo.BASIC_INFO_ID,
                     'survey_text': DUMMY_SURVEY_ANSWERS_10
                 }),
             headers=self.dummy_auth
@@ -1570,7 +1572,7 @@ class SurveyTests(ApiTests):
         real_id_from_loc, get_resp = self._validate_survey_create(post_resp)
         exp_out, exp_model = self._make_exp_survey_out(real_id_from_loc,
                                                        DUMMY_SURVEY_ANSWERS_10,
-                                                       10,
+                                                       st_repo.BASIC_INFO_ID,
                                                        'Basic Information')
         self._validate_survey_info(get_resp, exp_out, exp_model)
 
@@ -1580,7 +1582,7 @@ class SurveyTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': SurveyTemplateRepo.DIET_ID,
+                    'survey_template_id': st_repo.DIET_ID,
                     'survey_text': DUMMY_SURVEY_ANSWERS_17
                 }),
             headers=self.dummy_auth
@@ -1594,7 +1596,7 @@ class SurveyTests(ApiTests):
 
         exp_out, exp_m = self._make_exp_survey_out(real_id_from_loc,
                                                    DUMMY_SURVEY_ANSWERS_17,
-                                                   SurveyTemplateRepo.DIET_ID,
+                                                   st_repo.DIET_ID,
                                                    'Diet')
         self._validate_survey_info(get_resp, exp_out, exp_m)
 
@@ -1610,7 +1612,7 @@ class SurveyTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': 10,
+                    'survey_template_id': st_repo.BASIC_INFO_ID,
                     'survey_text': {}
                 }),
             headers=self.dummy_auth
@@ -1619,7 +1621,7 @@ class SurveyTests(ApiTests):
         real_id_from_loc, get_resp = self._validate_survey_create(post_resp)
         exp_out, exp_model = self._make_exp_survey_out(real_id_from_loc,
                                                        {'108': ''},
-                                                       10,
+                                                       st_repo.BASIC_INFO_ID,
                                                        'Basic Information')
         self._validate_survey_info(get_resp, exp_out, exp_model)
 
@@ -1706,7 +1708,9 @@ class SampleTests(ApiTests):
             create_dummy_1=True)
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         dummy_answered_survey_id = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, survey_template_id=10)
+            dummy_acct_id,
+            dummy_source_id,
+            survey_template_id=st_repo.BASIC_INFO_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}'.format(
             dummy_acct_id, dummy_source_id)
@@ -1739,7 +1743,7 @@ class SampleTests(ApiTests):
         # ensure there is precisely one survey associated with this sample
         exp_out = [
             {'survey_id': dummy_answered_survey_id,
-             'survey_template_id': 10,
+             'survey_template_id': st_repo.BASIC_INFO_ID,
              'survey_status': None,
              'survey_template_title': "Basic Information",
              'survey_template_version': '1.0',
@@ -1760,7 +1764,9 @@ class SampleTests(ApiTests):
         create_dummy_kit(dummy_acct_id, dummy_source_id,
                          associate_sample=False)
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, survey_template_id=10)
+            dummy_acct_id,
+            dummy_source_id,
+            survey_template_id=st_repo.BASIC_INFO_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
             dummy_acct_id, dummy_source_id)
@@ -1815,7 +1821,7 @@ class SampleTests(ApiTests):
         _ = create_dummy_answered_survey(
             dummy_acct_id,
             dummy_source_id,
-            survey_template_id=SurveyTemplateRepo.DIET_ID,)
+            survey_template_id=st_repo.DIET_ID,)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples/{2}'.format(
             dummy_acct_id, dummy_source_id, MOCK_SAMPLE_ID)
@@ -1938,7 +1944,8 @@ class SampleTests(ApiTests):
 
         _ = create_dummy_answered_survey(
             dummy_acct_id, dummy_source_id,
-            survey_template_id=10, dummy_sample_id=MOCK_SAMPLE_ID)
+            survey_template_id=st_repo.BASIC_INFO_ID,
+            dummy_sample_id=MOCK_SAMPLE_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
             dummy_acct_id, dummy_source_id)
@@ -1979,7 +1986,9 @@ class SampleTests(ApiTests):
 
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, survey_template_id=10,
+            dummy_acct_id,
+            dummy_source_id,
+            survey_template_id=st_repo.BASIC_INFO_ID,
             dummy_sample_id=MOCK_SAMPLE_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
@@ -2053,7 +2062,9 @@ class SampleTests(ApiTests):
             create_dummy_1=True)
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         dummy_answered_survey_id = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, survey_template_id=10,
+            dummy_acct_id,
+            dummy_source_id,
+            survey_template_id=st_repo.BASIC_INFO_ID,
             dummy_sample_id=MOCK_SAMPLE_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(

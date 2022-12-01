@@ -1067,7 +1067,7 @@ class IntegrationTests(TestCase):
                              "Couldn't parse source_id from loc header")
 
         # Part 1: Submit a survey
-        chosen_survey = 10
+        chosen_survey = SurveyTemplateRepo.BASIC_INFO_ID
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en_US' %
@@ -1144,7 +1144,7 @@ class IntegrationTests(TestCase):
         """
 
         # Part 1: Submit a survey
-        chosen_survey = 10
+        chosen_survey = SurveyTemplateRepo.BASIC_INFO_ID
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en_US' %
@@ -1510,7 +1510,7 @@ class IntegrationTests(TestCase):
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en_qq' %
-            (ACCT_ID, HUMAN_ID, 10),
+            (ACCT_ID, HUMAN_ID, SurveyTemplateRepo.BASIC_INFO_ID),
             headers=MOCK_HEADERS
         )
         check_response(resp, 404)
@@ -1519,7 +1519,7 @@ class IntegrationTests(TestCase):
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en_US' %
-            (ACCT_ID, HUMAN_ID, 10),
+            (ACCT_ID, HUMAN_ID, SurveyTemplateRepo.BASIC_INFO_ID),
             headers=MOCK_HEADERS
         )
         check_response(resp)
@@ -1529,7 +1529,7 @@ class IntegrationTests(TestCase):
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en_GB' %
-            (ACCT_ID, HUMAN_ID, 10),
+            (ACCT_ID, HUMAN_ID, SurveyTemplateRepo.BASIC_INFO_ID),
             headers=MOCK_HEADERS
         )
         check_response(resp)
@@ -1569,7 +1569,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': 10,
+                    'survey_template_id': SurveyTemplateRepo.BASIC_INFO_ID,
                     'survey_text': model_gb
                 }),
             headers=MOCK_HEADERS
@@ -1583,7 +1583,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': 10,
+                    'survey_template_id': SurveyTemplateRepo.BASIC_INFO_ID,
                     'survey_text': model_gb
                 }),
             headers=MOCK_HEADERS
@@ -1603,7 +1603,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': 10,
+                    'survey_template_id': SurveyTemplateRepo.BASIC_INFO_ID,
                     'survey_text': model_gb
                 }),
             headers=MOCK_HEADERS
@@ -1620,7 +1620,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': 10,
+                    'survey_template_id': SurveyTemplateRepo.BASIC_INFO_ID,
                     'survey_text': model_gb
                 }),
             headers=MOCK_HEADERS
