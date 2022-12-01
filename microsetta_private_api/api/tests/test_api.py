@@ -2117,16 +2117,10 @@ class VioscreenTests(ApiTests):
             self.src_id = src_id
             self.samp_id = samp_id
             self.vio_id = '674533d367f222d2'
-            sessionId = "000ada854d4f45f5abda90ccade7f0a8"
             cur.execute("""INSERT INTO ag.vioscreen_registry
                            (account_id, source_id, sample_id, vio_id)
                            VALUES (%s, %s, %s, %s)""",
                         (self.acct_id, self.src_id, self.samp_id, self.vio_id))
-            cur.execute("""INSERT INTO ag.vioscreen_sessions
-                           (sessionid,username,protocolid,status,culturecode,created,modified)
-                           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-                        (sessionId, self.vio_id, 1, '1', '1',
-                         '2022-10-08 18:55:07', '2022-10-08 18:55:07'))
             t.commit()
 
     def tearDown(self):
@@ -2234,6 +2228,23 @@ class VioscreenTests(ApiTests):
         self.assertEqual(get_response.status_code, 404)
 
     def test_get_vioscreen_sessions_200(self):
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
+
+        with Transaction() as t:
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
+            t.commit()
+
         url = (f'/vioscreen/{self.acct_id}'
                f'/sources/{self.src_id}') + '/vioscreen_sessions'
         _ = create_dummy_acct(create_dummy_1=True,
