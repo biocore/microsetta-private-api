@@ -31,19 +31,19 @@ def get_fundrazr_transactions(test_transaction=None):
             added += 1
             amount += payment.amount
 
-        return added, amount
+        return added, amount, unixtimestamp
 
     if test_transaction is None:
         # if we do not have a test_transaction, we assume we are operating
         # in a commit safe environment
         with Transaction() as t:
-            added, amount = _get_load(t)
+            added, amount, unixtimestamp = _get_load(t)
             t.commit()
     else:
         # otherwise, we assume we are in tests and we do not commit
-        added, amount = _get_load(test_transaction)
+        added, amount, unixtimestamp = _get_load(test_transaction)
 
-    payload = f"Number added: {added}\nTotaling: ${amount}"
+    payload = f"Number added: {added}\nTotaling: ${amount}\nunixtimestamp: {unixtimestamp}"
 
     try:
         send_email(SERVER_CONFIG['pester_email'], "pester_daniel",

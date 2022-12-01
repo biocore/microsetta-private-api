@@ -5,8 +5,8 @@ from dateutil.relativedelta import relativedelta
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.subscription import Subscription
-# from microsetta_private_api.admin.admin_impl import\
-#    create_daklapack_order_internal
+from microsetta_private_api.admin.admin_impl import\
+    create_daklapack_order_internal
 from microsetta_private_api.model.daklapack_order import FEDEX_PROVIDER,\
     FEDEX_2DAY_SHIPPING
 from microsetta_private_api.model.activation_code import ActivationCode
@@ -404,12 +404,7 @@ class PerkFulfillmentRepo(BaseRepo):
             "shipping_provider": FEDEX_PROVIDER,
             "shipping_type": FEDEX_2DAY_SHIPPING
         }
-        # result = create_daklapack_order_internal(daklapack_order)
-        result = {
-            "order_address": "wedontcareaboutthis",
-            "order_success": True,
-            "order_id": "52175f11-9589-41fd-aee3-b34d70541f8a"
-        }
+        result = create_daklapack_order_internal(daklapack_order)
         if not result['order_success']:
             return False, result['daklapack_api_error_msg']
         else:
