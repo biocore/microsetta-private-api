@@ -141,41 +141,40 @@ class SurveyAnswersRepo(BaseRepo):
             return [(survey_id, SurveyTemplateRepo.VIOSCREEN_ID)]
 
         with self._transaction.cursor() as cur:
-            # Polyphenol FFQ
             try:
                 # If survey_id isn't a valid UUID, a ValueError will be
                 # raised.
                 uuid.UUID(survey_id)
-                cur.execute("SELECT EXISTS (SELECT polyphenol_ffq_id FROM "
-                            "ag.polyphenol_ffq_registry WHERE "
-                            "polyphenol_ffq_id=%s)", (survey_id,))
-
-                if cur.fetchone()[0] is True:
-                    return [(survey_id, SurveyTemplateRepo.POLYPHENOL_FFQ_ID)]
             except ValueError:
-                # not Polyphenol FFQ
-                pass
-
-            # Spain FFQ
-            try:
-                uuid.UUID(survey_id)
-                cur.execute("SELECT EXISTS (SELECT spain_ffq_id FROM "
-                            "ag.spain_ffq_registry WHERE spain_ffq_id=%s)",
+                # assume a survey_id that isn't a valid UUID is a myfoodrepo
+                # survey.
+                cur.execute("SELECT EXISTS (SELECT myfoodrepo_id FROM "
+                            "myfoodrepo_registry WHERE myfoodrepo_id=%s)",
                             (survey_id,))
 
                 if cur.fetchone()[0] is True:
-                    return [(survey_id, SurveyTemplateRepo.SPAIN_FFQ_ID)]
-            except ValueError:
-                # not Spain FFQ
-                pass
+                    return [(survey_id, SurveyTemplateRepo.MYFOODREPO_ID)]
+                else:
+                    return []
 
-            # myfoodrepo
-            cur.execute("SELECT EXISTS (SELECT myfoodrepo_id FROM "
-                        "myfoodrepo_registry WHERE myfoodrepo_id=%s)",
+            # survey_id must be a proper UUID formatted string, or else the
+            # queries below will fail.
+
+            # Polyphenol FFQ
+            cur.execute("SELECT EXISTS (SELECT polyphenol_ffq_id FROM "
+                        "ag.polyphenol_ffq_registry WHERE "
+                        "polyphenol_ffq_id=%s)", (survey_id,))
+
+            if cur.fetchone()[0] is True:
+                return [(survey_id, SurveyTemplateRepo.POLYPHENOL_FFQ_ID)]
+
+            # Spain FFQ
+            cur.execute("SELECT EXISTS (SELECT spain_ffq_id FROM "
+                        "ag.spain_ffq_registry WHERE spain_ffq_id=%s)",
                         (survey_id,))
 
             if cur.fetchone()[0] is True:
-                return [(survey_id, SurveyTemplateRepo.MYFOODREPO_ID)]
+                return [(survey_id, SurveyTemplateRepo.SPAIN_FFQ_ID)]
 
         return []
 
