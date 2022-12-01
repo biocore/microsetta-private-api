@@ -2217,7 +2217,7 @@ class VioscreenTests(ApiTests):
 
     def test_get_vioscreen_sessions_404(self):
         src_id = self.src_id + '1'
-        url = (f'/vioscreen/{self.acct_id}'
+        url = (f'/api/accounts/{self.acct_id}'
                f'/sources/{src_id}') + '/vioscreen_sessions'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
@@ -2226,9 +2226,6 @@ class VioscreenTests(ApiTests):
         get_response = self.client.get(url,
                                        headers=make_headers(FAKE_TOKEN_ADMIN))
         self.assertEqual(get_response.status_code, 404)
-
-        response_obj = json.loads(get_response.data)
-        self.assertEqual(response_obj['message'], "Session not found")
 
     def test_get_vioscreen_sessions_200(self):
         vioscreen_session = VioscreenSession(
@@ -2248,8 +2245,7 @@ class VioscreenTests(ApiTests):
             vio_sess.upsert_session(vioscreen_session)
             t.commit()
 
-        url = (f'/vioscreen/{self.acct_id}'
-               f'/sources/{self.src_id}') + '/vioscreen_sessions'
+        url = self._url_constructor() + '/vioscreen/session'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
