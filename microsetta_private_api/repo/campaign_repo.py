@@ -1,7 +1,6 @@
 import psycopg2
 import json
 import datetime
-import pytz
 
 from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.repo.base_repo import BaseRepo
@@ -454,7 +453,8 @@ class UserTransaction(BaseRepo):
 
         # There's no reason to verify addresses and send emails for old
         # transactions, so we're only going to verify post-relaunch ones.
-        # We're also not going to verify the address if they didn't claim any items.
+        # We're also not going to verify the address if they didn't claim
+        # any perks.
         add_ver_cutoff = datetime.datetime(2022, 11, 15)
         if payment.created.timestamp() >= add_ver_cutoff.timestamp() and\
                 payment.claimed_items is not None:
