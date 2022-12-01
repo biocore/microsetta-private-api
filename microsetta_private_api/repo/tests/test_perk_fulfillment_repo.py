@@ -3,7 +3,6 @@ import datetime
 import uuid
 from unittest.mock import patch
 import dateutil.parser
-import pytz
 
 from microsetta_private_api.repo.perk_fulfillment_repo import\
     PerkFulfillmentRepo
@@ -64,7 +63,7 @@ SUB_TRANSACTION_ID = "SUB_TRANS"
 
 TRANSACTION_ONE_FFQ = FundRazrPayment(
     FFQ_TRANSACTION_ID,
-    datetime.datetime.now(tz=pytz.timezone('US/Pacific')),
+    datetime.datetime.now(),
     '4Tqx5',
     20.,
     20.,
@@ -83,7 +82,7 @@ TRANSACTION_ONE_FFQ = FundRazrPayment(
 )
 TRANSACTION_ONE_KIT = FundRazrPayment(
     KIT_TRANSACTION_ID,
-    datetime.datetime.now(tz=pytz.timezone('US/Pacific')),
+    datetime.datetime.now(),
     '4Tqx5',
     180.,
     180.,
@@ -102,7 +101,7 @@ TRANSACTION_ONE_KIT = FundRazrPayment(
 )
 TRANSACTION_ONE_SUBSCRIPTION = FundRazrPayment(
     SUB_TRANSACTION_ID,
-    datetime.datetime.now(tz=pytz.timezone('US/Pacific')),
+    datetime.datetime.now(),
     '4Tqx5',
     720.,
     720.,
@@ -121,7 +120,7 @@ TRANSACTION_ONE_SUBSCRIPTION = FundRazrPayment(
 )
 TRANSACTION_FAKE_PERK = FundRazrPayment(
     '123abc',
-    datetime.datetime.now(tz=pytz.timezone('US/Pacific')),
+    datetime.datetime.now(),
     '4Tqx5',
     6.,
     6.,

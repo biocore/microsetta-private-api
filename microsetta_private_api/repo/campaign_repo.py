@@ -453,11 +453,11 @@ class UserTransaction(BaseRepo):
         interested_user_id = self._add_interested_user(payment)
 
         # There's no reason to verify addresses and send emails for old
-        # transactions, so we're only going to verify post-relaunch ones
-        add_ver_cutoff = datetime.datetime(
-            2022, 11, 15, tzinfo=pytz.timezone('US/Pacific')
-        )
-        if payment.created >= add_ver_cutoff:
+        # transactions, so we're only going to verify post-relaunch ones.
+        # We're also not going to verify the address if they didn't claim any items.
+        add_ver_cutoff = datetime.datetime(2022, 11, 15)
+        if payment.created.timestamp() >= add_ver_cutoff.timestamp() and\
+                payment.claimed_items is not None:
             # begin address verification
             i_u_repo = InterestedUserRepo(self._transaction)
             try:
@@ -479,7 +479,7 @@ class UserTransaction(BaseRepo):
                 try:
                     # TODO - will need to add actual language flag to the email
                     # Fundrazr doesn't provide a language flag, defer for now
-                    send_email("csymons@eng.ucsd.edu",
+                    send_email(payment.contact_email,
                                "address_invalid",
                                {"contact_name": cn,
                                 "resolution_url": resolution_url},
