@@ -2117,11 +2117,16 @@ class VioscreenTests(ApiTests):
             self.src_id = src_id
             self.samp_id = samp_id
             self.vio_id = '674533d367f222d2'
-
+            sessionId = "000ada854d4f45f5abda90ccade7f0a8"
             cur.execute("""INSERT INTO ag.vioscreen_registry
                            (account_id, source_id, sample_id, vio_id)
                            VALUES (%s, %s, %s, %s)""",
                         (self.acct_id, self.src_id, self.samp_id, self.vio_id))
+            cur.execute("""INSERT INTO ag.vioscreen_sessions
+                           (sessionid,username,protocolid,status,culturecode,created,modified)
+                           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                        (sessionId, self.vio_id, 1, '1', '1',
+                         '2022-10-08 18:55:07', '2022-10-08 18:55:07'))
             t.commit()
 
     def tearDown(self):
@@ -2217,6 +2222,18 @@ class VioscreenTests(ApiTests):
         self.assertEqual(response_obj['status'], vioscreen_session.status)
 
     def test_get_vioscreen_sessions_404(self):
+        src_id = self.src_id + '1'
+        url = (f'/vioscreen/{self.acct_id}'
+               f'/sources/{src_id}') + '/vioscreen_sessions'
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        get_response = self.client.get(url,
+                                       headers=make_headers(FAKE_TOKEN_ADMIN))
+        self.assertEqual(get_response.status_code, 404)
+
+    def test_get_vioscreen_sessions_200(self):
         url = (f'/vioscreen/{self.acct_id}'
                f'/sources/{self.src_id}') + '/vioscreen_sessions'
         _ = create_dummy_acct(create_dummy_1=True,
@@ -2225,7 +2242,7 @@ class VioscreenTests(ApiTests):
                               dummy_is_admin=True)
         get_response = self.client.get(url,
                                        headers=make_headers(FAKE_TOKEN_ADMIN))
-        self.assertEqual(get_response.status_code, 404)
+        self.assertEqual(get_response.status_code, 200)
 
     def test_get_sample_vioscreen_session_404(self):
         url = self._url_constructor() + '/vioscreen/session'
