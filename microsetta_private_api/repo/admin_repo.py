@@ -1136,6 +1136,7 @@ class AdminRepo(BaseRepo):
         :param survey_template_id: A survey template id to limit results to.
         :param include_retired_templates: Boolean.
         :return: A nested dict structure containing all answered surveys.
+        TODO: use include_retired_templates
         '''
         ids = self._get_ids_relevant_to_barcode(sample_barcode)
 

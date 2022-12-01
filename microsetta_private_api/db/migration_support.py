@@ -752,14 +752,15 @@ class MigrationSupport:
 
         # these modules cant be imported at the top of the file
         # (database isn't available yet).
-        from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+        from microsetta_private_api.repo.survey_answers_repo import (
+                                                             SurveyAnswersRepo)
         from microsetta_private_api.repo.transaction import Transaction
 
         # generate a list of all existing barcodes
 
         # process each barcode using functionality from SurveyAnswersRepo.
         with Transaction() as t:
-            survey_answers_repo = SurveyAnswersRepo(t)
+            survey_answers_repo = SurveyAnswersRepo(t) # noqa
             pass
 
     MIGRATION_LOOKUP = {

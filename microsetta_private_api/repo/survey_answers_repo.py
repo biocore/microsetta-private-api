@@ -134,11 +134,13 @@ class SurveyAnswersRepo(BaseRepo):
 
     def migrate_responses(self, barcode):
         '''
-        migrates filled answers from legacy surveys associated w/a barcode into current templates and saves them as new surveys.
+        migrates filled answers from legacy surveys associated w/a barcode
+        into current templates and saves them as new surveys.
         :param survey_ids: A barcode.
-        :return: A list of (account_id, survey_id) tuples representing the new surveys.
+        :return: A list of (account_id, survey_id) tuples representing the new
+        surveys.
         '''
-        if barcode is None or barcode is '':
+        if barcode is None or barcode == '':
             raise ValueError("invalid barcode")
 
         # to keep _migrate_responses() simple, it generates a set of new
@@ -149,12 +151,13 @@ class SurveyAnswersRepo(BaseRepo):
         results, all_meta = self._migrate_responses(barcode)
 
         sql = """SELECT a.survey_template_id
-                 FROM   ag.ag_login_surveys a 
-                        JOIN ag.source_barcodes_surveys b 
-                          ON a.survey_id = b.survey_id 
-                 WHERE  survey_template_id NOT IN ( 1, 2, 3, 4, 
-                                                    5, 6, 7, 10000, 
-                                                    10001, 10002, 10003, 10004 ) 
+                 FROM   ag.ag_login_surveys a
+                        JOIN ag.source_barcodes_surveys b
+                          ON a.survey_id = b.survey_id
+                 WHERE  survey_template_id NOT IN ( 1, 2, 3, 4,
+                                                    5, 6, 7, 10000,
+                                                    10001, 10002,
+                                                    10003, 10004 )
                         AND b.barcode = %s
                  ORDER  BY survey_template_id"""
 
@@ -174,13 +177,15 @@ class SurveyAnswersRepo(BaseRepo):
             # submit each new survey to the system.
             for template_id in results:
                 meta = all_meta[template_id]
+                result = results[template_id]
+                ts = meta['creation_time']
 
                 new_survey_id = self.submit_answered_survey(meta['account_id'],
                                                             meta['source_id'],
                                                             localization.EN_US,
                                                             template_id,
-                                                            results[template_id],
-                                                            creation_time=meta['creation_time'])
+                                                            result,
+                                                            creation_time=ts)
 
                 self.associate_answered_survey_with_sample(meta['account_id'],
                                                            meta['source_id'],
@@ -193,43 +198,71 @@ class SurveyAnswersRepo(BaseRepo):
 
     def _migrate_responses(self, barcode):
         '''
-        Get all survey responses associated with a barcode and migrate them into new survey templates.
+        Get all survey responses associated with a barcode and migrate them
+        into new survey templates.
         :param barcode: A barcode.
         :return: A dict of filled survey_templates, A dict of survey metadata.
-        TODO: Union with survey_questions_other
         '''
-        if barcode is None or barcode is '':
+        if barcode is None or barcode == '':
             raise ValueError("invalid barcode")
 
-        sql = """SELECT
-                        a.survey_question_id, 
-                        a.response, 
-                        d.survey_id as survey_template_id, 
+        sql = """SELECT * FROM (
+                 SELECT
+                        a.survey_question_id,
+                        a.response,
+                        d.survey_id as survey_template_id,
                         e.ag_login_id as account_id,
-                        e.source_id, 
+                        e.source_id,
                         e.creation_time,
                         f.survey_response_type,
-						g.ag_kit_barcode_id as sample_id
-                 FROM   ag.survey_answers a 
-                        JOIN ag.source_barcodes_surveys b 
-                          ON a.survey_id = b.survey_id 
-                        JOIN ag.group_questions c 
-                          ON a.survey_question_id = c.survey_question_id 
-                        JOIN ag.surveys d 
-                          ON c.survey_group = d.survey_group 
-                        JOIN ag.ag_login_surveys e 
+                        g.ag_kit_barcode_id as sample_id
+                 FROM   ag.survey_answers a
+                        JOIN ag.source_barcodes_surveys b
+                          ON a.survey_id = b.survey_id
+                        JOIN ag.group_questions c
+                          ON a.survey_question_id = c.survey_question_id
+                        JOIN ag.surveys d
+                          ON c.survey_group = d.survey_group
+                        JOIN ag.ag_login_surveys e
                           ON a.survey_id = e.survey_id
                         JOIN ag.survey_question_response_type f
                           ON a.survey_question_id = f.survey_question_id
-						JOIN ag.ag_kit_barcodes g
-						  ON b.barcode = g.barcode
-                 WHERE  a.response != 'Unspecified' 
+                        JOIN ag.ag_kit_barcodes g
+                          ON b.barcode = g.barcode
+                 WHERE  a.response != 'Unspecified'
                         AND b.barcode = %s
                         AND d.retired = false
-                 ORDER  BY d.survey_id asc, e.creation_time asc"""
+                 UNION
+                SELECT
+                        a.survey_question_id,
+                        a.response,
+                        d.survey_id as survey_template_id,
+                        e.ag_login_id as account_id,
+                        e.source_id,
+                        e.creation_time,
+                        f.survey_response_type,
+                        g.ag_kit_barcode_id as sample_id
+                 FROM   ag.survey_answers_other a
+                        JOIN ag.source_barcodes_surveys b
+                          ON a.survey_id = b.survey_id
+                        JOIN ag.group_questions c
+                          ON a.survey_question_id = c.survey_question_id
+                        JOIN ag.surveys d
+                          ON c.survey_group = d.survey_group
+                        JOIN ag.ag_login_surveys e
+                          ON a.survey_id = e.survey_id
+                        JOIN ag.survey_question_response_type f
+                          ON a.survey_question_id = f.survey_question_id
+                        JOIN ag.ag_kit_barcodes g
+                          ON b.barcode = g.barcode
+                 WHERE  a.response != 'Unspecified'
+                        AND b.barcode = %s
+                        AND d.retired = false) t
+                 ORDER  BY t.survey_template_id asc, t.creation_time asc
+                 """
 
         with self._transaction.cursor() as cur:
-            cur.execute(sql, (barcode,))
+            cur.execute(sql, (barcode, barcode, ))
 
             rows = cur.fetchall()
 
@@ -250,7 +283,7 @@ class SurveyAnswersRepo(BaseRepo):
 
                 # template n is now dirty.
                 dirty_flag.append(template_id)
-        
+
                 # responses are from earliest to latest thus older answers
                 # will be overwritten with newer ones as need be.
                 if response_type == 'MULTIPLE':
@@ -267,7 +300,7 @@ class SurveyAnswersRepo(BaseRepo):
                 meta[template_id] = {'creation_time': creation_time,
                                      'account_id': account_id,
                                      'sample_id': sample_id,
-                                     'source_id': source_id }
+                                     'source_id': source_id}
 
             # remove all templates that remain empty.
             for template_id in set(results.keys()) - set(dirty_flag):
@@ -280,21 +313,20 @@ class SurveyAnswersRepo(BaseRepo):
         Generate a set of empty templates for all non-retired surveys.
         Fill in the responses with 'Unspecified' and similar as needed.
         :return: A list of empty templates for all non-retired surveys.
-        TODO: Union with survey_questions_other
         '''
-        sql = """SELECT a.survey_id, 
-                        b.survey_question_id, 
-                        c.survey_response_type 
-                 FROM   ag.surveys a 
-                        JOIN ag.group_questions b 
-                          ON a.survey_group = b.survey_group 
-                        JOIN ag.survey_question_response_type c 
-                          ON b.survey_question_id = c.survey_question_id 
-                        JOIN ag.survey_question d 
-                          ON d.survey_question_id = b.survey_question_id 
-                 WHERE  a.retired = false 
-                        AND d.retired = false 
-                 ORDER  BY survey_id, 
+        sql = """SELECT a.survey_id,
+                        b.survey_question_id,
+                        c.survey_response_type
+                 FROM   ag.surveys a
+                        JOIN ag.group_questions b
+                          ON a.survey_group = b.survey_group
+                        JOIN ag.survey_question_response_type c
+                          ON b.survey_question_id = c.survey_question_id
+                        JOIN ag.survey_question d
+                          ON d.survey_question_id = b.survey_question_id
+                 WHERE  a.retired = false
+                        AND d.retired = false
+                 ORDER  BY survey_id,
                            survey_question_id"""
 
         with self._transaction.cursor() as cur:
@@ -308,7 +340,7 @@ class SurveyAnswersRepo(BaseRepo):
                 question_id = str(row[1])
                 response_type = row[2]
 
-                if not template_id in results:
+                if template_id not in results:
                     results[template_id] = {}
 
                 if response_type == 'MULTIPLE':

@@ -6,7 +6,7 @@ from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.model.source import Source, HumanInfo
-from json import dumps, loads
+from json import loads
 
 
 SURVEY_ID = 'abcdef01-aaaa-bbbb-cccc-dddddddddddd'
@@ -110,9 +110,7 @@ class SurveyAnswersTests(unittest.TestCase):
             # survey creation_time, etc.
             obs, obs_meta = sar._migrate_responses('000001040')
 
-            exp = loads(filled_surveys)
-
-            self.assertDictEqual(obs, exp)
+            self.assertDictEqual(obs, filled_surveys)
 
             # unfortunately, obs_meta only contains creation_time, source_id,
             # and account_id - three values that are generated dynamically.
@@ -129,7 +127,8 @@ class SurveyAnswersTests(unittest.TestCase):
             # delete the surveys now that they've been created successfully
             for account_id, survey_id in new_survey_ids:
                 status = sar.delete_answered_survey(account_id, survey_id)
-                self.assertTrue(status, msg=f"survey {survey_id} failed to delete")
+                msg = f"survey {survey_id} failed to delete"
+                self.assertTrue(status, msg=msg)
 
             t.commit()
 
@@ -156,13 +155,15 @@ class SurveyAnswersTests(unittest.TestCase):
             self.assertEqual(obs, exp)
 
             # this should just return one tuple.
-            obs = sar.get_template_ids_from_survey_ids(['6d16832b84358c93', '6d1682845c93'])
+            obs = sar.get_template_ids_from_survey_ids(['6d16832b84358c93',
+                                                        '6d1682845c93'])
             exp = [('6d16832b84358c93', 1)]
             self.assertEqual(obs, exp)
 
             # this should just return two tuples.
-            obs = sar.get_template_ids_from_survey_ids(['6d16832b84358c93', '001e19ab6ea2f7de'])
-            print(obs)
+            obs = sar.get_template_ids_from_survey_ids(['6d16832b84358c93',
+                                                        '001e19ab6ea2f7de'])
+
             exp = [('6d16832b84358c93', 1), ('001e19ab6ea2f7de', 1)]
             self.assertEqual(obs, exp)
 
@@ -188,9 +189,9 @@ class SurveyAnswersTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 # parameter contains one valid and one invalid value
-                sar.get_template_ids_from_survey_ids(['6d16832b84358c93', None])
+                sar.get_template_ids_from_survey_ids(['6d16832b84358c93',
+                                                      None])
 
-            #self.assertTrue(False)
 
 empty_surveys = """
 {
@@ -491,39 +492,48 @@ empty_surveys = """
   }
 }"""
 
-filled_surveys = """
-{
+filled_surveys = {
   "10": {
     "22": "I am right handed",
-    "108": "Unspecified",
+    "108": "[\"Free text - 5A.\u00f6h?L~8\u00d3qwqy\u012bG +21\"]",
     "109": "inches",
     "110": "United States",
     "111": "February",
     "112": "1945",
-    "113": "Unspecified",
-    "115": "Unspecified",
+    "113": "[\"Free text - S#G\u00e4e\u00c9n0x='\u00e8u)`\u00dfJ\u00dfM=\"]",
+    "115": "[\"Free text - bC\u00c4\u012bx*N*0\u00d3Ha7\r*/b3\u010dD\"]",
     "148": "Unspecified",
     "492": "Unspecified",
     "493": "Unspecified",
     "502": "Unspecified",
-    "41": "No",
-    "52": "Yes",
-    "114": "pounds",
-    "107": "Female",
-    "97": "I do not have this condition",
-    "88": "Diagnosed by a medical professional (doctor, physician assistant)",
-    "10": "Yes",
     "81": "Diagnosed by a medical professional (doctor, physician assistant)",
-    "12": "Yes",
-    "13": "Bottled",
-    "14": "Caucasian",
-    "23": "Graduate or Professional degree",
-    "31": "Daily",
+    "122": "[\"Free text - \u010d/ueIW|mFZK^g6+\u00fc\u00e1|i3\"]",
+    "55": "No",
     "63": "Never",
-    "55": "No"
+    "10": "Yes",
+    "119": "[\"Free text - Dt\u00e3\u012b>\"3`\u00d6\u00f6)\u00e3\u00d6YQL&+\u00df_\"]", # noqa
+    "12": "Yes",
+    "31": "Daily",
+    "23": "Graduate or Professional degree",
+    "107": "Female",
+    "118": "[\"Free text - U\u00e47\u00c9.\u00faH v.kSmP#j, '\u00fc\"]",
+    "120": "[\"Free text - $>K\u00e8yT*@\u00d8=Bf.P\u00bfl*v%\u00fa\"]",
+    "98": "[\"Free text - !\u0161z:s\u00d8*,+e`.\u00c4R>*Kd'z\"]",
+    "114": "pounds",
+    "13": "Bottled",
+    "101": "[\"Free text -  TQ$>\u00e5_-:F+!j=\u00bf~\u00f8#=)\"]",
+    "117": "[\"Free text - m%a)F--~-1\u00d8\u00e7$l*Q~K\u00e3P\"]",
+    "103": "[\"Free text - ;LD?;;\u00c45AT\u0161,f \"UO7u\u00d3\"]",
+    "97": "I do not have this condition",
+    "52": "Yes",
+    "105": "[\"Free text - @jtQ\r_*ih>l\u0161\u00e8k\u00c4\u00d6L<(\u00e1\"]",
+    "88": "Diagnosed by a medical professional (doctor, physician assistant)",
+    "116": "[\"Free text - G't\tUkV\u00f3.$lig50A\u00dfFFr\"]",
+    "41": "No",
+    "14": "Caucasian"
   },
   "11": {
-    "15": "I have lived in my current state of residence for more than a year.",
+    "15": "I have lived in my current state of residence for more than a year.", # noqa
     "17": "One",
     "18": "No",
     "19": "Unspecified",
@@ -542,7 +552,7 @@ filled_surveys = """
     "510": "Unspecified"
   },
   "12": {
-    "16": "I have not been outside of my country of residence in the past year.",
+    "16": "I have not been outside of my country of residence in the past year.", # noqa
     "24": "Rarely (a few times/month)",
     "25": "Indoors",
     "26": "No",
@@ -605,9 +615,9 @@ filled_surveys = """
     "49": "No",
     "50": "No",
     "51": "Primarily infant formula",
-    "99": "Unspecified",
-    "124": "Unspecified",
-    "126": "Unspecified",
+    "99": "[\"Free text - \\\u00e7y\u00ed\u00fc \"b$Ug~z@W\u00bfvDB=\"]",
+    "124": "[\"Free text - n\u00bf\u00c54\u00df\u00e9\u00f6lM,;Bo\u00f8\u00d3P\u00c9D\u00d3/\"]", # noqa
+    "126": "[\"Free text - m\u00bf\t\u012b\u00f3\u0161Drj\u00e1/F$j*I'%h\u00e9\"]", # noqa
     "156": "Unspecified",
     "370": "Unspecified",
     "374": "Unspecified",
@@ -631,7 +641,7 @@ filled_surveys = """
     "93": "Diagnosed by a medical professional (doctor, physician assistant)",
     "94": "I do not have this condition",
     "96": "I do not have this condition",
-    "106": "Unspecified",
+    "106": "[\"Free text - &ePd\u00e1\u00f6P\u00d8NJ#E$Q\"\\y'/h\"]",
     "407": "Unspecified",
     "408": "Unspecified",
     "409": [
@@ -655,9 +665,9 @@ filled_surveys = """
     ],
     "53": "Yes",
     "54": [
-      "Drug (e.g. Penicillin)",
+      "Sun",
       "Pet dander",
-      "Sun"
+      "Drug (e.g. Penicillin)"
     ],
     "415": "Unspecified"
   },
@@ -669,7 +679,7 @@ filled_surveys = """
     "5": "Daily",
     "6": "Yes",
     "11": "Yes",
-    "104": "Unspecified",
+    "104": "[\"Free text - H\u00f6~\u00c9\u00e5(r\u00ed@:P;uw<\u00df\u00d3W*\u00fa\"]", # noqa
     "162": [
       "Unspecified"
     ],
@@ -743,7 +753,7 @@ filled_surveys = """
     "477": "Unspecified",
     "478": "Unspecified"
   }
-}"""
+}
 
 
 if __name__ == '__main__':
