@@ -454,7 +454,9 @@ class UserTransaction(BaseRepo):
 
         # There's no reason to verify addresses and send emails for old
         # transactions, so we're only going to verify post-relaunch ones
-        add_ver_cutoff = datetime.datetime(2022, 11, 15, tzinfo=pytz.timezone('US/Pacific'))
+        add_ver_cutoff = datetime.datetime(
+            2022, 11, 15, tzinfo=pytz.timezone('US/Pacific')
+        )
         if payment.created >= add_ver_cutoff:
             # begin address verification
             i_u_repo = InterestedUserRepo(self._transaction)
