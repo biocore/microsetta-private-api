@@ -29,6 +29,7 @@ import copy
 import microsetta_private_api.api
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 
+
 ACCT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 NOT_ACCT_ID = "12341234-1234-1234-1234-123412341234"
 HUMAN_ID = "b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0"
@@ -1513,16 +1514,19 @@ class IntegrationTests(TestCase):
             (ACCT_ID, HUMAN_ID, SurveyTemplateRepo.BASIC_INFO_ID),
             headers=MOCK_HEADERS
         )
+
         check_response(resp, 404)
 
         # Should work for en_US
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
-            '?language_tag=en_US' %
-            (ACCT_ID, HUMAN_ID, SurveyTemplateRepo.BASIC_INFO_ID),
+            '?language_tag=en_US' % (ACCT_ID, HUMAN_ID,
+                                     SurveyTemplateRepo.BASIC_INFO_ID),
             headers=MOCK_HEADERS
         )
+
         check_response(resp)
+
         form_us = json.loads(resp.data)
 
         # Should work for en_GB

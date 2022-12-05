@@ -186,11 +186,12 @@ def read_survey_template(account_id, source_id, survey_template_id,
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
-        survey_template_repo = SurveyTemplateRepo(t)
-        info = survey_template_repo.get_survey_template_link_info(
+        st_repo = SurveyTemplateRepo(t)
+
+        info = st_repo.get_survey_template_link_info(
             survey_template_id)
 
-        remote_surveys = set(survey_template_repo.remote_surveys())
+        remote_surveys = set(st_repo.remote_surveys())
 
         # For external surveys, we generate links pointing out
         if survey_template_id in remote_surveys:
@@ -227,8 +228,8 @@ def read_survey_template(account_id, source_id, survey_template_id,
             return jsonify(info), 200
 
         # For local surveys, we generate the json representing the survey
-        survey_template = survey_template_repo.get_survey_template(
-            survey_template_id, language_tag)
+        survey_template = st_repo.get_survey_template(survey_template_id,
+                                                      language_tag)
         info.survey_template_text = vue_adapter.to_vue_schema(survey_template)
 
         # TODO FIXME HACK: We need a better way to enforce validation on fields
@@ -253,6 +254,19 @@ def read_survey_template(account_id, source_id, survey_template_id,
             for field in group.fields:
                 if field.id in client_side_validation:
                     field.set(**client_side_validation[field.id])
+
+        results, percent_comp = st_repo.migrate_responses(account_id,
+                                                          survey_template_id)
+        if results:
+            # modify info with previous results before returning to client.
+            for group in info.survey_template_text.groups:
+                for field in group.fields:
+                    previous_response = results[field.inputName]
+                    if previous_response:
+                        field.default = previous_response
+            info.percentage_completed = "{0:.2f}%".format(percent_comp * 100)
+        else:
+            info.percentage_completed = '0.00%'
 
         return jsonify(info), 200
 
@@ -357,7 +371,7 @@ def read_answered_survey_associations(account_id, source_id, sample_id,
             if template_id is None:
                 continue
             info = template_repo.get_survey_template_link_info(template_id)
-            resp_obj.append(info.to_api(answered_survey, status))
+            resp_obj.append(info.to_api(answered_survey, status, None))
 
         t.commit()
         return jsonify(resp_obj), 200

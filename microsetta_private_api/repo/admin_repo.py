@@ -19,6 +19,8 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
+
 
 # TODO: Refactor repeated elements in project-related sql queries?
 PROJECT_FIELDS = f"""
@@ -1170,7 +1172,8 @@ class AdminRepo(BaseRepo):
         a_ids = survey_ans_repo.list_answered_surveys_by_sample(
                 account_id, source_id, sample_id)
 
-        template_ids = survey_ans_repo.get_template_ids_from_survey_ids(a_ids)
+        st_repo = SurveyTemplateRepo(self._transaction)
+        template_ids = st_repo.get_template_ids_from_survey_ids(a_ids)
 
         if survey_template_id is not None:
             # extract just the template_ids for this check.

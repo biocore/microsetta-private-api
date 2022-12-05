@@ -16,6 +16,8 @@ import secrets
 from microsetta_private_api.exceptions import RepoException
 
 from microsetta_private_api.repo.sample_repo import SampleRepo
+import uuid
+from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 
 
 class SurveyTemplateRepo(BaseRepo):
@@ -1033,3 +1035,240 @@ class SurveyTemplateRepo(BaseRepo):
                     return True
 
         return False
+
+    def migrate_responses(self, account_id, survey_template_id):
+        '''
+        Get all survey responses associated with an account and survey_template
+         and migrate them. Will pull from past results if they are found,
+         including legacy template answers.
+        :param account_id: An account
+        :param survey_template_id: A survey template id.
+        :return: A filled survey_template dict
+        '''
+        if int(survey_template_id) in self.SURVEY_INFO:
+            if int(survey_template_id) in [self.VIOSCREEN_ID,
+                                           self.MYFOODREPO_ID,
+                                           self.POLYPHENOL_FFQ_ID,
+                                           self.SPAIN_FFQ_ID]:
+                raise ValueError("survey_template_id must be for a local "
+                                 "survey")
+        else:
+            raise ValueError("invalid value for survey_template_id")
+
+        sql = """SELECT *
+                 FROM  (SELECT a.survey_question_id,
+                               a.response,
+                               e.source_id,
+                               e.creation_time,
+                               f.survey_response_type
+                        FROM   ag.survey_answers a
+                               JOIN ag.group_questions c
+                                 ON a.survey_question_id = c.survey_question_id
+                               JOIN ag.surveys d
+                                 ON c.survey_group = d.survey_group
+                               JOIN ag.ag_login_surveys e
+                                 ON a.survey_id = e.survey_id
+                               JOIN ag.survey_question_response_type f
+                                 ON a.survey_question_id = f.survey_question_id
+                               JOIN ag.survey_question g
+                                 ON a.survey_question_id = g.survey_question_id
+                        WHERE a.response != 'Unspecified'
+                               AND e.ag_login_id = %s
+                               AND d.survey_id = %s
+                               AND g.retired = false
+                        UNION
+                        SELECT a.survey_question_id,
+                               a.response,
+                               e.source_id,
+                               e.creation_time,
+                               f.survey_response_type
+                        FROM   ag.survey_answers_other a
+                               JOIN ag.group_questions c
+                                 ON a.survey_question_id = c.survey_question_id
+                               JOIN ag.surveys d
+                                 ON c.survey_group = d.survey_group
+                               JOIN ag.ag_login_surveys e
+                                 ON a.survey_id = e.survey_id
+                               JOIN ag.survey_question_response_type f
+                                 ON a.survey_question_id = f.survey_question_id
+                               JOIN ag.survey_question g
+                                 ON a.survey_question_id = g.survey_question_id
+                        WHERE  a.response != 'Unspecified'
+                                 AND e.ag_login_id = %s
+                                 AND d.survey_id = %s
+                                 AND g.retired = false) t
+                 ORDER  BY creation_time ASC,
+                           survey_question_id ASC"""
+
+        with self._transaction.cursor() as cur:
+            # first, confirm account_id is valid.
+            '''
+            cur.execute("""SELECT ag_login_id AS account_id
+                           FROM   ag.ag_login_surveys
+                           WHERE  ag_login_id = %s""", (account_id,))
+            cur.fetchall()
+            '''
+
+            if cur.rowcount == 0:
+                raise ValueError("account_id is not valid")
+
+            cur.execute(sql, (account_id, survey_template_id,
+                              account_id, survey_template_id,))
+
+            rows = cur.fetchall()
+
+            # create an empty template to fill-in.
+            results = self._generate_empty_survey(survey_template_id)
+            total_question_count = len(results)
+
+            for row in rows:
+                question_id = str(row[0])
+                response = row[1]
+                response_type = row[4]
+
+                # responses are from earliest to latest thus older answers
+                # will be overwritten with newer ones as need be, according
+                # to creation time ASC.
+                if response_type == 'MULTIPLE':
+                    results[question_id].append(response)
+                    try:
+                        # remove will raise an exception if 'Unspecified' has
+                        # already been removed. Handle this quietly.
+                        results[question_id].remove("Unspecified")
+                    except ValueError:
+                        pass
+                elif response_type == 'SINGLE':
+                    results[question_id] = response
+                else:
+                    # STRING and TEXT responses may need their enclosing
+                    # brackets removed. For now, pass them on as is:
+                    # e.g.: ["Free text - <encrypted text>"]
+                    results[question_id] = response
+
+            # return percentage of the survey completed, along with the
+            # results.
+            return results, len(rows) / total_question_count
+
+    def _generate_empty_survey(self, survey_template_id):
+        '''
+        Generate a set of empty templates for all non-retired surveys.
+        Fill in the responses with 'Unspecified' and similar as needed.
+        :return: A list of empty templates for all non-retired surveys.
+        '''
+        if int(survey_template_id) in self.SURVEY_INFO:
+            if int(survey_template_id) in [self.VIOSCREEN_ID,
+                                           self.MYFOODREPO_ID,
+                                           self.POLYPHENOL_FFQ_ID,
+                                           self.SPAIN_FFQ_ID]:
+                raise ValueError("survey_template_id must be for a local "
+                                 "survey")
+        else:
+            raise ValueError("invalid value for survey_template_id")
+
+        # Note a.survey_id is actually a survey_template_id
+        sql = """SELECT b.survey_question_id,
+                        c.survey_response_type
+                 FROM   ag.surveys a
+                        JOIN ag.group_questions b
+                          ON a.survey_group = b.survey_group
+                        JOIN ag.survey_question_response_type c
+                          ON b.survey_question_id = c.survey_question_id
+                        JOIN ag.survey_question d
+                          ON d.survey_question_id = b.survey_question_id
+                 WHERE  a.survey_id = %s
+                        AND d.retired = false
+                 ORDER  BY survey_id,
+                           survey_question_id"""
+
+        with self._transaction.cursor() as cur:
+            cur.execute(sql, (survey_template_id,))
+
+            rows = cur.fetchall()
+
+            results = {}
+            for row in rows:
+                question_id = str(row[0])
+                response_type = row[1]
+
+                if response_type == 'MULTIPLE':
+                    results[question_id] = ["Unspecified"]
+                else:
+                    results[question_id] = "Unspecified"
+
+            return results
+
+    def get_template_ids_from_survey_ids(self, survey_ids):
+        '''
+        returns a list of (template_id, survey_id) tuples.
+        :param survey_ids: A list of survey ids.
+        :return: A list of (survey_id, survey_template_id) tuples.
+        '''
+        if not isinstance(survey_ids, list):
+            raise ValueError("survey_ids is not a list of survey ids")
+
+        if len(survey_ids) == 0 or '' in survey_ids or None in survey_ids:
+            raise ValueError("survey_ids is an empty list or contains invalid"
+                             " values")
+
+        res = self._local_survey_template_ids_from_survey_ids(survey_ids)
+
+        # check to see if any of the survey ids are associated with a remote
+        # survey.
+        for survey_id in survey_ids:
+            res += self._remote_survey_template_id_from_survey_id(survey_id)
+
+        return res
+
+    def _remote_survey_template_id_from_survey_id(self, survey_id):
+        # VIOscreen
+        vioscreen_repo = VioscreenRepo(self._transaction)
+        status = vioscreen_repo._get_vioscreen_status(survey_id)
+        if status is not None:
+            return [(survey_id, SurveyTemplateRepo.VIOSCREEN_ID)]
+
+        with self._transaction.cursor() as cur:
+            try:
+                # If survey_id isn't a valid UUID, a ValueError will be
+                # raised.
+                uuid.UUID(survey_id)
+            except ValueError:
+                # assume a survey_id that isn't a valid UUID is a myfoodrepo
+                # survey.
+                cur.execute("SELECT EXISTS (SELECT myfoodrepo_id FROM "
+                            "myfoodrepo_registry WHERE myfoodrepo_id=%s)",
+                            (survey_id,))
+
+                if cur.fetchone()[0] is True:
+                    return [(survey_id, SurveyTemplateRepo.MYFOODREPO_ID)]
+                else:
+                    return []
+
+            # survey_id must be a proper UUID formatted string, or else the
+            # queries below will fail.
+
+            # Polyphenol FFQ
+            cur.execute("SELECT EXISTS (SELECT polyphenol_ffq_id FROM "
+                        "ag.polyphenol_ffq_registry WHERE "
+                        "polyphenol_ffq_id=%s)", (survey_id,))
+
+            if cur.fetchone()[0] is True:
+                return [(survey_id, SurveyTemplateRepo.POLYPHENOL_FFQ_ID)]
+
+            # Spain FFQ
+            cur.execute("SELECT EXISTS (SELECT spain_ffq_id FROM "
+                        "ag.spain_ffq_registry WHERE spain_ffq_id=%s)",
+                        (survey_id,))
+
+            if cur.fetchone()[0] is True:
+                return [(survey_id, SurveyTemplateRepo.SPAIN_FFQ_ID)]
+
+        return []
+
+    def _local_survey_template_ids_from_survey_ids(self, survey_ids):
+        with self._transaction.cursor() as cur:
+            # note these ids are unique string ids, not integer ids.
+            cur.execute("SELECT survey_id, survey_template_id "
+                        "FROM ag.ag_login_surveys WHERE survey_id IN %s",
+                        (tuple(survey_ids),))
+
+            return [(x[0], x[1]) for x in cur.fetchall()]
