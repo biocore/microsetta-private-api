@@ -1130,15 +1130,12 @@ class AdminRepo(BaseRepo):
             )
             return [r[0] for r in cur.fetchall()]
 
-    def get_survey_metadata(self, sample_barcode, survey_template_id=None,
-                            include_retired_templates=False):
+    def get_survey_metadata(self, sample_barcode, survey_template_id=None):
         '''
         Return all surveys associated with a given barcode.
         :param sample_barcode: A sample barcode.
         :param survey_template_id: A survey template id to limit results to.
-        :param include_retired_templates: Boolean.
         :return: A nested dict structure containing all answered surveys.
-        TODO: use include_retired_templates
         '''
         ids = self._get_ids_relevant_to_barcode(sample_barcode)
 

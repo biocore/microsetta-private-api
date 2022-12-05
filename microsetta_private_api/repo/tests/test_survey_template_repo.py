@@ -721,14 +721,6 @@ class SurveyTemplateTests(unittest.TestCase):
                 sar.get_template_ids_from_survey_ids(['6d16832b84358c93',
                                                       None])
 
-    # CHARLIE FIX THIS
-    def test_local_survey_template_ids_from_survey_ids(self):
-        pass
-
-    # CHARLIE FIX THIS
-    def test_remote_survey_template_ids_from_survey_ids(self):
-        pass
-
     filled_surveys = {
         "10": {
             "22": "I am right handed",
