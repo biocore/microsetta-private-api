@@ -68,6 +68,7 @@ class VioscreenRepoTests(unittest.TestCase):
             obs = vr.get_ffq(VIOSCREEN_SESSION.sessionId)
             self.assertEqual(obs, self.FFQ)
 
+
 class VioscreenSessions(unittest.TestCase):
     def setUp(self):
         super().setUp()
@@ -85,7 +86,6 @@ class VioscreenSessions(unittest.TestCase):
             self.src_id = src_id
             self.samp_id = samp_id
             self.vio_id = '674533d367f222d2'
-            sessionId = "000ada854d4f45f5abda90ccade7f0a8"
             cur.execute("""INSERT INTO ag.vioscreen_registry
                            (account_id, source_id, sample_id, vio_id)
                            VALUES (%s, %s, %s, %s)""",
@@ -116,14 +116,14 @@ class VioscreenSessions(unittest.TestCase):
         super().tearDown()
 
     def test_get_vioscreen_sessions_404(self):
-        src_id = self.src_id + '1'
         _ = create_dummy_acct(create_dummy_1=True,
                               iss=ACCT_MOCK_ISS_3,
                               sub=ACCT_MOCK_SUB_3,
                               dummy_is_admin=True)
         with Transaction() as t:
-            vio_sess = VioscreenRepo(t)
-            sessions = vio_sess.get_vioscreen_sessions(self.acct_id, src_id)
+            vio_session = VioscreenRepo(t)
+            sessions = vio_session.get_vioscreen_sessions(self.acct_id,
+                                                          self.src_id)
             self.assertEqual(sessions, None)
 
     def test_get_vioscreen_sessions_200(self):
@@ -139,17 +139,13 @@ class VioscreenSessions(unittest.TestCase):
             modified="2017-07-29T03:56:04.22"
         )
 
-        _ = create_dummy_acct(create_dummy_1=True,
-                        iss=ACCT_MOCK_ISS_3,
-                        sub=ACCT_MOCK_SUB_3,
-                        dummy_is_admin=True)
-
         with Transaction() as t:
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             t.commit()
-            vio_sess = VioscreenRepo(t)
-            sessions = vio_sess.get_vioscreen_sessions(self.acct_id, self.src_id)
+            vio_session = VioscreenRepo(t)
+            sessions = vio_session.get_vioscreen_sessions(self.acct_id,
+                                                          self.src_id)
             self.assertEqual(len(sessions), 1)
 
 
