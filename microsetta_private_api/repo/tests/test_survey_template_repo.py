@@ -538,14 +538,15 @@ class SurveyTemplateTests(unittest.TestCase):
     def _create_source(self, account_id):
         with Transaction() as t:
             sr = SourceRepo(t)
+            HUMAN_INFO = HumanInfo('foo@bar.com', False, None, None, None,
+                                   datetime.datetime.now(), None, None,
+                                   '18-plus')
+
             HUMAN_SOURCE = Source('ffffffff-ffff-ffff-aaaa-aaaaaaaaaaaa',
                                   account_id,
                                   Source.SOURCE_TYPE_HUMAN,
                                   'test person',
-                                  HumanInfo('foo@bar.com', False,
-                                            None, None, None,
-                                            datetime.datetime.now(),
-                                            None, None, '18-plus'))
+                                  HUMAN_INFO)
 
             try:
                 sr.create_source(HUMAN_SOURCE)
