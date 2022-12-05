@@ -143,6 +143,7 @@ class VioscreenSessions(unittest.TestCase):
             vio_sess = VioscreenSessionRepo(t)
             vio_sess.upsert_session(vioscreen_session)
             t.commit()
+        with Transaction() as t:
             vio_session = VioscreenRepo(t)
             sessions = vio_session.get_vioscreen_sessions(self.acct_id,
                                                           self.src_id)

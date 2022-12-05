@@ -1666,7 +1666,7 @@ class VioscreenRepo(BaseRepo):
                         FROM vioscreen_sessions vs
                         JOIN vioscreen_registry vr
                         ON vs.username = vr.vio_id
-                        WHERE vr.account_id=%s AND vr.source_id=%s)""",
+                        WHERE vr.account_id=%s AND vr.source_id=%s""",
                         (account_id, source_id))
             rows = cur.fetchall()
             if rows is None or len(rows) == 0:
