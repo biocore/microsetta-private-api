@@ -538,9 +538,26 @@ class SurveyTemplateTests(unittest.TestCase):
     def _create_source(self, account_id):
         with Transaction() as t:
             sr = SourceRepo(t)
-            HUMAN_INFO = HumanInfo('foo@bar.com', False, None, None, None,
-                                   datetime.datetime.now(), None, None,
-                                   '18-plus')
+
+            email = 'foo@bar.com'
+            is_juvenile = False
+            parent1_name = None
+            parent2_name = None
+            deceased_parent = None
+            consent_date = datetime.datetime.now()
+            date_revoked = None
+            assent_obtainer = None
+            age_range = '18-plus'
+
+            HUMAN_INFO = HumanInfo(email,
+                                   is_juvenile,
+                                   parent1_name,
+                                   parent2_name,
+                                   deceased_parent,
+                                   consent_date,
+                                   date_revoked,
+                                   assent_obtainer,
+                                   age_range)
 
             HUMAN_SOURCE = Source('ffffffff-ffff-ffff-aaaa-aaaaaaaaaaaa',
                                   account_id,
