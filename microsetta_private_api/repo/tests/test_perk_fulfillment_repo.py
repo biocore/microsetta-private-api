@@ -139,7 +139,6 @@ TRANSACTION_FAKE_PERK = FundRazrPayment(
 )
 
 DUMMY_ORDER_ID = str(uuid.uuid4())
-DUMMY_ORDER_ID2 = str(uuid.uuid4())
 SUBMITTER_ID = FULFILLMENT_ACCOUNT_ID
 SUBMITTER_NAME = "demo demo"
 PROJECT_IDS = [1, ]
@@ -174,7 +173,6 @@ DUMMY_DAKLAPACK_ORDER = {
          'value': 'Bill Ted'}
     ]
 }
-DUMMY_DAKLAPACK_ORDER2 = '{"orderId": "' + DUMMY_ORDER_ID2 + '"}'
 
 VERIFY_ADDRESS_DICT = {
     "valid": True,
@@ -190,6 +188,7 @@ VERIFY_ADDRESS_DICT = {
 DUMMY_KIT_UUID = str(uuid.uuid4())
 DUMMY_KIT_ID = "SOMEKIT44"
 DUMMY_TRACKING = "qwerty123456"
+
 
 class PerkFulfillmentRepoTests(unittest.TestCase):
     @patch("microsetta_private_api.repo.interested_user_repo.verify_address")
@@ -251,12 +250,6 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
     def tearDown(self):
         with Transaction() as t:
             cur = t.cursor()
-            cur.execute(
-                "DELETE FROM barcodes.daklapack_order "
-                "WHERE dak_order_id = %s",
-                (DUMMY_ORDER_ID2, )
-            )
-
             cur.execute(
                 "DELETE FROM campaign.campaigns_projects "
                 "WHERE campaign_id = %s",
@@ -780,7 +773,7 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
 
                 # call create_daklapack_order
                 admin_repo = AdminRepo(t)
-                returned_id = admin_repo.create_daklapack_order(input)
+                _ = admin_repo.create_daklapack_order(input)
 
                 cur = t.cursor()
 
@@ -811,6 +804,9 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
 
                 pfr = PerkFulfillmentRepo(t)
                 _ = pfr.process_pending_fulfillment(ftp_id)
+
+                # Need to do something with this variable to satisfy lint
+                self.assertEqual(test_send_email_result, True)
 
                 emails_sent, error_report = pfr.check_for_shipping_updates()
 
