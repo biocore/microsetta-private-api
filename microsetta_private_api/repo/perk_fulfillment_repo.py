@@ -309,11 +309,14 @@ class PerkFulfillmentRepo(BaseRepo):
         """Find orders for which we have not provided a tracking number,
         see whether Daklapack has processed the order(s), and send out
         tracking details as necessary."""
+        emails_sent = 0
+        error_report = []
+
         with self._transaction.dict_cursor() as cur:
             cur.execute(
-                "SELECT fdo.fundrazr_transaction_perk_id, fdo.dak_order_id, "
-                "kit.outbound_fedex_tracking, t.payer_email, "
-                "t.payer_first_name "
+                "SELECT fdo.fundrazr_transaction_perk_id ftp_id, "
+                "fdo.dak_order_id, kit.outbound_fedex_tracking, "
+                "t.payer_email, t.payer_first_name "
                 "FROM campaign.fundrazr_daklapack_orders fdo "
                 "INNER JOIN barcodes.daklapack_order dako "
                 "ON fdo.dak_order_id = dako.dak_order_id "
@@ -345,11 +348,18 @@ class PerkFulfillmentRepo(BaseRepo):
                         "SET tracking_sent = true "
                         "WHERE fundrazr_transaction_perk_id = %s "
                         "AND dak_order_id = %s",
-                        (r['fundrazr_transaction_perk_id'], r['dak_order_id'])
+                        (r['ftp_id'], r['dak_order_id'])
                     )
-                except:  # noqa
-                    # try our best to email
-                    pass
+                    emails_sent += 1
+                except Exception as e:  # noqa
+                    # if the email fails, we'll log why but continue executing
+                    email_error = f"FedEx tracking code email failed " \
+                                  f"for ftp_id={r['ftp_id']} and " \
+                                  f"dak_order_id={r['dak_order_id']} with " \
+                                  f"the following: {repr(e)}"
+                    error_report.append(email_error)
+
+        return emails_sent, error_report
 
     def _fulfill_kit(self, row, quantity, subscription_id):
         projects = \

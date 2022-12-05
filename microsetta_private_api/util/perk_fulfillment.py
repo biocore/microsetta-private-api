@@ -70,7 +70,19 @@ def process_subscription_fulfillments():
 def check_shipping_updates():
     with Transaction() as t:
         pfr = PerkFulfillmentRepo(t)
-        pfr.check_for_shipping_updates()
+        emails_sent, error_report = pfr.check_for_shipping_updates()
+
+        if emails_sent > 0 or len(error_report) > 0:
+            email_content = f"Emails sent: {emails_sent}\n"\
+                            f"Errors: {error_report}"
+            try:
+                send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
+                           {"what": "Automated Tracking Updates Output",
+                            "content": email_content},
+                           EN_US)
+            except:  # noqa
+                # try our best to email
+                pass
 
 
 @celery.task(ignore_result=True)

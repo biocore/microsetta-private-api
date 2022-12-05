@@ -139,6 +139,7 @@ TRANSACTION_FAKE_PERK = FundRazrPayment(
 )
 
 DUMMY_ORDER_ID = str(uuid.uuid4())
+DUMMY_ORDER_ID2 = str(uuid.uuid4())
 SUBMITTER_ID = FULFILLMENT_ACCOUNT_ID
 SUBMITTER_NAME = "demo demo"
 PROJECT_IDS = [1, ]
@@ -173,6 +174,8 @@ DUMMY_DAKLAPACK_ORDER = {
          'value': 'Bill Ted'}
     ]
 }
+DUMMY_DAKLAPACK_ORDER2 = '{"orderId": "' + DUMMY_ORDER_ID2 + '"}'
+
 VERIFY_ADDRESS_DICT = {
     "valid": True,
     "address_1": "9500 Gilman Dr",
@@ -184,7 +187,9 @@ VERIFY_ADDRESS_DICT = {
     "latitude": 32.879215217102335,
     "longitude": -117.24106063080784
 }
-
+DUMMY_KIT_UUID = str(uuid.uuid4())
+DUMMY_KIT_ID = "SOMEKIT44"
+DUMMY_TRACKING = "qwerty123456"
 
 class PerkFulfillmentRepoTests(unittest.TestCase):
     @patch("microsetta_private_api.repo.interested_user_repo.verify_address")
@@ -246,6 +251,12 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
     def tearDown(self):
         with Transaction() as t:
             cur = t.cursor()
+            cur.execute(
+                "DELETE FROM barcodes.daklapack_order "
+                "WHERE dak_order_id = %s",
+                (DUMMY_ORDER_ID2, )
+            )
+
             cur.execute(
                 "DELETE FROM campaign.campaigns_projects "
                 "WHERE campaign_id = %s",
@@ -723,6 +734,88 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
             cancelled_fulfillments = cur.rowcount
 
             self.assertEqual(cancelled_fulfillments, 6)
+
+    @patch(
+        "microsetta_private_api.repo.perk_fulfillment_repo."
+        "create_daklapack_order_internal"
+    )
+    @patch(
+        "microsetta_private_api.repo.perk_fulfillment_repo.send_email"
+    )
+    def test_check_for_shipping_updates(
+        self,
+        test_send_email_result,
+        test_daklapack_order_result
+    ):
+        test_send_email_result = True
+        test_daklapack_order_result.return_value = {
+            "order_address": "wedontcareaboutthis",
+            "order_success": True,
+            "order_id": DUMMY_ORDER_ID
+        }
+
+        # res simulates what comes back from
+        # PerkFulfillmentRepo.get_pending_fulfillments()
+        res = [self.kit_ftp_id]
+        for ftp_id in res:
+            with Transaction() as t:
+                # create a dummy Daklapack order
+                acct_repo = AccountRepo(t)
+                submitter_acct = acct_repo.get_account(SUBMITTER_ID)
+
+                creation_timestamp = dateutil.parser.isoparse(
+                    "2020-10-09T22:43:52.219328Z")
+                last_polling_timestamp = dateutil.parser.isoparse(
+                    "2020-10-19T12:40:19.219328Z")
+                desc = "a description"
+                planned_send_date = datetime.date(2032, 2, 9)
+                last_status = "accepted"
+
+                # create dummy daklapack order object
+                input = DaklapackOrder(DUMMY_ORDER_ID, submitter_acct,
+                                       PROJECT_IDS, DUMMY_DAKLAPACK_ORDER,
+                                       desc, planned_send_date,
+                                       creation_timestamp,
+                                       last_polling_timestamp, last_status)
+
+                # call create_daklapack_order
+                admin_repo = AdminRepo(t)
+                returned_id = admin_repo.create_daklapack_order(input)
+
+                cur = t.cursor()
+
+                # To simulate a shipped order, we need to update the status,
+                # create a kit, and map the kit to the order
+                cur.execute(
+                    "UPDATE barcodes.daklapack_order "
+                    "SET last_polling_status = 'Sent' "
+                    "WHERE dak_order_id = %s",
+                    (DUMMY_ORDER_ID, )
+                )
+                cur.execute(
+                    "INSERT INTO barcodes.kit ("
+                    "kit_uuid, kit_id, outbound_fedex_tracking, box_id"
+                    ") VALUES ("
+                    "%s, %s, %s, 'ABOX'"
+                    ")",
+                    (DUMMY_KIT_UUID, DUMMY_KIT_ID, DUMMY_TRACKING)
+                )
+                cur.execute(
+                    "INSERT INTO barcodes.daklapack_order_to_kit ("
+                    "dak_order_id, kit_uuid"
+                    ") VALUES ("
+                    "%s, %s"
+                    ")",
+                    (DUMMY_ORDER_ID, DUMMY_KIT_UUID)
+                )
+
+                pfr = PerkFulfillmentRepo(t)
+                _ = pfr.process_pending_fulfillment(ftp_id)
+
+                emails_sent, error_report = pfr.check_for_shipping_updates()
+
+                self.assertEqual(emails_sent, 1)
+                self.assertEqual(len(error_report), 0)
 
     def _count_ffq_registration_codes(self, t):
         cur = t.cursor()
