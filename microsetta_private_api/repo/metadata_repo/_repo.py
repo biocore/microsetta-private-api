@@ -235,10 +235,24 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     transformed = []
 
     multiselect_map = _construct_multiselect_map(survey_templates)
+
     for metadata in metadatas:
         # metadata is a dict representing a barcode's metadata.
         try:
+            # each as_series represents the aggregated shortname, value
+            # pairs for all filled templates returned. If for example there
+            # are two templates w/overlapping questions (1, 10), there will
+            # be duplicate (shortname, value) pairs in as_series.
             as_series = _to_pandas_series(metadata, multiselect_map)
+
+            idx = as_series.index
+
+            # duplicate indexes are safe to remove because the values will
+            # always be identical. This is because for a question N in
+            # templates 1 and 10, the code will return the most recent value
+            # for both templates, regardless of whether it came from a type 1
+            # survey or a type 10 survey.
+            as_series = as_series[~idx.duplicated(keep="first")]
         except RepoException as e:
             barcode = metadata['sample_barcode']
             errors.append({barcode: repr(e)})

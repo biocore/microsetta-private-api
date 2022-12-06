@@ -202,7 +202,7 @@ class SurveyTemplateRepo(BaseRepo):
     def get_survey_template_link_info(survey_id):
         return copy.deepcopy(SurveyTemplateRepo.SURVEY_INFO[survey_id])
 
-    def get_survey_template(self, survey_id, language_tag):
+    def get_survey_template(self, survey_template_id, language_tag):
         tag_to_col = {
             localization.EN_US: "survey_question.american",
             localization.EN_GB: "survey_question.british",
@@ -218,7 +218,7 @@ class SurveyTemplateRepo(BaseRepo):
 
             cur.execute(
                 "SELECT count(*) FROM surveys WHERE survey_id=%s",
-                (survey_id,)
+                (survey_template_id,)
             )
 
             if cur.fetchone()[0] == 0:
@@ -245,7 +245,7 @@ class SurveyTemplateRepo(BaseRepo):
                 "survey_question.retired = false "
                 "ORDER BY group_questions.survey_group, "
                 "group_questions.display_index",
-                (survey_id,))
+                (survey_template_id,))
 
             rows = cur.fetchall()
 
@@ -299,7 +299,7 @@ class SurveyTemplateRepo(BaseRepo):
                     group_localized_text,
                     cur_questions))
 
-            return SurveyTemplate(survey_id, language_tag, all_groups)
+            return SurveyTemplate(survey_template_id, language_tag, all_groups)
 
     def _get_group_localized_text(self, group_id, language_tag):
         tag_to_col = {
@@ -1026,6 +1026,120 @@ class SurveyTemplateRepo(BaseRepo):
                     return True
 
         return False
+
+    def migrate_responses_by_barcode(self, barcode, survey_template_id):
+        '''
+        Get all survey responses associated with a barcode and
+         migrate them. Will pull from past results if they are found,
+         including legacy template answers. Only latest results are returned.
+        :param account_id: An account
+        :param barcodes: a barcode to search by
+        :return: A filled survey_template dict
+        '''
+        if int(survey_template_id) in self.SURVEY_INFO:
+            if int(survey_template_id) in [self.VIOSCREEN_ID,
+                                           self.MYFOODREPO_ID,
+                                           self.POLYPHENOL_FFQ_ID,
+                                           self.SPAIN_FFQ_ID]:
+                raise ValueError("survey_template_id must be for a local "
+                                 "survey")
+        else:
+            raise ValueError("invalid value for survey_template_id")
+
+        sql = """SELECT *
+                 FROM  (SELECT a.survey_question_id,
+                               a.response,
+                               e.creation_time,
+                               f.survey_response_type,
+                               h.barcode
+                        FROM   ag.survey_answers a
+                               JOIN ag.group_questions c
+                                 ON a.survey_question_id = c.survey_question_id
+                               JOIN ag.surveys d
+                                 ON c.survey_group = d.survey_group
+                               JOIN ag.ag_login_surveys e
+                                 ON a.survey_id = e.survey_id
+                               JOIN ag.survey_question_response_type f
+                                 ON a.survey_question_id = f.survey_question_id
+                               JOIN ag.survey_question g
+                                 ON a.survey_question_id = g.survey_question_id
+                               JOIN ag.source_barcodes_surveys h
+                                 ON a.survey_id = h.survey_id
+                        WHERE a.response != 'Unspecified'
+                               AND h.barcode = %s
+                               AND d.survey_id = %s
+                               AND g.retired = false
+                        UNION
+                        SELECT a.survey_question_id,
+                               a.response,
+                               e.creation_time,
+                               f.survey_response_type,
+                               h.barcode
+                        FROM   ag.survey_answers_other a
+                               JOIN ag.group_questions c
+                                 ON a.survey_question_id = c.survey_question_id
+                               JOIN ag.surveys d
+                                 ON c.survey_group = d.survey_group
+                               JOIN ag.ag_login_surveys e
+                                 ON a.survey_id = e.survey_id
+                               JOIN ag.survey_question_response_type f
+                                 ON a.survey_question_id = f.survey_question_id
+                               JOIN ag.survey_question g
+                                 ON a.survey_question_id = g.survey_question_id
+                               JOIN ag.source_barcodes_surveys h
+                                 ON a.survey_id = h.survey_id
+                        WHERE  a.response != 'Unspecified'
+                                 AND h.barcode = %s
+                                 AND d.survey_id = %s
+                                 AND g.retired = false) t
+                 ORDER  BY creation_time ASC,
+                           survey_question_id ASC"""
+
+        with self._transaction.cursor() as cur:
+            # first, confirm account_id is valid.
+            '''
+            cur.execute("""SELECT ag_login_id AS account_id
+                           FROM   ag.ag_login_surveys
+                           WHERE  ag_login_id = %s""", (account_id,))
+            cur.fetchall()
+            '''
+
+            if cur.rowcount == 0:
+                raise ValueError("account_id is not valid")
+
+            cur.execute(sql, (barcode, survey_template_id,
+                              barcode, survey_template_id,))
+
+            rows = cur.fetchall()
+
+            # create an empty template to fill-in.
+            results = self._generate_empty_survey(survey_template_id)
+
+            for row in rows:
+                question_id = str(row[0])
+                response = row[1]
+                response_type = row[3]
+
+                # responses are from earliest to latest thus older answers
+                # will be overwritten with newer ones as need be, according
+                # to creation time ASC.
+                if response_type == 'MULTIPLE':
+                    results[question_id].append(response)
+                    try:
+                        # remove will raise an exception if 'Unspecified' has
+                        # already been removed. Handle this quietly.
+                        results[question_id].remove("Unspecified")
+                    except ValueError:
+                        pass
+                elif response_type == 'SINGLE':
+                    results[question_id] = response
+                else:
+                    # STRING and TEXT responses may need their enclosing
+                    # brackets removed. For now, pass them on as is:
+                    # e.g.: ["Free text - <encrypted text>"]
+                    results[question_id] = response
+
+            return results
 
     def migrate_responses(self, account_id, survey_template_id):
         '''

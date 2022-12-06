@@ -1189,18 +1189,28 @@ class AdminRepo(BaseRepo):
 
         metadata_map = survey_ans_repo.build_metadata_map()
 
+        # we now just need a set of template_ids
+        template_ids = list(set([x[1] for x in template_ids]))
+
         all_survey_answers = []
-        for answer_id, template_id in template_ids:
-            answer_model = survey_ans_repo.get_answered_survey(account_id,
-                                                               source_id,
-                                                               answer_id,
-                                                               "en_US")
-            if answer_model is None:
+
+        for template_id in template_ids:
+            # note that if a barcode has a survey of type 1 and type 10, both
+            # will appear in these results. However, both will contain the
+            # most recent responses for individual questions, no matter which
+            # survey they came from.
+            if template_id not in st_repo.local_surveys():
                 # if answers are requested for a vioscreen survey
                 # the answers model will comeback empty so let's
-                # gracefully handle this
+                # gracefully handle this. Also, get_answered_survey()
+                # will raise an Error.
                 continue
 
+            # also note that if a barcode has multiple surveys of say type 10,
+            # only one result will be returned, and it will contain the latest
+            # filled answers across all of them.
+            answer_model = st_repo.migrate_responses_by_barcode(sample_barcode,
+                                                                template_id)
             survey_answers = {}
             for k in answer_model:
                 new_k = metadata_map[int(k)]

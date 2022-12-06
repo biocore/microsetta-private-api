@@ -140,7 +140,7 @@ class SurveyAnswersRepo(BaseRepo):
                         "FROM "
                         "ag_kit_barcodes "
                         "LEFT JOIN source_barcodes_surveys "
-                        "USING (barcode)"
+                        "USING (barcode) "
                         "WHERE "
                         "ag_kit_barcode_id = %s",
                         (sample_id,))

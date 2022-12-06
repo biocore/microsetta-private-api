@@ -21,6 +21,7 @@ from microsetta_private_api.model.tests.test_daklapack_order import \
     DUMMY_PROJ_ID_LIST, DUMMY_DAK_ARTICLE_CODE, DUMMY_ADDRESSES, \
     DUMMY_DAK_ORDER_DESC, DUMMY_PLANNED_SEND_DATE, DUMMY_FEDEX_REFS, \
     DUMMY_SHIPPING_PROVIDER, DUMMY_SHIPPING_TYPE
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 
 
 DUMMY_PROJ_NAME = "test project"
@@ -835,8 +836,57 @@ class AdminApiTests(TestCase):
         result = json.loads(response.data)
         self.assertEqual(set(result.keys()), {'000069747', '000051101'})
 
+    def test_metadata_qiita_compatible_two_templates(self):
+        # The surveys attached to barcode '000069747' are known to be 1 and
+        # 1000x. Submit a template 10 survey and confirm that the code is
+        # able to merge filled answers from 1 and 10, and pick the latest
+        # values.
+        with Transaction() as t:
+            sar = SurveyAnswersRepo(t)
+            survey_10 = {
+                '22': 'Unspecified',
+                '108': 'Unspecified',
+                '109': 'Unspecified',
+                '110': 'Unspecified',
+                '111': 'Unspecified',
+                '112': '1984',
+                '113': 'Unspecified',
+                '115': 'Unspecified',
+                '148': 'Unspecified',
+                '492': 'Unspecified',
+                '493': 'Unspecified',
+                '502': 'Unspecified'
+            }
+            survey_id = sar.submit_answered_survey(
+                '3341a094-33d1-4e57-930c-caff315c7e97',
+                'a5fab2f5-2917-4d0e-babe-9dffde7869a8',
+                'en_US', 10, survey_10)
+            sar.associate_answered_survey_with_sample(
+                '3341a094-33d1-4e57-930c-caff315c7e97',
+                'a5fab2f5-2917-4d0e-babe-9dffde7869a8',
+                'c380d941-625f-4d6c-a60c-e223ba69ea81',
+                survey_id)
+            t.commit()
+
+        # query the barcodes and confirm the birth year was changed to '1984'.
+        data = json.dumps({'sample_barcodes': ['000069747', '000051101']})
+        response = self.client.post('/api/admin/metadata/qiita-compatible',
+                                    content_type='application/json',
+                                    data=data,
+                                    headers=MOCK_HEADERS)
+        self.assertEqual(200, response.status_code)
+        result = json.loads(response.data)
+        self.assertEqual(result['000069747']['birth_year'], '1984')
+
+        # clean up by deleting the survey we added for testing.
+        with Transaction() as t:
+            sar = SurveyAnswersRepo(t)
+            sar.delete_answered_survey('3341a094-33d1-4e57-930c-caff315c7e97',
+                                       survey_id)
+
     def test_metadata_qiita_compatible_valid_private(self):
         data = json.dumps({'sample_barcodes': ['000004216']})
+        # 116 should be in there in survey be8516e8c5d4ff4d
         response = self.client.post('/api/admin/metadata/qiita-compatible'
                                     '?include_private=True',
                                     content_type='application/json',
