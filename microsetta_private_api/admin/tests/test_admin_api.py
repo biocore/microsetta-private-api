@@ -900,43 +900,134 @@ class AdminApiTests(TestCase):
             sar.delete_answered_survey(account_id, survey_id)
 
     def test_metadata_qiita_compatible_valid_private(self):
-        data = json.dumps({'sample_barcodes': ['000004216']})
-        # 116 should be in there in survey be8516e8c5d4ff4d
+        # All the old PM_ values have been retired. We've migrated
+        # 502: GENDER_v2 to PM_GENDER_v2. 502 is in template 10. Since there
+        # aren't existing template 10 surveys, create one, set 502, and confirm
+        # it appears in query results.
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                # first, find the ids for the barcode and survey we're using
+                # as they are dynamically generated.
+                cur.execute("select ag_login_id, source_id from "
+                            "ag_login_surveys a join source_barcodes_surveys b"
+                            " on a.survey_id = b.survey_id and b.barcode = "
+                            "'000069747' and survey_template_id = 1")
+                row = cur.fetchone()
+                account_id = row[0]
+                source_id = row[1]
+
+                cur.execute("select ag_kit_barcode_id from ag_kit_barcodes "
+                            "where barcode = '000069747'")
+                row = cur.fetchone()
+                sample_id = row[0]
+
+            sar = SurveyAnswersRepo(t)
+            survey_10 = {
+                '22': 'Unspecified',
+                '108': 'Unspecified',
+                '109': 'Unspecified',
+                '110': 'Unspecified',
+                '111': 'Unspecified',
+                '112': 'Unspecified',
+                '113': 'Unspecified',
+                '115': 'Unspecified',
+                '148': 'Unspecified',
+                '492': 'Unspecified',
+                '493': 'Unspecified',
+                '502': 'Male'
+            }
+            survey_id = sar.submit_answered_survey(
+                account_id,
+                source_id,
+                'en_US', 10, survey_10)
+            sar.associate_answered_survey_with_sample(
+                account_id,
+                source_id,
+                sample_id,
+                survey_id)
+            t.commit()
+        data = json.dumps({'sample_barcodes': ['000069747']})
         response = self.client.post('/api/admin/metadata/qiita-compatible'
                                     '?include_private=True',
                                     content_type='application/json',
                                     data=data,
                                     headers=MOCK_HEADERS)
+
+        # clean up by deleting the survey we added for testing.
+        with Transaction() as t:
+            sar = SurveyAnswersRepo(t)
+            sar.delete_answered_survey(account_id, survey_id)
+
         self.assertEqual(200, response.status_code)
         result = json.loads(response.data)
-        self.assertEqual(set(result.keys()), {'000004216'})
-        obs = {c.lower() for c in result['000004216']}
-        self.assertIn('about_yourself_text', obs)
+        self.assertEqual(set(result.keys()), {'000069747'})
+        obs = {c.lower() for c in result['000069747']}
+        self.assertIn('pm_gender_v2', obs)
 
     def test_metadata_qiita_compatible_valid_no_private(self):
-        data = json.dumps({'sample_barcodes': ['000043062', '000023842']})
+        # All the old PM_ values have been retired. We've migrated
+        # 502: GENDER_v2 to PM_GENDER_v2. 502 is in template 10. Since there
+        # aren't existing template 10 surveys, create one, set 502, and confirm
+        # it appears in query results.
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                # first, find the ids for the barcode and survey we're using
+                # as they are dynamically generated.
+                cur.execute("select ag_login_id, source_id from "
+                            "ag_login_surveys a join source_barcodes_surveys b"
+                            " on a.survey_id = b.survey_id and b.barcode = "
+                            "'000069747' and survey_template_id = 1")
+                row = cur.fetchone()
+                account_id = row[0]
+                source_id = row[1]
+
+                cur.execute("select ag_kit_barcode_id from ag_kit_barcodes "
+                            "where barcode = '000069747'")
+                row = cur.fetchone()
+                sample_id = row[0]
+
+            sar = SurveyAnswersRepo(t)
+            survey_10 = {
+                '22': 'Unspecified',
+                '108': 'Unspecified',
+                '109': 'Unspecified',
+                '110': 'Unspecified',
+                '111': 'Unspecified',
+                '112': 'Unspecified',
+                '113': 'Unspecified',
+                '115': 'Unspecified',
+                '148': 'Unspecified',
+                '492': 'Unspecified',
+                '493': 'Unspecified',
+                '502': 'Male'
+            }
+            survey_id = sar.submit_answered_survey(
+                account_id,
+                source_id,
+                'en_US', 10, survey_10)
+            sar.associate_answered_survey_with_sample(
+                account_id,
+                source_id,
+                sample_id,
+                survey_id)
+            t.commit()
+        data = json.dumps({'sample_barcodes': ['000069747']})
         response = self.client.post('/api/admin/metadata/qiita-compatible'
                                     '?include_private=False',
                                     content_type='application/json',
                                     data=data,
                                     headers=MOCK_HEADERS)
-        self.assertEqual(200, response.status_code)
-        result = json.loads(response.data)
-        self.assertEqual(set(result.keys()), {'000043062', '000023842'})
-        obs = {c.lower() for c in result['000043062']}
-        self.assertNotIn('about_yourself_text', obs)
 
-        # sanity check the the default is false
-        data = json.dumps({'sample_barcodes': ['000043062', '000023842']})
-        response = self.client.post('/api/admin/metadata/qiita-compatible',
-                                    content_type='application/json',
-                                    data=data,
-                                    headers=MOCK_HEADERS)
+        # clean up by deleting the survey we added for testing.
+        with Transaction() as t:
+            sar = SurveyAnswersRepo(t)
+            sar.delete_answered_survey(account_id, survey_id)
+
         self.assertEqual(200, response.status_code)
         result = json.loads(response.data)
-        self.assertEqual(set(result.keys()), {'000043062', '000023842'})
-        obs = {c.lower() for c in result['000043062']}
-        self.assertNotIn('about_yourself_text', obs)
+        self.assertEqual(set(result.keys()), {'000069747'})
+        obs = {c.lower() for c in result['000069747']}
+        self.assertNotIn('pm_gender_v2', obs)
 
     def _test_post_daklapack_orders(self, order_info, expected_status):
         # NB: order_id and creation_date keys not included as different

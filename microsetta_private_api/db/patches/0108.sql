@@ -298,7 +298,7 @@ insert into ag.survey_question (survey_question_id, american, question_shortname
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (499, 'Have you ever been diagnosed with any other relevant clinical condition?', 'CLINICAL_CONDITION_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (500, 'Have you ever been diagnosed with a skin condition?', 'SKIN_CONDITION_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (501, 'Where does your dogs(s) mostly stay?', 'DOG_LOCATION_v2', false);
-insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (502, 'Biological sex assigned at birth', 'GENDER_v2', false);
+insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (502, 'Biological sex assigned at birth', 'PM_GENDER_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (503, 'Where does your cats(s) mostly stay?', 'CAT_LOCATION_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (504, 'Have you ever been diagnosed with mental health illness?', 'mental_illness_v2', false);
 insert into ag.survey_question (survey_question_id, american, question_shortname, retired) values (505, 'If you responded "yes", please select which disorder(s) from the following list:', 'mental_illness_type_v2', false);

@@ -1170,6 +1170,7 @@ class AdminRepo(BaseRepo):
                 account_id, source_id, sample_id)
 
         st_repo = SurveyTemplateRepo(self._transaction)
+
         template_ids = st_repo.get_template_ids_from_survey_ids(a_ids)
 
         if survey_template_id is not None:
