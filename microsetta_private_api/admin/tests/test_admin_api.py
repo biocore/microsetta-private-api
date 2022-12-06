@@ -842,6 +842,22 @@ class AdminApiTests(TestCase):
         # able to merge filled answers from 1 and 10, and pick the latest
         # values.
         with Transaction() as t:
+            with t.dict_cursor() as cur:
+                # first, find the ids for the barcode and survey we're using
+                # as they are dynamically generated.
+                cur.execute("select ag_login_id, source_id from "
+                            "ag_login_surveys a join source_barcodes_surveys b"
+                            " on a.survey_id = b.survey_id and b.barcode = "
+                            "'000069747' and survey_template_id = 1")
+                row = cur.fetchone()
+                account_id = row[0]
+                source_id = row[1]
+
+                cur.execute("select ag_kit_barcode_id from ag_kit_barcodes "
+                            "where barcode = '000069747'")
+                row = cur.fetchone()
+                sample_id = row[0]
+
             sar = SurveyAnswersRepo(t)
             survey_10 = {
                 '22': 'Unspecified',
@@ -858,13 +874,13 @@ class AdminApiTests(TestCase):
                 '502': 'Unspecified'
             }
             survey_id = sar.submit_answered_survey(
-                '3341a094-33d1-4e57-930c-caff315c7e97',
-                'a5fab2f5-2917-4d0e-babe-9dffde7869a8',
+                account_id,
+                source_id,
                 'en_US', 10, survey_10)
             sar.associate_answered_survey_with_sample(
-                '3341a094-33d1-4e57-930c-caff315c7e97',
-                'a5fab2f5-2917-4d0e-babe-9dffde7869a8',
-                'c380d941-625f-4d6c-a60c-e223ba69ea81',
+                account_id,
+                source_id,
+                sample_id,
                 survey_id)
             t.commit()
 
@@ -881,8 +897,7 @@ class AdminApiTests(TestCase):
         # clean up by deleting the survey we added for testing.
         with Transaction() as t:
             sar = SurveyAnswersRepo(t)
-            sar.delete_answered_survey('3341a094-33d1-4e57-930c-caff315c7e97',
-                                       survey_id)
+            sar.delete_answered_survey(account_id, survey_id)
 
     def test_metadata_qiita_compatible_valid_private(self):
         data = json.dumps({'sample_barcodes': ['000004216']})
