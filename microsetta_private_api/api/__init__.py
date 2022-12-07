@@ -108,5 +108,7 @@ __all__ = [
     'get_campaign_information',
     'create_interested_user',
     'get_interested_user_address_update',
-    'put_interested_user_address_update'
+    'put_interested_user_address_update',
+    'get_opt_out',
+    'put_opt_out'
 ]
