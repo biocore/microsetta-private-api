@@ -180,6 +180,56 @@ def put_interested_user_address_update(body):
         return jsonify(user_id=interested_user_id), 200
 
 
+def get_opt_out(interested_user_id):
+    with Transaction() as t:
+        i_u_repo = InterestedUserRepo(t)
+        i_u = i_u_repo.get_interested_user_by_id(interested_user_id)
+
+        if i_u is None:
+            return jsonify(
+                code=404,
+                message="Interested user not found."
+            ), 404
+        else:
+            campaign_repo = CampaignRepo(t)
+            campaign_info = \
+                campaign_repo.get_campaign_by_id(i_u.campaign_id)
+
+            return jsonify(
+                interested_user_id=interested_user_id,
+                force_primary_language=campaign_info.force_primary_language,
+                language_key=campaign_info.language_key
+            ), 200
+
+
+def put_opt_out(interested_user_id):
+    with Transaction() as t:
+        i_u_repo = InterestedUserRepo(t)
+        i_u = i_u_repo.get_interested_user_by_id(interested_user_id)
+
+        if i_u is None:
+            return jsonify(
+                code=404,
+                message="Interested user not found."
+            ), 404
+        else:
+            # We don't care if they've already opted out, we're just going to
+            # tell them we've removed them from the list
+            _ = i_u_repo.opt_out_interested_user(interested_user_id)
+
+            campaign_repo = CampaignRepo(t)
+            campaign_info = \
+                campaign_repo.get_campaign_by_id(i_u.campaign_id)
+
+            t.commit()
+
+            return jsonify(
+                interested_user_id=interested_user_id,
+                force_primary_language=campaign_info.force_primary_language,
+                language_key=campaign_info.language_key
+            ), 200
+
+
 def _validate_iuid_and_email_syntax(interested_user_id, email):
     try:
         uuid.UUID(interested_user_id)
