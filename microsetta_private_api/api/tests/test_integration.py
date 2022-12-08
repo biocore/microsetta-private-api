@@ -366,7 +366,11 @@ class IntegrationTests(TestCase):
         # Survey status should not be in templates
         self.assertNotIn("survey_status", bobo_surveys[0])
         self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
-                             [1, 3, 4, 5, 6, 7, 10001, 10002, 10003, 10004,
+                             [1, 3, 4, 5, 6, 7,
+                              SurveyTemplateRepo.VIOSCREEN_ID,
+                              SurveyTemplateRepo.MYFOODREPO_ID,
+                              SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                              SurveyTemplateRepo.SPAIN_FFQ_ID,
                               SurveyTemplateRepo.BASIC_INFO_ID,
                               SurveyTemplateRepo.AT_HOME_ID,
                               SurveyTemplateRepo.LIFESTYLE_ID,
@@ -460,7 +464,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "survey_template_id": 10001,
+                    "survey_template_id": SurveyTemplateRepo.VIOSCREEN_ID,
                     "survey_text": {'key': completed_key.decode('utf-8')}
                 }),
             headers=MOCK_HEADERS
@@ -504,7 +508,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "survey_template_id": 10002,
+                    "survey_template_id": SurveyTemplateRepo.MYFOODREPO_ID,
                     "survey_text": {'key': 'stuff'}
                 }),
             headers=MOCK_HEADERS
@@ -577,7 +581,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "survey_template_id": 10003,
+                    "survey_template_id": SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                     "survey_text": {'key': 'stuff'}
                 }),
             headers=MOCK_HEADERS
@@ -611,7 +615,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "survey_template_id": 10004,
+                    "survey_template_id": SurveyTemplateRepo.SPAIN_FFQ_ID,
                     "survey_text": {'key': 'stuff'}
                 }),
             headers=MOCK_HEADERS
@@ -647,8 +651,11 @@ class IntegrationTests(TestCase):
 
             # 10001, 10002, 10003, and 10004 are non-local surveys
             # surveys 1-7 are no longer present, and reformulated into 10-21.
-            if chosen_survey in (1, 2, 3, 4, 5, 6, 7, 10001, 10002, 10003,
-                                 10004,
+            if chosen_survey in (1, 2, 3, 4, 5, 6, 7,
+                                 SurveyTemplateRepo.VIOSCREEN_ID,
+                                 SurveyTemplateRepo.MYFOODREPO_ID,
+                                 SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                                 SurveyTemplateRepo.SPAIN_FFQ_ID,
                                  SurveyTemplateRepo.BASIC_INFO_ID,
                                  SurveyTemplateRepo.AT_HOME_ID,
                                  SurveyTemplateRepo.LIFESTYLE_ID,

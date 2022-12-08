@@ -10,6 +10,8 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenMPeds, VioscreenMPedsComponent,
     VioscreenFoodConsumption, VioscreenFoodConsumptionComponent,
     VioscreenComposite)
+
+
 from werkzeug.exceptions import NotFound
 
 
@@ -1606,7 +1608,11 @@ class VioscreenRepo(BaseRepo):
                     "ag_login_id, survey_id, vioscreen_status, source_id, "
                     "survey_template_id) "
                     "VALUES(%s, %s, %s, %s, %s)",
-                    (account_id, survey_id, status, source_id, 10001)
+                    (account_id, survey_id, status, source_id,
+                     # Use 10001 for now, as we cannot import
+                     # SurveyTemplateRepo as it would create a circular
+                     # dependency.
+                     10001)
                 )
         else:
             # Else, upsert a status.

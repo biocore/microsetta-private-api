@@ -898,6 +898,7 @@ class AdminApiTests(TestCase):
         with Transaction() as t:
             sar = SurveyAnswersRepo(t)
             sar.delete_answered_survey(account_id, survey_id)
+            t.commit()
 
     def test_metadata_qiita_compatible_valid_private(self):
         # All the old PM_ values have been retired. We've migrated
@@ -957,6 +958,7 @@ class AdminApiTests(TestCase):
         with Transaction() as t:
             sar = SurveyAnswersRepo(t)
             sar.delete_answered_survey(account_id, survey_id)
+            t.commit()
 
         self.assertEqual(200, response.status_code)
         result = json.loads(response.data)

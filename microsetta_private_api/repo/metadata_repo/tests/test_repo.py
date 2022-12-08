@@ -200,7 +200,8 @@ class MetadataUtilTests(unittest.TestCase):
 
     def test_fetch_survey_template_remote(self):
         # attempt to fetch info for Vioscreen survey
-        survey, errors = _fetch_survey_template(10001)
+        survey, errors = _fetch_survey_template(
+            SurveyTemplateRepo.VIOSCREEN_ID)
 
         # verify that _fetch_survey_template returns an error, reflecting
         # that it's a remote survey for which we can't extract local data

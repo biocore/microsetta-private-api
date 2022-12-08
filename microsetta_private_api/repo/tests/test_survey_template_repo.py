@@ -533,14 +533,14 @@ class SurveyTemplateTests(unittest.TestCase):
 
             # handle remote template id
             with self.assertRaises(ValueError):
-                sar._generate_empty_survey(10001)
+                sar._generate_empty_survey(SurveyTemplateRepo.VIOSCREEN_ID)
 
     def _create_source(self, account_id):
         with Transaction() as t:
             sr = SourceRepo(t)
 
             HUMAN_INFO = HumanInfo(None, None, None, None, None, None, None,
-                                   None)
+                                   None, None)
             HUMAN_INFO.email = 'foo@bar.com'
             HUMAN_INFO.is_juvenile = False
             HUMAN_INFO.parent1_name = None
@@ -566,14 +566,14 @@ class SurveyTemplateTests(unittest.TestCase):
 
             return HUMAN_SOURCE
 
-    def _clean_up(self, account_id, human_source, survey_ids):
+    def _clean_up(self, account_id, source_id, survey_ids):
         with Transaction() as t:
             sr = SourceRepo(t)
             sar = SurveyAnswersRepo(t)
             for survey_id in survey_ids:
                 sar.delete_answered_survey(account_id, survey_id)
 
-            sr.delete_source(human_source.account_id, human_source.id)
+            sr.delete_source(account_id, source_id)
             t.commit()
 
     def _submit_test_survey(self, account_id, human_source, month):
@@ -595,7 +595,7 @@ class SurveyTemplateTests(unittest.TestCase):
             }
 
             survey_id = sar.submit_answered_survey(account_id,
-                                                   human_source.id,
+                                                   human_source,
                                                    'en_US',
                                                    10,
                                                    survey_10)
@@ -606,16 +606,21 @@ class SurveyTemplateTests(unittest.TestCase):
 
     def test_migrate_responses(self):
         with Transaction() as t:
-            str = SurveyTemplateRepo(t)
+            with t.cursor() as cur:
+                # get source_id associated with survey_id 6d16832b84358c93 as
+                # it is randomly generated each install.
+                cur.execute("SELECT source_id FROM ag_login_surveys WHERE "
+                            "survey_id = '6d16832b84358c93'")
+                source_id = cur.fetchone()[0]
 
+        with Transaction() as t:
+            str = SurveyTemplateRepo(t)
             # use data from an old template 1 survey and return a subset of it
             # in a generated template 10.
-            # This account_id is associated with survey_id 6d16832b84358c93 in
-            # case it changes on db reload.
-            account_id = 'd8592c74-8148-2135-e040-8a80115d6401'
-            obs, obs_pc = str.migrate_responses(account_id, 10)
+
+            obs, obs_pc = str.migrate_responses(source_id, 10)
             self.assertDictEqual(obs, self.filled_survey_10a)
-            self.assertAlmostEqual(obs_pc, 0.583, 2)
+            self.assertAlmostEqual(obs_pc, 0.615, 2)
 
             # disabled because some other tests rely on an invalid id.
             # # use an invalid account id
@@ -630,8 +635,7 @@ class SurveyTemplateTests(unittest.TestCase):
 
             # request a test from a valid account, but contributes no prior
             # values to the result.
-            obs, obs_pc = str.migrate_responses(account_id, 19)
-
+            obs, obs_pc = str.migrate_responses(source_id, 19)
             self.assertDictEqual(obs, self.filled_survey_19a)
             self.assertAlmostEqual(obs_pc, 0.0, 2)
 
@@ -641,17 +645,17 @@ class SurveyTemplateTests(unittest.TestCase):
             # for ACCOUNT_ID, 111 (Birth Month) should return 'March' if the
             # surveys were submitted correctly and the latest value is being
             # taken.
-            ACCOUNT_ID = '607f6723-c704-4b52-bc26-556a9aec85f6'
-            HUMAN_SOURCE = self._create_source(ACCOUNT_ID)
+            account_id = '607f6723-c704-4b52-bc26-556a9aec85f6'
+            human_source = self._create_source(account_id)
             survey_ids = []
             survey_ids.append(
-                self._submit_test_survey(ACCOUNT_ID, HUMAN_SOURCE,
+                self._submit_test_survey(account_id, human_source.id,
                                          'February'))
             survey_ids.append(
-                self._submit_test_survey(ACCOUNT_ID, HUMAN_SOURCE,
+                self._submit_test_survey(account_id, human_source.id,
                                          'March'))
 
-            result, result_pc = str.migrate_responses(ACCOUNT_ID, 10)
+            result, result_pc = str.migrate_responses(human_source.id, 10)
             self.assertNotEqual(result['111'], 'February')
             self.assertEqual(result['111'], 'March')
             self.assertAlmostEqual(obs_pc, 0.0, 2)
@@ -659,7 +663,7 @@ class SurveyTemplateTests(unittest.TestCase):
             # clean up. These methods were not put into setUp and tearDown
             # as this is the only test that needs them. Each submit needs its
             # own commit(), this was the way to keep it better managed.
-            self._clean_up(ACCOUNT_ID, HUMAN_SOURCE, survey_ids)
+            self._clean_up(account_id, human_source.id, survey_ids)
 
     def test_get_template_ids_from_survey_ids(self):
         with Transaction() as t:
@@ -731,6 +735,7 @@ class SurveyTemplateTests(unittest.TestCase):
             "112": "1945",
             "113": "[\"Free text - S#G\u00e4e\u00c9n0x='\u00e8u)`\u00dfJ\u00dfM=\"]",   # noqa
             "115": "[\"Free text - bC\u00c4\u012bx*N*0\u00d3Ha7\r*/b3\u010dD\"]",   # noqa
+            "116": 'Unspecified',
             "148": "Unspecified",
             "492": "Unspecified",
             "493": "Unspecified",
@@ -1088,6 +1093,7 @@ class SurveyTemplateTests(unittest.TestCase):
         '112': 'Unspecified',
         '113': 'Unspecified',
         '115': 'Unspecified',
+        '116': 'Unspecified',
         '124': 'Unspecified',
         '126': 'Unspecified',
         '146': 'Unspecified',
@@ -1113,6 +1119,7 @@ class SurveyTemplateTests(unittest.TestCase):
         '112': 'Unspecified',
         '113': 'Unspecified',
         '115': 'Unspecified',
+        '116': 'Unspecified',
         '148': 'Unspecified',
         '492': 'Unspecified',
         '493': 'Unspecified',
@@ -1122,10 +1129,12 @@ class SurveyTemplateTests(unittest.TestCase):
     filled_survey_10a = {'22': 'I am right handed',
                          '108': '["Free text - í.,ú!N):TfüQWä$ãZ-SQ"]',
                          '109': 'centimeters',
-                         '110': 'United States', '111': 'June',
+                         '110': 'United States',
+                         '111': 'June',
                          '112': 'Unspecified',
                          '113': '["Free text - -,mV7Ä\t9xäMf\\è\n!¿x_ã"]',
                          '115': '["Free text - Js*äbéøx\'ó,çné\nSEQ8\t"]',
+                         '116': '["Free text - Å|ī8W=A4K\rØø\t_Af3ÓÓ."]',
                          '148': 'Unspecified',
                          '492': 'Unspecified',
                          '493': 'Unspecified',

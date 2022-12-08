@@ -255,7 +255,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
                 if field.id in client_side_validation:
                     field.set(**client_side_validation[field.id])
 
-        results, percent_comp = st_repo.migrate_responses(account_id,
+        results, percent_comp = st_repo.migrate_responses(source_id,
                                                           survey_template_id)
         if results:
             # modify info with previous results before returning to client.

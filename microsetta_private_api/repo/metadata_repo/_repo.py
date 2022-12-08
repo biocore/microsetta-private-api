@@ -22,7 +22,11 @@ jsonify = json.dumps
 # do not add legacy template_ids (1-7) to this dict at this time.
 # there are users of this dict that process valid grabs on legacy template
 # dagta.
-TEMPLATES_TO_IGNORE = {10001, 10002, 10003, 10004, None}
+TEMPLATES_TO_IGNORE = {SurveyTemplateRepo.VIOSCREEN_ID,
+                       SurveyTemplateRepo.MYFOODREPO_ID,
+                       SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                       SurveyTemplateRepo.SPAIN_FFQ_ID,
+                       None}
 
 # TODO 2022-10-03
 # Adding questions from Cooking Oils & Oxalate-rich Foods survey
@@ -408,10 +412,12 @@ def _to_pandas_series(metadata, multiselect_map):
         template = survey['template']
 
         if template in collected:
-            # HACK: there exist some samples that have duplicate surveys. This
-            # is unusual and unexpected state in the database, and has so far
-            # only been observed only with the surfers survey. The hacky
-            # solution is to only gather the results once
+            # As surveys can now be retaken, it will become more common for
+            # duplicates to appear. However, those duplicates are typically
+            # merged before this function is called. Hence, it would continue
+            # to be a somewhat unusual and unexpected state to process two or
+            # more surveys with the same template id here. For now, continue
+            # to gather the results only once.
             continue
 
         collected.add(template)

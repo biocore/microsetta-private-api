@@ -423,7 +423,8 @@ class SurveyTemplateRepo(BaseRepo):
                         "source_id, "
                         "survey_template_id) "
                         "VALUES(%s, %s, %s, %s, %s)",
-                        (account_id, mfr_id, None, source_id, 10002))
+                        (account_id, mfr_id, None, source_id,
+                         SurveyTemplateRepo.MYFOODREPO_ID))
 
             # Add to the myfoodrepo_registry
             cur.execute("""UPDATE myfoodrepo_registry
@@ -561,7 +562,7 @@ class SurveyTemplateRepo(BaseRepo):
                             "survey_template_id) "
                             "VALUES(%s, %s, %s, %s, %s)",
                             (account_id, polyphenol_ffq_id, None, source_id,
-                             10003))
+                             SurveyTemplateRepo.POLYPHENOL_FFQ_ID))
 
                 return polyphenol_ffq_id
 
@@ -658,7 +659,7 @@ class SurveyTemplateRepo(BaseRepo):
                             "survey_template_id) "
                             "VALUES(%s, %s, %s, %s, %s)",
                             (account_id, spain_ffq_id, None, source_id,
-                             10004))
+                             SurveyTemplateRepo.SPAIN_FFQ_ID))
 
                 return spain_ffq_id
 
@@ -754,7 +755,8 @@ class SurveyTemplateRepo(BaseRepo):
                             "source_id, "
                             "survey_template_id) "
                             "VALUES(%s, %s, %s, %s, %s)",
-                            (account_id, vioscreen_id, -1, source_id, 10001))
+                            (account_id, vioscreen_id, -1, source_id,
+                             SurveyTemplateRepo.VIOSCREEN_ID))
                 # Immediately attach that survey to the specified sample
                 sample_repo = SampleRepo(self._transaction)
                 s = sample_repo.get_sample(account_id,
@@ -1032,20 +1034,10 @@ class SurveyTemplateRepo(BaseRepo):
         Get all survey responses associated with a barcode and
          migrate them. Will pull from past results if they are found,
          including legacy template answers. Only latest results are returned.
-        :param account_id: An account
-        :param barcodes: a barcode to search by
+        :param barcode: a barcode to search by
+        :param survey_template_id: The id of the filled survey to return.
         :return: A filled survey_template dict
         '''
-        if int(survey_template_id) in self.SURVEY_INFO:
-            if int(survey_template_id) in [self.VIOSCREEN_ID,
-                                           self.MYFOODREPO_ID,
-                                           self.POLYPHENOL_FFQ_ID,
-                                           self.SPAIN_FFQ_ID]:
-                raise ValueError("survey_template_id must be for a local "
-                                 "survey")
-        else:
-            raise ValueError("invalid value for survey_template_id")
-
         sql = """SELECT *
                  FROM  (SELECT a.survey_question_id,
                                a.response,
@@ -1096,17 +1088,6 @@ class SurveyTemplateRepo(BaseRepo):
                            survey_question_id ASC"""
 
         with self._transaction.cursor() as cur:
-            # first, confirm account_id is valid.
-            '''
-            cur.execute("""SELECT ag_login_id AS account_id
-                           FROM   ag.ag_login_surveys
-                           WHERE  ag_login_id = %s""", (account_id,))
-            cur.fetchall()
-            '''
-
-            if cur.rowcount == 0:
-                raise ValueError("account_id is not valid")
-
             cur.execute(sql, (barcode, survey_template_id,
                               barcode, survey_template_id,))
 
@@ -1141,29 +1122,18 @@ class SurveyTemplateRepo(BaseRepo):
 
             return results
 
-    def migrate_responses(self, account_id, survey_template_id):
+    def migrate_responses(self, source_id, survey_template_id):
         '''
-        Get all survey responses associated with an account and survey_template
+        Get all survey responses associated with a source and survey_template
          and migrate them. Will pull from past results if they are found,
          including legacy template answers.
-        :param account_id: An account
+        :param source_id: A source (the provider of a sample)
         :param survey_template_id: A survey template id.
         :return: A filled survey_template dict
         '''
-        if int(survey_template_id) in self.SURVEY_INFO:
-            if int(survey_template_id) in [self.VIOSCREEN_ID,
-                                           self.MYFOODREPO_ID,
-                                           self.POLYPHENOL_FFQ_ID,
-                                           self.SPAIN_FFQ_ID]:
-                raise ValueError("survey_template_id must be for a local "
-                                 "survey")
-        else:
-            raise ValueError("invalid value for survey_template_id")
-
         sql = """SELECT *
                  FROM  (SELECT a.survey_question_id,
                                a.response,
-                               e.source_id,
                                e.creation_time,
                                f.survey_response_type
                         FROM   ag.survey_answers a
@@ -1178,13 +1148,12 @@ class SurveyTemplateRepo(BaseRepo):
                                JOIN ag.survey_question g
                                  ON a.survey_question_id = g.survey_question_id
                         WHERE a.response != 'Unspecified'
-                               AND e.ag_login_id = %s
+                               AND e.source_id = %s
                                AND d.survey_id = %s
                                AND g.retired = false
                         UNION
                         SELECT a.survey_question_id,
                                a.response,
-                               e.source_id,
                                e.creation_time,
                                f.survey_response_type
                         FROM   ag.survey_answers_other a
@@ -1199,27 +1168,14 @@ class SurveyTemplateRepo(BaseRepo):
                                JOIN ag.survey_question g
                                  ON a.survey_question_id = g.survey_question_id
                         WHERE  a.response != 'Unspecified'
-                                 AND e.ag_login_id = %s
+                                 AND e.source_id = %s
                                  AND d.survey_id = %s
                                  AND g.retired = false) t
                  ORDER  BY creation_time ASC,
                            survey_question_id ASC"""
 
         with self._transaction.cursor() as cur:
-            # first, confirm account_id is valid.
-            '''
-            cur.execute("""SELECT ag_login_id AS account_id
-                           FROM   ag.ag_login_surveys
-                           WHERE  ag_login_id = %s""", (account_id,))
-            cur.fetchall()
-            '''
-
-            if cur.rowcount == 0:
-                raise ValueError("account_id is not valid")
-
-            cur.execute(sql, (account_id, survey_template_id,
-                              account_id, survey_template_id,))
-
+            cur.execute(sql, (source_id, survey_template_id, source_id, survey_template_id,))
             rows = cur.fetchall()
 
             # create an empty template to fill-in.
@@ -1229,7 +1185,7 @@ class SurveyTemplateRepo(BaseRepo):
             for row in rows:
                 question_id = str(row[0])
                 response = row[1]
-                response_type = row[4]
+                response_type = row[3]
 
                 # responses are from earliest to latest thus older answers
                 # will be overwritten with newer ones as need be, according

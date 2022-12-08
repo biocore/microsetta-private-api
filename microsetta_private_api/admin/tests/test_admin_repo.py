@@ -17,6 +17,7 @@ from microsetta_private_api.repo.admin_repo import AdminRepo, \
     KIT_INBOUND_KEY
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.admin.admin_impl import validate_admin_access
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 
 STANDARD_ACCT_ID = "12345678-bbbb-cccc-dddd-eeeeffffffff"
 ADMIN_ACCT_ID = "12345678-1234-1234-1234-123412341234"
@@ -590,7 +591,11 @@ class AdminRepoTests(AdminTests):
             admin_repo = AdminRepo(t)
 
             with self.assertRaisesRegex(KeyError, "does not exist"):
-                admin_repo.create_kits(5, 3, '', [10000, 10001])
+                admin_repo.create_kits(5,
+                                       3,
+                                       '',
+                                       [10000,
+                                        SurveyTemplateRepo.VIOSCREEN_ID])
 
     def test_create_kits_success_not_microsetta(self):
         with Transaction() as t:
