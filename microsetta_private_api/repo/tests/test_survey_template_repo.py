@@ -735,7 +735,6 @@ class SurveyTemplateTests(unittest.TestCase):
             "112": "1945",
             "113": "[\"Free text - S#G\u00e4e\u00c9n0x='\u00e8u)`\u00dfJ\u00dfM=\"]",   # noqa
             "115": "[\"Free text - bC\u00c4\u012bx*N*0\u00d3Ha7\r*/b3\u010dD\"]",   # noqa
-            "116": 'Unspecified',
             "148": "Unspecified",
             "492": "Unspecified",
             "493": "Unspecified",

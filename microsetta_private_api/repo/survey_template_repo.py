@@ -1175,7 +1175,8 @@ class SurveyTemplateRepo(BaseRepo):
                            survey_question_id ASC"""
 
         with self._transaction.cursor() as cur:
-            cur.execute(sql, (source_id, survey_template_id, source_id, survey_template_id,))
+            cur.execute(sql, (source_id, survey_template_id, source_id,
+                              survey_template_id,))
             rows = cur.fetchall()
 
             # create an empty template to fill-in.
