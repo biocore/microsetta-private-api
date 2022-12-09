@@ -3,8 +3,7 @@ import uuid
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
-from psycopg2.errors import (ForeignKeyViolation, InvalidTextRepresentation,
-                             UniqueViolation)
+from psycopg2.errors import ForeignKeyViolation, InvalidTextRepresentation
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.model.source import Source, HumanInfo

@@ -14,10 +14,7 @@ from microsetta_private_api.model.survey_template_trigger import \
 import copy
 import secrets
 from microsetta_private_api.exceptions import RepoException
-
 from microsetta_private_api.repo.sample_repo import SampleRepo
-import uuid
-from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 
 
 class SurveyTemplateRepo(BaseRepo):
