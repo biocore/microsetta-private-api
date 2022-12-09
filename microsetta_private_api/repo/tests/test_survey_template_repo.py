@@ -540,7 +540,7 @@ class SurveyTemplateTests(unittest.TestCase):
             sr = SourceRepo(t)
 
             HUMAN_INFO = HumanInfo(None, None, None, None, None, None, None,
-                                   None)
+                                   None, None)
             HUMAN_INFO.email = 'foo@bar.com'
             HUMAN_INFO.is_juvenile = False
             HUMAN_INFO.parent1_name = None
@@ -560,10 +560,7 @@ class SurveyTemplateTests(unittest.TestCase):
                                   'test person',
                                   HUMAN_INFO)
 
-            try:
-                sr.create_source(HUMAN_SOURCE)
-            except UniqueViolation:
-                pass
+            sr.create_source(HUMAN_SOURCE)
 
             t.commit()
 
@@ -762,31 +759,6 @@ class SurveyTemplateTests(unittest.TestCase):
 
             exp = [('6d16832b84358c93', 1), ('001e19ab6ea2f7de', 1)]
             self.assertEqual(obs, exp)
-
-            with self.assertRaises(ValueError):
-                # lone parameter is not a list
-                sar.get_template_ids_from_survey_ids('6d16832b84358c93')
-
-            with self.assertRaises(ValueError):
-                # parameter is a list with just an empty string
-                sar.get_template_ids_from_survey_ids([''])
-
-            with self.assertRaises(ValueError):
-                # parameter is an empty list
-                sar.get_template_ids_from_survey_ids([])
-
-            with self.assertRaises(ValueError):
-                # parameter is None
-                sar.get_template_ids_from_survey_ids(None)
-
-            with self.assertRaises(ValueError):
-                # parameter contains one valid and one invalid value
-                sar.get_template_ids_from_survey_ids(['6d16832b84358c93', ''])
-
-            with self.assertRaises(ValueError):
-                # parameter contains one valid and one invalid value
-                sar.get_template_ids_from_survey_ids(['6d16832b84358c93',
-                                                      None])
 
     filled_surveys = {
         "10": {

@@ -1329,70 +1329,10 @@ class SurveyTemplateRepo(BaseRepo):
         :param survey_ids: A list of survey ids.
         :return: A list of (survey_id, survey_template_id) tuples.
         '''
-        if not isinstance(survey_ids, list):
-            raise ValueError("survey_ids is not a list of survey ids")
-
-        if len(survey_ids) == 0 or '' in survey_ids or None in survey_ids:
-            raise ValueError("survey_ids is an empty list or contains invalid"
-                             " values")
-
-        res = self._local_survey_template_ids_from_survey_ids(survey_ids)
-
-        # check to see if any of the survey ids are associated with a remote
-        # survey.
-        for survey_id in survey_ids:
-            res += self._remote_survey_template_id_from_survey_id(survey_id)
-
-        return res
-
-    def _remote_survey_template_id_from_survey_id(self, survey_id):
-        # VIOscreen
-        vioscreen_repo = VioscreenRepo(self._transaction)
-        status = vioscreen_repo._get_vioscreen_status(survey_id)
-        if status is not None:
-            return [(survey_id, SurveyTemplateRepo.VIOSCREEN_ID)]
-
         with self._transaction.cursor() as cur:
-            try:
-                # If survey_id isn't a valid UUID, a ValueError will be
-                # raised.
-                uuid.UUID(survey_id)
-            except ValueError:
-                # assume a survey_id that isn't a valid UUID is a myfoodrepo
-                # survey.
-                cur.execute("SELECT EXISTS (SELECT myfoodrepo_id FROM "
-                            "myfoodrepo_registry WHERE myfoodrepo_id=%s)",
-                            (survey_id,))
-
-                if cur.fetchone()[0] is True:
-                    return [(survey_id, SurveyTemplateRepo.MYFOODREPO_ID)]
-                else:
-                    return []
-
-            # survey_id must be a proper UUID formatted string, or else the
-            # queries below will fail.
-
-            # Polyphenol FFQ
-            cur.execute("SELECT EXISTS (SELECT polyphenol_ffq_id FROM "
-                        "ag.polyphenol_ffq_registry WHERE "
-                        "polyphenol_ffq_id=%s)", (survey_id,))
-
-            if cur.fetchone()[0] is True:
-                return [(survey_id, SurveyTemplateRepo.POLYPHENOL_FFQ_ID)]
-
-            # Spain FFQ
-            cur.execute("SELECT EXISTS (SELECT spain_ffq_id FROM "
-                        "ag.spain_ffq_registry WHERE spain_ffq_id=%s)",
-                        (survey_id,))
-
-            if cur.fetchone()[0] is True:
-                return [(survey_id, SurveyTemplateRepo.SPAIN_FFQ_ID)]
-
-        return []
-
-    def _local_survey_template_ids_from_survey_ids(self, survey_ids):
-        with self._transaction.cursor() as cur:
-            # note these ids are unique string ids, not integer ids.
+            # with the new survey_template_id column in ag_login_surveys,
+            # retrieving the template_ids for both remote and local surveys
+            # is now trivial.
             cur.execute("SELECT survey_id, survey_template_id "
                         "FROM ag.ag_login_surveys WHERE survey_id IN %s",
                         (tuple(survey_ids),))
