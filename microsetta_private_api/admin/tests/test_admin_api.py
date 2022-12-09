@@ -22,7 +22,6 @@ from microsetta_private_api.model.tests.test_daklapack_order import \
     DUMMY_DAK_ORDER_DESC, DUMMY_PLANNED_SEND_DATE, DUMMY_FEDEX_REFS, \
     DUMMY_SHIPPING_PROVIDER, DUMMY_SHIPPING_TYPE
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
-from microsetta_private_api.repo.metadata_repo._repo import EBI_REMOVE
 
 
 DUMMY_PROJ_NAME = "test project"

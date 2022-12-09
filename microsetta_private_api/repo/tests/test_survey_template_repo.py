@@ -540,7 +540,7 @@ class SurveyTemplateTests(unittest.TestCase):
             sr = SourceRepo(t)
 
             HUMAN_INFO = HumanInfo(None, None, None, None, None, None, None,
-                                   None, None)
+                                   None)
             HUMAN_INFO.email = 'foo@bar.com'
             HUMAN_INFO.is_juvenile = False
             HUMAN_INFO.parent1_name = None
