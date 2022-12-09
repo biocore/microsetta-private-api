@@ -1029,11 +1029,56 @@ class SurveyTemplateRepo(BaseRepo):
 
         return False
 
+    def _get_timestamp(self, barcode, survey_template_id):
+        with self._transaction.cursor() as cur:
+            # retrieve the timestamp for the survey being asked for. When we
+            # dynamically generate our results, we will incorporate answers
+            # from other surveys, but we will prioritize responses (or set of
+            # responses in the case of questions w/multiple answers) closest
+            # to the time the survey was taken.
+            cur.execute("""SELECT b.creation_time
+                                   FROM   ag.source_barcodes_surveys a
+                                          JOIN ag.ag_login_surveys b
+                                            ON a.survey_id = b.survey_id
+                                   WHERE  a.barcode = %s
+                                          AND b.survey_template_id = %s""",
+                        (barcode, survey_template_id,))
+
+            # what if there are multiple template Xs? Should we take the
+            # latest one? or take the one closest to the source creation
+            # timestamp?
+            result = cur.fetchone()
+            if result is not None:
+                return result[0]
+
+            # if a timestamp could not be found for the survey template id in
+            # question, use the creation timestamp for the source attached to
+            # the barcode. We assume that a barcode must always be attached to
+            # a source and it will always have a creation date.
+            cur.execute("""SELECT b.source_id,
+                                  c.creation_time AS source_timestamp
+                           FROM   ag.source_barcodes_surveys a
+                                  JOIN ag.ag_login_surveys b
+                                    ON a.survey_id = b.survey_id
+                                  JOIN ag.source c
+                                    ON b.source_id = c.id
+                           WHERE  a.barcode = %s""", (barcode,))
+
+            result = cur.fetchone()
+            if result is not None:
+                return result[1]
+
+            raise ValueError("A timestamp could not be found for barcode "
+                             f"{barcode}")
+
     def migrate_responses_by_barcode(self, barcode, survey_template_id):
         '''
-        Get all survey responses associated with a barcode and
-         migrate them. Will pull from past results if they are found,
-         including legacy template answers. Only latest results are returned.
+        Get all survey responses associated with a barcode and a
+        survey_template_id and migrate them. This will generate a result set
+        based on all responses across legacy and current surveys. Responses
+        closest to an existing survey will be used. If a survey could not be
+        found for the template_id, Responses closest to the creation timestamp
+        of the source will be used.
         :param barcode: a barcode to search by
         :param survey_template_id: The id of the filled survey to return.
         :return: A filled survey_template dict
@@ -1096,14 +1141,33 @@ class SurveyTemplateRepo(BaseRepo):
             # create an empty template to fill-in.
             results = self._generate_empty_survey(survey_template_id)
 
+            # retrieve the timestamp used to prefer one response over another.
+            target_ts = self._get_timestamp(barcode, survey_template_id)
+
+            # find the timestamp for the response (single, text, string) or
+            # set of responses (multiple) that has the timestamp closest to
+            # the target timestamp target_ts.
+            best_ts = {}
+            for row in rows:
+                qid = str(row[0])
+                if qid in best_ts:
+                    if row[2] - target_ts < best_ts[qid] - target_ts:
+                        best_ts[qid] = row[2]
+                else:
+                    best_ts[qid] = row[2]
+
             for row in rows:
                 question_id = str(row[0])
                 response = row[1]
+                timestamp = row[2]
                 response_type = row[3]
 
-                # responses are from earliest to latest thus older answers
-                # will be overwritten with newer ones as need be, according
-                # to creation time ASC.
+                if best_ts[question_id] != timestamp:
+                    # for every row, if the single or multiple does not have
+                    # the closest timestamp for that question, simply ignore
+                    # the row.
+                    continue
+
                 if response_type == 'MULTIPLE':
                     results[question_id].append(response)
                     try:

@@ -665,6 +665,52 @@ class SurveyTemplateTests(unittest.TestCase):
             # own commit(), this was the way to keep it better managed.
             self._clean_up(account_id, human_source.id, survey_ids)
 
+    def test_migrate_responses_by_barcode(self):
+        with Transaction() as t:
+            str = SurveyTemplateRepo(t)
+            # use data from an old template 1 survey and return a subset of it
+            # in a generated template 10.
+
+            obs = str.migrate_responses_by_barcode('000001410', 10)
+
+            self.assertDictEqual(obs, self.filled_survey_10a)
+
+            # use an invalid template id
+            with self.assertRaises(ValueError):
+                str.migrate_responses('d8592c74-8148-2135-e040-8a80115d6401',
+                                      -1)
+
+            # request a test from a valid source, but contributes no prior
+            # values to the result.
+            obs = str.migrate_responses_by_barcode('000001410', 19)
+            self.assertDictEqual(obs, self.filled_survey_19a)
+
+            # the following statements create a new source and submits a
+            # survey. It then changes the value for one of the survey
+            # questions, and submits it again. Upon retrieving the template 10
+            # for ACCOUNT_ID, 111 (Birth Month) should return 'March' if the
+            # surveys were submitted correctly and the latest value is being
+            # taken.
+            account_id = '607f6723-c704-4b52-bc26-556a9aec85f6'
+            human_source = self._create_source(account_id)
+            survey_ids = []
+            survey_ids.append(
+                self._submit_test_survey(account_id, human_source.id,
+                                         'February'))
+            survey_ids.append(
+                self._submit_test_survey(account_id, human_source.id,
+                                         'March'))
+
+            result = str.migrate_responses_by_barcode('000001410', 10)
+            self.assertTrue(False)
+            self.assertNotEqual(result['111'], 'February')
+            self.assertEqual(result['111'], 'March')
+
+            # clean up. These methods were not put into setUp and tearDown
+            # as this is the only test that needs them. Each submit needs its
+            # own commit(), this was the way to keep it better managed.
+            self._clean_up(account_id, human_source.id, survey_ids)
+
     def test_get_template_ids_from_survey_ids(self):
         with Transaction() as t:
             sar = SurveyTemplateRepo(t)
