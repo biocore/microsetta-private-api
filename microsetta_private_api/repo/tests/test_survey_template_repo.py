@@ -702,7 +702,6 @@ class SurveyTemplateTests(unittest.TestCase):
                                          'March'))
 
             result = str.migrate_responses_by_barcode('000001410', 10)
-            self.assertTrue(False)
             self.assertNotEqual(result['111'], 'February')
             self.assertEqual(result['111'], 'March')
 

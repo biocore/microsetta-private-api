@@ -1171,6 +1171,8 @@ class AdminRepo(BaseRepo):
 
         st_repo = SurveyTemplateRepo(self._transaction)
 
+        # template_ids will be a list of survey_id, template_id tuples
+        # e.g.: ('0002b7371e938751', 1).
         template_ids = st_repo.get_template_ids_from_survey_ids(a_ids)
 
         if survey_template_id is not None:

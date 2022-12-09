@@ -22,6 +22,7 @@ from microsetta_private_api.model.tests.test_daklapack_order import \
     DUMMY_DAK_ORDER_DESC, DUMMY_PLANNED_SEND_DATE, DUMMY_FEDEX_REFS, \
     DUMMY_SHIPPING_PROVIDER, DUMMY_SHIPPING_TYPE
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.metadata_repo._repo import EBI_REMOVE
 
 
 DUMMY_PROJ_NAME = "test project"
@@ -901,10 +902,9 @@ class AdminApiTests(TestCase):
             t.commit()
 
     def test_metadata_qiita_compatible_valid_private(self):
-        # All the old PM_ values have been retired. We've migrated
-        # 502: GENDER_v2 to PM_GENDER_v2. 502 is in template 10. Since there
-        # aren't existing template 10 surveys, create one, set 502, and confirm
-        # it appears in query results.
+        # BIRTH_MONTH is a question assigned to template 10 and it is also
+        # protected (present in EBI_REMOVE list). Query for template 10 and
+        # confirm that BIRTH_MONTH (111) is not present in the results.
         with Transaction() as t:
             with t.dict_cursor() as cur:
                 # first, find the ids for the barcode and survey we're using
@@ -928,7 +928,7 @@ class AdminApiTests(TestCase):
                 '108': 'Unspecified',
                 '109': 'Unspecified',
                 '110': 'Unspecified',
-                '111': 'Unspecified',
+                '111': 'February',
                 '112': 'Unspecified',
                 '113': 'Unspecified',
                 '115': 'Unspecified',
@@ -962,15 +962,19 @@ class AdminApiTests(TestCase):
 
         self.assertEqual(200, response.status_code)
         result = json.loads(response.data)
+        for barcode in result:
+            print(barcode)
+            foo = result[barcode]
+            for bar in foo:
+                print("\t%s" % bar)
         self.assertEqual(set(result.keys()), {'000069747'})
         obs = {c.lower() for c in result['000069747']}
-        self.assertIn('pm_gender_v2', obs)
+        self.assertIn('birth_month', obs)
 
     def test_metadata_qiita_compatible_valid_no_private(self):
-        # All the old PM_ values have been retired. We've migrated
-        # 502: GENDER_v2 to PM_GENDER_v2. 502 is in template 10. Since there
-        # aren't existing template 10 surveys, create one, set 502, and confirm
-        # it appears in query results.
+        # BIRTH_MONTH is a question assigned to template 10 and it is also
+        # protected (present in EBI_REMOVE list). Query for template 10 and
+        # confirm that BIRTH_MONTH (111) is not present in the results.
         with Transaction() as t:
             with t.dict_cursor() as cur:
                 # first, find the ids for the barcode and survey we're using
@@ -994,7 +998,7 @@ class AdminApiTests(TestCase):
                 '108': 'Unspecified',
                 '109': 'Unspecified',
                 '110': 'Unspecified',
-                '111': 'Unspecified',
+                '111': 'February',
                 '112': 'Unspecified',
                 '113': 'Unspecified',
                 '115': 'Unspecified',
@@ -1024,12 +1028,18 @@ class AdminApiTests(TestCase):
         with Transaction() as t:
             sar = SurveyAnswersRepo(t)
             sar.delete_answered_survey(account_id, survey_id)
+            t.commit()
 
         self.assertEqual(200, response.status_code)
         result = json.loads(response.data)
+        for barcode in result:
+            print(barcode)
+            foo = result[barcode]
+            for bar in foo:
+                print("\t%s" % bar)
         self.assertEqual(set(result.keys()), {'000069747'})
         obs = {c.lower() for c in result['000069747']}
-        self.assertNotIn('pm_gender_v2', obs)
+        self.assertNotIn('birth_month', obs)
 
     def _test_post_daklapack_orders(self, order_info, expected_status):
         # NB: order_id and creation_date keys not included as different
