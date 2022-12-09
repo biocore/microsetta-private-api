@@ -839,9 +839,9 @@ class AdminApiTests(TestCase):
 
     def test_metadata_qiita_compatible_two_templates(self):
         # The surveys attached to barcode '000069747' are known to be 1 and
-        # 1000x. Submit a template 10 survey and confirm that the code is
-        # able to merge filled answers from 1 and 10, and pick the latest
-        # values.
+        # 10001. Submit a template 10 survey and confirm that the code is
+        # able to merge filled answers from 1 and 10, and pick the values
+        # closest to the timestamp of the original survey.
         with Transaction() as t:
             with t.dict_cursor() as cur:
                 # first, find the ids for the barcode and survey we're using
@@ -866,13 +866,13 @@ class AdminApiTests(TestCase):
                 '109': 'Unspecified',
                 '110': 'Unspecified',
                 '111': 'Unspecified',
-                '112': '1984',
+                '112': '1990',
                 '113': 'Unspecified',
                 '115': 'Unspecified',
                 '148': 'Unspecified',
                 '492': 'Unspecified',
                 '493': 'Unspecified',
-                '502': 'Unspecified'
+                '502': 'Male'
             }
             survey_id = sar.submit_answered_survey(
                 account_id,
@@ -885,7 +885,7 @@ class AdminApiTests(TestCase):
                 survey_id)
             t.commit()
 
-        # query the barcodes and confirm the birth year was changed to '1984'.
+        # query the barcodes
         data = json.dumps({'sample_barcodes': ['000069747', '000051101']})
         response = self.client.post('/api/admin/metadata/qiita-compatible',
                                     content_type='application/json',
@@ -893,7 +893,20 @@ class AdminApiTests(TestCase):
                                     headers=MOCK_HEADERS)
         self.assertEqual(200, response.status_code)
         result = json.loads(response.data)
-        self.assertEqual(result['000069747']['birth_year'], '1984')
+
+        # confirm that the birth_year response from the new survey 10 (1990)
+        # did not 'overwrite' the original response from survey 1 (1985).
+        self.assertNotEqual(result['000069747']['birth_year'], '1990')
+        self.assertEqual(result['000069747']['birth_year'], '1985')
+
+        # confirm that the new attribute 502/gender_v2 (one that is not
+        # present in the original survey 1) was merged into the results.
+        self.assertEqual(result['000069747']['gender_v2'], 'Male')
+
+        # confirm that the results for the other survey, attached to a
+        # different source, did not receive the merged 502/gender_v2 attribute.
+        self.assertEqual(result['000051101']['gender_v2'], 'Unspecified')
+        self.assertEqual(result['000051101']['birth_year'], '1968')
 
         # clean up by deleting the survey we added for testing.
         with Transaction() as t:

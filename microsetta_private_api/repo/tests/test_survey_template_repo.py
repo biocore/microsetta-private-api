@@ -535,7 +535,7 @@ class SurveyTemplateTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 sar._generate_empty_survey(SurveyTemplateRepo.VIOSCREEN_ID)
 
-    def _create_source(self, account_id):
+    def _create_source(self, account_id, source_id=None):
         with Transaction() as t:
             sr = SourceRepo(t)
 
@@ -551,7 +551,10 @@ class SurveyTemplateTests(unittest.TestCase):
             HUMAN_INFO.assent_obtainer = None
             HUMAN_INFO.age_range = '18-plus'
 
-            HUMAN_SOURCE = Source('ffffffff-ffff-ffff-aaaa-aaaaaaaaaaaa',
+            if not source_id:
+                source_id = 'ffffffff-ffff-ffff-aaaa-aaaaaaaaaaaa'
+
+            HUMAN_SOURCE = Source(source_id,
                                   account_id,
                                   Source.SOURCE_TYPE_HUMAN,
                                   'test person',
@@ -667,43 +670,58 @@ class SurveyTemplateTests(unittest.TestCase):
 
     def test_migrate_responses_by_barcode(self):
         with Transaction() as t:
-            str = SurveyTemplateRepo(t)
+            with t.cursor() as cur:
+                cur.execute("SELECT ag_login_id, source_id FROM "
+                            "ag.ag_login_surveys WHERE survey_id = "
+                            "'6d16832b84358c93'")
+
+                # get the account and source id associated w/barcode 000001410
+                # and survey 6d16832b84358c93. We'll need them later.
+                row = cur.fetchone()
+                account_id = row[0]
+                source_id = row[1]
+
+            rpo = SurveyTemplateRepo(t)
+
             # use data from an old template 1 survey and return a subset of it
             # in a generated template 10.
-
-            obs = str.migrate_responses_by_barcode('000001410', 10)
-
+            obs = rpo.migrate_responses_by_barcode('000001410', 10)
             self.assertDictEqual(obs, self.filled_survey_10a)
 
             # use an invalid template id
             with self.assertRaises(ValueError):
-                str.migrate_responses('d8592c74-8148-2135-e040-8a80115d6401',
+                rpo.migrate_responses('d8592c74-8148-2135-e040-8a80115d6401',
                                       -1)
 
             # request a test from a valid source, but contributes no prior
             # values to the result.
-            obs = str.migrate_responses_by_barcode('000001410', 19)
+            obs = rpo.migrate_responses_by_barcode('000001410', 19)
             self.assertDictEqual(obs, self.filled_survey_19a)
 
             # the following statements create a new source and submits a
-            # survey. It then changes the value for one of the survey
-            # questions, and submits it again. Upon retrieving the template 10
-            # for ACCOUNT_ID, 111 (Birth Month) should return 'March' if the
-            # surveys were submitted correctly and the latest value is being
-            # taken.
-            account_id = '607f6723-c704-4b52-bc26-556a9aec85f6'
-            human_source = self._create_source(account_id)
+            # survey. It then submits a survey to the existing source
+            # associated with barcode '000001410'. Neither survey should
+            # affect the results for the final query.
+            print("ACCOUNT ID: %s" % account_id)
+            print("SOURCE ID: %s" % source_id)
+
+            new_source_id = str(uuid.uuid4())
+
+            human_source = self._create_source(account_id,
+                                               source_id=new_source_id)
             survey_ids = []
             survey_ids.append(
                 self._submit_test_survey(account_id, human_source.id,
                                          'February'))
             survey_ids.append(
-                self._submit_test_survey(account_id, human_source.id,
+                self._submit_test_survey(account_id, source_id,
                                          'March'))
 
-            result = str.migrate_responses_by_barcode('000001410', 10)
+            result = rpo.migrate_responses_by_barcode('000001410', 10)
+
             self.assertNotEqual(result['111'], 'February')
-            self.assertEqual(result['111'], 'March')
+            self.assertNotEqual(result['111'], 'March')
+            self.assertEqual(result['111'], 'June')
 
             # clean up. These methods were not put into setUp and tearDown
             # as this is the only test that needs them. Each submit needs its
