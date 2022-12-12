@@ -2117,7 +2117,6 @@ class VioscreenTests(ApiTests):
             self.src_id = src_id
             self.samp_id = samp_id
             self.vio_id = '674533d367f222d2'
-
             cur.execute("""INSERT INTO ag.vioscreen_registry
                            (account_id, source_id, sample_id, vio_id)
                            VALUES (%s, %s, %s, %s)""",
@@ -2179,8 +2178,7 @@ class VioscreenTests(ApiTests):
 
     def _url_constructor(self):
         return (f'/api/accounts/{self.acct_id}'
-                f'/sources/{self.src_id}'
-                f'/samples/{self.samp_id}')
+                f'/sources/{self.src_id}')
 
     def test_get_sample_vioscreen_session_200(self):
         vioscreen_session = VioscreenSession(

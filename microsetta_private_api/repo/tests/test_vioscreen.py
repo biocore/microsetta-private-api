@@ -1,17 +1,23 @@
 import unittest
 import json
+from microsetta_private_api.api.tests.test_api import (
+    ACCT_MOCK_ISS_3,
+    ACCT_MOCK_SUB_3,
+    create_dummy_acct)
 
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import (
-    VioscreenRepo, VioscreenSupplementsRepo)
+    VioscreenRepo, VioscreenSessionRepo, VioscreenSupplementsRepo)
 from microsetta_private_api.repo.tests.test_vioscreen_dietaryscore import (
     VIOSCREEN_SESSION, VIOSCREEN_DIETARY_SCORE)
 from microsetta_private_api.repo.tests.test_vioscreen_supplements import (
     VIOSCREEN_SUPPLEMENTS
     )
 from microsetta_private_api.model.vioscreen import (
-    VioscreenFoodConsumption, VioscreenPercentEnergy, VioscreenFoodComponents,
-    VioscreenMPeds, VioscreenEatingPatterns, VioscreenComposite)
+    VioscreenFoodConsumption, VioscreenPercentEnergy,
+    VioscreenFoodComponents,
+    VioscreenMPeds, VioscreenEatingPatterns,
+    VioscreenComposite, VioscreenSession)
 
 
 def get_data_path(filename):
@@ -61,6 +67,87 @@ class VioscreenRepoTests(unittest.TestCase):
             vr.insert_ffq(self.FFQ)
             obs = vr.get_ffq(VIOSCREEN_SESSION.sessionId)
             self.assertEqual(obs, self.FFQ)
+
+
+class VioscreenSessions(unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""SELECT DISTINCT ag_login_id as account_id,
+                                           source_id,
+                                           ag_kit_barcode_id as sample_id
+                           FROM ag.ag_kit_barcodes
+                           JOIN ag.ag_login_surveys using (source_id)
+                           WHERE barcode='000004216'""")
+            acct_id, src_id, samp_id = cur.fetchone()
+            self.acct_id = acct_id
+            self.src_id = src_id
+            self.samp_id = samp_id
+            self.vio_id = '674533d367f222d2'
+            cur.execute("""INSERT INTO ag.vioscreen_registry
+                           (account_id, source_id, sample_id, vio_id)
+                           VALUES (%s, %s, %s, %s)""",
+                        (self.acct_id, self.src_id, self.samp_id, self.vio_id))
+            t.commit()
+
+    def tearDown(self):
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""DELETE FROM ag.vioscreen_registry
+                           WHERE account_id=%s
+                               AND source_id=%s
+                               AND sample_id=%s
+                               AND vio_id=%s""",
+                        (self.acct_id, self.src_id, self.samp_id, self.vio_id))
+
+            sessionId = "000ada854d4f45f5abda90ccade7f0a8"
+            cur.execute("""DELETE FROM ag.vioscreen_sessions
+                           WHERE sessionId = %s""",
+                        (sessionId,))
+
+            sessionId2 = "000ada854d4f45f5abda90ccade7f0a9"
+            cur.execute("""DELETE FROM ag.vioscreen_sessions
+                           WHERE sessionId = %s""",
+                        (sessionId2,))
+            t.commit()
+
+        super().tearDown()
+
+    def test_get_vioscreen_sessions_404(self):
+        _ = create_dummy_acct(create_dummy_1=True,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+        with Transaction() as t:
+            vio_session = VioscreenRepo(t)
+            sessions = vio_session.get_vioscreen_sessions(self.acct_id,
+                                                          self.src_id)
+            self.assertEqual(sessions, None)
+
+    def test_get_vioscreen_sessions_200(self):
+        vioscreen_session = VioscreenSession(
+            sessionId="000ada854d4f45f5abda90ccade7f0a8",
+            username="674533d367f222d2",
+            protocolId=344,
+            status="Finished",
+            startDate="2014-10-08T18:55:12.747",
+            endDate="2014-10-08T18:57:07.503",
+            cultureCode="en-US",
+            created="2014-10-08T18:55:07.96",
+            modified="2017-07-29T03:56:04.22"
+        )
+
+        with Transaction() as t:
+            vio_sess = VioscreenSessionRepo(t)
+            vio_sess.upsert_session(vioscreen_session)
+            t.commit()
+        with Transaction() as t:
+            vio_session = VioscreenRepo(t)
+            sessions = vio_session.get_vioscreen_sessions(self.acct_id,
+                                                          self.src_id)
+            self.assertEqual(len(sessions), 1)
 
 
 if __name__ == '__main__':

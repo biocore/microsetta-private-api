@@ -15,8 +15,6 @@ import copy
 import secrets
 from microsetta_private_api.exceptions import RepoException
 
-from microsetta_private_api.repo.sample_repo import SampleRepo
-
 
 class SurveyTemplateRepo(BaseRepo):
 
@@ -636,7 +634,8 @@ class SurveyTemplateRepo(BaseRepo):
             return {r[0]: r[1] for r in cur.fetchall()}
 
     def create_vioscreen_id(self, account_id, source_id,
-                            vioscreen_ext_sample_id):
+                            sample_id=None,
+                            registration_code=None):
         with self._transaction.cursor() as cur:
             # This transaction scans for existing IDs,
             # then generates a new ID if none exist
@@ -647,7 +646,8 @@ class SurveyTemplateRepo(BaseRepo):
             self._transaction.lock_table("vioscreen_registry")
             # test if an existing ID is available
             existing = self.get_vioscreen_id_if_exists(account_id, source_id,
-                                                       vioscreen_ext_sample_id)
+                                                       sample_id,
+                                                       registration_code)
             if existing is None:
                 vioscreen_id = secrets.token_hex(8)
                 # Put a survey with status -1 into ag_login_surveys
@@ -658,42 +658,77 @@ class SurveyTemplateRepo(BaseRepo):
                             "source_id) "
                             "VALUES(%s, %s, %s, %s)",
                             (account_id, vioscreen_id, -1, source_id))
-                # Immediately attach that survey to the specified sample
-                sample_repo = SampleRepo(self._transaction)
-                s = sample_repo.get_sample(account_id,
-                                           source_id,
-                                           vioscreen_ext_sample_id)
-
-                if s is None:
-                    raise KeyError(f"{vioscreen_ext_sample_id} does not exist")
-
-                cur.execute("INSERT INTO source_barcodes_surveys "
-                            "(barcode, survey_id) "
-                            "VALUES(%s, %s)", (s.barcode, vioscreen_id))
 
                 # And add it to the registry to keep track of the survey if
                 # user quits out then wants to resume the survey.
-                cur.execute("INSERT INTO vioscreen_registry("
-                            "account_id, source_id, sample_id, vio_id) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, source_id, vioscreen_ext_sample_id,
-                             vioscreen_id))
+                if sample_id is not None:
+                    cur.execute("INSERT INTO vioscreen_registry("
+                                "account_id, source_id, vio_id, "
+                                "sample_id) "
+                                "VALUES(%s, %s, %s, %s)",
+                                (account_id, source_id,
+                                 vioscreen_id, sample_id))
+                elif registration_code is not None:
+                    cur.execute("INSERT INTO vioscreen_registry("
+                                "account_id, source_id, vio_id, "
+                                "registration_code) "
+                                "VALUES(%s, %s, %s, %s)",
+                                (account_id, source_id,
+                                 vioscreen_id, registration_code))
             else:
                 vioscreen_id = existing
         return vioscreen_id
 
     def get_vioscreen_id_if_exists(self, account_id, source_id,
-                                   vioscreen_ext_sample_id):
+                                   sample_id=None,
+                                   registration_code=None,
+                                   timestamp=None):
         """Obtain a vioscreen ID if it exists"""
         with self._transaction.cursor() as cur:
             # Find an active vioscreen survey for this account+source+sample
             # (deleted surveys are not active)
-            cur.execute("SELECT vio_id FROM vioscreen_registry WHERE "
-                        "account_id=%s AND "
-                        "source_id=%s AND "
-                        "sample_id=%s AND "
-                        "deleted=false",
-                        (account_id, source_id, vioscreen_ext_sample_id))
+            if sample_id is not None:
+                cur.execute("SELECT vio_id FROM "
+                            "vioscreen_registry WHERE "
+                            "account_id=%s AND "
+                            "source_id=%s AND "
+                            "sample_id=%s AND "
+                            "deleted=false",
+                            (account_id, source_id, sample_id))
+            elif registration_code is not None:
+                cur.execute("SELECT vio_id FROM "
+                            "vioscreen_registry WHERE "
+                            "account_id=%s AND "
+                            "source_id=%s AND "
+                            "registration_code=%s AND "
+                            "deleted=false",
+                            (account_id, source_id, registration_code))
+            elif timestamp is not None:
+                cur.execute("SELECT DISTINCT "
+                            "vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "FROM vioscreen_registry "
+                            "INNER JOIN ag_login_surveys "
+                            "ON vioscreen_registry.vio_id = "
+                            "ag_login_surveys.survey_id "
+                            "WHERE vioscreen_registry.account_id = %s "
+                            "AND vioscreen_registry.source_id = %s "
+                            "AND deleted=false "
+                            "AND ag_login_surveys.creation_time >= %s"
+                            "ORDER BY ag_login_surveys.creation_time DESC ",
+                            (account_id, source_id, timestamp))
+            else:
+                cur.execute("SELECT DISTINCT vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "FROM vioscreen_registry "
+                            "INNER JOIN ag_login_surveys "
+                            "ON vioscreen_registry.vio_id = "
+                            "ag_login_surveys.survey_id "
+                            "WHERE vioscreen_registry.account_id = %s "
+                            "AND vioscreen_registry.source_id = %s "
+                            "AND deleted=false "
+                            "ORDER BY ag_login_surveys.creation_time DESC ",
+                            (account_id, source_id))
             rows = cur.fetchall()
             if rows is None or len(rows) == 0:
                 return None
