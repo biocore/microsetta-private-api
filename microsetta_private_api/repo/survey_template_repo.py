@@ -1153,12 +1153,8 @@ class SurveyTemplateRepo(BaseRepo):
                 else:
                     best_ts[qid] = row[2]
 
-            for row in rows:
-                question_id = str(row[0])
-                response = row[1]
-                timestamp = row[2]
-                response_type = row[3]
-
+            for (question_id, response, timestamp, response_type, _) in rows:
+                question_id = str(question_id)
                 if best_ts[question_id] != timestamp:
                     # for every row, if the single or multiple does not have
                     # the closest timestamp for that question, simply ignore
