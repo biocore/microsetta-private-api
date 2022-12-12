@@ -1,3 +1,7 @@
+-- STEP 0: Add new desired constraints.
+alter table ag.ag_login_surveys alter column creation_time set not null;
+
+
 -- STEP 1: add survey_template_id to ag_login_surveys table and populate it.
 alter table ag.ag_login_surveys add column survey_template_id integer;
 -- create a table of survey_ids w/a single question_id associated w/that
