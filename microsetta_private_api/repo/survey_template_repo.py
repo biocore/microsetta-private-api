@@ -1028,45 +1028,30 @@ class SurveyTemplateRepo(BaseRepo):
 
     def _get_timestamp(self, barcode, survey_template_id):
         with self._transaction.cursor() as cur:
-            # retrieve the timestamp for the survey being asked for. When we
-            # dynamically generate our results, we will incorporate answers
+            # retrieve the timestamp for the survey type being asked for. When
+            # we dynamically generate our results, we will incorporate answers
             # from other surveys, but we will prioritize responses (or set of
             # responses in the case of questions w/multiple answers) closest
             # to the time the survey was taken.
-            cur.execute("""SELECT b.creation_time
-                                   FROM   ag.source_barcodes_surveys a
-                                          JOIN ag.ag_login_surveys b
-                                            ON a.survey_id = b.survey_id
-                                   WHERE  a.barcode = %s
-                                          AND b.survey_template_id = %s""",
-                        (barcode, survey_template_id,))
 
-            # what if there are multiple template Xs? Should we take the
-            # latest one? or take the one closest to the source creation
-            # timestamp?
-            result = cur.fetchone()
-            if result is not None:
-                return result[0]
-
-            # if a timestamp could not be found for the survey template id in
-            # question, use the creation timestamp for the source attached to
-            # the barcode. We assume that a barcode must always be attached to
-            # a source and it will always have a creation date.
-            cur.execute("""SELECT b.source_id,
-                                  c.creation_time AS source_timestamp
+            # Note ag.ag_kit_barcodes.sample_time does not include a timezone.
+            # for compatibility with other timestamps, we are assigning the
+            # San Diego timezone of 'America/Los_Angeles' to the result.
+            cur.execute("""SELECT a.barcode,
+                                  b.survey_template_id,
+                                  c.sample_date + c.sample_time
+                                  AT TIME zone 'America/Los_Angeles' AS ts
                            FROM   ag.source_barcodes_surveys a
                                   JOIN ag.ag_login_surveys b
                                     ON a.survey_id = b.survey_id
-                                  JOIN ag.source c
-                                    ON b.source_id = c.id
-                           WHERE  a.barcode = %s""", (barcode,))
+                                  JOIN ag.ag_kit_barcodes c
+                                    ON a.barcode = c.barcode
+                           WHERE  a.barcode = %s
+                                  AND b.survey_template_id = %s""",
+                        (barcode, survey_template_id))
 
-            result = cur.fetchone()
-            if result is not None:
-                return result[1]
-
-            raise ValueError("A timestamp could not be found for barcode "
-                             f"{barcode}")
+            # Expect that one and only one result will always be found.
+            return cur.fetchone()[2]
 
     def migrate_responses_by_barcode(self, barcode, survey_template_id):
         '''
