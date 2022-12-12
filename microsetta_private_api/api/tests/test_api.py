@@ -1822,7 +1822,7 @@ class SampleTests(ApiTests):
         _ = create_dummy_answered_survey(
             dummy_acct_id,
             dummy_source_id,
-            survey_template_id=st_repo.DIET_ID,)
+            survey_template_id=st_repo.DIET_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples/{2}'.format(
             dummy_acct_id, dummy_source_id, MOCK_SAMPLE_ID)
