@@ -140,9 +140,9 @@ def delete_source(account_id, source_id, token_info):
                 if not source_repo.scrub(account_id, source_id):
                     return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
             else:
-                # If we reach this point, then the user does not have external surveys
-                # nor do they have samples associated. Therefore it is safe to remove
-                # their surveys and source entirely 
+                # If we reach this point, then the user does not have external
+                # surveys nor do they have samples associated. Therefore it is
+                # safe to remove their surveys and source entirely
                 for survey_id in answers:
                     survey_answers_repo.delete_answered_survey(
                         account_id,
