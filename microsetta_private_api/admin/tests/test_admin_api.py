@@ -1039,11 +1039,6 @@ class AdminApiTests(TestCase):
 
         self.assertEqual(200, response.status_code)
         result = json.loads(response.data)
-        for barcode in result:
-            print(barcode)
-            foo = result[barcode]
-            for bar in foo:
-                print("\t%s" % bar)
         self.assertEqual(set(result.keys()), {'000069747'})
         obs = {c.lower() for c in result['000069747']}
         self.assertNotIn('birth_month', obs)
