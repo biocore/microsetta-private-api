@@ -1240,29 +1240,31 @@ class SurveyTemplateRepo(BaseRepo):
             results = self._generate_empty_survey(survey_template_id)
             total_question_count = len(results)
 
-            for row in rows:
-                question_id = str(row[0])
-                response = row[1]
-                response_type = row[3]
-
+            non_empty_keys = []
+            for question_id, response, _, response_type in rows:
                 # responses are from earliest to latest thus older answers
                 # will be overwritten with newer ones as need be, according
                 # to creation time ASC.
+                question_id = str(question_id)
+
                 if response_type == 'MULTIPLE':
                     results[question_id].append(response)
-                    try:
-                        # remove will raise an exception if 'Unspecified' has
-                        # already been removed. Handle this quietly.
-                        results[question_id].remove("Unspecified")
-                    except ValueError:
-                        pass
-                elif response_type == 'SINGLE':
-                    results[question_id] = response
+                    non_empty_keys.append(question_id)
                 else:
-                    # STRING and TEXT responses may need their enclosing
-                    # brackets removed. For now, pass them on as is:
-                    # e.g.: ["Free text - <encrypted text>"]
+                    # SINGLE, STRING, and TEXT types
                     results[question_id] = response
+
+            # every MULTIPLE type question requires at least one value
+            # 'Unspecified' to be present, if the question went unfilled.
+            # If the user did answer this question, we want to remove
+            # the 'Unspecified' initialization performed by
+            # _generate_empty_survey().
+
+            # set(non_empty_keys) is used because a question_id N could be
+            # processed multiple times and remove() will raise an Error if
+            # 'Unspecified' is not present.
+            for question_id in set(non_empty_keys):
+                results[question_id].remove("Unspecified")
 
             # return percentage of the survey completed, along with the
             # results.

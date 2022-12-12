@@ -621,12 +621,6 @@ class SurveyTemplateTests(unittest.TestCase):
             self.assertDictEqual(obs, self.filled_survey_10a)
             self.assertAlmostEqual(obs_pc, 0.615, 2)
 
-            # disabled because some other tests rely on an invalid id.
-            # # use an invalid account id
-            # with self.assertRaises(ValueError):
-            #     str.migrate_responses('d8592c74-9999-2135-e040-8a80115d6401',
-            #                           10)
-
             # use an invalid template id
             with self.assertRaises(ValueError):
                 str.migrate_responses('d8592c74-8148-2135-e040-8a80115d6401',
