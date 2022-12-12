@@ -698,8 +698,6 @@ class SurveyTemplateTests(unittest.TestCase):
             # survey. It then submits a survey to the existing source
             # associated with barcode '000001410'. Neither survey should
             # affect the results for the final query.
-            print("ACCOUNT ID: %s" % account_id)
-            print("SOURCE ID: %s" % source_id)
 
             new_source_id = str(uuid.uuid4())
 
