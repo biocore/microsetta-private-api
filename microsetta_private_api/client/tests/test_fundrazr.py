@@ -40,7 +40,7 @@ class FundrazrClientTests(TestCase):
     def test_campaigns(self):
         obs = self.c.campaigns()
 
-        # staging has two campaigns, let's assume that's stable...
+        # staging has three campaigns, let's assume that's stable...
         self.assertEqual(len(obs), 3)
         self.assertTrue(len(obs[0].items) > 0)
 

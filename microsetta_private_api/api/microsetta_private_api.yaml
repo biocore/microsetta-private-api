@@ -1615,6 +1615,68 @@ paths:
         '400':
           description: Creation or validation issue with the interested user
 
+  '/opt_out':
+    get:
+      operationId: microsetta_private_api.api.get_opt_out
+      tags:
+        - Campaigns
+      summary: Verify that an interested user exists for a given ID and can be opted out
+      description: Verify that an interested user exists for a given ID and can be opted out
+      security: [ ]
+      parameters:
+        - in: query
+          name: interested_user_id
+          description: unique identifier of interested user
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: interested user's id & campaign-oriented language information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  'interested_user_id':
+                    type: string
+                  'force_primary_language':
+                    type: boolean
+                  'language_key':
+                    type: string
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      operationId: microsetta_private_api.api.put_opt_out
+      tags:
+        - Campaigns
+      summary: Opt an interested user out of a campaign
+      description: Opt an interested user out of a campaign
+      security: [ ]
+      parameters:
+        - in: query
+          name: interested_user_id
+          description: unique identifier of interested user
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: interested user's id & campaign-oriented language information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  'interested_user_id':
+                    type: string
+                  'force_primary_language':
+                    type: boolean
+                  'language_key':
+                    type: string
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/update_address':
     get:
       operationId: microsetta_private_api.api.get_interested_user_address_update
