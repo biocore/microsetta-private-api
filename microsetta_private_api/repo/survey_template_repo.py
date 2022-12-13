@@ -1026,32 +1026,25 @@ class SurveyTemplateRepo(BaseRepo):
 
         return False
 
-    def _get_timestamp(self, barcode, survey_template_id):
+    def _get_sample_sub_timestamp(self, barcode):
         with self._transaction.cursor() as cur:
-            # retrieve the timestamp for the survey type being asked for. When
-            # we dynamically generate our results, we will incorporate answers
-            # from other surveys, but we will prioritize responses (or set of
-            # responses in the case of questions w/multiple answers) closest
-            # to the time the survey was taken.
+            # retrieve the timestamp for the barcode being asked for. Note that
+            # there will always be at least one result returned, and the
+            # timestamp will be the same regardless of the number of results
+            # returned. Hence, using fetchone() should be appropriate.
 
             # Note ag.ag_kit_barcodes.sample_time does not include a timezone.
             # for compatibility with other timestamps, we are assigning the
             # San Diego timezone of 'America/Los_Angeles' to the result.
             cur.execute("""SELECT a.barcode,
-                                  b.survey_template_id,
                                   c.sample_date + c.sample_time
                                   AT TIME zone 'America/Los_Angeles' AS ts
                            FROM   ag.source_barcodes_surveys a
-                                  JOIN ag.ag_login_surveys b
-                                    ON a.survey_id = b.survey_id
                                   JOIN ag.ag_kit_barcodes c
                                     ON a.barcode = c.barcode
-                           WHERE  a.barcode = %s
-                                  AND b.survey_template_id = %s""",
-                        (barcode, survey_template_id))
+                           WHERE  a.barcode = %s""", (barcode,))
 
-            # Expect that one and only one result will always be found.
-            return cur.fetchone()[2]
+            return cur.fetchone()[1]
 
     def migrate_responses_by_barcode(self, barcode, survey_template_id):
         '''
@@ -1123,8 +1116,9 @@ class SurveyTemplateRepo(BaseRepo):
             # create an empty template to fill-in.
             results = self._generate_empty_survey(survey_template_id)
 
-            # retrieve the timestamp used to prefer one response over another.
-            target_ts = self._get_timestamp(barcode, survey_template_id)
+            # the responses returned for this query should prioritize the
+            # responses closest to when the source submitted their sample.
+            target_ts = self._get_sample_sub_timestamp(barcode)
 
             # find the timestamp for the response (single, text, string) or
             # set of responses (multiple) that has the timestamp closest to
@@ -1138,6 +1132,7 @@ class SurveyTemplateRepo(BaseRepo):
                 else:
                     best_ts[qid] = row[2]
 
+            non_empty_keys = []
             for (question_id, response, timestamp, response_type, _) in rows:
                 question_id = str(question_id)
                 if best_ts[question_id] != timestamp:
@@ -1148,19 +1143,22 @@ class SurveyTemplateRepo(BaseRepo):
 
                 if response_type == 'MULTIPLE':
                     results[question_id].append(response)
-                    try:
-                        # remove will raise an exception if 'Unspecified' has
-                        # already been removed. Handle this quietly.
-                        results[question_id].remove("Unspecified")
-                    except ValueError:
-                        pass
-                elif response_type == 'SINGLE':
-                    results[question_id] = response
+                    non_empty_keys.append(question_id)
                 else:
-                    # STRING and TEXT responses may need their enclosing
-                    # brackets removed. For now, pass them on as is:
-                    # e.g.: ["Free text - <encrypted text>"]
+                    # SINGLE, STRING, and TEXT types
                     results[question_id] = response
+
+            # every MULTIPLE type question requires at least one value
+            # 'Unspecified' to be present, if the question went unfilled.
+            # If the user did answer this question, we want to remove
+            # the 'Unspecified' initialization performed by
+            # _generate_empty_survey().
+
+            # set(non_empty_keys) is used because a question_id N could be
+            # processed multiple times and remove() will raise an Error if
+            # 'Unspecified' is not present.
+            for question_id in set(non_empty_keys):
+                results[question_id].remove("Unspecified")
 
             return results
 
