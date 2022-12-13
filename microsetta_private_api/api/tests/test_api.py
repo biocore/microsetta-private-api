@@ -1300,6 +1300,8 @@ class AccountTests(ApiTests):
         create_dummy_acct(create_dummy_1=False, iss=ACCT_MOCK_ISS_3,
                           sub=ACCT_MOCK_SUB_3, dummy_is_admin=True)
 
+        # check to see if account_id is already in the removal queue. It
+        # shouldn't be.
         response = self.client.get(
             f'/api/accounts/{dummy_acct_id}/removal_queue',
             headers=self.dummy_auth)
@@ -1310,9 +1312,7 @@ class AccountTests(ApiTests):
         self.assertEqual(200, response.status_code)
         self.assertFalse(json.loads(response.data)['status'])
 
-        # submit a request for this account to be removed. Verify it is now
-        # present in the queue.
-
+        # submit a request for this account to be removed.
         response = self.client.put(
             f'/api/accounts/{dummy_acct_id}/removal_queue',
             headers=self.dummy_auth)
@@ -1322,6 +1322,7 @@ class AccountTests(ApiTests):
         self.assertEqual(json.loads(response.data)['message'],
                          "Request Accepted")
 
+        # Verify it is now present in the queue.
         response = self.client.get(
             f'/api/accounts/{dummy_acct_id}/removal_queue',
             headers=self.dummy_auth)
@@ -1332,7 +1333,6 @@ class AccountTests(ApiTests):
 
         # try to request a second time. Verify that an error is returned
         # instead.
-
         response = self.client.put(
             f'/api/accounts/{dummy_acct_id}/removal_queue',
             headers=self.dummy_auth)
@@ -1344,7 +1344,6 @@ class AccountTests(ApiTests):
 
         # attempt to remove the account id from the account removal queue
         # and cancel the deletion.
-
         response = self.client.put(
             f'/api/admin/account_removal/{dummy_acct_id}',
             headers=make_headers(FAKE_TOKEN_ADMIN))
@@ -1353,7 +1352,6 @@ class AccountTests(ApiTests):
 
         # attempt to remove the account id again and confirm that an error
         # is returned.
-
         response = self.client.put(
             f'/api/admin/account_removal/{dummy_acct_id}',
             headers=make_headers(FAKE_TOKEN_ADMIN))

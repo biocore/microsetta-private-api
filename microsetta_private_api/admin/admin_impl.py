@@ -872,6 +872,7 @@ def ignore_removal_request(account_id, token_info):
             # remove the user from the queue, noting the admin who allowed it
             # and the time the action was performed.
             rq_repo.update_queue(account_id, token_info['sub'], 'ignored')
+            t.commit()
         except RepoException as e:
             raise e
 
@@ -888,6 +889,8 @@ def allow_removal_request(account_id, token_info):
             # remove the user from the queue, noting the admin who allowed it
             # and the time the action was performed.
             rq_repo.update_queue(account_id, token_info['sub'], 'deleted')
+            # TODO: Revisit enclosing this in a try/except.
+            t.commit()
         except RepoException as e:
             raise e
 
@@ -901,4 +904,3 @@ def get_vioscreen_sample_to_user(token_info):
         st_repo = SurveyTemplateRepo(t)
         data = st_repo.get_vioscreen_sample_to_user()
     return jsonify(data), 200
-
