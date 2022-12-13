@@ -8,11 +8,11 @@ from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.exceptions import RepoException
 
 
-def verify_address(address_1, address_2=None, city=None, state=None,
-                   postal=None, country=None):
+def verify_address(address_1, address_2=None, address_3=None, city=None,
+                   state=None, postal=None, country=None):
     """
     Required parameters: address_1, postal, country
-    Optional parameters: address_2, city, state
+    Optional parameters: address_2, address_3, city, state
 
     Note - postal and country default to None as you can't have non-default
             arguments after default arguments, and preserving structural order
@@ -30,12 +30,13 @@ def verify_address(address_1, address_2=None, city=None, state=None,
         melissa_repo = MelissaRepo(t)
 
         dupe_status = melissa_repo.check_duplicate(address_1, address_2,
-                                                   postal, country)
+                                                   address_3, postal, country)
 
         if dupe_status is not False:
             # duplicate record - return result with an added field noting dupe
             return_dict = {"address_1": dupe_status["result_address_1"],
                            "address_2": dupe_status['result_address_2'],
+                           "address_3": dupe_status['result_address_3'],
                            "city": dupe_status['result_city'],
                            "state": dupe_status['result_state'],
                            "postal": dupe_status['result_postal'],
@@ -47,8 +48,8 @@ def verify_address(address_1, address_2=None, city=None, state=None,
             return return_dict
         else:
             record_id = melissa_repo.create_record(address_1, address_2,
-                                                   city, state, postal,
-                                                   country)
+                                                   address_3, city, state,
+                                                   postal, country)
 
             if record_id is None:
                 raise RepoException("Failed to create record in database.")
@@ -58,11 +59,18 @@ def verify_address(address_1, address_2=None, city=None, state=None,
                           "format": "JSON",
                           "t": record_id,
                           "a1": address_1,
-                          "a2": address_2,
                           "loc": city,
                           "admarea": state,
                           "postal": postal,
                           "ctry": country}
+
+            # Melissa API behaves oddly if it receives null values for a2
+            # and a3 - don't send if we don't have actual data for them
+            if address_2 is not None:
+                url_params["a2"] = address_2
+
+            if address_3 is not None:
+                url_params["a3"] = address_3
 
             url = SERVER_CONFIG["melissa_url"] + "?%s" % \
                 urllib.parse.urlencode(url_params)
@@ -98,6 +106,7 @@ def verify_address(address_1, address_2=None, city=None, state=None,
 
                 r_address_1 = record_obj["AddressLine1"]
                 r_address_2 = record_obj["AddressLine2"]
+                r_address_3 = record_obj["AddressLine3"]
                 r_city = record_obj["Locality"]
                 r_state = record_obj["AdministrativeArea"]
                 r_postal = record_obj["PostalCode"]
@@ -110,7 +119,8 @@ def verify_address(address_1, address_2=None, city=None, state=None,
                                                         r_good,
                                                         r_formatted_address,
                                                         r_address_1,
-                                                        r_address_2, r_city,
+                                                        r_address_2,
+                                                        r_address_3, r_city,
                                                         r_state, r_postal,
                                                         r_country, r_latitude,
                                                         r_longitude)
@@ -123,6 +133,7 @@ def verify_address(address_1, address_2=None, city=None, state=None,
 
                 return_dict = {"address_1": r_address_1,
                                "address_2": r_address_2,
+                               "address_3": r_address_3,
                                "city": r_city,
                                "state": r_state,
                                "postal": r_postal,

@@ -23,7 +23,7 @@ class AccountRepo(BaseRepo):
                  "account_type, auth_issuer, auth_sub, " \
                  "first_name, last_name, " \
                  "street, city, state, post_code, country_code, " \
-                 "created_with_kit_id, preferred_language"
+                 "preferred_language"
 
     @staticmethod
     def _row_to_addr(r):
@@ -45,8 +45,8 @@ class AccountRepo(BaseRepo):
             r['account_type'], r['auth_issuer'], r['auth_sub'],
             r['first_name'], r['last_name'],
             AccountRepo._row_to_addr(r),
-            r['created_with_kit_id'],
             r['preferred_language'],
+            r['created_with_kit_id'],
             r['creation_time'], r['update_time'])
 
     @staticmethod
@@ -55,7 +55,7 @@ class AccountRepo(BaseRepo):
                 a.account_type, a.auth_issuer, a.auth_sub,
                 a.first_name, a.last_name) + \
                 AccountRepo._addr_to_row(a.address) + \
-                (a.created_with_kit_id, a.language)
+                (a.language,)
 
     def claim_legacy_account(self, email, auth_iss, auth_sub):
         # Returns now-claimed legacy account if an unclaimed legacy account
@@ -124,9 +124,10 @@ class AccountRepo(BaseRepo):
                 return AccountRepo._row_to_account(r)
 
     def get_account(self, account_id):
+
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
-                        "account "
+                        "ag.account "
                         "WHERE "
                         "account.id = %s", (account_id,))
             r = cur.fetchone()
@@ -157,7 +158,6 @@ class AccountRepo(BaseRepo):
                             "state = %s, "
                             "post_code = %s, "
                             "country_code = %s, "
-                            "created_with_kit_id = %s, "
                             "preferred_language = %s "
                             "WHERE "
                             "account.id = %s",
@@ -178,7 +178,7 @@ class AccountRepo(BaseRepo):
     def create_account(self, account):
         try:
             with self._transaction.cursor() as cur:
-                cur.execute("INSERT INTO account (" +
+                cur.execute("INSERT INTO ag.account (" +
                             AccountRepo.write_cols +
                             ") "
                             "VALUES("
@@ -186,7 +186,7 @@ class AccountRepo(BaseRepo):
                             "%s, %s, %s, "
                             "%s, %s, "
                             "%s, %s, %s, %s, %s, "
-                            "%s, %s)",
+                            "%s)",
                             AccountRepo._account_to_row(account))
                 return cur.rowcount == 1
         except psycopg2.errors.UniqueViolation as e:
@@ -233,6 +233,7 @@ class AccountRepo(BaseRepo):
             for r in rows:
                 try:
                     melissa_response = verify_address(r['street'],
+                                                      "",
                                                       "",
                                                       r['city'],
                                                       r['state'],

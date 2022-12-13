@@ -122,11 +122,11 @@ class InterestedUserRepo(BaseRepo):
             cur.execute(
                 "SELECT interested_user_id, campaign_id, acquisition_source, "
                 "first_name, last_name, email, phone, address_1, address_2, "
-                "city, state, postal_code, country, latitude, longitude, "
-                "confirm_consent, ip_address, creation_timestamp, "
+                "address_3, city, state, postal_code, country, latitude, "
+                "longitude, confirm_consent, ip_address, creation_timestamp, "
                 "update_timestamp, address_checked, address_valid, "
                 "converted_to_account, converted_to_account_timestamp,"
-                "over_18 "
+                "over_18, residential_address "
                 "FROM campaign.interested_users "
                 "WHERE email ILIKE %s "
                 "ORDER BY email",
@@ -138,8 +138,8 @@ class InterestedUserRepo(BaseRepo):
     def verify_address(self, interested_user_id):
         with self._transaction.dict_cursor() as cur:
             cur.execute(
-                "SELECT address_1, address_2, city, state, postal_code, "
-                "country "
+                "SELECT address_1, address_2, address_3, city, state, "
+                "postal_code, country "
                 "FROM campaign.interested_users WHERE interested_user_id = %s "
                 "AND address_checked = false AND address_1 != '' AND "
                 "postal_code != '' AND country != ''",
@@ -152,6 +152,7 @@ class InterestedUserRepo(BaseRepo):
                 try:
                     melissa_response = verify_address(r['address_1'],
                                                       r['address_2'],
+                                                      r['address_3'],
                                                       r['city'],
                                                       r['state'],
                                                       r['postal_code'],
@@ -173,12 +174,13 @@ class InterestedUserRepo(BaseRepo):
                     cur.execute(
                         "UPDATE campaign.interested_users "
                         "SET address_checked = true, address_valid = true, "
-                        "address_1 = %s, address_2 = %s, city = %s, "
-                        "state = %s, postal_code = %s, "
+                        "address_1 = %s, address_2 = %s, address_3 = %s, "
+                        "city = %s, state = %s, postal_code = %s, "
                         "latitude = %s, longitude = %s "
                         "WHERE interested_user_id = %s",
                         (melissa_response['address_1'],
                          melissa_response['address_2'],
+                         melissa_response['address_3'],
                          melissa_response['city'],
                          melissa_response['state'],
                          melissa_response['postal'],

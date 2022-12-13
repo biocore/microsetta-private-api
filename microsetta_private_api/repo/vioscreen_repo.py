@@ -1655,3 +1655,24 @@ class VioscreenRepo(BaseRepo):
             if row is None:
                 return None
             return row[0]
+
+    def get_vioscreen_sessions(self, account_id, source_id):
+        """Obtain vioscreen sessions if it exists"""
+        with self._transaction.cursor() as cur:
+            # Find an active vioscreen for this account+source
+            # (deleted surveys are not active)
+            cur.execute("""SELECT vs.*
+                        FROM vioscreen_sessions vs
+                        JOIN vioscreen_registry vr
+                        ON vs.username = vr.vio_id
+                        WHERE vr.account_id=%s AND vr.source_id=%s""",
+                        (account_id, source_id))
+            rows = cur.fetchall()
+            if rows is None or len(rows) == 0:
+                return None
+            else:
+                sessions = []
+                for row in rows:
+                    session = VioscreenSession(*row)
+                    sessions.append(session)
+                return sessions

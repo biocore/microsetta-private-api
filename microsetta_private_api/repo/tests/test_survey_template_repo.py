@@ -12,12 +12,14 @@ TEST1_SOURCE_ID = None
 TEST1_SAMPLE_ID = "125a7cc5-41ae-44ef-983c-6f1a5213f668"
 TEST1_SURVEY_ID = None
 TEST1_VIO_ID = "1c689634cea0d11b"
+TEST1_REGISTRATION_CODE = None
 
 
 # not in registry
 TEST2_ACCOUNT_ID = "735e1689-6976-4d96-9a33-7a19f06602bf"
 TEST2_SOURCE_ID = None
 TEST2_SAMPLE_ID = "7380bb81-7401-45bd-85a0-51001f5f5cf1"
+TEST2_REGISTRATION_CODE = None
 
 
 # source IDs are not stable in the test database as these
@@ -109,6 +111,30 @@ class SurveyTemplateTests(unittest.TestCase):
                                                      TEST1_SOURCE_ID)
                 exp = (1973, 'Male', None, None)
                 self.assertEqual(obs, exp)
+
+    def test_delete_myfoodrepo(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            template_repo.create_myfoodrepo_entry(TEST2_ACCOUNT_ID,
+                                                  TEST2_SOURCE_ID)
+            template_repo.set_myfoodrepo_id(TEST2_ACCOUNT_ID,
+                                            TEST2_SOURCE_ID,
+                                            'foobar')
+            e, c = template_repo.get_myfoodrepo_id_if_exists(TEST2_ACCOUNT_ID,
+                                                             TEST2_SOURCE_ID)
+            self.assertEqual(e, 'foobar')
+            template_repo.delete_myfoodrepo(TEST2_ACCOUNT_ID,
+                                            TEST2_SOURCE_ID)
+
+            e, c = template_repo.get_myfoodrepo_id_if_exists(TEST2_ACCOUNT_ID,
+                                                             TEST2_SOURCE_ID)
+            self.assertEqual(e, None)
+
+            # make sure we can delete something that doesn't exist
+            template_repo.delete_myfoodrepo(TEST2_ACCOUNT_ID,
+                                            TEST2_SOURCE_ID)
+
+            t.rollback()
 
     def test_set_myfoodrepo_id_valid(self):
         with Transaction() as t:
@@ -278,12 +304,89 @@ class SurveyTemplateTests(unittest.TestCase):
                                                               TEST1_SOURCE_ID)
             self.assertEqual(obs, (None, None))
 
+    def test_delete_polyphenol_ffq(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            template_repo.create_polyphenol_ffq_entry(TEST1_ACCOUNT_ID,
+                                                      TEST1_SOURCE_ID,
+                                                      'en_US',
+                                                      'THDMI')
+            obs, _ = \
+                template_repo.get_polyphenol_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                              TEST1_SOURCE_ID)
+            self.assertTrue(obs is not None)
+            template_repo.delete_polyphenol_ffq(TEST1_ACCOUNT_ID,
+                                                TEST1_SOURCE_ID)
+            obs, _ = \
+                template_repo.get_polyphenol_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                              TEST1_SOURCE_ID)
+            self.assertTrue(obs is None)
+
+            # test we can delete something that doesn't exist
+            template_repo.delete_polyphenol_ffq(TEST1_ACCOUNT_ID,
+                                                TEST1_SOURCE_ID)
+
+    def test_delete_spain_ffq(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            template_repo.create_spain_ffq_entry(TEST1_ACCOUNT_ID,
+                                                 TEST1_SOURCE_ID)
+            obs = template_repo.get_spain_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                           TEST1_SOURCE_ID)
+            self.assertTrue(obs is not None)
+            template_repo.delete_spain_ffq(TEST1_ACCOUNT_ID,
+                                           TEST1_SOURCE_ID)
+            obs = template_repo.get_spain_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                           TEST1_SOURCE_ID)
+            self.assertTrue(obs is None)
+
+            # test we can delete something that doesn't exist
+            template_repo.delete_spain_ffq(TEST1_ACCOUNT_ID,
+                                           TEST1_SOURCE_ID)
+
+    def test_create_spain_ffq_entry_valid(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.create_spain_ffq_entry(TEST1_ACCOUNT_ID,
+                                                       TEST1_SOURCE_ID)
+            try:
+                uuid.UUID(obs)
+                valid_uuid_returned = True
+            except ValueError:
+                valid_uuid_returned = False
+            self.assertTrue(valid_uuid_returned)
+
+    def test_create_spain_ffq_entry_invalid(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            with self.assertRaises(InvalidTextRepresentation):
+                template_repo.create_spain_ffq_entry('',
+                                                     TEST1_SOURCE_ID)
+
+    def test_get_spain_ffq_id_if_exists_true(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            test_sffq_id = \
+                template_repo.create_spain_ffq_entry(TEST1_ACCOUNT_ID,
+                                                     TEST1_SOURCE_ID)
+            obs = \
+                template_repo.get_spain_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                         TEST1_SOURCE_ID)
+            self.assertEqual(test_sffq_id, obs)
+
+    def test_get_spain_ffq_id_if_exists_false(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = \
+                template_repo.get_spain_ffq_id_if_exists(TEST1_ACCOUNT_ID,
+                                                         TEST1_SOURCE_ID)
+            self.assertEqual(obs, None)
+
     def test_create_vioscreen_id_valid(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
             obs = template_repo.create_vioscreen_id(TEST2_ACCOUNT_ID,
-                                                    TEST2_SOURCE_ID,
-                                                    TEST2_SAMPLE_ID)
+                                                    TEST2_SOURCE_ID)
             self.assertTrue(obs is not None)
             t.rollback()
 
@@ -292,15 +395,18 @@ class SurveyTemplateTests(unittest.TestCase):
             template_repo = SurveyTemplateRepo(t)
             obs1 = template_repo.create_vioscreen_id(TEST2_ACCOUNT_ID,
                                                      TEST2_SOURCE_ID,
-                                                     TEST2_SAMPLE_ID)
+                                                     TEST2_SAMPLE_ID,
+                                                     TEST2_REGISTRATION_CODE)
             obs2 = template_repo.create_vioscreen_id(TEST2_ACCOUNT_ID,
                                                      TEST2_SOURCE_ID,
-                                                     TEST2_SAMPLE_ID)
+                                                     TEST2_SAMPLE_ID,
+                                                     TEST2_REGISTRATION_CODE)
             self.assertEqual(obs1, obs2)
 
             obs = template_repo.create_vioscreen_id(TEST1_ACCOUNT_ID,
                                                     TEST1_SOURCE_ID,
-                                                    TEST1_SAMPLE_ID)
+                                                    TEST1_SAMPLE_ID,
+                                                    TEST1_REGISTRATION_CODE)
             self.assertEqual(obs, TEST1_VIO_ID)
             t.rollback()
 
@@ -311,35 +417,83 @@ class SurveyTemplateTests(unittest.TestCase):
             template_repo = SurveyTemplateRepo(t)
             with self.assertRaises(ForeignKeyViolation):
                 template_repo.create_vioscreen_id(str(uuid.uuid4()),
-                                                  TEST2_SOURCE_ID,
-                                                  TEST2_SAMPLE_ID)
+                                                  TEST2_SOURCE_ID)
 
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
             with self.assertRaises(ForeignKeyViolation):
                 template_repo.create_vioscreen_id(TEST2_ACCOUNT_ID,
-                                                  str(uuid.uuid4()),
-                                                  TEST2_SAMPLE_ID)
+                                                  str(uuid.uuid4()))
 
+    def test_get_vioscreen_all_ids_if_exists_valid(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
-            with self.assertRaises(KeyError):
-                template_repo.create_vioscreen_id(TEST2_ACCOUNT_ID,
-                                                  TEST2_SOURCE_ID,
-                                                  str(uuid.uuid4()))
+            obs = \
+                template_repo.get_vioscreen_all_ids_if_exists(TEST1_ACCOUNT_ID,
+                                                              TEST1_SOURCE_ID)
+            self.assertEqual(obs, (TEST1_VIO_ID, ))
 
     def test_get_vioscreen_id_if_exists_valid(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
             obs = template_repo.get_vioscreen_id_if_exists(TEST1_ACCOUNT_ID,
-                                                           TEST1_SOURCE_ID,
-                                                           TEST1_SAMPLE_ID)
+                                                           TEST1_SOURCE_ID)
             self.assertEqual(obs, TEST1_VIO_ID)
 
     def test_get_vioscreen_id_if_exists_invalid(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
             obs = template_repo.get_vioscreen_id_if_exists(TEST2_ACCOUNT_ID,
-                                                           TEST2_SOURCE_ID,
-                                                           TEST2_SAMPLE_ID)
+                                                           TEST2_SOURCE_ID)
             self.assertEqual(obs, None)
+
+    def test_get_vioscreen_sample_to_user(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.get_vioscreen_sample_to_user()
+
+        # manually checked using
+        # select barcode, sample_id, vio_id
+        # from ag.vioscreen_registry
+        #    join ag.ag_kit_barcodes on sample_id=ag_kit_barcode_id
+        # limit 10;
+        tests = [('000031536', 'b98c5ac966b754ff'),
+                 ('000020495', '8fecc8f34a133eb8'),
+                 ('000023245', '52abc2ea83c08b96')]
+        for sample, user in tests:
+            self.assertEqual(obs.get(sample), user)
+
+    def test_delete_vioscreen(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+
+            obs = template_repo.get_vioscreen_id_if_exists(TEST1_ACCOUNT_ID,
+                                                           TEST1_SOURCE_ID,
+                                                           TEST1_SAMPLE_ID)
+            self.assertEqual(obs, TEST1_VIO_ID)
+
+            template_repo.delete_vioscreen(TEST1_ACCOUNT_ID,
+                                           TEST1_SOURCE_ID)
+
+            obs = template_repo.get_vioscreen_id_if_exists(TEST1_ACCOUNT_ID,
+                                                           TEST1_SOURCE_ID,
+                                                           TEST1_SAMPLE_ID)
+            self.assertEqual(obs, None)
+
+            # test we can delete something that doesn't exist
+            obs = template_repo.get_vioscreen_id_if_exists(TEST1_ACCOUNT_ID,
+                                                           TEST1_SOURCE_ID,
+                                                           TEST1_SAMPLE_ID)
+            self.assertEqual(obs, None)
+
+    def test_has_external_surveys(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+
+            obs = template_repo.has_external_surveys(TEST1_ACCOUNT_ID,
+                                                     TEST1_SOURCE_ID)
+            self.assertTrue(obs)
+
+            obs = template_repo.has_external_surveys(TEST2_ACCOUNT_ID,
+                                                     TEST2_SOURCE_ID)
+            self.assertFalse(obs)

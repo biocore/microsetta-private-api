@@ -14,3 +14,4 @@ JWT_EMAIL_CLAIM_KEY = 'email'
 ACCT_NOT_FOUND_MSG = "Account not found"
 SRC_NOT_FOUND_MSG = "Source not found"
 INVALID_TOKEN_MSG = "Invalid token"
+CONSENT_DOC_NOT_FOUND_MSG = "Consent not found"

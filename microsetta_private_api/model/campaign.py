@@ -316,7 +316,8 @@ class Campaign(ModelBase):
     def __init__(self, campaign_id, title, instructions, header_image,
                  permitted_countries, language_key, accepting_participants,
                  associated_projects, language_key_alt, title_alt,
-                 instructions_alt):
+                 instructions_alt, send_thdmi_confirmation,
+                 force_primary_language):
         self.campaign_id = campaign_id
         self.title = title
         self.instructions = instructions
@@ -328,6 +329,8 @@ class Campaign(ModelBase):
         self.language_key_alt = language_key_alt
         self.title_alt = title_alt
         self.instructions_alt = instructions_alt
+        self.send_thdmi_confirmation = send_thdmi_confirmation
+        self.force_primary_language = force_primary_language
 
     def to_api(self):
         return self.__dict__.copy()

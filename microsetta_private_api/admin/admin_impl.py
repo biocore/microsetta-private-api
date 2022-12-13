@@ -15,6 +15,7 @@ from microsetta_private_api.repo.event_log_repo import EventLogRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -592,15 +593,15 @@ def search_activation(token_info, email_query=None, code_query=None):
         return jsonify([i.to_api() for i in infos]), 200
 
 
-def address_verification(address_1=None, address_2=None,
+def address_verification(address_1=None, address_2=None, address_3=None,
                          city=None, state=None, postal=None, country=None):
     if address_1 is None or len(address_1) < 1 or \
             postal is None or len(postal) < 1 or \
             country is None or len(country) < 1:
         raise Exception("Must include address_1, postal, and country")
 
-    melissa_response = verify_address(address_1, address_2, city, state,
-                                      postal, country)
+    melissa_response = verify_address(address_1, address_2, address_3, city,
+                                      state, postal, country)
 
     return jsonify(melissa_response), 200
 
@@ -805,6 +806,7 @@ def delete_account(account_id, token_info):
         src_repo = SourceRepo(t)
         samp_repo = SampleRepo(t)
         sar_repo = SurveyAnswersRepo(t)
+        template_repo = SurveyTemplateRepo(t)
 
         acct = acct_repo.get_account(account_id)
         if acct is None:
@@ -815,6 +817,7 @@ def delete_account(account_id, token_info):
                 return None, 204
 
         sample_count = 0
+        account_has_external = False
         sources = src_repo.get_sources_in_account(account_id)
 
         for source in sources:
@@ -822,6 +825,11 @@ def delete_account(account_id, token_info):
 
             has_samples = len(samples) > 0
             sample_count += len(samples)
+            has_external = template_repo.has_external_surveys(account_id,
+                                                              source.id)
+
+            if has_external:
+                account_has_external = True
 
             for sample in samples:
                 # we scrub rather than disassociate in the event that the
@@ -829,21 +837,23 @@ def delete_account(account_id, token_info):
                 samp_repo.scrub(account_id, source.id, sample.id)
 
             surveys = sar_repo.list_answered_surveys(account_id, source.id)
-            if has_samples:
-                # if we have samples, we need to scrub survey / source
-                # free text
+            if has_samples or has_external:
+                # if we have samples or external surveys, we need to scrub
+                # survey / source free text
                 for survey_id in surveys:
                     sar_repo.scrub(account_id, source.id, survey_id)
                 src_repo.scrub(account_id, source.id)
-            else:
-                # if we do not have associated samples, then the source
-                # is safe to delete
+
+            if not has_samples and not has_external:
+                # if we do not have associated samples, or external surveys,
+                # then the source is safe to delete
                 for survey_id in surveys:
                     sar_repo.delete_answered_survey(account_id, survey_id)
                 src_repo.delete_source(account_id, source.id)
 
         # an account is safe to delete if there are no associated samples
-        if sample_count > 0:
+        # and does not have external surveys
+        if sample_count > 0 or account_has_external:
             acct_repo.scrub(account_id)
         else:
             acct_repo.delete_account(account_id)
@@ -883,3 +893,12 @@ def allow_removal_request(account_id, token_info):
 
         # delete the user
         return delete_account(account_id, token_info)
+
+
+def get_vioscreen_sample_to_user(token_info):
+    validate_admin_access(token_info)
+    with Transaction() as t:
+        st_repo = SurveyTemplateRepo(t)
+        data = st_repo.get_vioscreen_sample_to_user()
+    return jsonify(data), 200
+

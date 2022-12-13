@@ -1,95 +1,99 @@
-# English (United States) translations for PROJECT.
-# Copyright (C) 2021 ORGANIZATION
+# Japanese (Japan) translations for PROJECT.
+# Copyright (C) 2022 ORGANIZATION
 # This file is distributed under the same license as the PROJECT project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-09-01 20:49-0700\n"
-"PO-Revision-Date: 2021-06-03 17:28-0700\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: en_US\n"
-"Language-Team: en_US <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"POT-Creation-Date: 2022-11-07 22:49-0800\n"
+"PO-Revision-Date: 2022-11-04 10:48-0700\n"
+"Last-Translator: \n"
+"Language: ja_JP\n"
+"Language-Team: ja_JP <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.10.3\n"
+"Generated-By: Babel 2.11.0\n"
 
 #: admin/email_templates.py:22
 msgid "Welcome to The Microsetta Initiative"
-msgstr ""
+msgstr "ヒューマン ダイエット＆マイクロバイオーム イニシアティブ"
 
 #: admin/email_templates.py:29
 msgid "Your Microsetta Initiative status update: attention needed"
-msgstr ""
+msgstr "マイクロゼッタ・イニシアティブのステータス更新：注意"
 
 #: admin/email_templates.py:37 admin/email_templates.py:67
 msgid "Your Microsetta Initiative status update: information needed"
-msgstr ""
+msgstr "マイクロゼッタ・イニシアティブのステータス更新：情報必須"
 
 #: admin/email_templates.py:45
 msgid "Your Microsetta Initiative status update and next steps"
-msgstr ""
+msgstr "マイクロゼッタ・イニシアティブのステータス更新：次のステップ"
 
 #: admin/email_templates.py:52
 msgid "Your Microsetta Initiative status update: critical information needed"
-msgstr ""
+msgstr "マイクロゼッタ・イニシアティブのステータス更新：重要情報必須"
 
 #: admin/email_templates.py:60
 msgid "[PESTER] a thing happened"
-msgstr ""
+msgstr "トラブル発生"
+
+#: admin/email_templates.py:75
+msgid "We received your sign-up"
+msgstr "お申込み承りました"
 
 #: templates/email/activation_email.jinja2:221
 msgid ""
 "Thank you for your interest and participation in The Microsetta "
 "Initiative. We will be shipping out your sample collection kit(s) soon."
-msgstr ""
+msgstr "この度は、マイクロゼッタ　イニシアティブの研究にご参加いただきありがとうございます。採便キットをまもなく発送いたします。"
 
 #: templates/email/activation_email.jinja2:225
 msgid ""
 "The kit(s) may still be en route, but you don't have to pause your "
 "journey just yet.  You can sign up right now to get started at "
-msgstr ""
+msgstr "採便キットはまだ発送中かもしれませんが、まだ中止する必要はありません。こちらから登録して下さい。　"
 
 #: templates/email/activation_email.jinja2:225
 msgid "using the following info:"
-msgstr ""
+msgstr "以下の情報を使用："
 
 #: templates/email/activation_email.jinja2:228
 msgid "Email:"
-msgstr ""
+msgstr "Eメール："
 
 #: templates/email/activation_email.jinja2:229
 msgid "Activation Code:"
-msgstr ""
+msgstr "認証番号："
 
 #: templates/email/activation_email.jinja2:234
 msgid ""
 "Not your first foray into the microbiome?  No problem, you don't need to "
 "sign up again, your kit(s) can be added to your existing account when the"
 " order arrives."
-msgstr ""
+msgstr "既にこの研究に参加済みですか?問題ありません。再度登録する必要はありません。注文が届いた時に、既存のアカウントに採便キットを追加できます。"
 
 #: templates/email/activation_email.jinja2:238
 #: templates/email/incorrect_sample_type.jinja2:239
 #: templates/email/missing_sample_info.jinja2:269
 #: templates/email/sample_is_valid.jinja2:228
 msgid "If you have any questions, please reply to us at "
-msgstr ""
+msgstr "ご質問がございましたら、こちらまでご連絡下さい　"
 
 #: templates/email/activation_email.jinja2:238
 #: templates/email/incorrect_sample_type.jinja2:239
 #: templates/email/sample_is_valid.jinja2:228
 msgid "Thank you for supporting our project."
-msgstr ""
+msgstr "私たちのプロジェクトにご賛同いただき、ありがとうございます。"
 
 #: templates/email/activation_email.jinja2:242
 #: templates/email/incorrect_sample_type.jinja2:243
 msgid "Sincerely,"
-msgstr ""
+msgstr "敬具、"
 
 #: templates/email/activation_email.jinja2:245
 #: templates/email/address_invalid.jinja2:250
@@ -97,8 +101,9 @@ msgstr ""
 #: templates/email/missing_sample_info.jinja2:273
 #: templates/email/no_associated_source.jinja2:276
 #: templates/email/sample_is_valid.jinja2:235
+#: templates/email/submit_interest_confirmation.jinja2:240
 msgid "The Microsetta Team"
-msgstr ""
+msgstr "マイクロゼッタ・イニシアティブチーム"
 
 #: templates/email/address_invalid.jinja2:220
 #: templates/email/incorrect_sample_type.jinja2:220
@@ -106,7 +111,7 @@ msgstr ""
 #: templates/email/no_associated_source.jinja2:220
 #: templates/email/sample_is_valid.jinja2:220
 msgid "Hello"
-msgstr ""
+msgstr "こんにちは"
 
 #: templates/email/address_invalid.jinja2:224
 msgid ""
@@ -114,44 +119,45 @@ msgid ""
 "Initiative. We are writing as we've encountered an issue processing your "
 "transaction, and we would appreciate your assistance in helping to "
 "resolve this matter."
-msgstr ""
+msgstr "マイクロゼッタ　イニシアティブ の研究にご参加いただきありがとうございます。この度、お取引の際に問題が発生したので、迅速な対応をお願いいたします。"
 
 #: templates/email/address_invalid.jinja2:226
 msgid ""
 "Specifically, we were unable to verify the address to which you requested"
 " we ship you kit(s)."
-msgstr ""
+msgstr "具体的には、採便キットの発送先住所の確認ができませんでした。"
 
 #: templates/email/address_invalid.jinja2:232
 msgid ""
 "To resolve this issue and ensure we have a valid shipping address, please"
 " click the following link or copy and paste the URL into your browser:"
-msgstr ""
+msgstr "問題解決に向け、あなたの配送先住所を確認するため、次のリンクをクリックするかURL をコピーしてアクセスして下さい："
 
 #: templates/email/address_invalid.jinja2:246
 #: templates/email/no_associated_source.jinja2:272
 msgid "If you have any questions, please reply to us at"
-msgstr ""
+msgstr "ご質問がございましたら、こちらまでご連絡下さい"
 
 #: templates/email/address_invalid.jinja2:249
 #: templates/email/missing_sample_info.jinja2:272
 #: templates/email/no_associated_source.jinja2:275
+#: templates/email/submit_interest_confirmation.jinja2:239
 msgid "Thank you,"
-msgstr ""
+msgstr "ありがとうございます、"
 
 #: templates/email/incorrect_sample_type.jinja2:224
 msgid ""
 "We recently received the following microbiome sample from you and noticed"
 " that it might have been incorrectly labeled."
-msgstr ""
+msgstr "あなたの便サンプルを受け取りましたが、記入された情報が間違っている可能性があります。"
 
 #: templates/email/incorrect_sample_type.jinja2:229
 msgid "Marked"
-msgstr ""
+msgstr "マーク済み"
 
 #: templates/email/incorrect_sample_type.jinja2:229
 msgid "but appears to be"
-msgstr ""
+msgstr "しかし"
 
 #: templates/email/incorrect_sample_type.jinja2:236
 msgid ""
@@ -176,10 +182,12 @@ msgid ""
 "with our team. Please click on the URL below to view the collection "
 "information."
 msgstr ""
+"マイクロゼッタ　イニシアティブの研究 "
+"にご参加いただきありがとうございます。この度、あなたの便サンプルに問題が生じたため、迅速な対応をお願いいたします。正確な情報を入力するため、返送した便サンプルの種類、採取日、及び採取時刻を再度確認する必要があります。下記URLから採取情報をご確認ください。"
 
 #: templates/email/missing_sample_info.jinja2:236
 msgid "Based on what we can see, we think the collection type is:"
-msgstr ""
+msgstr "あなたの便サンプルの種類は："
 
 #: templates/email/missing_sample_info.jinja2:250
 msgid ""
@@ -193,23 +201,23 @@ msgstr ""
 #: templates/email/missing_sample_info.jinja2:254
 #: templates/email/no_associated_source.jinja2:263
 msgid "Collection date"
-msgstr ""
+msgstr "採取日"
 
 #: templates/email/missing_sample_info.jinja2:255
 #: templates/email/no_associated_source.jinja2:264
 msgid "Collection time"
-msgstr ""
+msgstr "採取時刻"
 
 #: templates/email/missing_sample_info.jinja2:256
 #: templates/email/no_associated_source.jinja2:265
 msgid "Collection type"
-msgstr ""
+msgstr "採便の種類"
 
 #: templates/email/missing_sample_info.jinja2:263
 msgid ""
 "Once we have these details, we will update the record so the specimen can"
 " be processed appropriately."
-msgstr ""
+msgstr "これらの詳細を確認次第、採便が適切に処理できるよう記録を更新致します。"
 
 #: templates/email/no_associated_source.jinja2:224
 msgid ""
@@ -217,13 +225,13 @@ msgid ""
 "Initiative. We are writing as we've encountered an issue processing your "
 "collection, and we would appreciate your assistance in helping to resolve"
 " this matter."
-msgstr ""
+msgstr "マイクロゼッタ　イニシアティブ の研究にご参加いただきありがとうございます。この度、あなたの採便に問題が発生したので、迅速な対応をお願いいたします。"
 
 #: templates/email/no_associated_source.jinja2:226
 msgid ""
 "Specifically, the following sample sent to the lab needs more information"
 " to be included before it can be processed:"
-msgstr ""
+msgstr "具体的には、返送された便サンプルを処理する前に、あなたの追加情報が必要になります："
 
 #: templates/email/no_associated_source.jinja2:238
 msgid ""
@@ -231,10 +239,12 @@ msgid ""
 "our human subjects research protocol. Please log back into the "
 "participant website by clicking or copying the following URL:"
 msgstr ""
+"これは人を対象とする研究規約に従って、便サンプルを処理するために必要な情報です。下記の URL をクリックするかコピーして、参加者用 "
+"サイトに再度ログインして下さい："
 
 #: templates/email/no_associated_source.jinja2:245
 msgid "Your account"
-msgstr ""
+msgstr "あなたのアカウント"
 
 #: templates/email/no_associated_source.jinja2:252
 msgid ""
@@ -259,92 +269,45 @@ msgstr ""
 
 #: templates/email/sample_is_valid.jinja2:232
 msgid "Kind regards,"
+msgstr "敬具、"
+
+#: templates/email/submit_interest_confirmation.jinja2:220
+msgid "Dear Volunteer"
+msgstr "お申し込みの皆様へ"
+
+#: templates/email/submit_interest_confirmation.jinja2:224
+msgid ""
+"On behalf of Danone Nutricia Research and The Microsetta Initiative (TMI)"
+" at UC San Diego, we would like to thank you for your interest in "
+"participating in our research study THDMI - The Human Diets and "
+"Microbiome Initiative."
 msgstr ""
+"カリフォルニア大学サンディエゴ校のマイクロゼッタ　イニシアティブ（TMI）及びダノン ニュートリシア リサーチ を代表して、TMI "
+"THDMI-ジャパン プロジェクトにご参加申し込み頂き心よりお礼申し上げます。"
 
-#~ msgid ""
-#~ "We recently received the following "
-#~ "microbiome collection from you and "
-#~ "noticed that it may have been "
-#~ "incorrectly assigned."
-#~ msgstr ""
+#: templates/email/submit_interest_confirmation.jinja2:230
+msgid ""
+"Soon you will receive an email letting you know if you were one of the "
+"first 800 individuals who signed up to participate in the project and "
+"what the next steps will be to take part. "
+msgstr "参加要件を満たした先着800名の方にのみ本登録用のEメールを後日お送りいたします。あらかじめご了承ください。ご回答まで今しばらくお待ちください。"
 
-#~ msgid ""
-#~ "The collection type determines lab "
-#~ "handling, and ultimately how the results"
-#~ " are assessed. We cannot process the"
-#~ " collection until the type is "
-#~ "verified. If you know the type "
-#~ "then please communicate with us at \n\n"
-#~ msgstr ""
+#: templates/email/submit_interest_confirmation.jinja2:236
+msgid ""
+"We are also here to help! Our team is ready to assist you with any "
+"questions you may have. Please contact us at"
+msgstr "ご質問やご不明な点がございましたらお気軽にお問い合わせください"
 
-#~ msgid ""
-#~ "by replying to this email. We will"
-#~ " then update your information so the"
-#~ " collection can be appropriately "
-#~ "associated."
-#~ msgstr ""
+#: templates/email/submit_interest_confirmation.jinja2:245
+msgid "Tip"
+msgstr "追記"
 
-#~ msgid ""
-#~ "Thank you for your interest and "
-#~ "participation in The Microsetta Initiative."
-#~ " We are writing as we've encountered"
-#~ " an issue processing your microbiome "
-#~ "collection, and we would appreciate your"
-#~ " assistance in helping to resolve "
-#~ "this matter. Specifically, the following "
-#~ "collection sent to the lab does "
-#~ "not have a recorded collection type, "
-#~ "date or time. Please click on the"
-#~ " URL below to view the collection "
-#~ "information."
-#~ msgstr ""
+#: templates/email/submit_interest_confirmation.jinja2:245
+msgid ""
+"To ensure our emails make it to your Inbox, not your SPAM folder, "
+"remember to add us to your safe sender's list."
+msgstr "本登録用のEメールが迷惑メールフォルダに届く恐れがあります。確実にお手元に届くようmicrosetta@ucsd.eduのメール受信設定をお願い致します。"
 
-#~ msgid ""
-#~ "We require this information in order "
-#~ "to process the collection in compliance"
-#~ " with our human subjects research "
-#~ "protocol. Editing by participants is "
-#~ "locked for received collections, so "
-#~ "updating this information requires the "
-#~ "involvement of a team member with "
-#~ "Microsetta. Could you please reply to"
-#~ " this email, and provide the "
-#~ "following information?"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Once we have this detail, we will"
-#~ " update the record so the specimen"
-#~ " can be processed appropriately."
-#~ msgstr ""
-
-#~ msgid ""
-#~ ">Specifically, the following collection sent"
-#~ " to the lab is not associated "
-#~ "with a source:"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "We require this information in order "
-#~ "to process this specimen in compliance"
-#~ " with our human subjects research "
-#~ "protocol. Please log back into the "
-#~ "participant website by clicking or "
-#~ "copying on the following URL:"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Thank you for your interest and "
-#~ "participation in The Microsetta Initiative."
-#~ " We have received your microbiome "
-#~ "collection, and it is now in the"
-#~ " processing queue."
-#~ msgstr ""
-
-#~ msgid ""
-#~ ">Specifically, the following sample sent "
-#~ "to the lab needs more information "
-#~ "to be included before it can be"
-#~ " processed:"
-#~ msgstr ""
+#~ msgid "Dear"
+#~ msgstr "拝啓"
 
