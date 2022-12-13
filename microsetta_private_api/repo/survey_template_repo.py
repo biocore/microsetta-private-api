@@ -743,6 +743,7 @@ class SurveyTemplateRepo(BaseRepo):
             existing = self.get_vioscreen_id_if_exists(account_id, source_id,
                                                        sample_id,
                                                        registration_code)
+
             if existing is None:
                 vioscreen_id = secrets.token_hex(8)
                 # Put a survey with status -1 into ag_login_surveys
@@ -750,9 +751,11 @@ class SurveyTemplateRepo(BaseRepo):
                             "ag_login_id, "
                             "survey_id, "
                             "vioscreen_status, "
-                            "source_id) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, vioscreen_id, -1, source_id))
+                            "source_id, "
+                            "survey_template_id) "
+                            "VALUES(%s, %s, %s, %s, %s)",
+                            (account_id, vioscreen_id, -1, source_id,
+                             self.VIOSCREEN_ID))
 
                 # And add it to the registry to keep track of the survey if
                 # user quits out then wants to resume the survey.
