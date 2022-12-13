@@ -295,6 +295,35 @@ class InterestedUserRepoTests(unittest.TestCase):
                 interested_user_repo.get_interested_user_by_email(t_e)
             self.assertFalse(obs is False)
 
+    def test_opt_out_interested_user(self):
+        dummy_user = {
+            "campaign_id": self.test_campaign_id,
+            "first_name": "Test",
+            "last_name": "McTesterson",
+            "email": "test@testing.com",
+            "confirm_consent": True
+        }
+        interested_user = InterestedUser.from_dict(dummy_user)
+        with Transaction() as t:
+            i_u_repo = InterestedUserRepo(t)
+            user_id = i_u_repo.insert_interested_user(interested_user)
+            i_u = i_u_repo.get_interested_user_by_id(user_id)
+
+            # Verify that the user has provided consent (is opted in)
+            self.assertTrue(i_u.confirm_consent)
+
+            # Opt the user out
+            r_c = i_u_repo.opt_out_interested_user(user_id)
+
+            # Verify that a row was updated
+            self.assertEqual(r_c, 1)
+
+            # Pull a fresh instance of the interested user
+            i_u = i_u_repo.get_interested_user_by_id(user_id)
+
+            # Verify that the user is now opted out
+            self.assertFalse(i_u.confirm_consent)
+
 
 if __name__ == '__main__':
     unittest.main()
