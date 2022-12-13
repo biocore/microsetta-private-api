@@ -1002,6 +1002,53 @@ class AccountTests(ApiTests):
         self.assertEqual(response_obj['sample_datetime'],
                          sample_body['sample_datetime'][:-1])
 
+    # This test specifically verifies that the scenario in Private API
+    # issue #492 - where a user takes an external survey, deletes the source,
+    # then requests account deletion - is resolved
+    def test_account_scrub_success_external_surveys_deleted_source(self):
+        # setup an account with a source and sample
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        _ = create_dummy_acct(create_dummy_1=False,
+                              iss=ACCT_MOCK_ISS_3,
+                              sub=ACCT_MOCK_SUB_3,
+                              dummy_is_admin=True)
+
+        # "take" the polyphenol FFQ
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/%s?language_tag=en_us' %  # noqa
+            (dummy_acct_id, dummy_source_id,
+             SurveyTemplateRepo.POLYPHENOL_FFQ_ID),
+            headers=self.dummy_auth)
+
+        # delete the source
+        response = self.client.delete(
+            '/api/accounts/%s/sources/%s?language_tag=en_us' %
+            (dummy_acct_id, dummy_source_id),
+            headers=self.dummy_auth
+        )
+
+        # now let's scrub the account
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (dummy_acct_id,),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(204, response.status_code)
+
+        # verify deleting is idempotent. If the account was scrubbed, then
+        # we get a 204. If the account was deleted, we get a 404
+        response = self.client.delete(
+            '/api/accounts/%s' %
+            (dummy_acct_id,),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # check response code
+        self.assertEqual(204, response.status_code)
+
     def test_account_delete_without_samples(self):
         # setup an account with a source and sample
         dummy_acct_id, dummy_source_id = create_dummy_source(
