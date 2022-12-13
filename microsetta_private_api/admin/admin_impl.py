@@ -871,7 +871,7 @@ def ignore_removal_request(account_id, token_info):
         try:
             # remove the user from the queue, noting the admin who allowed it
             # and the time the action was performed.
-            rq_repo.update_queue(account_id, token_info['sub'], 'ignored')
+            rq_repo.update_queue(account_id, token_info['email'], 'ignored')
             t.commit()
         except RepoException as e:
             raise e
@@ -888,8 +888,7 @@ def allow_removal_request(account_id, token_info):
         try:
             # remove the user from the queue, noting the admin who allowed it
             # and the time the action was performed.
-            rq_repo.update_queue(account_id, token_info['sub'], 'deleted')
-            # TODO: Revisit enclosing this in a try/except.
+            rq_repo.update_queue(account_id, token_info['email'], 'deleted')
             t.commit()
         except RepoException as e:
             raise e

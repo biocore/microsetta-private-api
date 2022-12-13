@@ -614,6 +614,15 @@ class ApiTests(TestCase):
         # is there some better pattern I can use to split up what should be
         # a 'with' call?
         self.client.__exit__(None, None, None)
+
+        # references to dummy admins need to be removed from
+        # ag.account_removal_log before delete_dummy_accts() will be
+        # successful.
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("delete from ag.account_removal_log")
+            t.commit()
+
         delete_dummy_accts()
 
     def run_query_and_content_required_field_test(self, url, action,

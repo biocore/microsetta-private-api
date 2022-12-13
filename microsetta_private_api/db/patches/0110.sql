@@ -10,9 +10,8 @@ CREATE TABLE ag.delete_account_queue (
 
 CREATE TABLE ag.account_removal_log (
     id SERIAL PRIMARY KEY,
-    account_id uuid NOT NULL, /* deleted account.ids can't be referenced here.*/
-    /* constraint on admin_id relaxed for similar reasons as above.*/
-    admin_id uuid, /* NOT NULL REFERENCES ag.account(id), */
+    account_id uuid NOT NULL, -- deleted account.ids can't be referenced here.
+    admin_id uuid NOT NULL REFERENCES ag.account(id),
     disposition VARCHAR(8),
     requested_on timestamptz,
     reviewed_on timestamptz default current_timestamp

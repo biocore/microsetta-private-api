@@ -35,7 +35,7 @@ class RemovalQueueRepo(BaseRepo):
             cur.execute("DELETE FROM delete_account_queue WHERE account_id ="
                         " %s", (account_id,))
 
-    def update_queue(self, account_id, admin_sub, disposition):
+    def update_queue(self, account_id, admin_email, disposition):
         if not self.check_request_remove_account(account_id):
             raise RepoException("Account is not in removal queue")
 
@@ -47,8 +47,8 @@ class RemovalQueueRepo(BaseRepo):
 
             # get the account id of the admin that authorized this account
             # to be deleted.
-            cur.execute("SELECT id FROM account WHERE auth_sub = %s",
-                        (admin_sub,))
+            cur.execute("SELECT id FROM account WHERE email = %s",
+                        (admin_email,))
             admin_id = cur.fetchone()[0]
 
             # add an entry to the log detailing who deleted the account,
@@ -62,4 +62,3 @@ class RemovalQueueRepo(BaseRepo):
             # w/out this.
             cur.execute("DELETE FROM delete_account_queue WHERE account_id"
                         " = %s", (account_id,))
-
