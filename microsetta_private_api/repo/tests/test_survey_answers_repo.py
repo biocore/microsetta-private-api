@@ -14,7 +14,7 @@ HUMAN_SOURCE = Source('ffffffff-ffff-ffff-aaaa-aaaaaaaaaaaa',
                       ACCOUNT_ID,
                       Source.SOURCE_TYPE_HUMAN,
                       'test person',
-                      HumanInfo('foo@bar.com', False,
+                      HumanInfo(False,
                                 None, None, None,
                                 datetime.datetime.now(),
                                 None, None, '18-plus'))

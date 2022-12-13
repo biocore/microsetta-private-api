@@ -290,7 +290,7 @@ msgid ""
 "Soon you will receive an email letting you know if you were one of the "
 "first 800 individuals who signed up to participate in the project and "
 "what the next steps will be to take part. "
-msgstr "参加要件を満たした先着800名の方にのみ本登録用のEメールを後日お送りいたします。ご回答まで今しばらくお待ちください。"
+msgstr "参加要件を満たした先着800名の方にのみ本登録用のEメールを後日お送りいたします。あらかじめご了承ください。ご回答まで今しばらくお待ちください。"
 
 #: templates/email/submit_interest_confirmation.jinja2:236
 msgid ""

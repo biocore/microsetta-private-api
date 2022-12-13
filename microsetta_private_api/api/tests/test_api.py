@@ -79,7 +79,6 @@ DUMMY_ACCT_INFO = {
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
-    KIT_NAME_KEY: EXISTING_KIT_NAME
 }
 DUMMY_ACCT_INFO_2 = {
     "address": {
@@ -93,7 +92,6 @@ DUMMY_ACCT_INFO_2 = {
     "first_name": "Obie",
     "last_name": "Dobie",
     "language": "en_US",
-    KIT_NAME_KEY: EXISTING_KIT_NAME_2
 }
 DUMMY_ACCT_ADMIN = {
     "address": {
@@ -115,7 +113,6 @@ DUMMY_HUMAN_SOURCE = {
                 'source_name': 'Bo',
                 'source_type': 'human',
                 'consent': {
-                    'participant_email': 'bo@bo.com',
                     'age_range': "18-plus"
                 },
             }
@@ -197,6 +194,11 @@ FAKE_BARCODES = [BC1, BC2, BC3]
 FAKE_SAMPLES = [S1, S2, S3]
 FAKE_KIT = "12345678-aaaa-aaaa-aaaa-bbbbccccccce"
 FAKE_KIT_PW = "MockItToMe"
+
+DATA_CONSENT = "Data"
+BIOSPECIMEN_CONSENT = "Biospecimen"
+ADULT_DATA_CONSENT = "Adult Consent - Data"
+ADULT_BIOSPECIMEN_CONSENT = "Adult Consent - Biospecimen"
 
 
 def make_headers(fake_token):
@@ -475,7 +477,6 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['post_code'],
                 input_obj['address']['country_code']
             ),
-            input_obj['kit_name'],
             input_obj['language']
         )
     else:
@@ -683,6 +684,7 @@ class ApiTests(TestCase):
                                           dummy_acct_dict=None):
         if dummy_acct_dict is None:
             dummy_acct_dict = DUMMY_ACCT_INFO
+        response_obj.pop('kit_name')
 
         # check expected additional fields/values appear in response body:
         # Note that "d.get()" returns none if key not found, doesn't throw err
@@ -745,34 +747,6 @@ class AccountsTests(ApiTests):
 
         # check account id provided in body matches that in location header
         self.assertTrue(real_acct_id_from_loc, real_acct_id_from_body)
-
-    def test_accounts_create_fail_400_without_required_fields(self):
-        """Return 400 validation fail if don't provide a required field """
-
-        self.run_query_and_content_required_field_test(
-            "/api/accounts", "post",
-            self.default_querystring_dict,
-            DUMMY_ACCT_INFO,
-            skip_fields=["kit_name"])
-
-    def test_accounts_create_fail_404(self):
-        """Return 404 if provided kit name is not found in db."""
-
-        # create post input json
-        input_obj = copy.deepcopy(DUMMY_ACCT_INFO)
-        input_obj[KIT_NAME_KEY] = MISSING_KIT_NAME
-        input_json = json.dumps(input_obj)
-
-        # execute accounts post (create)
-        response = self.client.post(
-            self.accounts_url,
-            content_type='application/json',
-            data=input_json,
-            headers=MOCK_HEADERS
-        )
-
-        # check response code
-        self.assertEqual(404, response.status_code)
 
     def test_accounts_create_fail_422(self):
         """Return 422 if provided email is in use in db."""
@@ -935,12 +909,6 @@ class AccountTests(ApiTests):
         self.assertEqual(200, response.status_code)
         response_obj = json.loads(response.data)
 
-        for k in DUMMY_ACCT_INFO:
-            if k in (KIT_NAME_KEY, 'language'):
-                continue
-            self.assertNotEqual(DUMMY_ACCT_INFO[k],
-                                response_obj[k])
-
         # verify deleting is idempotent
         response = self.client.delete(
             '/api/accounts/%s' %
@@ -991,8 +959,6 @@ class AccountTests(ApiTests):
 
         self.assertEqual(response_obj['source_name'],
                          'scrubbed')
-        self.assertEqual(response_obj['consent']['participant_email'],
-                         'scrubbed@microsetta.ucsd.edu')
 
         # pull the sample details
         response = self.client.get(
@@ -1167,11 +1133,8 @@ class AccountTests(ApiTests):
 
     # region account update/put tests
     @staticmethod
-    def make_updated_acct_dict(keep_kit_name=False):
+    def make_updated_acct_dict():
         result = copy.deepcopy(DUMMY_ACCT_INFO)
-
-        if not keep_kit_name:
-            result.pop(KIT_NAME_KEY)
 
         result["address"] = {
             "city": "Oakland",
@@ -1187,7 +1150,7 @@ class AccountTests(ApiTests):
         """Successfully update existing account"""
         dummy_acct_id = create_dummy_acct()
 
-        changed_acct_dict = self.make_updated_acct_dict(keep_kit_name=True)
+        changed_acct_dict = self.make_updated_acct_dict()
 
         # create post input json
         input_json = json.dumps(changed_acct_dict)
@@ -1479,6 +1442,68 @@ class SourceTests(ApiTests):
         expected_val[SOURCE_ID_KEY] = real_src_id_from_body
         self.assertEqual(expected_val, response_obj)
     # endregion source update/put
+
+
+@pytest.mark.usefixtures("client")
+class ConsentTests(ApiTests):
+
+    def sign_data_consent(self):
+        """Checks data consent for a source and sings the consent"""
+
+        dummy_acct_id, dummy_source_resp = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        consent_status = self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            headers=self.dummy_auth)
+
+        self.assertTrue(consent_status["result"])
+
+        CONSENT_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
+
+        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        consent_data.update("consent_type", ADULT_DATA_CONSENT)
+        consent_data.update("consent_id", CONSENT_ID)
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
+
+    def sign_biospecimen_consent(self):
+        """Checks biospecimen consent for a source and sings the consent"""
+
+        dummy_acct_id, source_resp = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        consent_status = self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, source_resp["source_id"], BIOSPECIMEN_CONSENT),
+            headers=self.dummy_auth)
+
+        self.assertTrue(consent_status["result"])
+
+        CONSENT_ID_BIO = "6b1595a5-4003-4d0f-aa91-56947eaf2901"
+
+        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        consent_data.update("consent_type", ADULT_BIOSPECIMEN_CONSENT)
+        consent_data.update("consent_id", CONSENT_ID_BIO)
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, source_resp["source_id"], BIOSPECIMEN_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
 
 
 @pytest.mark.usefixtures("client")
@@ -2145,7 +2170,6 @@ class VioscreenTests(ApiTests):
             self.src_id = src_id
             self.samp_id = samp_id
             self.vio_id = '674533d367f222d2'
-
             cur.execute("""INSERT INTO ag.vioscreen_registry
                            (account_id, source_id, sample_id, vio_id)
                            VALUES (%s, %s, %s, %s)""",
@@ -2207,8 +2231,7 @@ class VioscreenTests(ApiTests):
 
     def _url_constructor(self):
         return (f'/api/accounts/{self.acct_id}'
-                f'/sources/{self.src_id}'
-                f'/samples/{self.samp_id}')
+                f'/sources/{self.src_id}')
 
     def test_get_sample_vioscreen_session_200(self):
         vioscreen_session = VioscreenSession(

@@ -21,10 +21,10 @@ from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 
 STANDARD_ACCT_ID = "12345678-bbbb-cccc-dddd-eeeeffffffff"
 ADMIN_ACCT_ID = "12345678-1234-1234-1234-123412341234"
-FIRST_LIVE_DAK_ARTICLE = {'dak_article_code': '3510000E',
-                          'short_description': 'TMI 1 tube',
+FIRST_LIVE_DAK_ARTICLE = {'dak_article_code': '3510005E',
+                          'short_description': 'TMI 1matrix tube',
                           'detailed_description':
-                              'TMI 1 tube, American English'
+                              'TMI 1 matrix tube, American English'
                           }
 # This is the first one in the db, but it is retired
 FIRST_DAK_ARTICLE = {'dak_article_code': '350103',
@@ -997,7 +997,7 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             articles = admin_repo.get_daklapack_articles()
-            self.assertEqual(11, len(articles))
+            self.assertEqual(8, len(articles))
             first_article = articles[0]
             first_article.pop("dak_article_id")
             self.assertEqual(FIRST_LIVE_DAK_ARTICLE, first_article)
@@ -1006,7 +1006,7 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             articles = admin_repo.get_daklapack_articles(include_retired=True)
-            self.assertEqual(19, len(articles))
+            self.assertEqual(24, len(articles))
             first_article = articles[0]
             first_article.pop("dak_article_id")
             self.assertEqual(FIRST_DAK_ARTICLE, first_article)

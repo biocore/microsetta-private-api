@@ -5,11 +5,13 @@ from ._account import (
 )
 from ._consent import (
     render_consent_doc,
+    check_consent_signature,
+    sign_consent_doc
 )
 from ._source import (
     create_source, read_source, update_source, delete_source,
     read_sources, create_human_source_from_consent,
-    check_duplicate_source_name_email
+    check_duplicate_source_name, scrub_source
 )
 from ._survey import (
     read_survey_template, read_survey_templates, read_answered_survey,
@@ -28,15 +30,16 @@ from ._activation import (
 )
 
 from ._vioscreen import (
-    read_sample_vioscreen_session, read_sample_vioscreen_percent_energy,
-    read_sample_vioscreen_dietary_score, read_sample_vioscreen_supplements,
-    read_sample_vioscreen_food_components,
-    read_sample_vioscreen_eating_patterns,
-    read_sample_vioscreen_mpeds, read_sample_vioscreen_food_consumption,
+    read_vioscreen_session, read_vioscreen_percent_energy,
+    read_vioscreen_dietary_score, read_vioscreen_supplements,
+    read_vioscreen_food_components,
+    read_vioscreen_eating_patterns,
+    read_vioscreen_mpeds, read_vioscreen_food_consumption,
     get_vioscreen_dietary_scores_by_component,
     get_vioscreen_dietary_scores_descriptions,
     get_vioscreen_food_components_by_code,
-    get_vioscreen_food_components_descriptions
+    get_vioscreen_food_components_descriptions,
+    get_vioscreen_sessions
 )
 
 from ._campaign import (
@@ -71,9 +74,12 @@ __all__ = [
     'read_source',
     'update_source',
     'delete_source',
+    'scrub_source',
     'read_sources',
-    'check_duplicate_source_name_email',
+    'check_duplicate_source_name',
     'create_human_source_from_consent',
+    'check_consent_signature',
+    'sign_consent_doc',
     'read_survey_template',
     'read_survey_templates',
     'read_answered_survey',
@@ -93,14 +99,14 @@ __all__ = [
     'verify_jwt',
     'get_preparations',
     'check_activation',
-    'read_sample_vioscreen_session',
-    'read_sample_vioscreen_percent_energy',
-    'read_sample_vioscreen_dietary_score',
-    'read_sample_vioscreen_supplements',
-    'read_sample_vioscreen_food_components',
-    'read_sample_vioscreen_eating_patterns',
-    'read_sample_vioscreen_mpeds',
-    'read_sample_vioscreen_food_consumption',
+    'read_vioscreen_session',
+    'read_vioscreen_percent_energy',
+    'read_vioscreen_dietary_score',
+    'read_vioscreen_supplements',
+    'read_vioscreen_food_components',
+    'read_vioscreen_eating_patterns',
+    'read_vioscreen_mpeds',
+    'read_vioscreen_food_consumption',
     'get_vioscreen_dietary_scores_by_component',
     'get_vioscreen_dietary_scores_descriptions',
     'get_vioscreen_food_components_by_code',
@@ -108,5 +114,6 @@ __all__ = [
     'get_campaign_information',
     'create_interested_user',
     'get_interested_user_address_update',
-    'put_interested_user_address_update'
+    'put_interested_user_address_update',
+    'get_vioscreen_sessions'
 ]
