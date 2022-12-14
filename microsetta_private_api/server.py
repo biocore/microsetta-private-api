@@ -62,6 +62,7 @@ def build_app():
 
     # Set default json encoder
     # Note: app.app is the actual Flask application instance, so any Flask
+
     # settings have to be set there.
     app.app.json_encoder = JsonifyDefaultEncoder
 

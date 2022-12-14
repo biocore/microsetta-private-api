@@ -1,17 +1,19 @@
 CREATE TABLE ag.delete_account_queue (
     id SERIAL PRIMARY KEY,
-    /* foreign key requirement was relaxed because this requirement will
-       cause regular delete_account() calls to fail if the account_id is
-       in the delete_account_queue. This will cause a cascade of errors
-       in unittesting that aren't useful.*/
-    account_id uuid UNIQUE NOT NULL, /* REFERENCES ag.account(id), */
+    account_id uuid UNIQUE NOT NULL REFERENCES ag.account(id),
     requested_on timestamptz default current_timestamp
 );  
 
 CREATE TABLE ag.account_removal_log (
     id SERIAL PRIMARY KEY,
-    account_id uuid NOT NULL, -- deleted account.ids can't be referenced here.
+    -- account_id is not referenced to ag.account(id) so that the account may
+    -- be deleted and the record of it kept afterward.
+    account_id uuid NOT NULL,
     admin_id uuid NOT NULL REFERENCES ag.account(id),
+    -- although a method exists to remove entries from this table, the
+    -- intention is to record the admin who accepted or denied the request
+    -- here. This means that an account_id may appear more than once if the
+    -- user makes multiple requests.
     disposition VARCHAR(8),
     requested_on timestamptz,
     reviewed_on timestamptz default current_timestamp

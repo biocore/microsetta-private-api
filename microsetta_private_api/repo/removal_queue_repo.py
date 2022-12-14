@@ -6,6 +6,14 @@ class RemovalQueueRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
 
+    def _check_account_is_admin(self, admin_email):
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT count(id) FROM account WHERE account_type = "
+                        "'admin' and email = %s", (admin_email,))
+            count = cur.fetchone()[0]
+
+            return False if count == 0 else True
+
     def check_request_remove_account(self, account_id):
         with self._transaction.cursor() as cur:
             cur.execute("SELECT count(id) FROM delete_account_queue WHERE "
@@ -38,6 +46,12 @@ class RemovalQueueRepo(BaseRepo):
     def update_queue(self, account_id, admin_email, disposition):
         if not self.check_request_remove_account(account_id):
             raise RepoException("Account is not in removal queue")
+
+        if not self._check_account_is_admin(admin_email):
+            raise RepoException("That is not an admin email address")
+
+        if disposition in [None, '']:
+            raise RepoException("Disposition cannot be None or empty string")
 
         with self._transaction.cursor() as cur:
             # preserve the time account removal was requested by the user.
