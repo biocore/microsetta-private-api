@@ -618,9 +618,13 @@ class ApiTests(TestCase):
         # references to dummy admins need to be removed from
         # ag.account_removal_log before delete_dummy_accts() will be
         # successful.
+        ids = (ACCT_ID_1, ACCT_ID_2, ACCT_ID_3)
         with Transaction() as t:
             cur = t.cursor()
-            cur.execute("delete from ag.account_removal_log")
+            cur.execute("DELETE FROM ag.account_removal_log WHERE account_id"
+                        " IN %s", (ids,))
+            cur.execute("DELETE FROM ag.account_removal_log WHERE admin_id IN"
+                        " %s", (ids,))
             t.commit()
 
         delete_dummy_accts()

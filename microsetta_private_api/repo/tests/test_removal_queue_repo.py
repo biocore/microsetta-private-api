@@ -62,10 +62,13 @@ class RemovalQueueTests(unittest.TestCase):
             t.commit()
 
     def tearDown(self):
+        ids = (RemovalQueueTests.ACC_ID, RemovalQueueTests.ADM_ID)
         with Transaction() as t:
             cur = t.cursor()
-            cur.execute("DELETE FROM ag.delete_account_queue")
-            cur.execute("DELETE FROM ag.account_removal_log")
+            cur.execute("DELETE FROM ag.delete_account_queue WHERE account_id"
+                        " in %s", (ids,))
+            cur.execute("DELETE FROM ag.account_removal_log WHERE account_id"
+                        " in %s", (ids,))
             t.commit()
 
         with Transaction() as t:
