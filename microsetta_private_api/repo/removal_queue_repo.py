@@ -50,8 +50,9 @@ class RemovalQueueRepo(BaseRepo):
         if not self._check_account_is_admin(admin_email):
             raise RepoException("That is not an admin email address")
 
-        if disposition in [None, '']:
-            raise RepoException("Disposition cannot be None or empty string")
+        if disposition not in ['ignored', 'deleted']:
+            raise RepoException("Disposition must be either 'ignored' or "
+                                "'deleted'")
 
         with self._transaction.cursor() as cur:
             # preserve the time account removal was requested by the user.
@@ -60,19 +61,26 @@ class RemovalQueueRepo(BaseRepo):
             requested_on = cur.fetchone()[0]
 
             # get the account id of the admin that authorized this account
-            # to be deleted.
+            # to be deleted or ignored.
             cur.execute("SELECT id FROM account WHERE email = %s",
                         (admin_email,))
             admin_id = cur.fetchone()[0]
 
-            # add an entry to the log detailing who deleted the account,
-            # why, and when.
+            # add an entry to the log detailing who reviewed the account
+            # and when.
             cur.execute("INSERT INTO account_removal_log (account_id, "
                         "admin_id, disposition, requested_on) VALUES (%s,"
                         " %s, %s, %s)", (account_id, admin_id, disposition,
                                          requested_on))
 
-            # delete the entry from queue. account_delete() will fail
-            # w/out this.
+            # delete the entry from queue. Note that reviewed entries are
+            # deleted from the queue whether or not they were approved
+            # (deleted) or not (ignored).
+
+            # For clarity:
+            # allow_removal_request() will call this method and then call
+            # delete_account() immediately after.
+            # ignore_removal_request() will call this method and do nothing
+            # after.
             cur.execute("DELETE FROM delete_account_queue WHERE account_id"
                         " = %s", (account_id,))

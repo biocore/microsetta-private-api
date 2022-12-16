@@ -186,7 +186,7 @@ class RemovalQueueTests(unittest.TestCase):
             # update_queue should migrate the relevant information to the
             # ag.account_removal_log table and delete the entry from the
             # queue table.
-            rqr.update_queue(self.acc.id, self.adm.email, 'free txt')
+            rqr.update_queue(self.acc.id, self.adm.email, 'deleted')
 
             # confirm that the account id is no longer in the queue table.
             self.assertFalse(rqr.check_request_remove_account(self.acc.id))
@@ -206,7 +206,7 @@ class RemovalQueueTests(unittest.TestCase):
                     # note this loop should only execute once.
                     self.assertEqual(account_id, self.acc.id)
                     self.assertEqual(admin_id, self.adm.id)
-                    self.assertEqual(disposition, 'free txt')
+                    self.assertEqual(disposition, 'deleted')
                     now = datetime.datetime.now().timestamp()
                     # the requested_on time should be not far in the past.
                     # assume it is not NULL and is less than a minute ago.
@@ -219,7 +219,7 @@ class RemovalQueueTests(unittest.TestCase):
             rqr = RemovalQueueRepo(t)
 
             with self.assertRaises(InvalidTextRepresentation):
-                rqr.update_queue('XXXX', self.adm.email, 'free text')
+                rqr.update_queue('XXXX', self.adm.email, 'ignored')
 
         with Transaction() as t:
             rqr = RemovalQueueRepo(t)
@@ -230,7 +230,7 @@ class RemovalQueueTests(unittest.TestCase):
             # ensure that an Error is raised when an invalid admin
             # email address is passed.
             with self.assertRaises(RepoException):
-                rqr.update_queue(self.acc.id, 'XXXX', 'free text')
+                rqr.update_queue(self.acc.id, 'XXXX', 'ignored')
 
             # ensure that an Error is raised when disposition is None or
             # emptry string.
