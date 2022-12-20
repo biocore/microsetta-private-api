@@ -1173,7 +1173,7 @@ class AdminRepo(BaseRepo):
             template_id, status, timestamp = survey_answers_repo.\
                 survey_template_id_and_status(answer_id, True)
             answer_to_template_map[answer_id] = (
-                str(template_id),
+                template_id,
                 status,
                 timestamp
             )
@@ -1186,7 +1186,7 @@ class AdminRepo(BaseRepo):
         # appropriate instance of each template, relative to the sample's
         # collection time
         for answer_id in answer_ids:
-            s_t_id = answer_to_template_map[answer_id][0]
+            s_t_id = str(answer_to_template_map[answer_id][0])
             if s_t_id in best_ts:
                 cur_time_diff = abs(
                     (answer_to_template_map[best_ts[s_t_id]][2] -
@@ -1214,7 +1214,7 @@ class AdminRepo(BaseRepo):
             answers = []
             for answer_id in answer_ids:
                 if answer_to_template_map[answer_id][0] ==\
-                        str(survey_template_id):
+                        survey_template_id:
                     answers.append(answer_id)
 
             if len(answers) == 0:
