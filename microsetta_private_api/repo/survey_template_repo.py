@@ -1160,7 +1160,7 @@ class SurveyTemplateRepo(BaseRepo):
 
         Parameters
         ----------
-        survey_template_id : int
+        survey_template_id : int or str
             The id for which we're generating a survey template
         return_tuple : bool
             If set to True, each question's value is a tuple, rather than just
@@ -1174,6 +1174,10 @@ class SurveyTemplateRepo(BaseRepo):
             If return_tuple is True, the form is
                 {question_id: (question_response, None)}
         """
+        # various parts of the code base will push either int or str in
+        # for survey_template_id, so we cast to int here
+        survey_template_id = int(survey_template_id)
+
         if survey_template_id in self.SURVEY_INFO:
             if survey_template_id in [self.VIOSCREEN_ID,
                                       self.MYFOODREPO_ID,
