@@ -1174,11 +1174,11 @@ class SurveyTemplateRepo(BaseRepo):
             If return_tuple is True, the form is
                 {question_id: (question_response, None)}
         """
-        if int(survey_template_id) in self.SURVEY_INFO:
-            if int(survey_template_id) in [self.VIOSCREEN_ID,
-                                           self.MYFOODREPO_ID,
-                                           self.POLYPHENOL_FFQ_ID,
-                                           self.SPAIN_FFQ_ID]:
+        if survey_template_id in self.SURVEY_INFO:
+            if survey_template_id in [self.VIOSCREEN_ID,
+                                      self.MYFOODREPO_ID,
+                                      self.POLYPHENOL_FFQ_ID,
+                                      self.SPAIN_FFQ_ID]:
                 raise ValueError("survey_template_id must be for a local "
                                  "survey")
         else:
