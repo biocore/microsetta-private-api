@@ -1201,12 +1201,19 @@ class AdminRepo(BaseRepo):
             else:
                 best_ts[s_t_id] = answer_id
 
+        new_answer_to_template_map = {}
+        for s_id in best_ts.values():
+            new_answer_to_template_map[s_id] = answer_to_template_map[s_id]
+
+        answer_to_template_map = new_answer_to_template_map
+        answer_ids = answer_to_template_map.keys()
+
         # if a survey template is specified, filter the returned surveys
         if survey_template_id is not None:
             # TODO: This schema is so awkward for this type of query...
             answers = []
             for answer_id in answer_ids:
-                if answer_to_template_map[answer_id][0] == survey_template_id:
+                if answer_to_template_map[answer_id][0] == str(survey_template_id):
                     answers.append(answer_id)
 
             if len(answers) == 0:
