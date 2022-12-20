@@ -25,90 +25,44 @@ from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 
 
 class SurveyAnswersRepo(BaseRepo):
+    def survey_template_id_and_status(self, survey_answers_id, ts=False):
+        """ Retrieve a survey_template_id, vioscreen status, and optional
+            timestamp for a given survey_id
 
-    def survey_template_id_and_status(self, survey_answers_id):
-        # TODO FIXME HACK:  There has GOT TO BE an easier way!
-        with self._transaction.cursor() as cur:
-            cur.execute("SELECT survey_id, survey_question_id "
-                        "FROM survey_answers "
-                        "WHERE survey_id=%s "
-                        "LIMIT 1",
-                        (survey_answers_id,))
-            rows = cur.fetchall()
+        Parameters
+        ----------
+        survey_answers_id : str
+            ID of the survey record in ag_login_surveys
+        ts : bool, optional
+            Return timestamps
 
-            cur.execute("SELECT survey_id, survey_question_id "
-                        "FROM survey_answers_other "
-                        "WHERE survey_id=%s "
-                        "LIMIT 1",
-                        (survey_answers_id,))
-            rows += cur.fetchall()
-
-            if len(rows) == 0:
-                # see if it's vioscreen
-                vioscreen_repo = VioscreenRepo(self._transaction)
-                status = vioscreen_repo._get_vioscreen_status(
-                    survey_answers_id)
-                if status is not None:
-                    return SurveyTemplateRepo.VIOSCREEN_ID, status
-
-                # see if it's the Polyphenol FFQ
-                try:
-                    uuid.UUID(survey_answers_id)
-                    cur.execute("""SELECT EXISTS (
-                                   SELECT polyphenol_ffq_id
-                                   FROM ag.polyphenol_ffq_registry
-                                   WHERE polyphenol_ffq_id=%s)""",
-                                (survey_answers_id, ))
-                    if cur.fetchone()[0] is True:
-                        return SurveyTemplateRepo.POLYPHENOL_FFQ_ID, None
-                except ValueError:
-                    # Note: we don't care about the error, just means it's not
-                    # the Polyphenol FFQ
-                    pass
-
-                # see if it's the Spain FFQ
-                try:
-                    uuid.UUID(survey_answers_id)
-                    cur.execute("""SELECT EXISTS (
-                                   SELECT spain_ffq_id
-                                   FROM ag.spain_ffq_registry
-                                   WHERE spain_ffq_id=%s)""",
-                                (survey_answers_id, ))
-                    if cur.fetchone()[0] is True:
-                        return SurveyTemplateRepo.SPAIN_FFQ_ID, None
-                except ValueError:
-                    # Note: we don't care about the error, just means it's not
-                    # the Spain FFQ
-                    pass
-
-                # see if it's myfoodrepo
-                cur.execute("""SELECT EXISTS (
-                                   SELECT myfoodrepo_id
-                                   FROM myfoodrepo_registry
-                                   WHERE myfoodrepo_id=%s)""",
-                            (survey_answers_id, ))
-                if cur.fetchone()[0] is True:
-                    return SurveyTemplateRepo.MYFOODREPO_ID, None
+        Returns
+        -------
+        tuple of (int, int, datetime)
+            A tuple of the survey_template_id, vioscreen_status, and timestamp
+        """
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT survey_template_id, vioscreen_status, creation_time "
+                "FROM ag.ag_login_surveys "
+                "WHERE survey_id = %s",
+                (survey_answers_id, )
+            )
+            if cur.rowcount == 0:
+                # NB: I'm preserving the old behavior of _not_ throwing a
+                # RepoException here as it would lock users out of the
+                # participant interface.
+                if ts:
+                    return None, None, None
                 else:
-                    # not vioscreen and not myfoodrepo?
-
                     return None, None
-                    # TODO: Maybe this should throw an exception, but doing so
-                    #  locks the end user out of the minimal implementation
-                    #  if they submit an empty survey response.
-                    # raise RepoException("No answers in survey: %s" %
-                    #                     survey_answers_id)
-
-            arbitrary_question_id = rows[0][1]
-            cur.execute("SELECT surveys.survey_id FROM "
-                        "group_questions "
-                        "LEFT JOIN surveys USING (survey_group) "
-                        "WHERE survey_question_id = %s and retired is false",
-                        (arbitrary_question_id,))
-
-            survey_template_id = cur.fetchone()[0]
-            # Can define statuses for our internal surveys later if we want
-            return survey_template_id, None
+            else:
+                row = cur.fetchone()
+                if ts:
+                    return row['survey_template_id'], row['vioscreen_status'],\
+                           row['creation_time']
+                else:
+                    return row['survey_template_id'], row['vioscreen_status']
 
     def list_answered_surveys(self, account_id, source_id):
         with self._transaction.cursor() as cur:

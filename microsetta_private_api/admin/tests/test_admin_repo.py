@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta, timezone
 import dateutil.parser
 import psycopg2
 import psycopg2.extras
+from dateutil.relativedelta import relativedelta
 
 import microsetta_private_api.model.project as p
 
@@ -18,6 +19,10 @@ from microsetta_private_api.repo.admin_repo import AdminRepo, \
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.admin.admin_impl import validate_admin_access
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.repo.sample_repo import SampleRepo
+from microsetta_private_api.model.source import Source, HumanInfo
 
 STANDARD_ACCT_ID = "12345678-bbbb-cccc-dddd-eeeeffffffff"
 ADMIN_ACCT_ID = "12345678-1234-1234-1234-123412341234"
@@ -809,7 +814,7 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
 
-            BARCODE = '000043062'
+            BARCODE = '000004216'
 
             with self.assertRaises(NotFound):
                 admin_repo.get_survey_metadata("NOTABARCODE")
@@ -837,6 +842,104 @@ class AdminRepoTests(AdminTests):
                     break
 
             self.assertDictEqual(meta['survey_answers'][0], survey)
+
+    def test_get_survey_multiple_instances(self):
+        # this test verifies that when a user has taken the same survey
+        # multiple times and claims a sample, the closest instance of each
+        # survey template to the collection timestamp will be used.
+        with Transaction() as t:
+            cur = t.cursor()
+
+            ar = AdminRepo(t)
+            sar = SurveyAnswersRepo(t)
+            sr = SampleRepo(t)
+
+            # the expedient path to test this is to use a stable sample and
+            # add two instances of survey 10 to it
+            barcode = '000004216'
+            ids = ar._get_ids_relevant_to_barcode(barcode)
+            account_id = ids.get('account_id')
+            source_id = ids.get('source_id')
+            sample_id = ids.get('sample_id')
+            sample = sr._get_sample_by_id(sample_id)
+
+            # we're going to submit one instance of survey 10, then change
+            # the timestamp to be one month before the sample date
+            survey_10_1 = self._get_survey_10_model("January")
+            survey_id_1 = sar.submit_answered_survey(
+                account_id,
+                source_id,
+                'en_US',
+                10,
+                survey_10_1
+            )
+            sar.associate_answered_survey_with_sample(
+                account_id,
+                source_id,
+                sample_id,
+                survey_id_1
+            )
+            new_ts = sample.datetime_collected + relativedelta(months=-1)
+            cur.execute(
+                "UPDATE ag.ag_login_surveys "
+                "SET creation_time = %s "
+                "WHERE survey_id = %s",
+                (new_ts, survey_id_1)
+            )
+
+            # we're going to submit another instance of survey 10, then change
+            # the timestamp to be two months before the sample date
+            survey_10_2 = self._get_survey_10_model("March")
+            survey_id_2 = sar.submit_answered_survey(
+                account_id,
+                source_id,
+                'en_US',
+                10,
+                survey_10_2
+            )
+            sar.associate_answered_survey_with_sample(
+                account_id,
+                source_id,
+                sample_id,
+                survey_id_2
+            )
+            new_ts = sample.datetime_collected + relativedelta(months=-2)
+            cur.execute(
+                "UPDATE ag.ag_login_surveys "
+                "SET creation_time = %s "
+                "WHERE survey_id = %s",
+                (new_ts, survey_id_2)
+            )
+
+            # grab all of the metadata for the barcode, then filter down to
+            # the record for survey_template_id == 10
+            all_meta = ar.get_survey_metadata(barcode)
+            for survey in all_meta['survey_answers']:
+                if survey['template'] == 10:
+                    break
+
+            birth_month_response = survey['response']['111']
+
+            # since we set the survey response with a birth month of January
+            # temporally closer to the sample collection date, we should
+            # observe that in the metadata
+            self.assertEqual(birth_month_response, ["BIRTH_MONTH", "January"])
+
+    def _get_survey_10_model(self, month):
+        return {
+            '22': 'Unspecified',
+            '108': 'Unspecified',
+            '109': 'Unspecified',
+            '110': 'Unspecified',
+            '111': month,
+            '112': 'Unspecified',
+            '113': 'Unspecified',
+            '115': 'Unspecified',
+            '148': 'Unspecified',
+            '492': 'Unspecified',
+            '493': 'Unspecified',
+            '502': 'Unspecified'
+        }
 
     def _set_up_and_query_projects(self, t, include_stats, is_active_val):
         updated_dict = self._FULL_PROJECT_DICT.copy()

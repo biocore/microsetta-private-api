@@ -5,6 +5,7 @@ import datetime
 import pandas as pd
 import psycopg2.extras
 import json
+import pytz
 
 from psycopg2 import sql
 
@@ -1164,56 +1165,69 @@ class AdminRepo(BaseRepo):
 
         host_subject_id = source_repo.get_host_subject_id(source)
 
-        survey_ans_repo = SurveyAnswersRepo(self._transaction)
+        survey_answers_repo = SurveyAnswersRepo(self._transaction)
+        answer_ids = survey_answers_repo.list_answered_surveys_by_sample(
+            account_id, source_id, sample_id)
 
-        a_ids = survey_ans_repo.list_answered_surveys_by_sample(
-                account_id, source_id, sample_id)
+        answer_to_template_map = {}
+        for answer_id in answer_ids:
+            template_id, status, timestamp = survey_answers_repo.\
+                survey_template_id_and_status(answer_id, True)
+            answer_to_template_map[answer_id] = (template_id, status, timestamp)
 
-        st_repo = SurveyTemplateRepo(self._transaction)
+        pst = pytz.timezone('US/Pacific')
+        tz_aware_sample_ts = pst.localize(sample.datetime_collected)
 
-        # template_ids will be a list of survey_id, template_id tuples
-        # e.g.: ('0002b7371e938751', 1).
-        template_ids = st_repo.get_template_ids_from_survey_ids(a_ids)
+        best_ts = {}
+        # Since users can re-take surveys, we need to find the most temporally
+        # appropriate instance of each template, relative to the sample's
+        # collection time
+        for answer_id in answer_ids:
+            s_t_id = str(answer_to_template_map[answer_id][0])
+            if s_t_id in best_ts:
+                cur_time_diff = abs(
+                    (answer_to_template_map[best_ts[s_t_id]][2] -
+                     tz_aware_sample_ts).total_seconds()
+                )
+                new_time_diff = abs(
+                    (answer_to_template_map[answer_id][2] -
+                     tz_aware_sample_ts).total_seconds()
+                )
+                if new_time_diff < cur_time_diff:
+                    best_ts[s_t_id] = answer_id
+            else:
+                best_ts[s_t_id] = answer_id
 
+        # if a survey template is specified, filter the returned surveys
         if survey_template_id is not None:
-            # extract just the template_ids for this check.
-            if survey_template_id not in [x[1] for x in template_ids]:
+            # TODO: This schema is so awkward for this type of query...
+            answers = []
+            for answer_id in answer_ids:
+                if answer_to_template_map[answer_id][0] == survey_template_id:
+                    answers.append(answer_id)
+
+            if len(answers) == 0:
                 raise NotFound("This barcode is not associated with any "
                                "surveys matching this template id")
+            answer_ids = answers
 
-            # since a user can now update/retake a survey, it's possible for
-            # a barcode to be associated with multiple survey_ids with the
-            # same survey_template_id. Hence, this is no longer an Error.
-
-            # filter out survey_id/survey_template_id pairs that aren't the
-            # optional survey_template_id.
-            template_ids = [x for x in template_ids
-                            if x[1] == survey_template_id]
-
-        metadata_map = survey_ans_repo.build_metadata_map()
-
-        # we now just need a set of template_ids
-        template_ids = list(set([x[1] for x in template_ids]))
+        metadata_map = survey_answers_repo.build_metadata_map()
 
         all_survey_answers = []
+        for answer_id in answer_ids:
+            answer_model = survey_answers_repo.get_answered_survey(
+                account_id,
+                source_id,
+                answer_id,
+                "en_US"
+            )
 
-        for template_id in template_ids:
-            # note that if a barcode has a survey of type 1 and type 10, both
-            # will appear in these results. However, both will contain the
-            # most recent responses for individual questions, no matter which
-            # survey they came from.
-            if template_id not in st_repo.local_surveys():
-                # if answers are requested for a vioscreen survey
+            if answer_model is None:
+                # if answers are requested for a remote survey
                 # the answers model will comeback empty so let's
-                # gracefully handle this. Also, get_answered_survey()
-                # will raise an Error.
+                # gracefully handle this
                 continue
 
-            # also note that if a barcode has multiple surveys of say type 10,
-            # only one result will be returned, and it will contain the latest
-            # filled answers across all of them.
-            answer_model = st_repo.migrate_responses_by_barcode(sample_barcode,
-                                                                template_id)
             survey_answers = {}
             for k in answer_model:
                 new_k = metadata_map[int(k)]
@@ -1221,9 +1235,8 @@ class AdminRepo(BaseRepo):
 
             all_survey_answers.append(
                 {
-                    "template": template_id,
-                    # all survey statuses currently return None
-                    "survey_status": None,
+                    "template": answer_to_template_map[answer_id][0],
+                    "survey_status": answer_to_template_map[answer_id][1],
                     "response": survey_answers
                 })
 

@@ -1063,142 +1063,6 @@ class SurveyTemplateRepo(BaseRepo):
 
         return False
 
-    def _get_sample_sub_timestamp(self, barcode):
-        with self._transaction.cursor() as cur:
-            # retrieve the timestamp for the barcode being asked for. Note that
-            # there will always be at least one result returned, and the
-            # timestamp will be the same regardless of the number of results
-            # returned. Hence, using fetchone() should be appropriate.
-
-            # Note ag.ag_kit_barcodes.sample_time does not include a timezone.
-            # for compatibility with other timestamps, we are assigning the
-            # San Diego timezone of 'America/Los_Angeles' to the result.
-            cur.execute("""SELECT a.barcode,
-                                  c.sample_date + c.sample_time
-                                  AT TIME zone 'America/Los_Angeles' AS ts
-                           FROM   ag.source_barcodes_surveys a
-                                  JOIN ag.ag_kit_barcodes c
-                                    ON a.barcode = c.barcode
-                           WHERE  a.barcode = %s""", (barcode,))
-
-            return cur.fetchone()[1]
-
-    def migrate_responses_by_barcode(self, barcode, survey_template_id):
-        '''
-        Get all survey responses associated with a barcode and a
-        survey_template_id and migrate them. This will generate a result set
-        based on all responses across legacy and current surveys. Responses
-        closest to an existing survey will be used. If a survey could not be
-        found for the template_id, Responses closest to the creation timestamp
-        of the source will be used.
-        :param barcode: a barcode to search by
-        :param survey_template_id: The id of the filled survey to return.
-        :return: A filled survey_template dict
-        '''
-        sql = """SELECT *
-                 FROM  (SELECT a.survey_question_id,
-                               a.response,
-                               e.creation_time,
-                               f.survey_response_type,
-                               h.barcode
-                        FROM   ag.survey_answers a
-                               JOIN ag.group_questions c
-                                 ON a.survey_question_id = c.survey_question_id
-                               JOIN ag.surveys d
-                                 ON c.survey_group = d.survey_group
-                               JOIN ag.ag_login_surveys e
-                                 ON a.survey_id = e.survey_id
-                               JOIN ag.survey_question_response_type f
-                                 ON a.survey_question_id = f.survey_question_id
-                               JOIN ag.survey_question g
-                                 ON a.survey_question_id = g.survey_question_id
-                               JOIN ag.source_barcodes_surveys h
-                                 ON a.survey_id = h.survey_id
-                        WHERE a.response != 'Unspecified'
-                               AND h.barcode = %s
-                               AND d.survey_id = %s
-                               AND g.retired = false
-                        UNION
-                        SELECT a.survey_question_id,
-                               a.response,
-                               e.creation_time,
-                               f.survey_response_type,
-                               h.barcode
-                        FROM   ag.survey_answers_other a
-                               JOIN ag.group_questions c
-                                 ON a.survey_question_id = c.survey_question_id
-                               JOIN ag.surveys d
-                                 ON c.survey_group = d.survey_group
-                               JOIN ag.ag_login_surveys e
-                                 ON a.survey_id = e.survey_id
-                               JOIN ag.survey_question_response_type f
-                                 ON a.survey_question_id = f.survey_question_id
-                               JOIN ag.survey_question g
-                                 ON a.survey_question_id = g.survey_question_id
-                               JOIN ag.source_barcodes_surveys h
-                                 ON a.survey_id = h.survey_id
-                        WHERE  a.response != 'Unspecified'
-                                 AND h.barcode = %s
-                                 AND d.survey_id = %s
-                                 AND g.retired = false) t
-                 ORDER  BY creation_time ASC,
-                           survey_question_id ASC"""
-
-        with self._transaction.cursor() as cur:
-            cur.execute(sql, (barcode, survey_template_id,
-                              barcode, survey_template_id,))
-
-            rows = cur.fetchall()
-
-            # create an empty template to fill-in.
-            results = self._generate_empty_survey(survey_template_id)
-
-            # the responses returned for this query should prioritize the
-            # responses closest to when the source submitted their sample.
-            target_ts = self._get_sample_sub_timestamp(barcode)
-
-            # find the timestamp for the response (single, text, string) or
-            # set of responses (multiple) that has the timestamp closest to
-            # the target timestamp target_ts.
-            best_ts = {}
-            for row in rows:
-                qid = str(row[0])
-                if qid in best_ts:
-                    if row[2] - target_ts < best_ts[qid] - target_ts:
-                        best_ts[qid] = row[2]
-                else:
-                    best_ts[qid] = row[2]
-
-            non_empty_keys = []
-            for (question_id, response, timestamp, response_type, _) in rows:
-                question_id = str(question_id)
-                if best_ts[question_id] != timestamp:
-                    # for every row, if the single or multiple does not have
-                    # the closest timestamp for that question, simply ignore
-                    # the row.
-                    continue
-
-                if response_type == 'MULTIPLE':
-                    results[question_id].append(response)
-                    non_empty_keys.append(question_id)
-                else:
-                    # SINGLE, STRING, and TEXT types
-                    results[question_id] = response
-
-            # every MULTIPLE type question requires at least one value
-            # 'Unspecified' to be present, if the question went unfilled.
-            # If the user did answer this question, we want to remove
-            # the 'Unspecified' initialization performed by
-            # _generate_empty_survey().
-
-            # set(non_empty_keys) is used because a question_id N could be
-            # processed multiple times and remove() will raise an Error if
-            # 'Unspecified' is not present.
-            for question_id in set(non_empty_keys):
-                results[question_id].remove("Unspecified")
-
-            return results
-
     def migrate_responses(self, source_id, survey_template_id):
         '''
         Get all survey responses associated with a source and survey_template
@@ -1290,12 +1154,26 @@ class SurveyTemplateRepo(BaseRepo):
             # results.
             return results, len(rows) / total_question_count
 
-    def _generate_empty_survey(self, survey_template_id):
-        '''
-        Generate a set of empty templates for all non-retired surveys.
-        Fill in the responses with 'Unspecified' and similar as needed.
-        :return: A list of empty templates for all non-retired surveys.
-        '''
+    def _generate_empty_survey(self, survey_template_id, return_tuple=False):
+        """ Generate an empty survey template for a given template ID and
+            fill in the responses with 'Unspecified' as needed.
+
+        Parameters
+        ----------
+        survey_template_id : int
+            The id for which we're generating a survey template
+        return_tuple : bool
+            If set to True, each question's value is a tuple, rather than just
+            a an array/string
+
+        Returns
+        -------
+        dict of questions
+            If return_tuple is False, the form is
+                {question_id: question_response}
+            If return_tuple is True, the form is
+                {question_id: (question_response, None)}
+        """
         if int(survey_template_id) in self.SURVEY_INFO:
             if int(survey_template_id) in [self.VIOSCREEN_ID,
                                            self.MYFOODREPO_ID,
@@ -1332,9 +1210,15 @@ class SurveyTemplateRepo(BaseRepo):
                 response_type = row[1]
 
                 if response_type == 'MULTIPLE':
-                    results[question_id] = ["Unspecified"]
+                    if return_tuple:
+                        results[question_id] = (["Unspecified"], None)
+                    else:
+                        results[question_id] = ["Unspecified"]
                 else:
-                    results[question_id] = "Unspecified"
+                    if return_tuple:
+                        results[question_id] = ("Unspecified", None)
+                    else:
+                        results[question_id] = "Unspecified"
 
             return results
 

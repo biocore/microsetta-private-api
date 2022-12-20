@@ -651,64 +651,6 @@ class SurveyTemplateTests(unittest.TestCase):
             # own commit(), this was the way to keep it better managed.
             self._clean_up(account_id, human_source.id, survey_ids)
 
-    def test_migrate_responses_by_barcode(self):
-        with Transaction() as t:
-            with t.cursor() as cur:
-                cur.execute("SELECT ag_login_id, source_id FROM "
-                            "ag.ag_login_surveys WHERE survey_id = "
-                            "'6d16832b84358c93'")
-
-                # get the account and source id associated w/barcode 000001410
-                # and survey 6d16832b84358c93. We'll need them later.
-                row = cur.fetchone()
-                account_id = row[0]
-                source_id = row[1]
-
-            rpo = SurveyTemplateRepo(t)
-
-            # use data from an old template 1 survey and return a subset of it
-            # in a generated template 10.
-            obs = rpo.migrate_responses_by_barcode('000001410', 10)
-            self.assertDictEqual(obs, self.filled_survey_10a)
-
-            # use an invalid template id
-            with self.assertRaises(ValueError):
-                rpo.migrate_responses('d8592c74-8148-2135-e040-8a80115d6401',
-                                      -1)
-
-            # request a test from a valid source, but contributes no prior
-            # values to the result.
-            obs = rpo.migrate_responses_by_barcode('000001410', 19)
-            self.assertDictEqual(obs, self.filled_survey_19a)
-
-            # the following statements create a new source and submits a
-            # survey. It then submits a survey to the existing source
-            # associated with barcode '000001410'. Neither survey should
-            # affect the results for the final query.
-
-            new_source_id = str(uuid.uuid4())
-
-            human_source = self._create_source(account_id,
-                                               source_id=new_source_id)
-            survey_ids = []
-            survey_ids.append(
-                self._submit_test_survey(account_id, human_source.id,
-                                         'February'))
-            survey_ids.append(
-                self._submit_test_survey(account_id, source_id,
-                                         'March'))
-
-            result = rpo.migrate_responses_by_barcode('000001410', 10)
-
-            self.assertNotEqual(result['111'], 'February')
-            self.assertNotEqual(result['111'], 'March')
-            self.assertEqual(result['111'], 'June')
-
-            # clean up. These methods were not put into setUp and tearDown
-            # as this is the only test that needs them. Each submit needs its
-            # own commit(), this was the way to keep it better managed.
-            self._clean_up(account_id, human_source.id, survey_ids)
-
     def test_get_template_ids_from_survey_ids(self):
         with Transaction() as t:
             sar = SurveyTemplateRepo(t)
