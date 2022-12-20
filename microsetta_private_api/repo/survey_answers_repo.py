@@ -21,7 +21,6 @@ import uuid
 #  we disambiguate all these functions to decide whether it includes that
 #  table, build out a SurveyAnswersRepo, or modify the schema so its not so
 #  insane???
-from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 
 
 class SurveyAnswersRepo(BaseRepo):

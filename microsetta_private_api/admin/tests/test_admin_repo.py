@@ -20,9 +20,7 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.admin.admin_impl import validate_admin_access
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
-from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
-from microsetta_private_api.model.source import Source, HumanInfo
 
 STANDARD_ACCT_ID = "12345678-bbbb-cccc-dddd-eeeeffffffff"
 ADMIN_ACCT_ID = "12345678-1234-1234-1234-123412341234"

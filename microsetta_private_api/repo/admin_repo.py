@@ -20,7 +20,6 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
-from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 
 
 # TODO: Refactor repeated elements in project-related sql queries?
@@ -1173,7 +1172,11 @@ class AdminRepo(BaseRepo):
         for answer_id in answer_ids:
             template_id, status, timestamp = survey_answers_repo.\
                 survey_template_id_and_status(answer_id, True)
-            answer_to_template_map[answer_id] = (template_id, status, timestamp)
+            answer_to_template_map[answer_id] = (
+                template_id,
+                status,
+                timestamp
+            )
 
         pst = pytz.timezone('US/Pacific')
         tz_aware_sample_ts = pst.localize(sample.datetime_collected)
