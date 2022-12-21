@@ -56,7 +56,9 @@ class MetadataUtilTests(unittest.TestCase):
                          9,
                          0,
                          0,
-                         tzinfo=datetime.timezone(datetime.timedelta(minutes=-420))
+                         tzinfo=datetime.timezone(
+                             datetime.timedelta(minutes=-420)
+                         )
                      ),
                      'response': {'1': ['DIET_TYPE', '[""]'],
                                   '2': ['MULTIVITAMIN', 'No'],
@@ -76,7 +78,9 @@ class MetadataUtilTests(unittest.TestCase):
                          9,
                          15,
                          0,
-                         tzinfo=datetime.timezone(datetime.timedelta(minutes=-420))
+                         tzinfo=datetime.timezone(
+                             datetime.timedelta(minutes=-420)
+                         )
                      ),
                      'response': {'275': ['abc', 'okay'],
                                   '276': ['def', 'No']}}]}
@@ -101,7 +105,9 @@ class MetadataUtilTests(unittest.TestCase):
                          9,
                          15,
                          0,
-                         tzinfo=datetime.timezone(datetime.timedelta(minutes=-420))
+                         tzinfo=datetime.timezone(
+                             datetime.timedelta(minutes=-420)
+                         )
                      ),
                      'response': {'1': ['DIET_TYPE', '["Vegan\nfoo"]'],
                                   '2': ['MULTIVITAMIN', 'Yes'],
