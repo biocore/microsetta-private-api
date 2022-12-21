@@ -20,8 +20,10 @@ HUMAN_SOURCE = Source('ffffffff-ffff-ffff-aaaa-aaaaaaaaaaaa',
                                 None, None, '18-plus'))
 
 SURVEY_ANSWERS = {
-    "3": "Never",  # non-free text
-    "116": "a free text field",
+    # Birth Month
+    "111": "February",
+    # Current ZIP code
+    "115": "a free text field"
 }
 
 
@@ -33,7 +35,7 @@ class SurveyAnswersTests(unittest.TestCase):
 
             sr.create_source(HUMAN_SOURCE)
             sar.submit_answered_survey(ACCOUNT_ID, HUMAN_SOURCE.id,
-                                       'en_US', 1, SURVEY_ANSWERS,
+                                       'en_US', 10, SURVEY_ANSWERS,
                                        SURVEY_ID)
             t.commit()
 
@@ -68,12 +70,13 @@ class SurveyAnswersTests(unittest.TestCase):
             sar = SurveyAnswersRepo(t)
             sar.scrub(HUMAN_SOURCE.account_id, HUMAN_SOURCE.id,
                       SURVEY_ID)
+
             obs = sar.get_answered_survey(HUMAN_SOURCE.account_id,
                                           HUMAN_SOURCE.id,
                                           SURVEY_ID,
                                           'en_US')
-            self.assertEqual(obs['3'], SURVEY_ANSWERS['3'])
-            self.assertNotEqual(obs['116'], SURVEY_ANSWERS['116'])
+            self.assertEqual(obs['111'], SURVEY_ANSWERS['111'])
+            self.assertNotEqual(obs['115'], SURVEY_ANSWERS['115'])
 
     def test_unlocalize_bug(self):
         with Transaction() as t:

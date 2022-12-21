@@ -10,6 +10,8 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenMPeds, VioscreenMPedsComponent,
     VioscreenFoodConsumption, VioscreenFoodConsumptionComponent,
     VioscreenComposite)
+
+
 from werkzeug.exceptions import NotFound
 
 
@@ -1598,15 +1600,19 @@ class VioscreenRepo(BaseRepo):
         cur_status = self.get_vioscreen_status(account_id,
                                                source_id,
                                                survey_id)
-
         # If there is no status, insert a row.
         if cur_status is None:
             with self._transaction.cursor() as cur:
                 cur.execute(
                     "INSERT INTO ag_login_surveys("
-                    "ag_login_id, survey_id, vioscreen_status, source_id) "
-                    "VALUES(%s, %s, %s, %s)",
-                    (account_id, survey_id, status, source_id)
+                    "ag_login_id, survey_id, vioscreen_status, source_id, "
+                    "survey_template_id) "
+                    "VALUES(%s, %s, %s, %s, %s)",
+                    (account_id, survey_id, status, source_id,
+                     # Use 10001 for now, as we cannot import
+                     # SurveyTemplateRepo as it would create a circular
+                     # dependency.
+                     10001)
                 )
         else:
             # Else, upsert a status.

@@ -28,6 +28,8 @@ from unittest import TestCase, skipIf
 from microsetta_private_api.LEGACY.locale_data import american_gut, british_gut
 import copy
 import microsetta_private_api.api
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
+
 
 ACCT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 NOT_ACCT_ID = "12341234-1234-1234-1234-123412341234"
@@ -395,7 +397,23 @@ class IntegrationTests(TestCase):
         # Survey status should not be in templates
         self.assertNotIn("survey_status", bobo_surveys[0])
         self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
-                             [1, 3, 4, 5, 6, 7, 10001, 10002, 10003, 10004])
+                             [1, 3, 4, 5, 6, 7,
+                              SurveyTemplateRepo.VIOSCREEN_ID,
+                              SurveyTemplateRepo.MYFOODREPO_ID,
+                              SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                              SurveyTemplateRepo.SPAIN_FFQ_ID,
+                              SurveyTemplateRepo.BASIC_INFO_ID,
+                              SurveyTemplateRepo.AT_HOME_ID,
+                              SurveyTemplateRepo.LIFESTYLE_ID,
+                              SurveyTemplateRepo.GUT_ID,
+                              SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                              SurveyTemplateRepo.HEALTH_DIAG_ID,
+                              SurveyTemplateRepo.ALLERGIES_ID,
+                              SurveyTemplateRepo.DIET_ID,
+                              SurveyTemplateRepo.DETAILED_DIET_ID,
+                              SurveyTemplateRepo.MIGRAINE_ID,
+                              SurveyTemplateRepo.SURFERS_ID,
+                              SurveyTemplateRepo.COVID19_ID])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
                              [2])
         self.assertListEqual([x["survey_template_id"] for x in env_surveys],
@@ -477,7 +495,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "survey_template_id": 10001,
+                    "survey_template_id": SurveyTemplateRepo.VIOSCREEN_ID,
                     "survey_text": {'key': completed_key.decode('utf-8')}
                 }),
             headers=MOCK_HEADERS
@@ -521,7 +539,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "survey_template_id": 10002,
+                    "survey_template_id": SurveyTemplateRepo.MYFOODREPO_ID,
                     "survey_text": {'key': 'stuff'}
                 }),
             headers=MOCK_HEADERS
@@ -594,7 +612,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "survey_template_id": 10003,
+                    "survey_template_id": SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                     "survey_text": {'key': 'stuff'}
                 }),
             headers=MOCK_HEADERS
@@ -628,7 +646,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    "survey_template_id": 10004,
+                    "survey_template_id": SurveyTemplateRepo.SPAIN_FFQ_ID,
                     "survey_text": {'key': 'stuff'}
                 }),
             headers=MOCK_HEADERS
@@ -663,7 +681,24 @@ class IntegrationTests(TestCase):
             chosen_survey = bobo_survey["survey_template_id"]
 
             # 10001, 10002, 10003, and 10004 are non-local surveys
-            if chosen_survey in (10001, 10002, 10003, 10004):
+            # surveys 1-7 are no longer present, and reformulated into 10-21.
+            if chosen_survey in (1, 2, 3, 4, 5, 6, 7,
+                                 SurveyTemplateRepo.VIOSCREEN_ID,
+                                 SurveyTemplateRepo.MYFOODREPO_ID,
+                                 SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                                 SurveyTemplateRepo.SPAIN_FFQ_ID,
+                                 SurveyTemplateRepo.BASIC_INFO_ID,
+                                 SurveyTemplateRepo.AT_HOME_ID,
+                                 SurveyTemplateRepo.LIFESTYLE_ID,
+                                 SurveyTemplateRepo.GUT_ID,
+                                 SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                                 SurveyTemplateRepo.HEALTH_DIAG_ID,
+                                 SurveyTemplateRepo.ALLERGIES_ID,
+                                 SurveyTemplateRepo.DIET_ID,
+                                 SurveyTemplateRepo.DETAILED_DIET_ID,
+                                 SurveyTemplateRepo.MIGRAINE_ID,
+                                 SurveyTemplateRepo.SURFERS_ID,
+                                 SurveyTemplateRepo.COVID19_ID):
                 continue
 
             resp = self.client.get(
@@ -1114,7 +1149,7 @@ class IntegrationTests(TestCase):
                              "Couldn't parse source_id from loc header")
 
         # Part 1: Submit a survey
-        chosen_survey = BOBO_FAVORITE_SURVEY_TEMPLATE
+        chosen_survey = SurveyTemplateRepo.BASIC_INFO_ID
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en_US' %
@@ -1174,7 +1209,7 @@ class IntegrationTests(TestCase):
         """
 
         # Part 1: Submit a survey
-        chosen_survey = BOBO_FAVORITE_SURVEY_TEMPLATE
+        chosen_survey = SurveyTemplateRepo.BASIC_INFO_ID
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en_US' %
@@ -1536,29 +1571,33 @@ class IntegrationTests(TestCase):
     def test_survey_localization(self):
         # Retrieve Survey Template!
         # Should fail for en_qq
+
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en_qq' %
-            (ACCT_ID, HUMAN_ID, BOBO_FAVORITE_SURVEY_TEMPLATE),
+            (ACCT_ID, HUMAN_ID, SurveyTemplateRepo.BASIC_INFO_ID),
             headers=MOCK_HEADERS
         )
+
         check_response(resp, 404)
 
         # Should work for en_US
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
-            '?language_tag=en_US' %
-            (ACCT_ID, HUMAN_ID, BOBO_FAVORITE_SURVEY_TEMPLATE),
+            '?language_tag=en_US' % (ACCT_ID, HUMAN_ID,
+                                     SurveyTemplateRepo.BASIC_INFO_ID),
             headers=MOCK_HEADERS
         )
+
         check_response(resp)
+
         form_us = json.loads(resp.data)
 
         # Should work for en_GB
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s'
             '?language_tag=en_GB' %
-            (ACCT_ID, HUMAN_ID, BOBO_FAVORITE_SURVEY_TEMPLATE),
+            (ACCT_ID, HUMAN_ID, SurveyTemplateRepo.BASIC_INFO_ID),
             headers=MOCK_HEADERS
         )
         check_response(resp)
@@ -1566,26 +1605,29 @@ class IntegrationTests(TestCase):
 
         form_us = form_us["survey_template_text"]
         form_gb = form_gb["survey_template_text"]
+
         # Responses should differ by locale
-        self.assertEqual(form_us['groups'][0]['fields'][0]['id'], '107',
-                         "Survey question 107 moved, update the test!")
-        self.assertEqual(form_us['groups'][0]['fields'][0]['label'], 'Gender:',
-                         "Survey question 107 should say 'Gender:' in en_US")
-        self.assertEqual(form_gb['groups'][0]['fields'][0]['id'], '107',
-                         "Survey question 107 moved, update the test!")
+        # Note in this revised test, the texts are the same, except that GB
+        # English currently appends a ':' to the end.
+        self.assertEqual(form_us['groups'][0]['fields'][0]['id'], '111',
+                         "Survey question 111 moved, update the test!")
+        self.assertEqual(form_us['groups'][0]['fields'][0]['label'],
+                         'Birth month',
+                         ("Survey question 111 should say 'Birth month' in"
+                          " en_US"))
+        self.assertEqual(form_gb['groups'][0]['fields'][0]['id'], '111',
+                         "Survey question 111 moved, update the test!")
         self.assertEqual(
             form_gb['groups'][0]['fields'][0]['label'],
-            'Gandalf:',
-            "Survey question 107 should say 'Gandalf:' (test setup for en_GB)")
-
-        self.assertIn('Male', form_us['groups'][0]['fields'][0]['values'],
-                      "One choice for 107 should be 'Male' in en_US")
-        self.assertIn('Wizard', form_gb['groups'][0]['fields'][0]['values'],
-                      "One choice for 107 should be 'Wizard' in en_GB"
-                      "(After test setup for en_GB)")
+            'Birth month:',
+            "Survey question 111 should say 'Birth month:' in en_GB")
+        self.assertIn('February', form_us['groups'][0]['fields'][0]['values'],
+                      "One choice for 111 should be 'February' in en_US")
+        self.assertIn('February', form_gb['groups'][0]['fields'][0]['values'],
+                      "One choice for 111 should be 'February' in en_GB")
 
         model_gb = fuzz_form(form_gb)
-        model_gb['107'] = 'Wizard'  # British for 'Male' per test setup.
+        model_gb['111'] = 'March'
 
         # Submit a survey response!
         # Should fail for en_qq
@@ -1595,7 +1637,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': BOBO_FAVORITE_SURVEY_TEMPLATE,
+                    'survey_template_id': SurveyTemplateRepo.BASIC_INFO_ID,
                     'survey_text': model_gb
                 }),
             headers=MOCK_HEADERS
@@ -1609,7 +1651,7 @@ class IntegrationTests(TestCase):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': BOBO_FAVORITE_SURVEY_TEMPLATE,
+                    'survey_template_id': SurveyTemplateRepo.BASIC_INFO_ID,
                     'survey_text': model_gb
                 }),
             headers=MOCK_HEADERS
@@ -1621,13 +1663,15 @@ class IntegrationTests(TestCase):
 
         # Also, posting an en_GB model as en_US should explode as Wizard is
         # invalid in american
+        model_gb['111'] = 'Wizard'
+
         resp = self.client.post(
             '/api/accounts/%s/sources/%s/surveys?language_tag=en_US'
             % (ACCT_ID, HUMAN_ID),
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': BOBO_FAVORITE_SURVEY_TEMPLATE,
+                    'survey_template_id': SurveyTemplateRepo.BASIC_INFO_ID,
                     'survey_text': model_gb
                 }),
             headers=MOCK_HEADERS
@@ -1636,15 +1680,15 @@ class IntegrationTests(TestCase):
 
         # Lastly, posting an answer that does translate but is wrong
         # for the question should also fail out.
-        # British for 'Large Mammal', an invalid choice for Gender
-        model_gb['107'] = 'Large Mammal'
+        # British for 'Large Mammal', an invalid choice for Birth Month
+        model_gb['111'] = 'Large Mammal'
         resp = self.client.post(
             '/api/accounts/%s/sources/%s/surveys?language_tag=en_GB'
             % (ACCT_ID, HUMAN_ID),
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': BOBO_FAVORITE_SURVEY_TEMPLATE,
+                    'survey_template_id': SurveyTemplateRepo.BASIC_INFO_ID,
                     'survey_text': model_gb
                 }),
             headers=MOCK_HEADERS
@@ -1657,11 +1701,11 @@ class IntegrationTests(TestCase):
             # in en_US and converted to either locale
             result = repo.get_answered_survey(ACCT_ID, HUMAN_ID,
                                               survey_id, 'en_US')
-            self.assertEqual(result['107'], 'Male',
+            self.assertEqual(result['111'], 'March',
                              "Couldn't read answer from db in en_US")
             result = repo.get_answered_survey(ACCT_ID, HUMAN_ID,
                                               survey_id, 'en_GB')
-            self.assertEqual(result['107'], 'Wizard',
+            self.assertEqual(result['111'], 'March',
                              "Couldn't read answer from db in en_GB")
 
             # Clean up after the new survey
