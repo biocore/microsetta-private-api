@@ -1248,6 +1248,7 @@ class AdminRepo(BaseRepo):
                 {
                     "template": answer_to_template_map[answer_id][0],
                     "survey_status": answer_to_template_map[answer_id][1],
+                    "survey_timestamp": answer_to_template_map[answer_id][2],
                     "response": survey_answers
                 })
 

@@ -12,6 +12,8 @@ import re
 import pandas as pd
 import numpy as np
 import json
+import pytz
+import datetime
 jsonify = json.dumps
 
 # the vioscreen survey currently cannot be fetched from the database
@@ -241,22 +243,14 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     multiselect_map = _construct_multiselect_map(survey_templates)
 
     for metadata in metadatas:
+        metadata['survey_answers'] = _find_best_answers(
+            metadata['survey_answers'],
+            metadata['sample'].datetime_collected
+        )
+
         # metadata is a dict representing a barcode's metadata.
         try:
-            # each as_series represents the aggregated shortname, value
-            # pairs for all filled templates returned. If for example there
-            # are two templates w/overlapping questions (1, 10), there will
-            # be duplicate (shortname, value) pairs in as_series.
             as_series = _to_pandas_series(metadata, multiselect_map)
-
-            idx = as_series.index
-
-            # duplicate indexes are safe to remove because the values will
-            # always be identical. This is because for a question N in
-            # templates 1 and 10, the code will return the most recent value
-            # for both templates, regardless of whether it came from a type 1
-            # survey or a type 10 survey.
-            as_series = as_series[~idx.duplicated(keep="first")]
         except RepoException as e:
             barcode = metadata['sample_barcode']
             errors.append({barcode: repr(e)})
@@ -301,6 +295,71 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     df.fillna(MISSING_VALUE, inplace=True)
 
     return errors, apply_transforms(df, HUMAN_TRANSFORMS)
+
+
+def _find_best_answers(survey_responses, sample_ts):
+    pst = pytz.timezone('US/Pacific')
+    sample_ts = datetime.datetime.strptime(sample_ts, "%Y-%m-%dT%H:%M:%S")
+    sample_ts = pst.localize(sample_ts)
+
+    # we need to keep a list of the closest temporal answers to compare as
+    # we iterate through the survey responses
+    best_ts = {}
+
+    # we also need to keep a list of what we're going to discard
+    answers_discard = {}
+    for survey in survey_responses:
+        for qid, answer in survey['response'].items():
+            if qid in best_ts:
+                # we already have a response for this question, so we need to
+                # compare the timestamps
+                cur_time_diff = abs(
+                    (best_ts[qid][1] - sample_ts).total_seconds()
+                )
+                new_time_diff = abs(
+                    (survey['survey_timestamp'] - sample_ts).total_seconds()
+                )
+
+                if new_time_diff < cur_time_diff:
+                    # found a closer temporal response for the question
+
+                    # first, mark the old "best" question for discard
+
+                    # if we're already discarding questions for that template
+                    # we just append this question id
+                    if best_ts[qid][0] in answers_discard:
+                        answers_discard[best_ts[qid][0]].append(qid)
+                    # otherwise, we start a new list
+                    else:
+                        answers_discard[best_ts[qid][0]] = [qid]
+
+                    # then set the new "best" question
+                    best_ts[qid] = (
+                        survey['template'],
+                        survey['survey_timestamp']
+                    )
+                else:
+                    # this isn't the best answer, so we need to discard it
+                    if survey['template'] in answers_discard:
+                        answers_discard[survey['template']].append(qid)
+                    else:
+                        answers_discard[survey['template']] = [qid]
+            else:
+                # we don't have a response for this question stored yet, so
+                # we mark it as our best available
+                best_ts[qid] = (
+                    survey['template'],
+                    survey['survey_timestamp']
+                )
+
+    cleaned_surveys = []
+    for survey in survey_responses:
+        if survey['template'] in answers_discard:
+            for qid in answers_discard[survey['template']]:
+                survey['response'].pop(qid, None)
+        cleaned_surveys.append(survey)
+
+    return cleaned_surveys
 
 
 def _construct_multiselect_map(survey_templates):

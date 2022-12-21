@@ -1,7 +1,8 @@
 import unittest
 import pandas as pd
 import pandas.testing as pdt
-from copy import copy
+import datetime
+from copy import copy, deepcopy
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.metadata_repo._constants import (
     HUMAN_SITE_INVARIANTS, UNSPECIFIED)
@@ -15,6 +16,7 @@ from microsetta_private_api.repo.metadata_repo._repo import (
     _fetch_survey_template,
     _fetch_observed_survey_templates,
     _construct_multiselect_map,
+    _find_best_answers,
     drop_private_columns)
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 
@@ -47,6 +49,15 @@ class MetadataUtilTests(unittest.TestCase):
                 }),
                 'survey_answers': [
                     {'template': 1,
+                     'survey_timestamp': datetime.datetime(
+                         2013,
+                         10,
+                         13,
+                         9,
+                         0,
+                         0,
+                         tzinfo=datetime.timezone(datetime.timedelta(minutes=-420))
+                     ),
                      'response': {'1': ['DIET_TYPE', '[""]'],
                                   '2': ['MULTIVITAMIN', 'No'],
                                   '3': ['PROBIOTIC_FREQUENCY', 'Unspecified'],
@@ -58,8 +69,17 @@ class MetadataUtilTests(unittest.TestCase):
                                   '9': ['ALLERGIC_TO', ['blahblah',
                                                         'stuff']]}},
                     {'template': 2,
-                     'response': {'1': ['abc', 'okay'],
-                                  '2': ['def', 'No']}}]}
+                     'survey_timestamp': datetime.datetime(
+                         2013,
+                         10,
+                         13,
+                         9,
+                         15,
+                         0,
+                         tzinfo=datetime.timezone(datetime.timedelta(minutes=-420))
+                     ),
+                     'response': {'275': ['abc', 'okay'],
+                                  '276': ['def', 'No']}}]}
 
         self.raw_sample_2 = {
                 'sample_barcode': 'XY0004216',
@@ -74,6 +94,15 @@ class MetadataUtilTests(unittest.TestCase):
                 }),
                 'survey_answers': [
                     {'template': 1,
+                     'survey_timestamp': datetime.datetime(
+                         2013,
+                         10,
+                         13,
+                         9,
+                         15,
+                         0,
+                         tzinfo=datetime.timezone(datetime.timedelta(minutes=-420))
+                     ),
                      'response': {'1': ['DIET_TYPE', '["Vegan\nfoo"]'],
                                   '2': ['MULTIVITAMIN', 'Yes'],
                                   '3': ['PROBIOTIC_FREQUENCY', 'Unspecified'],
@@ -138,6 +167,49 @@ class MetadataUtilTests(unittest.TestCase):
                             'multi': True,
                             'values': ['x', 'baz', 'stuff', 'blahblah']})
                         ]})]})}
+
+        self.survey_responses_with_duplicate_questions = [
+            {'template': 1,
+             'survey_timestamp': datetime.datetime(
+                 2013,
+                 10,
+                 13,
+                 9,
+                 0,
+                 0,
+                 tzinfo=datetime.timezone(datetime.timedelta(minutes=-420))
+             ),
+             'response': {'1': ['DIET_TYPE', '[""]'],
+                          '2': ['MULTIVITAMIN', 'No'],
+                          '3': ['PROBIOTIC_FREQUENCY', 'Unspecified'],
+                          '4': ['VITAMIN_B_SUPPLEMENT_FREQUENCY',
+                                'Unspecified'],
+                          '5': ['VITAMIN_D_SUPPLEMENT_FREQUENCY',
+                                'Unspecified'],
+                          '6': ['OTHER_SUPPLEMENT_FREQUENCY', 'No'],
+                          '9': ['ALLERGIC_TO', ['blahblah',
+                                                'stuff']],
+                          '22': ['DOMINANT_HAND', 'Unspecified'],
+                          '110': ['COUNTRY_OF_BIRTH', 'Unspecified'],
+                          '111': ['BIRTH_MONTH', 'Unspecified']
+                          }
+             },
+            {'template': 10,
+             'survey_timestamp': datetime.datetime(
+                 2022,
+                 12,
+                 20,
+                 9,
+                 15,
+                 0,
+                 tzinfo=datetime.timezone(datetime.timedelta(minutes=-420))
+             ),
+             'response': {'22': ['DOMINANT_HAND', 'I am right handed'],
+                          '110': ['COUNTRY_OF_BIRTH', 'United States'],
+                          '111': ['BIRTH_MONTH', 'June']
+                          }
+             }
+        ]
 
         super().setUp()
 
@@ -336,6 +408,61 @@ class MetadataUtilTests(unittest.TestCase):
         ms_map = _construct_multiselect_map(templates)
         with self.assertRaises(RepoException):
             _to_pandas_series(data, ms_map)
+
+    def test_find_best_answers(self):
+        # this test verifies that the _find_best_answers() function uses a
+        # given sample date to preserve the closest instance of each survey
+        # question and discard all other instances of the given question
+        data = deepcopy(self.survey_responses_with_duplicate_questions)
+        data_2 = deepcopy(self.survey_responses_with_duplicate_questions)
+
+        # the test data we'll use contains a subset of the old primary survey
+        # and a subset of the new basic info survey. when we test with an old
+        # sample collection date, we should observe the answers from the old
+        # primary survey being returned and that the same questions no longer
+        # exist on the new basic info survey
+        obs = _find_best_answers(
+            data,
+            "2013-10-15T09:30:00"
+        )
+
+        # make sure that the three shared questions reflect the old answer
+        self.assertEqual(obs[0]['response']['22'],
+                         ['DOMINANT_HAND', 'Unspecified'])
+        self.assertEqual(obs[0]['response']['110'],
+                         ['COUNTRY_OF_BIRTH', 'Unspecified'])
+        self.assertEqual(obs[0]['response']['111'],
+                         ['BIRTH_MONTH', 'Unspecified'])
+
+        # and verify that they don't exist in the newer survey
+        with self.assertRaises(KeyError):
+            _ = obs[1]['response']['22']
+        with self.assertRaises(KeyError):
+            _ = obs[1]['response']['110']
+        with self.assertRaises(KeyError):
+            _ = obs[1]['response']['111']
+
+        # now, we're going to repeat the exercise with a newer collection date
+        # and observe the opposite results
+        obs = _find_best_answers(
+            data_2,
+            "2022-12-30T09:30:00"
+        )
+
+        # make sure that the three shared questions reflect the new answer
+        self.assertEqual(obs[1]['response']['22'],
+                         ['DOMINANT_HAND', 'I am right handed'])
+        self.assertEqual(obs[1]['response']['110'],
+                         ['COUNTRY_OF_BIRTH', 'United States'])
+        self.assertEqual(obs[1]['response']['111'], ['BIRTH_MONTH', 'June'])
+
+        # and verify that they don't exist in the old survey
+        with self.assertRaises(KeyError):
+            _ = obs[0]['response']['22']
+        with self.assertRaises(KeyError):
+            _ = obs[0]['response']['110']
+        with self.assertRaises(KeyError):
+            _ = obs[0]['response']['111']
 
 
 if __name__ == '__main__':
