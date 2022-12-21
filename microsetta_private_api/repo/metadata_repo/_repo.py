@@ -298,8 +298,9 @@ def _to_pandas_dataframe(metadatas, survey_templates):
 
 
 def _find_best_answers(survey_responses, sample_ts):
+    if isinstance(sample_ts, str):
+        sample_ts = datetime.datetime.strptime(sample_ts, "%Y-%m-%dT%H:%M:%S")
     pst = pytz.timezone('US/Pacific')
-    sample_ts = datetime.datetime.strptime(sample_ts, "%Y-%m-%dT%H:%M:%S")
     sample_ts = pst.localize(sample_ts)
 
     # we need to keep a list of the closest temporal answers to compare as
