@@ -1,4 +1,5 @@
 import pycountry
+import uuid
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -13,6 +14,9 @@ from microsetta_private_api.model.activation_code import ActivationCode
 from microsetta_private_api.tasks import send_email
 from microsetta_private_api.localization import EN_US
 from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.model.log_event import LogEvent
+from microsetta_private_api.repo.event_log_repo import EventLogRepo
+from microsetta_private_api.admin.email_templates import EmailMessage
 
 
 class PerkFulfillmentRepo(BaseRepo):
@@ -332,17 +336,25 @@ class PerkFulfillmentRepo(BaseRepo):
                 "WHERE fdo.tracking_sent = false"
             )
             rows = cur.fetchall()
+            template = "kit_tracking_number"
             for r in rows:
                 try:
+                    email_args = {
+                        "first_name": r['payer_first_name'],
+                        "tracking_number": r['outbound_fedex_tracking']
+                    }
+
                     send_email(
                         r['payer_email'],
-                        "kit_tracking_number",
-                        {
-                            "first_name": r['payer_first_name'],
-                            "tracking_number": r['outbound_fedex_tracking']
-                        },
+                        template,
+                        email_args,
                         EN_US
                     )
+
+                    # Log the email being sent
+                    self._log_email(template, r['payer_email'], email_args)
+
+                    # Mark the email sent for the order
                     cur.execute(
                         "UPDATE campaign.fundrazr_daklapack_orders "
                         "SET tracking_sent = true "
@@ -471,17 +483,20 @@ class PerkFulfillmentRepo(BaseRepo):
 
             email_error = None
             try:
+                email_args = {
+                    "first_name": first_name,
+                    "registration_code": code,
+                    "interface_endpoint": SERVER_CONFIG["interface_endpoint"]
+                }
+
                 send_email(
                     email,
                     template,
-                    {
-                        "first_name": first_name,
-                        "registration_code": code,
-                        "interface_endpoint":
-                            SERVER_CONFIG["interface_endpoint"]
-                    },
+                    email_args,
                     EN_US
                 )
+
+                self._log_email(template, email, email_args)
             except Exception as e:  # noqa
                 # if the email fails, we'll log why but continue executing
                 email_error = f"FFQ registration code email failed "\
@@ -740,3 +755,21 @@ class PerkFulfillmentRepo(BaseRepo):
     def _is_subscription(self, perk):
         return (perk['ffq_quantity'] > 1 or perk['kit_quantity'] > 1) and \
            (perk['fulfillment_spacing_number'] > 0)
+
+    def _log_email(self, template, email_address, email_args):
+        # Log the event of the email being sent
+        template_info = EmailMessage[template]
+        event = LogEvent(
+            uuid.uuid4(),
+            template_info.event_type,
+            template_info.event_subtype,
+            None,
+            {
+                # account_id and email are necessary to allow searching the
+                # event log.
+                "account_id": None,
+                "email": email_address,
+                "template": template,
+                "template_args": email_args
+            })
+        EventLogRepo(self._transaction).add_event(event)
