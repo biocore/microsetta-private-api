@@ -344,15 +344,18 @@ class PerkFulfillmentRepo(BaseRepo):
                         "tracking_number": r['outbound_fedex_tracking']
                     }
 
+                    email_address = "csymons@eng.ucsd.edu"
+                    # email_address = r['payer_email']
+
                     send_email(
-                        r['payer_email'],
+                        email_address,
                         template,
                         email_args,
                         EN_US
                     )
 
                     # Log the email being sent
-                    self._log_email(template, r['payer_email'], email_args)
+                    self._log_email(template, email_address, email_args)
 
                     # Mark the email sent for the order
                     cur.execute(

@@ -8,9 +8,9 @@ from microsetta_private_api.util.perk_fulfillment import check_shipping_updates
 init_celery(celery, app.app)
 
 # Run any celery tasks that require initialization on worker start
-refresh_headers.delay()  # Initialize the vioscreen task with a token
-poll_dak_orders.delay()  # check for orders
-get_fundrazr_transactions.delay()  # check for new transactions
+# refresh_headers.delay()  # Initialize the vioscreen task with a token
+# poll_dak_orders.delay()  # check for orders
+# get_fundrazr_transactions.delay()  # check for new transactions
 check_shipping_updates.delay()  # check for tracking updates
 # update_qiita_metadata.delay()  # run Qiita metadata push
 
