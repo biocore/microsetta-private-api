@@ -858,6 +858,9 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
             test_daklapack_order_result
     ):
         test_send_email_result = True
+        # Need to do something with this variable to satisfy lint
+        self.assertEqual(test_send_email_result, True)
+
         test_daklapack_order_result.side_effect = [
             {
                 "order_address": "wedontcareaboutthis",
@@ -900,14 +903,14 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
             admin_repo = AdminRepo(t)
             returned_id = admin_repo.create_daklapack_order(input)
 
-            # create dummy daklapack order object for first shipment
+            # create dummy daklapack order object for second shipment
             input2 = DaklapackOrder(DUMMY_ORDER_ID2, submitter_acct,
                                     PROJECT_IDS, DUMMY_DAKLAPACK_ORDER2, desc,
                                     planned_send_date, creation_timestamp,
                                     last_polling_timestamp, last_status)
 
             # call create_daklapack_order
-            returned_id2 = admin_repo.create_daklapack_order(input2)
+            _ = admin_repo.create_daklapack_order(input2)
 
             pfr = PerkFulfillmentRepo(t)
             _ = pfr.process_pending_fulfillment(self.sub_ftp_id)
