@@ -42,8 +42,19 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
                                      SurveyTemplateRepo.VIOSCREEN_ID,
                                      SurveyTemplateRepo.MYFOODREPO_ID,
                                      SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
-                                     SurveyTemplateRepo.SPAIN_FFQ_ID]
-                            ]), 200
+                                     SurveyTemplateRepo.SPAIN_FFQ_ID,
+                                     SurveyTemplateRepo.BASIC_INFO_ID,
+                                     SurveyTemplateRepo.AT_HOME_ID,
+                                     SurveyTemplateRepo.LIFESTYLE_ID,
+                                     SurveyTemplateRepo.GUT_ID,
+                                     SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                                     SurveyTemplateRepo.HEALTH_DIAG_ID,
+                                     SurveyTemplateRepo.ALLERGIES_ID,
+                                     SurveyTemplateRepo.DIET_ID,
+                                     SurveyTemplateRepo.DETAILED_DIET_ID,
+                                     SurveyTemplateRepo.MIGRAINE_ID,
+                                     SurveyTemplateRepo.SURFERS_ID,
+                                     SurveyTemplateRepo.COVID19_ID]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200
@@ -53,20 +64,22 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
 
 def _remote_survey_url_vioscreen(transaction, account_id, source_id,
                                  language_tag, survey_redirect_url,
-                                 vioscreen_ext_sample_id):
+                                 sample_id=None,
+                                 registration_code=None):
     # assumes an instance of Transaction is already available
     acct_repo = AccountRepo(transaction)
     survey_template_repo = SurveyTemplateRepo(transaction)
 
-    if vioscreen_ext_sample_id:
-        # User is about to start a vioscreen survey for this sample
-        # record this in the database.
-        db_vioscreen_id = survey_template_repo.create_vioscreen_id(
-            account_id, source_id, vioscreen_ext_sample_id
-        )
-    else:
-        raise ValueError("Vioscreen Template requires "
-                         "vioscreen_ext_sample_id parameter.")
+    if sample_id is None and registration_code is None:
+        return jsonify(code=400, message="Please pass sample id"
+                                         "or registration code"), 400
+
+    # User is about to start a vioscreen survey
+    # record this in the database.
+    db_vioscreen_id = \
+        survey_template_repo.create_vioscreen_id(account_id, source_id,
+                                                 sample_id,
+                                                 registration_code)
 
     (birth_year, gender, height, weight) = \
         survey_template_repo.fetch_user_basic_physiology(
@@ -171,14 +184,17 @@ def _remote_survey_url_spain_ffq(transaction, account_id, source_id):
 
 def read_survey_template(account_id, source_id, survey_template_id,
                          language_tag, token_info, survey_redirect_url=None,
-                         vioscreen_ext_sample_id=None):
+                         vioscreen_ext_sample_id=None,
+                         registration_code=None):
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
-        survey_template_repo = SurveyTemplateRepo(t)
-        info = survey_template_repo.get_survey_template_link_info(
+        st_repo = SurveyTemplateRepo(t)
+
+        info = st_repo.get_survey_template_link_info(
             survey_template_id)
-        remote_surveys = set(survey_template_repo.remote_surveys())
+
+        remote_surveys = set(st_repo.remote_surveys())
 
         # For external surveys, we generate links pointing out
         if survey_template_id in remote_surveys:
@@ -188,7 +204,8 @@ def read_survey_template(account_id, source_id, survey_template_id,
                                                    source_id,
                                                    language_tag,
                                                    survey_redirect_url,
-                                                   vioscreen_ext_sample_id)
+                                                   vioscreen_ext_sample_id,
+                                                   registration_code)
             elif survey_template_id == SurveyTemplateRepo.MYFOODREPO_ID:
                 url = _remote_survey_url_myfoodrepo(t,
                                                     account_id,
@@ -215,8 +232,8 @@ def read_survey_template(account_id, source_id, survey_template_id,
             return jsonify(info), 200
 
         # For local surveys, we generate the json representing the survey
-        survey_template = survey_template_repo.get_survey_template(
-            survey_template_id, language_tag)
+        survey_template = st_repo.get_survey_template(survey_template_id,
+                                                      language_tag)
         info.survey_template_text = vue_adapter.to_vue_schema(survey_template)
 
         # TODO FIXME HACK: We need a better way to enforce validation on fields
@@ -241,6 +258,19 @@ def read_survey_template(account_id, source_id, survey_template_id,
             for field in group.fields:
                 if field.id in client_side_validation:
                     field.set(**client_side_validation[field.id])
+
+        results, percent_comp = st_repo.migrate_responses(source_id,
+                                                          survey_template_id)
+        if results:
+            # modify info with previous results before returning to client.
+            for group in info.survey_template_text.groups:
+                for field in group.fields:
+                    previous_response = results[field.inputName]
+                    if previous_response:
+                        field.default = previous_response
+            info.percentage_completed = "{0:.2f}%".format(percent_comp * 100)
+        else:
+            info.percentage_completed = '0.00%'
 
         return jsonify(info), 200
 
@@ -345,7 +375,7 @@ def read_answered_survey_associations(account_id, source_id, sample_id,
             if template_id is None:
                 continue
             info = template_repo.get_survey_template_link_info(template_id)
-            resp_obj.append(info.to_api(answered_survey, status))
+            resp_obj.append(info.to_api(answered_survey, status, None))
 
         t.commit()
         return jsonify(resp_obj), 200
