@@ -187,7 +187,8 @@ class PerkFulfillmentRepo(BaseRepo):
                     else:
                         status, return_val = self._fulfill_kit(
                             row,
-                            1
+                            1,
+                            subscription_id
                         )
                         if not status:
                             # Daklapack order failed, let the error percolate
@@ -209,9 +210,9 @@ class PerkFulfillmentRepo(BaseRepo):
         with self._transaction.dict_cursor() as cur:
             cur.execute(
                 "SELECT fulfillment_id "
-                "FROM campaigns.subscriptions_fulfillment "
+                "FROM campaign.subscriptions_fulfillment "
                 "WHERE fulfilled = FALSE AND cancelled = FALSE "
-                "AND fulfillment_type <= CURRENT_DATE"
+                "AND fulfillment_date <= CURRENT_DATE"
             )
             rows = cur.fetchall()
             return [r['fulfillment_id'] for r in rows]
@@ -228,25 +229,25 @@ class PerkFulfillmentRepo(BaseRepo):
             # been processed and collect the necessary fields
             cur.execute(
                 "SELECT sf.fulfillment_id, sf.fulfillment_type, "
-                "sf.dak_article_code, ftp.id ftp_id, ft.payer_email, "
-                "iu.first_name, iu.last_name, iu.phone, iu.address_1, "
-                "iu.address_2, iu.city, iu.state, iu.postal_code, "
-                "iu.country, iu.campaign_id, s.account_id, "
+                "sf.dak_article_code, sf.subscription_id, ftp.id ftp_id, "
+                "ft.payer_email, iu.first_name, iu.last_name, iu.phone, "
+                "iu.address_1, iu.address_2, iu.city, iu.state, "
+                "iu.postal_code, iu.country, iu.campaign_id, s.account_id, "
                 "a.email a_email, a.first_name a_first_name, "
                 "a.last_name a_last_name, a.street a_address_1, "
                 "a.city a_city, a.state a_state, a.post_code a_postal_code, "
                 "a.country_code a_country "
-                "FROM campaigns.subscriptions_fulfillment sf "
-                "INNER JOIN campaigns.subscriptions s "
+                "FROM campaign.subscriptions_fulfillment sf "
+                "INNER JOIN campaign.subscriptions s "
                 "ON sf.subscription_id = s.subscription_id "
-                "INNER JOIN campaigns.fundrazr_transaction_perk ftp "
+                "INNER JOIN campaign.fundrazr_transaction_perk ftp "
                 "ON s.fundrazr_transaction_perk_id = ftp.id "
-                "INNER JOIN campaigns.transaction ft "
+                "INNER JOIN campaign.transaction ft "
                 "ON ftp.transaction_id = ft.id "
                 "INNER JOIN campaign.interested_users iu "
                 "ON ft.interested_user_id = iu.interested_user_id "
-                "LEFT JOIN ag.account a"
-                "ON s.account_id = a.id"
+                "LEFT JOIN ag.account a "
+                "ON s.account_id = a.id "
                 "WHERE sf.fulfilled = FALSE AND sf.cancelled = FALSE "
                 "AND sf.fulfillment_date <= CURRENT_DATE "
                 "AND sf.fulfillment_id = %s",
@@ -283,7 +284,7 @@ class PerkFulfillmentRepo(BaseRepo):
 
                 elif row['fulfillment_type'] == "kit":
                     status, return_val = \
-                        self._fulfill_kit(row, 1)
+                        self._fulfill_kit(row, 1, row['subscription_id'])
                     if not status:
                         # Daklapack order failed, let the error percolate
                         error_report.append(

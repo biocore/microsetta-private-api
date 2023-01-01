@@ -139,11 +139,43 @@ TRANSACTION_FAKE_PERK = FundRazrPayment(
 )
 
 DUMMY_ORDER_ID = str(uuid.uuid4())
+DUMMY_ORDER_ID2 = str(uuid.uuid4())
 SUBMITTER_ID = FULFILLMENT_ACCOUNT_ID
 SUBMITTER_NAME = "demo demo"
 PROJECT_IDS = [1, ]
 DUMMY_DAKLAPACK_ORDER = {
     'orderId': DUMMY_ORDER_ID,
+    'articles': [
+        {
+            'articleCode': '3510005E',
+            'addresses': [
+                {
+                    'firstName': 'Microbe',
+                    'lastName': 'Researcher',
+                    'address1': '9500 Gilman Dr',
+                    'insertion': '',
+                    'address2': '',
+                    'postalCode': 92093,
+                    'city': 'La Jolla',
+                    'state': 'CA',
+                    'country': 'United States',
+                    'countryCode': 'US',
+                    'phone': '1234567890',
+                    'creationDate': '2020-10-09T22:43:52.219328Z',
+                    'companyName': SUBMITTER_NAME
+                }
+            ]
+        }
+    ],
+    'shippingProvider': 'FedEx',
+    'shippingType': 'FEDEX_2_DAY',
+    'shippingProviderMetadata': [
+        {'key': 'Reference 1',
+         'value': 'Bill Ted'}
+    ]
+}
+DUMMY_DAKLAPACK_ORDER2 = {
+    'orderId': DUMMY_ORDER_ID2,
     'articles': [
         {
             'articleCode': '3510005E',
@@ -812,6 +844,117 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
 
                 self.assertEqual(emails_sent, 1)
                 self.assertEqual(len(error_report), 0)
+
+    @patch(
+        "microsetta_private_api.repo.perk_fulfillment_repo."
+        "create_daklapack_order_internal"
+    )
+    @patch(
+        "microsetta_private_api.repo.perk_fulfillment_repo.send_email"
+    )
+    def test_get_subscription_fulfillments(
+            self,
+            test_send_email_result,
+            test_daklapack_order_result
+    ):
+        test_send_email_result = True
+        test_daklapack_order_result.side_effect = [
+            {
+                "order_address": "wedontcareaboutthis",
+                "order_success": True,
+                "order_id": DUMMY_ORDER_ID
+            },
+            {
+                "order_address": "wedontcareaboutthis",
+                "order_success": True,
+                "order_id": DUMMY_ORDER_ID2
+            }
+        ]
+
+        # We're going to add a transaction for one subscription.
+        # Then we're going to set the first pending fulfillment to be due
+        # today so we can observe it as ready for processing.
+
+        # We have to mock out the actual Daklapack order since it's an
+        # external resource.
+        with Transaction() as t:
+            # create a dummy Daklapack order
+            acct_repo = AccountRepo(t)
+            submitter_acct = acct_repo.get_account(SUBMITTER_ID)
+
+            creation_timestamp = dateutil.parser.isoparse(
+                "2020-10-09T22:43:52.219328Z")
+            last_polling_timestamp = dateutil.parser.isoparse(
+                "2020-10-19T12:40:19.219328Z")
+            desc = "a description"
+            planned_send_date = datetime.date(2032, 2, 9)
+            last_status = "accepted"
+
+            # create dummy daklapack order object for first shipment
+            input = DaklapackOrder(DUMMY_ORDER_ID, submitter_acct,
+                                   PROJECT_IDS, DUMMY_DAKLAPACK_ORDER, desc,
+                                   planned_send_date, creation_timestamp,
+                                   last_polling_timestamp, last_status)
+
+            # call create_daklapack_order
+            admin_repo = AdminRepo(t)
+            returned_id = admin_repo.create_daklapack_order(input)
+
+            # create dummy daklapack order object for first shipment
+            input2 = DaklapackOrder(DUMMY_ORDER_ID2, submitter_acct,
+                                    PROJECT_IDS, DUMMY_DAKLAPACK_ORDER2, desc,
+                                    planned_send_date, creation_timestamp,
+                                    last_polling_timestamp, last_status)
+
+            # call create_daklapack_order
+            returned_id2 = admin_repo.create_daklapack_order(input2)
+
+            pfr = PerkFulfillmentRepo(t)
+            _ = pfr.process_pending_fulfillment(self.sub_ftp_id)
+
+            cur = t.dict_cursor()
+
+            # We need to grab the subscription ID
+            cur.execute(
+                "SELECT s.subscription_id "
+                "FROM campaign.subscriptions s "
+                "INNER JOIN campaign.fundrazr_daklapack_orders fdo "
+                "ON s.fundrazr_transaction_perk_id = "
+                "fdo.fundrazr_transaction_perk_id AND fdo.dak_order_id = %s",
+                (returned_id,)
+            )
+            row = cur.fetchone()
+            subscription_id = row['subscription_id']
+
+            # Grab the first two unfilfilled records for the subscription.
+            # Given the subscription setup, this will be one FFQ and one kit.
+            cur.execute(
+                "SELECT fulfillment_id "
+                "FROM campaign.subscriptions_fulfillment "
+                "WHERE subscription_id = %s AND fulfilled = FALSE "
+                "ORDER BY fulfillment_date LIMIT 2",
+                (subscription_id,)
+            )
+            rows = cur.fetchall()
+            for row in rows:
+                # Update them to be due to fulfill today
+                cur.execute(
+                    "UPDATE campaign.subscriptions_fulfillment "
+                    "SET fulfillment_date = CURRENT_DATE "
+                    "WHERE fulfillment_id = %s",
+                    (row['fulfillment_id'], )
+                )
+
+            # Get pending fulfillments
+            pending_ful = pfr.get_subscription_fulfillments()
+
+            # Verify that there are two records
+            self.assertEqual(len(pending_ful), 2)
+
+            # Process the pending fulfillments
+            for f_id in pending_ful:
+                error_list = pfr.process_subscription_fulfillment(f_id)
+                self.assertEqual(len(error_list), 0)
 
     def _count_ffq_registration_codes(self, t):
         cur = t.cursor()
