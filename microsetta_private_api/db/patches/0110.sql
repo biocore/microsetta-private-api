@@ -4,6 +4,7 @@ CREATE TABLE ag.delete_account_queue (
     requested_on timestamptz default current_timestamp
 );  
 
+CREATE TYPE DISPOSITION_TYPE AS ENUM ('ignored', 'deleted');
 CREATE TABLE ag.account_removal_log (
     id SERIAL PRIMARY KEY,
     -- account_id is not referenced to ag.account(id) so that the account may
@@ -14,7 +15,7 @@ CREATE TABLE ag.account_removal_log (
     -- intention is to record the admin who accepted or denied the request
     -- here. This means that an account_id may appear more than once if the
     -- user makes multiple requests.
-    disposition VARCHAR(8),
+    disposition DISPOSITION_TYPE,
     requested_on timestamptz,
     reviewed_on timestamptz default current_timestamp
 );
