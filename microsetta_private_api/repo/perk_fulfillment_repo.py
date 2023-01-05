@@ -345,8 +345,7 @@ class PerkFulfillmentRepo(BaseRepo):
                         "tracking_number": r['outbound_fedex_tracking']
                     }
 
-                    email_address = "csymons@eng.ucsd.edu"
-                    # email_address = r['payer_email']
+                    email_address = r['payer_email']
 
                     send_email(
                         email_address,
