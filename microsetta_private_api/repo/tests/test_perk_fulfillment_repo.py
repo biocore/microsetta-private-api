@@ -4,6 +4,7 @@ import uuid
 from unittest.mock import patch
 import dateutil.parser
 
+from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.repo.perk_fulfillment_repo import\
     PerkFulfillmentRepo
 from microsetta_private_api.repo.campaign_repo import UserTransaction
@@ -14,7 +15,6 @@ from microsetta_private_api.model.address import Address
 from microsetta_private_api.model.daklapack_order import DaklapackOrder
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
-from microsetta_private_api.model.subscription import FULFILLMENT_ACCOUNT_ID
 from microsetta_private_api.model.account import Account
 
 ACCT_ID_1 = '7a98df6a-e4db-40f4-91ec-627ac315d881'
@@ -140,7 +140,7 @@ TRANSACTION_FAKE_PERK = FundRazrPayment(
 
 DUMMY_ORDER_ID = str(uuid.uuid4())
 DUMMY_ORDER_ID2 = str(uuid.uuid4())
-SUBMITTER_ID = FULFILLMENT_ACCOUNT_ID
+SUBMITTER_ID = SERVER_CONFIG['fulfillment_account_id']
 SUBMITTER_NAME = "demo demo"
 PROJECT_IDS = [1, ]
 DUMMY_DAKLAPACK_ORDER = {
