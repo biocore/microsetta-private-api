@@ -14,6 +14,8 @@ from microsetta_private_api.model.address import Address
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.repo.perk_fulfillment_repo import\
+    PerkFulfillmentRepo
 
 
 def find_accounts_for_login(token_info):
@@ -66,6 +68,16 @@ def register_account(body, token_info):
         acct_repo = AccountRepo(t)
         acct_repo.create_account(account_obj)
         new_acct = acct_repo.get_account(new_acct_id)
+
+        # Check for unclaimed subscriptions attached to the email address
+        pfr = PerkFulfillmentRepo(t)
+        subscription_ids = pfr.get_unclaimed_subscriptions_by_email(
+            new_acct.email
+        )
+        # If we find any, claim them
+        for sub_id in subscription_ids:
+            pfr.claim_unclaimed_subscription(sub_id, new_acct_id)
+
         t.commit()
 
     response = jsonify(new_acct.to_api())

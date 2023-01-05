@@ -40,8 +40,8 @@ class FundrazrClientTests(TestCase):
     def test_campaigns(self):
         obs = self.c.campaigns()
 
-        # staging has two campaigns, let's assume that's stable...
-        self.assertEqual(len(obs), 2)
+        # staging has three campaigns, let's assume that's stable...
+        self.assertEqual(len(obs), 3)
         self.assertTrue(len(obs[0].items) > 0)
 
     @skipIf(SERVER_CONFIG['fundrazr_url'] in ('', 'fundrazr_url_placeholder'),
