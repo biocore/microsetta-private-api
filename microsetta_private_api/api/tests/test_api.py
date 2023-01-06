@@ -10,6 +10,7 @@ from dateutil.parser import isoparse
 from urllib.parse import urlencode
 from unittest import TestCase
 from math import isclose
+from uuid import uuid4
 import microsetta_private_api.server
 from microsetta_private_api import localization
 from microsetta_private_api.model.preparation import Preparation
@@ -621,6 +622,19 @@ class ApiTests(TestCase):
         # is there some better pattern I can use to split up what should be
         # a 'with' call?
         self.client.__exit__(None, None, None)
+
+        # references to dummy admins need to be removed from
+        # ag.account_removal_log before delete_dummy_accts() will be
+        # successful.
+        ids = (ACCT_ID_1, ACCT_ID_2, ACCT_ID_3)
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("DELETE FROM ag.account_removal_log WHERE account_id"
+                        " IN %s", (ids,))
+            cur.execute("DELETE FROM ag.account_removal_log WHERE admin_id IN"
+                        " %s", (ids,))
+            t.commit()
+
         delete_dummy_accts()
 
     def run_query_and_content_required_field_test(self, url, action,
@@ -1297,6 +1311,178 @@ class AccountTests(ApiTests):
         # check response code
         self.assertEqual(response.status_code, 404)
     # endregion account/email_match tests
+
+    def test_request_account_removal(self):
+        # create a dummy account and then confirm it is not present in the
+        # delete-queue.
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        # this admin account needs to be created, but the metadata for it
+        # is already associated w/make_headers(FAKE_TOKEN_ADMIN).
+        create_dummy_acct(create_dummy_1=False, iss=ACCT_MOCK_ISS_3,
+                          sub=ACCT_MOCK_SUB_3, dummy_is_admin=True)
+
+        # check to see if account_id is already in the removal queue. It
+        # shouldn't be.
+        response = self.client.get(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        # Like similar functions, GET will return status-code 200 as long as
+        # the query was successful. Whether it is in the queue (True) or not
+        # (False) is stored in the response data under the 'status' key.
+        self.assertEqual(200, response.status_code)
+        self.assertFalse(json.loads(response.data)['status'])
+
+        # submit a request for this account to be removed.
+        response = self.client.put(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Request Accepted")
+
+        # Verify it is now present in the queue.
+        response = self.client.get(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertTrue(json.loads(response.data)['status'])
+
+        # try to request a second time. Verify that an error is returned
+        # instead.
+        response = self.client.put(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(422, response.status_code)
+
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Account is already in removal queue")
+
+        # attempt to remove the account id from the account removal queue
+        # and cancel the deletion request.
+        response = self.client.delete(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        # Verify it is not present in the queue.
+        response = self.client.get(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertFalse(json.loads(response.data)['status'])
+
+        # attempt to remove the request again and confirm that an error
+        # is returned.
+        response = self.client.delete(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(422, response.status_code)
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Account is not in removal queue")
+
+        # now let's test having an admin ignore the request.
+        # first, put the user back in the queue.
+        response = self.client.put(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Request Accepted")
+
+        response = self.client.put(
+            f'/api/admin/account_removal/{dummy_acct_id}',
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(204, response.status_code)
+
+        # Note that the behavior for an admin ignoring the request is
+        # identical to a user cancelling the request except that there will be
+        # a log entry in ag.account_removal_log if an admin ignored the
+        # request. Either way the request is removed from the queue.
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""SELECT account_id, reviewed_on, CURRENT_TIMESTAMP
+                           FROM ag.account_removal_log ORDER BY id DESC""")
+            (a_id, r_date, n_date) = cur.fetchone()
+
+            # verify that the account in the log belongs to our dummy user.
+            self.assertEqual(dummy_acct_id, a_id)
+
+            # check that the admin just completed this review. Verify that
+            # the review occured in the last minute.
+            self.assertTrue((n_date - r_date).total_seconds() < 60)
+
+        # attempt to ignore the request again and confirm that an error
+        # is returned.
+        response = self.client.put(
+            f'/api/admin/account_removal/{dummy_acct_id}',
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(422, response.status_code)
+
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Account is not in removal queue")
+
+        # generate a random UUID4 value and assume that it is not a valid
+        # account number because of its statistical uniqueness. Attempt to
+        # query for an account w/this number and confirm that it will not be
+        # found.
+
+        uri = '/api/accounts/%s/removal_queue' % uuid4()
+
+        response = self.client.get(uri, headers=self.dummy_auth)
+
+        self.assertEqual(404, response.status_code)
+
+        results = json.loads(response.data)
+        self.assertIn('detail', results)
+        self.assertEqual(results['detail'], 'Account not found')
+
+        # push the dummy_acct_id account back onto the queue and attempt to
+        # delete the account. Then confirm that the account no longer exists:
+
+        # mimic a user pressing the 'Delete Account' button in their
+        # accounts page. This will put the account_id for dummy_acct_id back
+        # in the queue.
+        response = self.client.put(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        # confirm that the operation was a success.
+        self.assertEqual(200, response.status_code)
+
+        # Attempt to delete user dummy_acct_id using the account_removal
+        # endpoint. Note this endpoint wraps our standard account_delete()
+        # functionality; it deletes the id from the delete-queue and logs the
+        # deletion in a separate 'log' table, before calling account_delete().
+        response = self.client.delete(
+            f'/api/admin/account_removal/{dummy_acct_id}',
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # confirm that the operation was a success.
+        self.assertEqual(204, response.status_code)
+
+        # if the operation was a success, use the same functionality we
+        # previously tested to confirm that the user we just deleted
+        # (dummy_acct_id) is no longer in the system.
+        response = self.client.get(
+            '/api/accounts/%s?%s' %
+            (dummy_acct_id, self.default_lang_querystring),
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # confirm the user was not found.
+        self.assertEqual(404, response.status_code)
 
 
 @pytest.mark.usefixtures("client")

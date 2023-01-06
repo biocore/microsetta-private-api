@@ -1,11 +1,8 @@
 import uuid
-
 import jwt
 from flask import jsonify
 from jwt import InvalidTokenError
-
 from werkzeug.exceptions import Unauthorized, Forbidden, NotFound
-
 from microsetta_private_api.api.literals import AUTHROCKET_PUB_KEY, \
     INVALID_TOKEN_MSG, JWT_ISS_CLAIM_KEY, JWT_SUB_CLAIM_KEY, \
     JWT_EMAIL_CLAIM_KEY, ACCT_NOT_FOUND_MSG, CRONJOB_PUB_KEY

@@ -35,6 +35,7 @@ from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
 from microsetta_private_api.qiita import qclient
 from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
+from microsetta_private_api.repo.removal_queue_repo import RemovalQueueRepo
 
 
 def search_barcode(token_info, sample_barcode):
@@ -629,6 +630,15 @@ def list_campaigns(token_info):
     return jsonify(campaigns), 200
 
 
+def list_removal_queue(token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        repo = RemovalQueueRepo(t)
+        requests = repo.get_all_account_removal_requests()
+    return jsonify(requests), 200
+
+
 def post_campaign_information(body, token_info):
     validate_admin_access(token_info)
 
@@ -866,6 +876,40 @@ def delete_account(account_id, token_info):
         t.commit()
 
     return None, 204
+
+
+def ignore_removal_request(account_id, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        rq_repo = RemovalQueueRepo(t)
+        try:
+            # remove the user from the queue, noting the admin who allowed it
+            # and the time the action was performed.
+            rq_repo.update_queue(account_id, token_info['email'], 'ignored')
+            t.commit()
+        except RepoException as e:
+            raise e
+
+    return None, 204
+
+
+def allow_removal_request(account_id, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        rq_repo = RemovalQueueRepo(t)
+
+        try:
+            # remove the user from the queue, noting the admin who allowed it
+            # and the time the action was performed.
+            rq_repo.update_queue(account_id, token_info['email'], 'deleted')
+            t.commit()
+        except RepoException as e:
+            raise e
+
+        # delete the user
+        return delete_account(account_id, token_info)
 
 
 def get_vioscreen_sample_to_user(token_info):

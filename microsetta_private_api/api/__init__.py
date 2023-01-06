@@ -3,6 +3,12 @@ from ._account import (
     read_account, update_account, check_email_match, _verify_jwt,
     _verify_jwt_mock
 )
+
+from ._removal_queue import (
+    check_request_remove_account, request_remove_account,
+    cancel_request_remove_account
+)
+
 from ._consent import (
     render_consent_doc,
     check_consent_signature,
@@ -69,6 +75,9 @@ __all__ = [
     'read_account',
     'update_account',
     'check_email_match',
+    'request_remove_account',
+    'cancel_request_remove_account',
+    'check_request_remove_account',
     'render_consent_doc',
     'create_source',
     'read_source',
