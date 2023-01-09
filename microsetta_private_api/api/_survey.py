@@ -291,7 +291,7 @@ def read_answered_surveys(account_id, source_id, language_tag, token_info):
             if template_id is None:
                 continue
             o = survey_template_repo.get_survey_template_link_info(template_id)
-            api_objs.append(o.to_api(ans, status))
+            api_objs.append(o.to_api(ans, status, None))
         return jsonify(api_objs), 200
 
 
