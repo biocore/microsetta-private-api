@@ -29,38 +29,38 @@ def init_celery(celery, app):
             "task": "microsetta_private_api.util.vioscreen.refresh_headers",
             "schedule": 55 * 60
         },
-        "update_vioscreen_sessions": {
-            "task": "microsetta_private_api.util.vioscreen.update_session_detail",  # noqa
-            "schedule": 60 * 60 * 24  # every 24 hours
-        },
-        "poll_daklapack_orders": {
-            "task": "microsetta_private_api.admin.daklapack_polling.poll_dak_orders",  # noqa
-            "schedule":  60 * 60 * 4  # every 4 hours
-        },
-        "update_qiita_metadata": {
-            "task": "microsetta_private_api.tasks.update_qiita_metadata",  # noqa
-            "schedule":  60 * 60 * 24  # every 24 hours
-        },
-        "pull_fundrazr_transactions": {
-            "task": "microsetta_private_api.util.fundrazr.get_fundrazr_transactions",  # noqa
-            "schedule": 60 * 60  # every hour
-        },
-        "fulfill_new_transactions": {
-            "task": "microsetta_private_api.util.perk_fulfillment.fulfill_new_transactions",  # noqa
-            "schedule": 60 * 60  # every hour
-        },
-        "fulfill_subscriptions": {
-            "task": "microsetta_private_api.util.perk_fulfillment.process_subscription_fulfillments",  # noqa
-            "schedule": 60 * 60 * 24  # every 24 hours
-        },
-        "check_shipping_updates": {
-            "task": "microsetta_private_api.util.perk_fulfillment.check_shipping_updates",  # noqa
-            "schedule": 60 * 60 * 4  # every 4 hours
-        },
-        "perks_without_fulfillment_details": {
-            "task": "microsetta_private_api.util.perk_fulfillment.perks_without_fulfillment_details",  # noqa
-            "schedule": 60 * 60 * 24  # every 24 hours
-        },
+        # "update_vioscreen_sessions": {
+        #    "task": "microsetta_private_api.util.vioscreen.update_session_detail",  # noqa
+        #    "schedule": 60 * 60 * 24  # every 24 hours
+        # },
+        # "poll_daklapack_orders": {
+        #    "task": "microsetta_private_api.admin.daklapack_polling.poll_dak_orders",  # noqa
+        #    "schedule":  60 * 60 * 4  # every 4 hours
+        # },
+        # "update_qiita_metadata": {
+        #    "task": "microsetta_private_api.tasks.update_qiita_metadata",  # noqa
+        #    "schedule":  60 * 60 * 24  # every 24 hours
+        # },
+        # "pull_fundrazr_transactions": {
+        #    "task": "microsetta_private_api.util.fundrazr.get_fundrazr_transactions",  # noqa
+        #    "schedule": 60 * 60  # every hour
+        # },
+        # "fulfill_new_transactions": {
+        #    "task": "microsetta_private_api.util.perk_fulfillment.fulfill_new_transactions",  # noqa
+        #    "schedule": 60 * 60  # every hour
+        # },
+        # "fulfill_subscriptions": {
+        #    "task": "microsetta_private_api.util.perk_fulfillment.process_subscription_fulfillments",  # noqa
+        #    "schedule": 60 * 60 * 24  # every 24 hours
+        # },
+        # "check_shipping_updates": {
+        #    "task": "microsetta_private_api.util.perk_fulfillment.check_shipping_updates",  # noqa
+        #    "schedule": 60 * 60 * 4  # every 4 hours
+        # },
+        # "perks_without_fulfillment_details": {
+        #    "task": "microsetta_private_api.util.perk_fulfillment.perks_without_fulfillment_details",  # noqa
+        #    "schedule": 60 * 60 * 24  # every 24 hours
+        # },
         # "fetch_ffqs": {
         #     "task": "microsetta_private_api.util.vioscreen.fetch_ffqs",
         #     "schedule":  60 * 60 * 24  # every 24 hours

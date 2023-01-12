@@ -118,7 +118,8 @@ def update_account(account_id, body, token_info):
             body['address']['city'],
             body['address']['state'],
             body['address']['post_code'],
-            body['address']['country_code']
+            body['address']['country_code'],
+            body['address']['street2']
         )
         acc.language = body['language']
 

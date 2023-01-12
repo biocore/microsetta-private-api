@@ -34,6 +34,7 @@ class SurveyTemplateRepo(BaseRepo):
     MIGRAINE_ID = 19
     SURFERS_ID = 20
     COVID19_ID = 21
+    OTHER_ID = 22
 
     SURVEY_INFO = {
         # For now, let's keep legacy survey info as well.
@@ -93,7 +94,7 @@ class SurveyTemplateRepo(BaseRepo):
         ),
         POLYPHENOL_FFQ_ID: SurveyTemplateLinkInfo(
             POLYPHENOL_FFQ_ID,
-            "Polyphenol Food Frequency Questionnaire",
+            "Polyphenols",
             "1.0",
             "remote"
         ),
@@ -174,6 +175,12 @@ class SurveyTemplateRepo(BaseRepo):
             "COVID19 Questionnaire",
             "1.0",
             "local"
+        ),
+        OTHER_ID: SurveyTemplateLinkInfo(
+            OTHER_ID,
+            "Other",
+            "1.0",
+            "local"
         )
     }
 
@@ -226,7 +233,8 @@ class SurveyTemplateRepo(BaseRepo):
                 "survey_question.survey_question_id, " +
                 tag_to_col[language_tag] + ", " +
                 "survey_question.question_shortname, "
-                "survey_question_response_type.survey_response_type "
+                "survey_question_response_type.survey_response_type, "
+                "survey_question.css_classes "
                 "FROM "
                 "surveys "
                 "LEFT JOIN group_questions ON "
@@ -255,6 +263,7 @@ class SurveyTemplateRepo(BaseRepo):
                 localized_text = r[2]
                 short_name = r[3]
                 response_type = r[4]
+                css_classes = r[5]
 
                 if group_id != cur_group_id:
                     if cur_group_id is not None:
@@ -284,7 +293,8 @@ class SurveyTemplateRepo(BaseRepo):
                                                   short_name,
                                                   response_type,
                                                   responses,
-                                                  triggers)
+                                                  triggers,
+                                                  css_classes)
                 cur_questions.append(question)
 
             if cur_group_id is not None:
@@ -1088,8 +1098,7 @@ class SurveyTemplateRepo(BaseRepo):
                                  ON a.survey_question_id = f.survey_question_id
                                JOIN ag.survey_question g
                                  ON a.survey_question_id = g.survey_question_id
-                        WHERE a.response != 'Unspecified'
-                               AND e.source_id = %s
+                        WHERE  e.source_id = %s
                                AND d.survey_id = %s
                                AND g.retired = false
                         UNION
@@ -1108,12 +1117,11 @@ class SurveyTemplateRepo(BaseRepo):
                                  ON a.survey_question_id = f.survey_question_id
                                JOIN ag.survey_question g
                                  ON a.survey_question_id = g.survey_question_id
-                        WHERE  a.response != 'Unspecified'
-                                 AND e.source_id = %s
+                        WHERE  e.source_id = %s
                                  AND d.survey_id = %s
                                  AND g.retired = false) t
-                 ORDER  BY creation_time ASC,
-                           survey_question_id ASC"""
+                 ORDER BY creation_time ASC,
+                          survey_question_id ASC"""
 
         with self._transaction.cursor() as cur:
             cur.execute(sql, (source_id, survey_template_id, source_id,
@@ -1124,35 +1132,41 @@ class SurveyTemplateRepo(BaseRepo):
             results = self._generate_empty_survey(survey_template_id)
             total_question_count = len(results)
 
-            non_empty_keys = []
-            for question_id, response, _, response_type in rows:
+            multiple_timestamps = {}
+            for question_id, response, creation_time, response_type in rows:
                 # responses are from earliest to latest thus older answers
                 # will be overwritten with newer ones as need be, according
                 # to creation time ASC.
                 question_id = str(question_id)
 
                 if response_type == 'MULTIPLE':
-                    results[question_id].append(response)
-                    non_empty_keys.append(question_id)
+                    # For questions that are MULTIPLE (checkbox lists), we
+                    # need to keep track of which survey submission each
+                    # response is from and reset the list if we find a newer
+                    # survey submission
+                    if len(results[question_id]) == 0:
+                        results[question_id].append(response)
+                        multiple_timestamps[question_id] = creation_time
+                    else:
+                        if creation_time == multiple_timestamps[question_id]:
+                            # same survey submission, so append
+                            results[question_id].append(response)
+                        else:
+                            # we just hit a newer survey, reset the list
+                            results[question_id] = [response]
+                            multiple_timestamps[question_id] = creation_time
                 else:
                     # SINGLE, STRING, and TEXT types
                     results[question_id] = response
 
-            # every MULTIPLE type question requires at least one value
-            # 'Unspecified' to be present, if the question went unfilled.
-            # If the user did answer this question, we want to remove
-            # the 'Unspecified' initialization performed by
-            # _generate_empty_survey().
-
-            # set(non_empty_keys) is used because a question_id N could be
-            # processed multiple times and remove() will raise an Error if
-            # 'Unspecified' is not present.
-            for question_id in set(non_empty_keys):
-                results[question_id].remove("Unspecified")
+            responses = 0
+            for answer in results.values():
+                if answer is not None and answer != '' and answer != [] and answer != 'Unspecified':
+                    responses += 1
 
             # return percentage of the survey completed, along with the
             # results.
-            return results, len(rows) / total_question_count
+            return results, responses / total_question_count
 
     def _generate_empty_survey(self, survey_template_id, return_tuple=False):
         """ Generate an empty survey template for a given template ID and
@@ -1215,14 +1229,14 @@ class SurveyTemplateRepo(BaseRepo):
 
                 if response_type == 'MULTIPLE':
                     if return_tuple:
-                        results[question_id] = (["Unspecified"], None)
+                        results[question_id] = ([], None)
                     else:
-                        results[question_id] = ["Unspecified"]
+                        results[question_id] = []
                 else:
                     if return_tuple:
-                        results[question_id] = ("Unspecified", None)
+                        results[question_id] = ("", None)
                     else:
-                        results[question_id] = "Unspecified"
+                        results[question_id] = ""
 
             return results
 

@@ -61,7 +61,7 @@ class VueField:
 
 
 class VueInputField(VueField):
-    def __init__(self, question_id, question_text, question_shortname=None):
+    def __init__(self, question_id, question_text, question_classes, question_shortname=None):
         super().__init__(
             type_="input",
             label=question_text,
@@ -78,7 +78,7 @@ class VueInputField(VueField):
             help_=None,
             validator="string",
             validate_debounce_time=None,
-            style_classes=None,
+            style_classes=question_classes,
             buttons=None,
             attributes=None,
             shortname=question_shortname
@@ -87,7 +87,7 @@ class VueInputField(VueField):
 
 
 class VueTextAreaField(VueField):
-    def __init__(self, question_id, question_text, question_shortname=None):
+    def __init__(self, question_id, question_text, question_classes, question_shortname=None):
         super().__init__(
             type_="textArea",
             label=question_text,
@@ -104,7 +104,7 @@ class VueTextAreaField(VueField):
             help_=None,
             validator="string",
             validate_debounce_time=None,
-            style_classes=None,
+            style_classes=question_classes,
             buttons=None,
             attributes=None,
             shortname=question_shortname
@@ -119,7 +119,7 @@ class VueTextAreaField(VueField):
 
 class VueSelectField(VueField):
     def __init__(self, question_id, question_text, valid_responses,
-                 question_shortname=None):
+                 question_classes, question_shortname=None):
         super().__init__(
             type_="select",
             label=question_text,
@@ -131,12 +131,12 @@ class VueSelectField(VueField):
             disabled=False,
             required=False,
             multi=False,
-            default=valid_responses[0],
+            default=None,
             hint=None,
             help_=None,
             validator=None,
             validate_debounce_time=None,
-            style_classes=None,
+            style_classes=question_classes,
             buttons=None,
             attributes=None,
             shortname=question_shortname
@@ -150,7 +150,7 @@ class VueSelectField(VueField):
 
 class VueRadiosField(VueField):
     def __init__(self, question_id, question_text, valid_responses,
-                 question_shortname=None):
+                 question_classes, question_shortname=None):
         super().__init__(
             type_="radios",
             label=question_text,
@@ -162,12 +162,12 @@ class VueRadiosField(VueField):
             disabled=False,
             required=False,
             multi=False,
-            default=valid_responses[0],
+            default=None,
             hint=None,
             help_=None,
             validator=None,
             validate_debounce_time=None,
-            style_classes=None,
+            style_classes=question_classes,
             buttons=None,
             attributes=None,
             shortname=question_shortname
@@ -180,7 +180,7 @@ class VueRadiosField(VueField):
 
 class VueChecklistField(VueField):
     def __init__(self, question_id, question_text, valid_responses,
-                 question_shortname=None):
+                 question_classes, question_shortname=None):
         super().__init__(
             type_="checklist",
             label=question_text,
@@ -197,18 +197,18 @@ class VueChecklistField(VueField):
             help_=None,
             validator=None,
             validate_debounce_time=None,
-            style_classes=None,
+            style_classes=question_classes,
             buttons=None,
             attributes=None,
             shortname=question_shortname
         )
-        self.listBox = False
+        self.listBox = True
         self.values = valid_responses
         self.selectOptions = {}
 
 
 class VueDateTimePickerField(VueField):
-    def __init__(self, question_id, question_text, question_shortname=None):
+    def __init__(self, question_id, question_text, question_classes, question_shortname=None):
         super().__init__(
             type_="dateTimePicker",
             label=question_text,
@@ -225,7 +225,7 @@ class VueDateTimePickerField(VueField):
             help_=None,
             validator=None,
             validate_debounce_time=None,
-            style_classes=None,
+            style_classes=question_classes,
             buttons=None,
             attributes=None,
             shortname=question_shortname

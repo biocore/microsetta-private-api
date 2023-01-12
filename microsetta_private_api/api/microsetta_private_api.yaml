@@ -43,12 +43,6 @@ paths:
             schema:
               allOf:
                 - $ref: '#/components/schemas/account'
-                - type: "object"
-                  properties:
-                    kit_name:
-                      $ref: '#/components/schemas/kit_name'
-                    code:
-                      $ref: '#/components/schemas/activation_code'
       responses:
         '201':
           description: Successfully registered new user account

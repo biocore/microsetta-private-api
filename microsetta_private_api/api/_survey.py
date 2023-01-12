@@ -38,23 +38,22 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [1, 3, 4, 5, 6, 7,
-                                     SurveyTemplateRepo.VIOSCREEN_ID,
-                                     SurveyTemplateRepo.MYFOODREPO_ID,
-                                     SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
-                                     SurveyTemplateRepo.SPAIN_FFQ_ID,
-                                     SurveyTemplateRepo.BASIC_INFO_ID,
-                                     SurveyTemplateRepo.AT_HOME_ID,
-                                     SurveyTemplateRepo.LIFESTYLE_ID,
-                                     SurveyTemplateRepo.GUT_ID,
-                                     SurveyTemplateRepo.GENERAL_HEALTH_ID,
-                                     SurveyTemplateRepo.HEALTH_DIAG_ID,
-                                     SurveyTemplateRepo.ALLERGIES_ID,
-                                     SurveyTemplateRepo.DIET_ID,
-                                     SurveyTemplateRepo.DETAILED_DIET_ID,
-                                     SurveyTemplateRepo.MIGRAINE_ID,
-                                     SurveyTemplateRepo.SURFERS_ID,
-                                     SurveyTemplateRepo.COVID19_ID]]), 200
+                           for x in [
+                                SurveyTemplateRepo.VIOSCREEN_ID,
+                                SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                                SurveyTemplateRepo.SPAIN_FFQ_ID,
+                                SurveyTemplateRepo.BASIC_INFO_ID,
+                                SurveyTemplateRepo.AT_HOME_ID,
+                                SurveyTemplateRepo.LIFESTYLE_ID,
+                                SurveyTemplateRepo.GUT_ID,
+                                SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                                SurveyTemplateRepo.HEALTH_DIAG_ID,
+                                SurveyTemplateRepo.ALLERGIES_ID,
+                                SurveyTemplateRepo.DIET_ID,
+                                SurveyTemplateRepo.DETAILED_DIET_ID,
+                                SurveyTemplateRepo.COVID19_ID,
+                                SurveyTemplateRepo.OTHER_ID
+                            ]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200
@@ -268,9 +267,9 @@ def read_survey_template(account_id, source_id, survey_template_id,
                     previous_response = results[field.inputName]
                     if previous_response:
                         field.default = previous_response
-            info.percentage_completed = "{0:.2f}%".format(percent_comp * 100)
+            info.percentage_completed = percent_comp
         else:
-            info.percentage_completed = '0.00%'
+            info.percentage_completed = 0
 
         return jsonify(info), 200
 

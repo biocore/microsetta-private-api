@@ -28,7 +28,8 @@ class Account(ModelBase):
                 input_dict['address']['city'],
                 input_dict['address']['state'],
                 input_dict['address']['post_code'],
-                input_dict['address']['country_code']
+                input_dict['address']['country_code'],
+                input_dict['address']['street2']
             ),
             input_dict['language']
         )
