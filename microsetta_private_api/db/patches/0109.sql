@@ -6,13 +6,13 @@ alter table ag.ag_login_surveys alter column creation_time set not null;
 alter table ag.ag_login_surveys add column survey_template_id integer;
 -- create a table of survey_ids w/a single question_id associated w/that
 -- survey and survey template.
-create table ag.tmp_tbl1 as select a.survey_id, min(b.survey_question_id) from ag_login_surveys a join survey_answers b on a.survey_id = b.survey_id group by a.survey_id;
+create table ag.tmp_tbl1 as select a.survey_id, min(b.survey_question_id) from ag.ag_login_surveys a join ag.survey_answers b on a.survey_id = b.survey_id group by a.survey_id;
 -- replace the question_ids in the table above w/the survey_group those
 -- questions are associated with.
-create table ag.tmp_tbl2 as select survey_id, survey_group from ag.tmp_tbl1 a join group_questions b on a.min = b.survey_question_id;
+create table ag.tmp_tbl2 as select survey_id, survey_group from ag.tmp_tbl1 a join ag.group_questions b on a.min = b.survey_question_id;
 -- replace the group_ids in the table above w/the template_ids those groups
 -- are associated with.
-create table ag.tmp_tbl3 as select a.survey_id, b.survey_id as survey_template_id from ag.tmp_tbl2 a join surveys b on a.survey_group = b.survey_group;
+create table ag.tmp_tbl3 as select a.survey_id, b.survey_id as survey_template_id from ag.tmp_tbl2 a join ag.surveys b on a.survey_group = b.survey_group;
 -- use the mapping of survey_ids to survey_template_ids to populate the
 -- new column of the existing table ag_login_surveys.
 update ag.ag_login_surveys set survey_template_id = (select survey_template_id from ag.tmp_tbl3 where survey_id = ag_login_surveys.survey_id);
@@ -21,14 +21,16 @@ drop table ag.tmp_tbl1;
 drop table ag.tmp_tbl2;
 drop table ag.tmp_tbl3;
 -- add survey_template_ids for remote surveys
-update ag.ag_login_surveys set survey_template_id = 10001 where survey_id in (select vio_id from vioscreen_registry);
-update ag.ag_login_surveys set survey_template_id = 10002 where survey_id in (select myfoodrepo_id::text from myfoodrepo_registry);
-update ag.ag_login_surveys set survey_template_id = 10003 where survey_id in (select polyphenol_ffq_id::text from polyphenol_ffq_registry);
-update ag.ag_login_surveys set survey_template_id = 10004 where survey_id in (select spain_ffq_id::text from spain_ffq_registry);
+update ag.ag_login_surveys set survey_template_id = 10001 where survey_id in (select vio_id from ag.vioscreen_registry);
+update ag.ag_login_surveys set survey_template_id = 10002 where survey_id in (select myfoodrepo_id::text from ag.myfoodrepo_registry);
+update ag.ag_login_surveys set survey_template_id = 10003 where survey_id in (select polyphenol_ffq_id::text from ag.polyphenol_ffq_registry);
+update ag.ag_login_surveys set survey_template_id = 10004 where survey_id in (select spain_ffq_id::text from ag.spain_ffq_registry);
 -- survey_template_id should be filled for all rows. If not, there is an issue
 -- and this update should stop. Every survey should be associated w/a
 -- template_id.
-alter table ag.ag_login_surveys alter column survey_template_id set not null;
+
+-- Temporarily removing not null constraint for testing
+-- alter table ag.ag_login_surveys alter column survey_template_id set not null;
 
 
 -- STEP 2: add retired column to surveys table and retire existing survey
