@@ -172,7 +172,7 @@ class SurveyTemplateRepo(BaseRepo):
         ),
         COVID19_ID: SurveyTemplateLinkInfo(
             COVID19_ID,
-            "COVID19 Questionnaire",
+            "COVID-19",
             "1.0",
             "local"
         ),
@@ -1073,6 +1073,33 @@ class SurveyTemplateRepo(BaseRepo):
 
         return False
 
+    def get_date_survey_last_taken(self, source_id, survey_template_id):
+        """ Get the date that the given source last took the given
+            survey_Template_id
+
+        Parameters
+        ----------
+        source_id : str
+            The id of the source
+        survey_template_id : int or str
+            The id of the survey in question
+
+        Returns
+        -------
+        datetime or None
+            If it finds a result, it returns the datetime. Otherwise, None.
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT MAX(creation_time) "
+                        "FROM ag.ag_login_surveys "
+                        "WHERE source_id = %s AND survey_template_id = %s",
+                        (source_id, survey_template_id))
+            r = cur.fetchone()
+            if r is None:
+                return None
+            else:
+                return r[0]
+
     def migrate_responses(self, source_id, survey_template_id):
         '''
         Get all survey responses associated with a source and survey_template
@@ -1161,7 +1188,7 @@ class SurveyTemplateRepo(BaseRepo):
 
             responses = 0
             for answer in results.values():
-                if answer is not None and answer != '' and answer != [] and answer != 'Unspecified':
+                if answer is not None and answer != '' and answer != []:
                     responses += 1
 
             # return percentage of the survey completed, along with the

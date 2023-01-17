@@ -1,6 +1,7 @@
 import flask
 from flask import jsonify, make_response
 from werkzeug.exceptions import NotFound
+from flask_babel import format_datetime, force_locale
 
 from microsetta_private_api.api._account import \
     _validate_account_access
@@ -257,6 +258,15 @@ def read_survey_template(account_id, source_id, survey_template_id,
             for field in group.fields:
                 if field.id in client_side_validation:
                     field.set(**client_side_validation[field.id])
+
+        date_last_taken = st_repo.get_date_survey_last_taken(
+            source_id,
+            survey_template_id
+        )
+        if date_last_taken is not None:
+            with force_locale(language_tag):
+                date_last_taken = format_datetime(date_last_taken, "MMM d, yyyy")
+        info.date_last_taken = date_last_taken
 
         results, percent_comp = st_repo.migrate_responses(source_id,
                                                           survey_template_id)

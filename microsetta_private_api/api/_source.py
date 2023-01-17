@@ -179,16 +179,12 @@ def create_human_source_from_consent(account_id, body, token_info):
         }
     }
 
-    deceased_parent_key = 'deceased_parent'
-    child_keys = {'parent_1_name', 'parent_2_name', deceased_parent_key,
-                  'obtainer_name'}
+    child_keys = {'parent_1_name', 'obtainer_name'}
 
     intersection = child_keys.intersection(body)
     if intersection:
         source['consent']['child_info'] = {}
         for key in intersection:
-            if key == deceased_parent_key:
-                body[deceased_parent_key] = body[deceased_parent_key] == 'true'
             source['consent']['child_info'][key] = body[key]
 
     # NB: Don't expect to handle errors 404, 422 in this function; expect to

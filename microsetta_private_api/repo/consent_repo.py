@@ -150,7 +150,7 @@ class ConsentRepo(BaseRepo):
 
         for v in con:
             if v in doc.consent_type:
-                if None in (parent_1, parent_2):
+                if parent_1 is None:
                     res = False
                     return res
 

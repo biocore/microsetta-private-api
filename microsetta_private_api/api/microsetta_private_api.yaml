@@ -316,12 +316,6 @@ paths:
                   $ref: '#/components/schemas/source_name'
                 parent_1_name:
                   $ref: '#/components/schemas/parent_1_name'
-                parent_2_name:
-                  $ref: '#/components/schemas/parent_2_name'
-                deceased_parent:
-                  type: string
-                  enum: ['true', 'false']
-                  example: 'true'
                 obtainer_name:
                   $ref: '#/components/schemas/obtainer_name'
                 consent_type:
@@ -405,12 +399,6 @@ paths:
                   $ref: '#/components/schemas/source_name'
                 parent_1_name:
                   $ref: '#/components/schemas/parent_1_name'
-                parent_2_name:
-                  $ref: '#/components/schemas/parent_2_name'
-                deceased_parent:
-                  type: string
-                  enum: ['true', 'false']
-                  example: 'true'
                 obtainer_name:
                   $ref: '#/components/schemas/obtainer_name'
                 consent_type:
@@ -480,8 +468,6 @@ paths:
                     age_range: "0-6"
                     child_info:
                       parent_1_name: "Demeter Doe"
-                      parent_2_name: "Zeus Doe"
-                      deceased_parent: false
                       obtainer_name: "Hades Doe"
         '401':
           $ref: '#/components/responses/401Unauthorized'

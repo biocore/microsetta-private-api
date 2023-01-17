@@ -75,9 +75,7 @@ INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response
     (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 489),
     (92, 'Diagnosed by an alternative medicine practitioner', 489),
     (92, 'Self-diagnosed', 489),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 490),
-    (92, 'Diagnosed by an alternative medicine practitioner', 490),
-    (92, 'Self-diagnosed', 490),
+    (489, 'Yes', 490),
     (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 511),
     (92, 'Diagnosed by an alternative medicine practitioner', 511),
     (92, 'Self-diagnosed', 511),
@@ -127,6 +125,13 @@ UPDATE ag.survey_question_response_type SET survey_response_type = 'STRING' WHER
 DELETE FROM ag.survey_question_response WHERE survey_question_id = 486;
 UPDATE ag.survey_question SET american = 'What date were you diagnosed?' WHERE survey_question_id = 213;
 UPDATE ag.survey_question SET retired = TRUE WHERE survey_question_id = 215;
+UPDATE ag.survey_question SET american = 'At home, what is the main source of your plain, unflavored drinking water? This can include still or sparkling/carbonated water. *In the options below, "bottled" includes bottles, jugs, water coolers or water dispensers.' WHERE survey_question_id = 474;
+UPDATE ag.survey_question SET american = 'When you''re outside the home, what is the main source of your plain unflavored drinking water? This can include still or sparkling/carbonated water. *In the options below, "bottled" includes bottles, jugs, water coolers or water dispensers.' WHERE survey_question_id = 476;
+UPDATE ag.survey_question SET american = 'If you answered "yes" to consuming beverages and/or foods containing non-nutritive or low-calorie sweeteners, what type of non-nutritive or low-calorie sweetner(s) do you consume on a regular basis? Select all that apply.' WHERE survey_question_id = 464;
+UPDATE ag.survey_question_response_type SET survey_response_type = 'MULTIPLE' WHERE survey_question_id = 505;
+UPDATE ag.survey_question_response_type SET survey_response_type = 'MULTIPLE' WHERE survey_question_id = 487;
+UPDATE ag.survey_question SET american = 'On nights before you have school or work, what time do you go to bed?' WHERE survey_question_id = 345;
+UPDATE ag.survey_question_response SET response = 'Some college or technical school' WHERE survey_question_id = 493 AND response = 'College degree';
 
 -- Fix triggers for various questions
 INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (17, 'Two', 18);
@@ -272,7 +277,6 @@ UPDATE ag.survey_question SET css_classes = 'tmi-survey-textarea tmi-survey-trig
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-axis' WHERE survey_question_id IN (56, 57, 58, 59, 91, 443, 61, 62, 236, 237, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 157, 463, 239, 240, 241, 242, 243, 244, 76, 165);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE survey_question_id IN (146, 474, 476, 478, 166);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical tmi-survey-triggered-question' WHERE survey_question_id IN (462);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-checkbox' WHERE survey_question_id IN (505, 487, 409, 410);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-checkbox tmi-survey-triggered-question' WHERE survey_question_id IN (464, 466, 167, 169, 171);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal tmi-survey-triggered-question' WHERE survey_question_id IN (465);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal' WHERE survey_question_id IN (475, 477);

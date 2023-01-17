@@ -55,6 +55,7 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
 
     _validate_account_access(token_info, account_id)
 
+
     with Transaction() as t:
         consent_repo = ConsentRepo(t)
         sign_id = str(uuid.uuid4())
@@ -62,8 +63,9 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
         try:
             consent_repo.sign_consent(account_id, consent_sign)
             t.commit()
-        except Exception:
-            return jsonify(code=404, message=CONSENT_DOC_NOT_FOUND_MSG), 404
+        except Exception as e:
+            raise Exception(e)
+            return jsonify(code=404, message=e), 404
 
     response = jsonify({"result": True})
     response.status_code = 201
