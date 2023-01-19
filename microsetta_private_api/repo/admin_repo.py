@@ -830,8 +830,11 @@ class AdminRepo(BaseRepo):
             # this is *safe* for all prior barcodes as the first character
             # has always been the "0" character.
             total_barcodes = number_of_kits * number_of_samples
-            cur.execute("SELECT max(right(barcode,8)::integer) "
-                        "FROM barcodes.barcode")
+            cur.execute(
+                "SELECT max(right(barcode,8)::integer) "
+                "FROM barcodes.barcode "
+                "WHERE barcode LIKE 'X%' OR barcode LIKE '0%'"
+            )
             start_bc = cur.fetchone()[0] + 1
             new_barcodes = ['X%0.8d' % (start_bc + i)
                             for i in range(total_barcodes)]

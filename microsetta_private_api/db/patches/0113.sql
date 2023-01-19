@@ -132,6 +132,7 @@ UPDATE ag.survey_question_response_type SET survey_response_type = 'MULTIPLE' WH
 UPDATE ag.survey_question_response_type SET survey_response_type = 'MULTIPLE' WHERE survey_question_id = 487;
 UPDATE ag.survey_question SET american = 'On nights before you have school or work, what time do you go to bed?' WHERE survey_question_id = 345;
 UPDATE ag.survey_question_response SET response = 'Some college or technical school' WHERE survey_question_id = 493 AND response = 'College degree';
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (54, 'None of the above', 5);
 
 -- Fix triggers for various questions
 INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (17, 'Two', 18);
@@ -206,8 +207,8 @@ ALTER TABLE ag.survey_question ADD COLUMN css_classes VARCHAR;
 
 -- Set the CSS classes for questions
 -- Basic Info survey
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-select col-4' WHERE survey_question_id IN (111,112);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal col-4' WHERE survey_question_id IN (502);
+UPDATE ag.survey_question SET css_classes = 'tmi-survey-select col-3' WHERE survey_question_id IN (111,112);
+UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal col-6' WHERE survey_question_id IN (502);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-text col-2' WHERE survey_question_id IN (108,113);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-switch col-4' WHERE survey_question_id IN (109,114);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-select col-4' WHERE survey_question_id IN (110, 148);
