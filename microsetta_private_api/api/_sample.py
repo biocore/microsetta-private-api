@@ -65,6 +65,7 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         'sample_ids': ["10317." + str(sample.barcode)]
     }
 
+    """
     try:
         qiita_data = qclient.post(
             '/api/v1/study/10317/samples/status',
@@ -94,7 +95,7 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         # How do I log these to gunicorn??
         app.logger.warning("Couldn't communicate with qiita", exc_info=True)
         raise
-
+    """
     return jsonify(sample.to_api()),
 
 
