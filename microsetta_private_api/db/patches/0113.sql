@@ -9,8 +9,9 @@ INSERT INTO ag.surveys (survey_id, survey_group) VALUES (22, -22);
 UPDATE ag.group_questions SET survey_group = -22, display_index = 0 WHERE survey_group = -10 AND survey_question_id = 116;
 
 -- Move the migraine-related questions from the Migraines survey into the Health Diagnoses survey as triggered questions
+UPDATE ag.survey_question SET retired = TRUE WHERE survey_question_id = 486;
 INSERT INTO ag.survey_question (survey_question_id, american, question_shortname, retired) VALUES
-    (511, 'Stress', 'MIGRAINE_FACTORS_STRESS', FALSE),
+    (511, 'For questions 11b - 11i, rank the listed factor based on how likely it is to lead to your migraines, where "1" is most likely, "2" is second most likely, etc. If the factor does not cause migraines, choose N/A.<br /><br />Stress', 'MIGRAINE_FACTORS_STRESS', FALSE),
     (512, 'Caffeine', 'MIGRAINE_FACTORS_CAFFEINE', FALSE),
     (513, 'Depression', 'MIGRAINE_FACTORS_DEPRESSION', FALSE),
     (514, 'Lack of sleep', 'MIGRAINE_FACTORS_LACKOFSLEEP', FALSE),
@@ -19,53 +20,125 @@ INSERT INTO ag.survey_question (survey_question_id, american, question_shortname
     (517, 'Nitrates', 'MIGRAINE_FACTORS_NITRATES', FALSE),
     (518, 'Hormones', 'MIGRAINE_FACTORS_HORMONES', FALSE);
 INSERT INTO ag.survey_question_response_type (survey_question_id, survey_response_type) VALUES
-    (511, 'STRING'),
-    (512, 'STRING'),
-    (513, 'STRING'),
-    (514, 'STRING'),
-    (515, 'STRING'),
-    (516, 'STRING'),
-    (517, 'STRING'),
-    (518, 'STRING');
+    (511, 'SINGLE'),
+    (512, 'SINGLE'),
+    (513, 'SINGLE'),
+    (514, 'SINGLE'),
+    (515, 'SINGLE'),
+    (516, 'SINGLE'),
+    (517, 'SINGLE'),
+    (518, 'SINGLE');
+INSERT INTO ag.survey_response (american) VALUES ('N/A');
 
-UPDATE ag.group_questions SET display_index = 39 WHERE survey_group = -15 AND display_index = 25;
-UPDATE ag.group_questions SET display_index = 38 WHERE survey_group = -15 AND display_index = 24;
-UPDATE ag.group_questions SET display_index = 37 WHERE survey_group = -15 AND display_index = 23;
-UPDATE ag.group_questions SET display_index = 36 WHERE survey_group = -15 AND display_index = 22;
-UPDATE ag.group_questions SET display_index = 35 WHERE survey_group = -15 AND display_index = 21;
-UPDATE ag.group_questions SET display_index = 34 WHERE survey_group = -15 AND display_index = 20;
-UPDATE ag.group_questions SET display_index = 33 WHERE survey_group = -15 AND display_index = 19;
-UPDATE ag.group_questions SET display_index = 32 WHERE survey_group = -15 AND display_index = 18;
-UPDATE ag.group_questions SET display_index = 31 WHERE survey_group = -15 AND display_index = 17;
-UPDATE ag.group_questions SET display_index = 30 WHERE survey_group = -15 AND display_index = 16;
-UPDATE ag.group_questions SET display_index = 29 WHERE survey_group = -15 AND display_index = 15;
-UPDATE ag.group_questions SET display_index = 28 WHERE survey_group = -15 AND display_index = 14;
+INSERT INTO ag.survey_question_response(survey_question_id, response, display_index) VALUES
+    (511, '1', 0),
+    (511, '2', 1),
+    (511, '3', 2),
+    (511, '4', 3),
+    (511, '5', 4),
+    (511, '6', 5),
+    (511, '7', 6),
+    (511, '8', 7),
+    (511, 'N/A', 8),
+    (512, '1', 0),
+    (512, '2', 1),
+    (512, '3', 2),
+    (512, '4', 3),
+    (512, '5', 4),
+    (512, '6', 5),
+    (512, '7', 6),
+    (512, '8', 7),
+    (512, 'N/A', 8),
+    (513, '1', 0),
+    (513, '2', 1),
+    (513, '3', 2),
+    (513, '4', 3),
+    (513, '5', 4),
+    (513, '6', 5),
+    (513, '7', 6),
+    (513, '8', 7),
+    (513, 'N/A', 8),
+    (514, '1', 0),
+    (514, '2', 1),
+    (514, '3', 2),
+    (514, '4', 3),
+    (514, '5', 4),
+    (514, '6', 5),
+    (514, '7', 6),
+    (514, '8', 7),
+    (514, 'N/A', 8),
+    (515, '1', 0),
+    (515, '2', 1),
+    (515, '3', 2),
+    (515, '4', 3),
+    (515, '5', 4),
+    (515, '6', 5),
+    (515, '7', 6),
+    (515, '8', 7),
+    (515, 'N/A', 8),
+    (516, '1', 0),
+    (516, '2', 1),
+    (516, '3', 2),
+    (516, '4', 3),
+    (516, '5', 4),
+    (516, '6', 5),
+    (516, '7', 6),
+    (516, '8', 7),
+    (516, 'N/A', 8),
+    (517, '1', 0),
+    (517, '2', 1),
+    (517, '3', 2),
+    (517, '4', 3),
+    (517, '5', 4),
+    (517, '6', 5),
+    (517, '7', 6),
+    (517, '8', 7),
+    (517, 'N/A', 8),
+    (518, '1', 0),
+    (518, '2', 1),
+    (518, '3', 2),
+    (518, '4', 3),
+    (518, '5', 4),
+    (518, '6', 5),
+    (518, '7', 6),
+    (518, '8', 7),
+    (518, 'N/A', 8);
+
+
+UPDATE ag.group_questions SET display_index = 38 WHERE survey_group = -15 AND display_index = 25;
+UPDATE ag.group_questions SET display_index = 37 WHERE survey_group = -15 AND display_index = 24;
+UPDATE ag.group_questions SET display_index = 36 WHERE survey_group = -15 AND display_index = 23;
+UPDATE ag.group_questions SET display_index = 35 WHERE survey_group = -15 AND display_index = 22;
+UPDATE ag.group_questions SET display_index = 34 WHERE survey_group = -15 AND display_index = 21;
+UPDATE ag.group_questions SET display_index = 33 WHERE survey_group = -15 AND display_index = 20;
+UPDATE ag.group_questions SET display_index = 32 WHERE survey_group = -15 AND display_index = 19;
+UPDATE ag.group_questions SET display_index = 31 WHERE survey_group = -15 AND display_index = 18;
+UPDATE ag.group_questions SET display_index = 30 WHERE survey_group = -15 AND display_index = 17;
+UPDATE ag.group_questions SET display_index = 29 WHERE survey_group = -15 AND display_index = 16;
+UPDATE ag.group_questions SET display_index = 28 WHERE survey_group = -15 AND display_index = 15;
+UPDATE ag.group_questions SET display_index = 27 WHERE survey_group = -15 AND display_index = 14;
 
 UPDATE ag.group_questions SET display_index = 14, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 485;
-UPDATE ag.group_questions SET display_index = 15, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 486;
 -- Leave a gap for the sub-questions of 486
-UPDATE ag.group_questions SET display_index = 24, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 487;
-UPDATE ag.group_questions SET display_index = 25, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 488;
-UPDATE ag.group_questions SET display_index = 26, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 489;
-UPDATE ag.group_questions SET display_index = 27, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 490;
+UPDATE ag.group_questions SET display_index = 23, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 487;
+UPDATE ag.group_questions SET display_index = 24, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 488;
+UPDATE ag.group_questions SET display_index = 25, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 489;
+UPDATE ag.group_questions SET display_index = 26, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 490;
 
 INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES
-    (-15, 511, 16),
-    (-15, 512, 17),
-    (-15, 513, 18),
-    (-15, 514, 19),
-    (-15, 515, 20),
-    (-15, 516, 21),
-    (-15, 517, 22),
-    (-15, 518, 23);
+    (-15, 511, 15),
+    (-15, 512, 16),
+    (-15, 513, 17),
+    (-15, 514, 18),
+    (-15, 515, 19),
+    (-15, 516, 20),
+    (-15, 517, 21),
+    (-15, 518, 22);
 
 INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES
     (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 485),
     (92, 'Diagnosed by an alternative medicine practitioner', 485),
     (92, 'Self-diagnosed', 485),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 486),
-    (92, 'Diagnosed by an alternative medicine practitioner', 486),
-    (92, 'Self-diagnosed', 486),
     (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 487),
     (92, 'Diagnosed by an alternative medicine practitioner', 487),
     (92, 'Self-diagnosed', 487),
@@ -121,7 +194,6 @@ DELETE FROM ag.survey_question_response WHERE survey_question_id = 502 AND respo
 UPDATE ag.survey_question_response SET display_index = 3 WHERE survey_question_id = 502 AND response = 'Not sure';
 UPDATE ag.survey_question_response_type SET survey_response_type = 'STRING' WHERE survey_question_id = 150;
 UPDATE ag.survey_question SET american = 'Describe the quality of your bowel movements. Use the chart below as a reference:<br/><img src="/static/img/en_us/bristol_stool.jpg" id="bristol-chart">' WHERE survey_question_id = 38;
-UPDATE ag.survey_question_response_type SET survey_response_type = 'STRING' WHERE survey_question_id = 486;
 DELETE FROM ag.survey_question_response WHERE survey_question_id = 486;
 UPDATE ag.survey_question SET american = 'What date were you diagnosed?' WHERE survey_question_id = 213;
 UPDATE ag.survey_question SET retired = TRUE WHERE survey_question_id = 215;
@@ -133,6 +205,28 @@ UPDATE ag.survey_question_response_type SET survey_response_type = 'MULTIPLE' WH
 UPDATE ag.survey_question SET american = 'On nights before you have school or work, what time do you go to bed?' WHERE survey_question_id = 345;
 UPDATE ag.survey_question_response SET response = 'Some college or technical school' WHERE survey_question_id = 493 AND response = 'College degree';
 INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (54, 'None of the above', 5);
+UPDATE ag.survey_question SET american = 'On your days off (when you do not have school or work), what time do you get up in the morning?' WHERE survey_question_id = 346;
+UPDATE ag.survey_question SET american = 'On your days off (when you do not have school or work), what time do you go to bed?' WHERE survey_question_id = 347;
+UPDATE ag.survey_question_response SET response = 'Other' WHERE survey_question_id = 474 AND display_index = 9;
+INSERT INTO ag.survey_question (survey_question_id, american, question_shortname, retired) VALUES
+    (519, 'Please describe your main source of water at home:', 'WATER_AT_HOME_OTHER', FALSE),
+    (520, 'Please describe your main source of water outside the home:', 'WATER_OUTSIDE_HOME_OTHER', FALSE);
+INSERT INTO ag.survey_question_response_type (survey_question_id, survey_response_type) VALUES
+    (519, 'STRING'),
+    (520, 'STRING');
+
+UPDATE ag.group_questions SET display_index = 48 WHERE survey_group = -18 AND display_index = 46;
+UPDATE ag.group_questions SET display_index = 47 WHERE survey_group = -18 AND display_index = 45;
+UPDATE ag.group_questions SET display_index = 46 WHERE survey_group = -18 AND display_index = 44;
+UPDATE ag.group_questions SET display_index = 45 WHERE survey_group = -18 AND display_index = 43;
+UPDATE ag.group_questions SET display_index = 44 WHERE survey_group = -18 AND display_index = 42;
+UPDATE ag.group_questions SET display_index = 43 WHERE survey_group = -18 AND display_index = 41;
+UPDATE ag.group_questions SET display_index = 42 WHERE survey_group = -18 AND display_index = 40;
+INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (-18, 520, 41);
+UPDATE ag.group_questions SET display_index = 40 WHERE survey_group = -18 AND display_index = 39;
+UPDATE ag.group_questions SET display_index = 39 WHERE survey_group = -18 AND display_index = 38;
+INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (-18, 519, 38);
+
 
 -- Fix triggers for various questions
 INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (17, 'Two', 18);
@@ -200,6 +294,8 @@ INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response
 INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Daily', 171);
 INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (212, 'Yes, with a positive test', 213);
 INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (212, 'Yes, medical diagnosis, but no test', 213);
+INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (474, 'Other', 519);
+INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (476, 'Other', 520);
 
 
 -- Add column for CSS classes to survey questions table
@@ -252,8 +348,7 @@ UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-buttons' WHERE sur
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-checkbox tmi-survey-triggered-question' WHERE survey_question_id IN (505, 487, 409, 410);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical tmi-survey-triggered-question' WHERE survey_question_id IN (506, 485, 413);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal tmi-survey-triggered-question' WHERE survey_question_id IN (488, 489, 408);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text-hide tmi-survey-triggered-question' WHERE survey_question_id IN (486);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text-small tmi-survey-triggered-question' WHERE survey_question_id IN (511, 512, 513, 514, 515, 516, 517, 518);
+UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-axis tmi-survey-triggered-question' WHERE survey_question_id IN (511, 512, 513, 514, 515, 516, 517, 518);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-text tmi-survey-triggered-question' WHERE survey_question_id IN (490, 407);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal' WHERE survey_question_id IN (507, 499);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-textarea tmi-survey-triggered-question' WHERE survey_question_id IN (106);
@@ -281,6 +376,7 @@ UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical tmi-surve
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-checkbox tmi-survey-triggered-question' WHERE survey_question_id IN (464, 466, 167, 169, 171);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal tmi-survey-triggered-question' WHERE survey_question_id IN (465);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal' WHERE survey_question_id IN (475, 477);
+UPDATE ag.survey_question SET css_classes = 'tmi-survey-text tmi-survey-triggered-question' WHERE survey_question_id IN (519, 520);
 
 -- COVID-19
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-text' WHERE survey_question_id IN (209);
