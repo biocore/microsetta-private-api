@@ -226,7 +226,7 @@ INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index)
 UPDATE ag.group_questions SET display_index = 40 WHERE survey_group = -18 AND display_index = 39;
 UPDATE ag.group_questions SET display_index = 39 WHERE survey_group = -18 AND display_index = 38;
 INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (-18, 519, 38);
-
+UPDATE ag.survey_question SET american = 'Describe the consistency of your bowel movements:<br /><img src="/static/img/bristol_1.png" id="bristol-chart-1" /><br /><span class="bristol-chart-text">Type 1: Separate hard lumps, like nuts (hard to pass.<br />Type 2: Sausage shaped but lumpy.<br />Type 3: Like a sausage but with cracks on the surface.<br />Type 4: Like a sausage or snake - smooth and soft.</span><img src="/static/img/bristol_2.png" id="bristol-chart-2" /><br /><span class="bristol-chart-text">Type 5: Soft blobs with clear-cut edges.<br />Type 6: Fluffy pieces with ragged edges; a mushy stool.<br />Type 7: Watery, no solid pieces. Entirely liquid.</span>' WHERE survey_question_id = 38;
 
 -- Fix triggers for various questions
 INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (17, 'Two', 18);

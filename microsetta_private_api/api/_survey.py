@@ -277,12 +277,42 @@ def read_survey_template(account_id, source_id, survey_template_id,
                     previous_response = results[field.inputName]
                     if previous_response:
                         field.default = previous_response
-            info.percentage_completed = percent_comp
+            info.percentage_completed = _calculate_completion_percentage(info.survey_template_text)
         else:
             info.percentage_completed = 0
 
         return jsonify(info), 200
 
+
+def _calculate_completion_percentage(survey_model):
+    visible_questions = 0
+    answered_questions = 0
+    answers = {}
+
+    for group in survey_model.groups:
+        for field in group.fields:
+            answers[field.id] = field.default
+            if hasattr(field, 'triggered_by'):
+                q_is_visible = False
+                for trigger_q in field.triggered_by:
+                    if answers[trigger_q['q_id']] == trigger_q['response']:
+                        q_is_visible = True
+                        break
+
+                if q_is_visible is True:
+                    visible_questions += 1
+                    if _is_question_answered(field.default):
+                        answered_questions += 1
+            else:
+                visible_questions += 1
+                if _is_question_answered(field.default):
+                    answered_questions += 1
+
+    return answered_questions / visible_questions
+
+
+def _is_question_answered(response):
+    return (response is not None and response != '' and response != [])
 
 def read_answered_surveys(account_id, source_id, language_tag, token_info):
     _validate_account_access(token_info, account_id)
