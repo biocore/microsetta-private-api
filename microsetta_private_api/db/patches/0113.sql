@@ -31,78 +31,87 @@ INSERT INTO ag.survey_question_response_type (survey_question_id, survey_respons
 INSERT INTO ag.survey_response (american) VALUES ('N/A');
 
 INSERT INTO ag.survey_question_response(survey_question_id, response, display_index) VALUES
-    (511, '1', 0),
-    (511, '2', 1),
-    (511, '3', 2),
-    (511, '4', 3),
-    (511, '5', 4),
-    (511, '6', 5),
-    (511, '7', 6),
-    (511, '8', 7),
-    (511, 'N/A', 8),
-    (512, '1', 0),
-    (512, '2', 1),
-    (512, '3', 2),
-    (512, '4', 3),
-    (512, '5', 4),
-    (512, '6', 5),
-    (512, '7', 6),
-    (512, '8', 7),
-    (512, 'N/A', 8),
-    (513, '1', 0),
-    (513, '2', 1),
-    (513, '3', 2),
-    (513, '4', 3),
-    (513, '5', 4),
-    (513, '6', 5),
-    (513, '7', 6),
-    (513, '8', 7),
-    (513, 'N/A', 8),
-    (514, '1', 0),
-    (514, '2', 1),
-    (514, '3', 2),
-    (514, '4', 3),
-    (514, '5', 4),
-    (514, '6', 5),
-    (514, '7', 6),
-    (514, '8', 7),
-    (514, 'N/A', 8),
-    (515, '1', 0),
-    (515, '2', 1),
-    (515, '3', 2),
-    (515, '4', 3),
-    (515, '5', 4),
-    (515, '6', 5),
-    (515, '7', 6),
-    (515, '8', 7),
-    (515, 'N/A', 8),
-    (516, '1', 0),
-    (516, '2', 1),
-    (516, '3', 2),
-    (516, '4', 3),
-    (516, '5', 4),
-    (516, '6', 5),
-    (516, '7', 6),
-    (516, '8', 7),
-    (516, 'N/A', 8),
-    (517, '1', 0),
-    (517, '2', 1),
-    (517, '3', 2),
-    (517, '4', 3),
-    (517, '5', 4),
-    (517, '6', 5),
-    (517, '7', 6),
-    (517, '8', 7),
-    (517, 'N/A', 8),
-    (518, '1', 0),
-    (518, '2', 1),
-    (518, '3', 2),
-    (518, '4', 3),
-    (518, '5', 4),
-    (518, '6', 5),
-    (518, '7', 6),
-    (518, '8', 7),
-    (518, 'N/A', 8);
+    (511, 'Unspecified', 0),
+    (511, '1', 1),
+    (511, '2', 2),
+    (511, '3', 3),
+    (511, '4', 4),
+    (511, '5', 5),
+    (511, '6', 6),
+    (511, '7', 7),
+    (511, '8', 8),
+    (511, 'N/A', 9),
+    (512, 'Unspecified', 0),
+    (512, '1', 1),
+    (512, '2', 2),
+    (512, '3', 3),
+    (512, '4', 4),
+    (512, '5', 5),
+    (512, '6', 6),
+    (512, '7', 7),
+    (512, '8', 8),
+    (512, 'N/A', 9),
+    (513, 'Unspecified', 0),
+    (513, '1', 1),
+    (513, '2', 2),
+    (513, '3', 3),
+    (513, '4', 4),
+    (513, '5', 5),
+    (513, '6', 6),
+    (513, '7', 7),
+    (513, '8', 8),
+    (513, 'N/A', 9),
+    (514, 'Unspecified', 0),
+    (514, '1', 1),
+    (514, '2', 2),
+    (514, '3', 3),
+    (514, '4', 4),
+    (514, '5', 5),
+    (514, '6', 6),
+    (514, '7', 7),
+    (514, '8', 8),
+    (514, 'N/A', 9),
+    (515, 'Unspecified', 0),
+    (515, '1', 1),
+    (515, '2', 2),
+    (515, '3', 3),
+    (515, '4', 4),
+    (515, '5', 5),
+    (515, '6', 6),
+    (515, '7', 7),
+    (515, '8', 8),
+    (515, 'N/A', 9),
+    (516, 'Unspecified', 0),
+    (516, '1', 1),
+    (516, '2', 2),
+    (516, '3', 3),
+    (516, '4', 4),
+    (516, '5', 5),
+    (516, '6', 6),
+    (516, '7', 7),
+    (516, '8', 8),
+    (516, 'N/A', 9),
+    (517, 'Unspecified', 0),
+    (517, '1', 1),
+    (517, '2', 2),
+    (517, '3', 3),
+    (517, '4', 4),
+    (517, '5', 5),
+    (517, '6', 6),
+    (517, '7', 7),
+    (517, '8', 8),
+    (517, 'N/A', 9),
+    (518, 'Unspecified', 0),
+    (518, '1', 1),
+    (518, '2', 2),
+    (518, '3', 3),
+    (518, '4', 4),
+    (518, '5', 5),
+    (518, '6', 6),
+    (518, '7', 7),
+    (518, '8', 8),
+    (518, 'N/A', 9);
+
 
 
 UPDATE ag.group_questions SET display_index = 38 WHERE survey_group = -15 AND display_index = 25;
@@ -193,7 +202,6 @@ UPDATE ag.survey_question SET retired = FALSE WHERE survey_question_id = 114;
 DELETE FROM ag.survey_question_response WHERE survey_question_id = 502 AND response = 'Other';
 UPDATE ag.survey_question_response SET display_index = 3 WHERE survey_question_id = 502 AND response = 'Not sure';
 UPDATE ag.survey_question_response_type SET survey_response_type = 'STRING' WHERE survey_question_id = 150;
-UPDATE ag.survey_question SET american = 'Describe the quality of your bowel movements. Use the chart below as a reference:<br/><img src="/static/img/en_us/bristol_stool.jpg" id="bristol-chart">' WHERE survey_question_id = 38;
 DELETE FROM ag.survey_question_response WHERE survey_question_id = 486;
 UPDATE ag.survey_question SET american = 'What date were you diagnosed?' WHERE survey_question_id = 213;
 UPDATE ag.survey_question SET retired = TRUE WHERE survey_question_id = 215;
@@ -226,7 +234,10 @@ INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index)
 UPDATE ag.group_questions SET display_index = 40 WHERE survey_group = -18 AND display_index = 39;
 UPDATE ag.group_questions SET display_index = 39 WHERE survey_group = -18 AND display_index = 38;
 INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (-18, 519, 38);
-UPDATE ag.survey_question SET american = 'Describe the consistency of your bowel movements:<br /><img src="/static/img/bristol_1.png" id="bristol-chart-1" /><br /><span class="bristol-chart-text">Type 1: Separate hard lumps, like nuts (hard to pass.<br />Type 2: Sausage shaped but lumpy.<br />Type 3: Like a sausage but with cracks on the surface.<br />Type 4: Like a sausage or snake - smooth and soft.</span><img src="/static/img/bristol_2.png" id="bristol-chart-2" /><br /><span class="bristol-chart-text">Type 5: Soft blobs with clear-cut edges.<br />Type 6: Fluffy pieces with ragged edges; a mushy stool.<br />Type 7: Watery, no solid pieces. Entirely liquid.</span>' WHERE survey_question_id = 38;
+UPDATE ag.survey_question SET american = 'Describe the consistency of your bowel movements:<br /><div class="bristol-img-container"><img src="/static/img/bristol_1.png" id="bristol-chart-1" /></div><span class="bristol-chart-text">Type 1: Separate hard lumps, like nuts (hard to pass.<br />Type 2: Sausage shaped but lumpy.</span><div class="bristol-img-container"><img src="/static/img/bristol_2.png" id="bristol-chart-2" /></div><span class="bristol-chart-text">Type 3: Like a sausage but with cracks on the surface.<br />Type 4: Like a sausage or snake - smooth and soft.</span><div class="bristol-img-container"><img src="/static/img/bristol_3.png" id="bristol-chart-3" /></div><span class="bristol-chart-text">Type 5: Soft blobs with clear-cut edges.<br />Type 6: Fluffy pieces with ragged edges; a mushy stool.<br />Type 7: Watery, no solid pieces. Entirely liquid.</span>' WHERE survey_question_id = 38;
+UPDATE ag.survey_question_response SET display_index = 5 WHERE survey_question_id = 38 AND response = 'I tend to have diarrhea (watery stool) - Type 5, 6 and 7';
+UPDATE ag.survey_question_response SET display_index = 2 WHERE survey_question_id = 38 AND response = 'I tend to have normal formed stool - Type 3 and 4';
+UPDATE ag.survey_question_response SET display_index = 3 WHERE survey_question_id = 38 AND response = 'I tend to have diarrhea (watery stool) - Type 5, 6 and 7';
 
 -- Fix triggers for various questions
 INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (17, 'Two', 18);
@@ -496,7 +507,7 @@ UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
 
 UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
   <strong>University of California, San Diego</strong><br />
-  Assent to Act as a Research Subject
+  Assent to Act as a Research Subject<br />
   (Ages 13-17 years)
 </p>
 <p class="consent_title">
@@ -588,12 +599,12 @@ UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
   Your consent is entirely voluntary, but declining to provide it may impede your ability to participate in this research.
 </p>' WHERE consent_type = 'adolescent_data' AND locale = 'en_US';
 
-UPDATE ag.consent_documents SET consent_content = '<p class="content_title">
+UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
   <strong>University of California, San Diego</strong><br />
   Consent to Act as a Research Subject
 </p>
 <p class="consent_title">
-  <strong>The Microsetta Initiative</strong>
+  <strong>The Microsetta Initiative</strong><br />
   Biospecimen and Future Use Research
 </p>
 <p class="consent_header">
