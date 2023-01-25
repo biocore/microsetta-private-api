@@ -1288,7 +1288,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/vioscreen/{account_id}/sources/{source_id}/vioscreen_sessions':
+  '/accounts/{account_id}/sources/{source_id}/vioscreen_sessions':
     get:
       operationId: microsetta_private_api.api.get_vioscreen_sessions
       tags:
@@ -1312,6 +1312,29 @@ paths:
           $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
+
+  '/accounts/{account_id}/sources/{source_id}/vioscreen_registry_entries':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_registry_entries
+      tags:
+        - Vioscreen
+      summary: Get Vioscreen registry entries for given source
+      description: Get Vioscreen registry entries for given source
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+      responses:
+        '200':
+          description: Successfully returned vioscreens
+          content:
+            application/json:
+              schema:
+                type:
+                  array
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
 
   '/vioscreen/dietaryscore/':
     get:
@@ -1566,6 +1589,39 @@ paths:
                   error:
                     type: string
                     nullable: true
+
+  '/check_ffq_code':
+    get:
+      operationId: microsetta_private_api.api.check_ffq_code
+      tags:
+        - FFQs
+      summary: Check if an FFQ code is valid and has not been used
+      description: Check if an FFQ code is valid and has not been used
+      parameters:
+        - in: query
+          name: ffq_code
+          description: FFQ Code
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully returned list of unassigned samples
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unused_code:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
 
   '/campaign_information':
     get:
@@ -2654,6 +2710,27 @@ paths:
       responses:
         '200':
           description: Returns array of activation information
+          content:
+            application/json:
+              schema:
+                type: array
+
+  '/admin/generate_ffq_codes':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.generate_ffq_codes
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code_quantity:
+                  type: integer
+      responses:
+        '200':
+          description: Returns FFQ code(s)
           content:
             application/json:
               schema:

@@ -681,6 +681,20 @@ def generate_activation_codes(body, token_info):
     return jsonify(results), 200
 
 
+def generate_ffq_codes(body, token_info):
+    validate_admin_access(token_info)
+
+    quantity = body.get("code_quantity", 1)
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        code_list = []
+        for i in range(quantity):
+            code_list.append(admin_repo.create_ffq_code())
+        t.commit()
+
+    return jsonify(code_list), 200
+
+
 def list_barcode_query_fields(token_info):
     validate_admin_access(token_info)
 

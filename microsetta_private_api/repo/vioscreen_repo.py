@@ -1683,3 +1683,74 @@ class VioscreenRepo(BaseRepo):
                     session = VioscreenSession(*row)
                     sessions.append(session)
                 return sessions
+
+    def get_registry_entries_by_source(self, account_id, source_id):
+        """ Retrieve all Vioscreen surveys for a given source
+
+        Parameters
+        ----------
+        account_id : str
+            The account_id of the source
+        source_id : str
+            The source_id
+
+        Returns
+        -------
+        list of dicts or None
+            The records of the entries or None
+        """
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT als.vioscreen_status, als.creation_time, "
+                "vr.sample_id, vr.registration_code "
+                "FROM ag.ag_login_surveys als "
+                "JOIN ag.vioscreen_registry vr "
+                "ON als.survey_id = vr.vio_id "
+                "WHERE als.ag_login_id = %s AND als.source_id = %s "
+                "AND vr.deleted = FALSE "
+                "ORDER BY creation_time DESC",
+                (account_id, source_id)
+            )
+            rows = cur.fetchall()
+            if rows is None:
+                return []
+            else:
+                ret_val = []
+                for r in rows:
+                    vre = {
+                        "vioscreen_status": r['vioscreen_status'],
+                        "creation_time": r['creation_time'].strftime(
+                            "%b %d, %Y %I:%M %p"
+                        ),
+                        "sample_id": r['sample_id'],
+                        "registration_code": r['registration_code']
+                    }
+                    ret_val.append(vre)
+                return ret_val
+
+    def get_unused_code(self, ffq_code):
+        """ Check whether an FFQ code has been used
+
+        Parameters
+        ----------
+        ffq_code : str
+            The session ID to obtain a FFQ for
+
+        Returns
+        -------
+        str or None
+            The code if it exists and is unused
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT ffq_registration_code "
+                "FROM campaign.ffq_registration_codes "
+                "WHERE ffq_registration_code = %s AND "
+                "registration_code_used IS NULL",
+                (ffq_code, )
+            )
+            row = cur.fetchone()
+            if row is None:
+                return None
+            else:
+                return row[0]

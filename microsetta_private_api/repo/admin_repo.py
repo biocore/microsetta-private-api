@@ -17,6 +17,7 @@ from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.model.activation_code import ActivationCode
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
@@ -1357,3 +1358,15 @@ class AdminRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             psycopg2.extras.execute_values(cur, insert_sql, kit_uuid_tuples,
                                            template=None, page_size=100)
+
+    def create_ffq_code(self):
+        code = ActivationCode.generate_code()
+        with self._transaction.cursor() as cur:
+            # Insert the newly created registration code
+            cur.execute(
+                "INSERT INTO campaign.ffq_registration_codes ("
+                "ffq_registration_code"
+                ") VALUES (%s)",
+                (code,)
+            )
+        return code

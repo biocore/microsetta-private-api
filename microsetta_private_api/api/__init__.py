@@ -45,7 +45,7 @@ from ._vioscreen import (
     get_vioscreen_dietary_scores_descriptions,
     get_vioscreen_food_components_by_code,
     get_vioscreen_food_components_descriptions,
-    get_vioscreen_sessions
+    get_vioscreen_sessions, get_vioscreen_registry_entries, check_ffq_code
 )
 
 from ._campaign import (
@@ -124,5 +124,7 @@ __all__ = [
     'create_interested_user',
     'get_interested_user_address_update',
     'put_interested_user_address_update',
-    'get_vioscreen_sessions'
+    'get_vioscreen_sessions',
+    'get_vioscreen_registry_entries',
+    'check_ffq_code'
 ]

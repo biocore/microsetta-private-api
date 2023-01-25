@@ -14,6 +14,7 @@ from microsetta_private_api.model.survey_template_trigger import \
 import copy
 import secrets
 from microsetta_private_api.exceptions import RepoException
+from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 
 
 class SurveyTemplateRepo(BaseRepo):
@@ -756,6 +757,26 @@ class SurveyTemplateRepo(BaseRepo):
 
             if existing is None:
                 vioscreen_id = secrets.token_hex(8)
+
+                # if they're using a registration code, we need to make sure
+                # it hasn't already been used
+                if registration_code is not None:
+                    vio_repo = VioscreenRepo(self._transaction)
+                    unused_code = vio_repo.get_unused_code(registration_code)
+
+                    if unused_code is None:
+                        # the code is either invalid or has been used
+                        raise RepoException("Registration code is invalid")
+                    else:
+                        # the code is valid and unused, so let's mark it used
+                        # and proceed
+                        cur.execute(
+                            "UPDATE campaign.ffq_registration_codes "
+                            "SET registration_code_used = NOW() "
+                            "WHERE ffq_registration_code = %s",
+                            (registration_code, )
+                        )
+
                 # Put a survey with status -1 into ag_login_surveys
                 cur.execute("INSERT INTO ag_login_surveys("
                             "ag_login_id, "
@@ -769,20 +790,14 @@ class SurveyTemplateRepo(BaseRepo):
 
                 # And add it to the registry to keep track of the survey if
                 # user quits out then wants to resume the survey.
-                if sample_id is not None:
-                    cur.execute("INSERT INTO vioscreen_registry("
-                                "account_id, source_id, vio_id, "
-                                "sample_id) "
-                                "VALUES(%s, %s, %s, %s)",
-                                (account_id, source_id,
-                                 vioscreen_id, sample_id))
-                elif registration_code is not None:
-                    cur.execute("INSERT INTO vioscreen_registry("
-                                "account_id, source_id, vio_id, "
-                                "registration_code) "
-                                "VALUES(%s, %s, %s, %s)",
-                                (account_id, source_id,
-                                 vioscreen_id, registration_code))
+                cur.execute(
+                    "INSERT INTO ag.vioscreen_registry ("
+                    "account_id, source_id, vio_id, sample_id, "
+                    "registration_code) "
+                    "VALUES (%s, %s, %s, %s, %s)",
+                    (account_id, source_id, vioscreen_id, sample_id,
+                     registration_code)
+                )
             else:
                 vioscreen_id = existing
         return vioscreen_id
