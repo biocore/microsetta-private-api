@@ -1702,7 +1702,7 @@ class VioscreenRepo(BaseRepo):
         with self._transaction.dict_cursor() as cur:
             cur.execute(
                 "SELECT als.vioscreen_status, als.creation_time, "
-                "vr.sample_id, vr.registration_code "
+                "als.survey_id, vr.sample_id, vr.registration_code "
                 "FROM ag.ag_login_surveys als "
                 "JOIN ag.vioscreen_registry vr "
                 "ON als.survey_id = vr.vio_id "
@@ -1718,6 +1718,7 @@ class VioscreenRepo(BaseRepo):
                 ret_val = []
                 for r in rows:
                     vre = {
+                        "survey_id": r['survey_id'],
                         "vioscreen_status": r['vioscreen_status'],
                         "creation_time": r['creation_time'].strftime(
                             "%b %d, %Y %I:%M %p"
