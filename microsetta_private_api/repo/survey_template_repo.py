@@ -975,14 +975,14 @@ class SurveyTemplateRepo(BaseRepo):
                                  'HEIGHT_UNITS',
                                  'WEIGHT_UNITS',
                                  'BIRTH_YEAR',
-                                 'GENDER')
+                                 'GENDER_v2')
                              AND s.ag_login_id = %s
                              and s.source_id = %s""",
                         (account_id, source_id))
 
             results = {name: value for name, value in cur.fetchall()}
             birth_year = results.get('BIRTH_YEAR')
-            gender = results.get('GENDER')
+            gender = results.get('GENDER_v2')
             height_units = results.get('HEIGHT_UNITS')
             weight_units = results.get('WEIGHT_UNITS')
 
