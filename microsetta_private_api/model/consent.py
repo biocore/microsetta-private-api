@@ -46,7 +46,8 @@ class ConsentSignature:
         parent_name_1 = input_dict.get("parent_1_name")
         parent_name_2 = input_dict.get("parent_2_name")
         deceased_parent = input_dict.get("deceased_parent")
-        assent_obtainer = input_dict.get("assent_obtainer")
+        assent_obtainer = input_dict.get("obtainer_name")
+        assent_id = input_dict.get("assent_id")
 
         return ConsentSignature(
             signature_id,
@@ -56,12 +57,13 @@ class ConsentSignature:
             parent_name_1,
             parent_name_2,
             deceased_parent,
-            assent_obtainer
+            assent_obtainer,
+            assent_id
         )
 
     def __init__(self, signature_id, consent_id, source_id,
                  date_time, parent_1_name, parent_2_name,
-                 deceased_parent, assent_obtainer):
+                 deceased_parent, assent_obtainer, assent_id):
         self.signature_id = signature_id
         self.consent_id = consent_id
         self.source_id = source_id
@@ -70,6 +72,7 @@ class ConsentSignature:
         self.parent_2_name = parent_2_name
         self.deceased_parent = deceased_parent
         self.assent_obtainer = assent_obtainer
+        self.assent_id = assent_id
 
     def to_api(self):
         return {'signature_id': self.signature_id,
@@ -79,5 +82,6 @@ class ConsentSignature:
                 'parent_1_name': self.parent_1_name,
                 'parent_2_name': self.parent_2_name,
                 'deceased_parent': self.deceased_parent,
-                'assent_obtainer': self.assent_obtainer
+                'assent_obtainer': self.assent_obtainer,
+                'assent_id': self.assent_id
                 }

@@ -1,6 +1,10 @@
 -- Add an Address 2 field to the account table
 ALTER TABLE ag.account ADD COLUMN street2 VARCHAR;
 
+-- Add an assent_id to the consent_audit table for the 7-12 and 13-17 age groups. It needs to remain nullable as not all age groups have an assent document.
+ALTER TABLE ag.consent_audit ADD COLUMN assent_id UUID,
+    ADD CONSTRAINT fk_assent_id FOREIGN KEY (assent_id) REFERENCES ag.consent_documents (consent_id);
+
 -- Create the Other survey
 INSERT INTO ag.survey_group (group_order, american) VALUES (-22, 'Other');
 INSERT INTO ag.surveys (survey_id, survey_group) VALUES (22, -22);
@@ -234,7 +238,7 @@ INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index)
 UPDATE ag.group_questions SET display_index = 40 WHERE survey_group = -18 AND display_index = 39;
 UPDATE ag.group_questions SET display_index = 39 WHERE survey_group = -18 AND display_index = 38;
 INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (-18, 519, 38);
-UPDATE ag.survey_question SET american = 'Describe the consistency of your bowel movements:<br /><div class="bristol-img-container"><img src="/static/img/bristol_1.png" id="bristol-chart-1" /></div><span class="bristol-chart-text">Type 1: Separate hard lumps, like nuts (hard to pass.<br />Type 2: Sausage shaped but lumpy.</span><div class="bristol-img-container"><img src="/static/img/bristol_2.png" id="bristol-chart-2" /></div><span class="bristol-chart-text">Type 3: Like a sausage but with cracks on the surface.<br />Type 4: Like a sausage or snake - smooth and soft.</span><div class="bristol-img-container"><img src="/static/img/bristol_3.png" id="bristol-chart-3" /></div><span class="bristol-chart-text">Type 5: Soft blobs with clear-cut edges.<br />Type 6: Fluffy pieces with ragged edges; a mushy stool.<br />Type 7: Watery, no solid pieces. Entirely liquid.</span>' WHERE survey_question_id = 38;
+UPDATE ag.survey_question SET american = 'Describe the consistency of your bowel movements:<br /><div class="bristol-img-container"><img src="/static/img/bristol_1.png" id="bristol-chart-1" /></div><span class="bristol-chart-text">Type 1: Separate hard lumps, like nuts (hard to pass).<br />Type 2: Sausage shaped but lumpy.</span><div class="bristol-img-container"><img src="/static/img/bristol_2.png" id="bristol-chart-2" /></div><span class="bristol-chart-text">Type 3: Like a sausage but with cracks on the surface.<br />Type 4: Like a sausage or snake - smooth and soft.</span><div class="bristol-img-container"><img src="/static/img/bristol_3.png" id="bristol-chart-3" /></div><span class="bristol-chart-text">Type 5: Soft blobs with clear-cut edges.<br />Type 6: Fluffy pieces with ragged edges; a mushy stool.<br />Type 7: Watery, no solid pieces. Entirely liquid.</span>' WHERE survey_question_id = 38;
 UPDATE ag.survey_question_response SET display_index = 5 WHERE survey_question_id = 38 AND response = 'I tend to have diarrhea (watery stool) - Type 5, 6 and 7';
 UPDATE ag.survey_question_response SET display_index = 2 WHERE survey_question_id = 38 AND response = 'I tend to have normal formed stool - Type 3 and 4';
 UPDATE ag.survey_question_response SET display_index = 3 WHERE survey_question_id = 38 AND response = 'I tend to have diarrhea (watery stool) - Type 5, 6 and 7';

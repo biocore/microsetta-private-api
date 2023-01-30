@@ -1030,6 +1030,11 @@ class SurveyTemplateRepo(BaseRepo):
                     if height_units == 'centimeters':
                         # to inches
                         height = height / 2.54
+
+                    # Per email from David @ Viocare, height must be between
+                    # 24 and 96 inches.
+                    if height < 24 or height > 96:
+                        height = None
             else:
                 # should not occur but just in case
                 height = None
@@ -1048,6 +1053,11 @@ class SurveyTemplateRepo(BaseRepo):
                     if weight_units == 'kilograms':
                         # to pounds
                         weight = weight * 2.20462
+
+                    # Per email from David @ Viocare, weight must be between
+                    # 30 and 600 pounds.
+                    if weight < 30 or weight > 600:
+                        weight = None
             else:
                 # should not occur but just in case
                 weight = None

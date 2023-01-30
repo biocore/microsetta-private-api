@@ -36,7 +36,8 @@ def _consent_signature_to_row(s):
            getattr(s, 'parent_1_name', None),
            getattr(s, 'parent_2_name', None),
            getattr(s, 'deceased_parent', None),
-           getattr(s, 'assent_obtainer', None)
+           getattr(s, 'assent_obtainer', None),
+           getattr(s, 'assent_id', None)
            )
 
     return row
@@ -51,7 +52,8 @@ def _row_to_consent_signature(r):
         r["parent_1_name"],
         r["parent_2_name"],
         r["deceased_parent"],
-        r["assent_obtainer"])
+        r["assent_obtainer"],
+        r["assent_id"])
 
 
 class ConsentRepo(BaseRepo):
@@ -71,7 +73,8 @@ class ConsentRepo(BaseRepo):
 
     signature_write_cols = "signature_id, consent_id, " \
                            "source_id, date_time, parent_1_name, " \
-                           "parent_2_name, deceased_parent, assent_obtainer"
+                           "parent_2_name, deceased_parent, assent_obtainer, "\
+                           "assent_id"
 
     def create_doc(self, consent):
         with self._transaction.dict_cursor() as cur:
@@ -186,7 +189,7 @@ class ConsentRepo(BaseRepo):
                         "VALUES("
                         "%s, %s, %s, "
                         "%s, %s, %s, "
-                        "%s, %s)",
+                        "%s, %s, %s)",
                         _consent_signature_to_row(consent_signature))
             return cur.rowcount == 1
 
