@@ -270,8 +270,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
                 )
         info.date_last_taken = date_last_taken
 
-        results, percent_comp = st_repo.migrate_responses(source_id,
-                                                          survey_template_id)
+        results = st_repo.migrate_responses(source_id, survey_template_id)
         if results:
             # modify info with previous results before returning to client.
             for group in info.survey_template_text.groups:

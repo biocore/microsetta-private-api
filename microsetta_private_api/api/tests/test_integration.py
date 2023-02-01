@@ -58,6 +58,7 @@ DUMMY_ACCT = {
               "first_name": "demo",
               "last_name": "demo",
               "address": {"street": "demo",
+                          "street2": "",
                           "city": "demo",
                           "state": "IN",
                           "post_code": "46227",
@@ -398,7 +399,6 @@ class IntegrationTests(TestCase):
         self.assertNotIn("survey_status", bobo_surveys[0])
         self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
                              [SurveyTemplateRepo.VIOSCREEN_ID,
-                              SurveyTemplateRepo.MYFOODREPO_ID,
                               SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                               SurveyTemplateRepo.SPAIN_FFQ_ID,
                               SurveyTemplateRepo.BASIC_INFO_ID,
@@ -410,7 +410,8 @@ class IntegrationTests(TestCase):
                               SurveyTemplateRepo.ALLERGIES_ID,
                               SurveyTemplateRepo.DIET_ID,
                               SurveyTemplateRepo.DETAILED_DIET_ID,
-                              SurveyTemplateRepo.COVID19_ID])
+                              SurveyTemplateRepo.COVID19_ID,
+                              SurveyTemplateRepo.OTHER_ID])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
                              [2])
         self.assertListEqual([x["survey_template_id"] for x in env_surveys],
@@ -756,7 +757,8 @@ class IntegrationTests(TestCase):
                     "country_code": "US",
                     "post_code": "12345",
                     "state": "CA",
-                    "street": "123 Main St. E. Apt. 2"
+                    "street": "123 Main St. E.",
+                    "street2": "Apt. 2"
                 },
                 "email": FAKE_EMAIL,
                 "first_name": "Jane",
@@ -826,6 +828,7 @@ class IntegrationTests(TestCase):
                 "account_type": "standard",
                 "address": {
                     "street": "123 Dan Lane",
+                    "street2": "",
                     "city": "Danville",
                     "state": "CA",
                     "post_code": "12345",

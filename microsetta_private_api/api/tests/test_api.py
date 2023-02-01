@@ -1158,7 +1158,8 @@ class AccountTests(ApiTests):
             "country_code": "US",
             "post_code": "99228",
             "state": "CA",
-            "street": "641 Queen St. E"
+            "street": "641 Queen St. E",
+            "street2": ""
         }
 
         return result
@@ -1909,6 +1910,7 @@ class SampleTests(ApiTests):
         exp = DUMMY_EMPTY_SAMPLE_INFO.copy()
         exp['source_id'] = SOURCE_ID_1
         exp['account_id'] = ACCT_ID_1
+        exp['kit_id'] = "FooFooFoo"
 
         self.assertEqual(get_resp_obj, [exp])
 

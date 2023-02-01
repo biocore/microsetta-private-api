@@ -1033,7 +1033,7 @@ class SurveyTemplateRepo(BaseRepo):
 
                     # Per email from David @ Viocare, height must be between
                     # 24 and 96 inches.
-                    if height < 24 or height > 96:
+                    if height < 24.0 or height > 96.0:
                         height = None
             else:
                 # should not occur but just in case
@@ -1046,6 +1046,7 @@ class SurveyTemplateRepo(BaseRepo):
                     # old survey_answers_other responses are of the form
                     # '["foo"]' :/
                     weight = weight[2:-2]
+
                 if weight == "":
                     weight = None
                 else:
@@ -1056,7 +1057,7 @@ class SurveyTemplateRepo(BaseRepo):
 
                     # Per email from David @ Viocare, weight must be between
                     # 30 and 600 pounds.
-                    if weight < 30 or weight > 600:
+                    if weight < 30.0 or weight > 600.0:
                         weight = None
             else:
                 # should not occur but just in case
@@ -1211,14 +1212,7 @@ class SurveyTemplateRepo(BaseRepo):
                     # SINGLE, STRING, and TEXT types
                     results[question_id] = response
 
-            responses = 0
-            for answer in results.values():
-                if answer is not None and answer != '' and answer != []:
-                    responses += 1
-
-            # return percentage of the survey completed, along with the
-            # results.
-            return results, responses / total_question_count
+            return results
 
     def _generate_empty_survey(self, survey_template_id, return_tuple=False):
         """ Generate an empty survey template for a given template ID and
