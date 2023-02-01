@@ -39,7 +39,7 @@ paths:
       requestBody:
         content:
           application/json:
-            # Send (non-readOnly) values of account schema PLUS kit name OR activation code
+            # Send (non-readOnly) values of account schema
             schema:
               allOf:
                 - $ref: '#/components/schemas/account'
@@ -3103,6 +3103,11 @@ components:
             the full street address including house number and street name
           type: string
           example: 123 Main St. E., apt. 2
+        street2:
+          description: |
+            the apartment or unit number
+          type: string
+          example: apt. 2
         city:
           description: |
             name of the city / locality
@@ -3128,6 +3133,7 @@ components:
           example: "CA" # NB: this is the country of *canada*, not the state of california
       required:
         - street
+        - street2
         - city
         - state
         - post_code
