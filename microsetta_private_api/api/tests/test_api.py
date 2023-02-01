@@ -1160,7 +1160,7 @@ class AccountTests(ApiTests):
             "post_code": "99228",
             "state": "CA",
             "street": "641 Queen St. E",
-            "street2": ""
+            "street2": "Test"
         }
 
         return result
