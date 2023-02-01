@@ -204,7 +204,8 @@ class IntegrationTests(TestCase):
                               "Danville",
                               "CA",
                               12345,
-                              "US"
+                              "US",
+                              ""
                           ),
                           "en_US")
             acct_repo.create_account(acc)
@@ -1758,7 +1759,8 @@ class IntegrationTests(TestCase):
                               "Danville",
                               "CA",
                               12345,
-                              "US"
+                              "US",
+                              ""
                           ),
                           "en_US")
             accountRepo.create_account(acc)

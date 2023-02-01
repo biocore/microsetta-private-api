@@ -1183,7 +1183,6 @@ class SurveyTemplateRepo(BaseRepo):
 
             # create an empty template to fill-in.
             results = self._generate_empty_survey(survey_template_id)
-            total_question_count = len(results)
 
             multiple_timestamps = {}
             for question_id, response, creation_time, response_type in rows:
