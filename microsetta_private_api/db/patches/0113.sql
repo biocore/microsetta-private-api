@@ -318,12 +318,12 @@ ALTER TABLE ag.survey_question ADD COLUMN css_classes VARCHAR;
 
 -- Set the CSS classes for questions
 -- Basic Info survey
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-select col-3' WHERE survey_question_id IN (111,112);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal col-6' WHERE survey_question_id IN (502);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text col-2' WHERE survey_question_id IN (108,113);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-switch col-4' WHERE survey_question_id IN (109,114);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-select col-4' WHERE survey_question_id IN (110, 148);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text col-4' WHERE survey_question_id IN (115);
+UPDATE ag.survey_question SET css_classes = 'tmi-survey-select col-12 col-md-3' WHERE survey_question_id IN (111,112);
+UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal col-12 col-md-6' WHERE survey_question_id IN (502);
+UPDATE ag.survey_question SET css_classes = 'tmi-survey-text col-6 col-md-2' WHERE survey_question_id IN (108,113);
+UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-switch col-6 col-md-4' WHERE survey_question_id IN (109,114);
+UPDATE ag.survey_question SET css_classes = 'tmi-survey-select col-12 col-md-4' WHERE survey_question_id IN (110, 148);
+UPDATE ag.survey_question SET css_classes = 'tmi-survey-text col-12 col-md-4' WHERE survey_question_id IN (115);
 UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE survey_question_id IN (22, 492, 493);
 
 -- At Home survey

@@ -238,3 +238,24 @@ class ConsentRepo(BaseRepo):
                         "source_id = %s", (source_id,))
 
             return cur.rowcount >= 0
+
+    def get_latest_signed_consent(self, source_id, consent_type):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT ca.signature_id, ca.consent_id, ca.source_id, "
+                "ca.date_time, ca.parent_1_name, ca.parent_2_name, "
+                "ca.deceased_parent, ca.assent_obtainer, ca.assent_id "
+                "FROM ag.consent_audit ca "
+                "INNER JOIN ag.consent_documents cd "
+                "ON ca.consent_id = cd.consent_id "
+                "INNER JOIN ag.source s "
+                "ON ca.source_id = s.id "
+                "WHERE ca.source_id = %s AND cd.consent_type LIKE %s "
+                "ORDER BY ca.date_time DESC LIMIT 1",
+                (source_id, consent_type)
+            )
+            row = cur.fetchone()
+            if row is None:
+                return None
+            else:
+                return _row_to_consent_signature(row)

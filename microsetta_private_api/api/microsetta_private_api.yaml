@@ -351,6 +351,28 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/accounts/{account_id}/source/{source_id}/signed_consents':
+    get:
+      operationId: microsetta_private_api.api.get_signed_consents
+      tags:
+        - Consent
+      summary: Get signed consent documents for source
+      description: Get signed consent documents for source
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+      responses:
+        '200':
+          description: Consent Signature Info
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
   '/accounts/{account_id}/source/{source_id}/consent/{consent_type}':
     get:
       operationId: microsetta_private_api.api.check_consent_signature

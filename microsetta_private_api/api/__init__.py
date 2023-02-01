@@ -12,7 +12,8 @@ from ._removal_queue import (
 from ._consent import (
     render_consent_doc,
     check_consent_signature,
-    sign_consent_doc
+    sign_consent_doc,
+    get_signed_consents
 )
 from ._source import (
     create_source, read_source, update_source, delete_source,
@@ -89,6 +90,7 @@ __all__ = [
     'create_human_source_from_consent',
     'check_consent_signature',
     'sign_consent_doc',
+    'get_signed_consents',
     'read_survey_template',
     'read_survey_templates',
     'read_answered_survey',
