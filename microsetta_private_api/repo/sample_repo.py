@@ -252,7 +252,9 @@ class SampleRepo(BaseRepo):
             samples = []
             for sample_row in cur.fetchall():
                 sample = self._create_sample_obj(sample_row)
-                sample.kit_id = self._get_supplied_kit_id_by_sample(sample.barcode)
+                sample.kit_id = self._get_supplied_kit_id_by_sample(
+                    sample.barcode
+                )
                 samples.append(sample)
             return samples
 

@@ -61,7 +61,8 @@ class VueField:
 
 
 class VueInputField(VueField):
-    def __init__(self, question_id, question_text, question_classes, question_shortname=None):
+    def __init__(self, question_id, question_text, question_classes,
+                 question_shortname=None):
         super().__init__(
             type_="input",
             label=question_text,
@@ -87,7 +88,8 @@ class VueInputField(VueField):
 
 
 class VueTextAreaField(VueField):
-    def __init__(self, question_id, question_text, question_classes, question_shortname=None):
+    def __init__(self, question_id, question_text, question_classes,
+                 question_shortname=None):
         super().__init__(
             type_="textArea",
             label=question_text,
@@ -208,7 +210,8 @@ class VueChecklistField(VueField):
 
 
 class VueDateTimePickerField(VueField):
-    def __init__(self, question_id, question_text, question_classes, question_shortname=None):
+    def __init__(self, question_id, question_text, question_classes,
+                 question_shortname=None):
         super().__init__(
             type_="dateTimePicker",
             label=question_text,

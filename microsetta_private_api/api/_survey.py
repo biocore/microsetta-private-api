@@ -265,7 +265,9 @@ def read_survey_template(account_id, source_id, survey_template_id,
         )
         if date_last_taken is not None:
             with force_locale(language_tag):
-                date_last_taken = format_datetime(date_last_taken, "MMM d, yyyy")
+                date_last_taken = format_datetime(
+                    date_last_taken, "MMM d, yyyy"
+                )
         info.date_last_taken = date_last_taken
 
         results, percent_comp = st_repo.migrate_responses(source_id,
@@ -277,7 +279,9 @@ def read_survey_template(account_id, source_id, survey_template_id,
                     previous_response = results[field.inputName]
                     if previous_response:
                         field.default = previous_response
-            info.percentage_completed = _calculate_completion_percentage(info.survey_template_text)
+            info.percentage_completed = _calculate_completion_percentage(
+                info.survey_template_text
+            )
         else:
             info.percentage_completed = 0
 
@@ -313,6 +317,7 @@ def _calculate_completion_percentage(survey_model):
 
 def _is_question_answered(response):
     return (response is not None and response != '' and response != [])
+
 
 def read_answered_surveys(account_id, source_id, language_tag, token_info):
     _validate_account_access(token_info, account_id)

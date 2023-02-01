@@ -18,7 +18,8 @@ DUMMY_ACCT_INFO_1 = {
         "country_code": "US",
         "post_code": "12345",
         "state": "CA",
-        "street": "123 Main St. E. Apt. 2"
+        "street": "123 Main St. E.",
+        "street2": "Apt. 2"
     },
     "email": "geocode_test_1@testing.com",
     "first_name": "Jane",

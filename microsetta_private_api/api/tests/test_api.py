@@ -74,7 +74,8 @@ DUMMY_ACCT_INFO = {
         "country_code": "US",
         "post_code": "12345",
         "state": "CA",
-        "street": "123 Main St. E. Apt. 2"
+        "street": "123 Main St. E.",
+        "street2": "Apt. 2"
     },
     "email": TEST_EMAIL,
     "first_name": "Jane",
@@ -87,7 +88,8 @@ DUMMY_ACCT_INFO_2 = {
         "country_code": "US",
         "post_code": "44074",
         "state": "OH",
-        "street": "489 College St."
+        "street": "489 College St.",
+        "street2": ""
     },
     "email": TEST_EMAIL_2,
     "first_name": "Obie",
@@ -100,7 +102,8 @@ DUMMY_ACCT_ADMIN = {
         "country_code": "US",
         "post_code": "44074",
         "state": "OH",
-        "street": "489 College St."
+        "street": "489 College St.",
+        "street2": ""
     },
     "email": TEST_EMAIL_3,
     "first_name": "Obie",

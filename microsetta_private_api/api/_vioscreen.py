@@ -302,6 +302,7 @@ def get_vioscreen_sessions(account_id, source_id, token_info):
         else:
             return jsonify({"vioscreens": vioscreen_session})
 
+
 def check_ffq_code(ffq_code, token_info):
     _validate_has_account(token_info)
 
@@ -311,6 +312,7 @@ def check_ffq_code(ffq_code, token_info):
         if unused_code is None:
             return jsonify(code=404, message="No unused code found"), 404
         return jsonify({"unused_code": True}), 200
+
 
 def get_vioscreen_registry_entries(account_id, source_id, token_info):
     _validate_has_account(token_info)

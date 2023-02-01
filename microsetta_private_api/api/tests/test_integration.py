@@ -397,8 +397,7 @@ class IntegrationTests(TestCase):
         # Survey status should not be in templates
         self.assertNotIn("survey_status", bobo_surveys[0])
         self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
-                             [1, 3, 4, 5, 6, 7,
-                              SurveyTemplateRepo.VIOSCREEN_ID,
+                             [SurveyTemplateRepo.VIOSCREEN_ID,
                               SurveyTemplateRepo.MYFOODREPO_ID,
                               SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                               SurveyTemplateRepo.SPAIN_FFQ_ID,
@@ -411,8 +410,6 @@ class IntegrationTests(TestCase):
                               SurveyTemplateRepo.ALLERGIES_ID,
                               SurveyTemplateRepo.DIET_ID,
                               SurveyTemplateRepo.DETAILED_DIET_ID,
-                              SurveyTemplateRepo.MIGRAINE_ID,
-                              SurveyTemplateRepo.SURFERS_ID,
                               SurveyTemplateRepo.COVID19_ID])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
                              [2])

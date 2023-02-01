@@ -87,10 +87,14 @@ def get_signed_consents(account_id, source_id, token_info):
             ret_val['survey'] = None
         else:
             survey_consent = survey_consent.to_api()
-            survey_doc = consent_repo.get_consent_document(survey_consent['consent_id'])
+            survey_doc = consent_repo.get_consent_document(
+                survey_consent['consent_id']
+            )
             survey_consent['consent_content'] = survey_doc.consent_content
             if survey_consent['assent_id'] is not None:
-                assent_doc = consent_repo.get_consent_document(survey_consent['assent_id'])
+                assent_doc = consent_repo.get_consent_document(
+                    survey_consent['assent_id']
+                )
                 survey_consent['assent_content'] = assent_doc.consent_content
             ret_val['survey'] = survey_consent
 
@@ -102,10 +106,14 @@ def get_signed_consents(account_id, source_id, token_info):
             ret_val['sample'] = None
         else:
             sample_consent = sample_consent.to_api()
-            sample_doc = consent_repo.get_consent_document(sample_consent['consent_id'])
+            sample_doc = consent_repo.get_consent_document(
+                sample_consent['consent_id']
+            )
             sample_consent['consent_content'] = sample_doc.consent_content
             if sample_consent['assent_id'] is not None:
-                assent_doc = consent_repo.get_consent_document(sample_consent['assent_id'])
+                assent_doc = consent_repo.get_consent_document(
+                    sample_consent['assent_id']
+                )
                 sample_consent['assent_content'] = assent_doc.consent_content
             ret_val['sample'] = sample_consent
 
