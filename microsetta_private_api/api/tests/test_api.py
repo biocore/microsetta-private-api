@@ -479,7 +479,8 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['city'],
                 input_obj['address']['state'],
                 input_obj['address']['post_code'],
-                input_obj['address']['country_code']
+                input_obj['address']['country_code'],
+                input_obj['address']['street2']
             ),
             input_obj['language']
         )
