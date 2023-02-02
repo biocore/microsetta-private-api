@@ -125,5 +125,6 @@ __all__ = [
     'get_interested_user_address_update',
     'put_interested_user_address_update',
     'get_opt_out',
-    'put_opt_out'
+    'put_opt_out',
+    'get_vioscreen_sessions'
 ]
