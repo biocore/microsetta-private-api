@@ -252,7 +252,7 @@ class ConsentRepo(BaseRepo):
                 "ON ca.source_id = s.id "
                 "WHERE ca.source_id = %s AND cd.consent_type LIKE %s "
                 "ORDER BY ca.date_time DESC LIMIT 1",
-                (source_id, consent_type)
+                (source_id, "%"+consent_type+"%")
             )
             row = cur.fetchone()
             if row is None:

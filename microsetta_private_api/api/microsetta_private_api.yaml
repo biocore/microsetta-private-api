@@ -351,7 +351,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/accounts/{account_id}/source/{source_id}/signed_consents':
+  '/accounts/{account_id}/sources/{source_id}/signed_consents':
     get:
       operationId: microsetta_private_api.api.get_signed_consents
       tags:
