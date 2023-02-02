@@ -1,6 +1,5 @@
 import uuid
 from datetime import date
-
 from flask import jsonify
 
 from microsetta_private_api.api._account import _validate_account_access
@@ -9,6 +8,8 @@ from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG,\
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.repo.consent_repo import ConsentRepo
+from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
@@ -155,6 +156,35 @@ def delete_source(account_id, source_id, token_info):
             return '', 204
 
 
+def scrub_source(account_id, source_id, token_info):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        consent_repo = ConsentRepo(t)
+        samp_repo = SampleRepo(t)
+        sur_repo = SurveyAnswersRepo(t)
+
+        samples = samp_repo.get_samples_by_source(account_id, source_id)
+        for sample in samples:
+            # we scrub rather than disassociate in the event that the
+            # sample is in our freezers but not with an up-to-date scan
+            samp_repo.scrub(account_id, source_id, sample.id)
+
+        # fetch and scrub all surveys
+        surveys = sur_repo.list_answered_surveys(account_id, source_id)
+        for survey_id in surveys:
+            sur_repo.scrub(account_id, source_id, survey_id)
+
+        # scrub all consents accosiated with source
+        consent_repo.scrub(account_id, source_id)
+
+        # scrub the source
+        source_repo.scrub(account_id, source_id)
+        t.commit()
+        return jsonify({"result": True}), 200
+
+
 def create_human_source_from_consent(account_id, body, token_info):
     _validate_account_access(token_info, account_id)
 
@@ -166,7 +196,6 @@ def create_human_source_from_consent(account_id, body, token_info):
         'source_type': Source.SOURCE_TYPE_HUMAN,
         'source_name': body['participant_name'],
         'consent': {
-            'participant_email': body['participant_email'],
             'age_range': body['age_range']
         }
     }
@@ -188,12 +217,11 @@ def create_human_source_from_consent(account_id, body, token_info):
     return create_source(account_id, source, token_info)
 
 
-def check_duplicate_source_name_email(account_id, body, token_info):
+def check_duplicate_source_name(account_id, body, token_info):
     _validate_account_access(token_info, account_id)
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source_name = body['participant_name']
-        email = body['participant_email']
-        source = source_repo.get_duplicate_source_name_email(
-            account_id, source_name, email)
+        source = source_repo.get_duplicate_source_name(
+            account_id, source_name)
         return jsonify(source), 200

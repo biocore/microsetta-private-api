@@ -12,15 +12,23 @@ import re
 import pandas as pd
 import numpy as np
 import json
+import pytz
+import datetime
 jsonify = json.dumps
-
 
 # the vioscreen survey currently cannot be fetched from the database
 # there seems to be some detached survey IDs -- see 000089779
 # that account has a long and unusual history though
 # Adding the MyFoodRepo, Polyphenol FFQ, and Spain FFQs to the
 # ignore list.
-TEMPLATES_TO_IGNORE = {10001, 10002, 10003, 10004, None}
+# do not add legacy template_ids (1-7) to this dict at this time.
+# there are users of this dict that process valid grabs on legacy template
+# dagta.
+TEMPLATES_TO_IGNORE = {SurveyTemplateRepo.VIOSCREEN_ID,
+                       SurveyTemplateRepo.MYFOODREPO_ID,
+                       SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                       SurveyTemplateRepo.SPAIN_FFQ_ID,
+                       None}
 
 # TODO 2022-10-03
 # Adding questions from Cooking Oils & Oxalate-rich Foods survey
@@ -207,7 +215,7 @@ def _fetch_survey_template(template_id):
         if error is None:
             survey_template_text = vue_adapter.to_vue_schema(survey_template)
 
-            info = info.to_api(None, None)
+            info = info.to_api(None, None, None)
             info['survey_template_text'] = survey_template_text
 
         return info, error
@@ -233,7 +241,14 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     transformed = []
 
     multiselect_map = _construct_multiselect_map(survey_templates)
+
     for metadata in metadatas:
+        metadata['survey_answers'] = _find_best_answers(
+            metadata['survey_answers'],
+            metadata['sample'].datetime_collected
+        )
+
+        # metadata is a dict representing a barcode's metadata.
         try:
             as_series = _to_pandas_series(metadata, multiselect_map)
         except RepoException as e:
@@ -282,6 +297,72 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     return errors, apply_transforms(df, HUMAN_TRANSFORMS)
 
 
+def _find_best_answers(survey_responses, sample_ts):
+    if isinstance(sample_ts, str):
+        sample_ts = datetime.datetime.strptime(sample_ts, "%Y-%m-%dT%H:%M:%S")
+    pst = pytz.timezone('US/Pacific')
+    sample_ts = pst.localize(sample_ts)
+
+    # we need to keep a list of the closest temporal answers to compare as
+    # we iterate through the survey responses
+    best_ts = {}
+
+    # we also need to keep a list of what we're going to discard
+    answers_discard = {}
+    for survey in survey_responses:
+        for qid, answer in survey['response'].items():
+            if qid in best_ts:
+                # we already have a response for this question, so we need to
+                # compare the timestamps
+                cur_time_diff = abs(
+                    (best_ts[qid][1] - sample_ts).total_seconds()
+                )
+                new_time_diff = abs(
+                    (survey['survey_timestamp'] - sample_ts).total_seconds()
+                )
+
+                if new_time_diff < cur_time_diff:
+                    # found a closer temporal response for the question
+
+                    # first, mark the old "best" question for discard
+
+                    # if we're already discarding questions for that template
+                    # we just append this question id
+                    if best_ts[qid][0] in answers_discard:
+                        answers_discard[best_ts[qid][0]].append(qid)
+                    # otherwise, we start a new list
+                    else:
+                        answers_discard[best_ts[qid][0]] = [qid]
+
+                    # then set the new "best" question
+                    best_ts[qid] = (
+                        survey['template'],
+                        survey['survey_timestamp']
+                    )
+                else:
+                    # this isn't the best answer, so we need to discard it
+                    if survey['template'] in answers_discard:
+                        answers_discard[survey['template']].append(qid)
+                    else:
+                        answers_discard[survey['template']] = [qid]
+            else:
+                # we don't have a response for this question stored yet, so
+                # we mark it as our best available
+                best_ts[qid] = (
+                    survey['template'],
+                    survey['survey_timestamp']
+                )
+
+    cleaned_surveys = []
+    for survey in survey_responses:
+        if survey['template'] in answers_discard:
+            for qid in answers_discard[survey['template']]:
+                survey['response'].pop(qid, None)
+        cleaned_surveys.append(survey)
+
+    return cleaned_surveys
+
+
 def _construct_multiselect_map(survey_templates):
     """Identify multi-select questions, and construct stable names
 
@@ -302,6 +383,8 @@ def _construct_multiselect_map(survey_templates):
 
         for group in template_text.groups:
             for field in group.fields:
+                # some vues are apparently missing values property
+                # assert hasattr(field, 'values')
                 if not field.multi:
                     continue
 
@@ -383,20 +466,21 @@ def _to_pandas_series(metadata, multiselect_map):
     values = [hsi, collection_timestamp]
     index = ['HOST_SUBJECT_ID', 'COLLECTION_TIMESTAMP']
 
-    # HACK: there exist some samples that have duplicate surveys. This is
-    # unusual and unexpected state in the database, and has so far only been
-    # observed only with the surfers survey. The hacky solution is to only
-    # gather the results once
     collected = set()
 
-    # TODO: denote sample projects
     for survey in metadata['survey_answers']:
         template = survey['template']
 
         if template in collected:
+            # As surveys can now be retaken, it will become more common for
+            # duplicates to appear. However, those duplicates are typically
+            # merged before this function is called. Hence, it would continue
+            # to be a somewhat unusual and unexpected state to process two or
+            # more surveys with the same template id here. For now, continue
+            # to gather the results only once.
             continue
-        else:
-            collected.add(template)
+
+        collected.add(template)
 
         for qid, (shortname, answer) in survey['response'].items():
             if (template, qid) in multiselect_map:
@@ -418,9 +502,14 @@ def _to_pandas_series(metadata, multiselect_map):
                     values.append('true')
                     index.append(specific_shortname)
             else:
-                # free text fields from the API come down as ["foo"]
-                values.append(answer.strip('[]"'))
-                index.append(shortname)
+                if '["' in answer and '"]' in answer:
+                    # process this STRING/TEXT value
+                    index.append(shortname)
+                    values.append(answer.replace('["', '').replace('"]', ''))
+                else:
+                    # process this SINGLE value
+                    index.append(shortname)
+                    values.append(answer)
 
     for variable, value in sample_invariants.items():
         index.append(variable)
