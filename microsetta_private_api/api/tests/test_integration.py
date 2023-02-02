@@ -1199,7 +1199,7 @@ class IntegrationTests(TestCase):
             loc + "?language_tag=en_US",
             headers=MOCK_HEADERS
         )
-        check_response(resp, 204)
+        check_response(resp, 422)
 
     def test_associate_sample_and_survey(self):
         """

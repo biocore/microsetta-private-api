@@ -3,13 +3,15 @@ from datetime import date
 from flask import jsonify
 
 from microsetta_private_api.api._account import _validate_account_access
-from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG
+from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG,\
+    SRC_NO_DELETE_MSG
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.consent_repo import ConsentRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
 
 
@@ -110,29 +112,47 @@ def delete_source(account_id, source_id, token_info):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         survey_answers_repo = SurveyAnswersRepo(t)
-        consent_repo = ConsentRepo(t)
-        samp_repo = SampleRepo(t)
+        template_repo = SurveyTemplateRepo(t)
+        sample_repo = SampleRepo(t)
 
-        samples = samp_repo.get_samples_by_source(account_id, source_id)
-        for sample in samples:
-            # we scrub rather than disassociate in the event that the
-            # sample is in our freezers but not with an up-to-date scan
-            samp_repo.dissociate_sample(account_id, source_id, sample.id)
+        # The interface has historically enforced this constraint, but it
+        # wasn't codified into the API
+        samples = sample_repo.get_samples_by_source(account_id, source_id)
+        if len(samples) > 0:
+            return jsonify(code=422, message=SRC_NO_DELETE_MSG), 422
+        else:
+            has_external = template_repo.has_external_surveys(
+                account_id,
+                source_id
+            )
+            answers = survey_answers_repo.list_answered_surveys(
+                account_id,
+                source_id
+            )
 
-        answers = survey_answers_repo.list_answered_surveys(account_id,
-                                                            source_id)
-        for survey_id in answers:
-            survey_answers_repo.delete_answered_survey(account_id,
-                                                       survey_id)
+            if has_external:
+                for survey_id in answers:
+                    survey_answers_repo.scrub(
+                        account_id,
+                        source_id,
+                        survey_id
+                    )
+                if not source_repo.scrub(account_id, source_id):
+                    return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
+            else:
+                # If we reach this point, then the user does not have external
+                # surveys nor do they have samples associated. Therefore it is
+                # safe to remove their surveys and source entirely
+                for survey_id in answers:
+                    survey_answers_repo.delete_answered_survey(
+                        account_id,
+                        survey_id
+                    )
+                if not source_repo.delete_source(account_id, source_id):
+                    return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
 
-        # delete all consents accosiated with source
-        consent_repo.delete_signatures(account_id, source_id)
-
-        if not source_repo.delete_source(account_id, source_id):
-            return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
-        # TODO: 422?
-        t.commit()
-        return '', 204
+            t.commit()
+            return '', 204
 
 
 def scrub_source(account_id, source_id, token_info):

@@ -833,10 +833,17 @@ def delete_account(account_id, token_info):
 
         sample_count = 0
         account_has_external = False
-        sources = src_repo.get_sources_in_account(account_id)
+        sources = src_repo.get_sources_in_account(
+            account_id,
+            allow_revoked=True
+        )
 
         for source in sources:
-            samples = samp_repo.get_samples_by_source(account_id, source.id)
+            samples = samp_repo.get_samples_by_source(
+                account_id,
+                source.id,
+                allow_revoked=True
+            )
 
             has_samples = len(samples) > 0
             sample_count += len(samples)
@@ -857,7 +864,11 @@ def delete_account(account_id, token_info):
                 # survey / source free text
                 for survey_id in surveys:
                     sar_repo.scrub(account_id, source.id, survey_id)
-                src_repo.scrub(account_id, source.id)
+
+                # We're including scrubbed sources to detect external surveys
+                # so we need to make sure the source isn't already scrubbed
+                if source.source_data.date_revoked is None:
+                    src_repo.scrub(account_id, source.id)
 
             if not has_samples and not has_external:
                 # if we do not have associated samples, or external surveys,

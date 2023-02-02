@@ -54,7 +54,7 @@ from ._campaign import (
 
 from ._interested_user import (
     create_interested_user, get_interested_user_address_update,
-    put_interested_user_address_update
+    put_interested_user_address_update, get_opt_out, put_opt_out
 )
 
 from ..config_manager import SERVER_CONFIG
@@ -124,5 +124,7 @@ __all__ = [
     'create_interested_user',
     'get_interested_user_address_update',
     'put_interested_user_address_update',
+    'get_opt_out',
+    'put_opt_out',
     'get_vioscreen_sessions'
 ]

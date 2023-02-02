@@ -89,6 +89,16 @@ class InterestedUserRepo(BaseRepo):
             )
             return cur.rowcount == 1
 
+    def opt_out_interested_user(self, interested_user_id):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "UPDATE campaign.interested_users "
+                "SET confirm_consent = FALSE "
+                "WHERE interested_user_id = %s",
+                (interested_user_id, )
+            )
+            return cur.rowcount
+
     def get_interested_user_by_id(self, interested_user_id):
         with self._transaction.dict_cursor() as cur:
             try:
