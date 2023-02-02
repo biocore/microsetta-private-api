@@ -1010,7 +1010,7 @@ class AccountTests(ApiTests):
         response = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s?language_tag=en_us' %  # noqa
             (dummy_acct_id, dummy_source_id,
-             SurveyTemplateRepo.POLYPHENOL_FFQ_ID),
+             st_repo.POLYPHENOL_FFQ_ID),
             headers=self.dummy_auth)
 
         # delete the source
