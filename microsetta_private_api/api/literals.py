@@ -13,5 +13,7 @@ JWT_SUB_CLAIM_KEY = 'sub'
 JWT_EMAIL_CLAIM_KEY = 'email'
 ACCT_NOT_FOUND_MSG = "Account not found"
 SRC_NOT_FOUND_MSG = "Source not found"
+SRC_NO_DELETE_MSG = "A source cannot be deleted while samples are "\
+    "associated with it"
 INVALID_TOKEN_MSG = "Invalid token"
 CONSENT_DOC_NOT_FOUND_MSG = "Consent not found"
