@@ -43,8 +43,7 @@ UPDATE ag.ag_login_surveys SET survey_template_id = 1 WHERE survey_template_id I
 -- and this update should stop. Every survey should be associated w/a
 -- template_id.
 
--- Temporarily removing not null constraint for testing
--- alter table ag.ag_login_surveys alter column survey_template_id set not null;
+alter table ag.ag_login_surveys alter column survey_template_id set not null;
 
 
 -- STEP 2: add retired column to surveys table and retire existing survey
