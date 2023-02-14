@@ -1958,7 +1958,7 @@ class SampleTests(ApiTests):
         exp = DUMMY_EMPTY_SAMPLE_INFO.copy()
         exp['source_id'] = SOURCE_ID_1
         exp['account_id'] = ACCT_ID_1
-        exp['kit_id'] = "FooFooFoo"
+        exp['kit_id'] = None
 
         self.assertEqual(get_resp_obj, [exp])
 
