@@ -7,6 +7,7 @@ from microsetta_private_api.model.consent import ConsentSignature
 from microsetta_private_api.repo.consent_repo import ConsentRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.api.literals import CONSENT_DOC_NOT_FOUND_MSG
+from werkzeug.exceptions import NotFound
 
 
 def render_consent_doc(account_id, language_tag, token_info):
@@ -61,8 +62,7 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
         try:
             consent_repo.sign_consent(account_id, consent_sign)
             t.commit()
-        except Exception as e:
-            raise Exception(e)
+        except NotFound as e:
             return jsonify(code=404, message=e), 404
 
     response = jsonify({"result": True})
@@ -73,48 +73,16 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
     return response
 
 
-def get_signed_consents(account_id, source_id, token_info):
+def get_signed_consent(account_id, source_id, consent_type, token_info):
     _validate_account_access(token_info, account_id)
 
-    ret_val = {}
     with Transaction() as t:
         consent_repo = ConsentRepo(t)
-        survey_consent = consent_repo.get_latest_signed_consent(
+        signed_consent = consent_repo.get_latest_signed_consent(
             source_id,
-            "data"
+            consent_type
         )
-        if survey_consent is None:
-            ret_val['survey'] = None
-        else:
-            survey_consent = survey_consent.to_api()
-            survey_doc = consent_repo.get_consent_document(
-                survey_consent['consent_id']
-            )
-            survey_consent['consent_content'] = survey_doc.consent_content
-            if survey_consent['assent_id'] is not None:
-                assent_doc = consent_repo.get_consent_document(
-                    survey_consent['assent_id']
-                )
-                survey_consent['assent_content'] = assent_doc.consent_content
-            ret_val['survey'] = survey_consent
+        if signed_consent is None:
+            return jsonify(code=404, message="No signed consent found"), 404
 
-        sample_consent = consent_repo.get_latest_signed_consent(
-            source_id,
-            "biospecimen"
-        )
-        if sample_consent is None:
-            ret_val['sample'] = None
-        else:
-            sample_consent = sample_consent.to_api()
-            sample_doc = consent_repo.get_consent_document(
-                sample_consent['consent_id']
-            )
-            sample_consent['consent_content'] = sample_doc.consent_content
-            if sample_consent['assent_id'] is not None:
-                assent_doc = consent_repo.get_consent_document(
-                    sample_consent['assent_id']
-                )
-                sample_consent['assent_content'] = assent_doc.consent_content
-            ret_val['sample'] = sample_consent
-
-    return jsonify(ret_val), 200
+    return jsonify(signed_consent.to_api()), 200

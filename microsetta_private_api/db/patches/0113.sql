@@ -5,6 +5,9 @@ ALTER TABLE ag.account ADD COLUMN street2 VARCHAR;
 ALTER TABLE ag.consent_audit ADD COLUMN assent_id UUID,
     ADD CONSTRAINT fk_assent_id FOREIGN KEY (assent_id) REFERENCES ag.consent_documents (consent_id);
 
+-- Add a foreign key for vioscreen registration codes
+ALTER TABLE ag.vioscreen_registry ADD CONSTRAINT fk_registration_code FOREIGN KEY (registration_code) REFERENCES campaign.ffq_registration_codes (ffq_registration_code);
+
 -- Create the Other survey
 INSERT INTO ag.survey_group (group_order, american) VALUES (-22, 'Other');
 INSERT INTO ag.surveys (survey_id, survey_group) VALUES (22, -22);
@@ -239,6 +242,8 @@ UPDATE ag.group_questions SET display_index = 40 WHERE survey_group = -18 AND di
 UPDATE ag.group_questions SET display_index = 39 WHERE survey_group = -18 AND display_index = 38;
 INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (-18, 519, 38);
 UPDATE ag.survey_question SET american = 'Describe the consistency of your bowel movements:<br /><div class="bristol-img-container"><img src="/static/img/bristol_1.png" id="bristol-chart-1" /></div><span class="bristol-chart-text">Type 1: Separate hard lumps, like nuts (hard to pass).<br />Type 2: Sausage shaped but lumpy.</span><div class="bristol-img-container"><img src="/static/img/bristol_2.png" id="bristol-chart-2" /></div><span class="bristol-chart-text">Type 3: Like a sausage but with cracks on the surface.<br />Type 4: Like a sausage or snake - smooth and soft.</span><div class="bristol-img-container"><img src="/static/img/bristol_3.png" id="bristol-chart-3" /></div><span class="bristol-chart-text">Type 5: Soft blobs with clear-cut edges.<br />Type 6: Fluffy pieces with ragged edges; a mushy stool.<br />Type 7: Watery, no solid pieces. Entirely liquid.</span>' WHERE survey_question_id = 38;
+
+-- Two of the responses for this question need to be reordered. Since there's a unique constraint on display_index, playing musical chairs with the entries (which requires updating one of the entries twice) is more expedient than dropping and recreating the index.
 UPDATE ag.survey_question_response SET display_index = 5 WHERE survey_question_id = 38 AND response = 'I tend to have diarrhea (watery stool) - Type 5, 6 and 7';
 UPDATE ag.survey_question_response SET display_index = 2 WHERE survey_question_id = 38 AND response = 'I tend to have normal formed stool - Type 3 and 4';
 UPDATE ag.survey_question_response SET display_index = 3 WHERE survey_question_id = 38 AND response = 'I tend to have diarrhea (watery stool) - Type 5, 6 and 7';
@@ -457,7 +462,10 @@ UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
   What are the alternatives to participating in this study? Can you withdraw from the study or be withdrawn?
 </p>
 <p class="consent_content">
-  You do not have to participate. Your participation in this study is completely voluntary and you can refuse to participate or withdraw at any time by withdrawing your consent and deleting your online profile. Our researchers will still use the data about you that was collected before you withdrew. After you withdraw, no further data will be collected from you. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
+  You do not have to participate. Your participation in this study is completely voluntary. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
+</p>
+<p class="consent_content">
+  You can refuse to participate or withdraw at any time by withdrawing your consent and deleting your online profile. Our researchers will still use the data about you that was collected before you withdrew. After you withdraw, no further data will be collected from you.
 </p>
 <p class="consent_content">
   You may be withdrawn from the study if you do not follow the instructions given to you by the study personnel.
@@ -579,7 +587,7 @@ UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
   The General Data Protection Regulation ("GDPR") requires researchers to provide information to you when we collect and use research data if you are located within the European Union (EU) or the European Economic Area (EEA). The GDPR gives you rights relating to your Personal Data, including the right to access, correct, restrict, and withdraw your personal information.
 </p>
 <p class="consent_content">
-  The research team will store and process your Personal Data at our research site in the United States. The United States does not have the same laws to protect your Personal Data as countries in the EU/EEA. However, the research team is committed to protecting the confidentiality of your Study Data. Additional information about the protections we will use is included in this consent document.
+  The research team will store and process your Personal Data at our research site in the United States. The United States does not have the same laws to protect your Personal Data as countries in the EU/EEA. However, the research team is committed to protecting the confidentiality of your Personal Data. Additional information about the protections we will use is included in our <a href="https://microsetta.ucsd.edu/privacy-statement/" target="_blank">Privacy Statement</a>.
 </p>
 <p class="consent_header">
   Who can you call if you have questions?
@@ -671,7 +679,10 @@ UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
   What are the alternatives to participating in this study? Can you withdraw from the study or be withdrawn?
 </p>
 <p class="consent_content">
-  You do not have to participate. Your participation in this study is completely voluntary and you may refuse to participate or withdraw at any time without penalty or loss of benefits to which you are entitled. If you decide that you no longer wish to continue in this study, you may withdraw your consent by requesting the deletion of your profile and/or account through your online account. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
+  You do not have to participate. Your participation in this study is completely voluntary. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
+</p>
+<p class="consent_content">
+  You can refuse to participate or withdraw at any time by withdrawing your consent and deleting your online profile. Our researchers will still use the data about you that was collected before you withdrew. After you withdraw, no further data will be collected from you.
 </p>
 <p class="consent_content">
   You may be withdrawn from the study if you do not follow the instructions given to you by the study personnel.
@@ -698,7 +709,7 @@ UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
   How we will use your Sample
 </p>
 <p class="consent_content">
-  Information from analyses of your data and biospecimen(s) will be used  to study the non-human DNA (e.g. bacterial DNA) in it. The data from the samples in the project (including yours) may be analyzed and published in scientific articles. We may save some of your sample to be accessible to researchers so they can conduct additional studies using the other compounds from it, such as RNA, proteins or metabolites. If we do so, we will remove all directly identifiable information before use or sharing. Once identifiers have been removed, we will not ask for your consent for the use or sharing of your data and/or biospecimen(s) in other research. In addition, data that has been removed of directly identifying information will be uploaded to the European Bioinformatics Institute (http://www.ebi.ac.uk) and Qiita (https://qiita.ucsd.edu) for other researchers to access and use.We may contact you if additional information or action is needed in order to process your sample(s) and/or for re-consenting purposes.
+  Information from analyses of your data and biospecimen(s) will be used to study the non-human DNA (e.g. bacterial DNA) in it. The data from the samples in the project (including yours) may be analyzed and published in scientific articles. We may save some of your sample to be accessible to researchers so they can conduct additional studies using the other compounds from it, such as RNA, proteins or metabolites. If we do so, we will remove all directly identifiable information before use or sharing. Once identifiers have been removed, we will not ask for your consent for the use or sharing of your data and/or biospecimen(s) in other research. In addition, data that has been removed of directly identifying information will be uploaded to the European Bioinformatics Institute (http://www.ebi.ac.uk) and Qiita (https://qiita.ucsd.edu) for other researchers to access and use. We may contact you if additional information or action is needed in order to process your sample(s) and/or for re-consenting purposes.
 </p>
 <p class="consent_content">
   Biospecimens (such as stool, skin, urine, or blood) collected from you for this study and information obtained from your biospecimens may be used in this research or other research, and shared with other organizations. You will not share in any commercial value or profit derived from the use of your biospecimens and/or information obtained from them.
@@ -816,7 +827,7 @@ UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
   The General Data Protection Regulation ("GDPR") requires researchers to provide information to you when we collect and use research data if you are located within the European Union (EU) or the European Economic Area (EEA). The GDPR gives you rights relating to your Personal Data, including the right to access, correct, restrict, and withdraw your personal information.
 </p>
 <p class="consent_content">
-  The research team will store and process your Personal Data at our research site in the United States. The United States does not have the same laws to protect your Personal Data as countries in the EU/EEA. However, the research team is committed to protecting the confidentiality of your Study Data. Additional information about the protections we will use is included in this consent document.
+  The research team will store and process your Personal Data at our research site in the United States. The United States does not have the same laws to protect your Personal Data as countries in the EU/EEA. However, the research team is committed to protecting the confidentiality of your Personal Data. Additional information about the protections we will use is included in our <a href="https://microsetta.ucsd.edu/privacy-statement/" target="_blank">Privacy Statement</a>.
 </p>
 <p class="consent_header">
   Who can you call if you have questions?
@@ -849,7 +860,7 @@ UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
   <strong>The Microsetta Initiative (a study about microbes)</strong>
 </p>
 <p class="consent_content">
-  Dr. Rob Knight and his research team are doing a research study to find out more about the trillions of  tiny living things like bacteria and viruses that live in you or on you. These tiny things are called microbes, and you are being asked if you want to be in this study because the kinds of microbes you have is unique - not the same as anyone else on earth. We may be able to tell if you have been infected with something (like the virus that causes COVID-19) but we can''t tell you that because we are not allowed to do that.
+  Dr. Rob Knight and his research team are doing a research study to find out more about the trillions of tiny living things like bacteria and viruses that live in you or on you. These tiny things are called microbes, and you are being asked if you want to be in this study because the kinds of microbes you have is unique - not the same as anyone else on earth. We may be able to tell if you have been infected with something (like the virus that causes COVID-19) but we can''t tell you that because we are not allowed to do that.
 </p>
 <p class="consent_content">
   If you decide you want to be in this research study, this is what will happen to you:
@@ -1119,7 +1130,7 @@ UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
   The General Data Protection Regulation ("GDPR") requires researchers to provide information to you when we collect and use research data if you are located within the European Union (EU) or the European Economic Area (EEA). The GDPR gives you rights relating to your child''s Personal Data, including the right to access, correct, restrict, and withdraw your child''s personal information.
 </p>
 <p class="consent_content">
-  The research team will store and process your child''s Personal Data at our research site in the United States. The United States does not have the same laws to protect your child''s Personal Data as States in the EU/EEA. However, the research team is committed to protecting the confidentiality of your child''s Study Data. Additional information about the protections we will use is included in this consent document.
+  The research team will store and process your child''s Personal Data at our research site in the United States. The United States does not have the same laws to protect your child''s Personal Data as States in the EU/EEA. However, the research team is committed to protecting the confidentiality of your child''s Study Data. Additional information about the protections we will use is included in our <a href="https://microsetta.ucsd.edu/privacy-statement/" target="_blank">Privacy Statement</a>.
 </p>
 <p class="consent_header">
   Who can you call if you have questions?

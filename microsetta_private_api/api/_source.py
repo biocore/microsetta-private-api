@@ -199,7 +199,7 @@ def create_human_source_from_consent(account_id, body, token_info):
         }
     }
 
-    child_keys = {'parent_1_name', 'obtainer_name'}
+    child_keys = {'parent_1_name', 'assent_obtainer'}
 
     intersection = child_keys.intersection(body)
     if intersection:

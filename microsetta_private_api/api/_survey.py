@@ -271,18 +271,16 @@ def read_survey_template(account_id, source_id, survey_template_id,
         info.date_last_taken = date_last_taken
 
         results = st_repo.migrate_responses(source_id, survey_template_id)
-        if results:
-            # modify info with previous results before returning to client.
-            for group in info.survey_template_text.groups:
-                for field in group.fields:
-                    previous_response = results[field.inputName]
-                    if previous_response:
-                        field.default = previous_response
-            info.percentage_completed = _calculate_completion_percentage(
-                info.survey_template_text
-            )
-        else:
-            info.percentage_completed = 0
+        # modify info with previous results before returning to client.
+        for group in info.survey_template_text.groups:
+            for field in group.fields:
+                previous_response = results[field.inputName]
+                if previous_response:
+                    field.default = previous_response
+
+        info.percentage_completed = _calculate_completion_percentage(
+            info.survey_template_text
+        )
 
         return jsonify(info), 200
 
@@ -311,7 +309,10 @@ def _calculate_completion_percentage(survey_model):
                 if _is_question_answered(field.default):
                     answered_questions += 1
 
-    return answered_questions / visible_questions
+    if visible_questions == 0:
+        return 0
+    else:
+        return answered_questions / visible_questions
 
 
 def _is_question_answered(response):

@@ -9,7 +9,7 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenEatingPatterns, VioscreenEatingPatternsComponent,
     VioscreenMPeds, VioscreenMPedsComponent,
     VioscreenFoodConsumption, VioscreenFoodConsumptionComponent,
-    VioscreenComposite)
+    VioscreenComposite, VioscreenRegistryEntry)
 
 
 from werkzeug.exceptions import NotFound
@@ -1684,6 +1684,18 @@ class VioscreenRepo(BaseRepo):
                     sessions.append(session)
                 return sessions
 
+    @staticmethod
+    def _row_to_vioscreen_registry_entry(r):
+        return VioscreenRegistryEntry(
+            r['survey_id'],
+            r['vioscreen_status'],
+            r['creation_time'].strftime(
+                "%b %d, %Y %I:%M %p"
+            ),
+            r['sample_id'],
+            r['registration_code']
+        )
+
     def get_registry_entries_by_source(self, account_id, source_id):
         """ Retrieve all Vioscreen surveys for a given source
 
@@ -1696,8 +1708,8 @@ class VioscreenRepo(BaseRepo):
 
         Returns
         -------
-        list of dicts or None
-            The records of the entries or None
+        list of dicts
+            The records of the entries, which may be an empty list
         """
         with self._transaction.dict_cursor() as cur:
             cur.execute(
@@ -1717,41 +1729,29 @@ class VioscreenRepo(BaseRepo):
             else:
                 ret_val = []
                 for r in rows:
-                    vre = {
-                        "survey_id": r['survey_id'],
-                        "vioscreen_status": r['vioscreen_status'],
-                        "creation_time": r['creation_time'].strftime(
-                            "%b %d, %Y %I:%M %p"
-                        ),
-                        "sample_id": r['sample_id'],
-                        "registration_code": r['registration_code']
-                    }
-                    ret_val.append(vre)
+                    ret_val.append(self._row_to_vioscreen_registry_entry(r))
                 return ret_val
 
-    def get_unused_code(self, ffq_code):
+    def is_code_used(self, ffq_code):
         """ Check whether an FFQ code has been used
 
         Parameters
         ----------
         ffq_code : str
-            The session ID to obtain a FFQ for
+            The FFQ registration code
 
         Returns
         -------
-        str or None
-            The code if it exists and is unused
+        bool
+            True/False reflecting whether code has been used
         """
         with self._transaction.cursor() as cur:
             cur.execute(
-                "SELECT ffq_registration_code "
-                "FROM campaign.ffq_registration_codes "
-                "WHERE ffq_registration_code = %s AND "
-                "registration_code_used IS NULL",
+                "SELECT EXISTS("
+                "    SELECT ffq_registration_code "
+                "    FROM campaign.ffq_registration_codes "
+                "    WHERE ffq_registration_code = %s AND "
+                "    registration_code_used IS NULL)",
                 (ffq_code, )
             )
-            row = cur.fetchone()
-            if row is None:
-                return None
-            else:
-                return row[0]
+            return cur.fetchone()[0]

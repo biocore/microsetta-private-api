@@ -762,9 +762,9 @@ class SurveyTemplateRepo(BaseRepo):
                 # it hasn't already been used
                 if registration_code is not None:
                     vio_repo = VioscreenRepo(self._transaction)
-                    unused_code = vio_repo.get_unused_code(registration_code)
+                    unused_code = vio_repo.is_code_used(registration_code)
 
-                    if unused_code is None:
+                    if unused_code is False:
                         # the code is either invalid or has been used
                         raise RepoException("Registration code is invalid")
                     else:

@@ -1786,7 +1786,7 @@ class IntegrationTests(TestCase):
                  "parent_1_name": "Mr. Schmoe",
                  "parent_2_name": "Mrs. Schmoe",
                  "deceased_parent": 'false',
-                 "obtainer_name": "MojoJojo"
+                 "assent_obtainer": "MojoJojo"
                  }),
             headers=MOCK_HEADERS_3
 

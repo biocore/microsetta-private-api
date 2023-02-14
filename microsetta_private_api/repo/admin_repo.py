@@ -820,6 +820,8 @@ class AdminRepo(BaseRepo):
                                  kit_names):
         """Generate specified number of random barcodes for input kit names"""
 
+        total_barcodes = number_of_kits * number_of_samples
+
         with self._transaction.cursor() as cur:
             # get the maximum observed barcode.
             # historically, barcodes were of the format NNNNNNNNN where each
@@ -830,7 +832,7 @@ class AdminRepo(BaseRepo):
             # control character that cannot safely be considered a digit.
             # this is *safe* for all prior barcodes as the first character
             # has always been the "0" character.
-            total_barcodes = number_of_kits * number_of_samples
+            # Barcodes prefixed with X or 0 are designated by UC San Diego.
             cur.execute(
                 "SELECT max(right(barcode,8)::integer) "
                 "FROM barcodes.barcode "

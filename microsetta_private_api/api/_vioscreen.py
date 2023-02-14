@@ -290,7 +290,7 @@ def get_vioscreen_food_components_descriptions(token_info):
 
 
 def get_vioscreen_sessions(account_id, source_id, token_info):
-    _validate_has_account(token_info)
+    _validate_account_access(token_info, account_id)
 
     """Obtain vioscreen sessions if it exists"""
     with Transaction() as t:
@@ -308,14 +308,14 @@ def check_ffq_code(ffq_code, token_info):
 
     with Transaction() as t:
         vio_repo = VioscreenRepo(t)
-        unused_code = vio_repo.get_unused_code(ffq_code)
-        if unused_code is None:
+        unused_code = vio_repo.is_code_used(ffq_code)
+        if unused_code is False:
             return jsonify(code=404, message="No unused code found"), 404
         return jsonify({"unused_code": True}), 200
 
 
 def get_vioscreen_registry_entries(account_id, source_id, token_info):
-    _validate_has_account(token_info)
+    _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         vio_repo = VioscreenRepo(t)
@@ -323,4 +323,4 @@ def get_vioscreen_registry_entries(account_id, source_id, token_info):
             account_id,
             source_id
         )
-    return jsonify(vio_registry_entries), 200
+    return jsonify([vre.to_api() for vre in vio_registry_entries]), 200

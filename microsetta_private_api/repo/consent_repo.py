@@ -246,7 +246,7 @@ class ConsentRepo(BaseRepo):
             consent_type_like = "%_biospecimen"
         else:
             raise RepoException("Unknown consent type: %s" % consent_type)
-            
+
         with self._transaction.dict_cursor() as cur:
             cur.execute(
                 "SELECT ca.signature_id, ca.consent_id, ca.source_id, "
@@ -265,4 +265,18 @@ class ConsentRepo(BaseRepo):
             if row is None:
                 return None
             else:
-                return _row_to_consent_signature(row)
+                consent_signature = _row_to_consent_signature(row)
+
+                survey_doc = self.get_consent_document(
+                    consent_signature.consent_id
+                )
+                consent_signature.consent_content = survey_doc.consent_content
+
+                if consent_signature.assent_id is not None:
+                    assent_doc = self.get_consent_document(
+                        consent_signature.assent_id
+                    )
+                    consent_signature.assent_content =\
+                        assent_doc.consent_content
+
+                return consent_signature

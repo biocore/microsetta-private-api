@@ -316,8 +316,8 @@ paths:
                   $ref: '#/components/schemas/source_name'
                 parent_1_name:
                   $ref: '#/components/schemas/parent_1_name'
-                obtainer_name:
-                  $ref: '#/components/schemas/obtainer_name'
+                assent_obtainer:
+                  $ref: '#/components/schemas/assent_obtainer'
                 consent_type:
                   $ref: '#/components/schemas/consent_type'
                 consent_id:
@@ -353,7 +353,7 @@ paths:
 
   '/accounts/{account_id}/sources/{source_id}/signed_consents':
     get:
-      operationId: microsetta_private_api.api.get_signed_consents
+      operationId: microsetta_private_api.api.get_signed_consent
       tags:
         - Consent
       summary: Get signed consent documents for source
@@ -368,10 +368,35 @@ paths:
             application/json:
               schema:
                 type: object
+                properties:
+                  signature_id:
+                    $ref: '#/components/schemas/signature_id'
+                  consent_id:
+                    $ref: '#/components/schemas/consent_id'
+                  source_id:
+                    $ref: '#/components/schemas/source_id'
+                  date_time:
+                    $ref: '#/components/schemas/date_time'
+                  parent_1_name:
+                    $ref: '#/components/schemas/parent_1_name'
+                  parent_2_name:
+                    $ref: '#/components/schemas/parent_2_name'
+                  deceased_parent:
+                    $ref: '#/components/schemas/deceased_parent'
+                  assent_obtainer:
+                    $ref: '#/components/schemas/assent_obtainer'
+                  assent_id:
+                    $ref: '#/components/schemas/assent_id'
+                  consent_content:
+                    $ref: '#/components/schemas/consent_content'
+                  assent_content:
+                    $ref: '#/components/schemas/assent_content'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':
           $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   '/accounts/{account_id}/source/{source_id}/consent/{consent_type}':
     get:
@@ -421,8 +446,8 @@ paths:
                   $ref: '#/components/schemas/source_name'
                 parent_1_name:
                   $ref: '#/components/schemas/parent_1_name'
-                obtainer_name:
-                  $ref: '#/components/schemas/obtainer_name'
+                assent_obtainer:
+                  $ref: '#/components/schemas/assent_obtainer'
                 consent_type:
                   $ref: '#/components/schemas/consent_type'
                 consent_id:
@@ -490,7 +515,7 @@ paths:
                     age_range: "0-6"
                     child_info:
                       parent_1_name: "Demeter Doe"
-                      obtainer_name: "Hades Doe"
+                      assent_obtainer: "Hades Doe"
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':
@@ -1053,7 +1078,6 @@ paths:
         - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
         - $ref: '#/components/parameters/timestamp'
-      responses:
       responses:
         '200':
           description: Successfully returned session information
@@ -1620,12 +1644,7 @@ paths:
       summary: Check if an FFQ code is valid and has not been used
       description: Check if an FFQ code is valid and has not been used
       parameters:
-        - in: query
-          name: ffq_code
-          description: FFQ Code
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/ffq_code'
       responses:
         '200':
           description: Successfully returned list of unassigned samples
@@ -1635,15 +1654,13 @@ paths:
                 type: object
                 properties:
                   unused_code:
-                    type: boolean
+                    $ref: '#/components/schemas/unused_code'
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':
           $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
-        '422':
-          $ref: '#/components/responses/422UnprocessableEntity'
 
   '/campaign_information':
     get:
@@ -2811,7 +2828,7 @@ paths:
               type: object
               properties:
                 code_quantity:
-                  type: integer
+                  $ref: '#/components/schemas/code_quantity'
       responses:
         '200':
           description: Returns FFQ code(s)
@@ -2959,7 +2976,6 @@ components:
       description: Food Components Code
       schema:
         $ref: '#/components/schemas/fc_code'
-
     consent_type:
       name: consent_type
       in: path
@@ -3057,6 +3073,12 @@ components:
       description: include private information in a metadata pulldown; may be true or false. Optional.
       schema:
         $ref: '#/components/schemas/include_private'
+    ffq_code:
+      name: ffq_code
+      in: query
+      description: FFQ Code
+      schema:
+        $ref: '#/components/schemas/ffq_code'
 
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
@@ -3209,6 +3231,16 @@ components:
     kit_name:
       type: string
       example: "jb_qhxqe"
+    # ffq code section
+    ffq_code:
+      type: string
+      example: TMI-XXXXX-XXXXX-XXXXX
+    unused_code:
+      type: boolean
+      example: true
+    code_quantity:
+      type: integer
+      example: 5
 
     # sample section
     sample_barcode:
@@ -3327,12 +3359,22 @@ components:
     deceased_parent:
       type: boolean
       example: false
-    obtainer_name:
+    assent_obtainer:
       type: string
       example: "Professor X"
     consent_id:
       type: string
+    assent_id:
+      type: string
     consent_type:
+      type: string
+    signature_id:
+      type: string
+    date_time:
+      type: string
+    consent_content:
+      type: string
+    assent_content:
       type: string
     nonhuman_source:
       type: object
@@ -3377,7 +3419,7 @@ components:
                   $ref: '#/components/schemas/parent_2_name'
                 deceased_parent:
                   $ref: '#/components/schemas/deceased_parent'
-                obtainer_name:
+                assent_obtainer:
                   type: string
               additionalProperties: false
       additionalProperties: false
@@ -3689,7 +3731,7 @@ components:
             parent_1_name: "Maman Doe"
             parent_2_name: "Pere Doe"
             deceased_parent: false
-            obtainer_name: "Maman M. Doe"
+            assent_obtainer: "Maman M. Doe"
     nonhuman_source:
       value:
         source_name: "Fluffy"
@@ -3713,7 +3755,7 @@ components:
             parent_1_name: "Maman Doe"
             parent_2_name: "Pere Doe"
             deceased_parent: false
-            obtainer_name: "Maman M. Doe"
+            assent_obtainer: "Maman M. Doe"
     nonhuman_source_w_id:
       value:
         source_id: "42f799a8-e814-4b91-a291-2dbd50fda75d"
