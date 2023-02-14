@@ -240,6 +240,13 @@ class ConsentRepo(BaseRepo):
             return cur.rowcount >= 0
 
     def get_latest_signed_consent(self, source_id, consent_type):
+        if consent_type == 'data':
+            consent_type_like = "%_data"
+        elif consent_type == 'biospecimen':
+            consent_type_like = "%_biospecimen"
+        else:
+            raise RepoException("Unknown consent type: %s" % consent_type)
+            
         with self._transaction.dict_cursor() as cur:
             cur.execute(
                 "SELECT ca.signature_id, ca.consent_id, ca.source_id, "
@@ -252,7 +259,7 @@ class ConsentRepo(BaseRepo):
                 "ON ca.source_id = s.id "
                 "WHERE ca.source_id = %s AND cd.consent_type LIKE %s "
                 "ORDER BY ca.date_time DESC LIMIT 1",
-                (source_id, "%"+consent_type+"%")
+                (source_id, consent_type_like)
             )
             row = cur.fetchone()
             if row is None:
