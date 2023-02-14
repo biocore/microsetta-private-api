@@ -1347,7 +1347,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
       responses:
         '200':
-          description: Successfully returned vioscreens
+          description: Successfully returned vioscreen registration entries
           content:
             application/json:
               schema:
