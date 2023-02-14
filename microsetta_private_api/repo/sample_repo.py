@@ -391,11 +391,9 @@ class SampleRepo(BaseRepo):
     def _get_supplied_kit_id_by_sample(self, sample_barcode):
         with self._transaction.cursor() as cur:
             cur.execute(
-                "SELECT ag_kit.supplied_kit_id "
-                "FROM ag.ag_kit "
-                "LEFT JOIN ag.ag_kit_barcodes "
-                "ON ag_kit.ag_kit_id = ag_kit_barcodes.ag_kit_id "
-                "WHERE ag_kit_barcodes.barcode = %s",
+                "SELECT kit_id "
+                "FROM barcodes.barcode "
+                "WHERE barcode = %s",
                 (sample_barcode, )
             )
             row = cur.fetchone()
