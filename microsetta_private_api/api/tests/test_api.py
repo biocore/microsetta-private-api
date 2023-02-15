@@ -1769,8 +1769,8 @@ class ConsentTests(ApiTests):
             data=json.dumps(consent_data),
             headers=self.dummy_auth)
 
-        self.assertEquals(201, response.status_code)
         self.assertEquals(response.headers, "")
+        self.assertEquals(201, response.status_code)
 
         # Now let's get that signed consent back
         response = self.client.get(
