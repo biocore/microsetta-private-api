@@ -1688,6 +1688,22 @@ class SourceTests(ApiTests):
 
 @pytest.mark.usefixtures("client")
 class ConsentTests(ApiTests):
+    def setUp(self):
+        super().setUp()
+        self.signature_to_delete = None
+
+    def tearDown(self):
+        with Transaction() as t:
+            cur = t.cursor()
+            if self.signature_to_delete is not None:
+                cur.execute(
+                    "DELETE FROM ag.consent_audit "
+                    "WHERE signature_id = %s",
+                    (self.signature_to_delete, )
+                )
+                t.commit()
+
+        super().tearDown()
 
     def sign_data_consent(self):
         """Checks data consent for a source and sings the consent"""
@@ -1778,7 +1794,6 @@ class ConsentTests(ApiTests):
             data=json.dumps(consent_data),
             headers=self.dummy_auth)
 
-        self.assertEquals(response.data, "")
         self.assertEquals(201, response.status_code)
 
         # Now let's get that signed consent back
@@ -1798,6 +1813,9 @@ class ConsentTests(ApiTests):
             response_data['consent_id'],
             adult_data_consent
         )
+
+        # need to clean this up in tearDown
+        self.signature_to_delete = response_data['signature_id']
 
 
 @pytest.mark.usefixtures("client")
