@@ -53,7 +53,10 @@ def _row_to_consent_signature(r):
         r["parent_2_name"],
         r["deceased_parent"],
         r["assent_obtainer"],
-        r["assent_id"])
+        r["assent_id"],
+        "",
+        ""
+    )
 
 
 class ConsentRepo(BaseRepo):

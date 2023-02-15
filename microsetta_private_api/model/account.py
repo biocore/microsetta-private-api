@@ -31,7 +31,8 @@ class Account(ModelBase):
                 input_dict['address']['country_code'],
                 input_dict['address']['street2']
             ),
-            input_dict['language']
+            input_dict['language'],
+            input_dict['consent_privacy_terms']
         )
         return result
 
@@ -39,6 +40,7 @@ class Account(ModelBase):
                  account_type, auth_issuer, auth_sub,
                  first_name, last_name,
                  address, language,
+                 consent_privacy_terms,
                  created_with_kit_id=None,
                  creation_time=None, update_time=None):
         self.id = account_id
@@ -53,6 +55,7 @@ class Account(ModelBase):
         self.creation_time = creation_time
         self.update_time = update_time
         self.language = language
+        self.consent_privacy_terms = consent_privacy_terms
 
     def to_api(self):
         # api is not given the auth_issuer or auth_sub
@@ -66,7 +69,8 @@ class Account(ModelBase):
             "language": self.language,
             "creation_time": self.creation_time,
             "update_time": self.update_time,
-            "kit_name": self.created_with_kit_id
+            "kit_name": self.created_with_kit_id,
+            "consent_privacy_terms": self.consent_privacy_terms
         }
 
     def account_matches_auth(self, email, auth_issuer, auth_sub):

@@ -1,6 +1,9 @@
 -- Add an Address 2 field to the account table
 ALTER TABLE ag.account ADD COLUMN street2 VARCHAR;
 
+-- Add a column to store whether the user agreed to the privacy policy and terms upon signup.
+ALTER TABLE ag.account ADD COLUMN consent_privacy_terms BOOLEAN DEFAULT FALSE NOT NULL;
+
 -- Add an assent_id to the consent_audit table for the 7-12 and 13-17 age groups. It needs to remain nullable as not all age groups have an assent document.
 ALTER TABLE ag.consent_audit ADD COLUMN assent_id UUID,
     ADD CONSTRAINT fk_assent_id FOREIGN KEY (assent_id) REFERENCES ag.consent_documents (consent_id);

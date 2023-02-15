@@ -26,6 +26,7 @@ DUMMY_ACCT_INFO_1 = {
     "last_name": "Doe",
     "language": "en_US",
     "kit_name": 'jb_qhxqe',
+    "consent_privacy_terms": True,
     "id": ACCT_ID_1
 }
 ACCT_MOCK_ISS_1 = "MrUnitTest.go"

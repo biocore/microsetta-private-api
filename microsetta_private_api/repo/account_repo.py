@@ -17,13 +17,13 @@ class AccountRepo(BaseRepo):
                 "first_name, last_name, " \
                 "street, street2, city, state, post_code, country_code, " \
                 "created_with_kit_id, preferred_language, " \
-                "creation_time, update_time"
+                "consent_privacy_terms, creation_time, update_time"
 
     write_cols = "id, email, " \
                  "account_type, auth_issuer, auth_sub, " \
                  "first_name, last_name, " \
                  "street, street2, city, state, post_code, country_code, " \
-                 "preferred_language"
+                 "preferred_language, consent_privacy_terms"
 
     @staticmethod
     def _row_to_addr(r):
@@ -47,6 +47,7 @@ class AccountRepo(BaseRepo):
             r['first_name'], r['last_name'],
             AccountRepo._row_to_addr(r),
             r['preferred_language'],
+            r['consent_privacy_terms'],
             r['created_with_kit_id'],
             r['creation_time'], r['update_time'])
 
@@ -56,7 +57,7 @@ class AccountRepo(BaseRepo):
                 a.account_type, a.auth_issuer, a.auth_sub,
                 a.first_name, a.last_name) + \
                 AccountRepo._addr_to_row(a.address) + \
-                (a.language,)
+                (a.language, a.consent_privacy_terms)
 
     def claim_legacy_account(self, email, auth_iss, auth_sub):
         # Returns now-claimed legacy account if an unclaimed legacy account
@@ -141,6 +142,11 @@ class AccountRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             row = AccountRepo._account_to_row(account)
 
+            # remove consent_privacy_terms from the row since we don't
+            # update it
+            consent_pos = len(row) - 1
+            row = row[:consent_pos]
+
             # Shift id to end since it appears in the WHERE clause
             row_id = row[0:1]
             row_email_to_cc = row[1:]
@@ -188,7 +194,7 @@ class AccountRepo(BaseRepo):
                             "%s, %s, %s, "
                             "%s, %s, "
                             "%s, %s, %s, %s, %s, %s, "
-                            "%s)",
+                            "%s, %s)",
                             AccountRepo._account_to_row(account))
                 return cur.rowcount == 1
         except psycopg2.errors.UniqueViolation as e:

@@ -351,7 +351,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/accounts/{account_id}/sources/{source_id}/signed_consents':
+  '/accounts/{account_id}/sources/{source_id}/signed_consent/{consent_type}':
     get:
       operationId: microsetta_private_api.api.get_signed_consent
       tags:
@@ -361,6 +361,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/consent_type'
       responses:
         '200':
           description: Consent Signature Info
@@ -408,7 +409,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#components/parameters/consent_type'
+        - $ref: '#/components/parameters/consent_type'
       responses:
         '200':
           description: Consent Signature Status
@@ -3149,6 +3150,9 @@ components:
       readOnly: true
       format: date-time
       example: "2019-12-13T00:54:28.712Z"
+    consent_privacy_terms:
+      type: boolean
+      example: True
     account:
       type: object
       properties:
@@ -3170,6 +3174,8 @@ components:
           $ref: '#/components/schemas/creation_time'
         update_time:
           $ref: '#/components/schemas/update_time'
+        consent_privacy_terms:
+          $ref: '#/components/schemas/consent_privacy_terms'
       required:
         - first_name
         - last_name
@@ -3352,6 +3358,7 @@ components:
     parent_1_name:
       type: string
       example: "Madre Doe"
+      nullable: true
     parent_2_name:
       type: string
       nullable: true
@@ -3359,13 +3366,16 @@ components:
     deceased_parent:
       type: boolean
       example: false
+      nullable: true
     assent_obtainer:
       type: string
       example: "Professor X"
+      nullable: true
     consent_id:
       type: string
     assent_id:
       type: string
+      nullable: true
     consent_type:
       type: string
     signature_id:
