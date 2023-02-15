@@ -81,6 +81,7 @@ DUMMY_ACCT_INFO = {
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
+    "consent_privacy_terms": True
 }
 DUMMY_ACCT_INFO_2 = {
     "address": {
@@ -95,6 +96,7 @@ DUMMY_ACCT_INFO_2 = {
     "first_name": "Obie",
     "last_name": "Dobie",
     "language": "en_US",
+    "consent_privacy_terms": True
 }
 DUMMY_ACCT_ADMIN = {
     "address": {
@@ -108,6 +110,7 @@ DUMMY_ACCT_ADMIN = {
     "email": TEST_EMAIL_3,
     "first_name": "Obie",
     "last_name": "Dobie",
+    "consent_privacy_terms": True,
     KIT_NAME_KEY: EXISTING_KIT_NAME_2
 }
 
