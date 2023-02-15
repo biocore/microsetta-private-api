@@ -1748,13 +1748,21 @@ class ConsentTests(ApiTests):
         self.assertEquals(201, response.status_code)
 
     def test_get_signed_consent(self):
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                cur.execute(
+                    "SELECT consent_id "
+                    "FROM ag.consent_documents "
+                    "WHERE locale = 'en_US' AND consent_type = 'adult_data' "
+                    "ORDER BY date_time DESC LIMIT 1"
+                )
+                row = cur.fetchone()
+                consent_id = row['consent_id']
+
         # Create our account and source to work from
         dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
-
-        # Sign the consent doc
-        consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
 
         consent_data = {
             "age_range": "18-plus",
