@@ -1271,7 +1271,7 @@ class AdminApiTests(TestCase):
             self.assertEqual(204, response.status_code)
 
     def test_generate_ffq_codes(self):
-        input_json = {"code_quantity": 2}
+        input_json = json.dumps({"code_quantity": 2})
 
         response = self.client.post(
             "api/admin/generate_ffq_codes",
