@@ -61,8 +61,8 @@ def setup_test_data():
                           12345,
                           "US"
                       ),
-                      "fakekit",
-                      "en_US")
+                      "en_US",
+                      True)
         acct_repo.create_account(acc)
 
         with t.cursor() as cur:
