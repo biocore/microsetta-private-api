@@ -63,7 +63,7 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
             consent_repo.sign_consent(account_id, consent_sign)
             t.commit()
         except NotFound as e:
-            return jsonify(code=404, message=e), 404
+            return jsonify(code=404, message=e.description), 404
 
     response = jsonify({"result": True})
     response.status_code = 201
