@@ -29,15 +29,16 @@ def get_data_path(filename):
 
 class VioscreenRepoTests(unittest.TestCase):
     def setUp(self):
-        cur = t.cursor()
-        cur.execute("""SELECT DISTINCT ag_login_id as account_id,
-                                       source_id
-                       FROM ag.ag_kit_barcodes
-                       JOIN ag.ag_login_surveys using (source_id)
-                       WHERE barcode='000004216'""")
-        acct_id, src_id = cur.fetchone()
-        self.acct_id = acct_id
-        self.src_id = src_id
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""SELECT DISTINCT ag_login_id as account_id,
+                                           source_id
+                           FROM ag.ag_kit_barcodes
+                           JOIN ag.ag_login_surveys using (source_id)
+                           WHERE barcode='000004216'""")
+            acct_id, src_id = cur.fetchone()
+            self.acct_id = acct_id
+            self.src_id = src_id
 
         # reusing as much as we can, but there are some differences in
         # hwo the raw data were used

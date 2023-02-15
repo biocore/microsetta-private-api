@@ -4,8 +4,7 @@ from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.consent_repo import ConsentRepo
-from microsetta_private_api.model.consent import ConsentDocument, \
-    ConsentSignature
+from microsetta_private_api.model.consent import ConsentSignature
 from microsetta_private_api.model.source import HumanInfo, Source
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.model.account import Account
@@ -82,7 +81,8 @@ class ConsentRepoTests(unittest.TestCase):
                 cur.execute(
                     "SELECT consent_id "
                     "FROM ag.consent_documents "
-                    "WHERE locale = 'en_US' AND consent_type = 'adult_biospecimen' "
+                    "WHERE locale = 'en_US' AND "
+                    "consent_type = 'adult_biospecimen' "
                     "ORDER BY date_time DESC LIMIT 1"
                 )
                 row = cur.fetchone()
