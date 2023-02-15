@@ -1753,25 +1753,7 @@ class ConsentTests(ApiTests):
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
 
-        consent_id = "6ac8883b-0f00-481a-a43f-336d56ea012a"
-
-        consent_data = {
-            "age_range": "18-plus",
-            "participant_name": "Bo",
-            "consent_type": ADULT_DATA_CONSENT,
-            "consent_id": consent_id
-        }
-
-        response = self.client.post(
-            '/api/accounts/%s/source/%s/consent/%s' %
-            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
-            content_type='application/json',
-            data=json.dumps(consent_data),
-            headers=self.dummy_auth)
-
-        self.assertEquals(201, response.status_code)
-
-        # Now let's get that signed consent back
+        # Now let's get the consent that was signed as part of source setup
         response = self.client.get(
             '/api/accounts/%s/sources/%s/signed_consent/%s',
             (dummy_acct_id, dummy_source_id, "data"),
@@ -1783,10 +1765,6 @@ class ConsentTests(ApiTests):
         self.assertEqual(
             response_data['source_id'],
             dummy_source_id
-        )
-        self.assertEqual(
-            response_data['consent_id'],
-            consent_id
         )
 
 
