@@ -18,6 +18,7 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenFoodComponents,
     VioscreenMPeds, VioscreenEatingPatterns,
     VioscreenComposite, VioscreenSession)
+from microsetta_private_api.repo.admin_repo import AdminRepo
 
 
 def get_data_path(filename):
@@ -67,6 +68,32 @@ class VioscreenRepoTests(unittest.TestCase):
             vr.insert_ffq(self.FFQ)
             obs = vr.get_ffq(VIOSCREEN_SESSION.sessionId)
             self.assertEqual(obs, self.FFQ)
+
+    def test_is_code_used_true(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            vr = VioscreenRepo(t)
+            ffq_code = admin_repo.create_ffq_code()
+
+            with t.dict_cursor() as cur:
+                cur.execute(
+                    "UPDATE campaign.ffq_registration_codes "
+                    "SET registration_code_used = NOW()"
+                    "WHERE ffq_registration_code = %s",
+                    (ffq_code,)
+                )
+
+            code_used = vr.is_code_used(ffq_code)
+            self.assertTrue(code_used)
+
+    def test_is_code_used_false(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            vr = VioscreenRepo(t)
+            ffq_code = admin_repo.create_ffq_code()
+
+            code_used = vr.is_code_used(ffq_code)
+            self.assertFalse(code_used)
 
 
 class VioscreenSessions(unittest.TestCase):

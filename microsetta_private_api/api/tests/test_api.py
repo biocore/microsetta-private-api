@@ -484,7 +484,8 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['country_code'],
                 input_obj['address']['street2']
             ),
-            input_obj['language']
+            input_obj['language'],
+            input_obj['consent_privacy_terms']
         )
     else:
         acct = Account.from_dict(input_obj, iss, sub)
