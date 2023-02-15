@@ -1755,7 +1755,7 @@ class ConsentTests(ApiTests):
 
         # Now let's get the consent that was signed as part of source setup
         response = self.client.get(
-            '/api/accounts/%s/sources/%s/signed_consent/%s',
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
             (dummy_acct_id, dummy_source_id, "data"),
             headers=self.dummy_auth
         )
