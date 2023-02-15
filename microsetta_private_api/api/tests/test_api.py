@@ -1753,13 +1753,22 @@ class ConsentTests(ApiTests):
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
 
-        consent_id = "6ac8883b-0f00-481a-a43f-336d56ea012a"
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                cur.execute(
+                    "SELECT consent_id "
+                    "FROM ag.consent_documents "
+                    "WHERE locale = 'en_US' AND consent_type = 'adult_data' "
+                    "ORDER BY date_time DESC LIMIT 1"
+                )
+                row = cur.fetchone()
+                adult_data_consent = row['consent_id']
 
         consent_data = {
             "age_range": "18-plus",
             "participant_name": "Bo",
             "consent_type": ADULT_DATA_CONSENT,
-            "consent_id": consent_id
+            "consent_id": adult_data_consent
         }
 
         response = self.client.post(
@@ -1787,7 +1796,7 @@ class ConsentTests(ApiTests):
         )
         self.assertEqual(
             response_data['consent_id'],
-            consent_id
+            adult_data_consent
         )
 
 
