@@ -874,6 +874,7 @@ class IntegrationTests(TestCase):
         check_response(response, 400)
 
         # Check that data can be written once request is not malformed
+        fuzzy_data.pop('consent_privacy_terms')
         fuzzy_data.pop('account_type')
         response = self.client.put(
             '/api/accounts/%s?language_tag=en_US' % (ACCT_ID,),
@@ -890,10 +891,12 @@ class IntegrationTests(TestCase):
         acc.pop('creation_time')
         acc.pop('update_time')
         acc.pop('kit_name')
+        acc.pop('consent_privacy_terms')
         self.assertDictEqual(fuzzy_data, acc, "Check Fuzz Account Match")
 
         # Attempt to restore back to old data.
         regular_data.pop('account_type')
+        regular_data.pop('consent_privacy_terms')
         response = self.client.put(
             '/api/accounts/%s?language_tag=en_US' % (ACCT_ID,),
             content_type='application/json',
