@@ -1761,7 +1761,7 @@ class ConsentTests(ApiTests):
         consent_data.update({"consent_id": consent_id})
 
         response = self.client.post(
-            '/api/accounts/%s/sources/%s/consent/%s' %
+            '/api/accounts/%s/source/%s/consent/%s' %
             (dummy_acct_id, dummy_source_id, DATA_CONSENT),
             content_type='application/json',
             data=json.dumps(consent_data),
