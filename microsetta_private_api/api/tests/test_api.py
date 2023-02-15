@@ -1747,6 +1747,53 @@ class ConsentTests(ApiTests):
 
         self.assertEquals(201, response.status_code)
 
+    def test_get_signed_consent(self):
+        # Create our account and source to work from
+        dummy_acct_id, dummy_source_resp = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        # Sign the consent doc
+        consent_status = self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            headers=self.dummy_auth)
+
+        self.assertTrue(consent_status["result"])
+
+        consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
+
+        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        consent_data.update("consent_type", ADULT_DATA_CONSENT)
+        consent_data.update("consent_id", consent_id)
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
+
+        # Now let's get that signed consent back
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s',
+            (dummy_acct_id, dummy_source_resp['source_id'], "data"),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+
+        response_data = json.loads(response.data)
+        self.assertEqual(
+            response_data['source_id'],
+            dummy_source_resp['source_id']
+        )
+        self.assertEqual(
+            response_data['consent_id'],
+            consent_id
+        )
+
 
 @pytest.mark.usefixtures("client")
 class SurveyTests(ApiTests):
