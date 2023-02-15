@@ -765,7 +765,8 @@ class IntegrationTests(TestCase):
                 "email": FAKE_EMAIL,
                 "first_name": "Jane",
                 "last_name": "Doe",
-                "language": "en_US"
+                "language": "en_US",
+                "consent_privacy_terms": True
             })
 
         # Registering with the authrocket associated with the mock account
@@ -839,8 +840,7 @@ class IntegrationTests(TestCase):
                 "email": "foo@baz.com",
                 "first_name": "Dan",
                 "last_name": "H",
-                "language": "en_US",
-                "consent_privacy_terms": True
+                "language": "en_US"
             }
 
         # Hard to guess these two, so let's pop em out

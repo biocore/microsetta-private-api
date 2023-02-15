@@ -1246,6 +1246,7 @@ class AccountTests(ApiTests):
 
         dummy_acct_id = create_dummy_acct()
         changed_acct_dict = self.make_updated_acct_dict()
+        changed_acct_dict.pop("consent_privacy_terms")
 
         input_url = "/api/accounts/{0}".format(dummy_acct_id)
         self.run_query_and_content_required_field_test(

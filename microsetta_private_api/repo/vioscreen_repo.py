@@ -1732,7 +1732,7 @@ class VioscreenRepo(BaseRepo):
                     ret_val.append(self._row_to_vioscreen_registry_entry(r))
                 return ret_val
 
-    def is_code_used(self, ffq_code):
+    def is_code_unused(self, ffq_code):
         """ Check whether an FFQ code has been used
 
         Parameters

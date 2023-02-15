@@ -308,7 +308,7 @@ def check_ffq_code(ffq_code, token_info):
 
     with Transaction() as t:
         vio_repo = VioscreenRepo(t)
-        unused_code = vio_repo.is_code_used(ffq_code)
+        unused_code = vio_repo.is_code_unused(ffq_code)
         if unused_code is False:
             return jsonify(code=404, message="No unused code found"), 404
         return jsonify({"unused_code": True}), 200

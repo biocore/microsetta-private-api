@@ -69,7 +69,7 @@ class VioscreenRepoTests(unittest.TestCase):
             obs = vr.get_ffq(VIOSCREEN_SESSION.sessionId)
             self.assertEqual(obs, self.FFQ)
 
-    def test_is_code_used_true(self):
+    def test_is_code_unused_true(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             vr = VioscreenRepo(t)
@@ -83,16 +83,16 @@ class VioscreenRepoTests(unittest.TestCase):
                     (ffq_code,)
                 )
 
-            code_used = vr.is_code_used(ffq_code)
+            code_used = vr.is_code_unused(ffq_code)
             self.assertTrue(code_used)
 
-    def test_is_code_used_false(self):
+    def test_is_code_unused_false(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             vr = VioscreenRepo(t)
             ffq_code = admin_repo.create_ffq_code()
 
-            code_used = vr.is_code_used(ffq_code)
+            code_used = vr.is_code_unused(ffq_code)
             self.assertFalse(code_used)
 
 
