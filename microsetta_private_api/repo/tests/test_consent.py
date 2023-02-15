@@ -88,7 +88,8 @@ class ConsentRepoTests(unittest.TestCase):
                               12345,
                               "US"
                           ),
-                          "en_US")
+                          "en_US",
+                          True)
             acct_repo.create_account(acc)
 
             source = CORRECT_SIGN["source_id"]
@@ -133,7 +134,8 @@ class ConsentRepoTests(unittest.TestCase):
                               12345,
                               "US"
                           ),
-                          "en_US")
+                          "en_US",
+                          True)
             acct_repo.create_account(acc)
 
             srcRepo = SourceRepo(t)
