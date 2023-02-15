@@ -912,6 +912,7 @@ class IntegrationTests(TestCase):
         acc.pop('kit_name')
         regular_data['account_type'] = 'standard'
         regular_data["account_id"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
+        regular_data['consent_privacy_terms'] = True
 
         self.assertDictEqual(regular_data, acc, "Check restore to regular")
 
