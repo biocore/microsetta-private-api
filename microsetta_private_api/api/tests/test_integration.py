@@ -840,7 +840,8 @@ class IntegrationTests(TestCase):
                 "email": "foo@baz.com",
                 "first_name": "Dan",
                 "last_name": "H",
-                "language": "en_US"
+                "language": "en_US",
+                "consent_privacy_terms": True
             }
 
         # Hard to guess these two, so let's pop em out
