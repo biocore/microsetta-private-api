@@ -111,7 +111,6 @@ DUMMY_ACCT_ADMIN = {
     "first_name": "Obie",
     "last_name": "Dobie",
     "consent_privacy_terms": True,
-    KIT_NAME_KEY: EXISTING_KIT_NAME_2
 }
 
 SOURCE_ID_1 = "9fba75a5-6fbf-42be-9624-731b6a9a161a"
