@@ -1756,11 +1756,12 @@ class ConsentTests(ApiTests):
         # Sign the consent doc
         consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
 
-        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
-        consent_data.update({"consent_type": ADULT_DATA_CONSENT})
-        consent_data.update({"consent_id": consent_id})
-
-        print(consent_data)
+        consent_data = {
+            "age_range": "18-plus",
+            "participant_name": "Bo",
+            "consent_type": ADULT_DATA_CONSENT,
+            "consent_id": consent_id
+        }
 
         response = self.client.post(
             '/api/accounts/%s/source/%s/consent/%s' %
