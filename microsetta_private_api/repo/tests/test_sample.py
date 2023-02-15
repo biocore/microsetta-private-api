@@ -1,5 +1,6 @@
 import unittest
 from microsetta_private_api.repo.sample_repo import SampleRepo
+from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.transaction import Transaction
 
@@ -141,6 +142,31 @@ class SampleTests(unittest.TestCase):
             # verify samples are part of the new source
             self.assertFalse(self._sample_in_source(src1_samples, samp1))
             self.assertTrue(self._sample_in_source(src2_samples, samp1))
+
+    def test_get_supplied_kit_id_by_sample(self):
+        with Transaction() as t:
+            # First we'll create a kit so that we have a kit_id/barcode combo
+            # to test with
+            admin_repo = AdminRepo(t)
+            res = admin_repo.create_kits(
+                1,
+                1,
+                "UNITTEST",
+                [1]
+            )
+
+            # Extract the info from results. We know we created 1 kit with 1
+            # sample so we don't need to iterate
+            kit_info = res['created'][0]
+            kit_id = kit_info['kit_id']
+            sample_barcode = kit_info['sample_barcodes'][0]
+
+            # Verify that the function returns the correct kit_id
+            sample_repo = SampleRepo(t)
+            supplied_kit_id = sample_repo._get_supplied_kit_id_by_sample(
+                sample_barcode
+            )
+            self.assertEqual(kit_id, supplied_kit_id)
 
 
 if __name__ == '__main__':

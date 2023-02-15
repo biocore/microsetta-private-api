@@ -19,6 +19,7 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenMPeds, VioscreenEatingPatterns,
     VioscreenComposite, VioscreenSession)
 from microsetta_private_api.repo.admin_repo import AdminRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 
 
 def get_data_path(filename):
@@ -28,6 +29,16 @@ def get_data_path(filename):
 
 class VioscreenRepoTests(unittest.TestCase):
     def setUp(self):
+        cur = t.cursor()
+        cur.execute("""SELECT DISTINCT ag_login_id as account_id,
+                                       source_id
+                       FROM ag.ag_kit_barcodes
+                       JOIN ag.ag_login_surveys using (source_id)
+                       WHERE barcode='000004216'""")
+        acct_id, src_id = cur.fetchone()
+        self.acct_id = acct_id
+        self.src_id = src_id
+
         # reusing as much as we can, but there are some differences in
         # hwo the raw data were used
         def loader(model, name):
@@ -94,6 +105,32 @@ class VioscreenRepoTests(unittest.TestCase):
 
             code_used = vr.is_code_unused(ffq_code)
             self.assertTrue(code_used)
+
+    def test_get_registry_entries_by_source(self):
+        with Transaction() as t:
+            # First, we'll set up an FFQ code
+            admin_repo = AdminRepo(t)
+            ffq_code = admin_repo.create_ffq_code()
+
+            # Next, we'll have our source 'take' the FFQ
+            s_t_repo = SurveyTemplateRepo(t)
+            vio_id = s_t_repo.create_vioscreen_id(
+                self.acct_id,
+                self.src_id,
+                None,
+                ffq_code
+            )
+
+            # Now let's verify that we can retrieve the registry entry
+            vio_repo = VioscreenRepo(t)
+            reg_entries = vio_repo.get_registry_entries_by_source(
+                self.acct_id,
+                self.src_id
+            )
+            retrieved_entry = reg_entries[0]
+
+            self.assertEqual(retrieved_entry.registration_code, ffq_code)
+            self.assertEqual(retrieved_entry.survey_id, vio_id)
 
 
 class VioscreenSessions(unittest.TestCase):

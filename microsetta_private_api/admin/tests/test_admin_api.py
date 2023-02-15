@@ -1269,3 +1269,19 @@ class AdminApiTests(TestCase):
                 data=json.dumps(info),
                 headers=MOCK_HEADERS)
             self.assertEqual(204, response.status_code)
+
+    def test_generate_ffq_codes(self):
+        input_json = {"code_quantity": 2}
+
+        response = self.client.post(
+            "api/admin/generate_ffq_codes",
+            content_type='application/json',
+            data=input_json,
+            headers=MOCK_HEADERS
+        )
+        self.assertEqual(200, response.status_code)
+
+        response_obj = json.loads(response.data)
+
+        for ffq_code in response_obj:
+            self.assertEqual("TMI", ffq_code[0:3])
