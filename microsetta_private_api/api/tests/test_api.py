@@ -201,10 +201,10 @@ FAKE_SAMPLES = [S1, S2, S3]
 FAKE_KIT = "12345678-aaaa-aaaa-aaaa-bbbbccccccce"
 FAKE_KIT_PW = "MockItToMe"
 
-DATA_CONSENT = "Data"
-BIOSPECIMEN_CONSENT = "Biospecimen"
-ADULT_DATA_CONSENT = "Adult Consent - Data"
-ADULT_BIOSPECIMEN_CONSENT = "Adult Consent - Biospecimen"
+DATA_CONSENT = "data"
+BIOSPECIMEN_CONSENT = "biospecimen"
+ADULT_DATA_CONSENT = "adult_data"
+ADULT_BIOSPECIMEN_CONSENT = "adult_biospecimen"
 
 
 def make_headers(fake_token):
@@ -1759,6 +1759,8 @@ class ConsentTests(ApiTests):
         consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
         consent_data.update({"consent_type": ADULT_DATA_CONSENT})
         consent_data.update({"consent_id": consent_id})
+
+        print(consent_data)
 
         response = self.client.post(
             '/api/accounts/%s/source/%s/consent/%s' %
