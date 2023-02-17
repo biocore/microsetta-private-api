@@ -975,6 +975,7 @@ class SurveyTemplateRepo(BaseRepo):
                                  'HEIGHT_UNITS',
                                  'WEIGHT_UNITS',
                                  'BIRTH_YEAR',
+                                 'GENDER',
                                  'GENDER_v2')
                              AND s.ag_login_id = %s
                              and s.source_id = %s""",
@@ -982,9 +983,14 @@ class SurveyTemplateRepo(BaseRepo):
 
             results = {name: value for name, value in cur.fetchall()}
             birth_year = results.get('BIRTH_YEAR')
-            gender = results.get('GENDER_v2')
             height_units = results.get('HEIGHT_UNITS')
             weight_units = results.get('WEIGHT_UNITS')
+
+            # If the user has responded to the new form of the gender question
+            # use that. Otherwise, fall back to the old question.
+            gender = results.get('GENDER_v2')
+            if gender is None:
+                gender = results.get('GENDER')
 
             # from survey_answers_other for height/weight
             cur.execute("""SELECT question_shortname, q.response
