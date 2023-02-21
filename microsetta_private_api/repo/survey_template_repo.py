@@ -1215,6 +1215,14 @@ class SurveyTemplateRepo(BaseRepo):
                             multiple_timestamps[question_id] = creation_time
                 else:
                     # SINGLE, STRING, and TEXT types
+
+                    # Some historical values for height (108) and weight (113)
+                    # are of the form ["70"] rather than 70. We need to clean
+                    # that format up before returning values to the UI
+                    if (question_id == '108' or question_id == '113') and \
+                            response.startswith('['):
+                        response = response[2:-2]
+
                     results[question_id] = response
 
             return results
