@@ -972,12 +972,12 @@ class SurveyTemplateTests(unittest.TestCase):
     }
 
     filled_survey_10a = {'22': 'I am right handed',
-                         '108': '["Free text - í.,ú!N):TfüQWä$ãZ-SQ"]',
+                         '108': 'Free text - í.,ú!N):TfüQWä$ãZ-SQ',
                          '109': 'centimeters',
                          '110': 'United States',
                          '111': 'June',
                          '112': 'Unspecified',
-                         '113': '["Free text - -,mV7Ä\t9xäMf\\è\n!¿x_ã"]',
+                         '113': 'Free text - -,mV7Ä\t9xäMf\\è\n!¿x_ã',
                          '114': 'kilograms',
                          '115': '["Free text - Js*äbéøx\'ó,çné\nSEQ8\t"]',
                          '148': '',
