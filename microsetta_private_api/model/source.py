@@ -19,7 +19,7 @@ class HumanInfo:
             child_info.get("deceased_parent"),
             consent_date,
             date_revoked,
-            child_info.get("obtainer_name"),
+            child_info.get("assent_obtainer"),
             age_range)
 
     def __init__(self, is_juvenile,
@@ -42,7 +42,7 @@ class HumanInfo:
                 "parent_1_name": self.parent1_name,
                 "parent_2_name": self.parent2_name,
                 "deceased_parent": self.deceased_parent,
-                "obtainer_name": self.assent_obtainer
+                "assent_obtainer": self.assent_obtainer
             })
 
         result = {"consent": consent}

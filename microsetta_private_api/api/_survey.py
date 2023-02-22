@@ -1,6 +1,7 @@
 import flask
 from flask import jsonify, make_response
 from werkzeug.exceptions import NotFound
+from flask_babel import format_datetime, force_locale
 
 from microsetta_private_api.api._account import \
     _validate_account_access
@@ -38,23 +39,22 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
             return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [1, 3, 4, 5, 6, 7,
-                                     SurveyTemplateRepo.VIOSCREEN_ID,
-                                     SurveyTemplateRepo.MYFOODREPO_ID,
-                                     SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
-                                     SurveyTemplateRepo.SPAIN_FFQ_ID,
-                                     SurveyTemplateRepo.BASIC_INFO_ID,
-                                     SurveyTemplateRepo.AT_HOME_ID,
-                                     SurveyTemplateRepo.LIFESTYLE_ID,
-                                     SurveyTemplateRepo.GUT_ID,
-                                     SurveyTemplateRepo.GENERAL_HEALTH_ID,
-                                     SurveyTemplateRepo.HEALTH_DIAG_ID,
-                                     SurveyTemplateRepo.ALLERGIES_ID,
-                                     SurveyTemplateRepo.DIET_ID,
-                                     SurveyTemplateRepo.DETAILED_DIET_ID,
-                                     SurveyTemplateRepo.MIGRAINE_ID,
-                                     SurveyTemplateRepo.SURFERS_ID,
-                                     SurveyTemplateRepo.COVID19_ID]]), 200
+                           for x in [
+                                SurveyTemplateRepo.VIOSCREEN_ID,
+                                SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                                SurveyTemplateRepo.SPAIN_FFQ_ID,
+                                SurveyTemplateRepo.BASIC_INFO_ID,
+                                SurveyTemplateRepo.AT_HOME_ID,
+                                SurveyTemplateRepo.LIFESTYLE_ID,
+                                SurveyTemplateRepo.GUT_ID,
+                                SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                                SurveyTemplateRepo.HEALTH_DIAG_ID,
+                                SurveyTemplateRepo.ALLERGIES_ID,
+                                SurveyTemplateRepo.DIET_ID,
+                                SurveyTemplateRepo.DETAILED_DIET_ID,
+                                SurveyTemplateRepo.COVID19_ID,
+                                SurveyTemplateRepo.OTHER_ID
+                            ]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
             return jsonify([template_repo.get_survey_template_link_info(x)
                            for x in [2]]), 200
@@ -259,20 +259,64 @@ def read_survey_template(account_id, source_id, survey_template_id,
                 if field.id in client_side_validation:
                     field.set(**client_side_validation[field.id])
 
-        results, percent_comp = st_repo.migrate_responses(source_id,
-                                                          survey_template_id)
-        if results:
-            # modify info with previous results before returning to client.
-            for group in info.survey_template_text.groups:
-                for field in group.fields:
-                    previous_response = results[field.inputName]
-                    if previous_response:
-                        field.default = previous_response
-            info.percentage_completed = "{0:.2f}%".format(percent_comp * 100)
-        else:
-            info.percentage_completed = '0.00%'
+        date_last_taken = st_repo.get_date_survey_last_taken(
+            source_id,
+            survey_template_id
+        )
+        if date_last_taken is not None:
+            with force_locale(language_tag):
+                date_last_taken = format_datetime(
+                    date_last_taken, "MMM d, yyyy"
+                )
+        info.date_last_taken = date_last_taken
+
+        results = st_repo.migrate_responses(source_id, survey_template_id)
+        # modify info with previous results before returning to client.
+        for group in info.survey_template_text.groups:
+            for field in group.fields:
+                previous_response = results[field.inputName]
+                if previous_response:
+                    field.default = previous_response
+
+        info.percentage_completed = _calculate_completion_percentage(
+            info.survey_template_text
+        )
 
         return jsonify(info), 200
+
+
+def _calculate_completion_percentage(survey_model):
+    visible_questions = 0
+    answered_questions = 0
+    answers = {}
+
+    for group in survey_model.groups:
+        for field in group.fields:
+            answers[field.id] = field.default
+            if hasattr(field, 'triggered_by'):
+                q_is_visible = False
+                for trigger_q in field.triggered_by:
+                    if answers[trigger_q['q_id']] == trigger_q['response']:
+                        q_is_visible = True
+                        break
+
+                if q_is_visible is True:
+                    visible_questions += 1
+                    if _is_question_answered(field.default):
+                        answered_questions += 1
+            else:
+                visible_questions += 1
+                if _is_question_answered(field.default):
+                    answered_questions += 1
+
+    if visible_questions == 0:
+        return 0
+    else:
+        return answered_questions / visible_questions
+
+
+def _is_question_answered(response):
+    return (response is not None and response != '' and response != [])
 
 
 def read_answered_surveys(account_id, source_id, language_tag, token_info):

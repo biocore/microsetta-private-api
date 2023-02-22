@@ -13,6 +13,4 @@ class Address(ModelBase):
 
     def to_api(self):
         cp = self.__dict__.copy()
-        if self.street2 is None:
-            cp.pop('street2')
         return cp

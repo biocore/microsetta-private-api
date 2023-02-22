@@ -681,6 +681,20 @@ def generate_activation_codes(body, token_info):
     return jsonify(results), 200
 
 
+def generate_ffq_codes(body, token_info):
+    validate_admin_access(token_info)
+
+    quantity = body.get("code_quantity", 1)
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        code_list = []
+        for i in range(quantity):
+            code_list.append(admin_repo.create_ffq_code())
+        t.commit()
+
+    return jsonify(code_list), 200
+
+
 def list_barcode_query_fields(token_info):
     validate_admin_access(token_info)
 
@@ -821,7 +835,6 @@ def delete_account(account_id, token_info):
         src_repo = SourceRepo(t)
         samp_repo = SampleRepo(t)
         sar_repo = SurveyAnswersRepo(t)
-        template_repo = SurveyTemplateRepo(t)
 
         acct = acct_repo.get_account(account_id)
         if acct is None:
@@ -831,8 +844,6 @@ def delete_account(account_id, token_info):
             if acct.account_type == 'deleted':
                 return None, 204
 
-        sample_count = 0
-        account_has_external = False
         sources = src_repo.get_sources_in_account(
             account_id,
             allow_revoked=True
@@ -845,44 +856,21 @@ def delete_account(account_id, token_info):
                 allow_revoked=True
             )
 
-            has_samples = len(samples) > 0
-            sample_count += len(samples)
-            has_external = template_repo.has_external_surveys(account_id,
-                                                              source.id)
-
-            if has_external:
-                account_has_external = True
-
             for sample in samples:
                 # we scrub rather than disassociate in the event that the
                 # sample is in our freezers but not with an up-to-date scan
                 samp_repo.scrub(account_id, source.id, sample.id)
 
             surveys = sar_repo.list_answered_surveys(account_id, source.id)
-            if has_samples or has_external:
-                # if we have samples or external surveys, we need to scrub
-                # survey / source free text
-                for survey_id in surveys:
-                    sar_repo.scrub(account_id, source.id, survey_id)
+            for survey_id in surveys:
+                sar_repo.scrub(account_id, source.id, survey_id)
 
-                # We're including scrubbed sources to detect external surveys
-                # so we need to make sure the source isn't already scrubbed
-                if source.source_data.date_revoked is None:
-                    src_repo.scrub(account_id, source.id)
+            # We're including scrubbed sources to detect external surveys
+            # so we need to make sure the source isn't already scrubbed
+            if source.source_data.date_revoked is None:
+                src_repo.scrub(account_id, source.id)
 
-            if not has_samples and not has_external:
-                # if we do not have associated samples, or external surveys,
-                # then the source is safe to delete
-                for survey_id in surveys:
-                    sar_repo.delete_answered_survey(account_id, survey_id)
-                src_repo.delete_source(account_id, source.id)
-
-        # an account is safe to delete if there are no associated samples
-        # and does not have external surveys
-        if sample_count > 0 or account_has_external:
-            acct_repo.scrub(account_id)
-        else:
-            acct_repo.delete_account(account_id)
+        acct_repo.scrub(account_id)
 
         t.commit()
 

@@ -57,12 +57,19 @@ class SurveyTemplateTests(unittest.TestCase):
         with Transaction() as t:
             tr = SurveyTemplateRepo(t)
 
-            # year and gender already set for this survey
+            # year already set for this survey
             # weight and height are scrambled in the test
             # database as they're remarked as free text
+            # gender needs to be updated since we changed the question
             with t.cursor() as cur:
+                cur.execute(
+                    "UPDATE ag.survey_answers "
+                    "SET survey_question_id = 502 "
+                    "WHERE survey_id=%s AND survey_question_id = 107",
+                    (TEST1_SURVEY_ID,)
+                )
                 cur.execute("""UPDATE ag.survey_answers_other
-                               SET response='["254"]'
+                               SET response='["127"]'
                                WHERE survey_id=%s AND survey_question_id=%s""",
                             (TEST1_SURVEY_ID, 108))  # height_cm
                 cur.execute("""UPDATE ag.survey_answers_other
@@ -74,11 +81,11 @@ class SurveyTemplateTests(unittest.TestCase):
 
                 obs = tr.fetch_user_basic_physiology(TEST1_ACCOUNT_ID,
                                                      TEST1_SOURCE_ID)
-                exp = (1973, 'Male', 100, 220.462)
+                exp = (1973, 'Male', 50.0, 220.462)
                 self.assertEqual(obs, exp)
 
                 cur.execute("""UPDATE ag.survey_answers_other
-                               SET response='["100"]'
+                               SET response='["50"]'
                                WHERE survey_id=%s AND survey_question_id=%s""",
                             (TEST1_SURVEY_ID, 108))  # height_cm
                 cur.execute("""UPDATE ag.survey_answers
@@ -92,7 +99,7 @@ class SurveyTemplateTests(unittest.TestCase):
 
                 obs = tr.fetch_user_basic_physiology(TEST1_ACCOUNT_ID,
                                                      TEST1_SOURCE_ID)
-                exp = (1973, 'Male', 100, 100)
+                exp = (1973, 'Male', 50, 100)
                 self.assertEqual(obs, exp)
 
                 # equiv of Unspecified for height
@@ -507,10 +514,6 @@ class SurveyTemplateTests(unittest.TestCase):
         with Transaction() as t:
             sar = SurveyTemplateRepo(t)
 
-            # generate a legacy (retired) template "Primary Questionnaire"
-            obs = sar._generate_empty_survey(1)
-            self.assertEqual(obs, self.empty_survey_1)
-
             # generate a current template "Basic Information"
             obs = sar._generate_empty_survey(SurveyTemplateRepo.BASIC_INFO_ID)
             self.assertEqual(obs, self.empty_survey_10)
@@ -610,9 +613,8 @@ class SurveyTemplateTests(unittest.TestCase):
             # use data from an old template 1 survey and return a subset of it
             # in a generated template 10.
 
-            obs, obs_pc = str.migrate_responses(source_id, 10)
+            obs = str.migrate_responses(source_id, 10)
             self.assertDictEqual(obs, self.filled_survey_10a)
-            self.assertAlmostEqual(obs_pc, 0.615, 2)
 
             # use an invalid template id
             with self.assertRaises(ValueError):
@@ -621,9 +623,8 @@ class SurveyTemplateTests(unittest.TestCase):
 
             # request a test from a valid account, but contributes no prior
             # values to the result.
-            obs, obs_pc = str.migrate_responses(source_id, 19)
+            obs = str.migrate_responses(source_id, 19)
             self.assertDictEqual(obs, self.filled_survey_19a)
-            self.assertAlmostEqual(obs_pc, 0.0, 2)
 
             # the following statements create a new source and submits a
             # survey. It then changes the value for one of the survey
@@ -641,10 +642,9 @@ class SurveyTemplateTests(unittest.TestCase):
                 self._submit_test_survey(account_id, human_source.id,
                                          'March'))
 
-            result, result_pc = str.migrate_responses(human_source.id, 10)
+            result = str.migrate_responses(human_source.id, 10)
             self.assertNotEqual(result['111'], 'February')
             self.assertEqual(result['111'], 'March')
-            self.assertAlmostEqual(obs_pc, 0.0, 2)
 
             # clean up. These methods were not put into setUp and tearDown
             # as this is the only test that needs them. Each submit needs its
@@ -955,159 +955,37 @@ class SurveyTemplateTests(unittest.TestCase):
         }
     }
 
-    empty_survey_1 = {
-        '1': 'Unspecified',
-        '2': 'Unspecified',
-        '3': 'Unspecified',
-        '4': 'Unspecified',
-        '5': 'Unspecified',
-        '6': 'Unspecified',
-        '7': 'Unspecified',
-        '8': 'Unspecified',
-        '9': [
-            'Unspecified'
-        ],
-        '11': 'Unspecified',
-        '15': 'Unspecified',
-        '16': 'Unspecified',
-        '17': 'Unspecified',
-        '18': 'Unspecified',
-        '19': 'Unspecified',
-        '20': 'Unspecified',
-        '21': 'Unspecified',
-        '22': 'Unspecified',
-        '24': 'Unspecified',
-        '25': 'Unspecified',
-        '26': 'Unspecified',
-        '27': 'Unspecified',
-        '28': 'Unspecified',
-        '29': 'Unspecified',
-        '32': 'Unspecified',
-        '33': 'Unspecified',
-        '34': 'Unspecified',
-        '35': 'Unspecified',
-        '36': 'Unspecified',
-        '37': 'Unspecified',
-        '38': 'Unspecified',
-        '39': 'Unspecified',
-        '40': 'Unspecified',
-        '42': 'Unspecified',
-        '43': 'Unspecified',
-        '44': 'Unspecified',
-        '45': 'Unspecified',
-        '46': 'Unspecified',
-        '47': 'Unspecified',
-        '48': 'Unspecified',
-        '49': 'Unspecified',
-        '50': 'Unspecified',
-        '51': 'Unspecified',
-        '53': 'Unspecified',
-        '54': [
-            'Unspecified'
-        ],
-        '56': 'Unspecified',
-        '57': 'Unspecified',
-        '58': 'Unspecified',
-        '59': 'Unspecified',
-        '60': 'Unspecified',
-        '61': 'Unspecified',
-        '62': 'Unspecified',
-        '64': 'Unspecified',
-        '65': 'Unspecified',
-        '66': 'Unspecified',
-        '67': 'Unspecified',
-        '68': 'Unspecified',
-        '69': 'Unspecified',
-        '70': 'Unspecified',
-        '71': 'Unspecified',
-        '72': 'Unspecified',
-        '73': 'Unspecified',
-        '74': 'Unspecified',
-        '75': 'Unspecified',
-        '76': 'Unspecified',
-        '77': 'Unspecified',
-        '78': 'Unspecified',
-        '79': 'Unspecified',
-        '80': 'Unspecified',
-        '82': 'Unspecified',
-        '83': 'Unspecified',
-        '84': 'Unspecified',
-        '85': 'Unspecified',
-        '86': 'Unspecified',
-        '87': 'Unspecified',
-        '89': 'Unspecified',
-        '90': 'Unspecified',
-        '91': 'Unspecified',
-        '92': 'Unspecified',
-        '93': 'Unspecified',
-        '94': 'Unspecified',
-        '95': 'Unspecified',
-        '96': 'Unspecified',
-        '99': 'Unspecified',
-        '104': 'Unspecified',
-        '106': 'Unspecified',
-        '108': 'Unspecified',
-        '109': 'Unspecified',
-        '110': 'Unspecified',
-        '111': 'Unspecified',
-        '112': 'Unspecified',
-        '113': 'Unspecified',
-        '115': 'Unspecified',
-        '116': 'Unspecified',
-        '124': 'Unspecified',
-        '126': 'Unspecified',
-        '146': 'Unspecified',
-        '148': 'Unspecified',
-        '149': 'Unspecified',
-        '150': 'Unspecified',
-        '156': 'Unspecified',
-        '157': 'Unspecified',
-        '162': [
-            'Unspecified'
-        ],
-        '163': 'Unspecified',
-        '236': 'Unspecified',
-        '237': 'Unspecified'
-    }
-
     empty_survey_10 = {
-        '22': 'Unspecified',
-        '108': 'Unspecified',
-        '109': 'Unspecified',
-        '110': 'Unspecified',
-        '111': 'Unspecified',
-        '112': 'Unspecified',
-        '113': 'Unspecified',
-        '115': 'Unspecified',
-        '116': 'Unspecified',
-        '148': 'Unspecified',
-        '492': 'Unspecified',
-        '493': 'Unspecified',
-        '502': 'Unspecified'
+        '22': '',
+        '108': '',
+        '109': '',
+        '110': '',
+        '111': '',
+        '112': '',
+        '113': '',
+        '114': '',
+        '115': '',
+        '148': '',
+        '492': '',
+        '493': '',
+        '502': ''
     }
 
     filled_survey_10a = {'22': 'I am right handed',
-                         '108': '["Free text - í.,ú!N):TfüQWä$ãZ-SQ"]',
+                         '108': 'Free text - í.,ú!N):TfüQWä$ãZ-SQ',
                          '109': 'centimeters',
                          '110': 'United States',
                          '111': 'June',
                          '112': 'Unspecified',
-                         '113': '["Free text - -,mV7Ä\t9xäMf\\è\n!¿x_ã"]',
+                         '113': 'Free text - -,mV7Ä\t9xäMf\\è\n!¿x_ã',
+                         '114': 'kilograms',
                          '115': '["Free text - Js*äbéøx\'ó,çné\nSEQ8\t"]',
-                         '116': '["Free text - Å|ī8W=A4K\rØø\t_Af3ÓÓ."]',
-                         '148': 'Unspecified',
-                         '492': 'Unspecified',
-                         '493': 'Unspecified',
-                         '502': 'Unspecified'}
+                         '148': '',
+                         '492': '',
+                         '493': '',
+                         '502': ''}
 
-    filled_survey_19a = {
-        "485": "Unspecified",
-        "486": "Unspecified",
-        "487": "Unspecified",
-        "488": "Unspecified",
-        "489": "Unspecified",
-        "490": "Unspecified"
-    }
+    filled_survey_19a = {}
 
 
 SURVEY_ANSWERS = {

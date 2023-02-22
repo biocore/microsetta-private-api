@@ -37,7 +37,8 @@ class RemovalQueueTests(unittest.TestCase):
                                    92093,
                                    "US"
                                ),
-                               "en_US")
+                               "en_US",
+                               True)
 
             acct_repo.create_account(self.acc)
 
@@ -55,7 +56,8 @@ class RemovalQueueTests(unittest.TestCase):
                                    92093,
                                    "US"
                                ),
-                               "en_US")
+                               "en_US",
+                               True)
 
             acct_repo.create_account(self.adm)
 

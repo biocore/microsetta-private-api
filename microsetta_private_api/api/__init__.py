@@ -12,12 +12,13 @@ from ._removal_queue import (
 from ._consent import (
     render_consent_doc,
     check_consent_signature,
-    sign_consent_doc
+    sign_consent_doc,
+    get_signed_consent
 )
 from ._source import (
-    create_source, read_source, update_source, delete_source,
-    read_sources, create_human_source_from_consent,
-    check_duplicate_source_name, scrub_source
+    create_source, read_source, update_source, read_sources,
+    create_human_source_from_consent, check_duplicate_source_name,
+    scrub_source
 )
 from ._survey import (
     read_survey_template, read_survey_templates, read_answered_survey,
@@ -45,7 +46,7 @@ from ._vioscreen import (
     get_vioscreen_dietary_scores_descriptions,
     get_vioscreen_food_components_by_code,
     get_vioscreen_food_components_descriptions,
-    get_vioscreen_sessions
+    get_vioscreen_sessions, get_vioscreen_registry_entries, check_ffq_code
 )
 
 from ._campaign import (
@@ -82,13 +83,13 @@ __all__ = [
     'create_source',
     'read_source',
     'update_source',
-    'delete_source',
     'scrub_source',
     'read_sources',
     'check_duplicate_source_name',
     'create_human_source_from_consent',
     'check_consent_signature',
     'sign_consent_doc',
+    'get_signed_consent',
     'read_survey_template',
     'read_survey_templates',
     'read_answered_survey',
@@ -124,7 +125,9 @@ __all__ = [
     'create_interested_user',
     'get_interested_user_address_update',
     'put_interested_user_address_update',
+    'get_vioscreen_sessions',
+    'get_vioscreen_registry_entries',
+    'check_ffq_code',
     'get_opt_out',
-    'put_opt_out',
-    'get_vioscreen_sessions'
+    'put_opt_out'
 ]

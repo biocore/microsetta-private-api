@@ -74,12 +74,14 @@ DUMMY_ACCT_INFO = {
         "country_code": "US",
         "post_code": "12345",
         "state": "CA",
-        "street": "123 Main St. E. Apt. 2"
+        "street": "123 Main St. E.",
+        "street2": "Apt. 2"
     },
     "email": TEST_EMAIL,
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
+    "consent_privacy_terms": True
 }
 DUMMY_ACCT_INFO_2 = {
     "address": {
@@ -87,12 +89,14 @@ DUMMY_ACCT_INFO_2 = {
         "country_code": "US",
         "post_code": "44074",
         "state": "OH",
-        "street": "489 College St."
+        "street": "489 College St.",
+        "street2": ""
     },
     "email": TEST_EMAIL_2,
     "first_name": "Obie",
     "last_name": "Dobie",
     "language": "en_US",
+    "consent_privacy_terms": True
 }
 DUMMY_ACCT_ADMIN = {
     "address": {
@@ -100,12 +104,13 @@ DUMMY_ACCT_ADMIN = {
         "country_code": "US",
         "post_code": "44074",
         "state": "OH",
-        "street": "489 College St."
+        "street": "489 College St.",
+        "street2": ""
     },
     "email": TEST_EMAIL_3,
     "first_name": "Obie",
     "last_name": "Dobie",
-    KIT_NAME_KEY: EXISTING_KIT_NAME_2
+    "consent_privacy_terms": True,
 }
 
 SOURCE_ID_1 = "9fba75a5-6fbf-42be-9624-731b6a9a161a"
@@ -196,10 +201,10 @@ FAKE_SAMPLES = [S1, S2, S3]
 FAKE_KIT = "12345678-aaaa-aaaa-aaaa-bbbbccccccce"
 FAKE_KIT_PW = "MockItToMe"
 
-DATA_CONSENT = "Data"
-BIOSPECIMEN_CONSENT = "Biospecimen"
-ADULT_DATA_CONSENT = "Adult Consent - Data"
-ADULT_BIOSPECIMEN_CONSENT = "Adult Consent - Biospecimen"
+DATA_CONSENT = "data"
+BIOSPECIMEN_CONSENT = "biospecimen"
+ADULT_DATA_CONSENT = "adult_data"
+ADULT_BIOSPECIMEN_CONSENT = "adult_biospecimen"
 
 
 def make_headers(fake_token):
@@ -476,9 +481,11 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['city'],
                 input_obj['address']['state'],
                 input_obj['address']['post_code'],
-                input_obj['address']['country_code']
+                input_obj['address']['country_code'],
+                input_obj['address']['street2']
             ),
-            input_obj['language']
+            input_obj['language'],
+            input_obj['consent_privacy_terms']
         )
     else:
         acct = Account.from_dict(input_obj, iss, sub)
@@ -1060,13 +1067,16 @@ class AccountTests(ApiTests):
         self.assertEqual(204, response.status_code)
 
         # verify it is deleted
-        response = self.client.get(
-            '/api/accounts/%s?%s' %
-            (dummy_acct_id, self.default_lang_querystring),
-            headers=make_headers(FAKE_TOKEN_ADMIN))
-
-        # check response code
-        self.assertEqual(404, response.status_code)
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute(
+                "SELECT account_type "
+                "FROM ag.account "
+                "WHERE id = %s",
+                (dummy_acct_id,)
+            )
+            row = cur.fetchone()
+            self.assertEqual(row[0], "deleted")
 
     def test_account_scrub_non_existant(self):
         response = self.client.delete(
@@ -1202,7 +1212,8 @@ class AccountTests(ApiTests):
             "country_code": "US",
             "post_code": "99228",
             "state": "CA",
-            "street": "641 Queen St. E"
+            "street": "641 Queen St. E",
+            "street2": "Test"
         }
 
         return result
@@ -1238,6 +1249,7 @@ class AccountTests(ApiTests):
 
         dummy_acct_id = create_dummy_acct()
         changed_acct_dict = self.make_updated_acct_dict()
+        changed_acct_dict.pop("consent_privacy_terms")
 
         input_url = "/api/accounts/{0}".format(dummy_acct_id)
         self.run_query_and_content_required_field_test(
@@ -1520,17 +1532,6 @@ class AccountTests(ApiTests):
         # confirm that the operation was a success.
         self.assertEqual(204, response.status_code)
 
-        # if the operation was a success, use the same functionality we
-        # previously tested to confirm that the user we just deleted
-        # (dummy_acct_id) is no longer in the system.
-        response = self.client.get(
-            '/api/accounts/%s?%s' %
-            (dummy_acct_id, self.default_lang_querystring),
-            headers=make_headers(FAKE_TOKEN_ADMIN))
-
-        # confirm the user was not found.
-        self.assertEqual(404, response.status_code)
-
 
 @pytest.mark.usefixtures("client")
 class SourceTests(ApiTests):
@@ -1679,6 +1680,22 @@ class SourceTests(ApiTests):
 
 @pytest.mark.usefixtures("client")
 class ConsentTests(ApiTests):
+    def setUp(self):
+        super().setUp()
+        self.signature_to_delete = None
+
+    def tearDown(self):
+        with Transaction() as t:
+            cur = t.cursor()
+            if self.signature_to_delete is not None:
+                cur.execute(
+                    "DELETE FROM ag.consent_audit "
+                    "WHERE signature_id = %s",
+                    (self.signature_to_delete, )
+                )
+                t.commit()
+
+        super().tearDown()
 
     def sign_data_consent(self):
         """Checks data consent for a source and sings the consent"""
@@ -1737,6 +1754,60 @@ class ConsentTests(ApiTests):
             headers=self.dummy_auth)
 
         self.assertEquals(201, response.status_code)
+
+    def test_get_signed_consent(self):
+        # Create our account and source to work from
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                cur.execute(
+                    "SELECT consent_id "
+                    "FROM ag.consent_documents "
+                    "WHERE locale = 'en_US' AND consent_type = 'adult_data' "
+                    "ORDER BY date_time DESC LIMIT 1"
+                )
+                row = cur.fetchone()
+                adult_data_consent = row['consent_id']
+
+        consent_data = {
+            "age_range": "18-plus",
+            "participant_name": "Bo",
+            "consent_type": ADULT_DATA_CONSENT,
+            "consent_id": adult_data_consent
+        }
+
+        response = self.client.post(
+            '/api/accounts/%s/source/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
+
+        # Now let's get that signed consent back
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, "data"),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+
+        response_data = json.loads(response.data)
+        self.assertEqual(
+            response_data['source_id'],
+            dummy_source_id
+        )
+        self.assertEqual(
+            response_data['consent_id'],
+            adult_data_consent
+        )
+
+        # need to clean this up in tearDown
+        self.signature_to_delete = response_data['signature_id']
 
 
 @pytest.mark.usefixtures("client")
@@ -1953,6 +2024,7 @@ class SampleTests(ApiTests):
         exp = DUMMY_EMPTY_SAMPLE_INFO.copy()
         exp['source_id'] = SOURCE_ID_1
         exp['account_id'] = ACCT_ID_1
+        exp['kit_id'] = None
 
         self.assertEqual(get_resp_obj, [exp])
 

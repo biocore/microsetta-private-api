@@ -24,13 +24,14 @@ DUMMY_ACCT_INFO_1 = {
         "country_code": "US",
         "post_code": "12345",
         "state": "CA",
-        "street": "123 Main St. E. Apt. 2"
+        "street": "123 Main St. E.",
+        "street2": "Apt. 2"
     },
     "email": "microbe@bar.com",
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
-    "kit_name": 'jb_qhxqe',
+    "consent_privacy_terms": True,
     "id": ACCT_ID_1
 }
 ACCT_MOCK_ISS_1 = "MrUnitTest.go"
@@ -41,7 +42,8 @@ ADDRESS1 = Address(
     'La Jolla',
     'CA',
     '92093',
-    'US')
+    'US',
+    '')
 SHIPPING1 = Shipping('Microbe', 'Researcher', ADDRESS1)
 
 ITEM_ONE_FFQ = [

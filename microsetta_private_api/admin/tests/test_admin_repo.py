@@ -89,8 +89,8 @@ class AdminTests(TestCase):
                               12345,
                               "US"
                           ),
-                          "fakekit",
-                          "en_US")
+                          "en_US",
+                          True)
             acct_repo.create_account(acc)
 
             acc = Account(ADMIN_ACCT_ID,
@@ -107,8 +107,8 @@ class AdminTests(TestCase):
                               12345,
                               "US"
                           ),
-                          "fakekit",
-                          "en_US")
+                          "en_US",
+                          True)
             acct_repo.create_account(acc)
             t.commit()
 
@@ -1323,3 +1323,18 @@ class AdminRepoTests(AdminTests):
                 self.assertEqual(len(curr_records), 2)
                 for expected_record in expected_records:
                     self.assertIn(expected_record, curr_records)
+
+    def test_create_ffq_code(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            ffq_code = admin_repo.create_ffq_code()
+
+            with t.dict_cursor() as cur:
+                cur.execute(
+                    "SELECT registration_code_used "
+                    "FROM campaign.ffq_registration_codes "
+                    "WHERE ffq_registration_code = %s",
+                    (ffq_code,)
+                )
+                row = cur.fetchone()
+                self.assertEqual(row['registration_code_used'], None)

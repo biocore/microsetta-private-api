@@ -39,16 +39,10 @@ paths:
       requestBody:
         content:
           application/json:
-            # Send (non-readOnly) values of account schema PLUS kit name OR activation code
+            # Send (non-readOnly) values of account schema
             schema:
               allOf:
                 - $ref: '#/components/schemas/account'
-                - type: "object"
-                  properties:
-                    kit_name:
-                      $ref: '#/components/schemas/kit_name'
-                    code:
-                      $ref: '#/components/schemas/activation_code'
       responses:
         '201':
           description: Successfully registered new user account
@@ -322,14 +316,8 @@ paths:
                   $ref: '#/components/schemas/source_name'
                 parent_1_name:
                   $ref: '#/components/schemas/parent_1_name'
-                parent_2_name:
-                  $ref: '#/components/schemas/parent_2_name'
-                deceased_parent:
-                  type: string
-                  enum: ['true', 'false']
-                  example: 'true'
-                obtainer_name:
-                  $ref: '#/components/schemas/obtainer_name'
+                assent_obtainer:
+                  $ref: '#/components/schemas/assent_obtainer'
                 consent_type:
                   $ref: '#/components/schemas/consent_type'
                 consent_id:
@@ -363,6 +351,54 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/accounts/{account_id}/sources/{source_id}/signed_consent/{consent_type}':
+    get:
+      operationId: microsetta_private_api.api.get_signed_consent
+      tags:
+        - Consent
+      summary: Get signed consent documents for source
+      description: Get signed consent documents for source
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/consent_type'
+      responses:
+        '200':
+          description: Consent Signature Info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  signature_id:
+                    $ref: '#/components/schemas/signature_id'
+                  consent_id:
+                    $ref: '#/components/schemas/consent_id'
+                  source_id:
+                    $ref: '#/components/schemas/source_id'
+                  date_time:
+                    $ref: '#/components/schemas/date_time'
+                  parent_1_name:
+                    $ref: '#/components/schemas/parent_1_name'
+                  parent_2_name:
+                    $ref: '#/components/schemas/parent_2_name'
+                  deceased_parent:
+                    $ref: '#/components/schemas/deceased_parent'
+                  assent_obtainer:
+                    $ref: '#/components/schemas/assent_obtainer'
+                  assent_id:
+                    $ref: '#/components/schemas/assent_id'
+                  consent_content:
+                    $ref: '#/components/schemas/consent_content'
+                  assent_content:
+                    $ref: '#/components/schemas/assent_content'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/accounts/{account_id}/source/{source_id}/consent/{consent_type}':
     get:
       operationId: microsetta_private_api.api.check_consent_signature
@@ -373,7 +409,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#components/parameters/consent_type'
+        - $ref: '#/components/parameters/consent_type'
       responses:
         '200':
           description: Consent Signature Status
@@ -398,7 +434,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
-        - $ref: '#components/parameters/consent_type'
+        - $ref: '#/components/parameters/consent_type'
       requestBody:
         content:
           application/json:
@@ -411,14 +447,8 @@ paths:
                   $ref: '#/components/schemas/source_name'
                 parent_1_name:
                   $ref: '#/components/schemas/parent_1_name'
-                parent_2_name:
-                  $ref: '#/components/schemas/parent_2_name'
-                deceased_parent:
-                  type: string
-                  enum: ['true', 'false']
-                  example: 'true'
-                obtainer_name:
-                  $ref: '#/components/schemas/obtainer_name'
+                assent_obtainer:
+                  $ref: '#/components/schemas/assent_obtainer'
                 consent_type:
                   $ref: '#/components/schemas/consent_type'
                 consent_id:
@@ -486,9 +516,7 @@ paths:
                     age_range: "0-6"
                     child_info:
                       parent_1_name: "Demeter Doe"
-                      parent_2_name: "Zeus Doe"
-                      deceased_parent: false
-                      obtainer_name: "Hades Doe"
+                      assent_obtainer: "Hades Doe"
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '403':
@@ -629,7 +657,7 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
     delete:
-      operationId: microsetta_private_api.api.delete_source
+      operationId: microsetta_private_api.api.scrub_source
       tags:
         - Source
       summary: Delete source
@@ -650,40 +678,6 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
           # NB: This would be returned if source cannot be deleted bc has a sample assigned to it
-
-  '/accounts/{account_id}/sources/{source_id}/scrub':
-    delete:
-      operationId: microsetta_private_api.api.scrub_source
-      tags:
-        - Source
-      summary: Scrub the source and return status
-      description: Scrub (alternate to delete) the source
-      parameters:
-        - $ref: '#/components/parameters/account_id'
-        - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/language_tag'
-      responses:
-        '201':
-          description: Successfully scrubbed the source
-          headers:
-            Location:
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  result:
-                    type: boolean
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '403':
-          $ref: '#/components/responses/403Forbidden'
-        '404':
-          $ref: '#/components/responses/404NotFound'
-        '422':
-          $ref: '#/components/responses/422UnprocessableEntity'
 
   '/accounts/{account_id}/sources/{source_id}/survey_templates':
     get:
@@ -1052,7 +1046,6 @@ paths:
         - $ref: '#/components/parameters/registration_code'
         - $ref: '#/components/parameters/timestamp'
       responses:
-      responses:
         '200':
           description: Successfully returned session information
           content:
@@ -1308,7 +1301,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/vioscreen/{account_id}/sources/{source_id}/vioscreen_sessions':
+  '/accounts/{account_id}/sources/{source_id}/vioscreen_sessions':
     get:
       operationId: microsetta_private_api.api.get_vioscreen_sessions
       tags:
@@ -1332,6 +1325,29 @@ paths:
           $ref: '#/components/responses/403Forbidden'
         '404':
           $ref: '#/components/responses/404NotFound'
+
+  '/accounts/{account_id}/sources/{source_id}/vioscreen_registry_entries':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_registry_entries
+      tags:
+        - Vioscreen
+      summary: Get Vioscreen registry entries for given source
+      description: Get Vioscreen registry entries for given source
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+      responses:
+        '200':
+          description: Successfully returned vioscreen registration entries
+          content:
+            application/json:
+              schema:
+                type:
+                  array
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
 
   '/vioscreen/dietaryscore/':
     get:
@@ -1586,6 +1602,32 @@ paths:
                   error:
                     type: string
                     nullable: true
+
+  '/check_ffq_code':
+    get:
+      operationId: microsetta_private_api.api.check_ffq_code
+      tags:
+        - FFQs
+      summary: Check if an FFQ code is valid and has not been used
+      description: Check if an FFQ code is valid and has not been used
+      parameters:
+        - $ref: '#/components/parameters/ffq_code'
+      responses:
+        '200':
+          description: Successfully returned list of unassigned samples
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unused_code:
+                    $ref: '#/components/schemas/unused_code'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   '/campaign_information':
     get:
@@ -2741,6 +2783,27 @@ paths:
               schema:
                 type: array
 
+  '/admin/generate_ffq_codes':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.generate_ffq_codes
+      tags:
+        - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code_quantity:
+                  $ref: '#/components/schemas/code_quantity'
+      responses:
+        '200':
+          description: Returns FFQ code(s)
+          content:
+            application/json:
+              schema:
+                type: array
+
   '/admin/barcode_query_fields':
     get:
       operationId: microsetta_private_api.admin.admin_impl.list_barcode_query_fields
@@ -2880,7 +2943,6 @@ components:
       description: Food Components Code
       schema:
         $ref: '#/components/schemas/fc_code'
-
     consent_type:
       name: consent_type
       in: path
@@ -2978,6 +3040,12 @@ components:
       description: include private information in a metadata pulldown; may be true or false. Optional.
       schema:
         $ref: '#/components/schemas/include_private'
+    ffq_code:
+      name: ffq_code
+      in: query
+      description: FFQ Code
+      schema:
+        $ref: '#/components/schemas/ffq_code'
 
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
@@ -3048,6 +3116,9 @@ components:
       readOnly: true
       format: date-time
       example: "2019-12-13T00:54:28.712Z"
+    consent_privacy_terms:
+      type: boolean
+      example: True
     account:
       type: object
       properties:
@@ -3069,6 +3140,8 @@ components:
           $ref: '#/components/schemas/creation_time'
         update_time:
           $ref: '#/components/schemas/update_time'
+        consent_privacy_terms:
+          $ref: '#/components/schemas/consent_privacy_terms'
       required:
         - first_name
         - last_name
@@ -3086,6 +3159,11 @@ components:
             the full street address including house number and street name
           type: string
           example: 123 Main St. E., apt. 2
+        street2:
+          description: |
+            the apartment or unit number
+          type: string
+          example: apt. 2
         city:
           description: |
             name of the city / locality
@@ -3111,6 +3189,7 @@ components:
           example: "CA" # NB: this is the country of *canada*, not the state of california
       required:
         - street
+        - street2
         - city
         - state
         - post_code
@@ -3124,6 +3203,16 @@ components:
     kit_name:
       type: string
       example: "jb_qhxqe"
+    # ffq code section
+    ffq_code:
+      type: string
+      example: TMI-XXXXX-XXXXX-XXXXX
+    unused_code:
+      type: boolean
+      example: true
+    code_quantity:
+      type: integer
+      example: 5
 
     # sample section
     sample_barcode:
@@ -3235,6 +3324,7 @@ components:
     parent_1_name:
       type: string
       example: "Madre Doe"
+      nullable: true
     parent_2_name:
       type: string
       nullable: true
@@ -3242,12 +3332,25 @@ components:
     deceased_parent:
       type: boolean
       example: false
-    obtainer_name:
+      nullable: true
+    assent_obtainer:
       type: string
       example: "Professor X"
+      nullable: true
     consent_id:
       type: string
+    assent_id:
+      type: string
+      nullable: true
     consent_type:
+      type: string
+    signature_id:
+      type: string
+    date_time:
+      type: string
+    consent_content:
+      type: string
+    assent_content:
       type: string
     nonhuman_source:
       type: object
@@ -3292,7 +3395,7 @@ components:
                   $ref: '#/components/schemas/parent_2_name'
                 deceased_parent:
                   $ref: '#/components/schemas/deceased_parent'
-                obtainer_name:
+                assent_obtainer:
                   type: string
               additionalProperties: false
       additionalProperties: false
@@ -3604,7 +3707,7 @@ components:
             parent_1_name: "Maman Doe"
             parent_2_name: "Pere Doe"
             deceased_parent: false
-            obtainer_name: "Maman M. Doe"
+            assent_obtainer: "Maman M. Doe"
     nonhuman_source:
       value:
         source_name: "Fluffy"
@@ -3628,7 +3731,7 @@ components:
             parent_1_name: "Maman Doe"
             parent_2_name: "Pere Doe"
             deceased_parent: false
-            obtainer_name: "Maman M. Doe"
+            assent_obtainer: "Maman M. Doe"
     nonhuman_source_w_id:
       value:
         source_id: "42f799a8-e814-4b91-a291-2dbd50fda75d"

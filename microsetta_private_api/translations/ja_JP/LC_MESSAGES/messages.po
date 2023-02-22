@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-11-07 22:49-0800\n"
+"POT-Creation-Date: 2023-01-24 22:13-0800\n"
 "PO-Revision-Date: 2022-11-04 10:48-0700\n"
 "Last-Translator: \n"
 "Language: ja_JP\n"
@@ -45,6 +45,18 @@ msgstr "トラブル発生"
 #: admin/email_templates.py:75
 msgid "We received your sign-up"
 msgstr "お申込み承りました"
+
+#: admin/email_templates.py:83 admin/email_templates.py:107
+msgid "Registration code & kit update!"
+msgstr ""
+
+#: admin/email_templates.py:91
+msgid "Your questionnaire is ready!"
+msgstr ""
+
+#: admin/email_templates.py:99
+msgid "Your kit is on its way!"
+msgstr ""
 
 #: templates/email/activation_email.jinja2:221
 msgid ""
@@ -98,15 +110,20 @@ msgstr "敬具、"
 #: templates/email/activation_email.jinja2:245
 #: templates/email/address_invalid.jinja2:250
 #: templates/email/incorrect_sample_type.jinja2:246
+#: templates/email/kit_tracking_number.jinja2:246
 #: templates/email/missing_sample_info.jinja2:273
 #: templates/email/no_associated_source.jinja2:276
 #: templates/email/sample_is_valid.jinja2:235
 #: templates/email/submit_interest_confirmation.jinja2:240
+#: templates/email/subscription_ffq_code.jinja2:257
+#: templates/email/thank_you_no_kit.jinja2:263
+#: templates/email/thank_you_with_kit.jinja2:265
 msgid "The Microsetta Team"
 msgstr "マイクロゼッタ・イニシアティブチーム"
 
 #: templates/email/address_invalid.jinja2:220
 #: templates/email/incorrect_sample_type.jinja2:220
+#: templates/email/kit_tracking_number.jinja2:220
 #: templates/email/missing_sample_info.jinja2:220
 #: templates/email/no_associated_source.jinja2:220
 #: templates/email/sample_is_valid.jinja2:220
@@ -170,6 +187,38 @@ msgstr ""
 msgid ""
 "with this information. We will then update your profile so the collection"
 " can be appropriately associated."
+msgstr ""
+
+#: templates/email/kit_tracking_number.jinja2:224
+#, fuzzy
+msgid ""
+"Thank you for your contribution to The Microsetta Initiative. Your "
+"collection kit has been shipped."
+msgstr "この度は、マイクロゼッタ　イニシアティブの研究にご参加いただきありがとうございます。採便キットをまもなく発送いたします。"
+
+#: templates/email/kit_tracking_number.jinja2:230
+#: templates/email/subscription_ffq_code.jinja2:230
+#, fuzzy
+msgid "Item: Collection Kit"
+msgstr "採便の種類"
+
+#: templates/email/kit_tracking_number.jinja2:231
+msgid "Tracking number:"
+msgstr ""
+
+#: templates/email/kit_tracking_number.jinja2:238
+msgid ""
+"If you have any questions, please visit our <a "
+"href='https://microsetta.ucsd.edu/participant-resources/faqs/'>FAQs</a> "
+"and <a href='https://microsetta.ucsd.edu/participant-"
+"resources/instructions/'>instructions</a> pages, or you can email us at "
+msgstr ""
+
+#: templates/email/kit_tracking_number.jinja2:245
+#: templates/email/subscription_ffq_code.jinja2:256
+#: templates/email/thank_you_no_kit.jinja2:262
+#: templates/email/thank_you_with_kit.jinja2:264
+msgid "Best wishes,"
 msgstr ""
 
 #: templates/email/missing_sample_info.jinja2:224
@@ -307,6 +356,106 @@ msgid ""
 "To ensure our emails make it to your Inbox, not your SPAM folder, "
 "remember to add us to your safe sender's list."
 msgstr "本登録用のEメールが迷惑メールフォルダに届く恐れがあります。確実にお手元に届くようmicrosetta@ucsd.eduのメール受信設定をお願い致します。"
+
+#: templates/email/subscription_ffq_code.jinja2:220
+#: templates/email/thank_you_no_kit.jinja2:220
+#: templates/email/thank_you_with_kit.jinja2:220
+msgid "Dear"
+msgstr ""
+
+#: templates/email/subscription_ffq_code.jinja2:224
+msgid ""
+"Thank you for helping to drive research to discover more about the human "
+"microbiome. Once the next kit for your 'Follow Your Gut' ships, we will "
+"send you an email with a tracking number so you will know when it's on "
+"the way."
+msgstr ""
+
+#: templates/email/subscription_ffq_code.jinja2:236
+msgid ""
+"<strong>What's next</strong>: Your new food frequency questionnaire will "
+"be available to complete when you <a href='{{ interface_endpoint "
+"}}'>login to your account</a>. Visit the 'My Nutrition' page and enter "
+"the following:"
+msgstr ""
+
+#: templates/email/subscription_ffq_code.jinja2:242
+#: templates/email/thank_you_no_kit.jinja2:248
+#: templates/email/thank_you_with_kit.jinja2:248
+#, fuzzy
+msgid "Registration code:"
+msgstr "認証番号："
+
+#: templates/email/subscription_ffq_code.jinja2:249
+msgid ""
+"Thank you for your participation and we hope you enjoy learning more "
+"about your gut microbiome! If you have any questions, please visit our <a"
+" href='https://microsetta.ucsd.edu/participant-resources/faqs/'>FAQs</a> "
+"and <a href='https://microsetta.ucsd.edu/participant-"
+"resources/instructions/'>instructions</a> pages, or you can email us at "
+msgstr ""
+
+#: templates/email/thank_you_no_kit.jinja2:224
+msgid ""
+"Thank you for your contribution to The Microsetta Initiative and for "
+"helping to drive research to discover more about the human microbiome."
+msgstr ""
+
+#: templates/email/thank_you_no_kit.jinja2:230
+#: templates/email/thank_you_with_kit.jinja2:230
+msgid ""
+"<strong>What's next</strong>: If you're joining us for the first time, "
+"visit the TMI website to create your account, profile, and fill in the "
+"initial forms and surveys. <strong><i>Your email address is linked to "
+"this information and must be the same email used to set up your "
+"account</i></strong>."
+msgstr ""
+
+#: templates/email/thank_you_no_kit.jinja2:236
+#: templates/email/thank_you_with_kit.jinja2:236
+msgid "Create Account or Login"
+msgstr ""
+
+#: templates/email/thank_you_no_kit.jinja2:242
+msgid ""
+"Once completed you will be ready to take your food frequency "
+"questionnaire. Visit the 'My Nutrition' page and enter the following:"
+msgstr ""
+
+#: templates/email/thank_you_no_kit.jinja2:255
+msgid ""
+"Thank you for your participation! If you have any questions, please visit"
+" our <a href='https://microsetta.ucsd.edu/participant-"
+"resources/faqs/'>FAQs</a> and <a href='https://microsetta.ucsd.edu"
+"/participant-resources/instructions/'>instructions</a> pages, or you can "
+"email us at "
+msgstr ""
+
+#: templates/email/thank_you_with_kit.jinja2:224
+msgid ""
+"Thank you for helping to drive research to discover more about the human "
+"microbiome. Once your collection kit ships, we will send you an email "
+"with a tracking number so you will know when it's on the way."
+msgstr ""
+
+#: templates/email/thank_you_with_kit.jinja2:242
+msgid ""
+"Once your profile is complete you will be ready to take your food "
+"frequency questionnaire. Visit the 'My Nutrition' page and enter the "
+"following:"
+msgstr ""
+
+#: templates/email/thank_you_with_kit.jinja2:255
+msgid "For helpful resources, please visit the links below:"
+msgstr ""
+
+#: templates/email/thank_you_with_kit.jinja2:256
+msgid "Step-by-step instructions"
+msgstr ""
+
+#: templates/email/thank_you_with_kit.jinja2:257
+msgid "FAQs"
+msgstr ""
 
 #~ msgid "Dear"
 #~ msgstr "拝啓"

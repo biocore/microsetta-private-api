@@ -58,6 +58,7 @@ DUMMY_ACCT = {
               "first_name": "demo",
               "last_name": "demo",
               "address": {"street": "demo",
+                          "street2": "",
                           "city": "demo",
                           "state": "IN",
                           "post_code": "46227",
@@ -203,9 +204,11 @@ class IntegrationTests(TestCase):
                               "Danville",
                               "CA",
                               12345,
-                              "US"
+                              "US",
+                              ""
                           ),
-                          "en_US")
+                          "en_US",
+                          True)
             acct_repo.create_account(acc)
 
             source_repo.create_source(Source(
@@ -294,7 +297,10 @@ class IntegrationTests(TestCase):
                         "WHERE account_id=%s",
                         (ACCT_ID,))
             survey_answers_repo = SurveyAnswersRepo(t)
-            for source in source_repo.get_sources_in_account(ACCT_ID):
+            for source in source_repo.get_sources_in_account(
+                    ACCT_ID,
+                    allow_revoked=True
+            ):
                 answers = survey_answers_repo.list_answered_surveys(ACCT_ID,
                                                                     source.id)
                 for survey_id in answers:
@@ -397,9 +403,7 @@ class IntegrationTests(TestCase):
         # Survey status should not be in templates
         self.assertNotIn("survey_status", bobo_surveys[0])
         self.assertListEqual([x["survey_template_id"] for x in bobo_surveys],
-                             [1, 3, 4, 5, 6, 7,
-                              SurveyTemplateRepo.VIOSCREEN_ID,
-                              SurveyTemplateRepo.MYFOODREPO_ID,
+                             [SurveyTemplateRepo.VIOSCREEN_ID,
                               SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                               SurveyTemplateRepo.SPAIN_FFQ_ID,
                               SurveyTemplateRepo.BASIC_INFO_ID,
@@ -411,9 +415,8 @@ class IntegrationTests(TestCase):
                               SurveyTemplateRepo.ALLERGIES_ID,
                               SurveyTemplateRepo.DIET_ID,
                               SurveyTemplateRepo.DETAILED_DIET_ID,
-                              SurveyTemplateRepo.MIGRAINE_ID,
-                              SurveyTemplateRepo.SURFERS_ID,
-                              SurveyTemplateRepo.COVID19_ID])
+                              SurveyTemplateRepo.COVID19_ID,
+                              SurveyTemplateRepo.OTHER_ID])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
                              [2])
         self.assertListEqual([x["survey_template_id"] for x in env_surveys],
@@ -759,12 +762,14 @@ class IntegrationTests(TestCase):
                     "country_code": "US",
                     "post_code": "12345",
                     "state": "CA",
-                    "street": "123 Main St. E. Apt. 2"
+                    "street": "123 Main St. E.",
+                    "street2": "Apt. 2"
                 },
                 "email": FAKE_EMAIL,
                 "first_name": "Jane",
                 "last_name": "Doe",
-                "language": "en_US"
+                "language": "en_US",
+                "consent_privacy_terms": True
             })
 
         # Registering with the authrocket associated with the mock account
@@ -829,6 +834,7 @@ class IntegrationTests(TestCase):
                 "account_type": "standard",
                 "address": {
                     "street": "123 Dan Lane",
+                    "street2": "",
                     "city": "Danville",
                     "state": "CA",
                     "post_code": "12345",
@@ -837,7 +843,8 @@ class IntegrationTests(TestCase):
                 "email": "foo@baz.com",
                 "first_name": "Dan",
                 "last_name": "H",
-                "language": "en_US"
+                "language": "en_US",
+                "consent_privacy_terms": True
             }
 
         # Hard to guess these two, so let's pop em out
@@ -870,6 +877,7 @@ class IntegrationTests(TestCase):
         check_response(response, 400)
 
         # Check that data can be written once request is not malformed
+        fuzzy_data.pop('consent_privacy_terms')
         fuzzy_data.pop('account_type')
         response = self.client.put(
             '/api/accounts/%s?language_tag=en_US' % (ACCT_ID,),
@@ -886,10 +894,12 @@ class IntegrationTests(TestCase):
         acc.pop('creation_time')
         acc.pop('update_time')
         acc.pop('kit_name')
+        acc.pop('consent_privacy_terms')
         self.assertDictEqual(fuzzy_data, acc, "Check Fuzz Account Match")
 
         # Attempt to restore back to old data.
         regular_data.pop('account_type')
+        regular_data.pop('consent_privacy_terms')
         response = self.client.put(
             '/api/accounts/%s?language_tag=en_US' % (ACCT_ID,),
             content_type='application/json',
@@ -905,6 +915,7 @@ class IntegrationTests(TestCase):
         acc.pop('kit_name')
         regular_data['account_type'] = 'standard'
         regular_data["account_id"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
+        regular_data['consent_privacy_terms'] = True
 
         self.assertDictEqual(regular_data, acc, "Check restore to regular")
 
@@ -1758,9 +1769,11 @@ class IntegrationTests(TestCase):
                               "Danville",
                               "CA",
                               12345,
-                              "US"
+                              "US",
+                              ""
                           ),
-                          "en_US")
+                          "en_US",
+                          True)
             accountRepo.create_account(acc)
             t.commit()
 
@@ -1784,7 +1797,7 @@ class IntegrationTests(TestCase):
                  "parent_1_name": "Mr. Schmoe",
                  "parent_2_name": "Mrs. Schmoe",
                  "deceased_parent": 'false',
-                 "obtainer_name": "MojoJojo"
+                 "assent_obtainer": "MojoJojo"
                  }),
             headers=MOCK_HEADERS_3
 
@@ -1822,35 +1835,13 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 201)
 
-        # claim a sample
-        resp = self.client.get(
-            '/api/kits/?language_tag=en_US&kit_name=%s' % SUPPLIED_KIT_ID,
-            headers=MOCK_HEADERS_3
-        )
-        check_response(resp)
-
-        unused_samples = json.loads(resp.data)
-        sample_id = unused_samples[0]['sample_id']
-
-        resp = self.client.post(
-            '/api/accounts/%s/sources/%s/samples?language_tag=en_US' %
-            (account_id, source_id_from_obj),
-            content_type='application/json',
-            data=json.dumps(
-                {
-                    "sample_id": sample_id
-                }),
-            headers=MOCK_HEADERS_3
-        )
-        check_response(resp)
-
         # Scrub the newly created source
         resp = self.client.delete(
-           '/api/accounts/%s/sources/%s/scrub?language_tag=en_US' %
+           '/api/accounts/%s/sources/%s?language_tag=en_US' %
            (account_id, source_id_from_obj),
            headers=MOCK_HEADERS_3
         )
-        check_response(resp, 200)
+        check_response(resp, 204)
 
 
 def _create_mock_kit(transaction, barcodes=None, mock_sample_ids=None,

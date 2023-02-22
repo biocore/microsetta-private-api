@@ -17,6 +17,7 @@ from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.model.activation_code import ActivationCode
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
@@ -819,6 +820,8 @@ class AdminRepo(BaseRepo):
                                  kit_names):
         """Generate specified number of random barcodes for input kit names"""
 
+        total_barcodes = number_of_kits * number_of_samples
+
         with self._transaction.cursor() as cur:
             # get the maximum observed barcode.
             # historically, barcodes were of the format NNNNNNNNN where each
@@ -829,9 +832,12 @@ class AdminRepo(BaseRepo):
             # control character that cannot safely be considered a digit.
             # this is *safe* for all prior barcodes as the first character
             # has always been the "0" character.
-            total_barcodes = number_of_kits * number_of_samples
-            cur.execute("SELECT max(right(barcode,8)::integer) "
-                        "FROM barcodes.barcode")
+            # Barcodes prefixed with X or 0 are designated by UC San Diego.
+            cur.execute(
+                "SELECT max(right(barcode,8)::integer) "
+                "FROM barcodes.barcode "
+                "WHERE barcode LIKE 'X%' OR barcode LIKE '0%'"
+            )
             start_bc = cur.fetchone()[0] + 1
             new_barcodes = ['X%0.8d' % (start_bc + i)
                             for i in range(total_barcodes)]
@@ -1354,3 +1360,15 @@ class AdminRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             psycopg2.extras.execute_values(cur, insert_sql, kit_uuid_tuples,
                                            template=None, page_size=100)
+
+    def create_ffq_code(self):
+        code = ActivationCode.generate_code()
+        with self._transaction.cursor() as cur:
+            # Insert the newly created registration code
+            cur.execute(
+                "INSERT INTO campaign.ffq_registration_codes ("
+                "ffq_registration_code"
+                ") VALUES (%s)",
+                (code,)
+            )
+        return code
