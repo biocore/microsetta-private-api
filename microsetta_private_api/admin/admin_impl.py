@@ -880,12 +880,7 @@ def delete_account(account_id, token_info):
             if source.source_data.date_revoked is None:
                 src_repo.scrub(account_id, source.id)
 
-        # an account is safe to delete if there are no associated samples
-        # and does not have external surveys
-        if sample_count > 0 or account_has_external:
-            acct_repo.scrub(account_id)
-        else:
-            acct_repo.delete_account(account_id)
+        acct_repo.scrub(account_id)
 
         t.commit()
 
