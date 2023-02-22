@@ -11,6 +11,9 @@ ALTER TABLE ag.consent_audit ADD COLUMN assent_id UUID,
 -- Add a foreign key for vioscreen registration codes
 ALTER TABLE ag.vioscreen_registry ADD CONSTRAINT fk_registration_code FOREIGN KEY (registration_code) REFERENCES campaign.ffq_registration_codes (ffq_registration_code);
 
+-- Add date_revoked field to ag.consent_audit
+ALTER TABLE ag.consent_audit ADD COLUMN date_revoked TIMESTAMP WITH TIME ZONE NOT NULL;
+
 -- Create the Other survey
 INSERT INTO ag.survey_group (group_order, american) VALUES (-22, 'Other');
 INSERT INTO ag.surveys (survey_id, survey_group) VALUES (22, -22);

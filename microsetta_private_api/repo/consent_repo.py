@@ -197,50 +197,28 @@ class ConsentRepo(BaseRepo):
             return cur.rowcount == 1
 
     def scrub(self, account_id, source_id):
-
         with self._transaction.dict_cursor() as cur:
-            sourceRepo = SourceRepo(self._transaction)
-            if sourceRepo.get_source(account_id, source_id) is None:
-                raise NotFound("Source does not exist!")
-
-            cur.execute("SELECT signature_id FROM ag.consent_audit"
-                        " WHERE source_id = %s", (source_id,))
-
-            rows = cur.fetchall()
-            docs = [row["signature_id"] for row in rows]
+            source_repo = SourceRepo(self._transaction)
+            if source_repo.get_source(account_id, source_id) is None:
+                raise NotFound("Source does not exist")
 
             parent_1_name = "scrubbed"
             parent_2_name = "scrubbed"
             deceased_parent = None
             assent_obtainer = "scrubbed"
 
-            for doc in docs:
-                cur.execute("UPDATE ag.consent_audit "
-                            "SET parent_1_name = %s,"
-                            " parent_2_name = %s,"
-                            " deceased_parent = %s,"
-                            " assent_obtainer = %s"
-                            " WHERE signature_id = %s",
-                            (parent_1_name, parent_2_name,
-                             deceased_parent, assent_obtainer,
-                             doc,))
-
-                if cur.rowcount != 1:
-                    raise RepoException("Failed to scrub consent signature")
+            cur.execute("UPDATE ag.consent_audit "
+                        "SET parent_1_name = %s, "
+                        "parent_2_name = %s, "
+                        "deceased_parent = %s, "
+                        "assent_obtainer = %s, "
+                        "date_revoked = NOW() "
+                        "WHERE source_id = %s",
+                        (parent_1_name, parent_2_name,
+                         deceased_parent, assent_obtainer,
+                         source_id,))
 
         return True
-
-    def delete_signatures(self, account_id, source_id):
-
-        with self._transaction.dict_cursor() as cur:
-            sourceRepo = SourceRepo(self._transaction)
-            if sourceRepo.get_source(account_id, source_id) is None:
-                raise NotFound("Source does not exist!")
-
-            cur.execute("DELETE FROM ag.consent_audit WHERE "
-                        "source_id = %s", (source_id,))
-
-            return cur.rowcount >= 0
 
     def get_latest_signed_consent(self, source_id, consent_type):
         if consent_type == 'data':
