@@ -835,7 +835,6 @@ def delete_account(account_id, token_info):
         src_repo = SourceRepo(t)
         samp_repo = SampleRepo(t)
         sar_repo = SurveyAnswersRepo(t)
-        template_repo = SurveyTemplateRepo(t)
 
         acct = acct_repo.get_account(account_id)
         if acct is None:

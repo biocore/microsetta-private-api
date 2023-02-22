@@ -297,7 +297,10 @@ class IntegrationTests(TestCase):
                         "WHERE account_id=%s",
                         (ACCT_ID,))
             survey_answers_repo = SurveyAnswersRepo(t)
-            for source in source_repo.get_sources_in_account(ACCT_ID):
+            for source in source_repo.get_sources_in_account(
+                    ACCT_ID,
+                    allow_revoked=True
+            ):
                 answers = survey_answers_repo.list_answered_surveys(ACCT_ID,
                                                                     source.id)
                 for survey_id in answers:
