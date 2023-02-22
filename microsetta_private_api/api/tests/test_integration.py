@@ -1859,11 +1859,11 @@ class IntegrationTests(TestCase):
 
         # Scrub the newly created source
         resp = self.client.delete(
-           '/api/accounts/%s/sources/%s/scrub?language_tag=en_US' %
+           '/api/accounts/%s/sources/%s/?language_tag=en_US' %
            (account_id, source_id_from_obj),
            headers=MOCK_HEADERS_3
         )
-        check_response(resp, 200)
+        check_response(resp, 204)
 
 
 def _create_mock_kit(transaction, barcodes=None, mock_sample_ids=None,
