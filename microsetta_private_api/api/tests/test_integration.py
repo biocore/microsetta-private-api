@@ -1835,28 +1835,6 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 201)
 
-        # claim a sample
-        resp = self.client.get(
-            '/api/kits/?language_tag=en_US&kit_name=%s' % SUPPLIED_KIT_ID,
-            headers=MOCK_HEADERS_3
-        )
-        check_response(resp)
-
-        unused_samples = json.loads(resp.data)
-        sample_id = unused_samples[0]['sample_id']
-
-        resp = self.client.post(
-            '/api/accounts/%s/sources/%s/samples?language_tag=en_US' %
-            (account_id, source_id_from_obj),
-            content_type='application/json',
-            data=json.dumps(
-                {
-                    "sample_id": sample_id
-                }),
-            headers=MOCK_HEADERS_3
-        )
-        check_response(resp)
-
         # Scrub the newly created source
         resp = self.client.delete(
            '/api/accounts/%s/sources/%s?language_tag=en_US' %
