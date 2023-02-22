@@ -3164,6 +3164,7 @@ components:
             the apartment or unit number
           type: string
           example: apt. 2
+          nullable: true
         city:
           description: |
             name of the city / locality
