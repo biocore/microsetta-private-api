@@ -845,8 +845,6 @@ def delete_account(account_id, token_info):
             if acct.account_type == 'deleted':
                 return None, 204
 
-        sample_count = 0
-        account_has_external = False
         sources = src_repo.get_sources_in_account(
             account_id,
             allow_revoked=True
@@ -858,13 +856,6 @@ def delete_account(account_id, token_info):
                 source.id,
                 allow_revoked=True
             )
-
-            sample_count += len(samples)
-            has_external = template_repo.has_external_surveys(account_id,
-                                                              source.id)
-
-            if has_external:
-                account_has_external = True
 
             for sample in samples:
                 # we scrub rather than disassociate in the event that the

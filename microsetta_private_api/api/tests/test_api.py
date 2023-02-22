@@ -1067,13 +1067,16 @@ class AccountTests(ApiTests):
         self.assertEqual(204, response.status_code)
 
         # verify it is deleted
-        response = self.client.get(
-            '/api/accounts/%s?%s' %
-            (dummy_acct_id, self.default_lang_querystring),
-            headers=make_headers(FAKE_TOKEN_ADMIN))
-
-        # check response code
-        self.assertEqual(404, response.status_code)
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute(
+                "SELECT account_type "
+                "FROM ag.account "
+                "WHERE id = %s",
+                (dummy_acct_id,)
+            )
+            row = cur.fetchone()
+            self.assertEqual(row[0], "deleted")
 
     def test_account_scrub_non_existant(self):
         response = self.client.delete(
@@ -1528,17 +1531,6 @@ class AccountTests(ApiTests):
 
         # confirm that the operation was a success.
         self.assertEqual(204, response.status_code)
-
-        # if the operation was a success, use the same functionality we
-        # previously tested to confirm that the user we just deleted
-        # (dummy_acct_id) is no longer in the system.
-        response = self.client.get(
-            '/api/accounts/%s?%s' %
-            (dummy_acct_id, self.default_lang_querystring),
-            headers=make_headers(FAKE_TOKEN_ADMIN))
-
-        # confirm the user was not found.
-        self.assertEqual(404, response.status_code)
 
 
 @pytest.mark.usefixtures("client")
