@@ -11,7 +11,6 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.consent_repo import ConsentRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
-from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
 
 

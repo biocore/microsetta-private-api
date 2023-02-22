@@ -679,40 +679,6 @@ paths:
           $ref: '#/components/responses/422UnprocessableEntity'
           # NB: This would be returned if source cannot be deleted bc has a sample assigned to it
 
-  '/accounts/{account_id}/sources/{source_id}/scrub':
-    delete:
-      operationId: microsetta_private_api.api.scrub_source
-      tags:
-        - Source
-      summary: Scrub the source and return status
-      description: Scrub (alternate to delete) the source
-      parameters:
-        - $ref: '#/components/parameters/account_id'
-        - $ref: '#/components/parameters/source_id'
-        - $ref: '#/components/parameters/language_tag'
-      responses:
-        '201':
-          description: Successfully scrubbed the source
-          headers:
-            Location:
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  result:
-                    type: boolean
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '403':
-          $ref: '#/components/responses/403Forbidden'
-        '404':
-          $ref: '#/components/responses/404NotFound'
-        '422':
-          $ref: '#/components/responses/422UnprocessableEntity'
-
   '/accounts/{account_id}/sources/{source_id}/survey_templates':
     get:
       operationId: microsetta_private_api.api.read_survey_templates
