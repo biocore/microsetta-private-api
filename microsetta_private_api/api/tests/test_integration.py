@@ -415,7 +415,6 @@ class IntegrationTests(TestCase):
                               SurveyTemplateRepo.ALLERGIES_ID,
                               SurveyTemplateRepo.DIET_ID,
                               SurveyTemplateRepo.DETAILED_DIET_ID,
-                              SurveyTemplateRepo.COVID19_ID,
                               SurveyTemplateRepo.OTHER_ID])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
                              [2])
