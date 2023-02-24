@@ -52,7 +52,6 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
                                 SurveyTemplateRepo.ALLERGIES_ID,
                                 SurveyTemplateRepo.DIET_ID,
                                 SurveyTemplateRepo.DETAILED_DIET_ID,
-                                SurveyTemplateRepo.COVID19_ID,
                                 SurveyTemplateRepo.OTHER_ID
                             ]]), 200
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
