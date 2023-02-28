@@ -101,7 +101,7 @@ class SurveyTemplateRepo(BaseRepo):
         ),
         SPAIN_FFQ_ID: SurveyTemplateLinkInfo(
             SPAIN_FFQ_ID,
-            "Spain Food Frequency Questionnaire",
+            "Spain FFQ",
             "1.0",
             "remote"
         ),
