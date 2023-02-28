@@ -211,7 +211,8 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_US: "survey_question.american",
             localization.EN_GB: "survey_question.british",
             localization.ES_MX: "survey_question.spanish",
-            localization.ES_ES: "survey_question.spain_spanish"
+            localization.ES_ES: "survey_question.spain_spanish",
+            localization.JA_JP: "survey_question.japanese"
         }
 
         if language_tag not in tag_to_col:
@@ -313,7 +314,8 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_US: "american",
             localization.EN_GB: "british",
             localization.ES_MX: "spanish",
-            localization.ES_ES: "spain_spanish"
+            localization.ES_ES: "spain_spanish",
+            localization.JA_JP: "japanese"
         }
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
@@ -332,6 +334,7 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_GB: "survey_response.british",
             localization.ES_MX: "survey_response.spanish",
             localization.ES_ES: "survey_response.spain_spanish",
+            localization.JA_JP: "survey_response.japanese"
         }
 
         with self._transaction.cursor() as cur:
