@@ -280,7 +280,8 @@ class SurveyTemplateRepo(BaseRepo):
                 responses = self._get_question_valid_responses(question_id,
                                                                language_tag)
 
-                triggers = self._get_question_triggers(question_id)
+                triggers = self._get_question_triggers(question_id,
+                                                       language_tag)
 
                 # Quick fix to correctly sort country names in Spanish
                 if (language_tag == localization.ES_MX or language_tag ==
@@ -350,14 +351,24 @@ class SurveyTemplateRepo(BaseRepo):
                         "display_index", (survey_question_id,))
             return [x[0] for x in cur.fetchall()]
 
-    def _get_question_triggers(self, survey_question_id):
-        with self._transaction.cursor() as cur:
-            cur.execute("SELECT triggering_response, triggered_question "
-                        "FROM "
-                        "survey_question_triggers "
-                        "WHERE "
-                        "survey_question_id = %s ", (survey_question_id,))
+    def _get_question_triggers(self, survey_question_id, language_tag):
+        tag_to_col = {
+            localization.EN_US: "survey_response.american",
+            localization.EN_GB: "survey_response.british",
+            localization.ES_MX: "survey_response.spanish",
+            localization.ES_ES: "survey_response.spain_spanish",
+        }
 
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT " + tag_to_col[language_tag] + ", "
+                "sqt.triggered_question "
+                "FROM survey_response "
+                "INNER JOIN survey_question_triggers sqt "
+                "ON sqt.triggering_response = survey_response.american "
+                "WHERE sqt.survey_question_id = %s ",
+                (survey_question_id, )
+            )
             rows = cur.fetchall()
             return [SurveyTemplateTrigger(x[0], x[1]) for x in rows]
 
@@ -1132,7 +1143,7 @@ class SurveyTemplateRepo(BaseRepo):
             else:
                 return r[0]
 
-    def migrate_responses(self, source_id, survey_template_id):
+    def migrate_responses(self, source_id, survey_template_id, language_tag):
         '''
         Get all survey responses associated with a source and survey_template
          and migrate them. Will pull from past results if they are found,
@@ -1141,12 +1152,21 @@ class SurveyTemplateRepo(BaseRepo):
         :param survey_template_id: A survey template id.
         :return: A filled survey_template dict
         '''
+        tag_to_col = {
+            localization.EN_US: "survey_response.american",
+            localization.EN_GB: "survey_response.british",
+            localization.ES_MX: "survey_response.spanish",
+            localization.ES_ES: "survey_response.spain_spanish",
+        }
+
         sql = """SELECT *
-                 FROM  (SELECT a.survey_question_id,
-                               a.response,
+                 FROM  (SELECT a.survey_question_id, """ +\
+              tag_to_col[language_tag] + """,
                                e.creation_time,
                                f.survey_response_type
                         FROM   ag.survey_answers a
+                               JOIN ag.survey_response
+                                 ON a.response = survey_response.american
                                JOIN ag.group_questions c
                                  ON a.survey_question_id = c.survey_question_id
                                JOIN ag.surveys d

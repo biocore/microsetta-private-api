@@ -613,17 +613,17 @@ class SurveyTemplateTests(unittest.TestCase):
             # use data from an old template 1 survey and return a subset of it
             # in a generated template 10.
 
-            obs = str.migrate_responses(source_id, 10)
+            obs = str.migrate_responses(source_id, 10, "en_US")
             self.assertDictEqual(obs, self.filled_survey_10a)
 
             # use an invalid template id
             with self.assertRaises(ValueError):
                 str.migrate_responses('d8592c74-8148-2135-e040-8a80115d6401',
-                                      -1)
+                                      -1, "en_US")
 
             # request a test from a valid account, but contributes no prior
             # values to the result.
-            obs = str.migrate_responses(source_id, 19)
+            obs = str.migrate_responses(source_id, 19, "en_US")
             self.assertDictEqual(obs, self.filled_survey_19a)
 
             # the following statements create a new source and submits a
@@ -642,7 +642,7 @@ class SurveyTemplateTests(unittest.TestCase):
                 self._submit_test_survey(account_id, human_source.id,
                                          'March'))
 
-            result = str.migrate_responses(human_source.id, 10)
+            result = str.migrate_responses(human_source.id, 10, "en_US")
             self.assertNotEqual(result['111'], 'February')
             self.assertEqual(result['111'], 'March')
 
