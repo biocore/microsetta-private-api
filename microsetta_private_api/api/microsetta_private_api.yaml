@@ -679,6 +679,34 @@ paths:
           $ref: '#/components/responses/422UnprocessableEntity'
           # NB: This would be returned if source cannot be deleted bc has a sample assigned to it
 
+  '/accounts/{account_id}/sources/{source_id}/check_ffq_prereqs':
+    get:
+      operationId: microsetta_private_api.api.check_source_ffq_prereqs
+      tags:
+        - Source
+      summary: Check if source has provided birth year, gender, height, and weight
+      description: Check if source has provided birth year, gender, height, and weight
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: True/False as to whether all four fields have been provided
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  basic_info:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/accounts/{account_id}/sources/{source_id}/survey_templates':
     get:
       operationId: microsetta_private_api.api.read_survey_templates

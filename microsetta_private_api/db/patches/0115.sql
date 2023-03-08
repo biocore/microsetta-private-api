@@ -1,3 +1,158 @@
+-- Standardize the frequency-oriented questions to the legacy responses. The new, shorter responses have not actually been used so it's safe to change them.
+-- However, we need to temporarily drop the constraint on ag.survey_question_triggers.
+ALTER TABLE ag.survey_question_triggers DROP CONSTRAINT fk_survey_question_triggers0;
+-- Update the triggers table
+UPDATE ag.survey_question_triggers SET triggering_response = 'Rarely (a few times/month)' WHERE triggering_response = 'Few times/month';
+UPDATE ag.survey_question_triggers SET triggering_response = 'Occasionally (1-2 times/week)' WHERE triggering_response = '1-2 times/week';
+UPDATE ag.survey_question_triggers SET triggering_response = 'Regularly (3-5 times/week)' WHERE triggering_response = '3-5 times/week';
+-- Update the association between questions and valid responses
+UPDATE ag.survey_question_response SET response = 'Rarely (a few times/month)' WHERE response = 'Few times/month';
+UPDATE ag.survey_question_response SET response = 'Occasionally (1-2 times/week)' WHERE response = '1-2 times/week';
+UPDATE ag.survey_question_response SET response = 'Regularly (3-5 times/week)' WHERE response = '3-5 times/week';
+-- Now we'll recreate the constraint
+ALTER TABLE ag.survey_question_triggers ADD CONSTRAINT fk_survey_question_triggers0 FOREIGN KEY (survey_question_id, triggering_response)
+    REFERENCES ag.survey_question_response(survey_question_id, response);
+
+-- Adjust some questions/responses
+UPDATE ag.survey_question SET american = 'Have you ever been diagnosed with irritable bowel syndrome (IBS)? Note: IBS should not be confused with IBD. IBS is defined by symptoms, usually recurrent abdominal pain and changes in bowel movements. IBD is marked by inflammation or damage to the lining of the gastrointestinal tract.' WHERE survey_question_id = 79;
+UPDATE ag.survey_question SET american = 'Please rate the current (i.e. last 2 weeks) severity of any difficulty falling asleep.' WHERE survey_question_id = 229;
+UPDATE ag.survey_question SET american = 'Please rate the current (i.e. last 2 weeks) severity of any difficulty staying asleep.' WHERE survey_question_id = 230;
+UPDATE ag.survey_question SET american = 'Please rate the current (i.e. last 2 weeks) severity of any problems waking up too early.' WHERE survey_question_id = 231;
+UPDATE ag.survey_question SET american = 'How satisfied/dissatisfied are you with your current sleep pattern?' WHERE survey_question_id = 232;
+UPDATE ag.survey_question SET american = 'How noticeable to others do you think your sleep problem is in terms of impairing the quality of your life?' WHERE survey_question_id = 233;
+UPDATE ag.survey_question SET american = 'How worried/distressed are you about your current sleep problem?' WHERE survey_question_id = 234;
+UPDATE ag.survey_question SET american = 'To what extent do you consider your sleep problem to interfere with your daily functioning (e.g. daytime fatigue, mood, ability to function at work/daily chores, concentration, memory, mood, etc.) currently?' WHERE survey_question_id = 235;
+
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (428, '12:00AM', 25),
+    (428, '12:30AM', 26),
+    (428, '1:00AM', 27),
+    (428, '1:30AM', 28),
+    (428, '2:00AM', 29),
+    (428, '2:30AM', 30),
+    (428, '3:00AM', 31),
+    (428, '3:30AM', 32),
+    (428, '4:00AM', 33),
+    (428, '4:30AM', 34),
+    (428, '5:00AM', 35),
+    (428, '5:30AM', 36),
+    (428, '6:00AM', 37),
+    (428, '6:30AM', 38),
+    (428, '7:00AM', 39),
+    (428, '7:30AM', 40),
+    (428, '8:00AM', 41),
+    (428, '8:30AM', 42),
+    (428, '9:00AM', 43),
+    (428, '9:30AM', 44),
+    (428, '10:00AM', 45),
+    (428, '10:30AM', 46),
+    (428, '11:00AM', 47),
+    (428, '11:30AM', 48);
+
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (344, '12:00PM', 25),
+    (344, '12:30PM', 26),
+    (344, '1:00PM', 27),
+    (344, '1:30PM', 28),
+    (344, '2:00PM', 29),
+    (344, '2:30PM', 30),
+    (344, '3:00PM', 31),
+    (344, '3:30PM', 32),
+    (344, '4:00PM', 33),
+    (344, '4:30PM', 34),
+    (344, '5:00PM', 35),
+    (344, '5:30PM', 36),
+    (344, '6:00PM', 37),
+    (344, '6:30PM', 38),
+    (344, '7:00PM', 39),
+    (344, '7:30PM', 40),
+    (344, '8:00PM', 41),
+    (344, '8:30PM', 42),
+    (344, '9:00PM', 43),
+    (344, '9:30PM', 44),
+    (344, '10:00PM', 45),
+    (344, '10:30PM', 46),
+    (344, '11:00PM', 47),
+    (344, '11:30PM', 48);
+
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (345, '12:00AM', 25),
+    (345, '12:30AM', 26),
+    (345, '1:00AM', 27),
+    (345, '1:30AM', 28),
+    (345, '2:00AM', 29),
+    (345, '2:30AM', 30),
+    (345, '3:00AM', 31),
+    (345, '3:30AM', 32),
+    (345, '4:00AM', 33),
+    (345, '4:30AM', 34),
+    (345, '5:00AM', 35),
+    (345, '5:30AM', 36),
+    (345, '6:00AM', 37),
+    (345, '6:30AM', 38),
+    (345, '7:00AM', 39),
+    (345, '7:30AM', 40),
+    (345, '8:00AM', 41),
+    (345, '8:30AM', 42),
+    (345, '9:00AM', 43),
+    (345, '9:30AM', 44),
+    (345, '10:00AM', 45),
+    (345, '10:30AM', 46),
+    (345, '11:00AM', 47),
+    (345, '11:30AM', 48);
+
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (346, '12:00PM', 25),
+    (346, '12:30PM', 26),
+    (346, '1:00PM', 27),
+    (346, '1:30PM', 28),
+    (346, '2:00PM', 29),
+    (346, '2:30PM', 30),
+    (346, '3:00PM', 31),
+    (346, '3:30PM', 32),
+    (346, '4:00PM', 33),
+    (346, '4:30PM', 34),
+    (346, '5:00PM', 35),
+    (346, '5:30PM', 36),
+    (346, '6:00PM', 37),
+    (346, '6:30PM', 38),
+    (346, '7:00PM', 39),
+    (346, '7:30PM', 40),
+    (346, '8:00PM', 41),
+    (346, '8:30PM', 42),
+    (346, '9:00PM', 43),
+    (346, '9:30PM', 44),
+    (346, '10:00PM', 45),
+    (346, '10:30PM', 46),
+    (346, '11:00PM', 47),
+    (346, '11:30PM', 48);
+
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (347, '12:00AM', 25),
+    (347, '12:30AM', 26),
+    (347, '1:00AM', 27),
+    (347, '1:30AM', 28),
+    (347, '2:00AM', 29),
+    (347, '2:30AM', 30),
+    (347, '3:00AM', 31),
+    (347, '3:30AM', 32),
+    (347, '4:00AM', 33),
+    (347, '4:30AM', 34),
+    (347, '5:00AM', 35),
+    (347, '5:30AM', 36),
+    (347, '6:00AM', 37),
+    (347, '6:30AM', 38),
+    (347, '7:00AM', 39),
+    (347, '7:30AM', 40),
+    (347, '8:00AM', 41),
+    (347, '8:30AM', 42),
+    (347, '9:00AM', 43),
+    (347, '9:30AM', 44),
+    (347, '10:00AM', 45),
+    (347, '10:30AM', 46),
+    (347, '11:00AM', 47),
+    (347, '11:30AM', 48);
+
 -- All of the queries need to update two locales, for which we've determined there aren't any relevant differences
 -- 1) Mexican Spanish (es_mx) - column suffix is _spanish
 -- 2) Spanish Spanish (es_es) - column suffix is _spain_spanish
