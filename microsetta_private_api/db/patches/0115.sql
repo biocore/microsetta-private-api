@@ -994,7 +994,7 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
 </p>
 <p class="consent_title">
     <strong>The Microsetta Initiative (a study about microbes)</strong>
-<p>
+</p>
 <p class="consent_content">
     Dr. Rob Knight and his research team are doing a research study to find out more about the trillions of tiny living things like bacteria and viruses that live in you or on you. These tiny things are called microbes, and you are being asked if you want to be in this study because the kinds of microbes you have is unique - not the same as anyone else on earth. We may be able to tell if you have been infected with something but we can''t tell you that because we are not allowed to do that.
 </p>
@@ -1267,7 +1267,7 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
 <p class="consent_title">
     <strong>The Microsetta Initiative<br />
     Bioespecímenes e investigación de uso futuro</strong>
-<p>
+</p>
 <p class="consent_header">
     ¿Quién realiza el estudio, por qué se le ha pedido que participe, cómo fue seleccionado y cuál es la cifra aproximada de participantes en el estudio?
 </p>
@@ -2008,7 +2008,7 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
 <p class="consent_title">
     <strong>The Microsetta Initiative<br />
     Bioespecímenes e investigación de uso futuro</strong>
-<p>
+</p>
 <p class="consent_header">
     ¿Quién realiza el estudio, por qué se le ha pedido que participe, cómo fue seleccionado y cuál es la cifra aproximada de participantes en el estudio?
 </p>
@@ -2210,7 +2210,7 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
 UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="consent_title">
     <strong>University of California San Diego<br />
     Consentimiento para participar como sujeto de investigación</strong>
-<p>
+</p>
 <p class="consent_title">
     <strong>The Microsetta Initiative<br />
     Bioespecímenes e investigación de uso futuro</strong>
