@@ -2342,7 +2342,7 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
 <p class="consent_header">
     ¿Quién realiza el estudio, por qué se le ha pedido que participe, cómo fue seleccionado y cuál es la cifra aproximada de participantes en el estudio?
 </p>
-<p class="consent_title">
+<p class="consent_content">
     Usted ha sido invitado a participar en un estudio de investigación titulado The Microsetta Initiative. Este estudio está siendo realizado por el Dr. Rob Knight de la University of  California San Diego (UC San Diego). Usted fue seleccionado para participar en este estudio porque usted es único y su microbioma es único, no es el mismo que el de cualquier otra persona en la tierra. Habrá aproximadamente 500,000 participantes en el estudio de todos los EE. UU. y de otros países alrededor del mundo.
 </p>
 <p class="consent_header">
