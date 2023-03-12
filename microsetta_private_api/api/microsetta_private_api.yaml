@@ -707,6 +707,34 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/accounts/{account_id}/sources/{source_id}/check_prompt_survey_update':
+    get:
+      operationId: microsetta_private_api.api.check_prompt_survey_update
+      tags:
+        - Source
+      summary: Check if the user should be prompted to update their survey responses
+      description: Check if the user should be prompted to update their survey responses
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: True/False as to whether the user should be prompted
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  prompt:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/accounts/{account_id}/sources/{source_id}/survey_templates':
     get:
       operationId: microsetta_private_api.api.read_survey_templates

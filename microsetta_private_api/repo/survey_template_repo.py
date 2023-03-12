@@ -1334,3 +1334,40 @@ class SurveyTemplateRepo(BaseRepo):
                         (tuple(survey_ids),))
 
             return [(x[0], x[1]) for x in cur.fetchall()]
+
+    def check_prompt_survey_update(
+            self, source_id, days_threshold=7
+    ):
+        """ Checks how long it has been since a source last updated any survey
+            as a means of determining whether to prompt them to update their
+            profile after logging a sample. We add the survey_template_id <
+            10000 clause to ignore Vioscreen/remote surveys
+
+        Parameters
+        ----------
+        source_id : str
+            The source we're
+        days_threshold : int
+            The number of maximum number of days to allow since last survey
+            update. Defaults to 7.
+
+        Returns
+        -------
+        bool
+            If the user should be prompted, returns True
+            If the user should not be prompted, return False
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT COUNT(survey_id) "
+                "FROM ag.ag_login_surveys "
+                "WHERE source_id = %s "
+                "AND creation_time >= current_date - %s "
+                "AND survey_template_id < 10000",
+                (source_id, days_threshold)
+            )
+            row = cur.fetchone()
+            if row[0] > 0:
+                return False
+
+        return True
