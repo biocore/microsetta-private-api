@@ -364,7 +364,8 @@ class SexV2(Transformer):
 
                    # Lower case is not ideal here, however that's what is
                    # presently in Qiita
-                   'Unspecified': UNSPECIFIED}
+                   'Unspecified': UNSPECIFIED,
+                   MISSING_VALUE: MISSING_VALUE}
 
         observed_values = set(df[GENDER_V2].value_counts().index)
         if not observed_values.issubset(mapping):
