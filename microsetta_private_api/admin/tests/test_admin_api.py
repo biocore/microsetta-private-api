@@ -904,7 +904,7 @@ class AdminApiTests(TestCase):
 
         # confirm that the results for the other survey, attached to a
         # different source, did not receive the merged 502/gender_v2 attribute.
-        self.assertEqual(result['000051101']['gender_v2'], 'Unspecified')
+        self.assertEqual(result['000051101']['gender_v2'], 'not provided')
         self.assertEqual(result['000051101']['birth_year'], '1968')
 
         # clean up by deleting the survey we added for testing.

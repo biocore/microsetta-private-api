@@ -32,6 +32,8 @@ ALCOHOL_CONSUMPTION = 'alcohol_consumption'
 ALCOHOL_FREQUENCY = 'alcohol_frequency'
 SEX = 'sex'
 GENDER = 'gender'
+SEX_V2 = 'sex_v2'
+GENDER_V2 = 'gender_v2'
 ANONYMIZED_NAME = 'anonymized_name'
 SAMPLE_NAME = 'sample_name'
 
@@ -334,7 +336,7 @@ class Sex(Transformer):
 
                    # Lower case is not ideal here, however that's what is
                    # presently in Qiita
-                   'Unspecified': 'unspecified',
+                   'Unspecified': UNSPECIFIED,
                    MISSING_VALUE: MISSING_VALUE}
 
         observed_values = set(df[GENDER].value_counts().index)
@@ -343,6 +345,33 @@ class Sex(Transformer):
                            (GENDER, observed_values - set(mapping)))
 
         series = df[GENDER].replace(mapping, inplace=False)
+        series.name = cls.COLUMN_NAME
+        return series
+
+
+class SexV2(Transformer):
+    # The existing pulldown code cast entries of GENDER to lowercase, and
+    # stored them within the SEX variable. Adding here for consistency
+    # with existing metadata in Qiita.
+    REQUIRED_COLUMNS = frozenset([GENDER_V2, ])
+    COLUMN_NAME = SEX_V2
+
+    @classmethod
+    def _transform(cls, df):
+        mapping = {'Female': 'female',
+                   'Male': 'male',
+                   'Not sure': 'not sure',
+
+                   # Lower case is not ideal here, however that's what is
+                   # presently in Qiita
+                   'Unspecified': UNSPECIFIED}
+
+        observed_values = set(df[GENDER_V2].value_counts().index)
+        if not observed_values.issubset(mapping):
+            raise KeyError("Unexpected values present in column %s: %s" %
+                           (GENDER_V2, observed_values - set(mapping)))
+
+        series = df[GENDER_V2].replace(mapping, inplace=False)
         series.name = cls.COLUMN_NAME
         return series
 
@@ -403,7 +432,7 @@ class NormalizeWeight(Normalize):
 # on the presence of a BMI column
 HUMAN_TRANSFORMS = (ConstantHostAgeUnits, HostAge, AgeCat, NormalizeWeight,
                     NormalizeHeight, BMI, BMICat, AlcoholConsumption, Sex,
-                    HostAgeNormalizedYears, Lifestage)
+                    HostAgeNormalizedYears, Lifestage, SexV2)
 
 # mapping from our historical survey structure to EBI compliance
 # which should be correct for all host types

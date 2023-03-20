@@ -7,9 +7,9 @@ from microsetta_private_api.repo.metadata_repo._transforms import (
     BIRTH_MONTH, COLLECTION_TIMESTAMP, HOST_WEIGHT, HOST_HEIGHT, AGE_CAT,
     SEX, GENDER, BMI_, ALCOHOL_FREQUENCY, ALCOHOL_CONSUMPTION, Rename,
     Constant, Normalize, BMI_CAT, HOST_WEIGHT_UNITS, HOST_HEIGHT_UNITS,
-    LIFESTAGE)
+    LIFESTAGE, SexV2, SEX_V2, GENDER_V2)
 from microsetta_private_api.repo.metadata_repo._constants import (
-    UNSPECIFIED)
+    UNSPECIFIED, MISSING_VALUE)
 
 
 class TransformTests(unittest.TestCase):
@@ -135,13 +135,24 @@ class TransformTests(unittest.TestCase):
         df = pd.DataFrame([['Male'],
                            ['Female'],
                            ['Unspecified'],
-                           [UNSPECIFIED],
+                           [MISSING_VALUE],
                            ['Other']],
                           index=list('abcde'),
                           columns=[GENDER, ])
-        exp = pd.Series(['male', 'female', 'unspecified', UNSPECIFIED.lower(),
+        exp = pd.Series(['male', 'female', UNSPECIFIED, MISSING_VALUE,
                          'other'], index=list('abcde'), name=SEX)
         self._test_transformer(Sex, df, exp)
+
+    def test_SexV2(self):
+        df = pd.DataFrame([['Male'],
+                           ['Female'],
+                           ['Unspecified'],
+                           ['Not sure']],
+                          index=list('abcd'),
+                          columns=[GENDER_V2, ])
+        exp = pd.Series(['male', 'female', UNSPECIFIED, 'not sure'],
+                        index=list('abcd'), name=SEX_V2)
+        self._test_transformer(SexV2, df, exp)
 
     def test_BMI(self):
         df = pd.DataFrame([[180, 50],
@@ -209,7 +220,7 @@ class TransformTests(unittest.TestCase):
                            ['Regularly (3-5 times/week)'],
                            ['Daily'],
                            ['Never'],
-                           [UNSPECIFIED]],
+                           ['Unspecified']],
                           index=list('abcdef'),
                           columns=[ALCOHOL_FREQUENCY])
         exp = pd.Series(['Yes', 'Yes', 'Yes', 'Yes', 'No', UNSPECIFIED],
