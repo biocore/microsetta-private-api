@@ -17,6 +17,7 @@ from microsetta_private_api.repo.metadata_repo._repo import (
     _fetch_observed_survey_templates,
     _construct_multiselect_map,
     _find_best_answers,
+    _find_latest_survey_update,
     drop_private_columns)
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 
@@ -337,15 +338,17 @@ class MetadataUtilTests(unittest.TestCase):
 
         exp = pd.DataFrame([['000004216', 'foo', UNSPECIFIED, 'No',
                              'Unspecified', 'Unspecified', 'Unspecified', 'No',
-                             'true', 'true', 'false', 'false',
+                             'true', 'true', 'false', 'not collected',
                              UNSPECIFIED,
-                             'okay', 'No', "2013-10-15T09:30:00", '000004216'],
+                             'okay', 'No', "2013-10-15T09:30:00",
+                             "2013-10-13T09:15:00", '000004216'],
                             ['XY0004216', 'bar', 'Vegan foo', 'Yes',
                              'Unspecified', 'Unspecified', 'Unspecified',
-                             'No', 'false', 'true', 'true', 'false', 'foobar',
+                             'No', 'false', 'true', 'true', 'not collected', 'foobar',
                              UNSPECIFIED,
                              UNSPECIFIED,
-                             "2013-10-15T09:30:00", 'XY0004216']],
+                             "2013-10-15T09:30:00",
+                             "2013-10-13T09:15:00", 'XY0004216']],
                            columns=['sample_name', 'host_subject_id',
                                     'diet_type', 'multivitamin',
                                     'probiotic_frequency',
@@ -357,6 +360,7 @@ class MetadataUtilTests(unittest.TestCase):
                                     'allergic_to_x',
                                     'sample2specific', 'abc', 'def',
                                     'collection_timestamp',
+                                    'last_survey_update_timestamp',
                                     'anonymized_name']
                            ).set_index('sample_name')
 
@@ -384,13 +388,13 @@ class MetadataUtilTests(unittest.TestCase):
 
         values = ['foo', '', 'No', 'Unspecified', 'Unspecified',
                   'Unspecified', 'No', 'true', 'true', 'okay', 'No',
-                  "2013-10-15T09:30:00"]
+                  "2013-10-15T09:30:00", "2013-10-13T09:15:00"]
         index = ['HOST_SUBJECT_ID', 'DIET_TYPE', 'MULTIVITAMIN',
                  'PROBIOTIC_FREQUENCY', 'VITAMIN_B_SUPPLEMENT_FREQUENCY',
                  'VITAMIN_D_SUPPLEMENT_FREQUENCY',
                  'OTHER_SUPPLEMENT_FREQUENCY',
                  'ALLERGIC_TO_blahblah', 'ALLERGIC_TO_stuff', 'abc', 'def',
-                 'COLLECTION_TIMESTAMP']
+                 'COLLECTION_TIMESTAMP', 'LAST_SURVEY_UPDATE_TIMESTAMP']
 
         for k, v in HUMAN_SITE_INVARIANTS['Stool'].items():
             values.append(v)
@@ -469,6 +473,18 @@ class MetadataUtilTests(unittest.TestCase):
             _ = obs[0]['response']['110']
         with self.assertRaises(KeyError):
             _ = obs[0]['response']['111']
+
+    def test_find_latest_survey_update(self):
+        # this test verifies that the most recent survey timestamp is pulled
+        # out of the entire body of survey submissions
+
+        # the mock data surveys have the following timestamps:
+        # 2013-10-13 09:00:00
+        # 2022-12-20 09:15:00
+        # so we should observe the 2022 date
+        data = deepcopy(self.survey_responses_with_duplicate_questions)
+        obs = _find_latest_survey_update(data)
+        self.assertEqual(obs, "2022-12-20T09:15:00")
 
 
 if __name__ == '__main__':

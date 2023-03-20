@@ -270,9 +270,11 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     for column in all_multiselect_columns & included_columns:
         df.loc[df[column].isnull(), column] = 'false'
 
-    # add an entry for all multiselect columns which were not reported
+    # Add an entry for all multiselect columns which were not reported.
+    # Since no answers were collected, it's inappropriate to use 'false.'
+    # Instead, we'll use the MISSING_VALUE constant.
     for column in all_multiselect_columns - set(df.columns):
-        df[column] = 'false'
+        df[column] = MISSING_VALUE
 
     # force a consistent case
     df.rename(columns={c: c.lower() for c in df.columns},
@@ -463,8 +465,13 @@ def _to_pandas_series(metadata, multiselect_map):
     else:
         raise RepoException("Sample has an unknown sample type")
 
-    values = [hsi, collection_timestamp]
-    index = ['HOST_SUBJECT_ID', 'COLLECTION_TIMESTAMP']
+    last_survey_update = _find_latest_survey_update(
+        metadata['survey_answers']
+    )
+
+    values = [hsi, collection_timestamp, last_survey_update]
+    index = ['HOST_SUBJECT_ID', 'COLLECTION_TIMESTAMP',
+             'LAST_SURVEY_UPDATE_TIMESTAMP']
 
     collected = set()
 
@@ -599,3 +606,15 @@ def _find_duplicates(barcodes):
         }
 
     return dups, error
+
+
+def _find_latest_survey_update(survey_responses):
+    latest_timestamp = None
+    for survey in survey_responses:
+        if latest_timestamp is None or survey['survey_timestamp'] > latest_timestamp:
+            latest_timestamp = survey['survey_timestamp']
+
+    if latest_timestamp is not None:
+        latest_timestamp = latest_timestamp.strftime("%Y-%m-%dT%H:%M:%S")
+
+    return latest_timestamp
