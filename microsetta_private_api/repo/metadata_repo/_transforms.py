@@ -352,7 +352,8 @@ class Sex(Transformer):
 class SexV2(Transformer):
     # The existing pulldown code cast entries of GENDER to lowercase, and
     # stored them within the SEX variable. Adding here for consistency
-    # with existing metadata in Qiita.
+    # with existing metadata in Qiita. We're preserving this nomenclature
+    # for the new _v2 column.
     REQUIRED_COLUMNS = frozenset([GENDER_V2, ])
     COLUMN_NAME = SEX_V2
 
@@ -365,6 +366,7 @@ class SexV2(Transformer):
                    # Lower case is not ideal here, however that's what is
                    # presently in Qiita
                    'Unspecified': UNSPECIFIED,
+                   UNSPECIFIED: UNSPECIFIED,
                    MISSING_VALUE: MISSING_VALUE}
 
         observed_values = set(df[GENDER_V2].value_counts().index)

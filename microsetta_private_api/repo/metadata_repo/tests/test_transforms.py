@@ -148,11 +148,13 @@ class TransformTests(unittest.TestCase):
                            ['Female'],
                            ['Unspecified'],
                            ['Not sure'],
-                           [MISSING_VALUE]],
-                          index=list('abcde'),
+                           [MISSING_VALUE],
+                           [UNSPECIFIED]],
+                          index=list('abcdef'),
                           columns=[GENDER_V2, ])
         exp = pd.Series(['male', 'female', UNSPECIFIED, 'not sure',
-                         MISSING_VALUE], index=list('abcde'), name=SEX_V2)
+                         MISSING_VALUE, UNSPECIFIED],
+                        index=list('abcdef'), name=SEX_V2)
         self._test_transformer(SexV2, df, exp)
 
     def test_BMI(self):
