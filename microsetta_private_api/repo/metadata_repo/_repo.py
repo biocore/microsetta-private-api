@@ -611,7 +611,8 @@ def _find_duplicates(barcodes):
 def _find_latest_survey_update(survey_responses):
     latest_timestamp = None
     for survey in survey_responses:
-        if latest_timestamp is None or survey['survey_timestamp'] > latest_timestamp:
+        if latest_timestamp is None or survey['survey_timestamp'] >\
+                latest_timestamp:
             latest_timestamp = survey['survey_timestamp']
 
     if latest_timestamp is not None:

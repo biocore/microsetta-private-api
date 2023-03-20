@@ -5,7 +5,7 @@ import datetime
 from copy import copy, deepcopy
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.metadata_repo._constants import (
-    HUMAN_SITE_INVARIANTS, UNSPECIFIED)
+    HUMAN_SITE_INVARIANTS, UNSPECIFIED, MISSING_VALUE)
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.metadata_repo._repo import (
     _build_col_name,
@@ -338,15 +338,14 @@ class MetadataUtilTests(unittest.TestCase):
 
         exp = pd.DataFrame([['000004216', 'foo', UNSPECIFIED, 'No',
                              'Unspecified', 'Unspecified', 'Unspecified', 'No',
-                             'true', 'true', 'false', 'not collected',
+                             'true', 'true', 'false', MISSING_VALUE,
                              UNSPECIFIED,
                              'okay', 'No', "2013-10-15T09:30:00",
                              "2013-10-13T09:15:00", '000004216'],
                             ['XY0004216', 'bar', 'Vegan foo', 'Yes',
                              'Unspecified', 'Unspecified', 'Unspecified',
-                             'No', 'false', 'true', 'true', 'not collected', 'foobar',
-                             UNSPECIFIED,
-                             UNSPECIFIED,
+                             'No', 'false', 'true', 'true', MISSING_VALUE,
+                             'foobar', UNSPECIFIED, UNSPECIFIED,
                              "2013-10-15T09:30:00",
                              "2013-10-13T09:15:00", 'XY0004216']],
                            columns=['sample_name', 'host_subject_id',
