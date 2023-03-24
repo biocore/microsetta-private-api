@@ -1128,6 +1128,44 @@ class AdminRepo(BaseRepo):
             )
             return [r[0] for r in cur.fetchall()]
 
+    def map_to_rack(self, sample_barcode, scan_info):
+        with self._transaction.cursor() as cur:
+
+            # not actually using the result, just checking there IS one
+            # to ensure this is a valid barcode
+            cur.execute(
+                "SELECT barcode FROM barcodes.barcode WHERE barcode=%s",
+                (sample_barcode,)
+            )
+
+            if cur.rowcount == 0:
+                raise NotFound("No such barcode: %s" % sample_barcode)
+            elif cur.rowcount > 1:
+                # Note: This "can't" happen.
+                raise RepoException("ERROR: Multiple barcode entries would be "
+                                    "affected by scan; failing out")
+
+            # put a new row in the barcodes.barcode_scans table
+            new_uuid = str(uuid.uuid4())
+            scan_args = (
+                new_uuid,
+                scan_info['rack_id'],
+                sample_barcode,
+                scan_info['location_row'],
+                scan_info['location_col'],
+                datetime.datetime.now()
+            )
+
+            cur.execute(
+                "INSERT INTO barcodes.rack_samples "
+                "(location_id, rack_id, sample_id, "
+                "location_row, location_col, date_time) "
+                "VALUES (%s, %s, %s, %s, %s, %s)",
+                scan_args
+            )
+
+            return new_uuid
+
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
         ids = self._get_ids_relevant_to_barcode(sample_barcode)
 

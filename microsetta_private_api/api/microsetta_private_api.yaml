@@ -2125,6 +2125,37 @@ paths:
               schema:
                 type: object
 
+  '/admin/rack/{sample_barcode}/add':
+    post:
+      # Note: We might want to be able to differentiate system administrator operations
+      # from technician operations in the future by user accounts and the routes they post to
+      operationId: microsetta_private_api.admin.admin_impl.map_to_rack
+      tags:
+        - Admin
+      summary: Set sample processing information for a barcode
+      description: Set sample processing information for a barcode
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rack_id:
+                  type: string
+                location_col:
+                  type: string
+                location_row:
+                  type: string
+      responses:
+        '201':
+          description: Successfully mapped new barcode scan to rack
+          content:
+            application/json:
+              schema:
+                type: object
+
   '/admin/metadata/samples/{sample_barcode}/surveys/{survey_template_id}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.sample_pulldown_single_survey
@@ -2961,6 +2992,15 @@ components:
       items:
         type: string
         example: "https://wherever.com"
+    rack_id:
+      type: string
+      example: "0000"
+    location_col:
+      type: string
+      example: "1"
+    location_row:
+      type: string
+      example: "A"
 
     sample:
       type: object
@@ -2987,6 +3027,18 @@ components:
           $ref: '#/components/schemas/account_id_nullable'
         accession_urls:
           $ref: '#/components/schemas/accession_urls'
+
+    scanned_sample:
+      type: object
+      properties:
+        rack_id:
+          $ref: '#/components/schemas/rack_id'
+        location_col:
+          $ref: '#/components/schemas/location_col'
+        location_row:
+          $ref: '#/components/schemas/location_row'
+        sample_datetime:
+          $ref: '#/components/schemas/sample_datetime'
 
     preparation:
       type: object
