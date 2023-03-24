@@ -14,8 +14,7 @@ from microsetta_private_api.model.survey_template_trigger import \
 import copy
 import secrets
 from microsetta_private_api.exceptions import RepoException
-
-from microsetta_private_api.repo.sample_repo import SampleRepo
+from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 
 
 class SurveyTemplateRepo(BaseRepo):
@@ -24,7 +23,22 @@ class SurveyTemplateRepo(BaseRepo):
     MYFOODREPO_ID = 10002
     POLYPHENOL_FFQ_ID = 10003
     SPAIN_FFQ_ID = 10004
+    BASIC_INFO_ID = 10
+    AT_HOME_ID = 11
+    LIFESTYLE_ID = 12
+    GUT_ID = 13
+    GENERAL_HEALTH_ID = 14
+    HEALTH_DIAG_ID = 15
+    ALLERGIES_ID = 16
+    DIET_ID = 17
+    DETAILED_DIET_ID = 18
+    MIGRAINE_ID = 19
+    SURFERS_ID = 20
+    COVID19_ID = 21
+    OTHER_ID = 22
+
     SURVEY_INFO = {
+        # For now, let's keep legacy survey info as well.
         1: SurveyTemplateLinkInfo(
             1,
             "Primary Questionnaire",
@@ -81,7 +95,7 @@ class SurveyTemplateRepo(BaseRepo):
         ),
         POLYPHENOL_FFQ_ID: SurveyTemplateLinkInfo(
             POLYPHENOL_FFQ_ID,
-            "Polyphenol Food Frequency Questionnaire",
+            "Polyphenols",
             "1.0",
             "remote"
         ),
@@ -90,6 +104,84 @@ class SurveyTemplateRepo(BaseRepo):
             "Spain Food Frequency Questionnaire",
             "1.0",
             "remote"
+        ),
+        BASIC_INFO_ID: SurveyTemplateLinkInfo(
+            BASIC_INFO_ID,
+            "Basic Information",
+            "1.0",
+            "local"
+        ),
+        AT_HOME_ID: SurveyTemplateLinkInfo(
+            AT_HOME_ID,
+            "At Home",
+            "1.0",
+            "local"
+        ),
+        LIFESTYLE_ID: SurveyTemplateLinkInfo(
+            LIFESTYLE_ID,
+            "Lifestyle",
+            "1.0",
+            "local"
+        ),
+        GUT_ID: SurveyTemplateLinkInfo(
+            GUT_ID,
+            "Gut",
+            "1.0",
+            "local"
+        ),
+        GENERAL_HEALTH_ID: SurveyTemplateLinkInfo(
+            GENERAL_HEALTH_ID,
+            "General Health",
+            "1.0",
+            "local"
+        ),
+        HEALTH_DIAG_ID: SurveyTemplateLinkInfo(
+            HEALTH_DIAG_ID,
+            "Health Diagnosis",
+            "1.0",
+            "local"
+        ),
+        ALLERGIES_ID: SurveyTemplateLinkInfo(
+            ALLERGIES_ID,
+            "Allergies",
+            "1.0",
+            "local"
+        ),
+        DIET_ID: SurveyTemplateLinkInfo(
+            DIET_ID,
+            "Diet",
+            "1.0",
+            "local"
+        ),
+        DETAILED_DIET_ID: SurveyTemplateLinkInfo(
+            DETAILED_DIET_ID,
+            "Detailed Diet",
+            "1.0",
+            "local"
+        ),
+        MIGRAINE_ID: SurveyTemplateLinkInfo(
+            MIGRAINE_ID,
+            "Migraine",
+            "1.0",
+            "local"
+        ),
+        SURFERS_ID: SurveyTemplateLinkInfo(
+            SURFERS_ID,
+            "Surfers",
+            "1.0",
+            "local"
+        ),
+        COVID19_ID: SurveyTemplateLinkInfo(
+            COVID19_ID,
+            "COVID-19",
+            "1.0",
+            "local"
+        ),
+        OTHER_ID: SurveyTemplateLinkInfo(
+            OTHER_ID,
+            "Other",
+            "1.0",
+            "local"
         )
     }
 
@@ -106,7 +198,7 @@ class SurveyTemplateRepo(BaseRepo):
 
     def list_survey_ids(self):
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT DISTINCT survey_id from surveys")
+            cur.execute("SELECT DISTINCT survey_id FROM surveys")
             rows = cur.fetchall()
         return [x[0] for x in rows]
 
@@ -114,7 +206,7 @@ class SurveyTemplateRepo(BaseRepo):
     def get_survey_template_link_info(survey_id):
         return copy.deepcopy(SurveyTemplateRepo.SURVEY_INFO[survey_id])
 
-    def get_survey_template(self, survey_id, language_tag):
+    def get_survey_template(self, survey_template_id, language_tag):
         tag_to_col = {
             localization.EN_US: "survey_question.american",
             localization.EN_GB: "survey_question.british",
@@ -130,8 +222,9 @@ class SurveyTemplateRepo(BaseRepo):
 
             cur.execute(
                 "SELECT count(*) FROM surveys WHERE survey_id=%s",
-                (survey_id,)
+                (survey_template_id,)
             )
+
             if cur.fetchone()[0] == 0:
                 raise NotFound("No such survey")
 
@@ -141,7 +234,8 @@ class SurveyTemplateRepo(BaseRepo):
                 "survey_question.survey_question_id, " +
                 tag_to_col[language_tag] + ", " +
                 "survey_question.question_shortname, "
-                "survey_question_response_type.survey_response_type "
+                "survey_question_response_type.survey_response_type, "
+                "survey_question.css_classes "
                 "FROM "
                 "surveys "
                 "LEFT JOIN group_questions ON "
@@ -156,7 +250,7 @@ class SurveyTemplateRepo(BaseRepo):
                 "survey_question.retired = false "
                 "ORDER BY group_questions.survey_group, "
                 "group_questions.display_index",
-                (survey_id,))
+                (survey_template_id,))
 
             rows = cur.fetchall()
 
@@ -170,6 +264,8 @@ class SurveyTemplateRepo(BaseRepo):
                 localized_text = r[2]
                 short_name = r[3]
                 response_type = r[4]
+                css_classes = r[5]
+
                 if group_id != cur_group_id:
                     if cur_group_id is not None:
                         group_localized_text = self._get_group_localized_text(
@@ -183,9 +279,10 @@ class SurveyTemplateRepo(BaseRepo):
 
                 responses = self._get_question_valid_responses(question_id,
                                                                language_tag)
+
                 triggers = self._get_question_triggers(question_id)
 
-                # Quick  fix to correctly sort country names in Spanish
+                # Quick fix to correctly sort country names in Spanish
                 if (language_tag == localization.ES_MX or language_tag ==
                     localization.ES_ES) and (question_id == 110 or
                                              question_id == 148):
@@ -197,7 +294,8 @@ class SurveyTemplateRepo(BaseRepo):
                                                   short_name,
                                                   response_type,
                                                   responses,
-                                                  triggers)
+                                                  triggers,
+                                                  css_classes)
                 cur_questions.append(question)
 
             if cur_group_id is not None:
@@ -208,7 +306,7 @@ class SurveyTemplateRepo(BaseRepo):
                     group_localized_text,
                     cur_questions))
 
-            return SurveyTemplate(survey_id, language_tag, all_groups)
+            return SurveyTemplate(survey_template_id, language_tag, all_groups)
 
     def _get_group_localized_text(self, group_id, language_tag):
         tag_to_col = {
@@ -329,9 +427,11 @@ class SurveyTemplateRepo(BaseRepo):
                         "ag_login_id, "
                         "survey_id, "
                         "vioscreen_status, "
-                        "source_id) "
-                        "VALUES(%s, %s, %s, %s)",
-                        (account_id, mfr_id, None, source_id))
+                        "source_id, "
+                        "survey_template_id) "
+                        "VALUES(%s, %s, %s, %s, %s)",
+                        (account_id, mfr_id, None, source_id,
+                         SurveyTemplateRepo.MYFOODREPO_ID))
 
             # Add to the myfoodrepo_registry
             cur.execute("""UPDATE myfoodrepo_registry
@@ -465,9 +565,11 @@ class SurveyTemplateRepo(BaseRepo):
                             "ag_login_id, "
                             "survey_id, "
                             "vioscreen_status, "
-                            "source_id) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, polyphenol_ffq_id, None, source_id))
+                            "source_id, "
+                            "survey_template_id) "
+                            "VALUES(%s, %s, %s, %s, %s)",
+                            (account_id, polyphenol_ffq_id, None, source_id,
+                             SurveyTemplateRepo.POLYPHENOL_FFQ_ID))
 
                 return polyphenol_ffq_id
 
@@ -560,9 +662,11 @@ class SurveyTemplateRepo(BaseRepo):
                             "ag_login_id, "
                             "survey_id, "
                             "vioscreen_status, "
-                            "source_id) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, spain_ffq_id, None, source_id))
+                            "source_id, "
+                            "survey_template_id) "
+                            "VALUES(%s, %s, %s, %s, %s)",
+                            (account_id, spain_ffq_id, None, source_id,
+                             SurveyTemplateRepo.SPAIN_FFQ_ID))
 
                 return spain_ffq_id
 
@@ -636,7 +740,8 @@ class SurveyTemplateRepo(BaseRepo):
             return {r[0]: r[1] for r in cur.fetchall()}
 
     def create_vioscreen_id(self, account_id, source_id,
-                            vioscreen_ext_sample_id):
+                            sample_id=None,
+                            registration_code=None):
         with self._transaction.cursor() as cur:
             # This transaction scans for existing IDs,
             # then generates a new ID if none exist
@@ -647,53 +752,106 @@ class SurveyTemplateRepo(BaseRepo):
             self._transaction.lock_table("vioscreen_registry")
             # test if an existing ID is available
             existing = self.get_vioscreen_id_if_exists(account_id, source_id,
-                                                       vioscreen_ext_sample_id)
+                                                       sample_id,
+                                                       registration_code)
+
             if existing is None:
                 vioscreen_id = secrets.token_hex(8)
+
+                # if they're using a registration code, we need to make sure
+                # it hasn't already been used
+                if registration_code is not None:
+                    vio_repo = VioscreenRepo(self._transaction)
+                    unused_code = vio_repo.is_code_unused(registration_code)
+
+                    if unused_code is False:
+                        # the code is either invalid or has been used
+                        raise RepoException("Registration code is invalid")
+                    else:
+                        # the code is valid and unused, so let's mark it used
+                        # and proceed
+                        cur.execute(
+                            "UPDATE campaign.ffq_registration_codes "
+                            "SET registration_code_used = NOW() "
+                            "WHERE ffq_registration_code = %s",
+                            (registration_code, )
+                        )
+
                 # Put a survey with status -1 into ag_login_surveys
                 cur.execute("INSERT INTO ag_login_surveys("
                             "ag_login_id, "
                             "survey_id, "
                             "vioscreen_status, "
-                            "source_id) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, vioscreen_id, -1, source_id))
-                # Immediately attach that survey to the specified sample
-                sample_repo = SampleRepo(self._transaction)
-                s = sample_repo.get_sample(account_id,
-                                           source_id,
-                                           vioscreen_ext_sample_id)
-
-                if s is None:
-                    raise KeyError(f"{vioscreen_ext_sample_id} does not exist")
-
-                cur.execute("INSERT INTO source_barcodes_surveys "
-                            "(barcode, survey_id) "
-                            "VALUES(%s, %s)", (s.barcode, vioscreen_id))
+                            "source_id, "
+                            "survey_template_id) "
+                            "VALUES(%s, %s, %s, %s, %s)",
+                            (account_id, vioscreen_id, -1, source_id,
+                             self.VIOSCREEN_ID))
 
                 # And add it to the registry to keep track of the survey if
                 # user quits out then wants to resume the survey.
-                cur.execute("INSERT INTO vioscreen_registry("
-                            "account_id, source_id, sample_id, vio_id) "
-                            "VALUES(%s, %s, %s, %s)",
-                            (account_id, source_id, vioscreen_ext_sample_id,
-                             vioscreen_id))
+                cur.execute(
+                    "INSERT INTO ag.vioscreen_registry ("
+                    "account_id, source_id, vio_id, sample_id, "
+                    "registration_code) "
+                    "VALUES (%s, %s, %s, %s, %s)",
+                    (account_id, source_id, vioscreen_id, sample_id,
+                     registration_code)
+                )
             else:
                 vioscreen_id = existing
         return vioscreen_id
 
     def get_vioscreen_id_if_exists(self, account_id, source_id,
-                                   vioscreen_ext_sample_id):
+                                   sample_id=None,
+                                   registration_code=None,
+                                   timestamp=None):
         """Obtain a vioscreen ID if it exists"""
         with self._transaction.cursor() as cur:
             # Find an active vioscreen survey for this account+source+sample
             # (deleted surveys are not active)
-            cur.execute("SELECT vio_id FROM vioscreen_registry WHERE "
-                        "account_id=%s AND "
-                        "source_id=%s AND "
-                        "sample_id=%s AND "
-                        "deleted=false",
-                        (account_id, source_id, vioscreen_ext_sample_id))
+            if sample_id is not None:
+                cur.execute("SELECT vio_id FROM "
+                            "vioscreen_registry WHERE "
+                            "account_id=%s AND "
+                            "source_id=%s AND "
+                            "sample_id=%s AND "
+                            "deleted=false",
+                            (account_id, source_id, sample_id))
+            elif registration_code is not None:
+                cur.execute("SELECT vio_id FROM "
+                            "vioscreen_registry WHERE "
+                            "account_id=%s AND "
+                            "source_id=%s AND "
+                            "registration_code=%s AND "
+                            "deleted=false",
+                            (account_id, source_id, registration_code))
+            elif timestamp is not None:
+                cur.execute("SELECT DISTINCT "
+                            "vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "FROM vioscreen_registry "
+                            "INNER JOIN ag_login_surveys "
+                            "ON vioscreen_registry.vio_id = "
+                            "ag_login_surveys.survey_id "
+                            "WHERE vioscreen_registry.account_id = %s "
+                            "AND vioscreen_registry.source_id = %s "
+                            "AND deleted=false "
+                            "AND ag_login_surveys.creation_time >= %s"
+                            "ORDER BY ag_login_surveys.creation_time DESC ",
+                            (account_id, source_id, timestamp))
+            else:
+                cur.execute("SELECT DISTINCT vioscreen_registry.vio_id, "
+                            "ag_login_surveys.creation_time "
+                            "FROM vioscreen_registry "
+                            "INNER JOIN ag_login_surveys "
+                            "ON vioscreen_registry.vio_id = "
+                            "ag_login_surveys.survey_id "
+                            "WHERE vioscreen_registry.account_id = %s "
+                            "AND vioscreen_registry.source_id = %s "
+                            "AND deleted=false "
+                            "ORDER BY ag_login_surveys.creation_time DESC ",
+                            (account_id, source_id))
             rows = cur.fetchall()
             if rows is None or len(rows) == 0:
                 return None
@@ -817,16 +975,22 @@ class SurveyTemplateRepo(BaseRepo):
                                  'HEIGHT_UNITS',
                                  'WEIGHT_UNITS',
                                  'BIRTH_YEAR',
-                                 'GENDER')
+                                 'GENDER',
+                                 'GENDER_v2')
                              AND s.ag_login_id = %s
                              and s.source_id = %s""",
                         (account_id, source_id))
 
             results = {name: value for name, value in cur.fetchall()}
             birth_year = results.get('BIRTH_YEAR')
-            gender = results.get('GENDER')
             height_units = results.get('HEIGHT_UNITS')
             weight_units = results.get('WEIGHT_UNITS')
+
+            # If the user has responded to the new form of the gender question
+            # use that. Otherwise, fall back to the old question.
+            gender = results.get('GENDER_v2')
+            if gender is None:
+                gender = results.get('GENDER')
 
             # from survey_answers_other for height/weight
             cur.execute("""SELECT question_shortname, q.response
@@ -872,6 +1036,11 @@ class SurveyTemplateRepo(BaseRepo):
                     if height_units == 'centimeters':
                         # to inches
                         height = height / 2.54
+
+                    # Per email from David @ Viocare, height must be between
+                    # 24 and 96 inches.
+                    if height < 24.0 or height > 96.0:
+                        height = None
             else:
                 # should not occur but just in case
                 height = None
@@ -883,6 +1052,7 @@ class SurveyTemplateRepo(BaseRepo):
                     # old survey_answers_other responses are of the form
                     # '["foo"]' :/
                     weight = weight[2:-2]
+
                 if weight == "":
                     weight = None
                 else:
@@ -890,6 +1060,11 @@ class SurveyTemplateRepo(BaseRepo):
                     if weight_units == 'kilograms':
                         # to pounds
                         weight = weight * 2.20462
+
+                    # Per email from David @ Viocare, weight must be between
+                    # 30 and 600 pounds.
+                    if weight < 30.0 or weight > 600.0:
+                        weight = None
             else:
                 # should not occur but just in case
                 weight = None
@@ -929,3 +1104,213 @@ class SurveyTemplateRepo(BaseRepo):
                     return True
 
         return False
+
+    def get_date_survey_last_taken(self, source_id, survey_template_id):
+        """ Get the date that the given source last took the given
+            survey_Template_id
+
+        Parameters
+        ----------
+        source_id : str
+            The id of the source
+        survey_template_id : int or str
+            The id of the survey in question
+
+        Returns
+        -------
+        datetime or None
+            If it finds a result, it returns the datetime. Otherwise, None.
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute("SELECT MAX(creation_time) "
+                        "FROM ag.ag_login_surveys "
+                        "WHERE source_id = %s AND survey_template_id = %s",
+                        (source_id, survey_template_id))
+            r = cur.fetchone()
+            if r is None:
+                return None
+            else:
+                return r[0]
+
+    def migrate_responses(self, source_id, survey_template_id):
+        '''
+        Get all survey responses associated with a source and survey_template
+         and migrate them. Will pull from past results if they are found,
+         including legacy template answers.
+        :param source_id: A source (the provider of a sample)
+        :param survey_template_id: A survey template id.
+        :return: A filled survey_template dict
+        '''
+        sql = """SELECT *
+                 FROM  (SELECT a.survey_question_id,
+                               a.response,
+                               e.creation_time,
+                               f.survey_response_type
+                        FROM   ag.survey_answers a
+                               JOIN ag.group_questions c
+                                 ON a.survey_question_id = c.survey_question_id
+                               JOIN ag.surveys d
+                                 ON c.survey_group = d.survey_group
+                               JOIN ag.ag_login_surveys e
+                                 ON a.survey_id = e.survey_id
+                               JOIN ag.survey_question_response_type f
+                                 ON a.survey_question_id = f.survey_question_id
+                               JOIN ag.survey_question g
+                                 ON a.survey_question_id = g.survey_question_id
+                        WHERE  e.source_id = %s
+                               AND d.survey_id = %s
+                               AND g.retired = false
+                        UNION
+                        SELECT a.survey_question_id,
+                               a.response,
+                               e.creation_time,
+                               f.survey_response_type
+                        FROM   ag.survey_answers_other a
+                               JOIN ag.group_questions c
+                                 ON a.survey_question_id = c.survey_question_id
+                               JOIN ag.surveys d
+                                 ON c.survey_group = d.survey_group
+                               JOIN ag.ag_login_surveys e
+                                 ON a.survey_id = e.survey_id
+                               JOIN ag.survey_question_response_type f
+                                 ON a.survey_question_id = f.survey_question_id
+                               JOIN ag.survey_question g
+                                 ON a.survey_question_id = g.survey_question_id
+                        WHERE  e.source_id = %s
+                                 AND d.survey_id = %s
+                                 AND g.retired = false) t
+                 ORDER BY creation_time ASC,
+                          survey_question_id ASC"""
+
+        with self._transaction.cursor() as cur:
+            cur.execute(sql, (source_id, survey_template_id, source_id,
+                              survey_template_id,))
+            rows = cur.fetchall()
+
+            # create an empty template to fill-in.
+            results = self._generate_empty_survey(survey_template_id)
+
+            multiple_timestamps = {}
+            for question_id, response, creation_time, response_type in rows:
+                # responses are from earliest to latest thus older answers
+                # will be overwritten with newer ones as need be, according
+                # to creation time ASC.
+                question_id = str(question_id)
+
+                if response_type == 'MULTIPLE':
+                    # For questions that are MULTIPLE (checkbox lists), we
+                    # need to keep track of which survey submission each
+                    # response is from and reset the list if we find a newer
+                    # survey submission
+                    if len(results[question_id]) == 0:
+                        results[question_id].append(response)
+                        multiple_timestamps[question_id] = creation_time
+                    else:
+                        if creation_time == multiple_timestamps[question_id]:
+                            # same survey submission, so append
+                            results[question_id].append(response)
+                        else:
+                            # we just hit a newer survey, reset the list
+                            results[question_id] = [response]
+                            multiple_timestamps[question_id] = creation_time
+                else:
+                    # SINGLE, STRING, and TEXT types
+
+                    # Some historical values for height (108) and weight (113)
+                    # are of the form ["70"] rather than 70. We need to clean
+                    # that format up before returning values to the UI
+                    if (question_id == '108' or question_id == '113') and \
+                            response.startswith('['):
+                        response = response[2:-2]
+
+                    results[question_id] = response
+
+            return results
+
+    def _generate_empty_survey(self, survey_template_id, return_tuple=False):
+        """ Generate an empty survey template for a given template ID and
+            fill in the responses with 'Unspecified' as needed.
+
+        Parameters
+        ----------
+        survey_template_id : int or str
+            The id for which we're generating a survey template
+        return_tuple : bool
+            If set to True, each question's value is a tuple, rather than just
+            a an array/string
+
+        Returns
+        -------
+        dict of questions
+            If return_tuple is False, the form is
+                {question_id: question_response}
+            If return_tuple is True, the form is
+                {question_id: (question_response, None)}
+        """
+        # various parts of the code base will push either int or str in
+        # for survey_template_id, so we cast to int here
+        survey_template_id = int(survey_template_id)
+
+        if survey_template_id in self.SURVEY_INFO:
+            if survey_template_id in [self.VIOSCREEN_ID,
+                                      self.MYFOODREPO_ID,
+                                      self.POLYPHENOL_FFQ_ID,
+                                      self.SPAIN_FFQ_ID]:
+                raise ValueError("survey_template_id must be for a local "
+                                 "survey")
+        else:
+            raise ValueError("invalid value for survey_template_id")
+
+        # Note a.survey_id is actually a survey_template_id
+        sql = """SELECT b.survey_question_id,
+                        c.survey_response_type
+                 FROM   ag.surveys a
+                        JOIN ag.group_questions b
+                          ON a.survey_group = b.survey_group
+                        JOIN ag.survey_question_response_type c
+                          ON b.survey_question_id = c.survey_question_id
+                        JOIN ag.survey_question d
+                          ON d.survey_question_id = b.survey_question_id
+                 WHERE  a.survey_id = %s
+                        AND d.retired = false
+                 ORDER  BY survey_id,
+                           survey_question_id"""
+
+        with self._transaction.cursor() as cur:
+            cur.execute(sql, (survey_template_id,))
+
+            rows = cur.fetchall()
+
+            results = {}
+            for row in rows:
+                question_id = str(row[0])
+                response_type = row[1]
+
+                if response_type == 'MULTIPLE':
+                    if return_tuple:
+                        results[question_id] = ([], None)
+                    else:
+                        results[question_id] = []
+                else:
+                    if return_tuple:
+                        results[question_id] = ("", None)
+                    else:
+                        results[question_id] = ""
+
+            return results
+
+    def get_template_ids_from_survey_ids(self, survey_ids):
+        '''
+        returns a list of (template_id, survey_id) tuples.
+        :param survey_ids: A list of survey ids.
+        :return: A list of (survey_id, survey_template_id) tuples.
+        '''
+        with self._transaction.cursor() as cur:
+            # with the new survey_template_id column in ag_login_surveys,
+            # retrieving the template_ids for both remote and local surveys
+            # is now trivial.
+            cur.execute("SELECT survey_id, survey_template_id "
+                        "FROM ag.ag_login_surveys WHERE survey_id IN %s",
+                        (tuple(survey_ids),))
+
+            return [(x[0], x[1]) for x in cur.fetchall()]

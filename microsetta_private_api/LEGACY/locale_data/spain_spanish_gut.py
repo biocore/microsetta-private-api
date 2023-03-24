@@ -67,7 +67,7 @@ Correo electrónico: researchadmin@ucsd.edu</li>
     'TEXT_I_HAVE_READ_SIMPLIFIED': 'Sí, estarás en este estudio de investigación.',
     'PERSON_ATTAINING_ASSENT': 'Firma de la persona que obtiene el consentimiento',
     'TEXT_ASSENT_WITNESS': 'A mi juicio, el participante está dando su consentimiento voluntaria y conscientemente y posee la capacidad legal de dar su consentimiento para participar en el estudio.',
-    'OBTAINER_NAME': 'Nombre de la persona que obtiene el consentimiento',
+    'ASSENT_OBTAINER': 'Nombre de la persona que obtiene el consentimiento',
     'TEXT_I_HAVE_READ_PARENT': 'He leído (o alguien me ha leído) este formulario. Soy consciente de que se le está pidiendo a mi hijo que participe en un estudio de investigación. Acepto voluntariamente que mi hijo participe en este estudio',
     'PARTICIPANT_NAME': 'Nombre del participante',
     'PARTICIPANT_EMAIL': 'Correo electrónico del participante',

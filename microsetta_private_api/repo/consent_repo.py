@@ -36,7 +36,8 @@ def _consent_signature_to_row(s):
            getattr(s, 'parent_1_name', None),
            getattr(s, 'parent_2_name', None),
            getattr(s, 'deceased_parent', None),
-           getattr(s, 'assent_obtainer', None)
+           getattr(s, 'assent_obtainer', None),
+           getattr(s, 'assent_id', None)
            )
 
     return row
@@ -51,7 +52,11 @@ def _row_to_consent_signature(r):
         r["parent_1_name"],
         r["parent_2_name"],
         r["deceased_parent"],
-        r["assent_obtainer"])
+        r["assent_obtainer"],
+        r["assent_id"],
+        "",
+        ""
+    )
 
 
 class ConsentRepo(BaseRepo):
@@ -71,7 +76,8 @@ class ConsentRepo(BaseRepo):
 
     signature_write_cols = "signature_id, consent_id, " \
                            "source_id, date_time, parent_1_name, " \
-                           "parent_2_name, deceased_parent, assent_obtainer"
+                           "parent_2_name, deceased_parent, assent_obtainer, "\
+                           "assent_id"
 
     def create_doc(self, consent):
         with self._transaction.dict_cursor() as cur:
@@ -150,7 +156,7 @@ class ConsentRepo(BaseRepo):
 
         for v in con:
             if v in doc.consent_type:
-                if None in (parent_1, parent_2):
+                if parent_1 is None:
                     res = False
                     return res
 
@@ -186,52 +192,72 @@ class ConsentRepo(BaseRepo):
                         "VALUES("
                         "%s, %s, %s, "
                         "%s, %s, %s, "
-                        "%s, %s)",
+                        "%s, %s, %s)",
                         _consent_signature_to_row(consent_signature))
             return cur.rowcount == 1
 
     def scrub(self, account_id, source_id):
-
         with self._transaction.dict_cursor() as cur:
-            sourceRepo = SourceRepo(self._transaction)
-            if sourceRepo.get_source(account_id, source_id) is None:
-                raise NotFound("Source does not exist!")
-
-            cur.execute("SELECT signature_id FROM ag.consent_audit"
-                        " WHERE source_id = %s", (source_id,))
-
-            rows = cur.fetchall()
-            docs = [row["signature_id"] for row in rows]
+            source_repo = SourceRepo(self._transaction)
+            if source_repo.get_source(account_id, source_id) is None:
+                raise NotFound("Source does not exist")
 
             parent_1_name = "scrubbed"
             parent_2_name = "scrubbed"
             deceased_parent = None
             assent_obtainer = "scrubbed"
 
-            for doc in docs:
-                cur.execute("UPDATE ag.consent_audit "
-                            "SET parent_1_name = %s,"
-                            " parent_2_name = %s,"
-                            " deceased_parent = %s,"
-                            " assent_obtainer = %s"
-                            " WHERE signature_id = %s",
-                            (parent_1_name, parent_2_name,
-                             deceased_parent, assent_obtainer,
-                             doc,))
-
-                if cur.rowcount != 1:
-                    raise RepoException("Failed to scrub consent signature")
+            cur.execute("UPDATE ag.consent_audit "
+                        "SET parent_1_name = %s, "
+                        "parent_2_name = %s, "
+                        "deceased_parent = %s, "
+                        "assent_obtainer = %s, "
+                        "date_revoked = NOW() "
+                        "WHERE source_id = %s",
+                        (parent_1_name, parent_2_name,
+                         deceased_parent, assent_obtainer,
+                         source_id,))
 
         return True
 
-    def delete_signatures(self, account_id, source_id):
+    def get_latest_signed_consent(self, source_id, consent_type):
+        if consent_type == 'data':
+            consent_type_like = "%_data"
+        elif consent_type == 'biospecimen':
+            consent_type_like = "%_biospecimen"
+        else:
+            raise RepoException("Unknown consent type: %s" % consent_type)
 
         with self._transaction.dict_cursor() as cur:
-            sourceRepo = SourceRepo(self._transaction)
-            if sourceRepo.get_source(account_id, source_id) is None:
-                raise NotFound("Source does not exist!")
+            cur.execute(
+                "SELECT ca.signature_id, ca.consent_id, ca.source_id, "
+                "ca.date_time, ca.parent_1_name, ca.parent_2_name, "
+                "ca.deceased_parent, ca.assent_obtainer, ca.assent_id "
+                "FROM ag.consent_audit ca "
+                "INNER JOIN ag.consent_documents cd "
+                "ON ca.consent_id = cd.consent_id "
+                "INNER JOIN ag.source s "
+                "ON ca.source_id = s.id "
+                "WHERE ca.source_id = %s AND cd.consent_type LIKE %s "
+                "ORDER BY ca.date_time DESC LIMIT 1",
+                (source_id, consent_type_like)
+            )
+            row = cur.fetchone()
+            if row is None:
+                return None
+            else:
+                consent_signature = _row_to_consent_signature(row)
 
-            cur.execute("DELETE FROM ag.consent_audit WHERE "
-                        "source_id = %s", (source_id,))
+                survey_doc = self.get_consent_document(
+                    consent_signature.consent_id
+                )
+                consent_signature.consent_content = survey_doc.consent_content
 
-            return cur.rowcount >= 0
+                if consent_signature.assent_id is not None:
+                    assent_doc = self.get_consent_document(
+                        consent_signature.assent_id
+                    )
+                    consent_signature.assent_content =\
+                        assent_doc.consent_content
+
+                return consent_signature

@@ -251,7 +251,11 @@ class SampleRepo(BaseRepo):
 
             samples = []
             for sample_row in cur.fetchall():
-                samples.append(self._create_sample_obj(sample_row))
+                sample = self._create_sample_obj(sample_row)
+                sample.kit_id = self._get_supplied_kit_id_by_sample(
+                    sample.barcode
+                )
+                samples.append(sample)
             return samples
 
     def get_sample(self, account_id, source_id, sample_id):
@@ -382,6 +386,17 @@ class SampleRepo(BaseRepo):
             row = cur.fetchone()
             if row is None:
                 return None
+            return row[0]
+
+    def _get_supplied_kit_id_by_sample(self, sample_barcode):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT kit_id "
+                "FROM barcodes.barcode "
+                "WHERE barcode = %s",
+                (sample_barcode, )
+            )
+            row = cur.fetchone()
             return row[0]
 
     def scrub(self, account_id, source_id, sample_id):

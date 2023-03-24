@@ -5,6 +5,7 @@ import datetime
 import pandas as pd
 import psycopg2.extras
 import json
+import pytz
 
 from psycopg2 import sql
 
@@ -16,9 +17,11 @@ from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
+from microsetta_private_api.model.activation_code import ActivationCode
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+
 
 # TODO: Refactor repeated elements in project-related sql queries?
 PROJECT_FIELDS = f"""
@@ -817,6 +820,8 @@ class AdminRepo(BaseRepo):
                                  kit_names):
         """Generate specified number of random barcodes for input kit names"""
 
+        total_barcodes = number_of_kits * number_of_samples
+
         with self._transaction.cursor() as cur:
             # get the maximum observed barcode.
             # historically, barcodes were of the format NNNNNNNNN where each
@@ -827,9 +832,12 @@ class AdminRepo(BaseRepo):
             # control character that cannot safely be considered a digit.
             # this is *safe* for all prior barcodes as the first character
             # has always been the "0" character.
-            total_barcodes = number_of_kits * number_of_samples
-            cur.execute("SELECT max(right(barcode,8)::integer) "
-                        "FROM barcodes.barcode")
+            # Barcodes prefixed with X or 0 are designated by UC San Diego.
+            cur.execute(
+                "SELECT max(right(barcode,8)::integer) "
+                "FROM barcodes.barcode "
+                "WHERE barcode LIKE 'X%' OR barcode LIKE '0%'"
+            )
             start_bc = cur.fetchone()[0] + 1
             new_barcodes = ['X%0.8d' % (start_bc + i)
                             for i in range(total_barcodes)]
@@ -1167,6 +1175,12 @@ class AdminRepo(BaseRepo):
             return new_uuid
 
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
+        '''
+        Return all surveys associated with a given barcode.
+        :param sample_barcode: A sample barcode.
+        :param survey_template_id: A survey template id to limit results to.
+        :return: A nested dict structure containing all answered surveys.
+        '''
         ids = self._get_ids_relevant_to_barcode(sample_barcode)
 
         if ids is None:
@@ -1200,26 +1214,56 @@ class AdminRepo(BaseRepo):
 
         answer_to_template_map = {}
         for answer_id in answer_ids:
-            template_id, status = survey_answers_repo.\
-                survey_template_id_and_status(answer_id)
-            answer_to_template_map[answer_id] = (template_id, status)
+            template_id, status, timestamp = survey_answers_repo.\
+                survey_template_id_and_status(answer_id, True)
+            answer_to_template_map[answer_id] = (
+                template_id,
+                status,
+                timestamp
+            )
+
+        pst = pytz.timezone('US/Pacific')
+        tz_aware_sample_ts = pst.localize(sample.datetime_collected)
+
+        best_ts = {}
+        # Since users can re-take surveys, we need to find the most temporally
+        # appropriate instance of each template, relative to the sample's
+        # collection time
+        for answer_id in answer_ids:
+            s_t_id = str(answer_to_template_map[answer_id][0])
+            if s_t_id in best_ts:
+                cur_time_diff = abs(
+                    (answer_to_template_map[best_ts[s_t_id]][2] -
+                     tz_aware_sample_ts).total_seconds()
+                )
+                new_time_diff = abs(
+                    (answer_to_template_map[answer_id][2] -
+                     tz_aware_sample_ts).total_seconds()
+                )
+                if new_time_diff < cur_time_diff:
+                    best_ts[s_t_id] = answer_id
+            else:
+                best_ts[s_t_id] = answer_id
+
+        new_answer_to_template_map = {}
+        for s_id in best_ts.values():
+            new_answer_to_template_map[s_id] = answer_to_template_map[s_id]
+
+        answer_to_template_map = new_answer_to_template_map
+        answer_ids = answer_to_template_map.keys()
 
         # if a survey template is specified, filter the returned surveys
         if survey_template_id is not None:
             # TODO: This schema is so awkward for this type of query...
             answers = []
             for answer_id in answer_ids:
-                if answer_to_template_map[answer_id][0] == survey_template_id:
+                if answer_to_template_map[answer_id][0] ==\
+                        survey_template_id:
                     answers.append(answer_id)
 
             if len(answers) == 0:
                 raise NotFound("This barcode is not associated with any "
                                "surveys matching this template id")
-            if len(answers) > 1:
-                #  I really hope this can't happen.  (x . x)
-                raise RepoException("This barcode is associated with more "
-                                    "than one survey matching this template"
-                                    " id")
             answer_ids = answers
 
         metadata_map = survey_answers_repo.build_metadata_map()
@@ -1234,7 +1278,7 @@ class AdminRepo(BaseRepo):
             )
 
             if answer_model is None:
-                # if answers are requested for a vioscreen survey
+                # if answers are requested for a remote survey
                 # the answers model will comeback empty so let's
                 # gracefully handle this
                 continue
@@ -1248,6 +1292,7 @@ class AdminRepo(BaseRepo):
                 {
                     "template": answer_to_template_map[answer_id][0],
                     "survey_status": answer_to_template_map[answer_id][1],
+                    "survey_timestamp": answer_to_template_map[answer_id][2],
                     "response": survey_answers
                 })
 
@@ -1353,3 +1398,15 @@ class AdminRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             psycopg2.extras.execute_values(cur, insert_sql, kit_uuid_tuples,
                                            template=None, page_size=100)
+
+    def create_ffq_code(self):
+        code = ActivationCode.generate_code()
+        with self._transaction.cursor() as cur:
+            # Insert the newly created registration code
+            cur.execute(
+                "INSERT INTO campaign.ffq_registration_codes ("
+                "ffq_registration_code"
+                ") VALUES (%s)",
+                (code,)
+            )
+        return code

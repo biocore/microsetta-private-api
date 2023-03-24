@@ -10,28 +10,33 @@ from collections import defaultdict
 
 def to_vue_field(question, triggered_by=None):
     if question.response_type == "SINGLE":
-        if len(question.valid_responses) < 7:
+        if len(question.valid_responses) < 13:
             vue_field = VueRadiosField(question.id,
                                        question.localized_text,
                                        question.valid_responses,
+                                       question.css_classes,
                                        question.short_name)
         else:
             vue_field = VueSelectField(question.id,
                                        question.localized_text,
                                        question.valid_responses,
+                                       question.css_classes,
                                        question.short_name)
     elif question.response_type == "MULTIPLE":
         vue_field = VueChecklistField(question.id,
                                       question.localized_text,
                                       question.valid_responses,
+                                      question.css_classes,
                                       question.short_name)
     elif question.response_type == "STRING":
         vue_field = VueInputField(question.id,
                                   question.localized_text,
+                                  question.css_classes,
                                   question.short_name)
     elif question.response_type == "TEXT":
         vue_field = VueTextAreaField(question.id,
                                      question.localized_text,
+                                     question.css_classes,
                                      question.short_name)
     else:
         raise ValueError("Unknown question response_type %s" %

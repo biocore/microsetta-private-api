@@ -7,6 +7,7 @@ from microsetta_private_api.model.consent import ConsentSignature
 from microsetta_private_api.repo.consent_repo import ConsentRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.api.literals import CONSENT_DOC_NOT_FOUND_MSG
+from werkzeug.exceptions import NotFound
 
 
 def render_consent_doc(account_id, language_tag, token_info):
@@ -52,7 +53,6 @@ def check_consent_signature(account_id, source_id, consent_type, token_info):
 
 
 def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
-
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
@@ -62,8 +62,8 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
         try:
             consent_repo.sign_consent(account_id, consent_sign)
             t.commit()
-        except Exception:
-            return jsonify(code=404, message=CONSENT_DOC_NOT_FOUND_MSG), 404
+        except NotFound as e:
+            return jsonify(code=404, message=e.description), 404
 
     response = jsonify({"result": True})
     response.status_code = 201
@@ -71,3 +71,18 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
         (account_id)
 
     return response
+
+
+def get_signed_consent(account_id, source_id, consent_type, token_info):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        consent_repo = ConsentRepo(t)
+        signed_consent = consent_repo.get_latest_signed_consent(
+            source_id,
+            consent_type
+        )
+        if signed_consent is None:
+            return jsonify(code=404, message="No signed consent found"), 404
+
+    return jsonify(signed_consent.to_api()), 200

@@ -5,7 +5,7 @@ from microsetta_private_api.model.model_base import ModelBase
 class Sample(ModelBase):
     def __init__(self, sample_id, datetime_collected, site, notes, barcode,
                  latest_scan_timestamp, source_id, account_id,
-                 sample_projects, latest_scan_status):
+                 sample_projects, latest_scan_status, kit_id=None):
         self.id = sample_id
         # NB: datetime_collected may be None if sample not yet used
         self.datetime_collected = datetime_collected
@@ -23,6 +23,7 @@ class Sample(ModelBase):
         self.account_id = account_id
 
         self.accession_urls = []
+        self.kit_id = kit_id
 
     def set_accession_urls(self, accession_urls):
         self.accession_urls = accession_urls
@@ -65,7 +66,8 @@ class Sample(ModelBase):
             "source_id": self.source_id,
             "account_id": self.account_id,
             "sample_projects": list(self.sample_projects),
-            "accession_urls": self.accession_urls
+            "accession_urls": self.accession_urls,
+            "kit_id": self.kit_id
         }
 
 

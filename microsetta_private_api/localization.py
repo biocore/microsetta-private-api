@@ -5,6 +5,7 @@ EN_US = "en_US"
 EN_GB = "en_GB"
 ES_MX = "es_MX"
 ES_ES = "es_ES"
+JA_JP = "ja_JP"
 
 NEW_PARTICIPANT_KEY = "new_participant"
 LANG_NAME_KEY = "lang_name"
