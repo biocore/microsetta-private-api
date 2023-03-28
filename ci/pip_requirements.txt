@@ -11,6 +11,6 @@ celery[redis]
 redis
 requests
 requests_oauthlib
-flask-babel
+flask-babel < 3.0.0
 html2text
 https://github.com/qiita-spots/qiita_client/archive/refs/heads/master.zip
