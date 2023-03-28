@@ -1353,6 +1353,7 @@ class AdminRepoTests(AdminTests):
             uuid = admin_repo.map_to_rack(barcode, scan_info)
 
         self.assertTrue(len(uuid) > 0)
+
     def test_create_ffq_code(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)

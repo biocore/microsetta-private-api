@@ -1271,19 +1271,20 @@ class AdminApiTests(TestCase):
             self.assertEqual(204, response.status_code)
 
     def test_sample_map_to_rack(self):
-        barcode= "000001024"
-        scan_info= {
+        barcode = "000001024"
+        scan_info = {
             'rack_id': '005',
             'location_row': 'B',
             'location_col': '01'
         }
 
         response = self.client.post(
-            '/apo/admin/rack/{0}/add'.format(barcode),
+            '/api/admin/rack/{0}/add'.format(barcode),
             content_type="application/json",
             data=json.dumps(scan_info))
 
         self.assertEquals(201, response.status_code)
+
     def test_generate_ffq_codes(self):
         input_json = json.dumps({"code_quantity": 2})
 
