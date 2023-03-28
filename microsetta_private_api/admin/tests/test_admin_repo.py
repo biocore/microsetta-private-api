@@ -1219,3 +1219,33 @@ class AdminRepoTests(AdminTests):
                 self.assertEqual(len(curr_records), 2)
                 for expected_record in expected_records:
                     self.assertIn(expected_record, curr_records)
+
+    def test_map_to_rack_fail(self):
+        scan_info = {
+            'rack_id': '001',
+            'location_row': 'A',
+            'location_col': '02'
+        }
+
+        with Transaction() as t:
+            barcode = '00000000'
+
+            admin_repo = AdminRepo(t)
+            with self.assertRaises(NotFound):
+                admin_repo.map_to_rack(barcode, scan_info)
+
+    def test_map_to_rack_success(self):
+        scan_info = {
+            'rack_id': '001',
+            'location_row': 'A',
+            'location_col': '02'
+        }
+
+        uuid = ""
+        with Transaction() as t:
+            barcode = '000001024'
+
+            admin_repo = AdminRepo(t)
+            uuid = admin_repo.map_to_rack(barcode, scan_info)
+
+        self.assertTrue(len(uuid) > 0)
