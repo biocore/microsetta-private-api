@@ -1281,7 +1281,9 @@ class AdminApiTests(TestCase):
         response = self.client.post(
             '/api/admin/rack/{0}/add'.format(barcode),
             content_type="application/json",
-            data=json.dumps(scan_info))
+            data=json.dumps(scan_info),
+            headers=MOCK_HEADERS
+        )
 
         self.assertEquals(201, response.status_code)
 
