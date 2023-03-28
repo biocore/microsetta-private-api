@@ -119,7 +119,8 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_US: "survey_question.american",
             localization.EN_GB: "survey_question.british",
             localization.ES_MX: "survey_question.spanish",
-            localization.ES_ES: "survey_question.spain_spanish"
+            localization.ES_ES: "survey_question.spain_spanish",
+            localization.JA_JP: "survey_question.japanese"
         }
 
         if language_tag not in tag_to_col:
@@ -183,7 +184,8 @@ class SurveyTemplateRepo(BaseRepo):
 
                 responses = self._get_question_valid_responses(question_id,
                                                                language_tag)
-                triggers = self._get_question_triggers(question_id)
+                triggers = self._get_question_triggers(question_id,
+                                                       language_tag)
 
                 # Quick  fix to correctly sort country names in Spanish
                 if (language_tag == localization.ES_MX or language_tag ==
@@ -215,8 +217,13 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_US: "american",
             localization.EN_GB: "british",
             localization.ES_MX: "spanish",
-            localization.ES_ES: "spain_spanish"
+            localization.ES_ES: "spain_spanish",
+            localization.JA_JP: "japanese"
         }
+
+        if language_tag not in tag_to_col:
+            raise RepoException(f"{language_tag} is not supported.")
+
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
                         tag_to_col[language_tag] + " " +
@@ -234,7 +241,11 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_GB: "survey_response.british",
             localization.ES_MX: "survey_response.spanish",
             localization.ES_ES: "survey_response.spain_spanish",
+            localization.JA_JP: "survey_response.japanese"
         }
+
+        if language_tag not in tag_to_col:
+            raise RepoException(f"{language_tag} is not supported.")
 
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
@@ -252,13 +263,28 @@ class SurveyTemplateRepo(BaseRepo):
                         "display_index", (survey_question_id,))
             return [x[0] for x in cur.fetchall()]
 
-    def _get_question_triggers(self, survey_question_id):
+    def _get_question_triggers(self, survey_question_id, language_tag):
+        tag_to_col = {
+            localization.EN_US: "survey_response.american",
+            localization.EN_GB: "survey_response.british",
+            localization.ES_MX: "survey_response.spanish",
+            localization.ES_ES: "survey_response.spain_spanish",
+            localization.JA_JP: "survey_response.japanese"
+        }
+
+        if language_tag not in tag_to_col:
+            raise RepoException(f"{language_tag} is not supported.")
+
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT triggering_response, triggered_question "
-                        "FROM "
-                        "survey_question_triggers "
-                        "WHERE "
-                        "survey_question_id = %s ", (survey_question_id,))
+            cur.execute(
+                "SELECT " + tag_to_col[language_tag] + ", "
+                "sqt.triggered_question "
+                "FROM survey_response "
+                "INNER JOIN survey_question_triggers sqt "
+                "ON sqt.triggering_response = survey_response.american "
+                "WHERE sqt.survey_question_id = %s ",
+                (survey_question_id, )
+            )
 
             rows = cur.fetchall()
             return [SurveyTemplateTrigger(x[0], x[1]) for x in rows]
