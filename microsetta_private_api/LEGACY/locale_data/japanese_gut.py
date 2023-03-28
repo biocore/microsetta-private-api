@@ -1,5 +1,5 @@
 # NOTE: CONSENT_YOUR_CHILD, ASSENT_7_12, and ASSENT_13_17 are NOT up to date.
-# Those documents MUST be translated and implemented before allowing Spanish-speaking participants under the age of 18.
+# Those documents MUST be translated and implemented before allowing Japanese-speaking participants under the age of 18.
 
 media_locale = {}
 
