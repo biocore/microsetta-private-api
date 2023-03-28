@@ -3,15 +3,22 @@ from ._account import (
     read_account, update_account, check_email_match, _verify_jwt,
     _verify_jwt_mock
 )
+
+from ._removal_queue import (
+    check_request_remove_account, request_remove_account,
+    cancel_request_remove_account
+)
+
 from ._consent import (
     render_consent_doc,
     check_consent_signature,
-    sign_consent_doc
+    sign_consent_doc,
+    get_signed_consent
 )
 from ._source import (
-    create_source, read_source, update_source, delete_source,
-    read_sources, create_human_source_from_consent,
-    check_duplicate_source_name, scrub_source
+    create_source, read_source, update_source, read_sources,
+    create_human_source_from_consent, check_duplicate_source_name,
+    scrub_source
 )
 from ._survey import (
     read_survey_template, read_survey_templates, read_answered_survey,
@@ -30,15 +37,16 @@ from ._activation import (
 )
 
 from ._vioscreen import (
-    read_sample_vioscreen_session, read_sample_vioscreen_percent_energy,
-    read_sample_vioscreen_dietary_score, read_sample_vioscreen_supplements,
-    read_sample_vioscreen_food_components,
-    read_sample_vioscreen_eating_patterns,
-    read_sample_vioscreen_mpeds, read_sample_vioscreen_food_consumption,
+    read_vioscreen_session, read_vioscreen_percent_energy,
+    read_vioscreen_dietary_score, read_vioscreen_supplements,
+    read_vioscreen_food_components,
+    read_vioscreen_eating_patterns,
+    read_vioscreen_mpeds, read_vioscreen_food_consumption,
     get_vioscreen_dietary_scores_by_component,
     get_vioscreen_dietary_scores_descriptions,
     get_vioscreen_food_components_by_code,
-    get_vioscreen_food_components_descriptions
+    get_vioscreen_food_components_descriptions,
+    get_vioscreen_sessions, get_vioscreen_registry_entries, check_ffq_code
 )
 
 from ._campaign import (
@@ -47,7 +55,7 @@ from ._campaign import (
 
 from ._interested_user import (
     create_interested_user, get_interested_user_address_update,
-    put_interested_user_address_update
+    put_interested_user_address_update, get_opt_out, put_opt_out
 )
 
 from ..config_manager import SERVER_CONFIG
@@ -68,17 +76,20 @@ __all__ = [
     'read_account',
     'update_account',
     'check_email_match',
+    'request_remove_account',
+    'cancel_request_remove_account',
+    'check_request_remove_account',
     'render_consent_doc',
     'create_source',
     'read_source',
     'update_source',
-    'delete_source',
     'scrub_source',
     'read_sources',
     'check_duplicate_source_name',
     'create_human_source_from_consent',
     'check_consent_signature',
     'sign_consent_doc',
+    'get_signed_consent',
     'read_survey_template',
     'read_survey_templates',
     'read_answered_survey',
@@ -98,14 +109,14 @@ __all__ = [
     'verify_jwt',
     'get_preparations',
     'check_activation',
-    'read_sample_vioscreen_session',
-    'read_sample_vioscreen_percent_energy',
-    'read_sample_vioscreen_dietary_score',
-    'read_sample_vioscreen_supplements',
-    'read_sample_vioscreen_food_components',
-    'read_sample_vioscreen_eating_patterns',
-    'read_sample_vioscreen_mpeds',
-    'read_sample_vioscreen_food_consumption',
+    'read_vioscreen_session',
+    'read_vioscreen_percent_energy',
+    'read_vioscreen_dietary_score',
+    'read_vioscreen_supplements',
+    'read_vioscreen_food_components',
+    'read_vioscreen_eating_patterns',
+    'read_vioscreen_mpeds',
+    'read_vioscreen_food_consumption',
     'get_vioscreen_dietary_scores_by_component',
     'get_vioscreen_dietary_scores_descriptions',
     'get_vioscreen_food_components_by_code',
@@ -113,5 +124,10 @@ __all__ = [
     'get_campaign_information',
     'create_interested_user',
     'get_interested_user_address_update',
-    'put_interested_user_address_update'
+    'put_interested_user_address_update',
+    'get_vioscreen_sessions',
+    'get_vioscreen_registry_entries',
+    'check_ffq_code',
+    'get_opt_out',
+    'put_opt_out'
 ]

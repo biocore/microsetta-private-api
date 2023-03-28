@@ -35,6 +35,7 @@ from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
 from microsetta_private_api.qiita import qclient
 from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
+from microsetta_private_api.repo.removal_queue_repo import RemovalQueueRepo
 
 
 def search_barcode(token_info, sample_barcode):
@@ -542,6 +543,21 @@ def create_daklapack_orders(body, token_info):
     return response
 
 
+# We need an internal wrapper to create orders based on contributions coming
+# from Fundrazr without authenticating an admin user.
+# Do NOT expose an API endpoint for this.
+def create_daklapack_order_internal(order_dict):
+    # Since we've established the consent dummy as a stable account across
+    # dev, staging, and production, we'll continue to use that internally
+    with Transaction() as t:
+        account_repo = AccountRepo(t)
+        order_dict[SUBMITTER_ACCT_KEY] = account_repo.get_account(
+            SERVER_CONFIG['fulfillment_account_id'])
+
+    result = _create_daklapack_order(order_dict)
+    return result
+
+
 def _create_daklapack_order(order_dict):
     order_dict[ORDER_ID_KEY] = str(uuid.uuid4())
 
@@ -614,6 +630,15 @@ def list_campaigns(token_info):
     return jsonify(campaigns), 200
 
 
+def list_removal_queue(token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        repo = RemovalQueueRepo(t)
+        requests = repo.get_all_account_removal_requests()
+    return jsonify(requests), 200
+
+
 def post_campaign_information(body, token_info):
     validate_admin_access(token_info)
 
@@ -654,6 +679,20 @@ def generate_activation_codes(body, token_info):
         results = [{"email": email, "code": map[email]} for email in map]
         t.commit()
     return jsonify(results), 200
+
+
+def generate_ffq_codes(body, token_info):
+    validate_admin_access(token_info)
+
+    quantity = body.get("code_quantity", 1)
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        code_list = []
+        for i in range(quantity):
+            code_list.append(admin_repo.create_ffq_code())
+        t.commit()
+
+    return jsonify(code_list), 200
 
 
 def list_barcode_query_fields(token_info):
@@ -796,7 +835,6 @@ def delete_account(account_id, token_info):
         src_repo = SourceRepo(t)
         samp_repo = SampleRepo(t)
         sar_repo = SurveyAnswersRepo(t)
-        template_repo = SurveyTemplateRepo(t)
 
         acct = acct_repo.get_account(account_id)
         if acct is None:
@@ -806,20 +844,17 @@ def delete_account(account_id, token_info):
             if acct.account_type == 'deleted':
                 return None, 204
 
-        sample_count = 0
-        account_has_external = False
-        sources = src_repo.get_sources_in_account(account_id)
+        sources = src_repo.get_sources_in_account(
+            account_id,
+            allow_revoked=True
+        )
 
         for source in sources:
-            samples = samp_repo.get_samples_by_source(account_id, source.id)
-
-            has_samples = len(samples) > 0
-            sample_count += len(samples)
-            has_external = template_repo.has_external_surveys(account_id,
-                                                              source.id)
-
-            if has_external:
-                account_has_external = True
+            samples = samp_repo.get_samples_by_source(
+                account_id,
+                source.id,
+                allow_revoked=True
+            )
 
             for sample in samples:
                 # we scrub rather than disassociate in the event that the
@@ -827,30 +862,53 @@ def delete_account(account_id, token_info):
                 samp_repo.scrub(account_id, source.id, sample.id)
 
             surveys = sar_repo.list_answered_surveys(account_id, source.id)
-            if has_samples or has_external:
-                # if we have samples or external surveys, we need to scrub
-                # survey / source free text
-                for survey_id in surveys:
-                    sar_repo.scrub(account_id, source.id, survey_id)
+            for survey_id in surveys:
+                sar_repo.scrub(account_id, source.id, survey_id)
+
+            # We're including scrubbed sources to detect external surveys
+            # so we need to make sure the source isn't already scrubbed
+            if source.source_data.date_revoked is None:
                 src_repo.scrub(account_id, source.id)
 
-            if not has_samples and not has_external:
-                # if we do not have associated samples, or external surveys,
-                # then the source is safe to delete
-                for survey_id in surveys:
-                    sar_repo.delete_answered_survey(account_id, survey_id)
-                src_repo.delete_source(account_id, source.id)
-
-        # an account is safe to delete if there are no associated samples
-        # and does not have external surveys
-        if sample_count > 0 or account_has_external:
-            acct_repo.scrub(account_id)
-        else:
-            acct_repo.delete_account(account_id)
+        acct_repo.scrub(account_id)
 
         t.commit()
 
     return None, 204
+
+
+def ignore_removal_request(account_id, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        rq_repo = RemovalQueueRepo(t)
+        try:
+            # remove the user from the queue, noting the admin who allowed it
+            # and the time the action was performed.
+            rq_repo.update_queue(account_id, token_info['email'], 'ignored')
+            t.commit()
+        except RepoException as e:
+            raise e
+
+    return None, 204
+
+
+def allow_removal_request(account_id, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        rq_repo = RemovalQueueRepo(t)
+
+        try:
+            # remove the user from the queue, noting the admin who allowed it
+            # and the time the action was performed.
+            rq_repo.update_queue(account_id, token_info['email'], 'deleted')
+            t.commit()
+        except RepoException as e:
+            raise e
+
+        # delete the user
+        return delete_account(account_id, token_info)
 
 
 def get_vioscreen_sample_to_user(token_info):

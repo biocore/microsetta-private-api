@@ -20,7 +20,6 @@ def get_fundrazr_transactions(test_transaction=None):
         latest = tr.most_recent_transaction(transaction_source=tr.TRN_TYPE_FUNDRAZR,  # noqa
                                             include_anonymous=True)
 
-        # if we do not have any transactions, we don't have anything recent
         if latest is None:
             unixtimestamp = None
         else:
@@ -44,13 +43,14 @@ def get_fundrazr_transactions(test_transaction=None):
         # otherwise, we assume we are in tests and we do not commit
         added, amount = _get_load(test_transaction)
 
-    payload = f"Number added: {added}\nTotaling: ${amount}"
+    if added > 0:
+        payload = f"Number added: {added}\nTotaling: ${amount}"
 
-    try:
-        send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
-                   {"what": "FundRazr transactions added",
-                    "content": payload},
-                   EN_US)
-    except:  # noqa
-        # try our best to email
-        pass
+        try:
+            send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
+                       {"what": "FundRazr transactions added",
+                        "content": payload},
+                       EN_US)
+        except:  # noqa
+            # try our best to email
+            pass

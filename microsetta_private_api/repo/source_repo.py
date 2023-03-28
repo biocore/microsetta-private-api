@@ -184,6 +184,8 @@ class SourceRepo(BaseRepo):
                 return None
             return r
 
+    # NB: delete_source is being left for the purpose of cleaning up after
+    # unit and integration tests. All other applications should use scrub
     def delete_source(self, account_id, source_id):
         try:
             with self._transaction.cursor() as cur:

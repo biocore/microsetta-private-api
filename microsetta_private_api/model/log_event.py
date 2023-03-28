@@ -46,6 +46,16 @@ class EventSubtype(Enum):
     EMAIL_PER_PROJECT_SUMMARY = "per_project_summary"
     # for addresses that Melissa deems invalid
     EMAIL_ADDRESS_INVALID = "address_invalid"
+    # for confirmation emails of interested user signups
+    EMAIL_SUBMIT_INTEREST_CONFIRMATION = "submit_interest_confirmation"
+    # Thank you for Fundrazr contribution - kit or subscription
+    EMAIL_THANK_YOU_WITH_KIT = "thank_you_with_kit"
+    # Thank you for Fundrazr contribution - FFQ only
+    EMAIL_THANK_YOU_NO_KIT = "thank_you_no_kit"
+    # Send tracking number for newly shipped kit
+    EMAIL_KIT_TRACKING_NUMBER = "kit_tracking_number"
+    # When next subscription fulfillment occurs, send FFQ code
+    EMAIL_SUBSCRIPTION_FFQ_CODE = "subscription_ffq_code"
 
 
 class LogEvent(ModelBase):

@@ -1,5 +1,6 @@
 import psycopg2
 import json
+import datetime
 
 from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.repo.base_repo import BaseRepo
@@ -28,7 +29,8 @@ class CampaignRepo(BaseRepo):
         return (c.campaign_id, c.title, c.instructions, c.header_image,
                 c.permitted_countries, c.language_key,
                 c.accepting_participants, '',
-                c.language_key_alt, c.title_alt, c.instructions_alt)
+                c.language_key_alt, c.title_alt, c.instructions_alt,
+                c.send_thdmi_confirmation, c.force_primary_language)
 
     def _row_to_campaign(self, r):
         associated_projects = ", ".join(self._get_projects(r['campaign_id']))
@@ -36,7 +38,9 @@ class CampaignRepo(BaseRepo):
                         r['header_image'], r['permitted_countries'],
                         r['language_key'], r['accepting_participants'],
                         associated_projects, r['language_key_alt'],
-                        r['title_alt'], r['instructions_alt'])
+                        r['title_alt'], r['instructions_alt'],
+                        r['send_thdmi_confirmation'],
+                        r['force_primary_language'])
 
     def _get_projects(self, campaign_id):
         with self._transaction.cursor() as cur:
@@ -66,7 +70,8 @@ class CampaignRepo(BaseRepo):
                 "SELECT campaign_id, title, instructions, header_image, "
                 "permitted_countries, language_key, accepting_participants, "
                 "language_key_alt, title_alt, "
-                "instructions_alt "
+                "instructions_alt, send_thdmi_confirmation, "
+                "force_primary_language "
                 "FROM campaign.campaigns ORDER BY title"
             )
             rows = cur.fetchall()
@@ -86,24 +91,37 @@ class CampaignRepo(BaseRepo):
         title_alt = kwargs.get('title_alt')
         instructions_alt = kwargs.get('instructions_alt')
         extension = kwargs.get('extension')
+        send_thdmi_confirmation = kwargs.get('send_thdmi_confirmation', False)
+        force_primary_language = kwargs.get('force_primary_language', False)
 
         with self._transaction.cursor() as cur:
             cur.execute(
                 "INSERT INTO campaign.campaigns (title, instructions, "
                 "permitted_countries, language_key, accepting_participants, "
                 "language_key_alt, title_alt, "
-                "instructions_alt) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s) "
+                "instructions_alt, send_thdmi_confirmation, "
+                "force_primary_language) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
                 "RETURNING campaign_id",
                 (title, instructions, permitted_countries, language_key,
                  accepting_participants, language_key_alt, title_alt,
-                 instructions_alt)
+                 instructions_alt, send_thdmi_confirmation,
+                 force_primary_language)
             )
             campaign_id = cur.fetchone()[0]
 
             if campaign_id is None:
                 raise RepoException("Error inserting campaign into database")
             else:
+                # This code is not ideal but the various campaign creation
+                # methods pass several different datatypes in.
+                if isinstance(associated_projects, tuple):
+                    associated_projects = list(associated_projects)
+                elif isinstance(associated_projects, str):
+                    associated_projects = associated_projects.split(",")
+                elif isinstance(associated_projects, int):
+                    associated_projects = [associated_projects, ]
+
                 cur.executemany(
                     "INSERT INTO campaign.campaigns_projects ("
                     "campaign_id,project_id"
@@ -132,17 +150,21 @@ class CampaignRepo(BaseRepo):
         title_alt = kwargs.get('title_alt')
         instructions_alt = kwargs.get('instructions_alt')
         extension = kwargs.get('extension')
+        send_thdmi_confirmation = kwargs.get('send_thdmi_confirmation')
+        force_primary_language = kwargs.get('force_primary_language')
 
         with self._transaction.cursor() as cur:
             cur.execute(
                 "UPDATE campaign.campaigns SET title = %s, instructions = %s, "
                 "permitted_countries = %s, language_key = %s, "
                 "accepting_participants = %s, language_key_alt = %s, "
-                "title_alt = %s, instructions_alt = %s "
+                "title_alt = %s, instructions_alt = %s, "
+                "send_thdmi_confirmation = %s, force_primary_language = %s "
                 "WHERE campaign_id = %s",
                 (title, instructions, permitted_countries, language_key,
                  accepting_participants, language_key_alt, title_alt,
-                 instructions_alt, campaign_id)
+                 instructions_alt, send_thdmi_confirmation,
+                 force_primary_language, campaign_id)
             )
 
             self.update_header_image(campaign_id, extension)
@@ -156,7 +178,8 @@ class CampaignRepo(BaseRepo):
                     "SELECT campaign_id, title, instructions, header_image, "
                     "permitted_countries, language_key, "
                     "accepting_participants, "
-                    "language_key_alt, title_alt, instructions_alt "
+                    "language_key_alt, title_alt, instructions_alt, "
+                    "send_thdmi_confirmation, force_primary_language "
                     "FROM campaign.campaigns WHERE campaign_id = %s",
                     (campaign_id,)
                 )
@@ -428,36 +451,43 @@ class UserTransaction(BaseRepo):
 
         interested_user_id = self._add_interested_user(payment)
 
-        # begin address verification
-        i_u_repo = InterestedUserRepo(self._transaction)
-        try:
-            valid_address = i_u_repo.verify_address(interested_user_id)
-        except RepoException:
-            # we shouldn't reach this point, but address wasn't verified
-            valid_address = False
-
-        # we specifically care if valid_address is False, as verify_address
-        # will return None if the user doesn't have a shipping address
-        # in this case, that implies a perk that doesn't require shipping
-        if valid_address is False:
-            cn = payment.payer_first_name + " " + payment.payer_last_name
-
-            # casting str to avoid concatenation error
-            resolution_url = SERVER_CONFIG["interface_endpoint"] + \
-                "/update_address?uid=" + str(interested_user_id) + \
-                "&email=" + payment.contact_email
+        # There's no reason to verify addresses and send emails for old
+        # transactions, so we're only going to verify post-relaunch ones.
+        # We're also not going to verify the address if they didn't claim
+        # any perks.
+        add_ver_cutoff = datetime.datetime(2022, 11, 15)
+        if payment.created.timestamp() >= add_ver_cutoff.timestamp() and\
+                payment.claimed_items is not None:
+            # begin address verification
+            i_u_repo = InterestedUserRepo(self._transaction)
             try:
-                # TODO - will need to add actual language flag to the email
-                # Fundrazr doesn't provide a language flag, defer for now
-                send_email(payment.contact_email,
-                           "address_invalid",
-                           {"contact_name": cn,
-                            "resolution_url": resolution_url},
-                           EN_US)
-            except:  # noqa
-                # try our best to email
-                pass
-        # end address verification
+                valid_address = i_u_repo.verify_address(interested_user_id)
+            except RepoException:
+                # we shouldn't reach this point, but address wasn't verified
+                valid_address = False
+
+            # we specifically care if valid_address is False, as verify_address
+            # will return None if the user doesn't have a shipping address
+            # in this case, that implies a perk that doesn't require shipping
+            if valid_address is False:
+                cn = payment.payer_first_name + " " + payment.payer_last_name
+
+                # casting str to avoid concatenation error
+                resolution_url = SERVER_CONFIG["interface_endpoint"] + \
+                    "/update_address?uid=" + str(interested_user_id) + \
+                    "&email=" + payment.contact_email
+                try:
+                    # TODO - will need to add actual language flag to the email
+                    # Fundrazr doesn't provide a language flag, defer for now
+                    send_email(payment.contact_email,
+                               "address_invalid",
+                               {"contact_name": cn,
+                                "resolution_url": resolution_url},
+                               EN_US)
+                except:  # noqa
+                    # try our best to email
+                    pass
+            # end address verification
 
         if payment.TRANSACTION_TYPE == self.TRN_TYPE_FUNDRAZR:
             return self._add_transaction_fundrazr(payment, interested_user_id)
@@ -517,7 +547,7 @@ class UserTransaction(BaseRepo):
 
         with self._transaction.cursor() as cur:
             cur.execute(*sql)
-            interested_user_id = cur.fetchone()
+            interested_user_id = cur.fetchone()[0]
 
         return interested_user_id
 
@@ -562,14 +592,15 @@ class UserTransaction(BaseRepo):
                         data)
 
             if items is not None:
-                inserts = [(payment.transaction_id, i.id, i.quantity)
+                inserts = [(payment.transaction_id, i.id, i.quantity, False)
                            for i in items]
 
                 try:
                     cur.executemany("""INSERT INTO
                                            campaign.fundrazr_transaction_perk
-                                       (transaction_id, perk_id, quantity)
-                                       VALUES (%s, %s, %s)""",
+                                       (transaction_id, perk_id, quantity,
+                                       processed)
+                                       VALUES (%s, %s, %s, %s)""",
                                     inserts)
                 except psycopg2.errors.ForeignKeyViolation:
                     # this would indicate a synchronization issue, where

@@ -9,7 +9,9 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenEatingPatterns, VioscreenEatingPatternsComponent,
     VioscreenMPeds, VioscreenMPedsComponent,
     VioscreenFoodConsumption, VioscreenFoodConsumptionComponent,
-    VioscreenComposite)
+    VioscreenComposite, VioscreenRegistryEntry)
+
+
 from werkzeug.exceptions import NotFound
 
 
@@ -1598,15 +1600,19 @@ class VioscreenRepo(BaseRepo):
         cur_status = self.get_vioscreen_status(account_id,
                                                source_id,
                                                survey_id)
-
         # If there is no status, insert a row.
         if cur_status is None:
             with self._transaction.cursor() as cur:
                 cur.execute(
                     "INSERT INTO ag_login_surveys("
-                    "ag_login_id, survey_id, vioscreen_status, source_id) "
-                    "VALUES(%s, %s, %s, %s)",
-                    (account_id, survey_id, status, source_id)
+                    "ag_login_id, survey_id, vioscreen_status, source_id, "
+                    "survey_template_id) "
+                    "VALUES(%s, %s, %s, %s, %s)",
+                    (account_id, survey_id, status, source_id,
+                     # Use 10001 for now, as we cannot import
+                     # SurveyTemplateRepo as it would create a circular
+                     # dependency.
+                     10001)
                 )
         else:
             # Else, upsert a status.
@@ -1656,3 +1662,96 @@ class VioscreenRepo(BaseRepo):
             if row is None:
                 return None
             return row[0]
+
+    def get_vioscreen_sessions(self, account_id, source_id):
+        """Obtain vioscreen sessions if it exists"""
+        with self._transaction.cursor() as cur:
+            # Find an active vioscreen for this account+source
+            # (deleted surveys are not active)
+            cur.execute("""SELECT vs.*
+                        FROM vioscreen_sessions vs
+                        JOIN vioscreen_registry vr
+                        ON vs.username = vr.vio_id
+                        WHERE vr.account_id=%s AND vr.source_id=%s""",
+                        (account_id, source_id))
+            rows = cur.fetchall()
+            if rows is None or len(rows) == 0:
+                return None
+            else:
+                sessions = []
+                for row in rows:
+                    session = VioscreenSession(*row)
+                    sessions.append(session)
+                return sessions
+
+    @staticmethod
+    def _row_to_vioscreen_registry_entry(r):
+        return VioscreenRegistryEntry(
+            r['survey_id'],
+            r['vioscreen_status'],
+            r['creation_time'].strftime(
+                "%b %d, %Y %I:%M %p"
+            ),
+            r['sample_id'],
+            r['registration_code']
+        )
+
+    def get_registry_entries_by_source(self, account_id, source_id):
+        """ Retrieve all Vioscreen surveys for a given source
+
+        Parameters
+        ----------
+        account_id : str
+            The account_id of the source
+        source_id : str
+            The source_id
+
+        Returns
+        -------
+        list of dicts
+            The records of the entries, which may be an empty list
+        """
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT als.vioscreen_status, als.creation_time, "
+                "als.survey_id, vr.sample_id, vr.registration_code "
+                "FROM ag.ag_login_surveys als "
+                "JOIN ag.vioscreen_registry vr "
+                "ON als.survey_id = vr.vio_id "
+                "WHERE als.ag_login_id = %s AND als.source_id = %s "
+                "AND vr.deleted = FALSE "
+                "ORDER BY creation_time DESC",
+                (account_id, source_id)
+            )
+            rows = cur.fetchall()
+            if rows is None:
+                return []
+            else:
+                ret_val = []
+                for r in rows:
+                    ret_val.append(self._row_to_vioscreen_registry_entry(r))
+                return ret_val
+
+    def is_code_unused(self, ffq_code):
+        """ Check whether an FFQ code has been used
+
+        Parameters
+        ----------
+        ffq_code : str
+            The FFQ registration code
+
+        Returns
+        -------
+        bool
+            True/False reflecting whether code has been used
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT EXISTS("
+                "    SELECT ffq_registration_code "
+                "    FROM campaign.ffq_registration_codes "
+                "    WHERE ffq_registration_code = %s AND "
+                "    registration_code_used IS NULL)",
+                (ffq_code, )
+            )
+            return cur.fetchone()[0]
