@@ -22,7 +22,6 @@ UPDATE ag.survey_question SET japanese = '1週間のうち、ココナッツオ�
 UPDATE ag.survey_question SET japanese = '1週間のうち、マーガリンや植物性ショートニングをどれくらいの頻度で使用していますか？' WHERE american = 'In a given week, how often do you use or cook with margarine or (vegetable) shortening?';
 UPDATE ag.survey_question SET japanese = 'ほうれん草、ふだん草、ビーツまたはビーツの葉、オクラ、キノア、アマランス、蕎麦、小麦ふすままたは胚芽、ふすまシリアル、チアシード、ルバーブ、ダークチョコレートやココア粉末（> 70％）、又はナッツ（アーモンド、ピーナッツ、ピーカン、カシュー、ヘーゼルナッツ）などのシュウ酸塩が豊富な食品を平均してどれくらいの頻度で摂取していますか? ' WHERE american = 'On average, how often do you consume oxalate-rich foods, such as spinach, Swiss chard, beetroot or beet greens, okra, quinoa, amaranth, buckwheat, wheat bran or germ, Bran cereal, chia seeds, rhubarb, dark chocolate or cocoa powder (>70%), and nuts such as almonds, peanuts, pecans, cashews, and hazelnuts?';
 
-
 -- Update translations for survey responses
 UPDATE ag.survey_response SET japanese = '不明' WHERE american = 'Unspecified';
 UPDATE ag.survey_response SET japanese = '肉と野菜両方食べる' WHERE american = 'Omnivore';
@@ -44,6 +43,3 @@ UPDATE ag.survey_response SET japanese = '医療従事者（医師、医師助�
 UPDATE ag.survey_response SET japanese = '代替医療の医師に診断されたことがある' WHERE american = 'Diagnosed by an alternative medicine practitioner';
 UPDATE ag.survey_response SET japanese = '自己診断したことがある' WHERE american = 'Self-diagnosed';
 UPDATE ag.survey_response SET japanese = '固形食と粉ミルク/母乳の両方を食べている' WHERE american = 'I eat both solid food and formula/breast milk';
-
-
-UPDATE ag.survey_response SET japanese = '' WHERE american = '';
