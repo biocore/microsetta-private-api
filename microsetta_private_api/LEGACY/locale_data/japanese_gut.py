@@ -9,7 +9,7 @@ _NEW_PARTICIPANT = {
     'AGE_0_6': '',
     'AGE_7_12': '',
     'AGE_13_17': '',
-    'AGE_18': '18+ 年',
+    'AGE_18': '18歳以上',
 
     'PARTICIPATION_AGREEMENT': '''''',
 
