@@ -362,6 +362,17 @@ VALUES
     (463, 'Daily', 465),
     (465, 'Yes', 466);
 
+-- Update translations for survey groups
+UPDATE ag.survey_group SET japanese = '調理用油とシュウ酸が豊富な食品' WHERE group_order = -7; -- Cooing Oils & Oxalate-rich Foods
+UPDATE ag.survey_group SET japanese = '新型コロナウイルス感染症調査票' WHERE group_order = -6; -- COVID-19
+UPDATE ag.survey_group SET japanese = '発酵食品調査票' WHERE group_order = -3; -- Fermented Foods
+UPDATE ag.survey_group SET japanese = 'Microsetta Initiative（マイクロセッタ・イニシアチブ）' WHERE group_order = -1; -- Microsetta Initative
+UPDATE ag.survey_group SET japanese = '一般的な食事に関する情報' WHERE group_order = 0; -- General Diet
+UPDATE ag.survey_group SET japanese = '一般情報' WHERE group_order = 1; -- General Information
+UPDATE ag.survey_group SET japanese = '一般的な生活習慣と衛生に関する情報' WHERE group_order = 2; -- General Lifestyle and Hygiene Information
+UPDATE ag.survey_group SET japanese = '一般的な健康情報' WHERE group_order = 3; -- General Health
+UPDATE ag.survey_group SET japanese = '詳しい食事情報' WHERE group_order = 4; -- Detailed Diet
+UPDATE ag.survey_group SET japanese = 'その他' WHERE group_order = 5; -- Anything else?
 
 -- Update translations for survey questions
 UPDATE ag.survey_question SET japanese = 'どれくらいの頻度でプロバイオティクスや乳酸菌を服用していますか？' WHERE american = 'How frequently do you take a probiotic?';
