@@ -418,6 +418,7 @@ UPDATE ag.survey_question SET japanese = '期間中、何らかの理由で外�
 UPDATE ag.survey_question SET japanese = '相乗りタクシーを使用したことがありますか？' WHERE american = 'Have you used shared ride services including Lyft, Uber or alternative forms of taxi?';
 UPDATE ag.survey_question SET japanese = '発酵食品/飲料のうち、週一回以上摂取しているものをすべて選択してください。記載がないものは「その他」を選択してください。' WHERE american = 'Which of the following fermented foods/beverages do you consume more than once a week? Check all that apply.';
 UPDATE ag.survey_question SET japanese = '発酵食品/飲料を商用目的に製造していますか？該当するものをすべて選択してください。' WHERE american = 'Do you produce any of the following fermented foods/beverages for commercial purposes? Check all that apply.';
+UPDATE ag.survey_question SET japanese = '1日に2～3食分以上の果物を摂取する頻度はどのくらいですか？ (1食分 =　果物1/2カップ、中くらいの大きさの果物1個、100% フルーツ ジュース約 120 ミリリットル)。' WHERE american = 'In an average week, how often to you consume at least 2-3 servings of fruit in a day?  (1 serving = 1/2 cup fruit; 1 medium sized fruit; 4 oz. 100% fruit juice.)';
 
 -- Update translations for survey responses
 UPDATE ag.survey_response SET japanese = '不明' WHERE american = 'Unspecified';
