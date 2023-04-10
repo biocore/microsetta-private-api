@@ -9,19 +9,19 @@ _NEW_PARTICIPANT = {
     'AGE_0_6': '',
     'AGE_7_12': '',
     'AGE_13_17': '',
-    'AGE_18': '18+ 年',
+    'AGE_18': '18歳以上',
 
     'PARTICIPATION_AGREEMENT': '''''',
 
     'EXHIBIT_A': '''''',
     'BILL_OF_RIGHTS': '''研究被験者の権利章典''',
-    'TEXT_I_HAVE_READ_1': '私はこの用紙を読みました（または他の人が私に読んでくれました）。研究試験への参加を求められていることを理解し、この試験への参加に自由意志で同意します。私の個人データが処理される方法、関連した私の権利を理解しており、この同意書に記載されているように私のデータが処理されることに同意します。',
+    'TEXT_I_HAVE_READ_1': '私は同意書を読みました (又は代読してもらいました)。研究試験への参加を求められていることを理解し、この試験への参加に自由意志で同意します。私の個人データが処理される方法、関連した私の権利を理解しており、この同意書に記載されているように私のデータが処理されることに同意します。',
     'TEXT_I_HAVE_READ_SIMPLIFIED': '',
     'PERSON_ATTAINING_ASSENT': '',
     'TEXT_ASSENT_WITNESS': '',
     'OBTAINER_NAME': '',
     'TEXT_I_HAVE_READ_PARENT': '',
-    'PARTICIPANT_NAME': '被験者名',
+    'PARTICIPANT_NAME': '参加者名',
     'PARTICIPANT_EMAIL': 'Eメール',
     'PARTICIPANT_PARENT_1': '',
     'PARTICIPANT_PARENT_2': '',
@@ -97,7 +97,8 @@ _NEW_PARTICIPANT = {
 <p>研究被験者としての権利に関する質問や研究関連の問題を報告するには、UC San Diego(カリフォルニア大学サンディエゴ校)のIRB管理オフィスに電話（+1)858-246-4777）かメール（irb@ucsd.edu）で連絡してください。</p>
 <p>あなたの個人データの取り扱い、または全般的なプライバシーの実践についてご質問または苦情がある場合は、遠慮なくUC San Diego(カリフォルニア大学サンディエゴ校)のucsdprivacy@ucsd.eduまでメールをお送りください。</p>
 <p><b><i>署名と同意</i></b></p>
-<p>この同意文書のコピーおよび「<a href='https://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf' target='_blank'>研究被験者の権利章典</a>」のコピーを保管のためにダウンロードすることができます。</p>
+<p>この同意文書のコピーおよび「<a href='https://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf' target='_blank'>研究被験者の権利章典</a>」(英語) のコピーを保管のためにダウンロードすることができます。</p>
+<p>日本における本プロジェクトは東京工業大学と共同で実施します。<a href='/static/thdmi_japan.pdf' target='_blank'>東京工業大学-THDMIプロジェクト概要説明</a>も合わせてご確認の上、同意書に署名をお願いします。</p>
 <p>同意は完全に自由意志によるものですが、その提出を拒否される場合、この研究に参加できなくなる可能性があります。</p>''',
     'ASSENT_13_17': '''''',
     'ASSENT_7_12': '''''',
