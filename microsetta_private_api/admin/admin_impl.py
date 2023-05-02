@@ -930,3 +930,19 @@ def map_to_rack(token_info, sample_barcode, body):
     response = jsonify({"scan_id": scan_id})
     response.status_code = 201
     return response
+
+
+def get_sample_from_rack(token_info, rack_id):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        row = admin_repo.get_rack_sample(rack_id)
+        if row is None:
+            response = jsonify({"message": "sample does not exist!"})
+            response.status_code = 404
+            return response
+        else:
+            response = jsonify(row)
+            response.status_code = 201
+            return response

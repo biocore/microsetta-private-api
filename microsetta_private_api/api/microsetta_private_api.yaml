@@ -2373,8 +2373,8 @@ paths:
       operationId: microsetta_private_api.admin.admin_impl.map_to_rack
       tags:
         - Admin
-      summary: Set sample processing information for a barcode
-      description: Set sample processing information for a barcode
+      summary: Add sample to rack for a barcode
+      description: Add sample to rack for a barcode
       parameters:
         - $ref: '#/components/parameters/sample_barcode'
       requestBody:
@@ -2392,6 +2392,29 @@ paths:
       responses:
         '201':
           description: Successfully mapped new barcode scan to rack
+          content:
+            application/json:
+              schema:
+                type: object
+    
+  '/admin/rack/sample/{rack_id}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_sample_from_rack
+      tags:
+        - Admin
+      summary: Get sample details from rack by rack id
+      description: Get sample details from rack by rack id
+      parameters:
+        - $ref: '#/components/parameters/rack_id'
+      responses:
+        '201':
+          description: Successfully fetched sample details from rack by rack id
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Sample does not exist
           content:
             application/json:
               schema:
@@ -2980,6 +3003,12 @@ components:
       description: Type of consent
       schema:
         $ref: '#/components/schemas/consent_type'
+    rack_id:
+      name: rack_id
+      in: path
+      description: Rack id for a particular sample placed in rack
+      schema:
+        $ref: '#/components/schemas/rack_id'
 
     # query parameters
     activation_code:
@@ -3304,6 +3333,9 @@ components:
     location_row:
       type: string
       example: "A"
+    rack_id:
+      type: string
+      example: "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 
     sample:
       type: object

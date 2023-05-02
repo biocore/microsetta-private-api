@@ -1174,6 +1174,28 @@ class AdminRepo(BaseRepo):
 
             return new_uuid
 
+    def get_rack_sample(self, rack_id):
+        with self._transaction.dict_cursor() as cur:
+
+            # not actually using the result, just checking there IS one
+            # to ensure this is a valid barcode
+            cur.execute(
+                "SELECT sample_id, location_row, location_col "
+                "FROM barcodes.rack_samples WHERE rack_id=%s",
+                (rack_id,)
+            )
+
+            row = cur.fetchone()
+
+            if row is None:
+                raise NotFound("No such barcode with rack id: %s" % rack_id)
+            
+            data_to_return = {}
+            data_to_return["location_row"] = row["location_row"]
+            data_to_return["location_col"] = row["location_col"]
+            data_to_return["barcode"] = row["sample_id"]
+            return data_to_return
+
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
         '''
         Return all surveys associated with a given barcode.
