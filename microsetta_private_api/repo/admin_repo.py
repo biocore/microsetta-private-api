@@ -1189,7 +1189,7 @@ class AdminRepo(BaseRepo):
 
             if row is None:
                 raise NotFound("No such barcode with rack id: %s" % rack_id)
-            
+
             data_to_return = {}
             data_to_return["location_row"] = row["location_row"]
             data_to_return["location_col"] = row["location_col"]
