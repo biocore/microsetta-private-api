@@ -390,8 +390,8 @@ def _to_pandas_series(metadata, multiselect_map):
 
     values = [hsi, collection_timestamp, geo_loc_name, geo_state, latitude,
               longitude]
-    index = ['HOST_SUBJECT_ID', 'COLLECTION_TIMESTAMP', 'GEO_LOC_NAME', 'STATE',
-             'LATITUDE', 'LONGITUDE']
+    index = ['HOST_SUBJECT_ID', 'COLLECTION_TIMESTAMP', 'GEO_LOC_NAME',
+             'STATE', 'LATITUDE', 'LONGITUDE']
 
     # HACK: there exist some samples that have duplicate surveys. This is
     # unusual and unexpected state in the database, and has so far only been

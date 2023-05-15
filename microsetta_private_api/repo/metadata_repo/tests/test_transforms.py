@@ -209,7 +209,7 @@ class TransformTests(unittest.TestCase):
                            ['Regularly (3-5 times/week)'],
                            ['Daily'],
                            ['Never'],
-                           [UNSPECIFIED]],
+                           ['Unspecified']],
                           index=list('abcdef'),
                           columns=[ALCOHOL_FREQUENCY])
         exp = pd.Series(['Yes', 'Yes', 'Yes', 'Yes', 'No', UNSPECIFIED],
@@ -223,7 +223,7 @@ class TransformTests(unittest.TestCase):
                            ['Regularly (3-5 times/week)'],
                            ['Dailybadbadbad'],
                            ['Never'],
-                           ['Unspecified']],
+                           [UNSPECIFIED]],
                           index=list('abcdef'),
                           columns=[ALCOHOL_FREQUENCY])
         with self.assertRaisesRegex(KeyError, "Unexpected"):

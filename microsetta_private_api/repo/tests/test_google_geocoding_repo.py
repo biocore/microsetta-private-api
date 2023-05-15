@@ -6,7 +6,7 @@ from microsetta_private_api.repo.google_geocoding_repo import\
     GoogleGeocodingRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.util.google_geocoding import\
-    _construct_request_address, _parse_response
+    _construct_request_address
 
 
 UCSD_ADDRESS = Address(

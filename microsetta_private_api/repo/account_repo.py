@@ -5,7 +5,6 @@ from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.exceptions import RepoException
-from microsetta_private_api.util.melissa import verify_address
 
 
 class AccountRepo(BaseRepo):
@@ -269,6 +268,6 @@ class AccountRepo(BaseRepo):
         account.address.post_code = 'scrubbed'
         account.latitude = None
         account.longitude = None
-        account.cannot_geocode = None
+        account.cannot_geocode = False
 
         return self.update_account(account) == 1

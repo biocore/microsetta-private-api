@@ -77,7 +77,10 @@ DUMMY_ACCT_INFO = {
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
-    KIT_NAME_KEY: EXISTING_KIT_NAME
+    KIT_NAME_KEY: EXISTING_KIT_NAME,
+    "latitude": 32.8798916,
+    "longitude": -117.2363115,
+    "cannot_geocode": False
 }
 DUMMY_ACCT_INFO_2 = {
     "address": {
@@ -91,7 +94,10 @@ DUMMY_ACCT_INFO_2 = {
     "first_name": "Obie",
     "last_name": "Dobie",
     "language": "en_US",
-    KIT_NAME_KEY: EXISTING_KIT_NAME_2
+    KIT_NAME_KEY: EXISTING_KIT_NAME_2,
+    "latitude": 32.8798916,
+    "longitude": -117.2363115,
+    "cannot_geocode": False
 }
 DUMMY_ACCT_ADMIN = {
     "address": {
@@ -104,7 +110,10 @@ DUMMY_ACCT_ADMIN = {
     "email": TEST_EMAIL_3,
     "first_name": "Obie",
     "last_name": "Dobie",
-    KIT_NAME_KEY: EXISTING_KIT_NAME_2
+    KIT_NAME_KEY: EXISTING_KIT_NAME_2,
+    "latitude": 32.8798916,
+    "longitude": -117.2363115,
+    "cannot_geocode": False
 }
 
 SOURCE_ID_1 = "9fba75a5-6fbf-42be-9624-731b6a9a161a"
@@ -447,10 +456,6 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
     input_obj = copy.deepcopy(dict_to_copy)
     input_obj["id"] = dummy_acct_id
     acct_repo = AccountRepo(t)
-
-    input_obj['latitude'] = 32.8798916
-    input_obj['longitude'] = -117.2363115
-    input_obj['cannot_geocode'] = False
 
     if dummy_is_admin:
         # the Account.from_dict method intentionally does not allow for

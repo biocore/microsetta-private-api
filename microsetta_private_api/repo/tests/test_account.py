@@ -2,10 +2,8 @@ import unittest
 import datetime
 
 from microsetta_private_api.exceptions import RepoException
-from unittest.mock import patch
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
-from microsetta_private_api.model.account import Account
 
 
 ACCOUNT_ID = '607f6723-c704-4b52-bc26-556a9aec85f6'
