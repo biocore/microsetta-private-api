@@ -30,16 +30,19 @@ class Account(ModelBase):
                 input_dict['address']['post_code'],
                 input_dict['address']['country_code']
             ),
+            input_dict['latitude'],
+            input_dict['longitude'],
+            input_dict['cannot_geocode'],
             input_dict['kit_name'],
-            input_dict['language']
+            input_dict['language'],
         )
         return result
 
     def __init__(self, account_id, email,
                  account_type, auth_issuer, auth_sub,
                  first_name, last_name,
-                 address, created_with_kit_id,
-                 language,
+                 address, latitude, longitude, cannot_geocode,
+                 created_with_kit_id, language,
                  creation_time=None, update_time=None):
         self.id = account_id
         self.email = email
@@ -49,6 +52,9 @@ class Account(ModelBase):
         self.first_name = first_name
         self.last_name = last_name
         self.address = address
+        self.latitude = latitude
+        self.longitude = longitude
+        self.cannot_geocode = cannot_geocode
         self.created_with_kit_id = created_with_kit_id
         self.creation_time = creation_time
         self.update_time = update_time
@@ -62,6 +68,9 @@ class Account(ModelBase):
             "last_name": self.last_name,
             "email": self.email,
             "address": self.address.to_api(),
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "cannot_geocode": self.cannot_geocode,
             "account_type": self.account_type,
             "language": self.language,
             "creation_time": self.creation_time,

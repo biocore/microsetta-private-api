@@ -17,7 +17,7 @@ from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from werkzeug.exceptions import NotFound
-
+from microsetta_private_api.util.google_geocoding import geocode_address
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 
 # TODO: Refactor repeated elements in project-related sql queries?
@@ -1158,6 +1158,16 @@ class AdminRepo(BaseRepo):
 
         if source is None:
             raise RepoException("Barcode is not associated with a source")
+
+        if account is not None:
+            if account.latitude is None and account.cannot_geocode is False:
+                latitude, longitude, cannot_geocode = geocode_address(
+                    account.address
+                )
+                account.latitude = latitude
+                account.longitude = longitude
+                account.cannot_geocode = cannot_geocode
+                account_repo.update_account(account)
 
         host_subject_id = source_repo.get_host_subject_id(source)
 

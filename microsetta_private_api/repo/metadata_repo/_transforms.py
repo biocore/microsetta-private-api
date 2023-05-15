@@ -334,7 +334,7 @@ class Sex(Transformer):
 
                    # Lower case is not ideal here, however that's what is
                    # presently in Qiita
-                   'Unspecified': 'unspecified',
+                   'Unspecified': UNSPECIFIED,
                    MISSING_VALUE: MISSING_VALUE}
 
         observed_values = set(df[GENDER].value_counts().index)

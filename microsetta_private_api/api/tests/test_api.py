@@ -448,6 +448,10 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
     input_obj["id"] = dummy_acct_id
     acct_repo = AccountRepo(t)
 
+    input_obj['latitude'] = 32.8798916
+    input_obj['longitude'] = -117.2363115
+    input_obj['cannot_geocode'] = False
+
     if dummy_is_admin:
         # the Account.from_dict method intentionally does not allow for
         # creating an admin account. As such, let's use the constructor
@@ -467,6 +471,9 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['post_code'],
                 input_obj['address']['country_code']
             ),
+            input_obj['latitude'],
+            input_obj['longitude'],
+            input_obj['cannot_geocode'],
             input_obj['kit_name'],
             input_obj['language']
         )

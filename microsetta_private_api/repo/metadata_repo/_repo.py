@@ -255,9 +255,11 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     for column in all_multiselect_columns & included_columns:
         df.loc[df[column].isnull(), column] = 'false'
 
-    # add an entry for all multiselect columns which were not reported
+    # Add an entry for all multiselect columns which were not reported.
+    # Since no answers were collected, it's inappropriate to use 'false.'
+    # Instead, we'll use the MISSING_VALUE constant.
     for column in all_multiselect_columns - set(df.columns):
-        df[column] = 'false'
+        df[column] = MISSING_VALUE
 
     # force a consistent case
     df.rename(columns={c: c.lower() for c in df.columns},
@@ -349,6 +351,12 @@ def _to_pandas_series(metadata, multiselect_map):
     hsi = metadata['host_subject_id']
     source_type = metadata['source'].source_type
 
+    geo_state = metadata['account'].address.state
+    geo_loc_name = metadata['account'].address.country_code + ":"\
+        + geo_state
+    latitude = "{:.2f}".format(metadata['account'].latitude)
+    longitude = "{:.2f}".format(metadata['account'].longitude)
+
     sample_detail = metadata['sample']
     collection_timestamp = sample_detail.datetime_collected
     sample_type = sample_detail.site
@@ -380,8 +388,10 @@ def _to_pandas_series(metadata, multiselect_map):
     else:
         raise RepoException("Sample has an unknown sample type")
 
-    values = [hsi, collection_timestamp]
-    index = ['HOST_SUBJECT_ID', 'COLLECTION_TIMESTAMP']
+    values = [hsi, collection_timestamp, geo_loc_name, geo_state, latitude,
+              longitude]
+    index = ['HOST_SUBJECT_ID', 'COLLECTION_TIMESTAMP', 'GEO_LOC_NAME', 'STATE',
+             'LATITUDE', 'LONGITUDE']
 
     # HACK: there exist some samples that have duplicate surveys. This is
     # unusual and unexpected state in the database, and has so far only been
