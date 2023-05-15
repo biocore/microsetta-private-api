@@ -770,8 +770,8 @@ class AccountsTests(ApiTests):
         self.run_query_and_content_required_field_test(
             "/api/accounts", "post",
             self.default_querystring_dict,
-            DUMMY_ACCT_INFO,
-            skip_fields=["city"])
+            input_obj,
+            skip_fields=["kit_name"])
 
     def test_accounts_create_fail_404(self):
         """Return 404 if provided kit name is not found in db."""
