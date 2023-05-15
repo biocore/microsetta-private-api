@@ -771,7 +771,7 @@ class AccountsTests(ApiTests):
             "/api/accounts", "post",
             self.default_querystring_dict,
             DUMMY_ACCT_INFO,
-            skip_fields=["kit_name"])
+            skip_fields=["city"])
 
     def test_accounts_create_fail_404(self):
         """Return 404 if provided kit name is not found in db."""
@@ -952,7 +952,8 @@ class AccountTests(ApiTests):
         response_obj = json.loads(response.data)
 
         for k in DUMMY_ACCT_INFO:
-            if k in (KIT_NAME_KEY, 'language'):
+            if k in (KIT_NAME_KEY, 'language', 'cannot_geocode', 'latitude',
+                     'longitude'):
                 continue
             self.assertNotEqual(DUMMY_ACCT_INFO[k],
                                 response_obj[k])
