@@ -1185,16 +1185,19 @@ class AdminRepo(BaseRepo):
                 (rack_id,)
             )
 
-            row = cur.fetchone()
+            sample_rows = cur.fetchall()
 
-            if row is None:
-                raise NotFound("No such barcode with rack id: %s" % rack_id)
+            if len(sample_rows) == 0:
+                raise NotFound("No barcode with rack id: %s" % rack_id)
 
-            data_to_return = {}
-            data_to_return["location_row"] = row["location_row"]
-            data_to_return["location_col"] = row["location_col"]
-            data_to_return["barcode"] = row["sample_id"]
-            return data_to_return
+            result = []
+            for row in sample_rows:
+                data_to_return = {}
+                data_to_return["location_row"] = row["location_row"]
+                data_to_return["location_col"] = row["location_col"]
+                data_to_return["barcode"] = row["sample_id"]
+                result.append(data_to_return)
+            return result
 
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
         '''

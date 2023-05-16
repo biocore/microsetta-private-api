@@ -922,6 +922,8 @@ def get_vioscreen_sample_to_user(token_info):
 def map_to_rack(token_info, sample_barcode, body):
     validate_admin_access(token_info)
 
+    print(str(body))
+
     with Transaction() as t:
         admin_repo = AdminRepo(t)
         scan_id = admin_repo.map_to_rack(sample_barcode, body)
@@ -931,7 +933,8 @@ def map_to_rack(token_info, sample_barcode, body):
     response.status_code = 201
     return response
 
-
+#TO DO: CHANGE CODE TO HANDLE O-T-M RESPONSE
+#CHECK IF CHANGE NEEDED IN YAML
 def get_sample_from_rack(token_info, rack_id):
     validate_admin_access(token_info)
 
@@ -943,6 +946,6 @@ def get_sample_from_rack(token_info, rack_id):
             response.status_code = 404
             return response
         else:
-            response = jsonify(row)
+            response = jsonify({"result":row})
             response.status_code = 201
             return response
