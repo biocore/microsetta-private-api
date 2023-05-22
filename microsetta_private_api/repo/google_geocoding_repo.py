@@ -36,7 +36,8 @@ class GoogleGeocodingRepo(BaseRepo):
             row = cur.fetchone()
             if row is None:
                 # It's a new geocoding request, create a record in the table
-                cur.execute("""INSERT INTO ag.google_geocoding (request_address)
+                cur.execute("""INSERT INTO ag.google_geocoding
+                               (request_address)
                                VALUES (%s)
                                RETURNING geocoding_request_id""",
                             (request_address,))

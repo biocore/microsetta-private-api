@@ -47,9 +47,8 @@ def geocode_address(address):
 
             try:
                 gg_repo.update_record(request_id, response_raw)
-            except:
-                # Something went wrong here, but we shouldn't stop processing.
-                pass
+            except Exception:
+                t.rollback()
 
             t.commit()
 

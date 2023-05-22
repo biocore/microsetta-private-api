@@ -131,7 +131,7 @@ class GoogleGeocodingRepoTests(unittest.TestCase):
             gg_repo = GoogleGeocodingRepo(t)
             request_address = _construct_request_address(UCSD_ADDRESS)
 
-            request_id = gg_repo.create_record(request_address)
+            _, request_id = gg_repo.get_or_create_record(request_address)
 
             obs = gg_repo.update_record(
                 request_id,
