@@ -5,10 +5,11 @@ class GoogleGeocodingRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
 
-    def create_record(self, request_address):
+    def get_or_create_record(self, request_address):
         """
-        Create a record before pinging Google so we have visibility into
-        failed requests
+        Check if a record for a given address exists. If it does, return the
+        record's response_body. If it does not, create a record and return the
+        id
 
         Parameters
         ----------
@@ -17,51 +18,38 @@ class GoogleGeocodingRepo(BaseRepo):
 
         Returns
         -------
-        geocoding_request_id : uuid4
-            Unique ID of the record in the ag.google_geocoding table
-        """
-        with self._transaction.cursor() as cur:
-            cur.execute("""INSERT INTO ag.google_geocoding (request_address)
-                           VALUES (%s)
-                           RETURNING geocoding_request_id""",
-                        (request_address, ))
-            geocoding_request_id = cur.fetchone()[0]
-
-            if geocoding_request_id is None:
-                return None
-            else:
-                return geocoding_request_id
-
-    def get_record(self, geocoding_request_id):
-        """
-        Create a record before pinging Google so we have visibility into
-        failed requests
-
-        Parameters
-        ----------
-        geocoding_request_id : uuid4
-            Unique ID of the record in the ag.google_geocoding table
-
-        Returns
-        -------
-        None or response_body : json
-            None if no record is found
-            The json object with geocoding data if record exists
+        new_record : bool
+            Boolean flag indicating whether it's a new record
+        geocoding_request_id : uuid4 or response_body : json
+            Unique ID of the record in the ag.google_geocoding table OR
+            json object with geocoding data
         """
         with self._transaction.dict_cursor() as cur:
+            # Lock the table to prevent a race condition
+            self._transaction.lock_table("google_geocoding")
+
+            # Check to see if we've geocoded the address before
             cur.execute("""SELECT response_body
                            FROM ag.google_geocoding
-                           WHERE geocoding_request_id = %s""",
-                        (geocoding_request_id, ))
+                           WHERE request_address = %s""",
+                        (request_address, ))
             row = cur.fetchone()
             if row is None:
-                return None
+                # It's a new geocoding request, create a record in the table
+                cur.execute("""INSERT INTO ag.google_geocoding (request_address)
+                               VALUES (%s)
+                               RETURNING geocoding_request_id""",
+                            (request_address,))
+                geocoding_request_id = cur.fetchone()[0]
+                return True, geocoding_request_id
             else:
-                return row['response_body']
+                # Already geocoded, return the response body
+                return False, row['response_body']
 
     def update_record(self, geocoding_request_id, response_body):
         """
         Update the DB record with the geocoding response
+
         Parameters
         ----------
         geocoding_request_id : uuid4
@@ -80,29 +68,3 @@ class GoogleGeocodingRepo(BaseRepo):
                            WHERE geocoding_request_id = %s""",
                         (response_body, geocoding_request_id))
             return cur.rowcount == 1
-
-    def check_duplicate(self, request_address):
-        """
-        Check if we already have geocoding data for a given address
-
-        Parameters
-        ----------
-        request_address : str
-            Formatted address to geocode
-
-        Returns
-        -------
-        None or geocoding_request_id : uuid4
-            None if no record exists
-            The geocoding_request_id if one does exist
-        """
-        with self._transaction.dict_cursor() as cur:
-            cur.execute("""SELECT geocoding_request_id
-                           FROM ag.google_geocoding
-                           WHERE request_address = %s""",
-                        (request_address, ))
-            row = cur.fetchone()
-            if row is None:
-                return None
-            else:
-                return row['geocoding_request_id']

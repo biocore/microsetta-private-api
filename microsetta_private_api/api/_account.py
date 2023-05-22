@@ -76,11 +76,6 @@ def register_account(body, token_info):
     account_obj = Account.from_dict(body, token_info[JWT_ISS_CLAIM_KEY],
                                     token_info[JWT_SUB_CLAIM_KEY])
 
-    latitude, longitude, cannot_geocode = geocode_address(account_obj.address)
-    account_obj.latitude = latitude
-    account_obj.longitude = longitude
-    account_obj.cannot_geocode = cannot_geocode
-
     if kit_name == "" and code == "":
         return jsonify(
             code=400,
@@ -108,6 +103,14 @@ def register_account(body, token_info):
         acct_repo = AccountRepo(t)
         acct_repo.create_account(account_obj)
         new_acct = acct_repo.get_account(new_acct_id)
+
+        # Now that we've successfully created an account, geocode it
+        latitude, longitude, cannot_geocode = geocode_address(new_acct.address)
+        new_acct.latitude = latitude
+        new_acct.longitude = longitude
+        new_acct.cannot_geocode = cannot_geocode
+        acct_repo.update_account(new_acct)
+
         t.commit()
 
     response = jsonify(new_acct.to_api())

@@ -14,14 +14,14 @@ def geocode_address(address):
 
         request_address = _construct_request_address(address)
 
-        # Check for existing record with the same address
-        existing_request_id = gg_repo.check_duplicate(request_address)
-        if existing_request_id is not None:
-            geocoding_response = gg_repo.get_record(existing_request_id)
-            return _parse_response(geocoding_response)
-
+        # Determine if we've already geocoded the address
+        new_request, ret_val = gg_repo.get_or_create_record(request_address)
+        if new_request is False:
+            # Already geocoded, just return the parsed response
+            return _parse_response(ret_val)
         else:
-            request_id = gg_repo.create_record(request_address)
+            # New record, so ret_val is the ID of the record in the database
+            request_id = ret_val
 
             if request_id is None:
                 # There was an error creating the DB record - we should never
@@ -45,7 +45,12 @@ def geocode_address(address):
             response_raw = response.text
             response_obj = json.loads(response_raw)
 
-            gg_repo.update_record(request_id, response_raw)
+            try:
+                gg_repo.update_record(request_id, response_raw)
+            except:
+                # Something went wrong here, but we shouldn't stop processing.
+                pass
+
             t.commit()
 
             return _parse_response(response_obj)

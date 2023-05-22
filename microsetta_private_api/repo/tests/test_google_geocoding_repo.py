@@ -1,5 +1,6 @@
 import unittest
 import json
+import uuid
 
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.repo.google_geocoding_repo import\
@@ -92,14 +93,38 @@ UCSD_GEOCODING_RESULTS = {
 
 
 class GoogleGeocodingRepoTests(unittest.TestCase):
-    def test_create_record(self):
+    def test_get_or_create_record_create(self):
+        # Checking the UC San Diego address for the first time, so we should
+        # observe return values indicating a new record
         with Transaction() as t:
             gg_repo = GoogleGeocodingRepo(t)
             request_address = _construct_request_address(UCSD_ADDRESS)
 
-            request_id = gg_repo.create_record(request_address)
+            new_request, ret_val = gg_repo.get_or_create_record(
+                request_address
+            )
 
-            self.assertNotEqual(request_id, None)
+            self.assertTrue(new_request)
+            self.assertTrue(self._is_uuid(ret_val))
+
+    def test_get_or_create_record_get(self):
+        # We're going to create a record for the UC San Diego address, then
+        # check it again, so we should observe return values indicating an
+        # existing record
+        with Transaction() as t:
+            gg_repo = GoogleGeocodingRepo(t)
+            request_address = _construct_request_address(UCSD_ADDRESS)
+
+            _, _ = gg_repo.get_or_create_record(
+                request_address
+            )
+
+            new_request, ret_val = gg_repo.get_or_create_record(
+                request_address
+            )
+
+            self.assertFalse(new_request)
+            self.assertFalse(self._is_uuid(ret_val))
 
     def test_update_record(self):
         with Transaction() as t:
@@ -115,37 +140,12 @@ class GoogleGeocodingRepoTests(unittest.TestCase):
 
             self.assertEqual(obs, 1)
 
-    def test_get_record(self):
-        with Transaction() as t:
-            gg_repo = GoogleGeocodingRepo(t)
-            request_address = _construct_request_address(UCSD_ADDRESS)
-
-            request_id = gg_repo.create_record(request_address)
-
-            _ = gg_repo.update_record(
-                request_id,
-                json.dumps(UCSD_GEOCODING_RESULTS)
-            )
-
-            obs = gg_repo.get_record(request_id)
-
-            self.assertEqual(obs, UCSD_GEOCODING_RESULTS)
-
-    def test_check_duplicate(self):
-        with Transaction() as t:
-            gg_repo = GoogleGeocodingRepo(t)
-            request_address = _construct_request_address(UCSD_ADDRESS)
-
-            request_id = gg_repo.create_record(request_address)
-
-            _ = gg_repo.update_record(
-                request_id,
-                json.dumps(UCSD_GEOCODING_RESULTS)
-            )
-
-            obs = gg_repo.check_duplicate(request_address)
-
-            self.assertEqual(obs, request_id)
+    def _is_uuid(self, value_to_test):
+        try:
+            uuid.UUID(str(value_to_test))
+            return True
+        except ValueError:
+            return False
 
 
 if __name__ == '__main__':
