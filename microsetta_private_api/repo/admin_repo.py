@@ -1161,28 +1161,28 @@ class AdminRepo(BaseRepo):
                 sample_barcode,
                 scan_info['location_row'],
                 scan_info['location_col'],
-                datetime.datetime.now()
+                datetime.datetime.now(),
+                scan_info['bulk_scan_id']
             )
 
             cur.execute(
                 "INSERT INTO barcodes.rack_samples "
                 "(location_id, rack_id, sample_id, "
-                "location_row, location_col, date_time) "
-                "VALUES (%s, %s, %s, %s, %s, %s)",
+                "location_row, location_col, date_time, scan_id) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s)",
                 scan_args
             )
 
             return new_uuid
 
-    def get_rack_sample(self, rack_id):
+    def get_rack_samples(self, rack_id, bulk_scan_id):
         with self._transaction.dict_cursor() as cur:
 
-            # not actually using the result, just checking there IS one
-            # to ensure this is a valid barcode
             cur.execute(
-                "SELECT sample_id, location_row, location_col "
-                "FROM barcodes.rack_samples WHERE rack_id=%s",
-                (rack_id,)
+                "SELECT DISTINCT ON (sample_id) sample_id, location_row, location_col "
+                "FROM barcodes.rack_samples WHERE rack_id=%s AND scan_id=%s "
+                "ORDER BY sample_id, date_time DESC",
+                (rack_id,bulk_scan_id,)
             )
 
             sample_rows = cur.fetchall()

@@ -2389,6 +2389,8 @@ paths:
                   type: string
                 location_row:
                   type: string
+                bulk_scan_id:
+                  type: string
       responses:
         '201':
           description: Successfully mapped new barcode scan to rack
@@ -2397,15 +2399,16 @@ paths:
               schema:
                 type: object
     
-  '/admin/rack/sample/{rack_id}':
+  '/admin/rack/{bulk_scan_id}/sample/{rack_id}':
     get:
-      operationId: microsetta_private_api.admin.admin_impl.get_sample_from_rack
+      operationId: microsetta_private_api.admin.admin_impl.get_samples_from_rack
       tags:
         - Admin
       summary: Get sample details from rack by rack id
       description: Get sample details from rack by rack id
       parameters:
         - $ref: '#/components/parameters/rack_id'
+        - $ref: '#/components/parameters/bulk_scan_id'
       responses:
         '201':
           description: Successfully fetched sample details from rack by rack id
@@ -3009,6 +3012,12 @@ components:
       description: Rack id for a particular sample placed in rack
       schema:
         $ref: '#/components/schemas/rack_id'
+    bulk_scan_id:
+      name: bulk_scan_id
+      in: path
+      description: Unique identifier for each bulk scan cycle
+      schema:
+        $ref: '#/components/schemas/bulk_scan_id'
 
     # query parameters
     activation_code:
@@ -3334,6 +3343,9 @@ components:
       type: string
       example: "A"
     rack_id:
+      type: string
+      example: "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
+    bulk_scan_id:
       type: string
       example: "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 

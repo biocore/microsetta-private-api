@@ -7,3 +7,6 @@ CREATE TABLE barcodes.rack_samples (
     date_time TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (location_id)
 );
+
+ALTER TABLE barcodes.rack_samples
+ADD COLUMN scan_id varchar NOT NULL;

@@ -1339,20 +1339,27 @@ class AdminRepoTests(AdminTests):
                 admin_repo.map_to_rack(barcode, scan_info)
 
     def test_map_to_rack_success(self):
+        bulk_scan_id = str(uuid.uuid4())
         scan_info = {
             'rack_id': '001',
             'location_row': 'A',
-            'location_col': '02'
+            'location_col': '02',
+            'bulk_scan_id': bulk_scan_id
         }
 
         uuid = ""
+        samples = None
         with Transaction() as t:
             barcode = '000001024'
 
             admin_repo = AdminRepo(t)
             uuid = admin_repo.map_to_rack(barcode, scan_info)
 
+            rack_id = '001'
+            samples = admin_repo.get_rack_samples(rack_id, bulk_scan_id)
+
         self.assertTrue(len(uuid) > 0)
+        self.assertEquals(len(samples), 1)
 
     def test_create_ffq_code(self):
         with Transaction() as t:
