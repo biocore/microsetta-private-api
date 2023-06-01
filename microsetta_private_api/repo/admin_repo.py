@@ -1179,10 +1179,11 @@ class AdminRepo(BaseRepo):
         with self._transaction.dict_cursor() as cur:
 
             cur.execute(
-                "SELECT DISTINCT ON (sample_id) sample_id, location_row, location_col "
-                "FROM barcodes.rack_samples WHERE rack_id=%s AND scan_id=%s "
-                "ORDER BY sample_id, date_time DESC",
-                (rack_id,bulk_scan_id,)
+                "SELECT DISTINCT ON (sample_id) sample_id, location_row, "
+                "location_col FROM barcodes.rack_samples WHERE rack_id=%s "
+                "AND scan_id=%s "
+                "ORDER BY sample_id, date_time DESC", 
+                (rack_id,bulk_scan_id, )
             )
 
             sample_rows = cur.fetchall()

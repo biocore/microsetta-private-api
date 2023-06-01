@@ -934,7 +934,7 @@ def map_to_rack(token_info, sample_barcode, body):
 
 def get_samples_from_rack(token_info, rack_id, bulk_scan_id):
     validate_admin_access(token_info)
-    
+
     with Transaction() as t:
         admin_repo = AdminRepo(t)
         row = admin_repo.get_rack_samples(rack_id, bulk_scan_id)

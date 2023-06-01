@@ -4,6 +4,7 @@ import dateutil.parser
 import psycopg2
 import psycopg2.extras
 from dateutil.relativedelta import relativedelta
+import uuid
 
 import microsetta_private_api.model.project as p
 
@@ -1347,18 +1348,18 @@ class AdminRepoTests(AdminTests):
             'bulk_scan_id': bulk_scan_id
         }
 
-        uuid = ""
+        id = ""
         samples = None
         with Transaction() as t:
             barcode = '000001024'
 
             admin_repo = AdminRepo(t)
-            uuid = admin_repo.map_to_rack(barcode, scan_info)
+            id = admin_repo.map_to_rack(barcode, scan_info)
 
             rack_id = '001'
             samples = admin_repo.get_rack_samples(rack_id, bulk_scan_id)
 
-        self.assertTrue(len(uuid) > 0)
+        self.assertTrue(len(id) > 0)
         self.assertEquals(len(samples), 1)
 
     def test_create_ffq_code(self):
