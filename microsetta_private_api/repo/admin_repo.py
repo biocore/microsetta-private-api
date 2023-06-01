@@ -1182,8 +1182,8 @@ class AdminRepo(BaseRepo):
                 "SELECT DISTINCT ON (sample_id) sample_id, location_row, "
                 "location_col FROM barcodes.rack_samples WHERE rack_id=%s "
                 "AND scan_id=%s "
-                "ORDER BY sample_id, date_time DESC", 
-                (rack_id,bulk_scan_id, )
+                "ORDER BY sample_id, date_time DESC",
+                (rack_id, bulk_scan_id, )
             )
 
             sample_rows = cur.fetchall()
