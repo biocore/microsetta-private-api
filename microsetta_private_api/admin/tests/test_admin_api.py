@@ -1,6 +1,7 @@
 import pytest
 from unittest import TestCase
 from unittest.mock import patch
+import uuid
 from flask import Response
 import json
 import microsetta_private_api.server
@@ -1275,7 +1276,8 @@ class AdminApiTests(TestCase):
         scan_info = {
             'rack_id': '005',
             'location_row': 'B',
-            'location_col': '01'
+            'location_col': '01',
+            'bulk_scan_id': str(uuid.uuid4())
         }
 
         response = self.client.post(
