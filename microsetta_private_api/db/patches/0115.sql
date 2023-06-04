@@ -571,10 +571,12 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     What are the alternatives to participating in this study? Can you withdraw from the study or be withdrawn?
 </p>
 <p class="consent_content">
-    You do not have to participate. Your participation in this study is completely voluntary. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
+    Your participation in this study is completely voluntary. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
 </p>
 <p class="consent_content">
-    You can refuse to participate or withdraw at any time by requesting the deletion of your online profile. Our researchers will still use the data about you that was collected before you withdrew. After you withdraw, no further data will be collected from you.<br />
+    You can refuse to participate or withdraw at any time by deleting your online profile, or by requesting the deletion of your account. Our researchers will still use the data about you that was collected before you withdrew. These data will not include any personal information that could directly identify you. After you withdraw, no further data will be collected from you.
+</p>
+<p class="consent_content">
     You may be withdrawn from the study if you do not follow the instructions given to you by the study personnel.
 </p>
 <p class="consent_header">
@@ -665,7 +667,10 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     What are the alternatives to participating in this study and can you withdraw?
 </p>
 <p class="consent_content">
-    Your participation in this study is completely voluntary and you can refuse to participate or withdraw at any time by simply exiting the survey and deleting your online profile. Our researchers will still use the data about you that was collected before you withdrew. After you withdraw, no further data will be collected from you. You are free to skip any question that you choose.
+    Your participation in this study is completely voluntary and you are free to skip any question that you choose. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
+</p>
+<p class="consent_content">
+    You can refuse to participate or withdraw at any time by deleting your online profile. Our researchers will still use the data about you that was collected before you withdrew. These data will not include any personal information that could directly identify you. After you withdraw, no further data will be collected from you.
 </p>
 <p class="consent_header">
     Know what we will collect
@@ -790,10 +795,10 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     What are the alternatives to participating in this study? Can you withdraw from the study or be withdrawn?
 </p>
 <p class="consent_content">
-    You do not have to participate. Your participation in this study is completely voluntary. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
+    Your participation in this study is completely voluntary. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
 </p>
 <p class="consent_content">
-    You may refuse to participate or withdraw at any time without penalty or loss of benefits to which you are entitled. You can refuse to participate or withdraw at any time by requesting the deletion of your online profile. Our researchers will still use the data about you that was collected before you withdrew. After you withdraw, no further data will be collected from you.
+    You can refuse to participate or withdraw at any time by deleting your online profile, or by requesting the deletion of your account. Our researchers will still use the data about you that was collected before you withdrew. These data will not include any personal information that could directly identify you. After you withdraw, no further data will be collected from you.
 </p>
 <p class="consent_content">
     You may be withdrawn from the study if you do not follow the instructions given to you by the study personnel.
@@ -891,7 +896,13 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     What are the alternatives to participating in this study and can you withdraw?
 </p>
 <p class="consent_content">
-    Your participation in this study is completely voluntary and you can withdraw at any time by simply exiting the survey and deleting your online profile, or by requesting the deletion of your account through your online account. You are free to skip any question that you choose.
+    Your participation in this study is completely voluntary and you are free to skip any question that you choose. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
+</p>
+<p class="consent_content">
+    You can withdraw at any time by deleting your online profile, or by requesting the deletion of your account. Our researchers will still use the data about you that was collected before you withdrew. These data will not include any personal information that could directly identify you. After you withdraw, no further data will be collected from you.
+</p>
+<p class="consent_content">
+    You may be withdrawn from the study if you do not follow the instructions given to you by the study personnel.
 </p>
 <p class="consent_header">
     Will you be compensated for participating in this study?
@@ -1088,10 +1099,10 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     What are the alternatives to participating in this study? Can your child withdraw or be withdrawn from the study?
 </p>
 <p class="consent_content">
-    Participation in research is entirely voluntary. We will inform you and your child if any important new information is found during the course of this study that may affect your wanting to continue.
+    Participation in research is entirely voluntary. We will inform you if any important new information is found during the course of this study that may affect your child wanting to continue.
 </p>
 <p class="consent_content">
-    You may refuse to have your child participate or withdraw your child at any time without penalty or loss of benefits to which you or your child are entitled. You can withdraw your child at any time by requesting the deletion of your child''s online profile. Our researchers will still use the data about your child that was collected before they were withdrawn. After your child withdraws, no further data will be collected from them.
+    You may refuse to have your child participate or withdraw your child at any time by deleting your child''s online profile or by requesting the deletion of your account. Our researchers will still use the data about your child that was collected before they were withdrawn. These data will not include any personal information that could directly identify your child. After your child withdraws, no further data will be collected from them.
 </p>
 <p class="consent_content">
     Your child may be withdrawn from the study if the instructions given by the study personnel are not followed.
@@ -1195,7 +1206,13 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     What are the alternatives to participating in this study and can you withdraw?
 </p>
 <p class="consent_content">
-    Participation in this study is completely voluntary and you or your child can withdraw at any time by simply exiting the survey and deleting your child''s online profile, or by requesting the deletion of your online account. You are free to skip any question that you choose.
+    Participation in this study is completely voluntary and your child is free to skip any question that they choose. We will inform you if any important new information is found during the course of this study that may affect your child wanting to continue.
+</p>
+<p class="consent_content">
+    You or your child can withdraw at any time by deleting your child''s online profile, or by requesting the deletion of your account. Our researchers will still use the data about your child that was collected before they withdrew. These data will not include any personal information that could directly identify your child. After your child withdraws, no further data will be collected from them.
+</p>
+<p class="consent_content">
+    Your child may be withdrawn from the study if the instructions given by the study personnel are not followed.
 </p>
 <p class="consent_header">
     Are there any costs associated with participating in this study?
@@ -1312,10 +1329,10 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     ¿Cuáles son las alternativas a participar en este estudio? ¿Puede retirarse del estudio o ser retirado?
 </p>
 <p class="consent_content">
-    No tiene que participar. Su participación en este estudio es completamente voluntaria. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
+    Su participación en este estudio es completamente voluntaria. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
 </p>
 <p class="consent_content">
-    Puede negarse a participar o retirarse en cualquier momento solicitando la eliminación de su perfil en línea. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Después de retirarse, no se recopilarán más datos sobre usted.
+    Puede negarse a participar o retirarse en cualquier momento eliminando su perfil en línea o solicitando la eliminación de su cuenta. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Estos datos no incluirán ninguna información personal que pueda identificarle directamente. Después de retirarse, no se recopilarán más datos sobre usted.
 </p>
 <p class="consent_content">
     Puede ser retirado del estudio si no sigue las instrucciones que le ha dado el personal del estudio.
@@ -1409,7 +1426,13 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     ¿Cuáles son las alternativas para participar en este estudio y puede retirarse?
 </p>
 <p class="consent_content">
-    Su participación en este estudio es completamente voluntaria y puede negarse a participar o retirarse en cualquier momento simplemente saliendo de la encuesta y eliminando su perfil en línea. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Después de retirarse, no se recopilarán más datos sobre usted. Usted es libre de omitir cualquier pregunta que elija.
+    Su participación en este estudio es completamente voluntaria y usted es libre de omitir cualquier pregunta que elija. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
+</p>
+<p class="consent_content">
+    Puede negarse a participar o retirarse en cualquier momento eliminando su perfil en línea o solicitando la eliminación de su cuenta. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Estos datos no incluirán ninguna información personal que pueda identificarle directamente. Después de retirarse, no se recopilarán más datos sobre usted.
+</p>
+<p class="consent_content">
+    Puede ser retirado del estudio si no sigue las instrucciones que le ha dado el personal del estudio.
 </p>
 <p class="consent_header">
     Conoce lo que recopilaremos
@@ -1534,10 +1557,10 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     ¿Cuáles son las alternativas a participar en este estudio? ¿Puede retirarse del estudio o ser retirado?
 </p>
 <p class="consent_content">
-    No tiene que participar. Su participación en este estudio es completamente voluntaria. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
+    Su participación en este estudio es completamente voluntaria. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
 </p>
 <p class="consent_content">
-    Puede negarse a participar o retirarse en cualquier momento solicitando la eliminación  de su perfil en línea. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Después de retirarse, no se recopilarán más datos sobre usted.
+    Puede negarse a participar o retirarse en cualquier momento eliminando su perfil en línea o solicitando la eliminación de su cuenta. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Estos datos no incluirán ninguna información personal que pueda identificarle directamente. Después de retirarse, no se recopilarán más datos sobre usted.
 </p>
 <p class="consent_content">
     Puede ser retirado del estudio si no sigue las instrucciones que le ha dado el personal del estudio.
@@ -1635,7 +1658,13 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     ¿Cuáles son las alternativas a participar en este estudio y puede usted retirarse del estudio?
 </p>
 <p class="consent_content">
-    Su participación en este estudio es completamente voluntaria y puede retirarse en cualquier momento simplemente saliendo de la encuesta y eliminando su perfil, o solicitando la eliminación de su cuenta a través de su cuenta en línea. Usted es libre de omitir cualquier pregunta que elija.
+    Su participación en este estudio es completamente voluntaria y usted es libre de omitir cualquier pregunta que elija. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
+</p>
+<p class="consent_content">
+    Puede retirarse en cualquier momento eliminando su perfil en línea o solicitando la eliminación de su cuenta. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Estos datos no incluirán ninguna información personal que pueda identificarle directamente. Después de retirarse, no se recopilarán más datos sobre usted.
+</p>
+<p class="consent_content">
+    Puede ser retirado del estudio si no sigue las instrucciones que le ha dado el personal del estudio.
 </p>
 <p class="consent_header">
     ¿Se le compensará por participar en este estudio?
@@ -1832,7 +1861,7 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     La participación en la investigación es totalmente voluntaria. Le informaremos a usted y a su hijo si se encuentra alguna información nueva importante durante el curso de este estudio que pueda afectar su deseo de continuar.
 </p>
 <p class="consent_content">
-    Puede negarse a que su hijo participe o retirar a su hijo en cualquier momento sin penalización ni pérdida de los beneficios a los que usted o su hijo tienen derecho. Usted puede retirar a su hijo del estudio en cualquier momento solicitando la eliminación del perfil en línea de su hijo. Nuestros investigadores seguirán utilizando los datos sobre su hijo que se recopilaron antes de que se retirara. Después de que su hijo se retire del estudio, no se recopilarán más datos.
+    Puede negarse a que su hijo participe o retirar a su hijo en cualquier momento eliminando el perfil en línea de su hijo, o solicitando la eliminación de su cuenta.. Nuestros investigadores seguirán utilizando los datos sobre usted o su hijo que se recopilaron antes de que se retiraran. Estos datos no incluirán ninguna información personal que pueda identificar directamente a su hijo. Después de que su hijo retire, no se recopilarán más datos sobre su hijo.
 </p>
 <p class="consent_content">
     Su hijo puede ser retirado del estudio si no se siguen las instrucciones que le dio el personal del estudio.
@@ -1936,7 +1965,13 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     ¿Cuáles son las alternativas a participar en este estudio y puede usted retirarse?
 </p>
 <p class="consent_content">
-    La participación en este estudio es completamente voluntaria y usted o su hijo pueden retirarse en cualquier momento simplemente saliendo de la encuesta y eliminando el perfil en línea de su hijo, o solicitando la eliminación de su cuenta en línea. Usted es libre de omitir cualquier pregunta que elija.
+    La participación en este estudio es completamente voluntaria y usted es libre de omitir cualquier pregunta que elija. Le informaremos a usted y a su hijo si se encuentra alguna información nueva importante durante el curso de este estudio que pueda afectar su deseo de continuar.
+</p>
+<p class="consent_content">
+    Usted o su hijo pueden retirarse en cualquier momento eliminando el perfil en línea de su hijo, o solicitando la eliminación de su cuenta.  Nuestros investigadores seguirán utilizando los datos sobre usted o su hijo que se recopilaron antes de que se retiraran. Estos datos no incluirán ninguna información personal que pueda identificar directamente a su hijo. Después de que su hijo retire, no se recopilarán más datos sobre su hijo.
+</p>
+<p class="consent_content">
+    Su hijo puede ser retirado del estudio si no se siguen las instrucciones que le dio el personal del estudio.
 </p>
 <p class="consent_header">
     ¿Hay algún costo asociado con la participación en este estudio?
@@ -2053,10 +2088,10 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     ¿Cuáles son las alternativas a participar en este estudio? ¿Puede retirarse del estudio o ser retirado?
 </p>
 <p class="consent_content">
-    No tiene que participar. Su participación en este estudio es completamente voluntaria. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
+    Su participación en este estudio es completamente voluntaria. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
 </p>
 <p class="consent_content">
-    Puede negarse a participar o retirarse en cualquier momento solicitando la eliminación de su perfil en línea. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Después de retirarse, no se recopilarán más datos sobre usted.
+    Puede negarse a participar o retirarse en cualquier momento eliminando su perfil en línea o solicitando la eliminación de su cuenta. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Estos datos no incluirán ninguna información personal que pueda identificarle directamente. Después de retirarse, no se recopilarán más datos sobre usted.
 </p>
 <p class="consent_content">
     Puede ser retirado del estudio si no sigue las instrucciones que le ha dado el personal del estudio.
@@ -2150,7 +2185,13 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     ¿Cuáles son las alternativas para participar en este estudio y puede retirarse?
 </p>
 <p class="consent_content">
-    Su participación en este estudio es completamente voluntaria y puede negarse a participar o retirarse en cualquier momento simplemente saliendo de la encuesta y eliminando su perfil en línea. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Después de retirarse, no se recopilarán más datos sobre usted. Usted es libre de omitir cualquier pregunta que elija.
+    Su participación en este estudio es completamente voluntaria y usted es libre de omitir cualquier pregunta que elija. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
+</p>
+<p class="consent_content">
+    Puede negarse a participar o retirarse en cualquier momento eliminando su perfil en línea o solicitando la eliminación de su cuenta. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Estos datos no incluirán ninguna información personal que pueda identificarle directamente. Después de retirarse, no se recopilarán más datos sobre usted.
+</p>
+<p class="consent_content">
+    Puede ser retirado del estudio si no sigue las instrucciones que le ha dado el personal del estudio.
 </p>
 <p class="consent_header">
     Conoce lo que recopilaremos
@@ -2275,10 +2316,10 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     ¿Cuáles son las alternativas a participar en este estudio? ¿Puede retirarse del estudio o ser retirado?
 </p>
 <p class="consent_content">
-    No tiene que participar. Su participación en este estudio es completamente voluntaria. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
+    Su participación en este estudio es completamente voluntaria. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
 </p>
 <p class="consent_content">
-    Puede negarse a participar o retirarse en cualquier momento solicitando la eliminación  de su perfil en línea. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Después de retirarse, no se recopilarán más datos sobre usted.
+    Puede negarse a participar o retirarse en cualquier momento eliminando su perfil en línea o solicitando la eliminación de su cuenta. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Estos datos no incluirán ninguna información personal que pueda identificarle directamente. Después de retirarse, no se recopilarán más datos sobre usted.
 </p>
 <p class="consent_content">
     Puede ser retirado del estudio si no sigue las instrucciones que le ha dado el personal del estudio.
@@ -2376,7 +2417,13 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     ¿Cuáles son las alternativas a participar en este estudio y puede usted retirarse del estudio?
 </p>
 <p class="consent_content">
-    Su participación en este estudio es completamente voluntaria y puede retirarse en cualquier momento simplemente saliendo de la encuesta y eliminando su perfil, o solicitando la eliminación de su cuenta a través de su cuenta en línea. Usted es libre de omitir cualquier pregunta que elija.
+    Su participación en este estudio es completamente voluntaria y usted es libre de omitir cualquier pregunta que elija. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
+</p>
+<p class="consent_content">
+    Puede retirarse en cualquier momento eliminando su perfil en línea o solicitando la eliminación de su cuenta. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Estos datos no incluirán ninguna información personal que pueda identificarle directamente. Después de retirarse, no se recopilarán más datos sobre usted.
+</p>
+<p class="consent_content">
+    Puede ser retirado del estudio si no sigue las instrucciones que le ha dado el personal del estudio.
 </p>
 <p class="consent_header">
     ¿Se le compensará por participar en este estudio?
@@ -2573,7 +2620,7 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     La participación en la investigación es totalmente voluntaria. Le informaremos a usted y a su hijo si se encuentra alguna información nueva importante durante el curso de este estudio que pueda afectar su deseo de continuar.
 </p>
 <p class="consent_content">
-    Puede negarse a que su hijo participe o retirar a su hijo en cualquier momento sin penalización ni pérdida de los beneficios a los que usted o su hijo tienen derecho. Usted puede retirar a su hijo del estudio en cualquier momento solicitando la eliminación del perfil en línea de su hijo. Nuestros investigadores seguirán utilizando los datos sobre su hijo que se recopilaron antes de que se retirara. Después de que su hijo se retire del estudio, no se recopilarán más datos.
+    Puede negarse a que su hijo participe o retirar a su hijo en cualquier momento eliminando el perfil en línea de su hijo, o solicitando la eliminación de su cuenta.. Nuestros investigadores seguirán utilizando los datos sobre usted o su hijo que se recopilaron antes de que se retiraran. Estos datos no incluirán ninguna información personal que pueda identificar directamente a su hijo. Después de que su hijo retire, no se recopilarán más datos sobre su hijo.
 </p>
 <p class="consent_content">
     Su hijo puede ser retirado del estudio si no se siguen las instrucciones que le dio el personal del estudio.
@@ -2677,7 +2724,13 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     ¿Cuáles son las alternativas a participar en este estudio y puede usted retirarse?
 </p>
 <p class="consent_content">
-    La participación en este estudio es completamente voluntaria y usted o su hijo pueden retirarse en cualquier momento simplemente saliendo de la encuesta y eliminando el perfil en línea de su hijo, o solicitando la eliminación de su cuenta en línea. Usted es libre de omitir cualquier pregunta que elija.
+    La participación en este estudio es completamente voluntaria y usted es libre de omitir cualquier pregunta que elija. Le informaremos a usted y a su hijo si se encuentra alguna información nueva importante durante el curso de este estudio que pueda afectar su deseo de continuar.
+</p>
+<p class="consent_content">
+    Usted o su hijo pueden retirarse en cualquier momento eliminando el perfil en línea de su hijo, o solicitando la eliminación de su cuenta.  Nuestros investigadores seguirán utilizando los datos sobre usted o su hijo que se recopilaron antes de que se retiraran. Estos datos no incluirán ninguna información personal que pueda identificar directamente a su hijo. Después de que su hijo retire, no se recopilarán más datos sobre su hijo.
+</p>
+<p class="consent_content">
+    Su hijo puede ser retirado del estudio si no se siguen las instrucciones que le dio el personal del estudio.
 </p>
 <p class="consent_header">
     ¿Hay algún costo asociado con la participación en este estudio?
