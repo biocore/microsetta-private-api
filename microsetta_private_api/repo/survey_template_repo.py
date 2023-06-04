@@ -316,6 +316,11 @@ class SurveyTemplateRepo(BaseRepo):
             localization.ES_MX: "spanish",
             localization.ES_ES: "spain_spanish"
         }
+
+        if language_tag not in tag_to_col:
+            raise NotFound("Survey localization unavailable: %s" %
+                           language_tag)
+
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
                         tag_to_col[language_tag] + " " +
@@ -334,6 +339,10 @@ class SurveyTemplateRepo(BaseRepo):
             localization.ES_MX: "survey_response.spanish",
             localization.ES_ES: "survey_response.spain_spanish",
         }
+
+        if language_tag not in tag_to_col:
+            raise NotFound("Survey localization unavailable: %s" %
+                           language_tag)
 
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
@@ -358,6 +367,10 @@ class SurveyTemplateRepo(BaseRepo):
             localization.ES_MX: "survey_response.spanish",
             localization.ES_ES: "survey_response.spain_spanish",
         }
+
+        if language_tag not in tag_to_col:
+            raise NotFound("Survey localization unavailable: %s" %
+                           language_tag)
 
         with self._transaction.cursor() as cur:
             cur.execute(
@@ -1158,6 +1171,10 @@ class SurveyTemplateRepo(BaseRepo):
             localization.ES_MX: "survey_response.spanish",
             localization.ES_ES: "survey_response.spain_spanish",
         }
+
+        if language_tag not in tag_to_col:
+            raise NotFound("Survey localization unavailable: %s" %
+                           language_tag)
 
         sql = """SELECT *
                  FROM  (SELECT a.survey_question_id, """ +\
