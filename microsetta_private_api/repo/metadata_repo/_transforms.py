@@ -304,7 +304,7 @@ class AlcoholConsumption(Transformer):
                    'Regularly (3-5 times/week)': 'Yes',
                    'Daily': 'Yes',
                    'Never': 'No',
-                   'Unspecified': UNSPECIFIED,
+                   UNSPECIFIED: UNSPECIFIED,
                    MISSING_VALUE: MISSING_VALUE}
 
         # using value_counts() here as it drops NA by default whereas
@@ -334,7 +334,7 @@ class Sex(Transformer):
 
                    # Lower case is not ideal here, however that's what is
                    # presently in Qiita
-                   'Unspecified': UNSPECIFIED,
+                   UNSPECIFIED: UNSPECIFIED,
                    MISSING_VALUE: MISSING_VALUE}
 
         observed_values = set(df[GENDER].value_counts().index)

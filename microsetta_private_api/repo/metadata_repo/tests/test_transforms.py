@@ -134,7 +134,7 @@ class TransformTests(unittest.TestCase):
     def test_Sex(self):
         df = pd.DataFrame([['Male'],
                            ['Female'],
-                           ['Unspecified'],
+                           [UNSPECIFIED],
                            [MISSING_VALUE],
                            ['Other']],
                           index=list('abcde'),
@@ -209,7 +209,7 @@ class TransformTests(unittest.TestCase):
                            ['Regularly (3-5 times/week)'],
                            ['Daily'],
                            ['Never'],
-                           ['Unspecified']],
+                           [UNSPECIFIED]],
                           index=list('abcdef'),
                           columns=[ALCOHOL_FREQUENCY])
         exp = pd.Series(['Yes', 'Yes', 'Yes', 'Yes', 'No', UNSPECIFIED],
