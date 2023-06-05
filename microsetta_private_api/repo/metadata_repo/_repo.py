@@ -440,7 +440,7 @@ def _to_pandas_series(metadata, multiselect_map):
                             # the user selected this answer, so mark it true
                             values.append('true')
                         else:
-                            # the user did not select this answer, mark it false
+                            # the user did not select this answer, mark false
                             values.append('false')
                 else:
                     # the user did not select any options, so we're going to
