@@ -352,10 +352,23 @@ def _to_pandas_series(metadata, multiselect_map):
     source_type = metadata['source'].source_type
 
     geo_state = metadata['account'].address.state
-    geo_loc_name = metadata['account'].address.country_code + ":"\
-        + geo_state
-    latitude = "{:.2f}".format(metadata['account'].latitude)
-    longitude = "{:.2f}".format(metadata['account'].longitude)
+
+    if metadata['account'].address.country_code is None:
+        geo_loc_name = MISSING_VALUE
+    else:
+        geo_loc_name = metadata['account'].address.country_code
+        if geo_state is not None:
+            geo_loc_name += ":" + geo_state
+
+    if metadata['account'].latitude is None:
+        latitude = MISSING_VALUE
+    else:
+        latitude = "{:.2f}".format(metadata['account'].latitude)
+
+    if metadata['account'].longitude is None:
+        longitude = MISSING_VALUE
+    else:
+        longitude = "{:.2f}".format(metadata['account'].longitude)
 
     sample_detail = metadata['sample']
     collection_timestamp = sample_detail.datetime_collected
