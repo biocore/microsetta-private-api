@@ -428,18 +428,25 @@ def _to_pandas_series(metadata, multiselect_map):
 
                 # pull out the previously computed column names
                 specific_shortnames = multiselect_map[(template, qid)]
-                for selection in answer:
-                    # if someone selects the "other", it's not interesting
-                    # metadata, and the actual interesting piece is the
-                    # free text they enter
-                    if selection.lower() == 'other':
-                        continue
 
-                    # determine the column name
-                    specific_shortname = specific_shortnames[selection]
+                if len(answer) > 0:
+                    # the user selected at least one option, so we need to
+                    # put a true/false value for every option
+                    for key in specific_shortnames:
+                        specific_shortname = specific_shortnames[key]
+                        index.append(specific_shortname)
 
-                    values.append('true')
-                    index.append(specific_shortname)
+                        if key in answer:
+                            # the user selected this answer, so mark it true
+                            values.append('true')
+                        else:
+                            # the user did not select this answer, mark it false
+                            values.append('false')
+                else:
+                    # the user did not select any options, so we're going to
+                    # let all of the options be populated by 'not collected'
+                    # downstream
+                    continue
             else:
                 # free text fields from the API come down as ["foo"]
                 values.append(answer.strip('[]"'))

@@ -4,7 +4,7 @@ import pandas.testing as pdt
 from copy import copy
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.metadata_repo._constants import (
-    HUMAN_SITE_INVARIANTS, UNSPECIFIED, MISSING_VALUE)
+    HUMAN_SITE_INVARIANTS, UNSPECIFIED)
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.metadata_repo._repo import (
     _build_col_name,
@@ -264,13 +264,13 @@ class MetadataUtilTests(unittest.TestCase):
 
         exp = pd.DataFrame([['000004216', 'foo', UNSPECIFIED, 'No',
                              'Unspecified', 'Unspecified', 'Unspecified', 'No',
-                             'true', 'true', 'false', MISSING_VALUE,
+                             'true', 'true', 'false', 'false',
                              UNSPECIFIED,
                              'okay', 'No', "2013-10-15T09:30:00", '000004216',
                              'US:CA', 'CA', '32.88', '-117.24'],
                             ['XY0004216', 'bar', 'Vegan foo', 'Yes',
                              'Unspecified', 'Unspecified', 'Unspecified',
-                             'No', 'false', 'true', 'true', MISSING_VALUE,
+                             'No', 'false', 'true', 'true', 'false',
                              'foobar', UNSPECIFIED, UNSPECIFIED,
                              "2013-10-15T09:30:00", 'XY0004216',
                              'US:CA', 'CA', '32.88', '-117.24']],
@@ -312,13 +312,15 @@ class MetadataUtilTests(unittest.TestCase):
         data = self.raw_sample_1
 
         values = ['foo', '', 'No', 'Unspecified', 'Unspecified',
-                  'Unspecified', 'No', 'true', 'true', 'okay', 'No',
+                  'Unspecified', 'No', 'true', 'true', 'false',
+                  'false', 'okay', 'No',
                   '2013-10-15T09:30:00', 'US:CA', 'CA', '32.88', '-117.24']
         index = ['HOST_SUBJECT_ID', 'DIET_TYPE', 'MULTIVITAMIN',
                  'PROBIOTIC_FREQUENCY', 'VITAMIN_B_SUPPLEMENT_FREQUENCY',
                  'VITAMIN_D_SUPPLEMENT_FREQUENCY',
                  'OTHER_SUPPLEMENT_FREQUENCY',
-                 'ALLERGIC_TO_blahblah', 'ALLERGIC_TO_stuff', 'abc', 'def',
+                 'ALLERGIC_TO_blahblah', 'ALLERGIC_TO_stuff', 'ALLERGIC_TO_x',
+                 'ALLERGIC_TO_baz', 'abc', 'def',
                  'COLLECTION_TIMESTAMP', 'GEO_LOC_NAME', 'STATE', 'LATITUDE',
                  'LONGITUDE']
 
