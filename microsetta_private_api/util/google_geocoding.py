@@ -56,13 +56,24 @@ def geocode_address(address):
 
 
 def _construct_request_address(address):
-    request_address = address.street
+    # Apparently there are accounts with null values for some address fields
+    # which is causing concatenation errors. To avoid this, we'll create an
+    # empty string, then verify each field is not None before adding it to the
+    # request_address. Not ideal.
+    request_address = ""
+
+    if address.street is not None:
+        request_address += address.street
     if address.street2 is not None:
         request_address += " " + address.street2
-    request_address += ", " + address.city
-    request_address += ", " + address.state
-    request_address += " " + address.post_code
-    request_address += ", " + address.country_code
+    if address.city is not None:
+        request_address += ", " + address.city
+    if address.state is not None:
+        request_address += ", " + address.state
+    if address.post_code is not None:
+        request_address += " " + address.post_code
+    if address.country_code is not None:
+        request_address += ", " + address.country_code
 
     return request_address
 
