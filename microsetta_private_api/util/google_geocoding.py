@@ -85,6 +85,8 @@ def _parse_response(geocoding_response, strict_mode=False):
 
     latitude = None
     longitude = None
+    state = None
+    country = None
     request_error = False
 
     if geocoding_response['status'] != "OK":
@@ -103,7 +105,16 @@ def _parse_response(geocoding_response, strict_mode=False):
         if 'partial_match' in result and strict_mode:
             request_error = True
         else:
+            for addr_part in result['address_components']:
+                # administrative_area_level_1 is the name for state/province
+                # in the Google geocoding API
+                if "administrative_area_level_1" in addr_part['types']:
+                    state = addr_part['short_name']
+
+                if "country" in addr_part['types']:
+                    country = addr_part['short_name']
+
             latitude = result['geometry']['location']['lat']
             longitude = result['geometry']['location']['lng']
 
-    return latitude, longitude, request_error
+    return latitude, longitude, state, country, request_error

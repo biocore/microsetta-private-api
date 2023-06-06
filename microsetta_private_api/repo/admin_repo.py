@@ -1160,14 +1160,22 @@ class AdminRepo(BaseRepo):
             raise RepoException("Barcode is not associated with a source")
 
         if account is not None:
-            if account.latitude is None and account.cannot_geocode is False:
-                latitude, longitude, cannot_geocode = geocode_address(
-                    account.address
-                )
-                account.latitude = latitude
-                account.longitude = longitude
-                account.cannot_geocode = cannot_geocode
-                account_repo.update_account(account)
+            # Many older accounts do not have a standardized country code and
+            # state/province. If we can get standardized results from Google
+            # we're going to attach them to the account to filter through the
+            # metadata push. We're _not_ going to attach them to the account
+            # in our database, though.
+            latitude, longitude, geo_state, geo_country, cannot_geocode =\
+                geocode_address(account.address)
+            account.latitude = latitude
+            account.longitude = longitude
+            account.cannot_geocode = cannot_geocode
+            account_repo.update_account(account)
+
+            if geo_state is not None:
+                account.address.state = geo_state
+            if geo_country is not None:
+                account.address.country_code = geo_country
 
         host_subject_id = source_repo.get_host_subject_id(source)
 

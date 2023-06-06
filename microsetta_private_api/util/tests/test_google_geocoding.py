@@ -208,10 +208,13 @@ class GoogleGeocodingTests(unittest.TestCase):
             ('', 'geocoding_key_placeholder'),
             "Google Geocoding secrets not provided")
     def test_geocode_address(self):
-        obs_lat, obs_long, obs_error = geocode_address(UCSD_ADDRESS)
+        obs_lat, obs_long, obs_state, obs_country, obs_error =\
+           geocode_address(UCSD_ADDRESS)
 
         self.assertEqual(obs_lat, 32.8798916)
         self.assertEqual(obs_long, -117.2363115)
+        self.assertEqual(obs_state, "CA")
+        self.assertEqual(obs_country, "US")
         self.assertEqual(obs_error, False)
 
     def test_construct_request_address(self):
@@ -219,30 +222,35 @@ class GoogleGeocodingTests(unittest.TestCase):
         self.assertEqual(obs, "9500 Gilman Dr, La Jolla, CA 92093, US")
 
     def test_parse_response_successful(self):
-        obs_lat, obs_long, obs_error = _parse_response(UCSD_GEOCODING_RESULTS)
+        obs_lat, obs_long, obs_state, obs_country, obs_error =\
+           _parse_response(UCSD_GEOCODING_RESULTS)
 
         self.assertEqual(obs_lat, 32.8798916)
         self.assertEqual(obs_long, -117.2363115)
+        self.assertEqual(obs_state, "CA")
+        self.assertEqual(obs_country, "US")
         self.assertEqual(obs_error, False)
 
     def test_parse_response_failure(self):
-        obs_lat, obs_long, obs_error = _parse_response(
-            FAILURE_GEOCODING_RESULTS
-        )
+        obs_lat, obs_long, obs_state, obs_country, obs_error =\
+           _parse_response(FAILURE_GEOCODING_RESULTS)
 
         self.assertEqual(obs_lat, None)
         self.assertEqual(obs_long, None)
+        self.assertEqual(obs_state, None)
+        self.assertEqual(obs_country, None)
         self.assertEqual(obs_error, True)
 
     def test_parse_response_strict(self):
         # The results for STRICT_GEOCODING_RESULTS were generated with a query
         # of 1234 Fake St, San Diego, NY
-        obs_lat, obs_long, obs_error = _parse_response(
-            STRICT_GEOCODING_RESULTS, True
-        )
+        obs_lat, obs_long, obs_state, obs_country, obs_error =\
+           _parse_response(STRICT_GEOCODING_RESULTS, True)
 
         self.assertEqual(obs_lat, None)
         self.assertEqual(obs_long, None)
+        self.assertEqual(obs_state, None)
+        self.assertEqual(obs_country, None)
         self.assertEqual(obs_error, True)
 
 
