@@ -105,7 +105,9 @@ def register_account(body, token_info):
         new_acct = acct_repo.get_account(new_acct_id)
 
         # Now that we've successfully created an account, geocode it
-        latitude, longitude, _, _, cannot_geocode = geocode_address(new_acct.address)
+        latitude, longitude, _, _, cannot_geocode = geocode_address(
+            new_acct.address
+        )
         new_acct.latitude = latitude
         new_acct.longitude = longitude
         new_acct.cannot_geocode = cannot_geocode
@@ -162,7 +164,9 @@ def update_account(account_id, body, token_info):
         # info. We don't need to check if they're actually changing their
         # address, as the geocoding code prevents duplicate requests from
         # reaching Google's API
-        latitude, longitude, _, _, cannot_geocode = geocode_address(acc.address)
+        latitude, longitude, _, _, cannot_geocode = geocode_address(
+            acc.address
+        )
         acc.latitude = latitude
         acc.longitude = longitude
         acc.cannot_geocode = cannot_geocode
