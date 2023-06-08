@@ -11,6 +11,7 @@ from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.consent_repo import ConsentRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
 
 
@@ -78,6 +79,20 @@ def read_source(account_id, source_id, token_info):
         if source is None:
             return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
         return jsonify(source.to_api()), 200
+
+
+def check_source_ffq_prereqs(account_id, source_id, token_info):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        st_repo = SurveyTemplateRepo(t)
+        birth_year, gender, height, weight =\
+            st_repo.fetch_user_basic_physiology(account_id, source_id)
+        if birth_year is None or gender is None or height is None or\
+                weight is None:
+            return jsonify({"basic_info": False}), 200
+
+        return jsonify({"basic_info": True}), 200
 
 
 def update_source(account_id, source_id, body, token_info):

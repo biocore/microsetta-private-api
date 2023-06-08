@@ -269,7 +269,8 @@ def read_survey_template(account_id, source_id, survey_template_id,
                 )
         info.date_last_taken = date_last_taken
 
-        results = st_repo.migrate_responses(source_id, survey_template_id)
+        results = st_repo.migrate_responses(source_id, survey_template_id,
+                                            language_tag)
         # modify info with previous results before returning to client.
         for group in info.survey_template_text.groups:
             for field in group.fields:

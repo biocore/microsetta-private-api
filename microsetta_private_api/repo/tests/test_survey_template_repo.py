@@ -8,6 +8,7 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.model.source import Source, HumanInfo
 import datetime
+from werkzeug.exceptions import NotFound
 
 
 # test identifiers with a vio ID
@@ -613,17 +614,17 @@ class SurveyTemplateTests(unittest.TestCase):
             # use data from an old template 1 survey and return a subset of it
             # in a generated template 10.
 
-            obs = str.migrate_responses(source_id, 10)
+            obs = str.migrate_responses(source_id, 10, "en_US")
             self.assertDictEqual(obs, self.filled_survey_10a)
 
             # use an invalid template id
             with self.assertRaises(ValueError):
                 str.migrate_responses('d8592c74-8148-2135-e040-8a80115d6401',
-                                      -1)
+                                      -1, "en_US")
 
             # request a test from a valid account, but contributes no prior
             # values to the result.
-            obs = str.migrate_responses(source_id, 19)
+            obs = str.migrate_responses(source_id, 19, "en_US")
             self.assertDictEqual(obs, self.filled_survey_19a)
 
             # the following statements create a new source and submits a
@@ -642,7 +643,7 @@ class SurveyTemplateTests(unittest.TestCase):
                 self._submit_test_survey(account_id, human_source.id,
                                          'March'))
 
-            result = str.migrate_responses(human_source.id, 10)
+            result = str.migrate_responses(human_source.id, 10, "en_US")
             self.assertNotEqual(result['111'], 'February')
             self.assertEqual(result['111'], 'March')
 
@@ -650,6 +651,20 @@ class SurveyTemplateTests(unittest.TestCase):
             # as this is the only test that needs them. Each submit needs its
             # own commit(), this was the way to keep it better managed.
             self._clean_up(account_id, human_source.id, survey_ids)
+
+    def test_migrate_responses_invalid_language_tag(self):
+        with Transaction() as t:
+            with t.cursor() as cur:
+                # get source_id associated with survey_id 6d16832b84358c93 as
+                # it is randomly generated each install.
+                cur.execute("SELECT source_id FROM ag_login_surveys WHERE "
+                            "survey_id = '6d16832b84358c93'")
+                source_id = cur.fetchone()[0]
+
+            str = SurveyTemplateRepo(t)
+
+            with self.assertRaises(NotFound):
+                str.migrate_responses(source_id, 10, "foo_bar")
 
     def test_get_template_ids_from_survey_ids(self):
         with Transaction() as t:
