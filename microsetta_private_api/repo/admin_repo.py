@@ -1136,6 +1136,70 @@ class AdminRepo(BaseRepo):
             )
             return [r[0] for r in cur.fetchall()]
 
+    def map_to_rack(self, sample_barcode, scan_info):
+        with self._transaction.cursor() as cur:
+
+            # not actually using the result, just checking there IS one
+            # to ensure this is a valid barcode
+            cur.execute(
+                "SELECT barcode FROM barcodes.barcode WHERE barcode=%s",
+                (sample_barcode,)
+            )
+
+            if cur.rowcount == 0:
+                raise NotFound("No such barcode: %s" % sample_barcode)
+            elif cur.rowcount > 1:
+                # Note: This "can't" happen.
+                raise RepoException("ERROR: Multiple barcode entries would be "
+                                    "affected by scan; failing out")
+
+            # put a new row in the barcodes.barcode_scans table
+            new_uuid = str(uuid.uuid4())
+            scan_args = (
+                new_uuid,
+                scan_info['rack_id'],
+                sample_barcode,
+                scan_info['location_row'],
+                scan_info['location_col'],
+                datetime.datetime.now(),
+                scan_info['bulk_scan_id']
+            )
+
+            cur.execute(
+                "INSERT INTO barcodes.rack_samples "
+                "(location_id, rack_id, sample_id, "
+                "location_row, location_col, date_time, scan_id) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                scan_args
+            )
+
+            return new_uuid
+
+    def get_rack_samples(self, rack_id, bulk_scan_id):
+        with self._transaction.dict_cursor() as cur:
+
+            cur.execute(
+                "SELECT DISTINCT ON (sample_id) sample_id, location_row, "
+                "location_col FROM barcodes.rack_samples WHERE rack_id=%s "
+                "AND scan_id=%s "
+                "ORDER BY sample_id, date_time DESC",
+                (rack_id, bulk_scan_id, )
+            )
+
+            sample_rows = cur.fetchall()
+
+            if len(sample_rows) == 0:
+                raise NotFound("No barcode with rack id: %s" % rack_id)
+
+            result = []
+            for row in sample_rows:
+                data_to_return = {}
+                data_to_return["location_row"] = row["location_row"]
+                data_to_return["location_col"] = row["location_col"]
+                data_to_return["barcode"] = row["sample_id"]
+                result.append(data_to_return)
+            return result
+
     def get_survey_metadata(self, sample_barcode, survey_template_id=None):
         '''
         Return all surveys associated with a given barcode.

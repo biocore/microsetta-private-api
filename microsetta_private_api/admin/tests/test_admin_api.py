@@ -1,6 +1,7 @@
 import pytest
 from unittest import TestCase
 from unittest.mock import patch
+import uuid
 from flask import Response
 import json
 import microsetta_private_api.server
@@ -1269,6 +1270,24 @@ class AdminApiTests(TestCase):
                 data=json.dumps(info),
                 headers=MOCK_HEADERS)
             self.assertEqual(204, response.status_code)
+
+    def test_sample_map_to_rack(self):
+        barcode = "000001024"
+        scan_info = {
+            'rack_id': '005',
+            'location_row': 'B',
+            'location_col': '01',
+            'bulk_scan_id': str(uuid.uuid4())
+        }
+
+        response = self.client.post(
+            '/api/admin/rack/{0}/add'.format(barcode),
+            content_type="application/json",
+            data=json.dumps(scan_info),
+            headers=MOCK_HEADERS
+        )
+
+        self.assertEquals(201, response.status_code)
 
     def test_generate_ffq_codes(self):
         input_json = json.dumps({"code_quantity": 2})

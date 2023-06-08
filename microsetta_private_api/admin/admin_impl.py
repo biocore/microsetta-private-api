@@ -917,3 +917,32 @@ def get_vioscreen_sample_to_user(token_info):
         st_repo = SurveyTemplateRepo(t)
         data = st_repo.get_vioscreen_sample_to_user()
     return jsonify(data), 200
+
+
+def map_to_rack(token_info, sample_barcode, body):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        scan_id = admin_repo.map_to_rack(sample_barcode, body)
+        t.commit()
+
+    response = jsonify({"scan_id": scan_id})
+    response.status_code = 201
+    return response
+
+
+def get_samples_from_rack(token_info, rack_id, bulk_scan_id):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        row = admin_repo.get_rack_samples(rack_id, bulk_scan_id)
+        if row is None:
+            response = jsonify({"message": "sample does not exist!"})
+            response.status_code = 404
+            return response
+        else:
+            response = jsonify({"result": row})
+            response.status_code = 201
+            return response

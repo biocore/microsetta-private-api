@@ -4,6 +4,7 @@ import dateutil.parser
 import psycopg2
 import psycopg2.extras
 from dateutil.relativedelta import relativedelta
+import uuid
 
 import microsetta_private_api.model.project as p
 
@@ -1323,6 +1324,43 @@ class AdminRepoTests(AdminTests):
                 self.assertEqual(len(curr_records), 2)
                 for expected_record in expected_records:
                     self.assertIn(expected_record, curr_records)
+
+    def test_map_to_rack_fail(self):
+        scan_info = {
+            'rack_id': '001',
+            'location_row': 'A',
+            'location_col': '02'
+        }
+
+        with Transaction() as t:
+            barcode = '00000000'
+
+            admin_repo = AdminRepo(t)
+            with self.assertRaises(NotFound):
+                admin_repo.map_to_rack(barcode, scan_info)
+
+    def test_map_to_rack_success(self):
+        bulk_scan_id = str(uuid.uuid4())
+        scan_info = {
+            'rack_id': '001',
+            'location_row': 'A',
+            'location_col': '02',
+            'bulk_scan_id': bulk_scan_id
+        }
+
+        id = ""
+        samples = None
+        with Transaction() as t:
+            barcode = '000001024'
+
+            admin_repo = AdminRepo(t)
+            id = admin_repo.map_to_rack(barcode, scan_info)
+
+            rack_id = '001'
+            samples = admin_repo.get_rack_samples(rack_id, bulk_scan_id)
+
+        self.assertTrue(len(id) > 0)
+        self.assertEquals(len(samples), 1)
 
     def test_create_ffq_code(self):
         with Transaction() as t:
