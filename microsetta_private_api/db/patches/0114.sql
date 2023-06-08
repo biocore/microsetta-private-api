@@ -34,10 +34,7 @@ UPDATE ag.survey_question SET american = 'In the past month, have you been suspe
 UPDATE ag.survey_question SET american = 'In the past 6 weeks, have you had any of the following symptoms? (check all that apply)' WHERE survey_question_id = 214;
 
 -- Adjust the options for question 214
--- First, let's fix the typo in "Loss of appetite" - we'll leave the old option in the database so as to not break existing records
-INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('Lack of appetite', 'Falta de apetito', 'Falta de apetito');
-UPDATE ag.survey_question_response SET response = 'Lack of appetite' WHERE response = 'Lack of appetitie';
--- Now let's add new options. First, we'll add the options to the database
+-- First, we'll add the new options to the database
 INSERT INTO ag.survey_response (american) VALUES
     ('Shortness of breath or difficulty breathing'),
     ('Headaches'),
