@@ -1861,7 +1861,7 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     La participación en la investigación es totalmente voluntaria. Le informaremos a usted y a su hijo si se encuentra alguna información nueva importante durante el curso de este estudio que pueda afectar su deseo de continuar.
 </p>
 <p class="consent_content">
-    Puede negarse a que su hijo participe o retirar a su hijo en cualquier momento eliminando el perfil en línea de su hijo, o solicitando la eliminación de su cuenta.. Nuestros investigadores seguirán utilizando los datos sobre usted o su hijo que se recopilaron antes de que se retiraran. Estos datos no incluirán ninguna información personal que pueda identificar directamente a su hijo. Después de que su hijo retire, no se recopilarán más datos sobre su hijo.
+    Puede negarse a que su hijo participe o retirar a su hijo en cualquier momento eliminando el perfil en línea de su hijo, o solicitando la eliminación de su cuenta. Nuestros investigadores seguirán utilizando los datos sobre usted o su hijo que se recopilaron antes de que se retiraran. Estos datos no incluirán ninguna información personal que pueda identificar directamente a su hijo. Después de que su hijo retire, no se recopilarán más datos sobre su hijo.
 </p>
 <p class="consent_content">
     Su hijo puede ser retirado del estudio si no se siguen las instrucciones que le dio el personal del estudio.
@@ -2620,7 +2620,7 @@ UPDATE ag.consent_documents SET date_time = NOW(), consent_content = '<p class="
     La participación en la investigación es totalmente voluntaria. Le informaremos a usted y a su hijo si se encuentra alguna información nueva importante durante el curso de este estudio que pueda afectar su deseo de continuar.
 </p>
 <p class="consent_content">
-    Puede negarse a que su hijo participe o retirar a su hijo en cualquier momento eliminando el perfil en línea de su hijo, o solicitando la eliminación de su cuenta.. Nuestros investigadores seguirán utilizando los datos sobre usted o su hijo que se recopilaron antes de que se retiraran. Estos datos no incluirán ninguna información personal que pueda identificar directamente a su hijo. Después de que su hijo retire, no se recopilarán más datos sobre su hijo.
+    Puede negarse a que su hijo participe o retirar a su hijo en cualquier momento eliminando el perfil en línea de su hijo, o solicitando la eliminación de su cuenta. Nuestros investigadores seguirán utilizando los datos sobre usted o su hijo que se recopilaron antes de que se retiraran. Estos datos no incluirán ninguna información personal que pueda identificar directamente a su hijo. Después de que su hijo retire, no se recopilarán más datos sobre su hijo.
 </p>
 <p class="consent_content">
     Su hijo puede ser retirado del estudio si no se siguen las instrucciones que le dio el personal del estudio.
