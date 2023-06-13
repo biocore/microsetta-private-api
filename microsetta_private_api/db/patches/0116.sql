@@ -3008,7 +3008,7 @@ INSERT INTO barcodes.barcodes_needing_scans_0116 (barcode)
 
 -- Now, we'll create entries in the barcodes_scans table using an INSERT INTO...SELECT FROM... statement with an INNER JOIN
 -- to ensure the barcode exists in the environment.
-INSERT INTO barcodes.barcodes_scans (barcode, scan_timestamp, sample_status, technician_notes)
+INSERT INTO barcodes.barcode_scans (barcode, scan_timestamp, sample_status, technician_notes)
     SELECT bns.barcode, NOW(), 'sample-is-valid', 'Scan created automatically'
     FROM barcodes.barcodes_needing_scans_0116 bns
     INNER JOIN barcodes.barcode
