@@ -3002,7 +3002,14 @@ INSERT INTO barcodes.barcodes_needing_scans_0116 (barcode)
             ('000003431'),
             ('000002740'),
             ('000015680'),
-            ('000040544');
+            ('000040544'),
+            ('000008950'),
+            ('000008951'),
+            ('000008952'),
+            ('000008953'),
+            ('000008954'),
+            ('000008957'),
+            ('000008959');
 
 -- Now, we'll create entries in the barcodes_scans table using an INSERT INTO...SELECT FROM... statement with an INNER JOIN
 -- to ensure the barcode exists in the environment.
