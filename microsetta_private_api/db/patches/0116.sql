@@ -1,12 +1,10 @@
 -- Create table to log geocoding requests
-
--- NB: Temporarily disabling table creation so we don't need to re-run 30,000+ Google API calls in the staging environment
--- CREATE TABLE ag.google_geocoding (
---    geocoding_request_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---    request_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
---    request_address VARCHAR NOT NULL UNIQUE,
---    response_body JSONB
--- );
+CREATE TABLE ag.google_geocoding (
+    geocoding_request_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    request_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    request_address VARCHAR NOT NULL UNIQUE,
+    response_body JSONB
+);
 
 -- These four otherwise-valid samples are missing sample_time. We're going to set it to midnight and make a note of the action.
 UPDATE ag.ag_kit_barcodes SET sample_time = '00:00:00', notes = CONCAT(notes, ' NOTE: sample_time set to 00:00:00 administratively.')

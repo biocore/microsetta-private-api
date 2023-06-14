@@ -263,13 +263,13 @@ class MetadataUtilTests(unittest.TestCase):
         templates = {1: self.fake_survey_template2}
 
         exp = pd.DataFrame([['000004216', 'foo', UNSPECIFIED, 'No',
-                             'Unspecified', 'Unspecified', 'Unspecified', 'No',
+                             UNSPECIFIED, UNSPECIFIED, UNSPECIFIED, 'No',
                              'true', 'true', 'false', 'false',
                              UNSPECIFIED,
                              'okay', 'No', "2013-10-15T09:30:00", '000004216',
                              'US:CA', 'CA', '32.88', '-117.24'],
                             ['XY0004216', 'bar', 'Vegan foo', 'Yes',
-                             'Unspecified', 'Unspecified', 'Unspecified',
+                             UNSPECIFIED, UNSPECIFIED, UNSPECIFIED,
                              'No', 'false', 'true', 'true', 'false',
                              'foobar', UNSPECIFIED, UNSPECIFIED,
                              "2013-10-15T09:30:00", 'XY0004216',

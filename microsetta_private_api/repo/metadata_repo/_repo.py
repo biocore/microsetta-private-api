@@ -281,6 +281,11 @@ def _to_pandas_dataframe(metadatas, survey_templates):
         df.loc[human_mask] = df.loc[human_mask].fillna(UNSPECIFIED)
     df.fillna(MISSING_VALUE, inplace=True)
 
+    # We have values of 'Unspecified' coming out of the database, which is
+    # inappropriate to push to Qiita. We'll replace them with the UNSPECIFIED
+    # constant as the last step of creating the dataframe
+    df.replace("Unspecified", UNSPECIFIED, inplace=True)
+
     return errors, apply_transforms(df, HUMAN_TRANSFORMS)
 
 
