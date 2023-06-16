@@ -100,12 +100,12 @@ class GoogleGeocodingRepoTests(unittest.TestCase):
             gg_repo = GoogleGeocodingRepo(t)
             request_address = _construct_request_address(UCSD_ADDRESS)
 
-            new_request, ret_val = gg_repo.get_or_create_record(
+            new_request, request_id, _ = gg_repo.get_or_create_record(
                 request_address
             )
 
             self.assertTrue(new_request)
-            self.assertTrue(self._is_uuid(ret_val))
+            self.assertTrue(self._is_uuid(request_id))
 
     def test_get_or_create_record_get(self):
         # We're going to create a record for the UC San Diego address, then
@@ -115,23 +115,22 @@ class GoogleGeocodingRepoTests(unittest.TestCase):
             gg_repo = GoogleGeocodingRepo(t)
             request_address = _construct_request_address(UCSD_ADDRESS)
 
-            _, _ = gg_repo.get_or_create_record(
+            _, _, _ = gg_repo.get_or_create_record(
                 request_address
             )
 
-            new_request, ret_val = gg_repo.get_or_create_record(
+            new_request, _, _ = gg_repo.get_or_create_record(
                 request_address
             )
 
             self.assertFalse(new_request)
-            self.assertFalse(self._is_uuid(ret_val))
 
     def test_update_record(self):
         with Transaction() as t:
             gg_repo = GoogleGeocodingRepo(t)
             request_address = _construct_request_address(UCSD_ADDRESS)
 
-            _, request_id = gg_repo.get_or_create_record(request_address)
+            _, request_id, _ = gg_repo.get_or_create_record(request_address)
 
             obs = gg_repo.update_record(
                 request_id,

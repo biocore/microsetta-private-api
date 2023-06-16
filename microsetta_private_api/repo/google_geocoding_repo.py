@@ -20,16 +20,17 @@ class GoogleGeocodingRepo(BaseRepo):
         -------
         new_record : bool
             Boolean flag indicating whether it's a new record
-        geocoding_request_id : uuid4 or response_body : json
-            Unique ID of the record in the ag.google_geocoding table OR
-            json object with geocoding data
+        geocoding_request_id : uuid4
+            Unique ID of the record in the ag.google_geocoding table
+        response_body : json or None
+            Json object with geocoding data or None if it's a new record
         """
         with self._transaction.dict_cursor() as cur:
             # Lock the table to prevent a race condition
             self._transaction.lock_table("google_geocoding")
 
             # Check to see if we've geocoded the address before
-            cur.execute("""SELECT response_body
+            cur.execute("""SELECT geocoding_request_id, response_body
                            FROM ag.google_geocoding
                            WHERE request_address = %s""",
                         (request_address, ))
@@ -42,10 +43,10 @@ class GoogleGeocodingRepo(BaseRepo):
                                RETURNING geocoding_request_id""",
                             (request_address,))
                 geocoding_request_id = cur.fetchone()[0]
-                return True, geocoding_request_id
+                return True, geocoding_request_id, None
             else:
                 # Already geocoded, return the response body
-                return False, row['response_body']
+                return False, row['geocoding_request_id'], row['response_body']
 
     def update_record(self, geocoding_request_id, response_body):
         """

@@ -15,14 +15,13 @@ def geocode_address(address):
         request_address = _construct_request_address(address)
 
         # Determine if we've already geocoded the address
-        new_request, ret_val = gg_repo.get_or_create_record(request_address)
+        new_request, request_id, response_body = gg_repo.get_or_create_record(
+            request_address
+        )
         if not new_request:
             # Already geocoded, just return the parsed response
-            return _parse_response(ret_val)
+            return _parse_response(response_body)
         else:
-            # New record, so ret_val is the ID of the record in the database
-            request_id = ret_val
-
             if request_id is None:
                 # There was an error creating the DB record - we should never
                 # reach this point, but if we do, mark it as failed
