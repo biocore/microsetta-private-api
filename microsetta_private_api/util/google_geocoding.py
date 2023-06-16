@@ -49,8 +49,8 @@ def geocode_address(address):
                 gg_repo.update_record(request_id, response_raw)
             except Exception:
                 t.rollback()
-
-            t.commit()
+            else:
+                t.commit()
 
             return _parse_response(response_obj)
 
