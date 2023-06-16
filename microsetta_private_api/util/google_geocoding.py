@@ -16,7 +16,7 @@ def geocode_address(address):
 
         # Determine if we've already geocoded the address
         new_request, ret_val = gg_repo.get_or_create_record(request_address)
-        if new_request is False:
+        if not new_request:
             # Already geocoded, just return the parsed response
             return _parse_response(ret_val)
         else:
