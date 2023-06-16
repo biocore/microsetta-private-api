@@ -273,7 +273,7 @@ class MetadataUtilTests(unittest.TestCase):
                              'No', 'false', 'true', 'true', 'false',
                              'foobar', UNSPECIFIED, UNSPECIFIED,
                              "2013-10-15T09:30:00", 'XY0004216',
-                             'US:CA', 'CA', '32', '-117']],
+                             'US:CA', 'CA', '33', '-117']],
                            columns=['sample_name', 'host_subject_id',
                                     'diet_type', 'multivitamin',
                                     'probiotic_frequency',
@@ -314,7 +314,7 @@ class MetadataUtilTests(unittest.TestCase):
         values = ['foo', '', 'No', 'Unspecified', 'Unspecified',
                   'Unspecified', 'No', 'true', 'true', 'false',
                   'false', 'okay', 'No',
-                  '2013-10-15T09:30:00', 'US:CA', 'CA', '32', '-117']
+                  '2013-10-15T09:30:00', 'US:CA', 'CA', '33', '-117']
         index = ['HOST_SUBJECT_ID', 'DIET_TYPE', 'MULTIVITAMIN',
                  'PROBIOTIC_FREQUENCY', 'VITAMIN_B_SUPPLEMENT_FREQUENCY',
                  'VITAMIN_D_SUPPLEMENT_FREQUENCY',

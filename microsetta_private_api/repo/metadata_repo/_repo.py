@@ -368,12 +368,12 @@ def _to_pandas_series(metadata, multiselect_map):
     if metadata['account'].latitude is None:
         latitude = MISSING_VALUE
     else:
-        latitude = str(round(int(metadata['account'].latitude)))
+        latitude = str(int(round(metadata['account'].latitude)))
 
     if metadata['account'].longitude is None:
         longitude = MISSING_VALUE
     else:
-        longitude = str(round(int(metadata['account'].longitude)))
+        longitude = str(int(round(metadata['account'].longitude)))
 
     sample_detail = metadata['sample']
     collection_timestamp = sample_detail.datetime_collected
