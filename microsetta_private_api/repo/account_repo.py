@@ -5,7 +5,6 @@ from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.exceptions import RepoException
-from microsetta_private_api.util.melissa import verify_address
 
 
 class AccountRepo(BaseRepo):
@@ -17,13 +16,15 @@ class AccountRepo(BaseRepo):
                 "first_name, last_name, " \
                 "street, city, state, post_code, country_code, " \
                 "created_with_kit_id, preferred_language, " \
-                "creation_time, update_time"
+                "creation_time, update_time, latitude, longitude, "\
+                "cannot_geocode"
 
     write_cols = "id, email, " \
                  "account_type, auth_issuer, auth_sub, " \
                  "first_name, last_name, " \
                  "street, city, state, post_code, country_code, " \
-                 "created_with_kit_id, preferred_language"
+                 "created_with_kit_id, preferred_language, latitude, "\
+                 "longitude, cannot_geocode"
 
     @staticmethod
     def _row_to_addr(r):
@@ -45,6 +46,7 @@ class AccountRepo(BaseRepo):
             r['account_type'], r['auth_issuer'], r['auth_sub'],
             r['first_name'], r['last_name'],
             AccountRepo._row_to_addr(r),
+            r['latitude'], r['longitude'], r['cannot_geocode'],
             r['created_with_kit_id'],
             r['preferred_language'],
             r['creation_time'], r['update_time'])
@@ -55,7 +57,8 @@ class AccountRepo(BaseRepo):
                 a.account_type, a.auth_issuer, a.auth_sub,
                 a.first_name, a.last_name) + \
                 AccountRepo._addr_to_row(a.address) + \
-                (a.created_with_kit_id, a.language)
+                (a.created_with_kit_id, a.language, a.latitude, a.longitude,
+                 a.cannot_geocode)
 
     def claim_legacy_account(self, email, auth_iss, auth_sub):
         # Returns now-claimed legacy account if an unclaimed legacy account
@@ -158,7 +161,10 @@ class AccountRepo(BaseRepo):
                             "post_code = %s, "
                             "country_code = %s, "
                             "created_with_kit_id = %s, "
-                            "preferred_language = %s "
+                            "preferred_language = %s, "
+                            "latitude = %s, "
+                            "longitude = %s, "
+                            "cannot_geocode = %s "
                             "WHERE "
                             "account.id = %s",
                             final_row
@@ -186,7 +192,7 @@ class AccountRepo(BaseRepo):
                             "%s, %s, %s, "
                             "%s, %s, "
                             "%s, %s, %s, %s, %s, "
-                            "%s, %s)",
+                            "%s, %s, %s, %s, %s)",
                             AccountRepo._account_to_row(account))
                 return cur.rowcount == 1
         except psycopg2.errors.UniqueViolation as e:
@@ -222,75 +228,6 @@ class AccountRepo(BaseRepo):
                         "ORDER BY email",
                         (email,))
             return [x[0] for x in cur.fetchall()]
-
-    def geocode_accounts(self):
-        with self._transaction.dict_cursor() as cur:
-            cur.execute("SELECT id, street, city, state, post_code, "
-                        "country_code FROM ag.account "
-                        "WHERE latitude is null AND cannot_geocode = false "
-                        "LIMIT 100")
-            rows = cur.fetchall()
-            for r in rows:
-                try:
-                    melissa_response = verify_address(r['street'],
-                                                      "",
-                                                      "",
-                                                      r['city'],
-                                                      r['state'],
-                                                      r['post_code'],
-                                                      r['country_code'])
-                except KeyError:
-                    # missing field geocoding will never succeed
-                    cur.execute("UPDATE ag.account SET cannot_geocode = true "
-                                "WHERE id = %s",
-                                (r['id'],))
-                    continue
-                except ValueError:
-                    # Melissa worked but we were unable to update the database
-                    cur.execute("UPDATE ag.account SET cannot_geocode = true "
-                                "WHERE id = %s",
-                                (r['id'],))
-                    continue
-                except RepoException:
-                    # we couldn't create a record in the database for the
-                    # Melissa API attempt - should never reach this point
-                    continue
-                except Exception:
-                    # we either couldn't connect to Melissa or their server
-                    # returned a response with no records
-                    # TODO: What's the best way to log this failure state
-                    # so we can investigate?
-                    cur.execute("UPDATE ag.account SET cannot_geocode = true "
-                                "WHERE id = %s",
-                                (r['id'],))
-                    continue
-
-                if melissa_response['latitude'] and \
-                        melissa_response['longitude']:
-                    # Note - Melissa can return a valid lat/long for addresses
-                    # that aren't deliverable (e.g. missing apartment number).
-                    # Therefore, we log the lat/long AND a true/false
-                    # for address_verified so we can later separate geocoded
-                    # addresses from verified deliverable addresses
-                    cur.execute(
-                        "UPDATE ag.account "
-                        "SET address_verified = %s, "
-                        "latitude = %s, longitude = %s "
-                        "WHERE id = %s",
-                        (melissa_response['valid'],
-                         melissa_response['latitude'],
-                         melissa_response['longitude'],
-                         r['id'],)
-                    )
-                else:
-                    # Melissa couldn't find the address
-                    cur.execute(
-                        "UPDATE ag.account "
-                        "SET cannot_geocode = true "
-                        "WHERE id = %s",
-                        (r['id'],)
-                    )
-        return True
 
     def scrub(self, account_id):
         """Remove any identifying information from the account
@@ -329,5 +266,8 @@ class AccountRepo(BaseRepo):
         account.address.city = 'scrubbed'
         account.address.state = 'NA'
         account.address.post_code = 'scrubbed'
+        account.latitude = None
+        account.longitude = None
+        account.cannot_geocode = False
 
         return self.update_account(account) == 1

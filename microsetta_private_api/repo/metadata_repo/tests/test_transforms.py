@@ -9,7 +9,7 @@ from microsetta_private_api.repo.metadata_repo._transforms import (
     Constant, Normalize, BMI_CAT, HOST_WEIGHT_UNITS, HOST_HEIGHT_UNITS,
     LIFESTAGE)
 from microsetta_private_api.repo.metadata_repo._constants import (
-    UNSPECIFIED)
+    UNSPECIFIED, MISSING_VALUE)
 
 
 class TransformTests(unittest.TestCase):
@@ -134,12 +134,12 @@ class TransformTests(unittest.TestCase):
     def test_Sex(self):
         df = pd.DataFrame([['Male'],
                            ['Female'],
-                           ['Unspecified'],
                            [UNSPECIFIED],
+                           [MISSING_VALUE],
                            ['Other']],
                           index=list('abcde'),
                           columns=[GENDER, ])
-        exp = pd.Series(['male', 'female', 'unspecified', UNSPECIFIED.lower(),
+        exp = pd.Series(['male', 'female', UNSPECIFIED, MISSING_VALUE,
                          'other'], index=list('abcde'), name=SEX)
         self._test_transformer(Sex, df, exp)
 

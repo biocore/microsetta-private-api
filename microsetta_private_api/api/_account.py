@@ -16,6 +16,7 @@ from microsetta_private_api.repo.activation_repo import ActivationRepo
 from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.util.google_geocoding import geocode_address
 
 
 def find_accounts_for_login(token_info):
@@ -66,6 +67,12 @@ def register_account(body, token_info):
     code = body.get("code", "")
     body["code"] = code
 
+    # We need these keys to exist to create the account object, but we'll
+    # update them momentarily
+    body["latitude"] = None
+    body["longitude"] = None
+    body["cannot_geocode"] = False
+
     account_obj = Account.from_dict(body, token_info[JWT_ISS_CLAIM_KEY],
                                     token_info[JWT_SUB_CLAIM_KEY])
 
@@ -96,6 +103,16 @@ def register_account(body, token_info):
         acct_repo = AccountRepo(t)
         acct_repo.create_account(account_obj)
         new_acct = acct_repo.get_account(new_acct_id)
+
+        # Now that we've successfully created an account, geocode it
+        latitude, longitude, _, _, cannot_geocode = geocode_address(
+            new_acct.address
+        )
+        new_acct.latitude = latitude
+        new_acct.longitude = longitude
+        new_acct.cannot_geocode = cannot_geocode
+        acct_repo.update_account(new_acct)
+
         t.commit()
 
     response = jsonify(new_acct.to_api())
@@ -142,6 +159,17 @@ def update_account(account_id, body, token_info):
             body['address']['country_code']
         )
         acc.language = body['language']
+
+        # Whenever someone updates their address, we need to update geocoding
+        # info. We don't need to check if they're actually changing their
+        # address, as the geocoding code prevents duplicate requests from
+        # reaching Google's API
+        latitude, longitude, _, _, cannot_geocode = geocode_address(
+            acc.address
+        )
+        acc.latitude = latitude
+        acc.longitude = longitude
+        acc.cannot_geocode = cannot_geocode
 
         # 422 handling is done inside acct_repo
         acct_repo.update_account(acc)

@@ -71,8 +71,9 @@ class QiitaRepo(BaseRepo):
         # throw away the 10317. study prefix
         samples_in_qiita = {i.split('.', 1)[1] for i in samples_in_qiita}
 
-        # gather the categories currently used in qiita. we have to have parity
-        # with the categories when pushing
+        # gather the categories currently used in qiita. we no longer need to
+        # have parity with Qiita, but we do want to pass a "missing value"
+        # code for any field in Qiita that we aren't passing a real value for
         cats_in_qiita = qclient.get('/api/v1/study/10317/samples/info')
         cats_in_qiita = set(cats_in_qiita['categories'])
 
@@ -92,12 +93,6 @@ class QiitaRepo(BaseRepo):
             return 0, error
 
         columns = set(formatted.columns)
-
-        # the qiita endpoint will not allow for adding new categories
-        # and we can determine this before we poke qiita.
-        # TODO: allow adding new columns to Qiita
-        if not cats_in_qiita.issuperset(columns):
-            formatted = formatted[cats_in_qiita & columns]
 
         # if there are any categories not represented, remark them as
         # missing in the metadata

@@ -77,7 +77,10 @@ DUMMY_ACCT_INFO = {
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
-    KIT_NAME_KEY: EXISTING_KIT_NAME
+    KIT_NAME_KEY: EXISTING_KIT_NAME,
+    "latitude": 32.8798916,
+    "longitude": -117.2363115,
+    "cannot_geocode": False
 }
 DUMMY_ACCT_INFO_2 = {
     "address": {
@@ -91,7 +94,10 @@ DUMMY_ACCT_INFO_2 = {
     "first_name": "Obie",
     "last_name": "Dobie",
     "language": "en_US",
-    KIT_NAME_KEY: EXISTING_KIT_NAME_2
+    KIT_NAME_KEY: EXISTING_KIT_NAME_2,
+    "latitude": 32.8798916,
+    "longitude": -117.2363115,
+    "cannot_geocode": False
 }
 DUMMY_ACCT_ADMIN = {
     "address": {
@@ -104,7 +110,10 @@ DUMMY_ACCT_ADMIN = {
     "email": TEST_EMAIL_3,
     "first_name": "Obie",
     "last_name": "Dobie",
-    KIT_NAME_KEY: EXISTING_KIT_NAME_2
+    KIT_NAME_KEY: EXISTING_KIT_NAME_2,
+    "latitude": 32.8798916,
+    "longitude": -117.2363115,
+    "cannot_geocode": False
 }
 
 SOURCE_ID_1 = "9fba75a5-6fbf-42be-9624-731b6a9a161a"
@@ -467,6 +476,9 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['post_code'],
                 input_obj['address']['country_code']
             ),
+            input_obj['latitude'],
+            input_obj['longitude'],
+            input_obj['cannot_geocode'],
             input_obj['kit_name'],
             input_obj['language']
         )
@@ -697,6 +709,16 @@ class ApiTests(TestCase):
         expected_dict[ACCT_TYPE_KEY] = ACCT_TYPE_VAL
         expected_dict[CREATION_TIME_KEY] = real_creation_time
         expected_dict[UPDATE_TIME_KEY] = real_update_time
+
+        # the lat, long, and cannot_geocode need to be ignored for the sake of
+        # comparisons
+        expected_dict.pop("latitude", None)
+        expected_dict.pop("longitude", None)
+        expected_dict.pop("cannot_geocode", None)
+        response_obj.pop("latitude", None)
+        response_obj.pop("longitude", None)
+        response_obj.pop("cannot_geocode", None)
+
         self.assertEqual(expected_dict, response_obj)
 
         return real_acct_id_from_body
@@ -740,11 +762,15 @@ class AccountsTests(ApiTests):
 
     def test_accounts_create_fail_400_without_required_fields(self):
         """Return 400 validation fail if don't provide a required field """
+        input_obj = copy.deepcopy(DUMMY_ACCT_INFO)
+        input_obj.pop('latitude', None)
+        input_obj.pop('longitude', None)
+        input_obj.pop('cannot_geocode', None)
 
         self.run_query_and_content_required_field_test(
             "/api/accounts", "post",
             self.default_querystring_dict,
-            DUMMY_ACCT_INFO,
+            input_obj,
             skip_fields=["kit_name"])
 
     def test_accounts_create_fail_404(self):
@@ -926,7 +952,8 @@ class AccountTests(ApiTests):
         response_obj = json.loads(response.data)
 
         for k in DUMMY_ACCT_INFO:
-            if k in (KIT_NAME_KEY, 'language'):
+            if k in (KIT_NAME_KEY, 'language', 'cannot_geocode', 'latitude',
+                     'longitude'):
                 continue
             self.assertNotEqual(DUMMY_ACCT_INFO[k],
                                 response_obj[k])
@@ -1251,6 +1278,9 @@ class AccountTests(ApiTests):
 
         dummy_acct_id = create_dummy_acct()
         changed_acct_dict = self.make_updated_acct_dict()
+        changed_acct_dict.pop('latitude', None)
+        changed_acct_dict.pop('longitude', None)
+        changed_acct_dict.pop('cannot_geocode', None)
 
         input_url = "/api/accounts/{0}".format(dummy_acct_id)
         self.run_query_and_content_required_field_test(

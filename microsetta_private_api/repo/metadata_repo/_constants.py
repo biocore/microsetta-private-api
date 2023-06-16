@@ -1,5 +1,5 @@
-MISSING_VALUE = 'not applicable'
-UNSPECIFIED = 'Unspecified'
+MISSING_VALUE = 'not collected'
+UNSPECIFIED = 'not provided'
 
 
 # standard fields that are set based on sampling site

@@ -56,6 +56,7 @@ jobs:
         VS_PASSWORD: "${{ secrets.VS_PASSWORD }}"
         VS_CRYPTOKEY: "${{ secrets.VS_CRYPTOKEY }}"
         VS_REGCODE: "${{ secrets.VS_REGCODE }}"
+        GOOGLE_GEOCODING_KEY: "${{ secrets.GOOGLE_GEOCODING_KEY }}"
       run: |
         # pull out the port so we can modify the configuration file easily
         pgport=${{ job.services.postgres.ports[5432] }}

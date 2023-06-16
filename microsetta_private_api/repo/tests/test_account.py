@@ -2,10 +2,8 @@ import unittest
 import datetime
 
 from microsetta_private_api.exceptions import RepoException
-from unittest.mock import patch
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
-from microsetta_private_api.model.account import Account
 
 
 ACCOUNT_ID = '607f6723-c704-4b52-bc26-556a9aec85f6'
@@ -85,70 +83,6 @@ class AccountTests(unittest.TestCase):
             ar = AccountRepo(t)
             with self.assertRaises(RepoException):
                 ar.scrub(BAD_ACCOUNT_ID)
-
-    @patch("microsetta_private_api.repo.account_repo.verify_address")
-    def test_geocode_accounts_valid(self, test_verify_address):
-        test_verify_address.return_value = {
-            "address_1": DUMMY_ACCT_INFO_1['address']['street'],
-            "address_2": "",
-            "address_3": "",
-            "city": DUMMY_ACCT_INFO_1['address']['city'],
-            "state": DUMMY_ACCT_INFO_1['address']['state'],
-            "postal": DUMMY_ACCT_INFO_1['address']['post_code'],
-            "country": DUMMY_ACCT_INFO_1['address']['country_code'],
-            "latitude": RESULT_LAT,
-            "longitude": RESULT_LONG,
-            "valid": True
-        }
-        with Transaction() as t:
-            ar = AccountRepo(t)
-            acct_1 = Account.from_dict(DUMMY_ACCT_INFO_1,
-                                       ACCT_MOCK_ISS_1,
-                                       ACCT_MOCK_SUB_1)
-            ar.create_account(acct_1)
-            ar.geocode_accounts()
-            with t.dict_cursor() as cur:
-                cur.execute("SELECT latitude, longitude, address_verified, "
-                            "cannot_geocode FROM ag.account "
-                            "WHERE id = %s",
-                            (ACCT_ID_1,))
-                r = cur.fetchone()
-                self.assertAlmostEqual(r['latitude'], RESULT_LAT, 9)
-                self.assertAlmostEqual(r['longitude'], RESULT_LONG, 9)
-                self.assertTrue(r['address_verified'])
-                self.assertFalse(r['cannot_geocode'])
-
-    @patch("microsetta_private_api.repo.account_repo.verify_address")
-    def test_geocode_accounts_invalid(self, test_verify_address):
-        test_verify_address.return_value = {
-            "address_1": DUMMY_ACCT_INFO_1['address']['street'],
-            "address_2": "",
-            "address_3": "",
-            "city": DUMMY_ACCT_INFO_1['address']['city'],
-            "state": DUMMY_ACCT_INFO_1['address']['state'],
-            "postal": DUMMY_ACCT_INFO_1['address']['post_code'],
-            "country": DUMMY_ACCT_INFO_1['address']['country_code'],
-            "latitude": None,
-            "longitude": None,
-            "valid": False
-        }
-        with Transaction() as t:
-            ar = AccountRepo(t)
-            acct_1 = Account.from_dict(DUMMY_ACCT_INFO_1,
-                                       ACCT_MOCK_ISS_1,
-                                       ACCT_MOCK_SUB_1)
-            ar.create_account(acct_1)
-            ar.geocode_accounts()
-            with t.dict_cursor() as cur:
-                cur.execute("SELECT latitude, longitude, address_verified, "
-                            "cannot_geocode FROM ag.account "
-                            "WHERE id = %s",
-                            (ACCT_ID_1,))
-                r = cur.fetchone()
-                self.assertEqual(r['latitude'], None)
-                self.assertEqual(r['longitude'], None)
-                self.assertFalse(r['address_verified'])
-                self.assertTrue(r['cannot_geocode'])
 
 
 if __name__ == '__main__':

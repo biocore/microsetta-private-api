@@ -173,6 +173,9 @@ class IntegrationTests(TestCase):
                               12345,
                               "US"
                           ),
+                          32.8798916,
+                          -117.2363115,
+                          False,
                           "fakekit",
                           "en_US")
             acct_repo.create_account(acc)
@@ -779,6 +782,9 @@ class IntegrationTests(TestCase):
         # Hard to guess these two, so let's pop em out
         acc.pop("creation_time")
         acc.pop("update_time")
+        acc.pop("latitude")
+        acc.pop("longitude")
+        acc.pop("cannot_geocode")
         self.assertDictEqual(acc, regular_data, "Check Initial Account Match")
 
         regular_data.pop("account_id")
@@ -822,6 +828,9 @@ class IntegrationTests(TestCase):
         fuzzy_data["account_id"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
         acc.pop('creation_time')
         acc.pop('update_time')
+        acc.pop("latitude")
+        acc.pop("longitude")
+        acc.pop("cannot_geocode")
         self.assertDictEqual(fuzzy_data, acc, "Check Fuzz Account Match")
 
         # Attempt to restore back to old data.
@@ -838,6 +847,9 @@ class IntegrationTests(TestCase):
 
         acc.pop('creation_time')
         acc.pop('update_time')
+        acc.pop("latitude")
+        acc.pop("longitude")
+        acc.pop("cannot_geocode")
         regular_data['account_type'] = 'standard'
         regular_data["account_id"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
 
