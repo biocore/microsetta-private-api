@@ -18,7 +18,7 @@ from ._consent import (
 from ._source import (
     create_source, read_source, update_source, read_sources,
     create_human_source_from_consent, check_duplicate_source_name,
-    scrub_source, check_source_ffq_prereqs
+    scrub_source, check_source_ffq_prereqs, check_prompt_survey_update
 )
 from ._survey import (
     read_survey_template, read_survey_templates, read_answered_survey,
@@ -83,6 +83,7 @@ __all__ = [
     'create_source',
     'read_source',
     'check_source_ffq_prereqs',
+    'check_prompt_survey_update',
     'update_source',
     'scrub_source',
     'read_sources',
