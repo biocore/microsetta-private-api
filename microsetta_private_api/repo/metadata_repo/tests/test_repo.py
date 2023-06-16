@@ -267,7 +267,7 @@ class MetadataUtilTests(unittest.TestCase):
                              'true', 'true', 'false', 'false',
                              UNSPECIFIED,
                              'okay', 'No', "2013-10-15T09:30:00", '000004216',
-                             'US:CA', 'CA', '32', '-117'],
+                             'US:CA', 'CA', '33', '-117'],
                             ['XY0004216', 'bar', 'Vegan foo', 'Yes',
                              UNSPECIFIED, UNSPECIFIED, UNSPECIFIED,
                              'No', 'false', 'true', 'true', 'false',
