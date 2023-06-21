@@ -37,7 +37,7 @@ def geocode_address(address):
             response = requests.get(request_url)
             if response.ok is False:
                 exception_msg = "Error connecting to Google Geocoding API."
-                exception_msg += " Status Code: " + response.status_code
+                exception_msg += " Status Code: " + str(response.status_code)
                 exception_msg += " Status Text: " + response.reason
                 raise Exception(exception_msg)
 
