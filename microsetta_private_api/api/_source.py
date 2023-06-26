@@ -185,3 +185,12 @@ def check_duplicate_source_name(account_id, body, token_info):
         source = source_repo.get_duplicate_source_name(
             account_id, source_name)
         return jsonify(source), 200
+
+
+def check_prompt_survey_update(account_id, source_id, token_info):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        s_t_r = SurveyTemplateRepo(t)
+        prompt_update = s_t_r.check_prompt_survey_update(source_id)
+        return jsonify({"prompt": prompt_update}), 200

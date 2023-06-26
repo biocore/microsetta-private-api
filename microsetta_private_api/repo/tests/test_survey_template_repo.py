@@ -701,6 +701,56 @@ class SurveyTemplateTests(unittest.TestCase):
             exp = [('6d16832b84358c93', 1), ('001e19ab6ea2f7de', 1)]
             self.assertEqual(obs, exp)
 
+    def test_check_prompt_survey_update(self):
+        with Transaction() as t:
+            s_t_r = SurveyTemplateRepo(t)
+
+            with t.cursor() as cur:
+                # 6d16832b84358c93 is a stable survey_id used for testing so
+                # we'll use that for our purposes. We need to grab the
+                # source_id for our purposes.
+                cur.execute(
+                    "SELECT source_id "
+                    "FROM ag_login_surveys "
+                    "WHERE survey_id = '6d16832b84358c93'"
+                )
+                source_id = cur.fetchone()[0]
+
+                # And we're going to delete any other surveys associated with
+                # that source_id to make testing easier.
+                cur.execute(
+                    "DELETE FROM ag.ag_login_surveys "
+                    "WHERE source_id = %s "
+                    "AND survey_id != '6d16832b84358c93'",
+                    (source_id, )
+                )
+
+                # First, we're going to pretend they took the survey at
+                # midnight this morning, which falls within the past week.
+                cur.execute(
+                    "UPDATE ag.ag_login_surveys "
+                    "SET creation_time = CURRENT_DATE "
+                    "WHERE survey_id = '6d16832b84358c93'"
+                )
+
+                # We should observe a response of False, as they do not need
+                # to be prompted to update their surveys.
+                obs = s_t_r.check_prompt_survey_update(source_id)
+                self.assertFalse(obs)
+
+                # Now, we'll pretend they took the survey on January 1, 2023
+                # which falls well outside of the past week.
+                cur.execute(
+                    "UPDATE ag.ag_login_surveys "
+                    "SET creation_time = '2023-01-01 09:00:00' "
+                    "WHERE survey_id = '6d16832b84358c93'"
+                )
+
+                # We should observe a response of True, as they need to be
+                # prompted to update their surveys.
+                obs = s_t_r.check_prompt_survey_update(source_id)
+                self.assertTrue(obs)
+
     filled_surveys = {
         "10": {
             "22": "I am right handed",
