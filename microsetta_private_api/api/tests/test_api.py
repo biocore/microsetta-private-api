@@ -81,6 +81,10 @@ DUMMY_ACCT_INFO = {
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
+    KIT_NAME_KEY: EXISTING_KIT_NAME,
+    "latitude": 32.8798916,
+    "longitude": -117.2363115,
+    "cannot_geocode": False,
     "consent_privacy_terms": True
 }
 DUMMY_ACCT_INFO_2 = {
@@ -96,6 +100,10 @@ DUMMY_ACCT_INFO_2 = {
     "first_name": "Obie",
     "last_name": "Dobie",
     "language": "en_US",
+    KIT_NAME_KEY: EXISTING_KIT_NAME_2,
+    "latitude": 32.8798916,
+    "longitude": -117.2363115,
+    "cannot_geocode": False,
     "consent_privacy_terms": True
 }
 DUMMY_ACCT_ADMIN = {
@@ -110,6 +118,10 @@ DUMMY_ACCT_ADMIN = {
     "email": TEST_EMAIL_3,
     "first_name": "Obie",
     "last_name": "Dobie",
+    KIT_NAME_KEY: EXISTING_KIT_NAME_2,
+    "latitude": 32.8798916,
+    "longitude": -117.2363115,
+    "cannot_geocode": False,
     "consent_privacy_terms": True,
 }
 
@@ -484,6 +496,10 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['country_code'],
                 input_obj['address']['street2']
             ),
+            input_obj['latitude'],
+            input_obj['longitude'],
+            input_obj['cannot_geocode'],
+            input_obj['kit_name'],
             input_obj['language'],
             input_obj['consent_privacy_terms']
         )
@@ -728,6 +744,16 @@ class ApiTests(TestCase):
         expected_dict[ACCT_TYPE_KEY] = ACCT_TYPE_VAL
         expected_dict[CREATION_TIME_KEY] = real_creation_time
         expected_dict[UPDATE_TIME_KEY] = real_update_time
+
+        # the lat, long, and cannot_geocode need to be ignored for the sake of
+        # comparisons
+        expected_dict.pop("latitude", None)
+        expected_dict.pop("longitude", None)
+        expected_dict.pop("cannot_geocode", None)
+        response_obj.pop("latitude", None)
+        response_obj.pop("longitude", None)
+        response_obj.pop("cannot_geocode", None)
+
         self.assertEqual(expected_dict, response_obj)
 
         return real_acct_id_from_body
@@ -929,6 +955,13 @@ class AccountTests(ApiTests):
 
         self.assertEqual(200, response.status_code)
         response_obj = json.loads(response.data)
+
+        for k in DUMMY_ACCT_INFO:
+            if k in (KIT_NAME_KEY, 'language', 'cannot_geocode', 'latitude',
+                     'longitude'):
+                continue
+            self.assertNotEqual(DUMMY_ACCT_INFO[k],
+                                response_obj[k])
 
         # verify deleting is idempotent
         response = self.client.delete(
@@ -1249,6 +1282,9 @@ class AccountTests(ApiTests):
 
         dummy_acct_id = create_dummy_acct()
         changed_acct_dict = self.make_updated_acct_dict()
+        changed_acct_dict.pop('latitude', None)
+        changed_acct_dict.pop('longitude', None)
+        changed_acct_dict.pop('cannot_geocode', None)
         changed_acct_dict.pop("consent_privacy_terms")
 
         input_url = "/api/accounts/{0}".format(dummy_acct_id)

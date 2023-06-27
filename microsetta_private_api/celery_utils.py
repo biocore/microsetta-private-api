@@ -64,10 +64,6 @@ def init_celery(celery, app):
         # "fetch_ffqs": {
         #     "task": "microsetta_private_api.util.vioscreen.fetch_ffqs",
         #     "schedule":  60 * 60 * 24  # every 24 hours
-        # },
-        # "geocode_accounts": {
-        #     "task": "microsetta_private_api.tasks.geocode_accounts",
-        #     "schedule": 60
         # }
     }
 

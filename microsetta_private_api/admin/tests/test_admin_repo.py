@@ -89,6 +89,10 @@ class AdminTests(TestCase):
                               12345,
                               "US"
                           ),
+                          32.8798916,
+                          -117.2363115,
+                          False,
+                          "fakekit",
                           "en_US",
                           True)
             acct_repo.create_account(acc)
@@ -107,6 +111,10 @@ class AdminTests(TestCase):
                               12345,
                               "US"
                           ),
+                          32.8798916,
+                          -117.2363115,
+                          False,
+                          "fakekit",
                           "en_US",
                           True)
             acct_repo.create_account(acc)

@@ -270,9 +270,11 @@ def _to_pandas_dataframe(metadatas, survey_templates):
     for column in all_multiselect_columns & included_columns:
         df.loc[df[column].isnull(), column] = 'false'
 
-    # add an entry for all multiselect columns which were not reported
+    # Add an entry for all multiselect columns which were not reported.
+    # Since no answers were collected, it's inappropriate to use 'false.'
+    # Instead, we'll use the MISSING_VALUE constant.
     for column in all_multiselect_columns - set(df.columns):
-        df[column] = 'false'
+        df[column] = MISSING_VALUE
 
     # force a consistent case
     df.rename(columns={c: c.lower() for c in df.columns},
@@ -293,6 +295,11 @@ def _to_pandas_dataframe(metadatas, survey_templates):
         human_mask = df['host_taxid'] == '9606'
         df.loc[human_mask] = df.loc[human_mask].fillna(UNSPECIFIED)
     df.fillna(MISSING_VALUE, inplace=True)
+
+    # We have values of 'Unspecified' coming out of the database, which is
+    # inappropriate to push to Qiita. We'll replace them with the UNSPECIFIED
+    # constant as the last step of creating the dataframe
+    df.replace("Unspecified", UNSPECIFIED, inplace=True)
 
     return errors, apply_transforms(df, HUMAN_TRANSFORMS)
 
@@ -432,6 +439,25 @@ def _to_pandas_series(metadata, multiselect_map):
     hsi = metadata['host_subject_id']
     source_type = metadata['source'].source_type
 
+    geo_state = metadata['account'].address.state
+
+    if metadata['account'].address.country_code is None:
+        geo_loc_name = MISSING_VALUE
+    else:
+        geo_loc_name = metadata['account'].address.country_code
+        if geo_state is not None:
+            geo_loc_name += ":" + geo_state
+
+    if metadata['account'].latitude is None:
+        latitude = MISSING_VALUE
+    else:
+        latitude = str(int(round(metadata['account'].latitude)))
+
+    if metadata['account'].longitude is None:
+        longitude = MISSING_VALUE
+    else:
+        longitude = str(int(round(metadata['account'].longitude)))
+
     sample_detail = metadata['sample']
     collection_timestamp = sample_detail.datetime_collected
     sample_type = sample_detail.site
@@ -463,8 +489,10 @@ def _to_pandas_series(metadata, multiselect_map):
     else:
         raise RepoException("Sample has an unknown sample type")
 
-    values = [hsi, collection_timestamp]
-    index = ['HOST_SUBJECT_ID', 'COLLECTION_TIMESTAMP']
+    values = [hsi, collection_timestamp, geo_loc_name, geo_state, latitude,
+              longitude]
+    index = ['HOST_SUBJECT_ID', 'COLLECTION_TIMESTAMP', 'GEO_LOC_NAME',
+             'STATE', 'LATITUDE', 'LONGITUDE']
 
     collected = set()
 
@@ -489,18 +517,25 @@ def _to_pandas_series(metadata, multiselect_map):
 
                 # pull out the previously computed column names
                 specific_shortnames = multiselect_map[(template, qid)]
-                for selection in answer:
-                    # if someone selects the "other", it's not interesting
-                    # metadata, and the actual interesting piece is the
-                    # free text they enter
-                    if selection.lower() == 'other':
-                        continue
 
-                    # determine the column name
-                    specific_shortname = specific_shortnames[selection]
+                if len(answer) > 0:
+                    # the user selected at least one option, so we need to
+                    # put a true/false value for every option
+                    for key in specific_shortnames:
+                        specific_shortname = specific_shortnames[key]
+                        index.append(specific_shortname)
 
-                    values.append('true')
-                    index.append(specific_shortname)
+                        if key in answer:
+                            # the user selected this answer, so mark it true
+                            values.append('true')
+                        else:
+                            # the user did not select this answer, mark false
+                            values.append('false')
+                else:
+                    # the user did not select any options, so we're going to
+                    # let all of the options be populated by 'not collected'
+                    # downstream
+                    continue
             else:
                 if '["' in answer and '"]' in answer:
                     # process this STRING/TEXT value
