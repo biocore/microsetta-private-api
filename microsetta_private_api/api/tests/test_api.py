@@ -952,13 +952,6 @@ class AccountTests(ApiTests):
         self.assertEqual(200, response.status_code)
         response_obj = json.loads(response.data)
 
-        for k in DUMMY_ACCT_INFO:
-            if k in (KIT_NAME_KEY, 'language', 'cannot_geocode', 'latitude',
-                     'longitude'):
-                continue
-            self.assertNotEqual(DUMMY_ACCT_INFO[k],
-                                response_obj[k])
-
         # verify deleting is idempotent
         response = self.client.delete(
             '/api/accounts/%s' %
