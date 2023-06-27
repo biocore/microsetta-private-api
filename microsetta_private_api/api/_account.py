@@ -82,7 +82,6 @@ def register_account(body, token_info):
         for sub_id in subscription_ids:
             pfr.claim_unclaimed_subscription(sub_id, new_acct_id)
 
-
         # Now that we've successfully created an account, geocode it
         latitude, longitude, _, _, cannot_geocode = geocode_address(
             new_acct.address

@@ -199,7 +199,7 @@ class AccountRepo(BaseRepo):
                             "%s, %s, "
                             "%s, %s, %s, "
                             "%s, %s, "
-                            "%s, %s, %s, %s, %s, "
+                            "%s, %s, %s, %s, %s, %s, "
                             "%s, %s, %s, %s, %s)",
                             AccountRepo._account_to_row(account))
                 return cur.rowcount == 1

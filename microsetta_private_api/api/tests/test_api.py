@@ -499,7 +499,6 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
             input_obj['latitude'],
             input_obj['longitude'],
             input_obj['cannot_geocode'],
-            input_obj['kit_name'],
             input_obj['language'],
             input_obj['consent_privacy_terms']
         )
