@@ -1800,6 +1800,9 @@ class IntegrationTests(TestCase):
                               "US",
                               ""
                           ),
+                          32.8798916,
+                          -117.2363115,
+                          False,
                           "en_US",
                           True)
             accountRepo.create_account(acc)
