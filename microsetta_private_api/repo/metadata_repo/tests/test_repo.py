@@ -57,8 +57,8 @@ class MetadataUtilTests(unittest.TestCase):
                                    32.8798916,
                                    -117.2363115,
                                    False,
-                                   "fakekit",
-                                   "en_US"),
+                                   "en_US",
+                                   True),
                 'source': MM({'id': 'bar',
                               'source_type': 'human'}),
                 "sample": MM({
@@ -124,8 +124,8 @@ class MetadataUtilTests(unittest.TestCase):
                                    32.8798916,
                                    -117.2363115,
                                    False,
-                                   "fakekit",
-                                   "en_US"),
+                                   "en_US",
+                                   True),
                 'source': MM({'id': 'bonkers',
                               'source_type': 'human'}),
                 "sample": MM({

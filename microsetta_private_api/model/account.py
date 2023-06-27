@@ -34,7 +34,6 @@ class Account(ModelBase):
             input_dict['latitude'],
             input_dict['longitude'],
             input_dict['cannot_geocode'],
-            input_dict['kit_name'],
             input_dict['language'],
             input_dict['consent_privacy_terms']
         )
@@ -44,8 +43,7 @@ class Account(ModelBase):
                  account_type, auth_issuer, auth_sub,
                  first_name, last_name,
                  address, latitude, longitude, cannot_geocode,
-                 created_with_kit_id, language,
-                 consent_privacy_terms,
+                 language, consent_privacy_terms,
                  created_with_kit_id=None,
                  creation_time=None, update_time=None):
         self.id = account_id

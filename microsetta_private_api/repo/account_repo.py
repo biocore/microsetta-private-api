@@ -16,7 +16,7 @@ class AccountRepo(BaseRepo):
                 "first_name, last_name, " \
                 "street, street2, city, state, post_code, country_code, " \
                 "created_with_kit_id, preferred_language, " \
-                "consent_privacy_terms, creation_time, update_time" \
+                "consent_privacy_terms, creation_time, update_time, " \
                 "latitude, longitude, "\
                 "cannot_geocode"
 
@@ -24,8 +24,8 @@ class AccountRepo(BaseRepo):
                  "account_type, auth_issuer, auth_sub, " \
                  "first_name, last_name, " \
                  "street, street2, city, state, post_code, country_code, " \
-                 "preferred_language, consent_privacy_terms, "\
-                 "latitude, longitude, cannot_geocode"
+                 "preferred_language, latitude, longitude, cannot_geocode, " \
+                 "consent_privacy_terms"
 
     @staticmethod
     def _row_to_addr(r):
@@ -60,9 +60,8 @@ class AccountRepo(BaseRepo):
                 a.account_type, a.auth_issuer, a.auth_sub,
                 a.first_name, a.last_name) + \
                 AccountRepo._addr_to_row(a.address) + \
-                (a.language, a.consent_privacy_terms, a.language,
-                 a.latitude, a.longitude,
-                 a.cannot_geocode)
+                (a.language, a.latitude, a.longitude,
+                 a.cannot_geocode, a.consent_privacy_terms)
 
     def claim_legacy_account(self, email, auth_iss, auth_sub):
         # Returns now-claimed legacy account if an unclaimed legacy account
