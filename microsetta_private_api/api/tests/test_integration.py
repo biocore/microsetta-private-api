@@ -207,6 +207,9 @@ class IntegrationTests(TestCase):
                               "US",
                               ""
                           ),
+                          32.8798916,
+                          -117.2363115,
+                          False,
                           "en_US",
                           True)
             acct_repo.create_account(acc)
@@ -849,6 +852,9 @@ class IntegrationTests(TestCase):
         # Hard to guess these two, so let's pop em out
         acc.pop("creation_time")
         acc.pop("update_time")
+        acc.pop("latitude")
+        acc.pop("longitude")
+        acc.pop("cannot_geocode")
         acc.pop('kit_name')
         self.assertDictEqual(acc, regular_data, "Check Initial Account Match")
 
@@ -892,6 +898,9 @@ class IntegrationTests(TestCase):
         fuzzy_data["account_id"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
         acc.pop('creation_time')
         acc.pop('update_time')
+        acc.pop("latitude")
+        acc.pop("longitude")
+        acc.pop("cannot_geocode")
         acc.pop('kit_name')
         acc.pop('consent_privacy_terms')
         self.assertDictEqual(fuzzy_data, acc, "Check Fuzz Account Match")
@@ -911,6 +920,9 @@ class IntegrationTests(TestCase):
 
         acc.pop('creation_time')
         acc.pop('update_time')
+        acc.pop("latitude")
+        acc.pop("longitude")
+        acc.pop("cannot_geocode")
         acc.pop('kit_name')
         regular_data['account_type'] = 'standard'
         regular_data["account_id"] = "aaaaaaaa-bbbb-cccc-dddd-eeeeffffffff"
@@ -1210,6 +1222,23 @@ class IntegrationTests(TestCase):
             headers=MOCK_HEADERS
         )
         check_response(resp, 422)
+        self.assertIn("sample", resp.json["message"],
+                      "Failure message should complain about samples")
+
+        # Remove the sample.
+        resp = self.client.delete(
+            '/api/accounts/%s/sources/%s/samples/%s?language_tag=en_US' %
+            (ACCT_ID, source_id_from_obj, sample_id),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+
+        # Now delete the source (Hopefully successfully!
+        resp = self.client.delete(
+            loc + "?language_tag=en_US",
+            headers=MOCK_HEADERS
+        )
+        check_response(resp, 204)
 
     def test_associate_sample_and_survey(self):
         """
@@ -1771,6 +1800,9 @@ class IntegrationTests(TestCase):
                               "US",
                               ""
                           ),
+                          32.8798916,
+                          -117.2363115,
+                          False,
                           "en_US",
                           True)
             accountRepo.create_account(acc)

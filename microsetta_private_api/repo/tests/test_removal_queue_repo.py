@@ -37,6 +37,9 @@ class RemovalQueueTests(unittest.TestCase):
                                    92093,
                                    "US"
                                ),
+                               32.8798916,
+                               -117.2363115,
+                               False,
                                "en_US",
                                True)
 
@@ -56,6 +59,9 @@ class RemovalQueueTests(unittest.TestCase):
                                    92093,
                                    "US"
                                ),
+                               32.8798916,
+                               -117.2363115,
+                               False,
                                "en_US",
                                True)
 

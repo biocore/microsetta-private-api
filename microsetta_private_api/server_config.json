@@ -42,5 +42,7 @@
   "fundrazr_organization": "fundrazr_org_placeholder",
   "polyphenol_ffq_url": "pffq_placeholder",
   "spain_ffq_url": "sffq_placeholder",
-  "fulfillment_account_id": "000fc4cd-8fa4-db8b-e050-8a800c5d81b7"
+  "fulfillment_account_id": "000fc4cd-8fa4-db8b-e050-8a800c5d81b7",
+  "google_geocoding_url": "https://maps.googleapis.com/maps/api/geocode/json",
+  "google_geocoding_key": "geocoding_key_placeholder"
 }

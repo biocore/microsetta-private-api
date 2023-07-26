@@ -211,7 +211,8 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_US: "survey_question.american",
             localization.EN_GB: "survey_question.british",
             localization.ES_MX: "survey_question.spanish",
-            localization.ES_ES: "survey_question.spain_spanish"
+            localization.ES_ES: "survey_question.spain_spanish",
+            localization.JA_JP: "survey_question.japanese"
         }
 
         if language_tag not in tag_to_col:
@@ -314,12 +315,12 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_US: "american",
             localization.EN_GB: "british",
             localization.ES_MX: "spanish",
-            localization.ES_ES: "spain_spanish"
+            localization.ES_ES: "spain_spanish",
+            localization.JA_JP: "japanese"
         }
 
         if language_tag not in tag_to_col:
-            raise NotFound("Survey localization unavailable: %s" %
-                           language_tag)
+            raise RepoException(f"{language_tag} is not supported.")
 
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
@@ -338,11 +339,11 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_GB: "survey_response.british",
             localization.ES_MX: "survey_response.spanish",
             localization.ES_ES: "survey_response.spain_spanish",
+            localization.JA_JP: "survey_response.japanese"
         }
 
         if language_tag not in tag_to_col:
-            raise NotFound("Survey localization unavailable: %s" %
-                           language_tag)
+            raise RepoException(f"{language_tag} is not supported.")
 
         with self._transaction.cursor() as cur:
             cur.execute("SELECT " +
@@ -366,11 +367,11 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_GB: "survey_response.british",
             localization.ES_MX: "survey_response.spanish",
             localization.ES_ES: "survey_response.spain_spanish",
+            localization.JA_JP: "survey_response.japanese"
         }
 
         if language_tag not in tag_to_col:
-            raise NotFound("Survey localization unavailable: %s" %
-                           language_tag)
+            raise RepoException(f"{language_tag} is not supported.")
 
         with self._transaction.cursor() as cur:
             cur.execute(
@@ -382,6 +383,7 @@ class SurveyTemplateRepo(BaseRepo):
                 "WHERE sqt.survey_question_id = %s ",
                 (survey_question_id, )
             )
+
             rows = cur.fetchall()
             return [SurveyTemplateTrigger(x[0], x[1]) for x in rows]
 

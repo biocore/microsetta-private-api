@@ -1,5 +1,6 @@
 from microsetta_private_api.LEGACY.locale_data \
-    import (american_gut, british_gut, spanish_gut, spain_spanish_gut)
+    import (american_gut, british_gut, spanish_gut, spain_spanish_gut,
+            japanese_gut)
 
 EN_US = "en_US"
 EN_GB = "en_GB"
@@ -28,5 +29,9 @@ LANG_SUPPORT = {
     ES_ES: {
         NEW_PARTICIPANT_KEY: spain_spanish_gut._NEW_PARTICIPANT,
         LANG_NAME_KEY: "spain_spanish"
+    },
+    JA_JP: {
+        NEW_PARTICIPANT_KEY: japanese_gut._NEW_PARTICIPANT,
+        LANG_NAME_KEY: "japanese"
     }
 }

@@ -118,6 +118,9 @@ class ConsentRepoTests(unittest.TestCase):
                               12345,
                               "US"
                           ),
+                          32.8798916,
+                          -117.2363115,
+                          False,
                           "en_US",
                           True)
             acct_repo.create_account(acc)
@@ -164,6 +167,9 @@ class ConsentRepoTests(unittest.TestCase):
                               12345,
                               "US"
                           ),
+                          32.8798916,
+                          -117.2363115,
+                          False,
                           "en_US",
                           True)
             acct_repo.create_account(acc)
@@ -263,6 +269,9 @@ class ConsentRepoTests(unittest.TestCase):
                               12345,
                               "US"
                           ),
+                          32.8798916,
+                          -117.2363115,
+                          False,
                           "en_US",
                           True)
             acct_repo.create_account(acc)

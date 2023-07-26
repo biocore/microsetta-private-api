@@ -32,6 +32,9 @@ DUMMY_ACCT_INFO_1 = {
     "last_name": "Doe",
     "language": "en_US",
     "consent_privacy_terms": True,
+    "latitude": 32.8798916,
+    "longitude": -117.2363115,
+    "cannot_geocode": False,
     "id": ACCT_ID_1
 }
 ACCT_MOCK_ISS_1 = "MrUnitTest.go"

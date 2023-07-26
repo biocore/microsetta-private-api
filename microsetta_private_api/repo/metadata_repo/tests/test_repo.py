@@ -19,6 +19,8 @@ from microsetta_private_api.repo.metadata_repo._repo import (
     _find_best_answers,
     drop_private_columns)
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
+from microsetta_private_api.model.account import Account
+from microsetta_private_api.model.address import Address
 
 
 class MM:
@@ -35,11 +37,28 @@ class MM:
 
 class MetadataUtilTests(unittest.TestCase):
     def setUp(self):
-
         self.raw_sample_1 = {
                 'sample_barcode': '000004216',
                 'host_subject_id': 'foo',
-                'account': MM({'id': 'foo'}),
+                'account': Account("foo",
+                                   "foo@baz.com",
+                                   "standard",
+                                   "https://MOCKUNITTEST.com",
+                                   "1234ThisIsNotARealSub",
+                                   "NotDan",
+                                   "NotH",
+                                   Address(
+                                       "123 Dan Lane",
+                                       "NotDanville",
+                                       "CA",
+                                       12345,
+                                       "US"
+                                   ),
+                                   32.8798916,
+                                   -117.2363115,
+                                   False,
+                                   "en_US",
+                                   True),
                 'source': MM({'id': 'bar',
                               'source_type': 'human'}),
                 "sample": MM({
@@ -88,7 +107,25 @@ class MetadataUtilTests(unittest.TestCase):
         self.raw_sample_2 = {
                 'sample_barcode': 'XY0004216',
                 'host_subject_id': 'bar',
-                'account': MM({'id': 'baz'}),
+                'account': Account("foo",
+                                   "foo@baz.com",
+                                   "standard",
+                                   "https://MOCKUNITTEST.com",
+                                   "1234ThisIsNotARealSub",
+                                   "NotDan",
+                                   "NotH",
+                                   Address(
+                                       "123 Dan Lane",
+                                       "NotDanville",
+                                       "CA",
+                                       12345,
+                                       "US"
+                                   ),
+                                   32.8798916,
+                                   -117.2363115,
+                                   False,
+                                   "en_US",
+                                   True),
                 'source': MM({'id': 'bonkers',
                               'source_type': 'human'}),
                 "sample": MM({
@@ -318,7 +355,7 @@ class MetadataUtilTests(unittest.TestCase):
 
         # verify we obtained metadata. it is not the responsibility of this
         # test to assert the structure of the metadata as that is the scope of
-        # the admion interfaces on the private API
+        # the admin interfaces on the private API
 
         self.assertEqual(obs['sample_barcode'], '000001656')
         self.assertEqual(obs_errors, None)
@@ -336,16 +373,17 @@ class MetadataUtilTests(unittest.TestCase):
         templates = {1: self.fake_survey_template2}
 
         exp = pd.DataFrame([['000004216', 'foo', UNSPECIFIED, 'No',
-                             'Unspecified', 'Unspecified', 'Unspecified', 'No',
+                             UNSPECIFIED, UNSPECIFIED, UNSPECIFIED, 'No',
                              'true', 'true', 'false', 'false',
                              UNSPECIFIED,
-                             'okay', 'No', "2013-10-15T09:30:00", '000004216'],
+                             'okay', 'No', "2013-10-15T09:30:00", '000004216',
+                             'US:CA', 'CA', '33', '-117'],
                             ['XY0004216', 'bar', 'Vegan foo', 'Yes',
-                             'Unspecified', 'Unspecified', 'Unspecified',
-                             'No', 'false', 'true', 'true', 'false', 'foobar',
-                             UNSPECIFIED,
-                             UNSPECIFIED,
-                             "2013-10-15T09:30:00", 'XY0004216']],
+                             UNSPECIFIED, UNSPECIFIED, UNSPECIFIED,
+                             'No', 'false', 'true', 'true', 'false',
+                             'foobar', UNSPECIFIED, UNSPECIFIED,
+                             "2013-10-15T09:30:00", 'XY0004216',
+                             'US:CA', 'CA', '33', '-117']],
                            columns=['sample_name', 'host_subject_id',
                                     'diet_type', 'multivitamin',
                                     'probiotic_frequency',
@@ -357,7 +395,8 @@ class MetadataUtilTests(unittest.TestCase):
                                     'allergic_to_x',
                                     'sample2specific', 'abc', 'def',
                                     'collection_timestamp',
-                                    'anonymized_name']
+                                    'anonymized_name', 'geo_loc_name',
+                                    'state', 'latitude', 'longitude']
                            ).set_index('sample_name')
 
         for k, v in HUMAN_SITE_INVARIANTS['Stool'].items():
@@ -383,14 +422,17 @@ class MetadataUtilTests(unittest.TestCase):
         data = self.raw_sample_1
 
         values = ['foo', '', 'No', 'Unspecified', 'Unspecified',
-                  'Unspecified', 'No', 'true', 'true', 'okay', 'No',
-                  "2013-10-15T09:30:00"]
+                  'Unspecified', 'No', 'true', 'true', 'false',
+                  'false', 'okay', 'No',
+                  '2013-10-15T09:30:00', 'US:CA', 'CA', '33', '-117']
         index = ['HOST_SUBJECT_ID', 'DIET_TYPE', 'MULTIVITAMIN',
                  'PROBIOTIC_FREQUENCY', 'VITAMIN_B_SUPPLEMENT_FREQUENCY',
                  'VITAMIN_D_SUPPLEMENT_FREQUENCY',
                  'OTHER_SUPPLEMENT_FREQUENCY',
-                 'ALLERGIC_TO_blahblah', 'ALLERGIC_TO_stuff', 'abc', 'def',
-                 'COLLECTION_TIMESTAMP']
+                 'ALLERGIC_TO_blahblah', 'ALLERGIC_TO_stuff', 'ALLERGIC_TO_x',
+                 'ALLERGIC_TO_baz', 'abc', 'def',
+                 'COLLECTION_TIMESTAMP', 'GEO_LOC_NAME', 'STATE', 'LATITUDE',
+                 'LONGITUDE']
 
         for k, v in HUMAN_SITE_INVARIANTS['Stool'].items():
             values.append(v)

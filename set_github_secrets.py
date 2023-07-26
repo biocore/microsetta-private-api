@@ -16,6 +16,7 @@ if os.environ.get('MFR_URL', '') != '':
     config["vioscreen_cryptokey"] = os.environ['VS_CRYPTOKEY']
     config["vioscreen_admin_username"] = os.environ['VS_USER']
     config["vioscreen_admin_password"] = os.environ['VS_PASSWORD']
+    config['google_geocoding_key'] = os.environ['GOOGLE_GEOCODING_KEY']
 
     # a nonsecret to help examine the logs
     # we're munging to circumvent githubs log filtering

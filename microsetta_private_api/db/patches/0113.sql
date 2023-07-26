@@ -1,1638 +1,1191 @@
--- Add an Address 2 field to the account table
-ALTER TABLE ag.account ADD COLUMN street2 VARCHAR;
+-- Add columns to survey-related tables to support Japanese
+ALTER TABLE ag.survey_group ADD COLUMN japanese VARCHAR;
+ALTER TABLE ag.survey_question ADD COLUMN japanese VARCHAR;
+ALTER TABLE ag.survey_response ADD COLUMN japanese VARCHAR;
 
--- Add a column to store whether the user agreed to the privacy policy and terms upon signup.
-ALTER TABLE ag.account ADD COLUMN consent_privacy_terms BOOLEAN DEFAULT FALSE NOT NULL;
+-- Add the Japanese text for survey questions
+UPDATE ag.survey_question SET japanese = '普通は夜およそ何時間くらい寝ますか？' WHERE american = 'Approximately how many hours of sleep do you get in an average night?';
+UPDATE ag.survey_question SET japanese = '診断されたのはいつ頃ですか？' WHERE american = 'Approximately when were you diagnosed?';
+UPDATE ag.survey_question SET japanese = 'あなたの同居人のうち、誰かこの研究に参加している人はいますか？' WHERE american = 'Are any of your roommates participating in this study?';
+UPDATE ag.survey_question SET japanese = 'あなたは母乳や調整粉乳から栄養のほとんどを受け取っている乳児ですか、それとも成人用栄養シェイクから栄養のほとんど（1日のカロリーの75%以上）を受け取っている成人ですか？' WHERE american = 'Are you an infant who receives most of your nutrition from breast milk or formula, or an adult who receives most (more than 75% of daily calories) of your nutrition from adult nutritional shakes (i.e. Ensure)?';
+UPDATE ag.survey_question SET japanese = '現在妊娠中ですか？' WHERE american = 'Are you currently pregnant?';
+UPDATE ag.survey_question SET japanese = '現在、何らかのホルモン避妊法を使用していますか？' WHERE american = 'Are you currently using some form of hormonal birth control?';
+UPDATE ag.survey_question SET japanese = 'この人とあなたは血のつながりがありますか？' WHERE american = 'Are you genetically related?';
+UPDATE ag.survey_question SET japanese = 'あなたはグルテン不耐症ですか？' WHERE american = 'Are you gluten intolerant?';
+UPDATE ag.survey_question SET japanese = '患者介護に関与していますか、または病院／クリニックで働いていますか？' WHERE american = 'Are you involved in patient care or work in a hospital / clinic setting?';
+UPDATE ag.survey_question SET japanese = 'あなたは乳糖不耐症ですか？' WHERE american = 'Are you lactose intolerant?';
+UPDATE ag.survey_question SET japanese = 'あなたはこの研究の他の参加者と関係がありますか？' WHERE american = 'Are you related to any of the other participants in this study?';
+UPDATE ag.survey_question SET japanese = 'あなたは毎日マルチビタミンを服用していますか？' WHERE american = 'Are you taking a daily multivitamin?';
+UPDATE ag.survey_question SET japanese = '他の栄養／ハーブサプリメントを服用していますか？' WHERE american = 'Are you taking any other nutritional/herbal supplements?';
+UPDATE ag.survey_question SET japanese = '自宅で水を飲む前に、追加の処理（ろ過を除く）を施していますか（例：沸騰、浄化タブレット、塩素／漂白剤） ？' WHERE american = 'At home, do you apply additional treatment (not including filtering) to your drinking water prior to consumption (e.g., boiling, purification tablet, chlorine/bleach)?';
+UPDATE ag.survey_question SET japanese = '自宅で飲む、味のついていない普通の飲料水は主にどういうものですか？これには静水または発泡水／炭酸水も含められます。' WHERE american = 'At home, what is the main source of your plain, unflavored drinking water? This can include still or sparkling/carbonated water.';
+UPDATE ag.survey_question SET japanese = '通常、寝る前の最後の食事や軽食を何時に食べますか？' WHERE american = 'At what time do you typically eat your last meal or snack before going to sleep?';
+UPDATE ag.survey_question SET japanese = '出生時の生物学的性別' WHERE american = 'Biological sex assigned at birth';
+UPDATE ag.survey_question SET japanese = '誕生月' WHERE american = 'Birth month';
+UPDATE ag.survey_question SET japanese = '誕生年' WHERE american = 'Birth year';
+UPDATE ag.survey_question SET japanese = '出生国' WHERE american = 'Country of birth';
+UPDATE ag.survey_question SET japanese = '居住国' WHERE american = 'Country of residence';
+UPDATE ag.survey_question SET japanese = '現在の郵便番号：' WHERE american = 'Current ZIP code';
+UPDATE ag.survey_question SET japanese = '便の硬さについて教えてください。' WHERE american = 'Describe the consistency of your bowel movements';
+UPDATE ag.survey_question SET japanese = 'あなたの一番血のつながりが近い親族（一親等）で、片頭痛に悩まされている人はいますか？' WHERE american = 'Do any of your first-degree relatives suffer from migraines?';
+UPDATE ag.survey_question SET japanese = 'あなたは爪を噛みますか？' WHERE american = 'Do you bite your fingernails?';
+UPDATE ag.survey_question SET japanese = '現在、がんを患っていますか？' WHERE american = 'Do you currently have cancer?';
+UPDATE ag.survey_question SET japanese = '現在、他の疾患に対して市販薬または処方薬を服用していますか？' WHERE american = 'Do you currently take non-prescription or prescription medication for other conditions?';
+UPDATE ag.survey_question SET japanese = '現在、顔のニキビに処方薬を服用していますか？' WHERE american = 'Do you currently take prescription medication for facial acne?';
+UPDATE ag.survey_question SET japanese = '抗生物質で治療した動物の肉／乳製品を食べますか？' WHERE american = 'Do you eat meat/dairy products from animals treated with antibiotics?';
+UPDATE ag.survey_question SET japanese = '運動は一般的に屋内それとも屋外でしますか？' WHERE american = 'Do you generally exercise indoors or outdoors?';
+UPDATE ag.survey_question SET japanese = '猫を飼っていますか？' WHERE american = 'Do you have a cat(s)?';
+UPDATE ag.survey_question SET japanese = '犬を飼っていますか？' WHERE american = 'Do you have a dog(s)?';
+UPDATE ag.survey_question SET japanese = '不規則な時間帯に仕事や睡眠を必要とする仕事やその他の状況がありますか（午後10時～午前6時に仕事して、午前9時～午後5時に睡眠をとるなど）？' WHERE american = 'Do you have a job or some other situation that requires you to work and sleep during atypical hours (e.g. work between 10pm-6am and sleep between 9am-5pm)?';
+UPDATE ag.survey_question SET japanese = '次の慢性疾患のいずれかがありますか（該当するもの全てにチェックを入れてください） ：' WHERE american = 'Do you have any of the following chronic conditions (check all that apply)';
+UPDATE ag.survey_question SET japanese = '食べ物以外で、以下に記載のものに対するアレルギーはありますか？該当するものをすべて選択してください。' WHERE american = 'Do you have any of the following non-food allergies? Select all that apply.';
+UPDATE ag.survey_question SET japanese = '家畜をよく触ったり定期的に触ったりすることはありますか？' WHERE american = 'Do you have frequent and regular contact with farm animals?';
+UPDATE ag.survey_question SET japanese = '家に他の（犬や猫以外の）ペットはいますか？' WHERE american = 'Do you have other (non-dog or cat) pets at home?';
+UPDATE ag.survey_question SET japanese = '季節性アレルギーはありますか？' WHERE american = 'Do you have seasonal allergies?';
+UPDATE ag.survey_question SET japanese = '生々しいおよび／または恐ろしい夢を見ることがありますか？' WHERE american = 'Do you have vivid and/or frightening dreams?';
+UPDATE ag.survey_question SET japanese = '次の発酵食品／飲料のいずれかを自宅で個人用に製造していますか？該当するものをすべて選択し、記載されていないものを「その他」に記入してください。' WHERE american = 'Do you produce any of the following fermented foods/beverages at home for personal consumption? Select all that apply and write in any that are not listed under ‘Other’.';
+UPDATE ag.survey_question SET japanese = '次の発酵食品／飲料のいずれかを商業目的で製造していますか？該当するものをすべて選択し、記載されていないものを「その他」に記入してください。' WHERE american = 'Do you produce any of the following fermented foods/beverages for commercial purposes? Select all that apply and write in any that are not listed under ‘Other’.';
+UPDATE ag.survey_question SET japanese = '片頭痛が起きることがありますか？' WHERE american = 'Do you suffer from migraines?';
+UPDATE ag.survey_question SET japanese = '定期的に海でサーフィンをしていますか？' WHERE american = 'Do you surf in the ocean on a regular basis?';
+UPDATE ag.survey_question SET japanese = 'あなたは片頭痛用の薬を飲んでいますか。' WHERE american = 'Do you take any migraine medication?';
+UPDATE ag.survey_question SET japanese = '症状を和らげるために薬を服用していますか？' WHERE american = 'Do you take medication to relieve your symptoms?';
+UPDATE ag.survey_question SET japanese = 'アプリを使用して次のいずれかを追跡していますか？該当するものをすべて選択してください。' WHERE american = 'Do you track any of the following using an app(s)? Select all that apply.';
+UPDATE ag.survey_question SET japanese = 'デオドラントまたは制汗剤（制汗剤には一般的にアルミニウムが含まれています）は使用していますか？' WHERE american = 'Do you use deodorant or antiperspirant (antiperspirants generally contain aluminum)?';
+UPDATE ag.survey_question SET japanese = '衣類を乾かすときに柔軟剤を使っていますか？' WHERE american = 'Do you use fabric softener when drying your clothes?';
+UPDATE ag.survey_question SET japanese = '市販薬を使用して顔のニキビを治していますか？' WHERE american = 'Do you use non-prescription products to control facial acne?';
+UPDATE ag.survey_question SET japanese = 'この人はあなたと一緒に住んでいますか？' WHERE american = 'Does this person live with you?';
+UPDATE ag.survey_question SET japanese = 'ビール、ワイン、アルコールを除き、私が発酵食品を摂取する頻度または量は、過去____以内に大幅に（2倍以上）増加しました。' WHERE american = 'Excluding beer, wine, and alcohol, I have significantly increased (i.e. more than doubled) my intake of fermented foods in frequency or quantity within the last ____.';
+UPDATE ag.survey_question SET japanese = '新型コロナウイルス／COVID -19のため、あなたに次のようなことがありましたか？（該当するもの全てにチェックを入れてください）' WHERE american = 'Have any of the following happened to you because of Coronavirus/COVID-19? (check all that apply)';
+UPDATE ag.survey_question SET japanese = '新型コロナウイルス／COVID -19のため、ご家族に次のようなことがありましたか？（該当するもの全てにチェックを入れてください）' WHERE american = 'Have any of the following happened to your family members because of Coronavirus/COVID-19? (check all that apply)';
+UPDATE ag.survey_question SET japanese = '注意欠如障害（Attention Deficit Disorder、ADD）／注意欠如多動性障害（Attention Deficit Hyperactivity Disorder、ADHD）と診断されたことはありますか？' WHERE american = 'Have you been diagnosed with ADD/ADHD?';
+UPDATE ag.survey_question SET japanese = 'アルツハイマー病／認知症と診断されたことはありますか？' WHERE american = 'Have you been diagnosed with Alzheimer’s Disease/Dementia?';
+UPDATE ag.survey_question SET japanese = '喘息、嚢胞性線維症、慢性閉塞性肺疾患（chronic obstructive pulmonary disease、COPD）またはその他の肺疾患と診断されたことはありますか？' WHERE american = 'Have you been diagnosed with Asthma, Cystic fibrosis, COPD or other lung Disease?';
+UPDATE ag.survey_question SET japanese = '自閉症スペクトラム障害または状態（ASD／ASC）と診断されたことはありますか？' WHERE american = 'Have you been diagnosed with Autism Spectrum Disorder or Condition (ASD/ASC)?';
+UPDATE ag.survey_question SET japanese = 'ループス（全身性エリテマトーデス）、R.A.（関節リウマチ）、MS （多発性硬化症）、橋本甲状腺炎などの自己免疫疾患、またはその他の自己免疫疾患と診断されたことはありますか？' WHERE american = 'Have you been diagnosed with autoimmune disease such as Lupus (systemic lupus erythematosus), R.A. (rheumatoid arthritis), MS (multiple sclerosis), Hashimoto’s thyroiditis , or any other auto-immune disease?';
+UPDATE ag.survey_question SET japanese = '新型コロナウイルス/COVID -19に感染している可能性が高い人と接触したことはありますか？（該当するもの全てにチェックを入れてください）' WHERE american = 'Have you been exposed to someone likely to have Coronavirus/COVID-19? (check all that apply)';
+UPDATE ag.survey_question SET japanese = '新型コロナウイルス／COVID -19にかかったと疑ったことがありますか？' WHERE american = 'Have you been suspected of having Coronavirus/COVID-19 infection?';
+UPDATE ag.survey_question SET japanese = '今までに皮膚疾患の診断を受けたことはありますか？' WHERE american = 'Have you ever been diagnosed with a skin condition?';
+UPDATE ag.survey_question SET japanese = '今までに他に何かの病気の症状で診断を受けたことはありますか？ ' WHERE american = 'Have you ever been diagnosed with any other relevant clinical condition? ';
+UPDATE ag.survey_question SET japanese = '今までにがんと診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with cancer?';
+UPDATE ag.survey_question SET japanese = '今までにカンジダや真菌の腸内増殖過多と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with Candida or fungal overgrowth in the gut?';
+UPDATE ag.survey_question SET japanese = '今までにクロストリジウム・ディフィシル（ C. difficile ）感染症と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with Clostridium difficile (C. diff) infection?';
+UPDATE ag.survey_question SET japanese = '今までに冠動脈疾患、心臓疾患、心臓発作、または脳卒中と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with coronary artery disease, heart disease, heart attack, or stroke?';
+UPDATE ag.survey_question SET japanese = '今までに糖尿病と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with diabetes?';
+UPDATE ag.survey_question SET japanese = '今までにてんかんまたは発作性障害と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with epilepsy or seizure disorder?';
+UPDATE ag.survey_question SET japanese = '今までに炎症性腸疾患（inflammatory bowel disease、IBD）と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with inflammatory bowel disease (IBD)?';
+UPDATE ag.survey_question SET japanese = '今までに過敏性腸症候群（irritable bowel syndrome、IBS）*と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with irritable bowel syndrome (IBS)*?';
+UPDATE ag.survey_question SET japanese = '今までに腎臓病と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with kidney disease?';
+UPDATE ag.survey_question SET japanese = '今までに肝臓病と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with liver disease?';
+UPDATE ag.survey_question SET japanese = '今までに精神疾患と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with mental health illness?';
+UPDATE ag.survey_question SET japanese = '今までに片頭痛の診断を受けたことはありますか？' WHERE american = 'Have you ever been diagnosed with migraines?';
+UPDATE ag.survey_question SET japanese = '今までにフェニルケトン尿症と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with phenylketonuria?';
+UPDATE ag.survey_question SET japanese = '今までに小腸細菌過剰増殖症（small intestinal bacterial overgrowth、SIBO）と診断されたことはありますか？' WHERE american = 'Have you ever been diagnosed with small intestinal bacterial overgrowth (SIBO)?';
+UPDATE ag.survey_question SET japanese = '今までに甲状腺疾患と診断されたことはありますか。' WHERE american = 'Have you ever been diagnosed with thyroid disease?';
+UPDATE ag.survey_question SET japanese = '水ぼうそうにかかったこと（水ぼうそうワクチンのことではありません）はありますか？' WHERE american = 'Have you had a chickenpox infection (not the varicella vaccine)?';
+UPDATE ag.survey_question SET japanese = '次のいずれかの症状がありましたか？（該当するもの全てにチェックを入れてください）' WHERE american = 'Have you had any of the following symptoms? (check all that apply)';
+UPDATE ag.survey_question SET japanese = '虫垂（盲腸）を取って（摘出して）いますか？' WHERE american = 'Have you had your appendix removed?';
+UPDATE ag.survey_question SET japanese = '扁桃を取って（摘出して）いますか？' WHERE american = 'Have you had your tonsils removed?';
+UPDATE ag.survey_question SET japanese = 'Lyft、Uberを含むライドシェアサービス、またはタクシーの代替を使用したことがありますか?' WHERE american = 'Have you used shared ride services including Lyft, Uber or alternative forms of taxi?';
+UPDATE ag.survey_question SET japanese = '身長' WHERE american = 'Height';
+UPDATE ag.survey_question SET japanese = '繊維サプリメントをどれくらいの回数服用していますか？' WHERE american = 'How frequently do you take a fiber supplement?';
+UPDATE ag.survey_question SET japanese = 'プロバイオティクをどれくらいの回数服用していますか？' WHERE american = 'How frequently do you take a probiotic?';
+UPDATE ag.survey_question SET japanese = 'ビタミンDサプリメントをどれくらいの回数服用していますか？' WHERE american = 'How frequently do you take a Vitamin D supplement?';
+UPDATE ag.survey_question SET japanese = 'ビタミンB複合体、葉酸塩または葉酸をどれくらいの回数服用していますか？' WHERE american = 'How frequently do you take Vitamin B complex, folate or folic acid?';
+UPDATE ag.survey_question SET japanese = '通常、アルコール飲料は一度に何杯飲みますか？' WHERE american = 'How many alcoholic beverages do you usually have per sitting?';
+UPDATE ag.survey_question SET japanese = '通常、1日に何回食事をしますか？' WHERE american = 'How many meals do you typically eat per day?';
+UPDATE ag.survey_question SET japanese = 'あなたが同居している人のうち、あなたの家族の一員ではない人は何人いますか？' WHERE american = 'How many of the people you live with are not a part of your family?';
+UPDATE ag.survey_question SET japanese = '通常、1日に何回軽食（おやつ）を食べますか？' WHERE american = 'How many snacks do you typically eat per day?';
+UPDATE ag.survey_question SET japanese = '便通は普通1日に何回ありますか？' WHERE american = 'How many times do you have a bowel movement in an average day?';
+UPDATE ag.survey_question SET japanese = '仕事を含め、何らかの理由で自宅の外に出た（例えば、店舗や公園などに行くために家から離れた）回数は何回でしたか？' WHERE american = 'How many times have you gone outside of your home for any reason including work (e.g., left your property to go to stores, parks, etc.)?';
+UPDATE ag.survey_question SET japanese = '通常、一度にどのくらい飲みますか？' WHERE american = 'How much do you typically consume in a sitting?';
+UPDATE ag.survey_question SET japanese = 'あなたの生活の質を損なうという意味で、あなたの睡眠の問題は、どの程度他の人々が見てわかると思いますか？' WHERE american = 'How NOTICEABLE to others do you think your sleep problem is in terms of impairing the quality of your life?';
+UPDATE ag.survey_question SET japanese = 'トウモロコシ、大豆、キャノーラ（菜種）、オリーブ、ピーナッツ、アボカド、サフラワー、ヒマワリなどの植物油（ココナッツ油とパーム油は除かれます）で調理することはどれくらいありますか？ ' WHERE american = 'How often do you  cook with vegetable oils (excluding coconut and palm oil) such as corn, soy, canola (rapeseed), olive, peanut, avocado, safflower or sunflower? ';
+UPDATE ag.survey_question SET japanese = '歯磨きは1日何回していますか？' WHERE american = 'How often do you brush your teeth?';
+UPDATE ag.survey_question SET japanese = '水を1日1 L （約32オンス）以上飲むことはどれくらいありますか？' WHERE american = 'How often do you consume at least 1L (~32 ounces) of water in a day?';
+UPDATE ag.survey_question SET japanese = '牛乳またはチーズを1日2サービング以上食べることはどれくらいありますか？（ 1サービング＝1カップ分の牛乳またはヨーグルト；1.5～ 2オンス分のチーズ）' WHERE american = 'How often do you consume at least 2 servings of milk or cheese a day? (1 serving = 1 cup milk or yogurt; 1½ - 2 ounces cheese)';
+UPDATE ag.survey_question SET japanese = '果物を1日に2 ～ 3サービング以上食べることはどれくらいありますか？（ 1サービング＝半カップ分の果物；ミディアムサイズの果物1個、4液量オンス分の果汁100％のジュース。）' WHERE american = 'How often do you consume at least 2-3 servings of fruit in a day? (1 serving = ½ cup fruit; 1 medium sized fruit; 4 fl.oz. 100% fruit juice.)';
+UPDATE ag.survey_question SET japanese = 'デンプン質と非デンプン質の野菜を2 ～ 3サービング以上食べることはどれくらいありますか？デンプン質の野菜とは、ジャガイモ、トウモロコシ、エンドウ豆、キャベツなどです。非デンプン質の野菜とは、生の葉物野菜、キュウリ、トマト、ピーマン、ブロッコリー、ケールなどです。（ 1サービング＝半カップ分の野菜／ジャガイモ；1カップ分の生の葉物野菜）' WHERE american = 'How often do you consume at least 2-3 servings of starchy and non-starchy vegetables. Examples of starchy vegetables include white potatoes, corn, peas and cabbage. Examples of non-starchy vegetables include raw leafy greens, cucumbers, tomatoes, peppers, broccoli, and kale. (1 serving = ½ cup vegetables/potatoes; 1 cup leafy raw vegetables)';
+UPDATE ag.survey_question SET japanese = 'ビーツ（サトウダイコンのこと。生、缶入り、漬物にした、または焼いたものを含む）はどれくらい食べていますか？（ 1サービング＝1カップ分の生または調理済みのもの）' WHERE american = 'How often do you consume beets (including raw, canned, pickled, or roasted)? (1 serving = 1 cup raw or cooked)';
+UPDATE ag.survey_question SET japanese = 'ノンカロリーまたは低カロリーの甘味料を含む飲料を飲むことはどれくらいありますか*？' WHERE american = 'How often do you consume beverages with non-nutritive or low-calorie sweeteners*?';
+UPDATE ag.survey_question SET japanese = '鶏肉または七面鳥肉はどれくらい食べますか？' WHERE american = 'How often do you consume chicken or turkey?';
+UPDATE ag.survey_question SET japanese = 'ノンカロリーまたは低カロリーの甘味料を含む食品はどれくらい摂取していますか？' WHERE american = 'How often do you consume foods containing non-nutritive or low-calorie sweeteners?';
+UPDATE ag.survey_question SET japanese = 'プライムリブ、Tボーンステーキ、ハンバーガー、リブ肉、ベーコンなど、脂肪分の高い赤肉はどれくらい食べていますか？' WHERE american = 'How often do you consume higher fat red meats like prime rib, T-bone steak, hamburger, ribs, bacon, etc.?';
+UPDATE ag.survey_question SET japanese = '肉／卵はどれくらい食べていますか？' WHERE american = 'How often do you consume meat/eggs?';
+UPDATE ag.survey_question SET japanese = '代用乳（豆乳、無乳糖ミルク、アーモンドミルクなど）はどれくらい摂取していますか？' WHERE american = 'How often do you consume milk substitutes (soy milk, lactose free milk, almond milk, etc.)?';
+UPDATE ag.survey_question SET japanese = '発酵野菜または植物製品を1サービング以上摂取することはどれくらいありますか？（ 1サービング＝半カップ分のザウアークラウト、キムチまたは発酵野菜、あるいは1カップ分の紅茶キノコ）' WHERE american = 'How often do you consume one or more servings of fermented vegetables or plant products? (1 serving = ½ cup sauerkraut, kimchi or fermented vegetable or 1 cup of kombucha)';
+UPDATE ag.survey_question SET japanese = 'ほうれん草、スイスチャード、ビートの根または若葉、オクラ、キヌア、アマランサス、そば、小麦ふすまたは胚芽、ブランシリアル、チアシード、ダイオウ、スイカ、ダークチョコレートまたはココアパウダー（＞70％）などのシュウ酸塩を多く含む食物、およびアーモンド、ピーナッツ、ペカン、カシュー、ヘーゼルナッツなどのナッツ類はどれくらい食べていますか？' WHERE american = 'How often do you consume oxalate-rich foods, such as spinach, Swiss chard, beetroot or beet greens, okra, quinoa, amaranth, buckwheat, wheat bran or germ, Bran cereal, chia seeds, rhubarb, watermelon, dark chocolate or cocoa powder (>70%), and nuts such as almonds, peanuts pecans, cashews, and hazelnuts?';
+UPDATE ag.survey_question SET japanese = 'あなたはインスタント料理（マカロニ・アンド・チーズ、ラーメン、Lean Cuisineなど）をどれくらい食べていますか？' WHERE american = 'How often do you consume ready-to-eat meals (e.g. macaroni and cheese, ramen noodles, lean cuisine)?';
+UPDATE ag.survey_question SET japanese = '塩味のスナック（ポテトチップス、ナチョチップス、コーンチップス、バター付きのポップコーン、フライドポテトなど）はどれくらい食べますか？' WHERE american = 'How often do you consume salted snacks (potato chips, nacho chips, corn chips, popcorn with butter, French fries etc.)?';
+UPDATE ag.survey_question SET japanese = '魚介類（魚、エビ、ロブスター、カニなど）はどれくらい食べますか？' WHERE american = 'How often do you consume seafood (fish, shrimp, lobster, crab, etc.)?';
+UPDATE ag.survey_question SET japanese = '植物性加工タンパク質、豆腐、テンペ、大豆粉、大豆ナッツ、大豆バター、大豆、味噌（発酵大豆）などの大豆製品はどれくらい食べていますか？ ' WHERE american = 'How often do you consume soy products such as textured vegetable protein, tofu, tempeh, soybean flour, soy nuts, soy but butter, soybeans, and miso (i.e. fermented soy)? ';
+UPDATE ag.survey_question SET japanese = '甘いお菓子（ケーキ、クッキー、ペイストリー、ドーナツ、マフィン、チョコレートなど）はどれくらい食べますか？ ' WHERE american = 'How often do you consume sugary sweets (cake, cookies, pastries, donuts, muffins, chocolate etc.) ';
+UPDATE ag.survey_question SET japanese = '卵を丸ごと食べることはどれくらいありますか（卵泡立て器の使用や卵白のみのものは含まれません）？' WHERE american = 'How often do you consume whole eggs (does not include egg beaters or just egg whites).';
+UPDATE ag.survey_question SET japanese = 'あなたはどれくらい家で料理を作って食べていますか？（箱入りのマカロニ・アンド・チーズ、ラーメン、Lean Cuisineなど、インスタント料理は除く）' WHERE american = 'How often do you cook and consume home cooked meals? (Exclude ready-to-eat meals like boxed macaroni and cheese, ramen noodles, lean cuisine)';
+UPDATE ag.survey_question SET japanese = 'ラード、バター、またはギーで調理することはどれくらいありますか？' WHERE american = 'How often do you cook with lard, butter or ghee?';
+UPDATE ag.survey_question SET japanese = 'オリーブオイルを使って調理することはどれくらいありますか。' WHERE american = 'How often do you cook with olive oil?';
+UPDATE ag.survey_question SET japanese = '非ダイエットソーダやフルーツドリンク／パンチ（100 ％果汁のジュースは含まれません）などの砂糖入り飲料 を1日16オンス以上飲むことはどれくらいありますか？ （ソーダ1缶＝ 12オンス）' WHERE american = 'How often do you drink 16 ounces or more of sugar sweetened beverages such as non-diet soda or fruit drink/punch (not including 100 % fruit juice) in a day? (1 can of soda = 12 ounces)';
+UPDATE ag.survey_question SET japanese = 'アルコールはどれくらい飲んでいますか？' WHERE american = 'How often do you drink alcohol?';
+UPDATE ag.survey_question SET japanese = 'あなたが少なくとも1日2サービングの全粒穀物を食べることはどれくらいありますか？（ 1サービング＝スライス1枚分の全粒粉100 ％のパン；1カップ分のシレッデッド・フィート、ウィーティーズ、グレープ・ナッツ、高繊維シリアル、またはオートミールなどの全粒粉シリアル；全粒粉クラッカー3 ～ 4個；半カップ分の玄米または全粒粉パスタ）' WHERE american = 'How often do you eat at least 2 servings of whole grains in a day? (1 serving = 1 slice of 100% whole grain bread; 1 cup whole grain cereal like Shredded Wheat, Wheaties, Grape Nuts, high fiber cereals, or oatmeal; 3-4 whole grain crackers; ½ cup brown rice or whole wheat pasta)';
+UPDATE ag.survey_question SET japanese = '持ち帰り／テイクアウト用のものも含め、店で調理された食べものをどれくらい食べていますか？' WHERE american = 'How often do you eat food prepared at a restaurant, including carry-out/take-out?';
+UPDATE ag.survey_question SET japanese = '冷凍のデザート（アイスクリーム／ジェラート／ミルクシェイク、シャーベット／ソルベ、フローズンヨーグルトなど）はどれくらい食べていますか？' WHERE american = 'How often do you eat frozen desserts (ice cream/gelato/milkshakes, sherbet/sorbet, frozen yogurt, etc.)?';
+UPDATE ag.survey_question SET japanese = '豆腐、テンペ、枝豆、レンズ豆、ひよこ豆、ピーナッツ、アーモンド、クルミ、キヌアなどの植物由来のタンパク質源はどれくらい食べていますか？' WHERE american = 'How often do you eat plant-based sources of protein including tofu, tempeh, edamame, lentils, chickpeas, peanuts, almonds, walnuts, or quinoa?';
+UPDATE ag.survey_question SET japanese = '赤肉はどれくらい食べていますか。' WHERE american = 'How often do you eat red meat?';
+UPDATE ag.survey_question SET japanese = 'どれくらい定期的に運動していますか？' WHERE american = 'How often do you exercise?';
+UPDATE ag.survey_question SET japanese = 'どのような頻度で片頭痛がしますか？' WHERE american = 'How often do you experience migraines?';
+UPDATE ag.survey_question SET japanese = '糸ようじ（デンタルフロス）はどれくらい使っていますか？' WHERE american = 'How often do you floss your teeth?';
+UPDATE ag.survey_question SET japanese = 'タバコはどれくらい吸っていますか？' WHERE american = 'How often do you smoke cigarettes?';
+UPDATE ag.survey_question SET japanese = 'どれくらい定期的にチームスポーツに参加していますか？' WHERE american = 'How often do you take part in team sports?';
+UPDATE ag.survey_question SET japanese = '水泳用プール／ホットタブは、どのような頻度で使用していますか？' WHERE american = 'How often do you use a swimming pool/hot tub?';
+UPDATE ag.survey_question SET japanese = 'ココナッツ油、パーム油、またはパーム核油を使用したり調理に使うことはどれくらいありますか？ ' WHERE american = 'How often do you use or cook with coconut, palm or palm kernel oil? ';
+UPDATE ag.survey_question SET japanese = 'マーガリンや（野菜の）ショートニングを使用したり調理に使うことはどれくらいありますか？ ' WHERE american = 'How often do you use or cook with margarine or (vegetable) shortening? ';
+UPDATE ag.survey_question SET japanese = '顔用の化粧品（日焼け止めやモイスチャライザーなどのスキンケア製品の使用も含める）はどれくらい使っていますか？' WHERE american = 'How often do you wear facial cosmetics (includes the use of skin care products like sunscreen or moisturizer)?';
+UPDATE ag.survey_question SET japanese = '現在の睡眠パターンに関してどのように満足／不満足ですか？' WHERE american = 'How SATISFIED/DISSATISFIED are you with your CURRENT sleep pattern?';
+UPDATE ag.survey_question SET japanese = 'それはどのように診断されましたか？' WHERE american = 'How was this diagnosed?';
+UPDATE ag.survey_question SET japanese = 'その皮膚疾患はどのように診断されましたか？' WHERE american = 'How was your skin condition diagnosed?';
+UPDATE ag.survey_question SET japanese = '母乳と粉ミルクのどちらで育ちましたか？' WHERE american = 'How were you fed as an infant?';
+UPDATE ag.survey_question SET japanese = 'あなたが現在持っている睡眠の問題について、どの程度の心配／不安がありますか？' WHERE american = 'How WORRIED/DISTRESSED are you about your current sleep problem?';
+UPDATE ag.survey_question SET japanese = 'あなたは自分の食習慣をどのように分類しますか？' WHERE american = 'How would you classify your diet?';
+UPDATE ag.survey_question SET japanese = '私は過去____________の期間にインフルエンザワクチンを接種しました。' WHERE american = 'I have received a flu vaccine in the last ____________.';
+UPDATE ag.survey_question SET japanese = '私は過去____________の期間に抗生物質を服用しました。' WHERE american = 'I have taken antibiotics in the last ____________.';
+UPDATE ag.survey_question SET japanese = '私は過去＿＿＿の期間に、アメリカ合衆国外に旅行したことがあります。' WHERE american = 'I have traveled outside of the United States in the past _________.';
+UPDATE ag.survey_question SET japanese = '上記のいずれかの症状があった場合、症状があった間は仕事を休んで自宅で過ごしていましたか？' WHERE american = 'If yes to any symptoms above, did you stay home from work while symptomatic?';
+UPDATE ag.survey_question SET japanese = '質問24および／または25の回答が「はい」の場合、定期的に摂取するノンカロリーまたは低カロリーの甘味料はどのような種類のものですか？該当するものをすべて選択してください。' WHERE american = 'If you answered yes to Question 24 and/or 25, what type of non-nutritive or low-calorie sweetener(s) do you consume on a regular basis? Select all that apply.';
+UPDATE ag.survey_question SET japanese = '前の質問への回答が「はい」の場合、症状は何ですか？該当するものをすべて選択してください。' WHERE american = 'If you answered yes to the previous question, what are the symptoms? Select all that apply.';
+UPDATE ag.survey_question SET japanese = '回答が「はい」の場合、どのタイプのIBDですか？' WHERE american = 'If you answered yes, which type of IBD do you have?';
+UPDATE ag.survey_question SET japanese = '特殊な食習慣をとっている場合、それはどのような種類のものですか？該当するものをすべて選択してください。' WHERE american = 'If you eat a specialized diet, what type do you follow? Select all that apply.';
+UPDATE ag.survey_question SET japanese = '断続的な断食をする場合、どのよう種類の断食をしますか？' WHERE american = 'If you practice intermittent fasting, what type do you follow?';
+UPDATE ag.survey_question SET japanese = '回答が「はい」の場合、どのタイプの糖尿病かを選択してください：' WHERE american = 'If you responded “Yes”, select which type of diabetes';
+UPDATE ag.survey_question SET japanese = '回答が「はい」の場合、どの障害かを次のリストから選択してください：' WHERE american = 'If you responded “yes”, please select which disorder(s) from the following list';
+UPDATE ag.survey_question SET japanese = '繊維サプリメントを服用する場合、どのような種類のものを服用していますか？該当するものをすべて選択してください。' WHERE american = 'If you take a fiber supplement, what kind do you take? Select all that apply.';
+UPDATE ag.survey_question SET japanese = '電話やノートパソコンなどの発光電子機器を寝る直前に使用する場合、ナイトモードまたはダークモードで使用していますか？' WHERE american = 'If you use light emitting electronic devices such as a phone or laptop right before bed, do you use it in night or dark mode?';
+UPDATE ag.survey_question SET japanese = '普通の1週間に何種類の植物を食べていますか？たとえば、ニンジン、ジャガイモ、タマネギを含む缶詰スープを食べた場合、3種類別々の植物として数えることができます。マルチグレインのパンを摂取した場合、それぞれの穀物を別々の植物として数えます。すべての果物を合計に含めてください。' WHERE american = 'In an average week, how many different plants do you eat? For example - if you consume a can of soup that contains carrots, potatoes and onion, you can count this as 3 different plants; If you consume multi-grain bread, each different grain counts as a plant. Include all fruits in the total.';
+UPDATE ag.survey_question SET japanese = '普通の1週間に、繊維含有量の多い強化食品（例： Fiber One ）はどれくらい食べていますか？' WHERE american = 'In an average week, how often do you eat foods that are fortified with high fiber content (e.g. Fiber One)?';
+UPDATE ag.survey_question SET japanese = '過去6ヶ月以内に私の体重は_________しました。' WHERE american = 'My weight has _________ within the last 6 months.';
+UPDATE ag.survey_question SET japanese = '氏名' WHERE american = 'Name';
+UPDATE ag.survey_question SET japanese = '次のうち、片頭痛に伴う全ての症状にチェックを入れてください。' WHERE american = 'Of the following check all the symptoms you experience with a migraine';
+UPDATE ag.survey_question SET japanese = '過去1ヶ月間におけるあなたの平均的なストレスレベルを、1を「ストレスがほとんどまたは全くない」、10を「かなりのストレス」とした10段階で評価してください。' WHERE american = 'On a scale of 1 to 10, where 1 means you have "little or no stress" and 10 means you have "a great deal of stress," how would you rate your average level of stress during the past month?';
+UPDATE ag.survey_question SET japanese = '学校や仕事がある日は、朝何時に起きますか？' WHERE american = 'On days you have school or work, what time do you get up in the morning?';
+UPDATE ag.survey_question SET japanese = '学校や仕事がある前の夜は、何時に寝ますか？' WHERE american = 'On nights before you have school or work, what time do you go to bed?';
+UPDATE ag.survey_question SET japanese = '休みの日（学校や仕事がない日）の前の夜は、何時に寝ますか？' WHERE american = 'On nights before your off days (days when you do not have school or work), what time do you go to bed?';
+UPDATE ag.survey_question SET japanese = '休みの日（学校や仕事がない日）は、朝何時に起きますか？ ' WHERE american = 'On your off days (days when you do not have school or work), what time do you get up in the morning? ';
+UPDATE ag.survey_question SET japanese = '過去2週間の間、落ち込んだり、憂うつになったり、絶望したりすることがどれくらいありましたか？' WHERE american = 'Over the last 2 weeks, how often have you been bothered by feeling down, depressed or hopeless?';
+UPDATE ag.survey_question SET japanese = '過去2週間の間に、緊張したり、不安を感じたり、いらいらしたりすることがどれくらいありましたか？' WHERE american = 'Over the last 2 weeks, how often have you been bothered by feeling nervous, anxious, or on edge?';
+UPDATE ag.survey_question SET japanese = '過去2週間の間、何かをする興味や楽しみがほとんどなくてつらいと思ったことがどれくらいありましたか？' WHERE american = 'Over the last 2 weeks, how often have you been bothered by little interest or pleasure in doing things?';
+UPDATE ag.survey_question SET japanese = '過去2週間の間に、心配するのを止めたりコントロールできなかったりしたことがどれくらいありましたか？' WHERE american = 'Over the last 2 weeks, how often have you been bothered by not being able to stop or control worrying?';
+UPDATE ag.survey_question SET japanese = '過去1週間に、腹部膨満感が起こったことはどれくらいありましたか？' WHERE american = 'Over the last week, how frequently have you had abdominal bloating?';
+UPDATE ag.survey_question SET japanese = '過去1週間に、腹痛や腹部不快感を感じたことはどれくらいありましたか？' WHERE american = 'Over the last week, how frequently have you had abdominal pain or abdominal discomfort?';
+UPDATE ag.survey_question SET japanese = '過去1週間で、お腹が鳴る／胃が鳴ることはどれくらいありましたか？' WHERE american = 'Over the last week, how frequently have you had borborygmi / rumbling stomach?';
+UPDATE ag.survey_question SET japanese = '過去1週間に、膨満感（おならが出る）を感じたことはどれくらいありましたか？' WHERE american = 'Over the last week, how frequently have you had flatulence (passage of gas)?';
+UPDATE ag.survey_question SET japanese = '過去1週間の睡眠の質はどんなでしたか？' WHERE american = 'Over the past week, how would you rate your sleep quality?';
+UPDATE ag.survey_question SET japanese = '参加者名' WHERE american = 'Participant name';
+UPDATE ag.survey_question SET japanese = '上記に記載されていないその他の特殊な食事制限があったら列挙／説明してください。' WHERE american = 'Please list/describe any other special diet restrictions you follow that are not indicated above.';
+UPDATE ag.survey_question SET japanese = '片頭痛を起こす主な原因を、「1」が最も可能性が高い、「2」が2番目に可能性が高いとして、ランク付けしてください。片頭痛を引き起こす原因でないものは、空白のままにしておいてください。' WHERE american = 'Please rank the main factors that lead to your migraines, where “1” is most likely, “2” is second most likely, etc.  If the factor does not cause migraines leave blank';
+UPDATE ag.survey_question SET japanese = '眠りにつけないことについて現在（過去2週間）どれくらい重症かを評価してください。' WHERE american = 'Please rate the CURRENT (i.e. LAST 2 WEEKS) SEVERITY of any difficulty falling asleep.';
+UPDATE ag.survey_question SET japanese = '眠りが浅いことについて現在（過去2週間）どれくらい重症かを評価してください。' WHERE american = 'Please rate the CURRENT (i.e. LAST 2 WEEKS) SEVERITY of any difficulty staying asleep.';
+UPDATE ag.survey_question SET japanese = '目覚めが早すぎることについて現在（過去2週間）どれくらい重症かを評価してください。' WHERE american = 'Please rate the CURRENT (i.e. LAST 2 WEEKS) SEVERITY of any problems waking up too early.';
+UPDATE ag.survey_question SET japanese = 'あなたの現在の幸福状態について考えてください。幸福について考えるときは、あなたの身体的健康、感情的健康、あなたが経験しているあらゆる課題、あなたの人生の人々、あなたが利用できる機会や資源について考えてください。現在の幸福状態をどんなふうに言い表しますか？' WHERE american = 'Please think about your current level of well-being. When you think about well-being, think about your physical health, your emotional health, any challenges you are experiencing, the people in your life, and the opportunities or resources you have available to you. How would you describe your current level of well-being?';
+UPDATE ag.survey_question SET japanese = '出産予定日：' WHERE american = 'Pregnancy due date';
+UPDATE ag.survey_question SET japanese = 'この人は私の：' WHERE american = 'This person is my';
+UPDATE ag.survey_question SET japanese = 'あなたの睡眠の問題が日常活動を現在どの程度妨げていると思いますか（例：昼間の疲労、気分、職場での作業／日常の家事を行う能力、集中力、記憶力、気分など）？' WHERE american = 'To what extent do you consider your sleep problem to INTERFERE with your daily functioning (e.g. daytime fatigue, mood, ability to function at work/daily chores, concentration, memory, mood, etc.) CURRENTLY?';
+UPDATE ag.survey_question SET japanese = '種類／商品名：' WHERE american = 'Type/brand';
+UPDATE ag.survey_question SET japanese = '体重' WHERE american = 'Weight';
+UPDATE ag.survey_question SET japanese = 'あなたは帝王切開（ Cセクション）によって生まれましたか？' WHERE american = 'Were you born via cesarean section (C-section)?';
+UPDATE ag.survey_question SET japanese = 'どのような病状ですか？' WHERE american = 'What condition(s)?';
+UPDATE ag.survey_question SET japanese = 'あなたはどの食物に対してアレルギーがありますか？該当するものをすべて選択してください。' WHERE american = 'What foods are you allergic to? Select all that apply.';
+UPDATE ag.survey_question SET japanese = '通常、どれくらい激しい運動をしますか？該当するものをすべて選択してください。' WHERE american = 'What intensity of exercise do you typically do? Select all that apply.';
+UPDATE ag.survey_question SET japanese = 'あなたの最終学歴は何ですか？' WHERE american = 'What is your highest level of education?';
+UPDATE ag.survey_question SET japanese = 'あなたの職業は何ですか？' WHERE american = 'What is your occupation?';
+UPDATE ag.survey_question SET japanese = 'この研究に参加していて、そのことをあなたに自発的に伝えた人々と、あなたとの関係（パートナー、子供など）をお答えください。 両方の人が同じことを答えた情報のみが使用されることに注意してください。私たちの遺伝子が私たちのマイクロバイオームに影響を与えることが研究により示されているため、この情報は有用です。' WHERE american = 'What is your relationship to those in this study who have voluntarily told you of their participation (e.g. partner, children)? Note that we will only use information that both parties provide. This information is useful because studies have shown that our genes affect our microbiome.';
+UPDATE ag.survey_question SET japanese = 'どのような皮膚疾患と診断されましたか？' WHERE american = 'What kind of skin condition have you been diagnosed with?';
+UPDATE ag.survey_question SET japanese = 'どのような種類の抗生物質を服用しましたか？' WHERE american = 'What type of antibiotic did you take?';
+UPDATE ag.survey_question SET japanese = '通常、どのような運動をしますか？該当するものをすべて選択してください。' WHERE american = 'What type of exercise do you typically do? Select all that apply.';
+UPDATE ag.survey_question SET japanese = '通常、どのような種類のアルコールを飲みますか？該当するものをすべて選択してください。' WHERE american = 'What type(s) of alcohol do you typically consume? Select all that apply.';
+UPDATE ag.survey_question SET japanese = 'どのような種類のペットですか？' WHERE american = 'What type(s) of pets?';
+UPDATE ag.survey_question SET japanese = 'どのような種類のサプリメントですか？' WHERE american = 'What types of supplements?';
+UPDATE ag.survey_question SET japanese = '治療に使用された抗生物質は何ですか？' WHERE american = 'What was the antibiotic used to treat?';
+UPDATE ag.survey_question SET japanese = '現在の居住地（州）に移動したのはいつですか？' WHERE american = 'When did you move to your current location of residence (state)?';
+UPDATE ag.survey_question SET japanese = '発酵食品を食べ始めたのはいつですか？' WHERE american = 'When did you start eating fermented foods?';
+UPDATE ag.survey_question SET japanese = '毎日のカロリーのほとんどはいつ摂取しますか？' WHERE american = 'When do you consume most of your daily calories?';
+UPDATE ag.survey_question SET japanese = '園芸や庭仕事をする回数は、シーズン中どれくらいですか？' WHERE american = 'When the season allows, how often do you garden or do yard work?';
+UPDATE ag.survey_question SET japanese = 'ノンカロリーまたは低カロリーの甘味料を含む食品や飲料を摂取した場合、その後、ガス、膨張、下痢などの消化器の不具合が起きることがよくありますか？ ' WHERE american = 'When you consume foods or beverages containing non-nutritive or low-calorie sweeteners, do you tend to experience gastrointestinal disorders afterwards, such as gas, bloating, and/or diarrhea? ';
+UPDATE ag.survey_question SET japanese = '自宅の外で水を飲む前に、追加の処理（沸騰、浄化錠、塩素/漂白剤など）を施しますか ？' WHERE american = 'When you’re outside the home, do you apply additional treatment to your drinking water prior to consumption (e.g., boiling, purification tablet, chlorine/bleach)?';
+UPDATE ag.survey_question SET japanese = '自宅の外で飲む、味のついていない普通の飲料水は主にどういうものですか？これには静水または発泡水／炭酸水も含められます。' WHERE american = 'When you''re outside the home, what is the main source of your plain unflavored drinking water? This can include still or sparkling/carbonated water.';
+UPDATE ag.survey_question SET japanese = 'あなたの猫は主にどこにいますか？' WHERE american = 'Where does your cat(s) mostly stay?';
+UPDATE ag.survey_question SET japanese = 'あなたの犬は主にどこにいますか？' WHERE american = 'Where does your dog(s) mostly stay?';
+UPDATE ag.survey_question SET japanese = 'あなたの利き手はどちらですか？' WHERE american = 'Which is your dominant hand?';
+UPDATE ag.survey_question SET japanese = 'どのような種類のがんを患っています／いましたか？該当するものをすべて選択してください。' WHERE american = 'Which kind of cancer(s) did you / do you have? Select all that apply.';
+UPDATE ag.survey_question SET japanese = 'どんな薬を服用していますか？' WHERE american = 'Which medications are you taking?';
+UPDATE ag.survey_question SET japanese = 'お住まいの地域に最も当てはまるのは、次のうちどれですか？' WHERE american = 'Which of the following best describes the area in which you live?';
+UPDATE ag.survey_question SET japanese = '次のうち、ご自身に最もあてはまるものはどれでしょうか？' WHERE american = 'Which of the following best describes you?';
+UPDATE ag.survey_question SET japanese = '次の発酵食品／飲料のうち、週に1回以上摂取するのはどれですか？該当するものをすべて選択し、記載されていないものを「その他」に記入してください。' WHERE american = 'Which of the following fermented foods/beverages do you consume more than once a week? Select all that apply and write in any that are not listed under ‘Other’.';
+UPDATE ag.survey_question SET japanese = 'どのタイプの治療を受け／利用しましたか？該当するものをすべて選択してください。' WHERE american = 'Which types of treatment(s) did you take/use? Select all that apply.';
+UPDATE ag.survey_question SET japanese = 'この研究に参加していて、そのことをあなたに自発的に伝えた同居人は誰ですか？ 両方の人が同じことを答えた情報のみが使用されることに注意してください。私たちと一緒に住んでいる人々が私たちのマイクロバイオームに影響を与えることが研究により示されているため、この情報は有用です。' WHERE american = 'Who are your roommates who have voluntarily told you of their participation in this study? Note that we will only use information that both parties provide. This information is useful because studies have shown that the people we live with affect our microbiome.';
+UPDATE ag.survey_question SET japanese = 'ビタミンDサプリメントの摂取頻度について教えて下さい。' WHERE american = 'How frequently do you take Vitamin D supplement?';
+UPDATE ag.survey_question SET japanese = '私は___にアレルギーがあります（該当するものすべてに印を付けてください）。' WHERE american = 'I am allergic to __________ (mark all that apply)';
+UPDATE ag.survey_question SET japanese = 'パレオ、改質されたパレオ、プライマル、FODMAP、ウェステンプライス、その他低穀物、低加工食品の食事をしていますか？' WHERE american = 'Do you eat a paleo, modified paleo, primal, FODMAP, Westen-Price, or other low-grain, low processed food diet?';
+UPDATE ag.survey_question SET japanese = '上記以外で特別な食事制限をされていますか？' WHERE american = 'Do you follow any other special diet restrictions other than those indicated above?';
+UPDATE ag.survey_question SET japanese = 'ご自宅での飲料水の水源は何ですか？' WHERE american = 'What is your drinking water source at home?';
+UPDATE ag.survey_question SET japanese = 'あなたの人種/民族は何ですか？' WHERE american = 'What is your race/ethnicity?';
+UPDATE ag.survey_question SET japanese = '現在の居住地に移ったのはいつですか？' WHERE american = 'When did you move to current state of residence?';
+UPDATE ag.survey_question SET japanese = '私は過去＿＿年に居住国以外に旅行したことがある。' WHERE american = 'I have traveled outside of my country of residence in the past _________.';
+UPDATE ag.survey_question SET japanese = '家族以外の同居人は何人いますか？' WHERE american = 'How many non-family roommates do you have?';
+UPDATE ag.survey_question SET japanese = 'この研究の参加者の中に、親戚関係であるか、同居している人はいますか？' WHERE american = 'Are you related to or live with any of the other participants in this study?';
+UPDATE ag.survey_question SET japanese = 'あなたは通常、どのような種類のアルコールを摂取していますか（該当するものをすべて選択してください）。' WHERE american = 'What type(s) of alcohol do you typically consume (select all that apply)?';
+UPDATE ag.survey_question SET japanese = '顔用化粧品をつける頻度を教えてください。' WHERE american = 'How often do you wear facial cosmetics?';
+UPDATE ag.survey_question SET japanese = '平均的な睡眠時間は何時間ですか？' WHERE american = 'Approximately how many hours of sleep to you get in an average night?';
+UPDATE ag.survey_question SET japanese = 'あなたの便通について教えてください。下記の表を参考にしてください：<br/><img src="/static/img/ja_jp/bristol_stool.jpg" id="bristol-chart">' WHERE american = 'Describe the quality of your bowel movements. Use the chart below as a reference:<br/><img src="/static/img/en_us/bristol_stool.jpg" id="bristol-chart">';
+UPDATE ag.survey_question SET japanese = '盲腸を切除したことがありますか？' WHERE american = 'Have you had you appendix removed?';
+UPDATE ag.survey_question SET japanese = '水疱瘡にかかったことがありますか？' WHERE american = 'Have you had chickenpox?';
+UPDATE ag.survey_question SET japanese = '顔のニキビを抑えるために、市販のニキビ薬製品を使用していますか？' WHERE american = 'Do you use over the counter products to control facial acne?';
+UPDATE ag.survey_question SET japanese = '現在、他の疾患のために市販薬や処方箋薬を服用していますか？' WHERE american = 'Do you currently take over the counter or prescription medication for other conditions?';
+UPDATE ag.survey_question SET japanese = '帝王切開で生まれましたか？' WHERE american = 'Were you born via Caesarean section (C-section)?';
+UPDATE ag.survey_question SET japanese = '上記の症状に関する他の質問について、後日連絡してもよろしいですか?' WHERE american = 'Are you willing to be contacted to answer additional questions about the conditions listed above?';
+UPDATE ag.survey_question SET japanese = '以下の食物以外のアレルギーをお持ちですか？(該当するものすべてに印をつけてください)' WHERE american = 'Do you have any of the following non-food allergies? (mark all that apply)';
+UPDATE ag.survey_question SET japanese = 'あなたは1 日のカロリーの 75% 以上を栄養剤（エンシュア等）から摂取していますか?' WHERE american = 'Are you an infant who receives most of their nutrition from breast milk or formula, or an adult who receives most (more than 75% of daily calories) of their nutrition from adult nutritional shakes (i.e. Ensure)?';
+UPDATE ag.survey_question SET japanese = '1週間のうち、肉・卵を摂取する頻度はどれくらいですか？' WHERE american = 'In an average week, how often do you consume meat/eggs?';
+UPDATE ag.survey_question SET japanese = '1週間のうち、どれくらいの頻度で家庭料理を作ったり、摂取していますか？(市販のマカロニチーズ、インスタントラーメン等調理済み食品は除く）' WHERE american = 'In an average week, how often do you cook and consume home cooked meals? (Exclude ready-to-eat meals like boxed macaroni and cheese, ramen noodles, lean cuisine)';
+UPDATE ag.survey_question SET japanese = '1週間のうち、調理済み食品（マカロニチーズ、インスタントラーメン等）をどれくらいの頻度で摂取していますか？' WHERE american = 'In an average week, how often do you consume ready-to-eat meals (i.e macaroni and cheese, ramen noodles, lean cuisine)?';
+UPDATE ag.survey_question SET japanese = '1週間のうち、持ち帰りやテイクアウトを含め、外食する頻度はどのくらいですか？' WHERE american = 'In an average week, how often do you eat food prepared at a restaurant, including carry-out/take-out?';
+UPDATE ag.survey_question SET japanese = '1週間のうち、1日に１食分以上の発酵野菜または植物製品をどのくらいの頻度で摂取していますか？ （1食分＝ザワークラウト、キムチまたは発酵野菜1/2カップ、コンブチャ1カップ）' WHERE american = 'How often do you consume one or more servings of fermented vegetables in or plant products a day in an average week? (1 serving = 1/2 cup sauerkraut, kimchi or fermented vegetable or 1 cup of kombucha)';
+UPDATE ag.survey_question SET japanese = '1週間のうち、どれくらいの頻度で代用乳（豆乳、乳糖不使用乳、アーモンドミルクなど）を摂取していますか？' WHERE american = 'In an average week, how often do you consume milk substitutes (soy milk, lactose free milk, almond milk, etc.)?';
+UPDATE ag.survey_question SET japanese = '1週間のうち、赤身肉を食べる頻度はどれくらいですか？' WHERE american = 'In an average week, how often do you eat red meat?';
+UPDATE ag.survey_question SET japanese = '1週間のうち、プライムリブ、Tボーンステーキ、ハンバーグ、カルビ、ベーコンなど、脂肪分の多い赤身肉をどれくらいの頻度で摂取していますか。' WHERE american = 'In an average week, how often do you consume higher fat red meats like prime rib, T-bone steak, hamburger, ribs, bacon, etc.?';
+UPDATE ag.survey_question SET japanese = '1週間のうち、1日に1回以上鶏肉（チキン、ターキーなど）を摂取する日は何日ありますか？' WHERE american = 'How many days in an average week do you consume poultry (chicken, turkey, etc.) at least once a day?';
+UPDATE ag.survey_question SET japanese = '1週間のうち、魚介類（魚、エビ、ロブスター、カニなど）を摂取する日はどのくらいありますか？' WHERE american = 'How many days in an average week do you consume seafood (fish, shrimp, lobster, crab, etc.)?';
+UPDATE ag.survey_question SET japanese = '1週間のうち、塩味のスナック菓子（ポテトチップス、ナチョチップス、コーンチップス、バター入りポップコーン、フライドポテトなど）を摂取する日はどのくらいありますか？' WHERE american = 'How many days in an average week do you consume salted snacks (potato chips, nacho chips, corn chips, popcorn with butter, French fries etc.)?';
+UPDATE ag.survey_question SET japanese = '1週間のうち、オリーブオイルを使って料理（ドレッシングを含む）をする日は何日くらいありますか？' WHERE american = 'How many days in average week do you cook with olive oil (including salad dressing)?';
+UPDATE ag.survey_question SET japanese = '全卵をどのくらいの頻度で摂取していますか（液卵や卵白だけのものは含まれない）？' WHERE american = 'How often do you consume whole eggs (does not include egg beaters or just egg whites).';
+UPDATE ag.survey_question SET japanese = '16オンス以上のダイエット用ではないソーダやフルーツドリンク/パンチ（100%フルーツジュースは含まない）等の清涼飲料水を1日にどのくらい摂取していますか？（ ソーダ1缶＝12オンス）' WHERE american = 'How often do you drink 16 ounces or more of a sugar sweetened beverage such as non-diet soda or fruit drink/punch (however, not including 100 % fruit juice) in a day? (1 can of soda = 12 ounces)';
+UPDATE ag.survey_question SET japanese = '1日に1L（～32オンス）以上の水を摂取していますか？' WHERE american = 'Consume at least 1L (~32 ounces) of water in a day?';
+UPDATE ag.survey_question SET japanese = '自閉症や自閉スペクトラム症と診断されたことがありますか？' WHERE american = 'Have you ever been diagnosed with Autism or Autism Spectrum Disorder?';
+UPDATE ag.survey_question SET japanese = 'これまでに、他の臨床疾患と診断されたことがありますか？' WHERE american = 'Have you ever been diagnosed with any other relevant clinical condition?';
+UPDATE ag.survey_question SET japanese = '注意欠陥障害や多動症と診断されたことがありますか？' WHERE american = 'Have you ever been diagnosed with ADD/ADHD?';
+UPDATE ag.survey_question SET japanese = '冠動脈疾患、心臓病と診断されたこと、または心臓発作や脳卒中を起こしたことがありますか？' WHERE american = 'Have you ever been diagnosed with coronary artery disease, heart disease, or suffered a heart attack and/or stroke?';
+UPDATE ag.survey_question SET japanese = '喘息、嚢胞性線維症、COPD（慢性閉塞性肺疾患）と診断されたことがありますか？' WHERE american = 'Have you ever been diagnosed with Asthma, Cystic fibrosis, or COPD (chronic obstructive pulmonary disease?';
+UPDATE ag.survey_question SET japanese = '甲状腺の病気と診断されたことがありますか？' WHERE american = 'Have you ever been diagnosed with thyroid Disease?';
+UPDATE ag.survey_question SET japanese = 'うつ病、双極性障害、統合失調症と診断されたことがありますか？' WHERE american = 'Have you ever been diagnosed with depression, bipolar disorder or schizophrenia?';
+UPDATE ag.survey_question SET japanese = '妊娠の予定日：' WHERE american = 'Pregnancy due date:';
+UPDATE ag.survey_question SET japanese = '市販薬と処方薬：' WHERE american = 'Over the counter and prescription medication:';
+UPDATE ag.survey_question SET japanese = 'あなたの犬は室内・屋外、または犬小屋で飼われていますか：' WHERE american = 'Is your dog indoor/outdoor or confined (cage/tank):';
+UPDATE ag.survey_question SET japanese = '人種/民族：' WHERE american = 'Race/ethnicity:';
+UPDATE ag.survey_question SET japanese = 'サプリメント：' WHERE american = 'Dietary Supplements:';
+UPDATE ag.survey_question SET japanese = '犬と接触する頻度:' WHERE american = 'Contact extent with dog:';
+UPDATE ag.survey_question SET japanese = 'その他、診断された疾患の質問に記載されていない疾患について' WHERE american = 'Other conditions you suffer from that were not listed in the diagnosed conditions question';
+UPDATE ag.survey_question SET japanese = '性別：' WHERE american = 'Gender:';
+UPDATE ag.survey_question SET japanese = '生まれた月：' WHERE american = 'Birth month:';
+UPDATE ag.survey_question SET japanese = '生まれた年：' WHERE american = 'Birth year:';
+UPDATE ag.survey_question SET japanese = 'あなたの猫は室内・屋外、または犬小屋で飼われていますか：' WHERE american = 'Is your cat indoor/outdoor or confined (cage/tank):';
+UPDATE ag.survey_question SET japanese = '食事制限：' WHERE american = 'Dietary Restrictions:';
+UPDATE ag.survey_question SET japanese = '旅行：' WHERE american = 'Travel:';
+UPDATE ag.survey_question SET japanese = 'この研究に参加したことを自発的に話してくれた参加者とあなたはどのような関係にあたりますか (パートナー、子供、ルームメイトなど)?子供の場合は、遺伝的関係があるかどうかを明記してください。なお、両当事者から提供された情報のみを使用します。' WHERE american = 'What is your relationship to other people in this study who have voluntarily told you of their participation (e.g. partner, children, roommates)?  For children, please specify whether or not you are genetically related.  Note that we will only use information that both parties provide.';
+UPDATE ag.survey_question SET japanese = '猫と接触する頻度:' WHERE american = 'Contact extent with cat:';
+UPDATE ag.survey_question SET japanese = '使用している抗生物質：' WHERE american = 'Antibiotic used:';
+UPDATE ag.survey_question SET japanese = '治療：' WHERE american = 'Treatment for:';
+UPDATE ag.survey_question SET japanese = '平均して、1 週間に何種類の植物を食べますか?例えばにんじん、じゃがいも、玉ねぎを含むスープ缶を消費する場合、 3 種類の野菜として数えることができます。雑穀パンを消費する場合、それぞれの穀物を数えることができます。' WHERE american = 'In an average week, how many different plant species do you eat? e.g. If you consume a can of soup that contains carrots, potatoes, and onion, you can count this as 3 different plants; If you consume multi-grain bread, each different grain counts as a plant.';
+UPDATE ag.survey_question SET japanese = '他に飼っているペットはいますか？' WHERE american = 'Do you have any other pet(s)?';
+UPDATE ag.survey_question SET japanese = 'ペットをご記入ください。' WHERE american = 'Please list pets';
+UPDATE ag.survey_question SET japanese = '精神疾患と診断されたことがありますか？' WHERE american = 'Have you ever been diagnosed mental health illness?';
+UPDATE ag.survey_question SET japanese = '次の中から、どの疾患か選んでください：' WHERE american = 'Please select which disorder(s) from the following list:';
+UPDATE ag.survey_question SET japanese = 'どのタイプの糖尿病ですか？' WHERE american = 'which type of diabetes?';
+UPDATE ag.survey_question SET japanese = '人工甘味料入りのダイエット飲料を摂取していますか？' WHERE american = 'Consume diet beverages with artificial sweeteners?';
+UPDATE ag.survey_question SET japanese = 'がんと診断されたことがある場合、どのように治療されましたか？' WHERE american = 'If you have been diagnosed with cancer, how was it treated?';
+UPDATE ag.survey_question SET japanese = '酸欠やGERD（胃食道逆流症）と診断されたことがありますか？' WHERE american = 'Have you ever been diagnosed with acid reflux or GERD (gastro-esophageal reflux disease)?';
+UPDATE ag.survey_question SET japanese = 'どのタイプのIBD（炎症性腸疾患）ですか？' WHERE american = 'Which type of IBD?';
+UPDATE ag.survey_question SET japanese = '何か専門的な食事をしていますか？(該当するものをすべて選んでください)' WHERE american = 'Do you eat a specialized diet ? (select all that apply)';
+UPDATE ag.survey_question SET japanese = '普段、お酒を飲むときはどのくらい飲みますか？' WHERE american = 'How many alcoholic drinks do you usually have when you do drink?';
+UPDATE ag.survey_question SET japanese = 'どのタイプのIBD（炎症性腸疾患）ですか？' WHERE american = 'Which type of IBD do you have?';
+UPDATE ag.survey_question SET japanese = '日付をご記入ください。' WHERE american = 'Please provide date';
+UPDATE ag.survey_question SET japanese = '次のような慢性疾患をお持ちですか（該当するものすべてにチェックを入れてください）：' WHERE american = 'Do you have any of the following chronic conditions (check all that apply):';
+UPDATE ag.survey_question SET japanese = '過去7日間に、患者の治療に直接参加したことがありますか？' WHERE american = 'Have you participated in direct patient care in the past seven days?';
+UPDATE ag.survey_question SET japanese = '過去7日以内に、新型コロナウイルスに感染された患者の治療に直接参加したことがありますか？' WHERE american = 'Have you participated in direct patient care involving a patient with confirmed COVID-19 within the past 7 days?';
+UPDATE ag.survey_question SET japanese = '新型コロナウイルス感染患者と接触の際、個人防護具（PPE）をどれくらいの頻度で着用することができましたか？' WHERE american = 'During any health care interactions with a COVID-19 patients,  how often were you able to wear PPE as recommended for the level of contact?';
+UPDATE ag.survey_question SET japanese = '1週間のうち、どのくらいの頻度でビーツ（生、缶詰、漬物、調理したものを含む）を摂取していますか？(1食分＝生または調理済み1カップ）' WHERE american = 'In an average week, how often do you consume beets (including raw, canned, pickled, or roasted)? (1 serving = 1 cup raw or cooked)';
+UPDATE ag.survey_question SET japanese = '1週間のうち、豆腐、テンペ、枝豆、レンズ豆、ひよこ豆、ピーナッツ、アーモンド、クルミ、キヌアなどの植物性たんぱく質をどれくらいの頻度で食べていますか？' WHERE american = 'In an average week, how often do you eat various plant sources of protein including tofu, tempeh, edamame, lentils, chickpeas, peanuts, almonds, walnuts, or quinoa?';
+UPDATE ag.survey_question SET japanese = '身長：' WHERE american = 'Height:';
+UPDATE ag.survey_question SET japanese = '体重：' WHERE american = 'Weight:';
+UPDATE ag.survey_question SET japanese = '身長の単位：' WHERE american = 'Height units:';
+UPDATE ag.survey_question SET japanese = '体重の単位：' WHERE american = 'Weight units:';
+UPDATE ag.survey_question SET japanese = '出生国：' WHERE american = 'Country of birth:';
+UPDATE ag.survey_question SET japanese = '居住国：' WHERE american = 'Country of residence:';
+UPDATE ag.survey_question SET japanese = '現在の郵便番号：' WHERE american = 'Current ZIP code:';
+UPDATE ag.survey_question SET japanese = '1日に2～3食分以上の果物を摂取する頻度はどのくらいですか？ (1食分 =　果物1/2カップ、中くらいの大きさの果物1個、4 オンスの100%フルーツジュース)。' WHERE american = 'How often do you consume at least 2-3 servings of fruit in a day? (1 serving = ½ cup fruit; 1 mediuIn an average week, how often to you consume at least 2-3 servings of fruit in a day?  (1 serving = 1/2 cup fruit; 1 medium sized fruit; 4 oz. 100% fruit juice.)m sized fruit; 4 fl.oz. 100% fruit juice.)';
+UPDATE ag.survey_question SET japanese = '2～3食分以上のでんぷん質野菜と非でんぷん質野菜を摂取する頻度はどのくらいですか？でんぷん質野菜の例としては、白イモ、トウモロコシ、エンドウ豆、キャベツなどが挙げられます。非でんぷん質野菜の例としては、生の葉野菜、キュウリ、トマト、ピーマン、ブロッコリー、ケールなどがあります。（ 1食分＝野菜/じゃがいも1/2カップ、生の葉野菜1カップ）' WHERE american = 'In an average week, how often do you consume at least 2-3 servings of starchy and non-starchy vegetables. Examples of starchy vegetables include white potatoes, corn, peas and cabbage.  Examples of non-starchy vegetables include raw leafy greens, cucumbers, tomatoes, peppers, broccoli, and kale. (1 serving = ½ cup vegetables/potatoes; 1 cup leafy raw vegetables)';
+UPDATE ag.survey_question SET japanese = '1日に2食分以上の牛乳やチーズを摂取する頻度はどのくらいですか？（ 1食分＝牛乳またはヨーグルト1カップ、チーズ1.5～2オンス）' WHERE american = 'In an average week, how often do you consume at least 2 servings of milk or cheese a day?  (1 serving = 1 cup milk or yogurt; 1 1/2 - 2 ounces cheese)';
+UPDATE ag.survey_question SET japanese = '甘いお菓子（ケーキ、クッキー、ペイストリー、ドーナツ、マフィン、チョコレートなど）を摂取する頻度はどのくらいですか？' WHERE american = 'How many days in an average week do you consume sugary sweets (cake, cookies, pastries, donuts, muffins, chocolate etc.) at least once a day';
+UPDATE ag.survey_question SET japanese = '今までに過敏性腸症候群（IBS）と診断されたことがありますか？備考：IBSをIBDと混同しないでください。IBSは通常、再発性の腹痛と便通の変化という症状があります。IBDは、消化管の内壁に炎症や損傷があるのが特徴です。' WHERE american = 'Have you ever been diagnosed with irritable bowel syndrome (IBS)?';
+UPDATE ag.survey_question SET japanese = 'アルツハイマー病/認知症と診断されたことがありますか？' WHERE american = 'Have you ever been diagnosed with Alzheimer''s Disease/Dementia?';
+UPDATE ag.survey_question SET japanese = 'ループス（全身性エリテマトーデス）、RA（関節リウマチ）、MS（多発性硬化症）、橋本甲状腺炎などの自己免疫疾患と診断されたことがありますか。' WHERE american = 'Have you been diagnosed with autoimmune disease such as Lupus (systemic lupus erythematosus), R.A. (rheumatoid arthritis), MS (multiple sclerosis), Hashimoto''s thyroiditis, or any other auto-immune disease?';
+UPDATE ag.survey_question SET japanese = '1日に全粒粉を2食分以上を摂取する頻度はどのくらいですか？ （1食分＝100％全粒粉パン1枚分、高繊維シリアル、オートミールなどの全粒シリアル1カップ分、全粒クラッカー3～4枚、玄米や全粒パスタ1/2カップ分）' WHERE american = 'In an average week, how often do you eat at least 2 servings of whole grains in a day?';
+UPDATE ag.survey_question SET japanese = 'あなたは、1食分以上の発酵野菜や植物性食品をどのくらいの頻度で摂取していますか？(1食分＝ザワークラウト、キムチ、発酵野菜1/2カップ、又はコンブチャ1カップ）' WHERE american = 'How often do you consume one or more servings of fermented vegetables or plant products a day in an average week? (1 serving = 1/2 cup sauerkraut, kimchi or fermented vegetable or 1 cup of kombucha)';
+UPDATE ag.survey_question SET japanese = '以下の発酵食品/飲料のうち、週に1回以上摂取しているものはどれですか？該当するものをすべて選択し、記載がないものは「その他」に記入してください。' WHERE american = 'Which of the following fermented foods/beverages do you consume more than once a week? Check all that apply.';
+UPDATE ag.survey_question SET japanese = '以下の発酵食品/飲料のいずれかを自宅で個人消費用に製造していますか？該当するものをすべて選択し、記載されていないものは「その他」にすべて記入してください。' WHERE american = 'Do you produce any of the following fermented foods/beverages at home for personal consumption? Check all that apply.';
+UPDATE ag.survey_question SET japanese = '以下の発酵食品/飲料のいずれかを商業目的で製造していますか？該当するものをすべて選択し、記載されていないものは「その他」にすべて記入してください。' WHERE american = 'Do you produce any of the following fermented foods/beverages for commercial purposes? Check all that apply.';
+UPDATE ag.survey_question SET japanese = '過去1ヶ月の間に、コロナウイルス/COVID-19に感染している可能性の高い人物に接触したことがありますか？（該当するものすべてにチェックを入れてください）' WHERE american = 'In the past month, have you been exposed to someone likely to have Coronavirus/COVID-19? (check all that apply)';
+UPDATE ag.survey_question SET japanese = '過去1ヶ月の間に、コロナウイルス/COVID-19の感染が疑われたことがありますか？' WHERE american = 'In the past month, have you been suspected of having Coronavirus/COVID-19 infection?';
+UPDATE ag.survey_question SET japanese = '過去6週間の間に、以下のような症状がありましたか？(該当するものすべてにチェックを入れてください)' WHERE american = 'In the past 6 weeks, have you had any of the following symptoms? (check all that apply)';
+UPDATE ag.survey_question SET japanese = '現在（つまり過去2週間）の入眠困難の程度を評価してください。' WHERE american = 'Please rate the current (i.e. last 2 weeks) severity of any difficulty falling asleep.';
+UPDATE ag.survey_question SET japanese = '現在（つまり過去2週間）の寝つきの悪さの程度を評価してください。' WHERE american = 'Please rate the current (i.e. last 2 weeks) severity of any difficulty staying asleep.';
+UPDATE ag.survey_question SET japanese = '現在（つまり過去2週間）の早朝覚醒の程度を評価してください。' WHERE american = 'Please rate the current (i.e. last 2 weeks) severity of any problems waking up too early.';
+UPDATE ag.survey_question SET japanese = '現在の睡眠パターンにどの程度満足/不満足していますか？' WHERE american = 'How satisfied/dissatisfied are you with your current sleep pattern?';
+UPDATE ag.survey_question SET japanese = 'あなたの睡眠障害は生活の質を損なうという点で、他人から見てどの程度目立つと思いますか？' WHERE american = 'How noticeable to others do you think your sleep problem is in terms of impairing the quality of your life?';
+UPDATE ag.survey_question SET japanese = '現在の睡眠についてどの程度心配/悩んでいますか？' WHERE american = 'How worried/distressed are you about your current sleep problem?';
+UPDATE ag.survey_question SET japanese = '現在、睡眠の問題が、あなたの日常生活機能（日中の疲労感、気分、仕事・家事の能力、集中力、記憶力、気分など）にどの程度支障をきたしていますか？' WHERE american = 'To what extent do you consider your sleep problem to interfere with your daily functioning (e.g. daytime fatigue, mood, ability to function at work/daily chores, concentration, memory, mood, etc.) currently?';
+UPDATE ag.survey_question SET japanese = 'コーン、大豆、キャノーラ（菜種）、オリーブ、ピーナッツ、アボカド、サフラワー、ヒマワリなどの植物油（ココナッツ、パーム油を除く）を使った料理をどれくらいの頻度で作りますか？' WHERE american = 'In a given week, how often do you use or cook with vegetable oils (excluding coconut and palm oil) such as corn, soy, canola (rapeseed), olive, peanut, avocado, safflower or sunflower?';
+UPDATE ag.survey_question SET japanese = 'ココナッツオイル、パームオイル、パームカーネルオイルを使用する頻度はどのくらいですか？' WHERE american = 'In a given week, how often do you use or cook with coconut, palm or palm kernel oil?';
+UPDATE ag.survey_question SET japanese = 'マーガリンや（植物性）ショートニングを使用する頻度はどのくらいですか？' WHERE american = 'In a given week, how often do you use or cook with margarine or (vegetable) shortening?';
+UPDATE ag.survey_question SET japanese = 'ベジタブルプロテイン、豆腐、テンペ、きな粉、大豆ナッツ、大豆ナッツバター、大豆、味噌（＝発酵大豆）などの大豆製品をどれくらいの頻度で摂取していますか？' WHERE american = 'In a given week, how often do you consume soy products such as textured vegetable protein, tofu, tempeh, soybean flour, soy nuts, soy butter, soybeans, and miso (i.e. fermented soy)?';
+UPDATE ag.survey_question SET japanese = '全卵をどのくらいの頻度で摂取していますか（液卵や卵白だけのものは含まれない）？' WHERE american = 'Consume whole eggs (does not include egg beaters or just egg whites).';
+UPDATE ag.survey_question SET japanese = '16オンス以上のダイエット用ではないソーダやフルーツドリンク/パンチ（100%フルーツジュースは含まない）等の清涼飲料水を1日にどのくらい摂取していますか？（ ソーダ1缶＝12オンス）' WHERE american = 'Drink 16 ounces or more of a sugar sweetened beverage such as non-diet soda or fruit drink/punch (however, not including 100 % fruit juice) in a day? (1 can of soda = 12 ounces)';
+UPDATE ag.survey_question SET japanese = '「その他」に記載されていない消費食品を記入してください' WHERE american = 'Write in any consumed foods that are not listed under "Other"';
+UPDATE ag.survey_question SET japanese = '「その他」に記載されていない個人的に生産された食品を記入してください' WHERE american = 'Write in any presonally produced foods that are not listed under "Other"';
+UPDATE ag.survey_question SET japanese = '「その他」に記載されていない商業的に生産された食品を記入してください' WHERE american = 'Write in any commercially produced foods that are not listed under "Other"';
+UPDATE ag.survey_question SET japanese = 'この活動に関する詳しい情報を提供してください。' WHERE american = 'Volunteer more information about this activity.';
+UPDATE ag.survey_question SET japanese = '特定の週に、ラード、バター、またはギーを使用または調理する頻度はどれくらいですか?' WHERE american = 'In a given week, how often do you use or cook with lard, butter or ghee?';
+UPDATE ag.survey_question SET japanese = 'ホウレンソウ、フダンソウ、ビーツまたはビーツの葉、オクラ、キノア、アマランス、ソバ、小麦ふすままたは胚芽、ふすまシリアル、チアシード、ルバーブ、ダークチョコレートまたはココアなどのシュウ酸塩が豊富な食品を平均してどれくらいの頻度で消費しますか? 粉末（> 70％）、およびアーモンド、ピーナッツ、ピーカン、カシュー、ヘーゼルナッツなどのナッツ？' WHERE american = 'On average, how often do you consume oxalate-rich foods, such as spinach, Swiss chard, beetroot or beet greens, okra, quinoa, amaranth, buckwheat, wheat bran or germ, Bran cereal, chia seeds, rhubarb, dark chocolate or cocoa powder (>70%), and nuts such as almonds, peanuts, pecans, cashews, and hazelnuts?';
+UPDATE ag.survey_question SET japanese = 'その他、あなたの微生物に影響を与えると思われることがあればお書きください。' WHERE american = 'Please write anything else about yourself that you think could affect your personal microorganisms.';
 
--- Add an assent_id to the consent_audit table for the 7-12 and 13-17 age groups. It needs to remain nullable as not all age groups have an assent document.
-ALTER TABLE ag.consent_audit ADD COLUMN assent_id UUID,
-    ADD CONSTRAINT fk_assent_id FOREIGN KEY (assent_id) REFERENCES ag.consent_documents (consent_id);
-
--- Add a foreign key for vioscreen registration codes
-ALTER TABLE ag.vioscreen_registry ADD CONSTRAINT fk_registration_code FOREIGN KEY (registration_code) REFERENCES campaign.ffq_registration_codes (ffq_registration_code);
-
--- Add date_revoked field to ag.consent_audit
-ALTER TABLE ag.consent_audit ADD COLUMN date_revoked TIMESTAMP WITH TIME ZONE;
-
--- Create the Other survey
-INSERT INTO ag.survey_group (group_order, american) VALUES (-22, 'Other');
-INSERT INTO ag.surveys (survey_id, survey_group) VALUES (22, -22);
-
--- Move the "Tell us anything else" question into the Other category
-UPDATE ag.group_questions SET survey_group = -22, display_index = 0 WHERE survey_group = -10 AND survey_question_id = 116;
-
--- Move the migraine-related questions from the Migraines survey into the Health Diagnoses survey as triggered questions
-UPDATE ag.survey_question SET retired = TRUE WHERE survey_question_id = 486;
-INSERT INTO ag.survey_question (survey_question_id, american, question_shortname, retired) VALUES
-    (511, 'For questions 11b - 11i, rank the listed factor based on how likely it is to lead to your migraines, where "1" is most likely, "2" is second most likely, etc. If the factor does not cause migraines, choose N/A.<br /><br />Stress', 'MIGRAINE_FACTORS_STRESS', FALSE),
-    (512, 'Caffeine', 'MIGRAINE_FACTORS_CAFFEINE', FALSE),
-    (513, 'Depression', 'MIGRAINE_FACTORS_DEPRESSION', FALSE),
-    (514, 'Lack of sleep', 'MIGRAINE_FACTORS_LACKOFSLEEP', FALSE),
-    (515, 'Foods (wine, chocolate, strawberries)', 'MIGRAINE_FACTORS_FOODS', FALSE),
-    (516, 'Medications that contain barbituates or opioids', 'MIGRAINE_FACTORS_MEDICATIONS', FALSE),
-    (517, 'Nitrates', 'MIGRAINE_FACTORS_NITRATES', FALSE),
-    (518, 'Hormones', 'MIGRAINE_FACTORS_HORMONES', FALSE);
-INSERT INTO ag.survey_question_response_type (survey_question_id, survey_response_type) VALUES
-    (511, 'SINGLE'),
-    (512, 'SINGLE'),
-    (513, 'SINGLE'),
-    (514, 'SINGLE'),
-    (515, 'SINGLE'),
-    (516, 'SINGLE'),
-    (517, 'SINGLE'),
-    (518, 'SINGLE');
-INSERT INTO ag.survey_response (american) VALUES ('N/A');
-
-INSERT INTO ag.survey_question_response(survey_question_id, response, display_index) VALUES
-    (511, 'Unspecified', 0),
-    (511, '1', 1),
-    (511, '2', 2),
-    (511, '3', 3),
-    (511, '4', 4),
-    (511, '5', 5),
-    (511, '6', 6),
-    (511, '7', 7),
-    (511, '8', 8),
-    (511, 'N/A', 9),
-    (512, 'Unspecified', 0),
-    (512, '1', 1),
-    (512, '2', 2),
-    (512, '3', 3),
-    (512, '4', 4),
-    (512, '5', 5),
-    (512, '6', 6),
-    (512, '7', 7),
-    (512, '8', 8),
-    (512, 'N/A', 9),
-    (513, 'Unspecified', 0),
-    (513, '1', 1),
-    (513, '2', 2),
-    (513, '3', 3),
-    (513, '4', 4),
-    (513, '5', 5),
-    (513, '6', 6),
-    (513, '7', 7),
-    (513, '8', 8),
-    (513, 'N/A', 9),
-    (514, 'Unspecified', 0),
-    (514, '1', 1),
-    (514, '2', 2),
-    (514, '3', 3),
-    (514, '4', 4),
-    (514, '5', 5),
-    (514, '6', 6),
-    (514, '7', 7),
-    (514, '8', 8),
-    (514, 'N/A', 9),
-    (515, 'Unspecified', 0),
-    (515, '1', 1),
-    (515, '2', 2),
-    (515, '3', 3),
-    (515, '4', 4),
-    (515, '5', 5),
-    (515, '6', 6),
-    (515, '7', 7),
-    (515, '8', 8),
-    (515, 'N/A', 9),
-    (516, 'Unspecified', 0),
-    (516, '1', 1),
-    (516, '2', 2),
-    (516, '3', 3),
-    (516, '4', 4),
-    (516, '5', 5),
-    (516, '6', 6),
-    (516, '7', 7),
-    (516, '8', 8),
-    (516, 'N/A', 9),
-    (517, 'Unspecified', 0),
-    (517, '1', 1),
-    (517, '2', 2),
-    (517, '3', 3),
-    (517, '4', 4),
-    (517, '5', 5),
-    (517, '6', 6),
-    (517, '7', 7),
-    (517, '8', 8),
-    (517, 'N/A', 9),
-    (518, 'Unspecified', 0),
-    (518, '1', 1),
-    (518, '2', 2),
-    (518, '3', 3),
-    (518, '4', 4),
-    (518, '5', 5),
-    (518, '6', 6),
-    (518, '7', 7),
-    (518, '8', 8),
-    (518, 'N/A', 9);
-
-
-
-UPDATE ag.group_questions SET display_index = 38 WHERE survey_group = -15 AND display_index = 25;
-UPDATE ag.group_questions SET display_index = 37 WHERE survey_group = -15 AND display_index = 24;
-UPDATE ag.group_questions SET display_index = 36 WHERE survey_group = -15 AND display_index = 23;
-UPDATE ag.group_questions SET display_index = 35 WHERE survey_group = -15 AND display_index = 22;
-UPDATE ag.group_questions SET display_index = 34 WHERE survey_group = -15 AND display_index = 21;
-UPDATE ag.group_questions SET display_index = 33 WHERE survey_group = -15 AND display_index = 20;
-UPDATE ag.group_questions SET display_index = 32 WHERE survey_group = -15 AND display_index = 19;
-UPDATE ag.group_questions SET display_index = 31 WHERE survey_group = -15 AND display_index = 18;
-UPDATE ag.group_questions SET display_index = 30 WHERE survey_group = -15 AND display_index = 17;
-UPDATE ag.group_questions SET display_index = 29 WHERE survey_group = -15 AND display_index = 16;
-UPDATE ag.group_questions SET display_index = 28 WHERE survey_group = -15 AND display_index = 15;
-UPDATE ag.group_questions SET display_index = 27 WHERE survey_group = -15 AND display_index = 14;
-
-UPDATE ag.group_questions SET display_index = 14, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 485;
--- Leave a gap for the sub-questions of 486
-UPDATE ag.group_questions SET display_index = 23, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 487;
-UPDATE ag.group_questions SET display_index = 24, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 488;
-UPDATE ag.group_questions SET display_index = 25, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 489;
-UPDATE ag.group_questions SET display_index = 26, survey_group = -15 WHERE survey_group = -19 AND survey_question_id = 490;
-
-INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES
-    (-15, 511, 15),
-    (-15, 512, 16),
-    (-15, 513, 17),
-    (-15, 514, 18),
-    (-15, 515, 19),
-    (-15, 516, 20),
-    (-15, 517, 21),
-    (-15, 518, 22);
-
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 485),
-    (92, 'Diagnosed by an alternative medicine practitioner', 485),
-    (92, 'Self-diagnosed', 485),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 487),
-    (92, 'Diagnosed by an alternative medicine practitioner', 487),
-    (92, 'Self-diagnosed', 487),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 488),
-    (92, 'Diagnosed by an alternative medicine practitioner', 488),
-    (92, 'Self-diagnosed', 488),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 489),
-    (92, 'Diagnosed by an alternative medicine practitioner', 489),
-    (92, 'Self-diagnosed', 489),
-    (489, 'Yes', 490),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 511),
-    (92, 'Diagnosed by an alternative medicine practitioner', 511),
-    (92, 'Self-diagnosed', 511),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 512),
-    (92, 'Diagnosed by an alternative medicine practitioner', 512),
-    (92, 'Self-diagnosed', 512),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 513),
-    (92, 'Diagnosed by an alternative medicine practitioner', 513),
-    (92, 'Self-diagnosed', 513),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 514),
-    (92, 'Diagnosed by an alternative medicine practitioner', 514),
-    (92, 'Self-diagnosed', 514),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 515),
-    (92, 'Diagnosed by an alternative medicine practitioner', 515),
-    (92, 'Self-diagnosed', 515),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 516),
-    (92, 'Diagnosed by an alternative medicine practitioner', 516),
-    (92, 'Self-diagnosed', 516),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 517),
-    (92, 'Diagnosed by an alternative medicine practitioner', 517),
-    (92, 'Self-diagnosed', 517),
-    (92, 'Diagnosed by a medical professional (doctor, physician assistant)', 518),
-    (92, 'Diagnosed by an alternative medicine practitioner', 518),
-    (92, 'Self-diagnosed', 518);
-
--- Retire the Migraines survey
-UPDATE ag.surveys SET retired = TRUE where survey_id = 19;
-
--- Create a slot for the Weight Units question directly after Weight
-UPDATE ag.group_questions SET display_index = 93 WHERE survey_group = -10 AND display_index = 92;
-UPDATE ag.group_questions SET display_index = 92 WHERE survey_group = -10 AND display_index = 91;
-UPDATE ag.group_questions SET display_index = 91 WHERE survey_group = -10 AND display_index = 90;
-UPDATE ag.group_questions SET display_index = 90 WHERE survey_group = -10 AND display_index = 89;
-UPDATE ag.group_questions SET display_index = 89 WHERE survey_group = -10 AND display_index = 88;
-UPDATE ag.group_questions SET display_index = 88 WHERE survey_group = -10 AND display_index = 87;
-
--- Unretire the Weight Units question
-UPDATE ag.group_questions SET display_index = 87 WHERE survey_group = -10 AND survey_question_id = 114;
-UPDATE ag.survey_question SET retired = FALSE WHERE survey_question_id = 114;
-
--- Adjust various questions
-DELETE FROM ag.survey_question_response WHERE survey_question_id = 502 AND response = 'Other';
-UPDATE ag.survey_question_response SET display_index = 3 WHERE survey_question_id = 502 AND response = 'Not sure';
-UPDATE ag.survey_question_response_type SET survey_response_type = 'STRING' WHERE survey_question_id = 150;
-DELETE FROM ag.survey_question_response WHERE survey_question_id = 486;
-UPDATE ag.survey_question SET american = 'What date were you diagnosed?' WHERE survey_question_id = 213;
-UPDATE ag.survey_question SET retired = TRUE WHERE survey_question_id = 215;
-UPDATE ag.survey_question SET american = 'At home, what is the main source of your plain, unflavored drinking water? This can include still or sparkling/carbonated water. *In the options below, "bottled" includes bottles, jugs, water coolers or water dispensers.' WHERE survey_question_id = 474;
-UPDATE ag.survey_question SET american = 'When you''re outside the home, what is the main source of your plain unflavored drinking water? This can include still or sparkling/carbonated water. *In the options below, "bottled" includes bottles, jugs, water coolers or water dispensers.' WHERE survey_question_id = 476;
-UPDATE ag.survey_question SET american = 'If you answered "yes" to consuming beverages and/or foods containing non-nutritive or low-calorie sweeteners, what type of non-nutritive or low-calorie sweetner(s) do you consume on a regular basis? Select all that apply.' WHERE survey_question_id = 464;
-UPDATE ag.survey_question_response_type SET survey_response_type = 'MULTIPLE' WHERE survey_question_id = 505;
-UPDATE ag.survey_question_response_type SET survey_response_type = 'MULTIPLE' WHERE survey_question_id = 487;
-UPDATE ag.survey_question SET american = 'On nights before you have school or work, what time do you go to bed?' WHERE survey_question_id = 345;
-UPDATE ag.survey_question_response SET response = 'Some college or technical school' WHERE survey_question_id = 493 AND response = 'College degree';
-INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES (54, 'None of the above', 5);
-UPDATE ag.survey_question SET american = 'On your days off (when you do not have school or work), what time do you get up in the morning?' WHERE survey_question_id = 346;
-UPDATE ag.survey_question SET american = 'On your days off (when you do not have school or work), what time do you go to bed?' WHERE survey_question_id = 347;
-UPDATE ag.survey_question_response SET response = 'Other' WHERE survey_question_id = 474 AND display_index = 9;
-INSERT INTO ag.survey_question (survey_question_id, american, question_shortname, retired) VALUES
-    (519, 'Please describe your main source of water at home:', 'WATER_AT_HOME_OTHER', FALSE),
-    (520, 'Please describe your main source of water outside the home:', 'WATER_OUTSIDE_HOME_OTHER', FALSE);
-INSERT INTO ag.survey_question_response_type (survey_question_id, survey_response_type) VALUES
-    (519, 'STRING'),
-    (520, 'STRING');
-
-UPDATE ag.group_questions SET display_index = 48 WHERE survey_group = -18 AND display_index = 46;
-UPDATE ag.group_questions SET display_index = 47 WHERE survey_group = -18 AND display_index = 45;
-UPDATE ag.group_questions SET display_index = 46 WHERE survey_group = -18 AND display_index = 44;
-UPDATE ag.group_questions SET display_index = 45 WHERE survey_group = -18 AND display_index = 43;
-UPDATE ag.group_questions SET display_index = 44 WHERE survey_group = -18 AND display_index = 42;
-UPDATE ag.group_questions SET display_index = 43 WHERE survey_group = -18 AND display_index = 41;
-UPDATE ag.group_questions SET display_index = 42 WHERE survey_group = -18 AND display_index = 40;
-INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (-18, 520, 41);
-UPDATE ag.group_questions SET display_index = 40 WHERE survey_group = -18 AND display_index = 39;
-UPDATE ag.group_questions SET display_index = 39 WHERE survey_group = -18 AND display_index = 38;
-INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (-18, 519, 38);
-UPDATE ag.survey_question SET american = 'Describe the consistency of your bowel movements:<br /><div class="bristol-img-container"><img src="/static/img/bristol_1.png" id="bristol-chart-1" /></div><span class="bristol-chart-text">Type 1: Separate hard lumps, like nuts (hard to pass).<br />Type 2: Sausage shaped but lumpy.</span><div class="bristol-img-container"><img src="/static/img/bristol_2.png" id="bristol-chart-2" /></div><span class="bristol-chart-text">Type 3: Like a sausage but with cracks on the surface.<br />Type 4: Like a sausage or snake - smooth and soft.</span><div class="bristol-img-container"><img src="/static/img/bristol_3.png" id="bristol-chart-3" /></div><span class="bristol-chart-text">Type 5: Soft blobs with clear-cut edges.<br />Type 6: Fluffy pieces with ragged edges; a mushy stool.<br />Type 7: Watery, no solid pieces. Entirely liquid.</span>' WHERE survey_question_id = 38;
-
--- Two of the responses for this question need to be reordered. Since there's a unique constraint on display_index, playing musical chairs with the entries (which requires updating one of the entries twice) is more expedient than dropping and recreating the index.
-UPDATE ag.survey_question_response SET display_index = 5 WHERE survey_question_id = 38 AND response = 'I tend to have diarrhea (watery stool) - Type 5, 6 and 7';
-UPDATE ag.survey_question_response SET display_index = 2 WHERE survey_question_id = 38 AND response = 'I tend to have normal formed stool - Type 3 and 4';
-UPDATE ag.survey_question_response SET display_index = 3 WHERE survey_question_id = 38 AND response = 'I tend to have diarrhea (watery stool) - Type 5, 6 and 7';
-
--- Fix triggers for various questions
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (17, 'Two', 18);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (17, 'Three', 18);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (17, 'More than three', 18);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (20, 'Yes', 501);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (21, 'Yes', 503);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (24, 'Regularly (3-5 times/week)', 25);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (24, 'Regularly (3-5 times/week)', 331);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (24, 'Regularly (3-5 times/week)', 332);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (24, 'Occasionally (1-2 times/week)', 25);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (24, 'Occasionally (1-2 times/week)', 331);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (24, 'Occasionally (1-2 times/week)', 332);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (24, 'Rarely (a few times/month)', 25);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (24, 'Rarely (a few times/month)', 331);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (24, 'Rarely (a few times/month)', 332);
-UPDATE ag.survey_question_triggers SET triggered_question = 494 WHERE triggered_question = 30;
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (29, 'Rarely (a few times/month)', 494);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (83, 'Diagnosed by a medical professional (doctor, physician assistant)', 360);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (83, 'Diagnosed by an alternative medicine practitioner', 360);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (83, 'Self-diagnosed', 360);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (42, 'Yes', 370);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (504, 'Yes, diagnosed by a licensed mental health professional', 505);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (504, 'Yes, diagnosed by an alternative or complementary practitioner', 505);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (504, 'Self-diagnosed', 505);
-DELETE FROM ag.survey_question_triggers WHERE survey_question_id = 82;
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (82, 'Diagnosed by a medical professional (doctor, physician assistant)', 506);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (82, 'Diagnosed by an alternative medicine practitioner', 506);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (507, 'Yes, diagnosed by a medical professional (doctor, physician assistant)', 407);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (507, 'Yes, diagnosed by a medical professional (doctor, physician assistant)', 408);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (507, 'Yes, diagnosed by a medical professional (doctor, physician assistant)', 409);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (507, 'Yes, diagnosed by a medical professional (doctor, physician assistant)', 410);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Rarely (a few times/month)', 462);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Occasionally (1-2 times/week)', 462);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Regularly (3-5 times/week)', 462);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Daily', 462);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Rarely (a few times/month)', 464);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Occasionally (1-2 times/week)', 464);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Regularly (3-5 times/week)', 464);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Daily', 464);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Rarely (a few times/month)', 465);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Occasionally (1-2 times/week)', 465);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Regularly (3-5 times/week)', 465);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (157, 'Daily', 465);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (465, 'Yes', 466);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (463, 'Few times/month', 464);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (463, '1-2 times/week', 464);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (463, '3-5 times/week', 464);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (463, 'Daily', 464);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (463, 'Few times/month', 465);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (463, '1-2 times/week', 465);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (463, '3-5 times/week', 465);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (463, 'Daily', 465);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Rarely (a few times/month)', 167);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Occasionally (1-2 times/week)', 167);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Regularly (3-5 times/week)', 167);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Daily', 167);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Rarely (a few times/month)', 169);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Occasionally (1-2 times/week)', 169);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Regularly (3-5 times/week)', 169);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Daily', 169);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Rarely (a few times/month)', 171);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Occasionally (1-2 times/week)', 171);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Regularly (3-5 times/week)', 171);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (165, 'Daily', 171);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (212, 'Yes, with a positive test', 213);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (212, 'Yes, medical diagnosis, but no test', 213);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (474, 'Other', 519);
-INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response, triggered_question) VALUES (476, 'Other', 520);
-
-
--- Add column for CSS classes to survey questions table
-ALTER TABLE ag.survey_question ADD COLUMN css_classes VARCHAR;
-
--- Set the CSS classes for questions
--- Basic Info survey
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-select col-12 col-md-3' WHERE survey_question_id IN (111,112);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal col-12 col-md-6' WHERE survey_question_id IN (502);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text col-6 col-md-2' WHERE survey_question_id IN (108,113);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-switch col-6 col-md-4' WHERE survey_question_id IN (109,114);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-select col-12 col-md-4' WHERE survey_question_id IN (110, 148);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text col-12 col-md-4' WHERE survey_question_id IN (115);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE survey_question_id IN (22, 492, 493);
-
--- At Home survey
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE survey_question_id IN (313, 15, 17);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal' WHERE survey_question_id IN (19, 20, 21, 149, 326);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text tmi-survey-triggered-question' WHERE survey_question_id IN (316, 508, 319, 150);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal tmi-survey-triggered-question' WHERE survey_question_id IN (509, 510, 18);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical tmi-survey-triggered-question' WHERE survey_question_id IN (501, 503);
-
-
--- Lifestyle survey
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE survey_question_id IN (16, 495, 34, 35, 350);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-checkbox' WHERE survey_question_id IN (328);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-axis' WHERE survey_question_id IN (24, 333, 334, 28, 29, 32, 33, 27);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical tmi-survey-triggered-question' WHERE survey_question_id IN (25, 163);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-checkbox tmi-survey-triggered-question' WHERE survey_question_id IN (331, 332, 494);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-select' WHERE survey_question_id IN (344, 345, 346, 347);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal' WHERE survey_question_id IN (348, 349, 36, 26, 354);
-
--- Gut survey
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE survey_question_id IN (37, 38);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-buttons' WHERE survey_question_id IN (95, 79, 83, 78);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical tmi-survey-triggered-question' WHERE survey_question_id IN (360);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-axis' WHERE survey_question_id IN (362, 363, 364, 365);
-
--- General health survey
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal' WHERE survey_question_id IN (50, 42, 500, 47, 48, 49, 44, 45, 46);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE survey_question_id IN (51, 497, 43, 39, 40);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical tmi-survey-triggered-question' WHERE survey_question_id IN (374, 375);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text tmi-survey-triggered-question' WHERE survey_question_id IN (370);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-axis' WHERE survey_question_id IN (156);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-textarea tmi-survey-triggered-question' WHERE survey_question_id IN (99, 124, 126);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal-stacked' WHERE survey_question_id IN (387);
-
--- Health Diagnosis
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-buttons' WHERE survey_question_id IN (85, 84, 93, 77, 87, 80, 89, 504, 82, 90, 92, 60, 86, 94, 96);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-checkbox tmi-survey-triggered-question' WHERE survey_question_id IN (505, 487, 409, 410);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical tmi-survey-triggered-question' WHERE survey_question_id IN (506, 485, 413);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal tmi-survey-triggered-question' WHERE survey_question_id IN (488, 489, 408);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-axis tmi-survey-triggered-question' WHERE survey_question_id IN (511, 512, 513, 514, 515, 516, 517, 518);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text tmi-survey-triggered-question' WHERE survey_question_id IN (490, 407);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal' WHERE survey_question_id IN (507, 499);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-textarea tmi-survey-triggered-question' WHERE survey_question_id IN (106);
-
--- Allergies
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal' WHERE survey_question_id IN (53, 7);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE survey_question_id IN (8);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical tmi-survey-triggered-question' WHERE survey_question_id IN (415);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-checkbox' WHERE survey_question_id IN (54, 9);
-
--- Diet
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE survey_question_id IN (1, 423, 425, 426, 427);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-checkbox' WHERE survey_question_id IN (162, 433);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal' WHERE survey_question_id IN (11, 2, 6, 498);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-textarea' WHERE survey_question_id IN (424);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-select' WHERE survey_question_id IN (428);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-axis' WHERE survey_question_id IN (3, 4, 5);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-axis tmi-survey-triggered-question' WHERE survey_question_id IN (434);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-textarea tmi-survey-triggered-question' WHERE survey_question_id IN (104);
-
--- Detailed Diet
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-axis' WHERE survey_question_id IN (56, 57, 58, 59, 91, 443, 61, 62, 236, 237, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 157, 463, 239, 240, 241, 242, 243, 244, 76, 165);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE survey_question_id IN (146, 474, 476, 478, 166);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical tmi-survey-triggered-question' WHERE survey_question_id IN (462);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-checkbox tmi-survey-triggered-question' WHERE survey_question_id IN (464, 466, 167, 169, 171);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal tmi-survey-triggered-question' WHERE survey_question_id IN (465);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal' WHERE survey_question_id IN (475, 477);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text tmi-survey-triggered-question' WHERE survey_question_id IN (519, 520);
-
--- COVID-19
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text' WHERE survey_question_id IN (209);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-axis' WHERE survey_question_id IN (210, 221, 222, 223, 224, 229, 230, 231, 232, 233, 234, 235);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-checkbox' WHERE survey_question_id IN (211, 214, 217, 238, 220);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE survey_question_id IN (212, 218, 228);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-text tmi-survey-triggered-question' WHERE survey_question_id IN (213);
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-horizontal' WHERE survey_question_id IN (216, 219, 225, 226, 227);
-
--- Other
-UPDATE ag.survey_question SET css_classes = 'tmi-survey-textarea' WHERE survey_question_id IN (116);
-
--- Fix consent documents
--- No one has actually agreed to the new docs yet, so we can safely update rather than creating a new version
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego</strong><br />
-  Assent to Act as a Research Subject<br />
-  (Ages 13-17 years)
-</p>
-<p class="consent_title">
-  <strong>The Microsetta Initiative</strong><br />
-  Biospecimen and Future Use Research
-</p>
-<p class="consent_header">
-  Who is conducting the study, why have you been asked to participate, how were you selected, and what is the approximate number of participants in the study?
-</p>
-<p class="consent_content">
-  Dr. Rob Knight from the University of California - San Diego (UCSD is conducting a research study to find out more about all the many bacteria and other microorganisms (called your microbiome) that live on and within your body. You have been asked to participate in this study because you, and everyone else on earth, have a unique microbiome, and the more people we study of all ages, the more we will understand about how the microorganisms may help or harm us. There will be approximately 500,000 participants in total in the study from across the USA and from other countries around the world.
-</p>
-<p class="consent_header">
-  Why is this study being done?
-</p>
-<p class="consent_content">
-  The purpose of this study is to assess more accurately the microbial differences between people and whether these differences can be attributed to factors such as lifestyle, diet, body type, age or the presence of associated diseases. Biospecimens are samples from your body such as stool, skin, urine, or blood which are used for research purposes. This study involves the collection, storage, and use of your information and biospecimens for the purpose of processing your biospecimens and for future research. The results will be used to create a database of DNA sequence and other data from various body sites, as well as details about you (the participant supplying the sample). Researchers can then use that data while studying relevant topics, such as gut-related health conditions.
-</p>
-<p class="consent_header">
-  What will happen to you in this study and which procedures are standard of care and which are experimental?
-</p>
-<p class="consent_content">
-  If you agree to participate in this study, the following will happen to you:
-</p>
-<p class="consent_content">
-  You will sample yourself using the kit that was provided to you.  Instructions are included in the kit so you know what to do.  The most common sample is of your poop (stool) where you apply a small smear to the tips of a swab from used toilet tissue or to a card (called an FOBT card). You may also be asked to scoop some poop using a small spoon-like tool, place used toilet paper into a special receptacle we provide, or poop into a plastic container that you place under the toilet seat. You may also need to sample a small area of skin, your tongue or mouth, your nostrils, ear wax, or vagina.  We may also ask someone (like your mom or dad) to take a small sample of blood by pricking your finger and then collecting the blood on 2 small swabs. None of these samples or investigations will allow us to make a diagnosis of disease and we are not looking at anything in your own DNA that can also be found in your poop, skin, or saliva.
-</p>
-<p class="consent_header">
-  How much time will each study procedure take, what is your total time commitment, and how long will the study last?
-</p>
-<p class="consent_content">
-  Each sample you send can be obtained in 5 minutes or less.  We expect the study to continue for many years, but your results will be available to you before the end of the study.
-</p>
-<p class="consent_header">
-  What risks are associated with this study?
-</p>
-<p class="consent_content">
-  Participation in this study may involve some added risks or discomforts. These include the following:
-  <ol>
-    <li>You may experience temporary pain or a bruise at the site of the needle-stick if you take the blood test.</li>
-    <li>There is a risk of loss of confidentiality. </li>
-  </ol>
-  Because this is a research study, there may be some unknown risks that are currently unforeseeable. You and your parents will be informed of any significant new findings.
-</p>
-<p class="consent_header">
-  What are the alternatives to participating in this study? Can you withdraw from the study or be withdrawn?
-</p>
-<p class="consent_content">
-  You do not have to participate. Your participation in this study is completely voluntary. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
-</p>
-<p class="consent_content">
-  You can refuse to participate or withdraw at any time by withdrawing your consent and deleting your online profile. Our researchers will still use the data about you that was collected before you withdrew. After you withdraw, no further data will be collected from you.
-</p>
-<p class="consent_content">
-  You may be withdrawn from the study if you do not follow the instructions given to you by the study personnel.
-</p>
-<p class="consent_header">
-  What benefits can be reasonably expected?
-</p>
-<p class="consent_content">
-  There is no direct benefit to you for participating in this study. You will get access to your data that will give you and your parents an idea of what is in your sample and how it compares with other people like you (age, sex).
-</p>
-<p class="consent_header">
-  Will you be compensated for participating in this study?
-</p>
-<p class="consent_content">
-  You will not be financially compensated in this study.
-</p>
-<p class="consent_header">
-  Are there any costs associated with participating in the collection of your biospecimen(s)
-</p>
-<p class="consent_content">
-  There may be costs associated with obtaining a kit. Once you receive your kit, there will be no additional cost to you for participating in this sampling procedure.
-</p>
-<p class="consent_header">
-  What about your confidentiality?
-</p>
-<p class="consent_content">
-  Research records will be kept confidential to the extent allowed by law.  As part of your participation in the study, you will provide personal and/or sensitive information that could allow you to be identified if it was made public, such as name, date of birth, or address. We take every precaution to protect your identity. All data you provide is stored on secure systems within UC San Diego''s infrastructure and directly identifying information is accessible only to critical study personnel. The code key (that relates participant personal information to sample barcodes) is retained on a separate password-protected server that is accessible only to relevant staff such as the Dr. Knight, Co-Investigators, project and sample coordinators, IT administrator and the database coders. Sample analysis is performed using data from which directly identifying information has been removed, and all data shared with public repositories also undergo this treatment. Research records may be reviewed by the UC San Diego Institutional Review Board.
-</p>
-<p class="consent_header">
-  How we will use your Sample
-</p>
-<p class="consent_content">
-  Information from analyses of your data and biospecimen(s) will be used to study the non-human DNA (e.g. bacterial DNA) in it. The data from the samples in the project (including yours) may be analyzed and published in scientific articles. We may save some of your sample to be accessible to researchers so they can conduct additional studies using the other compounds from it, such as RNA, proteins or metabolites. If we do so, we will remove all directly identifiable information before use or sharing. Once identifiers have been removed, we will not ask for your consent for the use or sharing of your data and/or sample(s) in other research. In addition, data that has been removed of directly identifying information will be uploaded to the European Bioinformatics Institute (http://www.ebi.ac.uk) and Qiita (https://qiita.ucsd.edu) for other researchers to access and use. We may contact you if additional information or action is needed in order to process your sample(s) and/or for re-consenting purposes.
-</p>
-<p class="consent_content">
-  Biospecimens (such as stool, skin, urine, or blood) collected from you for this study and information obtained from your biospecimens may be used in this research or other research, and shared with other organizations. You will not share in any commercial value or profit derived from the use of your biospecimens and/or information obtained from them.
-</p>
-<p class="consent_content">
-  <strong><u>Please Note:</u></strong><br />
-  Please be aware that <strong>no human DNA</strong> will be analyzed as part of this or any future studies. Furthermore, the methods we use for identifying microorganisms in your sample <strong>cannot be used to diagnose disease or infection</strong>.
-</p>
-<p class="consent_header">
-  Who can you call if you have questions?
-</p>
-<p class="consent_content">
-  If you have questions or research-related problems, you may reach us by emailing our help account microsetta@ucsd.edu or Rob Knight at 858-246-1184.
-</p>
-<p class="consent_content">
-  You may contact UC San Diego Office of IRB Administration at 858-246-4777 or email at irb@ucsd.edu to inquire about your rights as a research subject or to report research-related problems.
-</p>' WHERE consent_type = 'adolescent_biospecimen' AND locale = 'en_US';
-
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego</strong><br />
-  Assent to Act as a Research Subject<br />
-  (Ages 13-17 years)
-</p>
-<p class="consent_title">
-  <strong>The Microsetta Initiative</strong>
-</p>
-<p class="consent_header">
-  Who is conducting the study, why have you been asked to participate, how were you selected, and what is the approximate number of participants in the study?
-</p>
-<p class="consent_content">
-  Dr. Rob Knight from the University of California - San Diego (UCSD) is conducting a research study to find out more about all the many bacteria and other microorganisms (called your microbiome) that live on and within your body. You have been asked to participate in this study because you, and everyone else on earth, have a unique microbiome, and the more people we study of all ages, the more we will understand about how the microorganisms may help or harm us. There will be approximately 500,000 participants in total in the study from across the USA and from other countries around the world.
-</p>
-<p class="consent_header">
-  Why is this study being done and what will happen to you?
-</p>
-<p class="consent_content">
-  The purpose of this research study is to assess more accurately the differences among people and whether these differences can be attributed to factors such as lifestyle, diet, body type, age or the presence of associated diseases. If you agree to take part in this study, you will be asked to complete online surveys/questionnaires. This survey/questionnaire will ask questions about you, such as your age, weight, height, lifestyle, diet, and  if you have certain medical or health conditions. You should expect to spend an average of 5-10 minutes on each survey, but some may take up to 30 minutes to complete.
-</p>
-<p class="consent_header">
-  What benefits can be reasonably expected?
-</p>
-<p class="consent_content">
-  There is no monetary or direct benefit for participating in this study. If you complete one of the questionnaires called the Food Frequency Questionnaire (FFQ), you may receive a nutritional report evaluating your eating pattern and nutrient intake with an overall diet score. The investigator(s), however, may learn more about relevant topics, such as gut-related health conditions.
-</p>
-<p class="consent_header">
-  What risks and confidentiality are associated with this study?
-</p>
-<p class="consent_content">
-  Participation in this study can involve some added minimal risks or discomforts. While answering surveys, you may feel frustration, emotional discomfort, fatigue, and/or boredom.  There is also a risk of loss of confidentiality, but we take every precaution to protect your identity and minimize the risks. All data you provide is stored on secure systems within UC San Diego''s infrastructure and directly identifying information is accessible only to critical research personnel. The code key (that relates participant personal information) is retained on a separate password-protected server that is accessible only to relevant staff such as the Dr. Knight, Co-Investigators, project and sample coordinators, IT administrator and the database coders. The code will be destroyed by deletion from the server at the end of the study or if you withdraw from the study. Research records will be kept confidential to the extent allowed by law and may be reviewed by the UC San Diego Institutional Review Board.
-</p>
-<p class="consent_header">
-  What are the alternatives to participating in this study and can you withdraw?
-</p>
-<p class="consent_content">
-  Your participation in this study is completely voluntary and you can refuse to participate or withdraw at any time by simply exiting the survey or withdrawing your consent and deleting your online profile. Our researchers will still use the data about you that was collected before you withdrew. After you withdraw, no further data will be collected from you. You are free to skip any question that you choose.
-</p>
-<p class="consent_header">
-  Know what we will collect
-</p>
-<p class="consent_content">
-  As part of this research study, we will create and obtain information related to you and your participation in the study from you or from collaborators so we can properly conduct this research. Research study data will include contact information, demographic information, personal experiences, lifestyle preferences, health information, date of birth, opinions or beliefs.
-</p>
-<p class="consent_header">
-  How we will use your Personal Data
-</p>
-<p class="consent_content">
-  The Personal Data you provide will be used for the following purposes:
-  <ul>
-    <li>To share with members of the research team so they can properly conduct the research.</li>
-    <li>For future research studies or additional research by other researchers.</li>
-    <li>To contact you for the purpose of receiving alerts of your participation status, general program updates, opportunities to take part in new or future research, and/or as a follow-up to questions you have responded to in the questionnaire(s).</li>
-    <li>To comply with legal and regulatory requirements, including requirements to share data with regulatory agencies overseeing the research.</li>
-    <li>To confirm proper conduct of the study and research integrity.</li>
-  </ul>
-</p>
-<p class="consent_header">
-  Retention of your Personal Data
-</p>
-<p class="consent_content">
-  We may retain your Personal Data for as long as necessary to fulfill the objectives of the research and to ensure the integrity of the research. We will delete your Personal Data when it is no longer needed for the study or if you withdraw your consent provided such deletion does not render impossible or seriously impair the achievement of the objectives of the research project. However, your information will be retained as necessary to comply with legal or regulatory requirements.
-</p>
-<p class="consent_header">
-  Your Privacy Rights
-</p>
-<p class="consent_content">
-  The General Data Protection Regulation ("GDPR") requires researchers to provide information to you when we collect and use research data if you are located within the European Union (EU) or the European Economic Area (EEA). The GDPR gives you rights relating to your Personal Data, including the right to access, correct, restrict, and withdraw your personal information.
-</p>
-<p class="consent_content">
-  The research team will store and process your Personal Data at our research site in the United States. The United States does not have the same laws to protect your Personal Data as countries in the EU/EEA. However, the research team is committed to protecting the confidentiality of your Personal Data. Additional information about the protections we will use is included in our <a href="https://microsetta.ucsd.edu/privacy-statement/" target="_blank">Privacy Statement</a>.
-</p>
-<p class="consent_header">
-  Who can you call if you have questions?
-</p>
-<p class="consent_content">
-  If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or email our help account: microsetta@ucsd.edu.
-</p>
-<p class="consent_content">
-  You may contact UC San Diego Office of IRB Administration at 858-246-4777 or email at irb@ucsd.edu to inquire about your rights as a research subject or to report research-related problems.
-</p>
-<p class="consent_content">
-  If you have questions or complaints about our treatment of your Personal Data, or about our privacy practices more generally, please feel free to contact the UC San Diego Privacy Official by email at ucsdprivacy@ucsd.edu.
-</p>
-<p class="consent_header">
-  Your Signature and Consent
-</p>
-<p class="consent_content">
-  You may download a copy of this consent document and a copy of the "<a href="https://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">Experimental Subject''s Bill of Rights</a>" to keep.
-</p>
-<p class="consent_content">
-  Your consent is entirely voluntary, but declining to provide it may impede your ability to participate in this research.
-</p>' WHERE consent_type = 'adolescent_data' AND locale = 'en_US';
-
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego</strong><br />
-  Consent to Act as a Research Subject
-</p>
-<p class="consent_title">
-  <strong>The Microsetta Initiative</strong><br />
-  Biospecimen and Future Use Research
-</p>
-<p class="consent_header">
-  Who is conducting the study, why have you been asked to participate, how were you selected, and what is the approximate number of participants in the study?
-</p>
-<p class="consent_content">
-  Dr. Rob Knight is conducting a research study to find out more about the trillions of bacteria and other microorganisms (called your microbiome) that live in and on your body. This includes eukaryotes like fungi and parasites, prokaryotes like bacteria and archaea, and viruses.  You have been asked to participate in this study because your microbiome is unique - not the same as anyone else''s on earth. There will be approximately 500,000 participants in the study from across the USA and from other countries around the world.
-</p>
-<p class="consent_header">
-  Why is this study being done?
-</p>
-<p class="consent_content">
-  The purpose of this study is to assess more accurately the microbial differences among people and whether these differences can be attributed to factors such as lifestyle, diet, body type, age or the presence of associated diseases. Biospecimens are samples from your body such as stool, skin, urine, or blood which are used for research purposes. This study involves the collection, storage, and use of your information and biospecimens for the purpose of processing your biospecimens and for future research. The results will be used to create a database of DNA sequence and other data from various body sites,, as well as details about you (the participant supplying the sample). Researchers can then use that data while studying relevant topics, such as gut-related health conditions.
-</p>
-<p class="consent_header">
-  What will happen to you in this study?
-</p>
-<p class="consent_content">
-  If you agree to the collection and processing of your biospecimen(s), the following will happen to you:
-</p>
-<p class="consent_content">
-  You have received or will receive a sample kit.  The kit contains devices used to collect samples and instructions for use.  The collection device may also include 95% ethanol to preserve the sample and make it non-infectious.  You will then collect a sample of yourself (e.g. feces, skin, mouth, nostril, ear, vagina), pet, or environment as described in the kit instructions or in the instructions provided to you by study coordinators. You will also be asked to provide general collection information such as the date and time your sample was collected. All samples should be returned to us in the included containers according to the instructions provided.
-</p>
-<p class="consent_content">
-  If collecting from stool, you will be asked to sample in one of a variety of ways, such as the following:
-  <ol>
-    <li>By inserting swab tip(s) into used toilet tissue and returning the swab(s) in the provided plastic container;</li>
-    <li>By inserting swab tip(s) into used toilet tissue and applying the tips to the surface of a Fecal Occult Blood Test (FOBT) card, then returning the card to us.  The FOBT card is the same device used by your doctor to check for blood in your stool.  The FOBT card stabilizes the stool material for later analysis.  We will not check if there is blood in the stool for diagnostic purposes because we are not a clinical laboratory;</li>
-    <li>By using a scooper device to scoop a part of the fecal material into the provided tube;</li>
-    <li>Depositing soiled toilet paper into the provided receptacle;</li>
-    <li>Submitting a whole stool sample in a shipping container we will provide.  This container will have ice packs that reliably cool the sample to -20 degrees Celsius/-4 degrees Fahrenheit.</li>
-  </ol>
-</p>
-<p class="consent_content">
-  If you received a blood collection kit, it contains materials and instructions on how to collect a blood sample at home.  It is similar to the test used to test glucose levels by pricking your finger.
-</p>
-<p class="consent_content">
-  Once your sample has been analyzed, we will upload results to your account and send you an email with a link to log in and view them.  We estimate that it can take 1-3 months for you to learn the results of your microbiome analysis. If you are a part of a specific sub-study, it  may take longer, depending on the duration of the study.
-</p>
-<p class="consent_header">
-  How much time will each study procedure take, what is your total time commitment, and how long will the study last?
-</p>
-<p class="consent_content">
-  Each sample you send can be obtained in 5 minutes or less.  We expect the study to continue for many years but your results will be available to you before the end of the study.
-</p>
-<p class="consent_header">
-  What risks are associated with this study?
-</p>
-<p class="consent_content">
-  Participation in this study may involve some added risks or discomforts. These include the following:
-  <ol>
-    <li>If using the blood collection device, you may experience temporary pain or a bruise at the site of the needle-stick.</li>
-    <li>There is a risk of loss of confidentiality. </li>
-  </ol>
-</p>
-<p class="consent_content">
-  Because this is a research study, there may be some unknown risks that are currently unforeseeable. You will be informed of any significant new findings.
-</p>
-<p class="consent_header">
-  What are the alternatives to participating in this study? Can you withdraw from the study or be withdrawn?
-</p>
-<p class="consent_content">
-  You do not have to participate. Your participation in this study is completely voluntary. We will inform you if any important new information is found during the course of this study that may affect your wanting to continue.
-</p>
-<p class="consent_content">
-  You can refuse to participate or withdraw at any time by withdrawing your consent and deleting your online profile. Our researchers will still use the data about you that was collected before you withdrew. After you withdraw, no further data will be collected from you.
-</p>
-<p class="consent_content">
-  You may be withdrawn from the study if you do not follow the instructions given to you by the study personnel.
-</p>
-<p class="consent_header">
-  What benefits can be reasonably expected?
-</p>
-<p class="consent_content">
-  There is no monetary or direct benefit for participating in this study. You will receive a report detailing the results of our analysis on your biospecimen(s), as well as facts and figures comparing your microbiome''s composition to that of other study participants.
-</p>
-<p class="consent_header">
-  Are there any costs associated with participating in the collection of your biospecimen(s)?
-</p>
-<p class="consent_content">
-  There may be costs associated with obtaining a kit. Once you receive your kit, there will be no additional cost to you for participating in this sampling procedure.
-</p>
-<p class="consent_header">
-  What about your confidentiality?
-</p>
-<p class="consent_content">
-  Research records will be kept confidential to the extent allowed by law. As part of your participation in the study, you will provide personal and/or sensitive information that could allow you to be identified if it was made public, such as name, date of birth, or address. We take every precaution to protect your identity. All data you provide is stored on secure systems within UC San Diego''s infrastructure and directly identifying information is accessible only to critical research personnel. The code key (that relates participant personal information to sample barcodes) is retained on a separate password-protected server that is accessible only to relevant staff such as the Dr. Knight, Co-Investigators, project and sample coordinators, IT administrator and the database coders. Sample analysis is performed using data from which directly identifying information has been removed, and all data shared with public repositories also undergo this treatment. Research records may be reviewed by the UC San Diego Institutional Review Board.
-</p>
-<p class="consent_header">
-  How we will use your Sample
-</p>
-<p class="consent_content">
-  Information from analyses of your data and biospecimen(s) will be used to study the non-human DNA (e.g. bacterial DNA) in it. The data from the samples in the project (including yours) may be analyzed and published in scientific articles. We may save some of your sample to be accessible to researchers so they can conduct additional studies using the other compounds from it, such as RNA, proteins or metabolites. If we do so, we will remove all directly identifiable information before use or sharing. Once identifiers have been removed, we will not ask for your consent for the use or sharing of your data and/or biospecimen(s) in other research. In addition, data that has been removed of directly identifying information will be uploaded to the European Bioinformatics Institute (http://www.ebi.ac.uk) and Qiita (https://qiita.ucsd.edu) for other researchers to access and use. We may contact you if additional information or action is needed in order to process your sample(s) and/or for re-consenting purposes.
-</p>
-<p class="consent_content">
-  Biospecimens (such as stool, skin, urine, or blood) collected from you for this study and information obtained from your biospecimens may be used in this research or other research, and shared with other organizations. You will not share in any commercial value or profit derived from the use of your biospecimens and/or information obtained from them.
-</p>
-<p class="consent_content">
-  <strong><u>Please Note:</u></strong><br />
-  Please be aware that <strong>no human DNA</strong> will be analyzed as part of this or any future studies. Furthermore, the methods we use for identifying microorganisms in your sample <strong>cannot be used to diagnose disease or infection</strong>.
-</p>
-<p class="consent_header">
-  Who can you call if you have questions?
-</p>
-<p class="consent_content">
-  If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or email our help account: microsetta@ucsd.edu.
-</p>
-<p class="consent_content">
-  You may contact UC San Diego Office of IRB Administration at 858-246-4777 or email at irb@ucsd.edu to inquire about your rights as a research subject or to report research-related problems.
-</p>
-<p class="consent_header">
-  Your Signature and Consent
-</p>
-<p class="consent_content">
-  You may download a copy of this consent document and a copy of the "<a href="https://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">Experimental Subject''s Bill of Rights</a>" to keep.
-</p>
-<p class="consent_content">
-  Your consent is entirely voluntary, but declining to provide it may impede your ability to participate in this research and have your sample(s) processed.
-</p>' WHERE consent_type = 'adult_biospecimen' AND locale = 'en_US';
-
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego<br />
-  Consent to Act as a Research Subject</strong>
-</p>
-<p class="consent_title">
-  <strong>The Microsetta Initiative</strong>
-</p>
-<p class="consent_header">
-  Who is conducting the study, why have you been asked to participate, how were you selected, and what is the approximate number of participants in the study?
-</p>
-<p class="consent_content">
-  You are being invited to participate in a research study titled The Microsetta Initiative. This study is being done by Dr. Rob Knight from the University of California - San Diego (UCSD). You were selected to participate in this study because you are unique and your microbiome is unique - not the same as anyone else''s on earth. There will be approximately 500,000 participants in the study from across the USA and from other countries around the world.
-</p>
-<p class="consent_header">
-  Why is this study being done and what will happen to you?
-</p>
-<p class="consent_content">
-  The purpose of this research study is to assess more accurately the microbial differences among people and whether these differences can be attributed to factors such as lifestyle, diet, body type, age or the presence of associated diseases. If you agree to take part in this study, you will be asked to complete online surveys/questionnaires. These surveys/questionnaires are categorized by content type and will ask questions about you, such as your age, weight, height, lifestyle, diet, and if you have certain medical or health conditions. You should expect to spend an average of 5-10 minutes on each survey, but some may take up to 30 minutes to complete.
-</p>
-<p class="consent_header">
-  What benefits can be reasonably expected?
-</p>
-<p class="consent_content">
-  There is no monetary or direct benefit for participating in this study. If you complete one of the questionnaires, called a Food Frequency Questionnaire (FFQ), you may receive a nutritional report evaluating your eating pattern and nutrient intake with an overall diet score. The investigator(s), however, may learn more about relevant topics, such as gut-related health conditions.
-</p>
-<p class="consent_header">
-  What risks and confidentiality are associated with this study?
-</p>
-<p class="consent_content">
-  Participation in this study may involve some added minimal risks or discomforts. While answering surveys, you may feel frustration, emotional discomfort, fatigue, and/or boredom.  There is also a risk of loss of confidentiality, but we take every precaution to protect your identity and minimize the risks. All data you provide is stored on secure systems within UC San Diego''s infrastructure and directly identifying information is accessible only to critical research personnel. The code key (that relates participant personal information) is retained on a separate password-protected server that is accessible only to relevant staff such as the Dr. Knight, Co-Investigators, project and sample coordinators, IT administrator and the database coders. The code will be destroyed by deletion from the server at the end of the study or if you withdraw from the study. Research records will be kept confidential to the extent allowed by law and may be reviewed by the UC San Diego Institutional Review Board.
-</p>
-<p class="consent_content">
-  We may need to report information about known or reasonably suspected incidents of abuse or neglect of a child, dependent adult or elder including physical, sexual, emotional, and financial abuse or neglect. If any investigator has or is given such information, they may report such information to the appropriate authorities.
-</p>
-<p class="consent_content">
-  Federal and State laws generally make it illegal for health insurance companies, group health plans, and most employers to discriminate against you based on your genetic information. This law generally will protect you in the following ways: a) Health insurance companies and group health plans may not request your genetic information that we get from this research. b) Health insurance companies and group health plans may not use your genetic information when making decisions regarding your eligibility or premiums. c) Employers with 5 or more employees may not use your genetic information that we get from this research when making a decision to hire, promote, or fire you or when setting the terms of your employment.
-</p>
-<p class="consent_content">
-  Be aware that these laws do not protect you against genetic discrimination by companies that sell life insurance, disability insurance, or long-term care insurance.
-</p>
-<p class="consent_header">
-  What are the alternatives to participating in this study and can you withdraw?
-</p>
-<p class="consent_content">
-  Your participation in this study is completely voluntary and you can withdraw at any time by simply exiting the survey, withdrawing your consent, or by requesting the deletion of your account through your online account. You are free to skip any question that you choose.
-</p>
-<p class="consent_header">
-  Will you be compensated for participating in this study?
-</p>
-<p class="consent_content">
-  You will not be financially compensated in this study.
-</p>
-<p class="consent_header">
-  Are there any costs associated with participating in this study?
-</p>
-<p class="consent_content">
-  There will be no cost to you for completing the standard survey/questionnaire(s). However, there may be costs associated with having certain diet assessment tools made available to you, such as the Food Frequency Questionnaire (FFQ).
-</p>
-<p class="consent_header">
-  Know what we will collect
-</p>
-<p class="consent_content">
-  As part of this research study, we will create and obtain information related to you and your participation in the study from you or from collaborators so we can properly conduct this research. Research study data will include contact information, demographic information, personal experiences, lifestyle preferences, health information, date of birth, opinions or beliefs.
-</p>
-<p class="consent_header">
-  How we will use your Personal Data
-</p>
-<p class="consent_content">
-  The Personal Data you provide will be used for the following purposes:
-  <ul>
-    <li>To share with members of the research team so they can properly conduct the research.</li>
-    <li>For future research studies or additional research by other researchers.</li>
-    <li>To contact you for the purpose of receiving alerts of your participation status, general program updates, opportunities to take part in new or future research, and/or as a follow-up to questions you have responded to in the questionnaire(s).</li>
-    <li>To comply with legal and regulatory requirements, including requirements to share data with regulatory agencies overseeing the research.</li>
-    <li>To confirm proper conduct of the study and research integrity.</li>
-  </ul>
-</p>
-<p class="consent_header">
-  Retention of your Personal Data
-</p>
-<p class="consent_content">
-  We may retain your Personal Data for as long as necessary to fulfill the objectives of the research and to ensure the integrity of the research. We will delete your Personal Data when it is no longer needed for the study or if you withdraw your consent provided such deletion does not render impossible or seriously impair the achievement of the objectives of the research project. However, your information will be retained as necessary to comply with legal or regulatory requirements.
-</p>
-<p class="consent_header">
-  Your Privacy Rights
-</p>
-<p class="consent_content">
-  The General Data Protection Regulation ("GDPR") requires researchers to provide information to you when we collect and use research data if you are located within the European Union (EU) or the European Economic Area (EEA). The GDPR gives you rights relating to your Personal Data, including the right to access, correct, restrict, and withdraw your personal information.
-</p>
-<p class="consent_content">
-  The research team will store and process your Personal Data at our research site in the United States. The United States does not have the same laws to protect your Personal Data as countries in the EU/EEA. However, the research team is committed to protecting the confidentiality of your Personal Data. Additional information about the protections we will use is included in our <a href="https://microsetta.ucsd.edu/privacy-statement/" target="_blank">Privacy Statement</a>.
-</p>
-<p class="consent_header">
-  Who can you call if you have questions?
-</p>
-<p class="consent_content">
-  If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or email our help account: microsetta@ucsd.edu.
-</p>
-<p clsas="consent_content">
-  You may contact UC San Diego Office of IRB Administration at 858-246-4777 or email at irb@ucsd.edu to inquire about your rights as a research subject or to report research-related problems.
-</p>
-<p class="consent_content">
-  If you have questions or complaints about our treatment of your Personal Data, or about our privacy practices more generally, please feel free to contact the UC San Diego Privacy Official by email at ucsdprivacy@ucsd.edu.
-</p>
-<p class="consent_header">
-  Your Signature and Consent
-</p>
-<p class="consent_content">
-  You may download a copy of this consent document and a copy of the "<a href="https://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">Experimental Subject''s Bill of Rights</a>" to keep.
-</p>
-<p class="consent_content">
-  Your consent is entirely voluntary, but declining to provide it may impede your ability to participate in this research.
-</p>' WHERE consent_type = 'adult_data' AND locale = 'en_US';
-
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego</strong><br />
-  Assent to Act as a Research Subject<br />
-  (Ages 7-12 years)
-</p>
-<p class="consent_title">
-  <strong>The Microsetta Initiative (a study about microbes)</strong>
-</p>
-<p class="consent_content">
-  Dr. Rob Knight and his research team are doing a research study to find out more about the trillions of tiny living things like bacteria and viruses that live in you or on you. These tiny things are called microbes, and you are being asked if you want to be in this study because the kinds of microbes you have is unique - not the same as anyone else on earth. We may be able to tell if you have been infected with something (like the virus that causes COVID-19) but we can''t tell you that because we are not allowed to do that.
-</p>
-<p class="consent_content">
-  If you decide you want to be in this research study, this is what will happen to you:
-</p>
-<p class="consent_content">
-  We will ask you or your mom or dad to sample some place on your body (like skin or mouth) or your poop (from toilet paper) with something that looks like 2 Q-tips.  Sometimes we need more poop for our research and then we will ask you to poop into a plastic bowl that is under the seat of the toilet and catches the poop as it comes out.  Your mom or dad will send it to us in the bowl. We may also ask your mom or dad to prick your finger so that we can get a little bit of your blood.
-</p>
-<p class="consent_content">
-  Sometimes kids don''t feel good while being in this study. You might feel a little bit sore if your skin is rubbed with the Q-tip and temporary pain if they prick your finger to get blood. Most people don''t mind these feelings.
-</p>
-<p class="consent_content">
-  If you feel any of these things, or other things, be sure to tell your mom or dad.
-</p>
-<p class="consent_content">
-  You don''t have to be in this research study if you don''t want to. Nobody will be mad at you if you say no. Even if you say yes now and change your mind after you start doing this study, you can stop and no one will be mad.
-</p>
-<p class="consent_content">
-  Be sure to ask your parents if you have questions.  You can also ask them to call Dr. Knight or his research team so they can tell you more about anything you don''t understand.
-</p>' WHERE consent_type = 'child_biospecimen' AND locale = 'en_US';
-
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego</strong><br />
-  Assent to Act as a Research Subject<br />
-  (Ages 7-12 years)
-</p>
-<p class="consent_title">
-  The Microsetta Initiative (a study about microbes)
-</p>
-<p class="consent_content">
-  Dr. Rob Knight and his research team are doing a research study to find out more about the trillions of tiny living things like bacteria and viruses that live in you or on you. These tiny things are called microbes, and you are being asked if you want to be in this study because the kinds of microbes you have is unique - not the same as anyone else on earth. We may be able to tell if you have been infected with something (like the virus that causes COVID-19) but we can''t tell you that because we are not allowed to do that.
-</p>
-<p class="consent_content">
-  If you decide you want to be in this research study, this is what will happen to you:
-</p>
-<p class="consent_content">
-  We will ask you to answer survey questions about you, like your age, weight, height, your lifestyle, what you eat, if you have taken antibiotics, if you have certain diseases and if you take supplements like vitamins.  There are also other surveys that you can choose to complete if you want to.
-</p>
-<p class="consent_content">
-  Your answers will be kept private. We will not share any information about whether or not you took part in this study.
-</p>
-<p class="consent_content">
-  Sometimes kids don''t feel good while being in this study. You might feel a little tired, bored, or uncomfortable. Most people don''t mind these feelings.
-</p>
-<p class="consent_content">
-  If you feel any of these things, or other things, be sure to tell your mom or dad.
-</p>
-<p class="consent_content">
-  You don''t have to be in this research study if you don''t want to. Nobody will be mad at you if you say no. Even if you say yes now and change your mind after you start doing this study, you can stop and no one will be mad.
-</p>
-<p class="consent_content">
-  Be sure to ask your parents if you have questions.  You can also ask them to call Dr. Knight or his research team so they can tell you more about anything you don''t understand.
-</p>' WHERE consent_type = 'child_data' AND locale = 'en_US';
-
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego</strong><br />
-  Parent Consent for Child to Act as a Research Subject
-</p>
-<p class="consent_title">
-  <strong>The Microsetta Initiative</strong><br />
-  Biospecimen and Future Use Research
-</p>
-<p class="consent_header">
-  Who is conducting the study, why has your child been asked to participate, how was your child selected, and what is the approximate number of participants in the study?
-</p>
-<p class="consent_content">
-  Dr. Rob Knight is conducting a research study to find out more about the trillions of bacteria and other microorganisms (called the microbiome) that live in and on the body. This includes eukaryotes like fungi and parasites, prokaryotes like bacteria and archaea, and viruses.  You are volunteering your child for this study because you want to know more about the microbiome of your child. Children like all humans have a unique microbiome and including them in the study will help elucidate the development of the microbiome. There will be approximately 500,000 participants in the study from across the USA and from other countries around the world.
-</p>
-<p class="consent_header">
-  Why is this study being done?
-</p>
-<p class="consent_content">
-  The purpose of this study is to assess more accurately the microbial differences between people and whether these differences can be attributed to factors such as lifestyle, diet, body type, age or the presence of associated diseases. Biospecimens are samples from your body such as stool, skin, urine, or blood which are used for research purposes. This study involves the collection, storage, and use of your child''s information and biospecimens for the purpose of processing your child''s biospecimens and for future research. The results will be used to create a database of DNA sequence and other data from various body sites, as well as details about the child participant supplying the sample. Researchers can then use that data while studying relevant topics, such as gut-related health conditions.
-</p>
-<p class="consent_header">
-  What will happen to your child in this study?
-</p>
-<p class="consent_content">
-  If you agree to the collection and processing of your child''s biospecimen(s), the following will happen to your child:
-</p>
-<p class="consent_content">
-  You have received or will receive a sample kit.  The kit contains devices used to collect samples and instructions for use.  The collection device may also include 95% ethanol to preserve the sample and make it non-infectious.
-</p>
-<p class="consent_content">
-  You will sample a part of your child''s body (e.g. feces, skin, mouth, nostril, ear, vagina) as described in the kit instructions. You will also be asked to provide general collection information such as the date and time your child''s sample was collected. All samples should be returned to us in the included containers according to the instructions provided.
-</p>
-<p class="consent_content">
-  If collecting from your child''s stool, you will be asked to sample in one of a variety of ways, such as the following:
-  <ol>
-    <li>By inserting swab tips into used toilet tissue or diaper and returning the sample in the provided plastic container;</li>
-    <li>By inserting swab tips into used toilet tissue and applying the tips to the surface of a Fecal Occult Blood Test (FOBT) card, then returning the card to us.  The FOBT card is the same device used by your doctor to check for blood in your stool.  The FOBT card stabilizes the stool material for later analysis.  We will not check if there is blood in the stool for diagnostic purposes because we are not a clinical laboratory;</li>
-    <li>By using a scooper device to scoop a part of the fecal material into the provided tube;</li>
-    <li>Depositing soiled toilet paper into the provided receptacle;</li>
-    <li>Submitting a whole stool sample in a shipping container we will provide.  This container will have ice packs that reliably cool the sample to -20 degrees Celcius/-4 degrees Fahrenheit.</li>
-  </ol>
-</p>
-<p class="consent_content">
-  If you received a blood collection kit, it contains materials and instructions on how to collect a blood sample at home.  It is similar to the test used to test glucose levels by pricking your child''s finger.
-</p>
-<p class="consent_content">
-  Once your child''s sample has been analyzed, we will upload results to your account and send you an email with a link to log in and view them. We estimate that it can take 1-3 months for you to learn the results of your child''s microbiome analysis. If your child is a part of a specific sub-study, it may take longer, depending on the duration of the study.
-</p>
-<p class="consent_header">
-  How much time will each study procedure take, what is your child''s total time commitment, and how long will the study last?
-</p>
-<p class="consent_content">
-  Each sample you send can be obtained in 5 minutes or less.  We expect the study to continue for many years but the results will be available to you before the end of the study.
-</p>
-<p class="consent_header">
-  What risks are associated with this study?
-</p>
-<p class="consent_content">
-  Participation in this study may involve some added risks or discomforts. These include the following:
-  <ol>
-    <li>If using the blood collection device, your child may experience temporary pain or a bruise at the site of the needle-stick.</li>
-    <li>There is a risk of loss of confidentiality.</li>
-  </ol>
-</p>
-<p class="consent_content">
-  Because this is a research study, there may be some unknown risks that are currently unforeseeable. You will be informed of any significant new findings.
-</p>
-<p class="consent_header">
-  What are the alternatives to participating in this study? Can your child withdraw or be withdrawn from the study?
-</p>
-<p class="consent_consent">
-  Participation in research is entirely voluntary. You may refuse to have your child participate or withdraw your child at any time without penalty or loss of benefits to which you or your child are entitled. If you decide that you no longer wish your child to continue in this study, you may withdraw your consent by requesting the deletion of your child''s profile through your online account. We will inform you and your child if any important new information is found during the course of this study that may affect your wanting to continue.
-</p>
-<p class="consent_content">
-  Your child may be withdrawn from the study if the instructions given to you by the study personnel are not followed.
-</p>
-<p class="consent_header">
-  What benefits can be reasonably expected?
-</p>
-<p class="consent_content">
-  There is no direct benefit to your child for participating in this study. You will receive a report detailing the results of our analysis on your child''s sample, as well as facts and figures comparing your child''s microbial composition to that of other study participants. The investigator, however, may learn more about the human microbiome in health and disease and provide a valuable resource for other researchers.
-</p>
-<p class="consent_header">
-  Will you be compensated for participating in this study?
-</p>
-<p class="consent_content">
-  You will not be financially compensated in this study.
-</p>
-<p class="consent_header">
-  Are there any costs associated with participating in this study?
-</p>
-<p class="consent_content">
-  There may be costs associated with obtaining a kit but there will be no cost for participating in the sampling procedure.
-</p>
-<p class="consent_header">
-  What about your or your child''s confidentiality?
-</p>
-<p class="consent_content">
-  Research records will be kept confidential to the extent allowed by law. As part of your child''s participation in the study, you or your child will provide personal and/or sensitive information that could allow your child to be identified if it was made public, such as name, date of birth, or address. We take every precaution to protect your identity. All data you or your child provide are stored on secure systems within UC San Diego''s infrastructure and directly identifying information is accessible only to critical study personnel. The code key (that relates participant personal information to sample barcodes) is retained on a separate password-protected server that is accessible only to relevant staff such as the Dr. Knight, Co-Investigators, project and sample coordinators, IT administrator and the database coders. Sample analysis is performed using data from which directly identifying information has been removed, and all data shared with public repositories also undergo this treatment. Research records may be reviewed by the UC San Diego Institutional Review Board.
-</p>
-<p class="consent_header">
-  How we will use your child''s Sample
-</p>
-<p class="consent_content">
-  Information from analyses of your child''s data and biospecimen(s) will be used to study the non-human DNA (e.g. bacterial DNA) in it. The data from the samples in the project (including your child''s) may be analyzed and published in scientific articles. We may save some of your child''s sample to be accessible to researchers so they can conduct additional studies using the other compounds from it, such as RNA, proteins or metabolites. If we do so, we will remove all directly identifiable information before use or sharing. Once identifiers have been removed, we will not ask for your consent for the use or sharing of your child''s data and/or biospecimen(s) in other research. In addition, data that has been removed of directly identifying information will be uploaded to the European Bioinformatics Institute (http://www.ebi.ac.uk) and Qiita (https://qiita.ucsd.edu) for other researchers to access and use. We may contact you if additional information or action is needed in order to process your child''s sample(s) and/or for re-consenting purposes.
-</p>
-<p class="consent_content">
-  Biospecimens (such as stool, skin, urine, or blood) collected from your child for this study and information obtained from your child''s biospecimens may be used in this research or other research, and shared with other organizations. You will not share in any commercial value or profit derived from the use of your child''s biospecimens and/or information obtained from them.
-</p>
-<p class="consent_content">
-  <strong><u>Please Note:</u></strong><br />
-  Please be aware that <strong>no human DNA</strong> will be analyzed as part of this or any future studies. Furthermore, the methods we use for identifying microorganisms in your sample <strong>cannot be used to diagnose disease or infection</strong>.
-</p>
-<p class="consent_header">
-  Who can you call if you have questions?
-</p>
-<p class="consent_content">
-  If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or email our help account: microsetta@ucsd.edu.
-</p>
-<p class="consent_content">
-  You may contact UC San Diego Office of IRB Administration at 858-246-4777 or email at irb@ucsd.edu to inquire about your rights as a research subject or to report research-related problems.
-</p>
-<p class="consent_header">
-  Your Signature and Consent
-</p>
-<p class="consent_content">
-  You may download a copy of this consent document and a copy of the "<a href="https://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">Experimental Subject''s Bill of Rights</a>" to keep.
-</p>
-<p class="consent_content">
-  Your consent is entirely voluntary, but declining to provide it may impede your child''s ability to participate in this research and have your child''s sample(s) processed.
-</p>' WHERE consent_type = 'parent_biospecimen' AND locale = 'en_US';
-
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego</strong><br />
-  Parent Consent for Child to Act as a Research Subject
-</p>
-<p class="consent_title">
-  <strong>The Microsetta Initiative</strong>
-</p>
-<p class="consent_header">
-  Who is conducting the study, why has your child been asked to participate, how was your child selected, and what is the approximate number of participants in the study?
-</p>
-<p class="consent_content">
-  Dr. Rob Knight is conducting a research study to find out more about the trillions of bacteria and other microorganisms (called the microbiome) that live in and on the body. This includes eukaryotes like fungi and parasites, prokaryotes like bacteria and archaea, and viruses.  You are volunteering your child for this study because you want to know more about the microbiome of your child. Children like all humans have a unique microbiome and including them in the study will help elucidate the development of the microbiome. There will be approximately 500,000 participants in the study from across the USA and from other countries around the world.
-</p>
-<p class="consent_header">
-  Why is this study being done and what will happen to your child?
-</p>
-<p class="consent_content">
-  The purpose of this study is to assess more accurately the microbial differences between people and whether these differences can be attributed to factors such as lifestyle, diet, body type, age or the presence of associated diseases. If you agree to allow your child to take part in this study, we will ask you to complete online surveys/questionnaires about your child such as their age, weight, height, lifestyle, diet, and if your child has certain medical or health conditions. You should expect to spend an average of 5-10 minutes on each survey, but some may take up to 30 minutes to complete.
-</p>
-<p class="consent_header">
-  What benefits can be reasonably expected?
-</p>
-<p class="consent_content">
-  There is no direct benefit to your child for participating in this study.  If you complete one of the questionnaires called Food Frequency Questionnaire (FFQ) for your child, you may receive a nutritional report evaluating your child''s eating pattern and nutrient intake with an overall diet score. The investigator(s), however, may learn more about relevant topics, such as gut-related health conditions.
-</p>
-<p class="consent_header">
-  What risks are associated with this study?
-</p>
-<p class="consent_content">
-  Participation in this study may involve some added minimal risks or discomforts. While answering surveys, you or your child may feel frustration, emotional discomfort, fatigue, and/or boredom.  There is also a risk of loss of confidentiality, but we take every precaution to protect your identity and minimize the risks. All data you or your child provide is stored on secure systems within UC San Diego''s infrastructure and directly identifying information is accessible only to critical research personnel. The code key (that relates participant personal information) is retained on a separate password-protected server that is accessible only to relevant staff such as the Dr. Knight, Co-Investigators, project and sample coordinators, IT administrator and the database coders. The code will be destroyed by deletion from the server at the end of the study or if you withdraw from the study. Research records will be kept confidential to the extent allowed by law and may be reviewed by the UC San Diego Institutional Review Board.
-</p>
-<p class="consent_content">
-  We may need to report information about known or reasonably suspected incidents of abuse or neglect of a child, dependent adult or elder including physical, sexual, emotional, and financial abuse or neglect. If any investigator has or is given such information, they may report such information to the appropriate authorities.
-</p>
-<p class="consent_content">
-  Federal and State laws generally make it illegal for health insurance companies, group health plans, and most employers to discriminate against you based on your genetic information. This law generally will protect you in the following ways: a) Health insurance companies and group health plans may not request your genetic information that we get from this research. b) Health insurance companies and group health plans may not use your genetic information when making decisions regarding your eligibility or premiums. c) Employers with 5 or more employees may not use your genetic information that we get from this research when making a decision to hire, promote, or fire you or when setting the terms of your employment.
-</p>
-<p class="consent_content">
-  Be aware that these laws do not protect you against genetic discrimination by companies that sell life insurance, disability insurance, or long-term care insurance.
-</p>
-<p class="consent_header">
-  What are the alternatives to participating in this study and can you withdraw?
-</p>
-<p class="consent_content">
-  Participation in this study is completely voluntary and you or your child can withdraw at any time by simply exiting the survey, withdrawing consent and deleting your child''s online profile, or by requesting the deletion of your online account. You are free to skip any question that you choose.
-</p>
-<p class="consent_header">
-  Are there any costs associated with participating in this study?
-</p>
-<p class="consent_content">
-  There will be no cost to you or your child for completing the standard survey/questionnaire(s). However, there may be costs associated with having certain diet assessment tools made available to your child, such as the Food Frequency Questionnaire (FFQ).
-</p>
-<p class="consent_header">
-  Know what we will collect
-</p>
-<p class="consent_content">
-  As part of this research study, we will create and obtain information related to you or your child''s participation in the study from you or from collaborators so we can properly conduct this research. Research study data will include contact information, demographic information, personal experiences, lifestyle preferences, health information, date of birth, opinions or beliefs.
-</p>
-<p class="consent_header">
-  How we will use your child''s Personal Data
-</p>
-<p class="consent_content">
-  The Personal Data you provide will be used for the following purposes:
-  <ul>
-    <li>To share with members of the research team so they can properly conduct the research.</li>
-    <li>For future research studies or additional research by other researchers.</li>
-    <li>To contact you for the purpose of receiving alerts of your child''s participation status, general program updates, opportunities to take part in new or future research, and/or as a follow-up to questions you have responded to in the questionnaire(s).</li>
-    <li>To comply with legal and regulatory requirements, including requirements to share data with regulatory agencies overseeing the research.</li>
-    <li>To confirm proper conduct of the study and research integrity.</li>
-  </ul>
-</p>
-<p class="consent_header">
-  Retention of your child''s Personal Data
-</p>
-<p class="consent_content">
-  We may retain the Personal Data you provide for as long as necessary to fulfill the objectives of the research and to ensure the integrity of the research. We will delete your child''s Personal Data when it is no longer needed for the study or if you withdraw your consent provided such deletion does not render impossible or seriously impair the achievement of the objectives of the research project. However, your child''s information will be retained as necessary to comply with legal or regulatory requirements.
-</p>
-<p class="consent_header">
-  Your Privacy Rights
-</p>
-<p class="consent_content">
-  The General Data Protection Regulation ("GDPR") requires researchers to provide information to you when we collect and use research data if you are located within the European Union (EU) or the European Economic Area (EEA). The GDPR gives you rights relating to your child''s Personal Data, including the right to access, correct, restrict, and withdraw your child''s personal information.
-</p>
-<p class="consent_content">
-  The research team will store and process your child''s Personal Data at our research site in the United States. The United States does not have the same laws to protect your child''s Personal Data as States in the EU/EEA. However, the research team is committed to protecting the confidentiality of your child''s Study Data. Additional information about the protections we will use is included in our <a href="https://microsetta.ucsd.edu/privacy-statement/" target="_blank">Privacy Statement</a>.
-</p>
-<p class="consent_header">
-  Who can you call if you have questions?
-</p>
-<p class="consent_content">
-  If you have questions or research-related problems, you may reach Rob Knight at 858-246-1184 or email our help account: microsetta@ucsd.edu.
-</p>
-<p class="consent_content">
-  You may contact UC San Diego Office of IRB Administration at 858-246-4777 or email at irb@ucsd.edu to inquire about your rights as a research subject or to report research-related problems.
-</p>
-<p class="consent_content">
-  If you have questions or complaints about our treatment of your Personal Data, or about our privacy practices more generally, please feel free to contact the UC San Diego Privacy Official by email at ucsdprivacy@ucsd.edu.
-</p>
-<p class="consent_header">
-  Your Signature and Consent
-</p>
-<p class="consent_content">
-  You may download a copy of this consent document and a copy of the "<a href="https://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">Experimental Subject''s Bill of Rights</a>" to keep.
-</p>
-<p class="consent_content">
-  Your consent is entirely voluntary, but declining to provide it may impede your child''s ability to participate in this research.
-</p>' WHERE consent_type = 'parent_data' AND locale = 'en_US';
-
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego<br />
-    Consentimiento para participar como sujeto de investigación<br />
-    (Edades 13-17 años)</strong>
-</p>
-<p class="consent_title">
-  <strong>The Microsetta Initiative<br />
-    Bioespecímenes e investigación de uso futuro</strong>
-</p>
-<p class="consent_header">
-  ¿Quién realiza el estudio, por qué se le ha pedido que participe, cómo fue seleccionado y cuál es la cifra aproximada de participantes en el estudio?
-</p>
-<p class="consent_content">
-  El Dr. Rob Knight de la Universidad de California - San Diego (UCSD) está realizando un estudio de investigación para obtener más información sobre todas las bacterias y otros microorganismos (llamado su microbioma) que viven sobre y dentro de su cuerpo. Se le ha pedido que participe en este estudio porque usted, y todos los demás en la tierra, tienen un microbioma único, y cuantas más personas estudiemos de todas las edades, más entenderemos acerca de cómo los microorganismos pueden ayudarnos o dañarnos. Habrá aproximadamente 500,000 participantes en total en el estudio de todos los EE. UU. y de otros países alrededor del mundo.
-</p>
-<p class="consent_header">
-  ¿Por qué se está llevando a cabo este estudio?
-</p>
-<p class="consent_content">
-  El propósito de este estudio es evaluar con mayor precisión las diferencias microbianas entre las personas y si estas diferencias pueden atribuirse a factores como el estilo de vida, la dieta, la constitución corporal, la edad o la presencia de enfermedades asociadas. Las muestras biológicas son muestras de su cuerpo, como heces, piel, orina o sangre, que se utilizan con fines de investigación. Este estudio implica la recopilación, el almacenamiento y el uso de su información y muestras biológicas con el fin de procesar sus muestras biológicas y para futuras investigaciones. Los resultados se utilizarán para crear una base de datos de secuencias de ADN y otros datos de varios sitios del cuerpo, así como detalles sobre usted (el participante que proporciona la muestra). Luego, los investigadores podrán usar esos datos mientras estudian temas relevantes, como las condiciones de salud relacionadas con el intestino.
-</p>
-<p class="consent_header">
-  ¿Qué le sucederá en este estudio y qué procedimientos son el estándar de atención y cuáles son experimentales?
-</p>
-<p class="consent_content">
-  Si usted acepta participar en este estudio, le ocurrirá lo siguiente:
-</p>
-<p class="consent_content">
-  Usted mismo tomará la muestra usando el kit que se le proporcionó. Las instrucciones están incluidas en el kit para que sepa qué hacer. La muestra más común es de heces (fecal) donde se recoge una pequeña muestra insertando las puntas de un hisopo en el papel higiénico usado o en una tarjeta (tarjeta llamada FOBT). También se le puede pedir que saque un trozo de materia fecal con una pequeña herramienta similar a una cuchara, que coloque papel higiénico usado en un receptáculo especial que le proporcionaremos o que defeque en un recipiente de plástico que se coloca debajo del asiento del baño. También es posible que deba tomar muestras de una pequeña área de la piel, la lengua o la boca, las fosas nasales, la cera del oído o la vagina. También podemos pedirle a alguien (como su mamá o papá) que tome una pequeña muestra de sangre pinchando su dedo y luego recolectando la sangre en 2 hisopos pequeños. Ninguna de estas muestras o investigaciones nos permitirá hacer un diagnóstico de enfermedad y no estamos buscando nada en su propio ADN que también se pueda encontrar en sus heces, piel o saliva.
-</p>
-<p class="consent_header">
-  ¿Cuánto tiempo es necesario para realizar cada procedimiento del estudio, cuánto tiempo debe dedicar en total y cuánto durará el estudio?
-</p>
-<p class="consent_content">
-  Cada muestra que envíe se puede obtener en 5 minutos o menos. Esperamos que el estudio continúe durante muchos años, pero sus resultados estarán disponibles para usted antes de que finalice el estudio.
-</p>
-<p class="consent_header">
-  ¿Cuáles son los riesgos relacionados con este estudio?
-</p>
-<p class="consent_content">
-  La participación en este estudio puede implicar algunos riesgos o molestias adicionales. Estos incluyen los siguientes:
-  <ol>
-    <li>Es posible que experimente un dolor temporal o un hematoma en el lugar del pinchazo si se hace el análisis de sangre.</li>
-    <li>Existe el riesgo de pérdida de confidencialidad.</li>
-  </ol>
-</p>
-<p class="consent_content">
-  Debido a que este es un estudio de investigación, puede haber algunos riesgos desconocidos que actualmente son imprevisibles. Usted y sus padres serán informados de cualquier nuevo hallazgo significativo.
-</p>
-<p class="consent_header">
-  ¿Cuáles son las alternativas a participar en este estudio? ¿Puede retirarse del estudio o ser retirado?
-</p>
-<p class="consent_content">
-  No tiene que participar. Su participación en este estudio es completamente voluntaria y puede negarse a participar o retirarse en cualquier momento retirando su consentimiento y eliminando su perfil en línea. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Después de retirarse, no se recopilarán más datos sobre usted. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
-</p>
-<p class="consent_content">
-  Puede ser retirado del estudio si no sigue las instrucciones que le ha dado el personal del estudio.
-</p>
-<p class="consent_header">
-  ¿Cuáles podrían ser los beneficios de participar?
-</p>
-<p class="consent_content">
-  No hay ningún beneficio directo para usted por participar en este estudio. Usted tendrá acceso a sus datos que le darán a usted y a sus padres una idea de lo que hay en su muestra y cómo se compara con otras personas como usted (edad, sexo).
-</p>
-<p class="consent_header">
-  ¿Se le pagará por participar en este estudio?
-</p>
-<p class="consent_content">
-  Usted  no recibirá ninguna remuneración económica por participar en este estudio.
-</p>
-<p class="consent_header">
-  ¿Hay algún costo vinculado con la participación en la colección de su(s) muestra(s) biológica(s)?
-</p>
-<p class="consent_content">
-  Puede haber costos asociados con la obtención de un kit. Una vez que reciba su kit, no habrá ningún costo adicional para usted por participar en este procedimiento de muestreo.
-</p>
-<p class="consent_header">
-  ¿Y su confidencialidad?
-</p>
-<p class="consent_content">
-  Los registros de investigación se mantendrán confidenciales en la medida permitida por la ley. Como parte de su participación en el estudio, usted proporcionará información personal y/o confidencial que podría permitir su identificación si se hiciera pública, como nombre, fecha de nacimiento o dirección. Nosotros tomamos todas las precauciones para proteger su identidad.Toda la información proporcionada se almacena en sistemas seguros dentro de la infraestructura de UC San Diego y la información de identificación directa sólo es accesible para el personal de investigación crítico. El código (que vincula los datos personales del participante con los códigos de barras de la muestras) se guarda en otro servidor protegido con contraseña, al que solo pueden acceder el personal pertinente, como el Dr. Knight, los coinvestigadores, los coordinadores de proyectos y muestras, el administrador de TI y los programadores de la base de datos. El análisis de muestras se realiza utilizando datos de los que se ha eliminado la información de identificación directa, y todos los datos compartidos con los repositorios públicos también se someten a este tratamiento. Los registros de investigación pueden ser revisados por la Junta de Revisión Institucional de UC San Diego.
-</p>
-<p class="consent_header">
-  Cómo usaremos su Muestra
-</p>
-<p class="consent_content">
-  La información de los análisis de sus datos y muestras biológicas se utilizará para estudiar el ADN no humano (por ejemplo, ADN bacteriano) que contiene. Los datos de las muestras del proyecto (incluido el suyo) pueden ser analizados y publicados en artículos científicos. Es posible que guardemos parte de su muestra para que los investigadores puedan acceder a ella y puedan realizar estudios adicionales utilizando los otros compuestos de la misma, como ARN, proteínas o metabolitos. Si lo hacemos, eliminaremos toda la información directamente identificable antes de usarla o compartirla. Una vez que se hayan eliminado los identificadores, no le pediremos su consentimiento para usar o compartir sus datos y/o muestra(s) en otras investigaciones. Además, los datos que se hayan eliminado de la información de identificación directa se cargarán en el Instituto Europeo de Bioinformática (http://www.ebi.ac.uk) y Qiita (https://qiita.ucsd.edu) para que otros investigadores tengan acceso y uso. Es posible que nos comuniquemos con usted si se necesita información o acción adicional para procesar su(s) muestra(s) y/o para propósitos de re-consentimiento.
-</p>
-<p class="consent_content">
-  <strong><u>Tenga en cuenta:</u></strong><br />
-  Tenga en cuenta que <strong>no se analizará ADN humano</strong> como parte de este ni de ningún estudio futuro. Además, los métodos que usamos para identificar microorganismos en su muestra <strong>no pueden usarse para diagnosticar enfermedades o infecciones</strong>.
-</p>
-<p class="consent_header">
-  ¿A quién puede llamar si tiene alguna duda?
-</p>
-<p class="consent_content">
-  Si tiene alguna duda o problemas relacionados con la investigación, usted puede comunicarse con nosotros enviando un correo electrónico a nuestra cuenta de ayuda microsetta@ucsd.edu o  llamando a Rob Knight al 858-246-1184.
-</p>
-<p class="consent_content">
-  Puede comunicarse con la Oficina de Administración del IRB de UC San Diego al 858-246-4777 o enviar un correo electrónico a irb@ucsd.edu para consultar sobre sus derechos como sujeto de investigación o para reportar  problemas relacionados con la investigación.
-</p>
-<p class="consent_header">
-  Firma y Consentimiento
-</p>
-<p class="consent_content">
-  Usted puede descargar una copia de este documento de consentimiento y una copia de la "<a href="https://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">Declaración de derechos del sujeto experimental</a>" para que las conserve.
-</p>' WHERE consent_type = 'adolescent_biospecimen' AND locale IN ('es_MX', 'es_ES');
-
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego<br />
-    Consentimiento para participar como sujeto de investigación</strong>
-</p>
-<p class="consent_title">
-  <strong>The Microsetta Initiative<br />
-    Bioespecímenes e investigación de uso futuro</strong>
-</p>
-<p class="consent_header">
-  ¿Quién realiza el estudio, por qué se le ha pedido que participe, cómo fue seleccionado y cuál es la cifra aproximada de participantes en el estudio?
-</p>
-<p class="consent_content">
-  El Dr. Rob Knight de la Universidad de California - San Diego (UCSD) está realizando un estudio de investigación para obtener más información sobre todas las bacterias y otros microorganismos (llamado su microbioma) que viven sobre y dentro de su cuerpo. Se le ha pedido que participe en este estudio porque usted, y todos los demás en la tierra, tienen un microbioma único, y cuantas más personas estudiemos de todas las edades, más entenderemos acerca de cómo los microorganismos pueden ayudarnos o dañarnos. Habrá aproximadamente 500,000 participantes en total en el estudio de todos los EE. UU. y de otros países alrededor del mundo.
-</p>
-<p class="consent_header">
-  ¿Por qué se está llevando a cabo este estudio?
-</p>
-<p class="consent_content">
-  El propósito de este estudio es evaluar con mayor precisión las diferencias microbianas entre las personas y si estas diferencias pueden atribuirse a factores como el estilo de vida, la dieta, la constitución corporal, la edad o la presencia de enfermedades asociadas. Las muestras biológicas son muestras de su cuerpo, como heces, piel, orina o sangre, que se utilizan con fines de investigación. Este estudio implica la recopilación, el almacenamiento y el uso de su información y muestras biológicas con el fin de procesar sus muestras biológicas y para futuras investigaciones. Los resultados se utilizarán para crear una base de datos de secuencias de ADN y otros datos de varios sitios del cuerpo, así como detalles sobre usted (el participante que proporciona la muestra). Luego, los investigadores podrán usar esos datos mientras estudian temas relevantes, como las condiciones de salud relacionadas con el intestino.
-</p>
-<p class="consent_header">
-  ¿Qué le sucederá durante el estudio?
-</p>
-<p class="consent_content">
-  Si acepta la recolección y el procesamiento de su(s) muestra(s) biológica(s), le ocurrirá lo siguiente:
-</p>
-<p class="consent_content">
-  Usted ha recibido o recibirá un kit de muestra. El kit contiene dispositivos utilizados para recolectar muestras e instrucciones de uso. El dispositivo de recolección también puede incluir etanol al 95% para preservar la muestra y hacerla no infecciosa. Luego, recolectará una muestra de usted mismo (por ejemplo, heces, piel, boca, orificio nasal, oído, vagina), mascota o entorno, como se describe en las instrucciones del kit o en las instrucciones que le proporcionaron los coordinadores del estudio. También se le pedirá que proporcione información general sobre la recolección, como la fecha y la hora en que se recolectó su muestra. Todas las muestras deben devolverse en los contenedores incluidos de acuerdo con las instrucciones proporcionadas.
-</p>
-<p class="consent_content">
-  Si se recolecta muestra de heces, se le pedirá que tome muestras en una variedad de formas, como las siguientes:
-  <ol>
-    <li>Insertando las punta(s) del hisopo en papel higiénico usado y devolviendo el hisopo(s) en el recipiente de plástico suministrado;</li>
-    <li>Insertando las puntas del hisopo en el papel higiénico usado y pasando las puntas por la superficie de una tarjeta para pruebas de sangre oculta en heces, y luego devuélvanos la tarjeta. La tarjeta para pruebas de sangre oculta en heces es el mismo instrumento que usa su médico para verificar si hay sangre en sus heces. La tarjeta para pruebas de sangre oculta en heces permite estabilizar las heces para su posterior análisis. No verificaremos si hay sangre en las heces con fines diagnósticos, puesto que no somos un laboratorio clínico;</li>
-    <li>Usando el instrumento de cuchara para recoger una parte de la materia fecal en el tubo suministrado;</li>
-    <li>Depositando papel higiénico sucio en el receptáculo suministrado;</li>
-    <li>Enviando una muestra completa de heces en el recipiente de envío que le suministraremos. Dicho recipiente contiene una serie de compresas de hielo que enfriarán la muestra de manera fiable a -20 °C/-4 °F.</li>
-  </ol>
-</p>
-<p class="consent_content">
-  Si recibió un kit de recolección de sangre, este contiene materiales e instrucciones sobre cómo recolectar una muestra de sangre en casa. Es similar a la prueba que se usa para medir los niveles de glucosa pinchando el dedo.
-</p>
-<p class="consent_content">
-  Una vez que se haya analizado su muestra, cargaremos los resultados en su cuenta y le enviaremos un correo electrónico con un enlace para iniciar sesión y verlos. Calculamos que puede tardar de 1 a 3 meses en conocer los resultados de su análisis del microbioma. Si forma parte de un subestudio específico, puede llevar más tiempo, según la duración del estudio.
-</p>
-<p class="consent_header">
-  ¿Cuánto tiempo es necesario para realizar cada procedimiento del estudio, cuánto tiempo debe dedicar en total y cuánto durará el estudio?
-</p>
-<p class="consent_content">
-  Cada muestra que envíe se puede obtener en 5 minutos o menos. Esperamos que el estudio continúe durante muchos años, pero sus resultados estarán disponibles para usted antes de que finalice el estudio.
-</p>
-<p class="consent_header">
-  ¿Cuáles son los riesgos relacionados con este estudio?
-</p>
-<p class="consent_content">
-  La participación en este estudio puede implicar algunos riesgos o molestias adicionales. Estos incluyen los siguientes:
-  <ol>
-    <li>Es posible que experimente un dolor temporal o un hematoma en el lugar del pinchazo si se hace el análisis de sangre.</li>
-    <li>Existe el riesgo de pérdida de confidencialidad.</li>
-  </ol>
-</p>
-<p class="consent_content">
-  Debido a que este es un estudio de investigación, puede haber algunos riesgos desconocidos que actualmente son imprevisibles. Usted y sus padres serán informados de cualquier nuevo hallazgo significativo.
-</p>
-<p class="consent_header">
-  ¿Cuáles son las alternativas a participar en este estudio? ¿Puede retirarse del estudio o ser retirado?
-</p>
-<p class="consent_content">
-  No tiene que participar. Su participación en este estudio es completamente voluntaria y puede negarse a participar o retirarse en cualquier momento retirando su consentimiento y eliminando su perfil en línea. Nuestros investigadores seguirán utilizando los datos sobre usted que se recopilaron antes de que se retirara. Después de retirarse, no se recopilarán más datos sobre usted. Le informaremos si se encuentra nueva información importante durante el curso de este estudio que pueda afectar su deseo de continuar.
-</p>
-<p class="consent_content">
-  Puede ser retirado del estudio si no sigue las instrucciones que le ha dado el personal del estudio.
-</p>
-<p class="consent_header">
-  ¿Cuáles podrían ser los beneficios de participar?
-</p>
-<p class="consent_content">
-  No hay ningún beneficio monetario o directo por participar en este estudio. Usted recibirá un informe que detalla los resultados de nuestro análisis en su(s) muestra(s) biológica(s), así como datos y cifras que comparan la composición de su microbioma con la de otros participantes del estudio.
-</p>
-<p class="consent_header">
-  ¿Hay algún costo vinculado con la participación en la colección de su(s) muestra(s) biológica(s)?
-</p>
-<p class="consent_content">
-  Puede haber costos asociados con la obtención de un kit. Una vez que reciba su kit, no habrá ningún costo adicional para usted por participar en este procedimiento de muestreo.
-</p>
-<p class="consent_header">
-  ¿Y su confidencialidad?
-</p>
-<p class="consent_content">
-  Los registros de investigación se mantendrán confidenciales en la medida permitida por la ley. Como parte de su participación en el estudio, usted proporcionará información personal y/o confidencial que podría permitir su identificación si se hiciera pública, como nombre, fecha de nacimiento o dirección. Nosotros tomamos todas las precauciones para proteger su identidad.Toda la información proporcionada se almacena en sistemas seguros dentro de la infraestructura de UC San Diego y la información de identificación directa sólo es accesible para el personal de investigación crítico. El código (que vincula los datos personales del participante con los códigos de barras de la muestras) se guarda en otro servidor protegido con contraseña, al que solo pueden acceder el personal pertinente, como el Dr. Knight, los coinvestigadores, los coordinadores de proyectos y muestras, el administrador de TI y los programadores de la base de datos. El análisis de muestras se realiza utilizando datos de los que se ha eliminado la información de identificación directa, y todos los datos compartidos con los repositorios públicos también se someten a este tratamiento. Los registros de investigación pueden ser revisados por la Junta de Revisión Institucional de UC San Diego.
-</p>
-<p class="consent_header">
-  Cómo usaremos su Muestra
-</p>
-<p class="consent_content">
-  La información de los análisis de sus datos y muestras biológicas se utilizará para estudiar el ADN no humano (por ejemplo, ADN bacteriano) que contiene. Los datos de las muestras del proyecto (incluido el suyo) pueden ser analizados y publicados en artículos científicos. Es posible que guardemos parte de su muestra para que los investigadores puedan acceder a ella y puedan realizar estudios adicionales utilizando los otros compuestos de la misma, como ARN, proteínas o metabolitos. Si lo hacemos, eliminaremos toda la información directamente identificable antes de usarla o compartirla. Una vez que se hayan eliminado los identificadores, no le pediremos su consentimiento para usar o compartir sus datos y/o muestra(s) en otras investigaciones. Además, los datos que se hayan eliminado de la información de identificación directa se cargarán en el Instituto Europeo de Bioinformática (http://www.ebi.ac.uk) y Qiita (https://qiita.ucsd.edu) para que otros investigadores tengan acceso y uso. Es posible que nos comuniquemos con usted si se necesita información o acción adicional para procesar su(s) muestra(s) y/o para propósitos de re-consentimiento.
-</p>
-<p class="consent_content">
-  Las muestras biológicas (como heces, piel, orina o sangre) recolectadas de usted para este estudio y la información obtenida de sus muestras biológicas pueden usarse en esta investigación u otra investigación, y compartirse con otras organizaciones. Usted no participará en ningún valor comercial o beneficio derivado del uso de sus muestras biológicas y/o la información obtenida de ellas.
-</p>
-<p class="consent_content">
-  <strong><u>Tenga en cuenta:</u></strong> <br />
-  Tenga en cuenta que <strong>no se analizará ADN humano</strong> como parte de este ni de ningún estudio futuro. Además, los métodos que usamos para identificar microorganismos en su muestra <strong>no pueden usarse para diagnosticar enfermedades o infecciones</strong>.
-</p>
-<p class="consent_header">
-  ¿A quién puede llamar si tiene alguna duda?
-</p>
-<p class="consent_content">
-  Si tiene alguna duda o problemas relacionados con la investigación, puede llamar a Rob Knight al 858-246-1184 o enviar un correo electrónico a nuestra cuenta de ayuda: microsetta@ucsd.edu.
-</p>
-<p class="consent_content">
-  Puede comunicarse con la Oficina de Administración del IRB de UC San Diego al 858-246-4777 o enviar un correo electrónico a irb@ucsd.edu para consultar sobre sus derechos como sujeto de investigación o para reportar problemas relacionados con la investigación.
-</p>
-<p class="consent_header">
-  Firma y Consentimiento
-</p>
-<p class="consent_content">
-  Usted puede descargar una copia de este documento de consentimiento y una copia de la "<a href="https://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">Declaración de derechos del sujeto experimental</a>" para que las conserve.
-</p>
-<p class="consent_content">
-  Su consentimiento es completamente voluntario, pero negarse a brindarlo puede impedir su capacidad para participar en esta investigación y procesar su(s) muestra(s).
-</p>' WHERE consent_type = 'adult_biospecimen' AND locale IN ('es_MX', 'es_ES');
-
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego<br />
-    Consentimiento para participar como sujeto de investigación</strong>
-</p>
-<p class="consent_title">
-  The Microsetta Initiative
-</p>
-<p class="consent_header">
-  ¿Quién realiza el estudio, por qué se le ha pedido que participe, cómo fue seleccionado y cuál es la cifra aproximada de participantes en el estudio?
-</p>
-<p class="consent_content">
-  Usted ha sido invitado a participar en un estudio de investigación titulado La Iniciativa Microsetta. Este estudio está siendo realizado por el Dr. Rob Knight de la Universidad de California - San Diego (UCSD). Usted fue seleccionado para participar en este estudio porque usted es único y su microbioma es único, no es el mismo que el de cualquier otra persona en la tierra. Habrá aproximadamente 500.000 participantes en el estudio de todos los EE. UU. y de otros países alrededor del mundo.
-</p>
-<p class="consent_header">
-  ¿Por qué se está llevando a cabo este estudio y qué le sucederá a usted durante el estudio?
-</p>
-<p class="consent_content">
-  El propósito de este estudio de investigación es evaluar con mayor precisión las diferencias microbianas entre las personas y si estas diferencias pueden atribuirse a factores como el estilo de vida, la dieta, la constitución corporal, la edad o la presencia de enfermedades asociadas. Si usted acepta participar en este estudio, se le pedirá que complete encuestas/cuestionarios en línea. Estas encuestas/cuestionarios se clasifican por tipo de contenido y le harán preguntas sobre usted, como su edad, peso, altura, estilo de vida, dieta y si tiene ciertas condiciones médicas o de salud. Le tomará alrededor de 5 a 10 minutos en cada encuesta, pero algunas pueden tardar hasta 30 minutos en completarse.
-</p>
-<p class="consent_header">
-  ¿Qué beneficios se pueden esperar?
-</p>
-<p class="consent_content">
-  No hay ningún beneficio monetario o directo por participar en este estudio. Si completa uno de los cuestionarios, llamado Cuestionario de frecuencia de alimentos (FFQ), usted podrá recibir un reporte nutricional que evalúa su patrón de alimentación y la ingesta de nutrientes con una puntuación general de la dieta. Sin embargo, los investigadores podrían aprender más sobre temas relevantes, como las condiciones de salud relacionadas con el intestino.
-</p>
-<p class="consent_header">
-  ¿Qué riesgos y confidencialidad están asociados con este estudio?
-</p>
-<p class="consent_content">
-  La participación en este estudio puede implicar algunos riesgos o molestias mínimas adicionales. Mientras responde las encuestas, puede sentir frustración, incomodidad emocional, fatiga y/o aburrimiento. También existe el riesgo de pérdida de confidencialidad, pero nosotros tomamos todas las precauciones para proteger su identidad y minimizar los riesgos. Todos los datos que proporciona se almacenan en sistemas seguros dentro de la infraestructura de UC San Diego y la información de identificación directa sólo es accesible para el personal de investigación crítico. La clave del código (que relaciona la información personal del participante) se conserva en un servidor separado protegido con contraseña al que solo puede acceder el personal pertinente, como el Dr. Knight, los coinvestigadores, los coordinadores de proyectos y muestras, el administrador de TI y los programadores de la base de datos. El código se destruirá mediante la eliminación del servidor al final del estudio o si se retira del estudio. Los registros de investigación se mantendrán confidenciales en la medida permitida por la ley y pueden ser revisados ​​por la Junta de Revisión Institucional de UC San Diego.
-</p>
-<p class="consent_content">
-  Es posible que necesitemos reportar información sobre incidentes conocidos o sospechados de abuso o negligencia de un niño, adulto dependiente o anciano, incluido el abuso o negligencia física, sexual, emocional y financiera. Si algún investigador tiene o recibe dicha información, puede reportar dicha información a las autoridades correspondientes.
-</p>
-<p class="consent_content">
-  Las leyes federales y estatales generalmente hacen que sea ilegal que las compañías de seguros de salud, los planes de salud grupales y la mayoría de los empleadores lo discriminen en función de su información genética. Esta ley generalmente lo protegerá de las siguientes maneras: a) Las compañías de seguros de salud y los planes de salud grupales no pueden solicitar su información genética que obtengamos de esta investigación. b) Las compañías de seguros de salud y los planes de salud grupales no pueden usar su información genética al tomar decisiones con respecto a su elegibilidad o primas. c) Los empleadores con 5 o más empleados no pueden usar su información genética que obtengamos de esta investigación al tomar una decisión para contratarlo, ascenderlo o despedirlo o al establecer los términos de su empleo.
-</p>
-<p class="consent_content">
-  Tenga en cuenta que estas leyes no lo protegen contra la discriminación genética por parte de compañías que venden seguros de vida, seguros por discapacidad o seguros de atención a largo plazo.
-</p>
-<p class="consent_header">
-  ¿Cuáles son las alternativas a participar en este estudio y puede usted retirarse del estudio?
-</p>
-<p class="consent_content">
-  Su participación en este estudio es completamente voluntaria y puede retirarse en cualquier momento simplemente saliendo de la encuesta, retirando su consentimiento o solicitando la eliminación de su cuenta a través de su cuenta en línea. Usted es libre de omitir cualquier pregunta que elija.
-</p>
-<p class="consent_header">
-  ¿Se le compensará por participar en este estudio?
-</p>
-<p class="consent_content">
-  Usted no será compensado económicamente en este estudio.
-</p>
-<p class="consent_header">
-  ¿Hay algún costo asociado con la participación en este estudio?
-</p>
-<p class="consent_content">
-  No habrá ningún costo para usted por completar la encuesta/cuestionario(s) estándar. Sin embargo, puede haber costos asociados al tener a su disposición ciertas herramientas para la evaluación de la dieta, como el Cuestionario de frecuencia de alimentos (FFQ por sus siglas en inglés).
-</p>
-<p class="consent_header">
-  Conoce lo que recopilaremos
-</p>
-<p class="consent_content">
-  Como parte de este estudio de investigación, nosotros crearemos y obtendremos información relacionada con usted y su participación en el estudio de usted o de sus colaboradores para que podamos realizar esta investigación de manera adecuada. Los datos del estudio de investigación incluirán información de contacto, información demográfica, experiencias personales, preferencias de estilo de vida, información de salud, fecha de nacimiento, opiniones o creencias.
-</p>
-<p class="consent_header">
-  Cómo utilizaremos sus datos personales
-</p>
-<p class="consent_content">
-  Los Datos Personales que nos proporcione serán utilizados para las siguientes finalidades:
-  <ul>
-    <li>Compartir con los miembros del equipo de investigación para que puedan realizar adecuadamente la investigación.</li>
-    <li>Para futuros estudios de investigación o investigaciones adicionales realizadas por otros investigadores.</li>
-    <li>Para comunicarnos con usted con el fin de recibir alertas sobre su estado de participación, actualizaciones generales del programa, oportunidades para participar en investigaciones nuevas o futuras y/o como seguimiento de las preguntas que ha respondido en los cuestionarios.</li>
-    <li>Para cumplir con los requisitos legales y reglamentarios, incluyendo los requisitos para compartir datos con las agencias reguladoras que supervisan la investigación.</li>
-    <li>Para confirmar la conducta adecuada del estudio y la integridad de la investigación.</li>
-  </ul>
-</p>
-<p class="consent_header">
-  Conservación de sus datos personales
-</p>
-<p class="consent_content">
-  Nosotros podemos retener sus Datos personales durante el tiempo que sea necesario para cumplir con los objetivos de la investigación y garantizar la integridad de la investigación. Nosotros eliminaremos sus Datos personales cuando ya no sean necesarios para el estudio o si retira su consentimiento, siempre que dicha eliminación no imposibilite o perjudique gravemente el logro de los objetivos del proyecto de investigación. Sin embargo, su información se conservará según sea necesario para cumplir con los requisitos legales o reglamentarios.
-</p>
-<p class="consent_header">
-  Sus derechos de privacidad
-</p>
-<p class="consent_content">
-  El Reglamento general de protección de datos ("GDPR" por sus siglas en inglés) requiere que los investigadores le proporcionen información cuando recopilamos y usamos datos de investigación si se encuentra dentro de la Unión Europea (UE) o el Espacio Económico Europeo (EEE). El GDPR le otorga derechos relacionados con sus Datos Personales, incluido el derecho a acceder, corregir, restringir y retirar su información personal.
-</p>
-<p class="consent_content">
-  El equipo de investigación almacenará y procesará sus Datos Personales en nuestro centro de investigación en los Estados Unidos. Los Estados Unidos no tiene las mismas leyes para proteger sus Datos Personales que los países de la UE/EEE. Sin embargo, el equipo de investigación se compromete a proteger la confidencialidad de sus Datos del Estudio. En este documento de consentimiento se incluye información adicional sobre las protecciones que utilizaremos.
-</p>
-<p class="consent_header">
-  ¿A quién puede llamar si tiene alguna duda?
-</p>
-<p class="consent_content">
-  Si tiene alguna duda o problemas relacionados con la investigación, puede llamar a Rob Knight al 858-246-1184 o enviar un correo electrónico a nuestra cuenta de ayuda: microsetta@ucsd.edu.
-</p>
-<p class="consent_content">
-  Puede comunicarse con la Oficina de Administración del IRB de UC San Diego al 858-246-4777 o enviar un correo electrónico a irb@ucsd.edu para consultar sobre sus derechos como sujeto de investigación o para reportar problemas relacionados con la investigación.
-</p>
-<p class="consent_content">
-  Si tiene preguntas o quejas sobre nuestro tratamiento de sus Datos Personales, o sobre nuestras prácticas de privacidad en general, no dude en comunicarse con el Funcionario de privacidad de UC San Diego por correo electrónico a ucsdprivacy@ucsd.edu.
-</p>
-<p class="consent_header">
-  Firma y Consentimiento
-</p>
-<p class="consent_content">
-  Usted puede descargar una copia de este documento de consentimiento y una copia de la "<a href="https://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">Declaración de derechos del sujeto experimental</a>" para que las conserve.
-</p>
-<p class="consent_content">
-  Su consentimiento es completamente voluntario, pero negarse a brindarlo puede impedir su capacidad para participar en esta investigación.
-</p>' WHERE consent_type = 'adult_data' AND locale IN ('es_MX', 'es_ES');
-
-UPDATE ag.consent_documents SET consent_content = '<p class="consent_title">
-  <strong>University of California, San Diego<br />
-    Consentimiento de los padres para que el niño actúe como sujeto de investigación</strong>
-</p>
-<p class="consent_title">
-  <strong>The Microsetta Initiative<br />
-    Bioespecímenes e Investigación de Uso Futuro</strong>
-</p>
-<p class="consent_header">
-  ¿Quién está realizando el estudio, por qué se le pidió a su hijo que participara, cómo se seleccionó a su hijo y cuál es el número aproximado de participantes en el estudio?
-</p>
-<p class="consent_content">
-  El Dr. Rob Knight está realizando un estudio de investigación para obtener más información sobre los trillones de bacterias y otros microorganismos (llamado el microbioma) que viven dentro y sobre el cuerpo. Esto incluye eucariotas como hongos y parásitos, procariotas como bacterias y arqueas y los virus. Usted está ofreciendo a su hijo como voluntario para este estudio porque quiere saber más sobre el microbioma de su hijo. Los niños, como todos los humanos, tienen un microbioma único e incluirlos en el estudio ayudará a dilucidar el desarrollo del microbioma. Habrá aproximadamente 500.000 participantes en el estudio de todos los EE. UU. y de otros países alrededor del mundo.
-</p>
-<p class="consent_header">
-  ¿Por qué se realiza este estudio?
-</p>
-<p class="consent_content">
-  El propósito de este estudio es evaluar con mayor precisión las diferencias microbianas entre las personas y si estas diferencias pueden atribuirse a factores como el estilo de vida, la dieta, la constitución corporal, la edad o la presencia de enfermedades asociadas. Las muestras biológicas son muestras de su cuerpo, como heces, piel, orina o sangre, que se utilizan con fines de investigación. Este estudio implica la recopilación, el almacenamiento y el uso de la información y las muestras biológicas de su hijo con el fin de procesar las muestras biológicas de su hijo y para futuras investigaciones. Los resultados se utilizarán para crear una base de datos de secuencias de ADN y otros datos de varios sitios del cuerpo, así como detalles sobre el niño participante que proporciona la muestra. Luego, los investigadores pueden usar esos datos mientras estudian temas relevantes, como las condiciones de salud relacionadas con el intestino.
-</p>
-<p class="consent_header">
-  ¿Qué le pasará a su hijo(a) en este estudio?
-</p>
-<p class="consent_content">
-  Si acepta la recolección y el procesamiento de las muestras biológicas de su hijo, le sucederá lo siguiente a su hijo:
-</p>
-<p class="consent_content">
-  Usted ha recibido o recibirá un kit de muestra. El kit contiene dispositivos utilizados para recolectar muestras e instrucciones de uso. El dispositivo de recolección también puede incluir etanol al 95% para preservar la muestra y hacerla no infecciosa.
-</p>
-<p class="consent_content">
-  Tomará muestras de una parte del cuerpo de su hijo (p. ej., heces, piel, boca, orificios nasales, orejas, vagina) como se describe en las instrucciones del kit. También se le pedirá que proporcione información general sobre la recolección, como la fecha y la hora en que se recolectó la muestra de su hijo. Todas las muestras deben devolverse en los contenedores incluidos de acuerdo con las instrucciones proporcionadas.
-</p>
-<p class="consent_content">
-  Si se recolecta muestra de heces de su hijo, se le pedirá que tome una muestra de una variedad de formas, como las siguientes:
-  <ol>
-    <li>Insertando las punta(s) del hisopo en papel higiénico usado y devolviendo el hisopo(s) en el recipiente de plástico suministrado;</li>
-    <li>Insertando las puntas del hisopo en el papel higiénico usado y pasando las puntas por la superficie de una tarjeta para pruebas de sangre oculta en heces, y luego devuélvanos la tarjeta. La tarjeta para pruebas de sangre oculta en heces es el mismo instrumento que usa su médico para verificar si hay sangre en sus heces. La tarjeta para pruebas de sangre oculta en heces permite estabilizar las heces para su posterior análisis. No verificaremos si hay sangre en las heces con fines diagnósticos, puesto que no somos un laboratorio clínico;</li>
-    <li>Usando el instrumento de cuchara para recoger una parte de la materia fecal en el tubo suministrado;</li>
-    <li>Depositando papel higiénico sucio en el receptáculo suministrado;</li>
-    <li>Enviando una muestra completa de heces en el recipiente de envío que le suministraremos. Dicho recipiente contiene una serie de compresas de hielo que enfriarán la muestra de manera fiable a -20 °C/-4 °F.</li>
-  </ol>
-</p>
-<p class="consent_content">
-  Si recibió un kit de recolección de sangre, este contiene materiales e instrucciones sobre cómo recolectar una muestra de sangre en casa. Es similar a la prueba que se usa para medir los niveles de glucosa pinchando el dedo.
-</p>
-<p class="consent_content">
-  Una vez que se haya analizado la muestra de su hijo, cargaremos los resultados en su cuenta y le enviaremos un correo electrónico con un enlace para iniciar sesión y verlos. Calculamos que puede tardar de 1 a 3 meses en conocer los resultados del análisis del microbioma de su hijo. Si su hijo es parte de un subestudio específico, puede tomar más tiempo, según la duración del estudio.
-</p>
-<p class="consent_header">
-  ¿Cuánto tiempo llevará cada procedimiento del estudio, cuánto tiempo debe dedicar en total su hijo y cuánto durará el estudio?
-</p>
-<p class="consent_content">
-  Cada muestra que envíe se puede obtener en 5 minutos o menos. Esperamos que el estudio continúe durante muchos años, pero los resultados estarán disponibles para usted antes de que finalice el estudio.
-</p>
-<p class="consent_header">
-  ¿Cuáles son los riesgos relacionados con este estudio?
-</p>
-<p class="consent_content">
-  La participación en este estudio puede implicar algunos riesgos o molestias adicionales. Estos incluyen los siguientes:
-  <ol>
-    <li>Si usa el dispositivo de recolección de sangre, su hijo puede experimentar un dolor temporal o un hematoma en el lugar del pinchazo de la aguja.</li>
-    <li>Existe el riesgo de pérdida de confidencialidad.</li>
-  </ol>
-</p>
-<p class="consent_content">
-  Debido a que este es un estudio de investigación, puede haber algunos riesgos desconocidos que actualmente son imprevisibles. Usted será informado de cualquier nuevo hallazgo significativo.
-</p>
-<p class="consent_header">
-  ¿Cuáles son las alternativas a participar en este estudio? ¿Puede su hijo retirarse o ser retirado del estudio?
-</p>
-<p class="consent_content">
-  La participación en la investigación es totalmente voluntaria. Puede negarse a que su hijo participe o retirar a su hijo en cualquier momento sin penalización ni pérdida de los beneficios a los que usted o su hijo tienen derecho. Si decide que ya no desea que su hijo continúe en este estudio, puede retirar su consentimiento solicitando la eliminación del perfil de su hijo a través de su cuenta en línea. Le informaremos a usted y a su hijo si se encuentra alguna información nueva importante durante el curso de este estudio que pueda afectar su deseo de continuar.
-</p>
-<p class="consent_content">
-  Su hijo puede ser retirado del estudio si no se siguen las instrucciones que le dio el personal del estudio.
-</p>
-<p class="consent_header">
-  ¿Qué beneficios se pueden esperar?
-</p>
-<p class="consent_content">
-  No hay ningún beneficio directo para su hijo por participar en este estudio. Usted recibirá un informe que detalla los resultados de nuestro análisis de la muestra de su hijo, así como datos y cifras que comparan la composición microbiana de su hijo con la de otros participantes del estudio. Sin embargo, el investigador puede aprender más sobre el microbioma humano en la salud y la enfermedad y proporcionar un recurso valioso para otros investigadores.
-</p>
-<p class="consent_header">
-  ¿Se le compensará por participar en este estudio?
-</p>
-<p class="consent_content">
-  Usted no será compensado económicamente en este estudio.
-</p>
-<p class="consent_header">
-  ¿Hay algún costo asociado con la participación en este estudio?
-</p>
-<p class="consent_content">
-  Puede haber costos asociados con la obtención de un kit, pero no habrá ningún costo por participar en el procedimiento de muestreo.
-</p>
-<p class="consent_header">
-  ¿Y su confidencialidad?
-</p>
-<p class="consent_content">
-  Los registros de investigación se mantendrán confidenciales en la medida permitida por la ley. Como parte de la participación de su hijo en el estudio, usted o su hijo proporcionarán información personal y/o confidencial que podría permitir identificar a su hijo si se hiciera pública, como el nombre, la fecha de nacimiento o la dirección. Nosotros tomamos todas las precauciones para proteger su identidad. Todos los datos que usted o su hijo proporcionan se almacenan en sistemas seguros dentro de la infraestructura de UC San Diego y la información de identificación directa solo es accesible para el personal crítico del estudio. La clave del código (que relaciona la información personal del participante con los códigos de barras de la muestra) se conserva en un servidor separado protegido con contraseña al que solo puede acceder el personal pertinente, como el Dr. Knight, los coinvestigadores, los coordinadores de proyectos y muestras, el administrador de TI y los programadores de la base de datos. El análisis de muestras se realiza utilizando datos de los que se ha eliminado la información de identificación directa, y todos los datos compartidos con los repositorios públicos también se someten a este tratamiento. Los registros de investigación pueden ser revisados ​​por la Junta de Revisión Institucional de UC San Diego.
-</p>
-<p class="consent_header">
-  Cómo usaremos la muestra de su hijo
-</p>
-<p class="consent_content">
-  La información de los análisis de los datos y muestras biológicas de su hijo se utilizará para estudiar el ADN no humano (por ejemplo, ADN bacteriano) que contiene. Los datos de las muestras del proyecto (incluido el de su hijo) pueden analizarse y publicarse en artículos científicos. Es posible que guardemos parte de la muestra de su hijo para que los investigadores puedan acceder a ella y puedan realizar estudios adicionales utilizando los otros compuestos de la misma, como ARN, proteínas o metabolitos. Si lo hacemos, eliminaremos toda la información directamente identificable antes de usarla o compartirla. Una vez que se hayan eliminado los identificadores, no le pediremos su consentimiento para usar o compartir los datos y/o muestras biológicas de su hijo en otras investigaciones. Además, los datos que se hayan eliminado de la información de identificación directa se cargarán en el Instituto Europeo de Bioinformática (http://www.ebi.ac.uk) y Qiita (https://qiita.ucsd.edu) para que otros investigadores tengan acceso y uso. Es posible que nos comuniquemos con usted si se necesita información o acción adicional para procesar la(s) muestra(s) de su hijo y/o para fines de re-consentimiento.
-</p>
-<p class="consent_content">
-  Las muestras biológicas (como heces, piel, orina o sangre) recolectadas de su hijo para este estudio y la información obtenida de las muestras biológicas de su hijo pueden usarse en esta investigación u otra investigación y compartirse con otras organizaciones. No participará en ningún valor comercial o beneficio derivado del uso de las muestras biológicas de su hijo y/o la información obtenida de ellas.
-</p>
-<p class="consent_content">
-  <strong><u>Tenga en cuenta:</u></strong><br />
-  Tenga en cuenta que <strong>no se analizará ADN humano</strong> como parte de este ni de ningún estudio futuro. Además, los métodos que usamos para identificar microorganismos en su muestra <strong>no pueden usarse para diagnosticar enfermedades o infecciones</strong>.
-</p>
-<p class="consent_header">
-  ¿A quién puede llamar si tiene preguntas?
-</p>
-<p class="consent_content">
-  Si tiene preguntas o problemas relacionados con la investigación, puede comunicarse con Rob Knight al 858-246-1184 o enviar un correo electrónico a nuestra cuenta de ayuda: microsetta@ucsd.edu.
-</p>
-<p class="consent_content">
-  Puede comunicarse con la Oficina de Administración del IRB de UC San Diego al 858-246-4777 o enviar un correo electrónico a irb@ucsd.edu para consultar sobre sus derechos como sujeto de investigación o para reportar problemas relacionados con la investigación.
-</p>
-<p class="consent_header">
-  Firma y Consentimiento
-</p>
-<p class="consent_content">
-  Usted puede descargar una copia de este documento de consentimiento y una copia de la "<a href="https://oag.ca.gov/sites/all/files/agweb/pdfs/research/bill_of_rights.pdf" target="_blank">Declaración de derechos del sujeto experimental</a>" para que las conserve.
-</p>
-<p class="consent_content">
-  Su consentimiento es completamente voluntario, pero negarse a brindarlo puede impedir que su hijo participe en esta investigación y que se procesen la(s) muestra(s) de su hijo.
-</p>' WHERE consent_type = 'parent_biospecimen' AND locale IN ('es_MX', 'es_ES');
+-- Add the Japanese text for survey responses
+UPDATE ag.survey_response SET japanese = '不明' WHERE american = 'Unspecified';
+UPDATE ag.survey_response SET japanese = '< 4液量オンス（< 118 ml ）' WHERE american = '<4 fl oz (<118 ml)';
+UPDATE ag.survey_response SET japanese = '> 20液量オンス（> 591 ml）' WHERE american = '>20 fl oz (>591 ml)';
+UPDATE ag.survey_response SET japanese = '1年' WHERE american = '1 year';
+UPDATE ag.survey_response SET japanese = '週に1 ～ 2日' WHERE american = '1-2 days per week';
+UPDATE ag.survey_response SET japanese = '週に１〜２回' WHERE american = '1-2 times/week';
+UPDATE ag.survey_response SET japanese = '12 ～ 16液量オンス（355 ～ 473 ml）' WHERE american = '12-16 fl oz (355-473 ml)';
+UPDATE ag.survey_response SET japanese = '16 ～ 20液量オンス（473 ～ 591 ml）' WHERE american = '16-20 fl oz (473-591 ml)';
+UPDATE ag.survey_response SET japanese = '1日2回' WHERE american = '2 times a day';
+UPDATE ag.survey_response SET japanese = '21～30種類' WHERE american = '21-30';
+UPDATE ag.survey_response SET japanese = '週に2～3日' WHERE american = '2-3 days per week';
+UPDATE ag.survey_response SET japanese = '２４時間断食（別名、イート・ストップ・イート法）' WHERE american = '24 hour fast (aka eat-stop-eat method)';
+UPDATE ag.survey_response SET japanese = '3ヶ月' WHERE american = '3 months';
+UPDATE ag.survey_response SET japanese = '週に３〜５回' WHERE american = '3-5 times/week';
+UPDATE ag.survey_response SET japanese = '週に4～6日' WHERE american = '4-6 days per week';
+UPDATE ag.survey_response SET japanese = '4〜8液量オンス（118〜237 ml）' WHERE american = '4-8 fl oz (118-237 ml)';
+UPDATE ag.survey_response SET japanese = '５：２方法' WHERE american = '5:2 method';
+UPDATE ag.survey_response SET japanese = '6ヶ月' WHERE american = '6 months';
+UPDATE ag.survey_response SET japanese = '8〜12液量オンス（237〜355 ml）' WHERE american = '8-12 fl oz (237-355 ml)';
+UPDATE ag.survey_response SET japanese = '週にわずかな日数' WHERE american = 'A few days per week';
+UPDATE ag.survey_response SET japanese = '年に数回' WHERE american = 'A few times a year';
+UPDATE ag.survey_response SET japanese = '少し心配' WHERE american = 'A little worried';
+UPDATE ag.survey_response SET japanese = '母乳と調整粉乳の両方' WHERE american = 'A mixture of breast milk and formula';
+UPDATE ag.survey_response SET japanese = 'アセスルファムカリウム' WHERE american = 'Acesulfame potassium';
+UPDATE ag.survey_response SET japanese = '身体活動／運動' WHERE american = 'Activity/exercise';
+UPDATE ag.survey_response SET japanese = '副腎がん' WHERE american = 'Adrenal cancer';
+UPDATE ag.survey_response SET japanese = 'エアロビック／有酸素トレーニング' WHERE american = 'Aerobic/cardio training';
+UPDATE ag.survey_response SET japanese = 'アフガニスタン' WHERE american = 'Afghanistan';
+UPDATE ag.survey_response SET japanese = 'オーランド諸島' WHERE american = 'Aland Islands';
+UPDATE ag.survey_response SET japanese = 'アルバニア' WHERE american = 'Albania';
+UPDATE ag.survey_response SET japanese = 'アルジェリア' WHERE american = 'Algeria';
+UPDATE ag.survey_response SET japanese = '隔日断食' WHERE american = 'Alternate day fasting';
+UPDATE ag.survey_response SET japanese = 'アメリカ領サモア' WHERE american = 'American Samoa';
+UPDATE ag.survey_response SET japanese = 'アンドラ' WHERE american = 'Andorra';
+UPDATE ag.survey_response SET japanese = 'アンゴラ' WHERE american = 'Angola';
+UPDATE ag.survey_response SET japanese = 'アンギラ' WHERE american = 'Anguilla';
+UPDATE ag.survey_response SET japanese = '神経性無食欲症' WHERE american = 'Anorexia nervosa';
+UPDATE ag.survey_response SET japanese = '南極' WHERE american = 'Antarctica';
+UPDATE ag.survey_response SET japanese = 'アンティグア・バーブーダ' WHERE american = 'Antigua and Barbuda';
+UPDATE ag.survey_response SET japanese = '自己免疫障害' WHERE american = 'Any autoimmune disease';
+UPDATE ag.survey_response SET japanese = 'リンゴの食物繊維*' WHERE american = 'Apple fiber*';
+UPDATE ag.survey_response SET japanese = '4月' WHERE american = 'April';
+UPDATE ag.survey_response SET japanese = 'アルゼンチン' WHERE american = 'Argentina';
+UPDATE ag.survey_response SET japanese = 'アルメニア' WHERE american = 'Armenia';
+UPDATE ag.survey_response SET japanese = '関節炎' WHERE american = 'Arthritis';
+UPDATE ag.survey_response SET japanese = 'アルバ' WHERE american = 'Aruba';
+UPDATE ag.survey_response SET japanese = 'アジア人' WHERE american = 'Asian';
+UPDATE ag.survey_response SET japanese = 'アスパルターム' WHERE american = 'Aspartame';
+UPDATE ag.survey_response SET japanese = '準学士号（AA、ASなど）' WHERE american = '"Associate’s degree (e.g. AA, AS))"';
+UPDATE ag.survey_response SET japanese = '喘息または他の肺疾患' WHERE american = 'Asthma or other lung problems';
+UPDATE ag.survey_response SET japanese = '心房細動または心房粗動' WHERE american = 'Atrial Fibrillation or Atrial Flutter';
+UPDATE ag.survey_response SET japanese = '8月' WHERE american = 'August';
+UPDATE ag.survey_response SET japanese = 'オーラ' WHERE american = 'Aura';
+UPDATE ag.survey_response SET japanese = 'オーストラリア' WHERE american = 'Australia';
+UPDATE ag.survey_response SET japanese = 'オーストリア' WHERE american = 'Austria';
+UPDATE ag.survey_response SET japanese = 'アゼルバイジャン' WHERE american = 'Azerbaijan';
+UPDATE ag.survey_response SET japanese = '学士号（BA、BSなど）' WHERE american = '"Bachelor’s degree (e.g. BA, BS)"';
+UPDATE ag.survey_response SET japanese = 'バハマ諸島' WHERE american = 'Bahamas';
+UPDATE ag.survey_response SET japanese = 'バーレーン' WHERE american = 'Bahrain';
+UPDATE ag.survey_response SET japanese = 'バランストレーニング' WHERE american = 'Balance training';
+UPDATE ag.survey_response SET japanese = 'バングラデシュ' WHERE american = 'Bangladesh';
+UPDATE ag.survey_response SET japanese = 'バルバドス' WHERE american = 'Barbados';
+UPDATE ag.survey_response SET japanese = 'ほとんどわからない' WHERE american = 'Barely noticeable';
+UPDATE ag.survey_response SET japanese = '蜂刺され' WHERE american = 'Bee stings';
+UPDATE ag.survey_response SET japanese = 'ビール' WHERE american = 'Beer';
+UPDATE ag.survey_response SET japanese = 'ベラルーシ' WHERE american = 'Belarus';
+UPDATE ag.survey_response SET japanese = 'ベルギー' WHERE american = 'Belgium';
+UPDATE ag.survey_response SET japanese = 'ベリーズ' WHERE american = 'Belize';
+UPDATE ag.survey_response SET japanese = 'ベナン' WHERE american = 'Benin';
+UPDATE ag.survey_response SET japanese = 'バミューダ' WHERE american = 'Bermuda';
+UPDATE ag.survey_response SET japanese = 'ブータン' WHERE american = 'Bhutan';
+UPDATE ag.survey_response SET japanese = '双極性障害' WHERE american = 'Bipolar disorder';
+UPDATE ag.survey_response SET japanese = '黒人またはアフリカ系アメリカ人' WHERE american = 'Black or African American';
+UPDATE ag.survey_response SET japanese = '膀胱がん' WHERE american = 'Bladder cancer';
+UPDATE ag.survey_response SET japanese = 'ないはずの体の部分に痛みがある；' WHERE american = 'Body pain where it shouldn’t exist;';
+UPDATE ag.survey_response SET japanese = 'ボリビア' WHERE american = 'Bolivia';
+UPDATE ag.survey_response SET japanese = 'ボスニア・ヘルツェゴビナ' WHERE american = 'Bosnia and Herzegovina';
+UPDATE ag.survey_response SET japanese = '両方' WHERE american = 'Both';
+UPDATE ag.survey_response SET japanese = '両方とも同じくらい' WHERE american = 'Both equally';
+UPDATE ag.survey_response SET japanese = 'ボツワナ' WHERE american = 'Botswana';
+UPDATE ag.survey_response SET japanese = '瓶詰めされた*精製水（ラベルに「湧き水」あるいは「天然ミネラルウォーター」とは表示されていない）' WHERE american = 'Bottled* purified water (does not indicate “spring water” or “natural mineral water” on the label)';
+UPDATE ag.survey_response SET japanese = 'ブーベ島' WHERE american = 'Bouvet Island';
+UPDATE ag.survey_response SET japanese = '脳がん（神経膠腫および神経膠芽腫を含む）' WHERE american = 'Brain cancer (includes gliomas and glioblastomas)';
+UPDATE ag.survey_response SET japanese = 'ブラジル' WHERE american = 'Brazil';
+UPDATE ag.survey_response SET japanese = '乳がん' WHERE american = 'Breast cancer';
+UPDATE ag.survey_response SET japanese = 'イギリス領インド洋地域' WHERE american = 'British Indian Ocean Territory';
+UPDATE ag.survey_response SET japanese = 'ブルネイ・ダルサラーム' WHERE american = 'Brunei Darussalam';
+UPDATE ag.survey_response SET japanese = 'ブルガリア' WHERE american = 'Bulgaria';
+UPDATE ag.survey_response SET japanese = '神経性過食症' WHERE american = 'Bulimia nervosa';
+UPDATE ag.survey_response SET japanese = 'ブルキナファソ' WHERE american = 'Burkina Faso';
+UPDATE ag.survey_response SET japanese = 'ブルンジ' WHERE american = 'Burundi';
+UPDATE ag.survey_response SET japanese = 'カフェイン________' WHERE american = 'Caffeine________';
+UPDATE ag.survey_response SET japanese = 'カロリーは1日にわたって均等に分配している' WHERE american = 'Calories are evenly distributed throughout the day';
+UPDATE ag.survey_response SET japanese = 'カンボジア' WHERE american = 'Cambodia';
+UPDATE ag.survey_response SET japanese = 'カメルーン' WHERE american = 'Cameroon';
+UPDATE ag.survey_response SET japanese = 'カナダ' WHERE american = 'Canada';
+UPDATE ag.survey_response SET japanese = 'がん' WHERE american = 'Cancer';
+UPDATE ag.survey_response SET japanese = 'カーボベルデ' WHERE american = 'Cape Verde';
+UPDATE ag.survey_response SET japanese = 'ケイマン諸島' WHERE american = 'Cayman Islands';
+UPDATE ag.survey_response SET japanese = 'センチメートル' WHERE american = 'centimeters';
+UPDATE ag.survey_response SET japanese = '中央アフリカ共和国' WHERE american = 'Central African Republic';
+UPDATE ag.survey_response SET japanese = '子宮頸がん' WHERE american = 'Cervical cancer';
+UPDATE ag.survey_response SET japanese = 'チャド' WHERE american = 'Chad';
+UPDATE ag.survey_response SET japanese = '化学療法' WHERE american = 'Chemotherapy';
+UPDATE ag.survey_response SET japanese = '胸部の痛みまたは圧迫感' WHERE american = 'Chest pain or tightness in chest';
+UPDATE ag.survey_response SET japanese = 'チチャ' WHERE american = 'Chicha';
+UPDATE ag.survey_response SET japanese = 'チリ' WHERE american = 'Chile';
+UPDATE ag.survey_response SET japanese = '中国' WHERE american = 'China';
+UPDATE ag.survey_response SET japanese = '胆管がん' WHERE american = 'Cholangiocarcinoma';
+UPDATE ag.survey_response SET japanese = 'クリスマス島' WHERE american = 'Christmas Island';
+UPDATE ag.survey_response SET japanese = '慢性閉塞性肺疾患（Chronic Obstructive Pulmonary Disease、COPD）' WHERE american = 'Chronic Obstructive Pulmonary Disease (COPD)';
+UPDATE ag.survey_response SET japanese = 'シードル' WHERE american = 'Cider';
+UPDATE ag.survey_response SET japanese = '都市（人口10万人超、100万人未満）' WHERE american = '"City (population is more than 100,000 and less than 1 million)"';
+UPDATE ag.survey_response SET japanese = 'ココス（キーリング）諸島' WHERE american = 'Cocos (Keeling) Islands';
+UPDATE ag.survey_response SET japanese = '大学の学位' WHERE american = 'College degree';
+UPDATE ag.survey_response SET japanese = 'コロンビア' WHERE american = 'Colombia';
+UPDATE ag.survey_response SET japanese = '結腸がん' WHERE american = 'Colon cancer';
+UPDATE ag.survey_response SET japanese = '結腸クローン病' WHERE american = 'Colonic Crohn''s disease';
+UPDATE ag.survey_response SET japanese = 'コモロ' WHERE american = 'Comoros';
+UPDATE ag.survey_response SET japanese = 'うっ血性心不全' WHERE american = 'Congestive Heart Failure';
+UPDATE ag.survey_response SET japanese = 'コンゴ' WHERE american = 'Congo';
+UPDATE ag.survey_response SET japanese = 'コンゴ民主共和国' WHERE american = '"Congo, The Democratic Republic of The"';
+UPDATE ag.survey_response SET japanese = '便秘' WHERE american = 'Constipation';
+UPDATE ag.survey_response SET japanese = 'クック諸島' WHERE american = 'Cook Islands';
+UPDATE ag.survey_response SET japanese = 'コスタリカ' WHERE american = 'Costa Rica';
+UPDATE ag.survey_response SET japanese = 'コートジボワール' WHERE american = 'Cote D''ivoire';
+UPDATE ag.survey_response SET japanese = 'カッテージチーズ' WHERE american = 'Cottage cheese';
+UPDATE ag.survey_response SET japanese = '咳' WHERE american = 'Cough';
+UPDATE ag.survey_response SET japanese = 'クロアチア' WHERE american = 'Croatia';
+UPDATE ag.survey_response SET japanese = 'キューバ' WHERE american = 'Cuba';
+UPDATE ag.survey_response SET japanese = '現在幼稚園〜高等学校' WHERE american = 'Currently in K-12';
+UPDATE ag.survey_response SET japanese = 'キプロス' WHERE american = 'Cyprus';
+UPDATE ag.survey_response SET japanese = 'チェコ共和国' WHERE american = 'Czech Republic';
+UPDATE ag.survey_response SET japanese = '毎日' WHERE american = 'Daily';
+UPDATE ag.survey_response SET japanese = '毎日の時間制限付き断食（time-restricted eating、TRE）' WHERE american = 'Daily time-restricted eating (TRE)';
+UPDATE ag.survey_response SET japanese = '12月' WHERE american = 'December';
+UPDATE ag.survey_response SET japanese = '10ポンド以上減少' WHERE american = 'Decreased more than 10 pounds';
+UPDATE ag.survey_response SET japanese = '深部静脈血栓症' WHERE american = 'Deep vein thrombosis';
+UPDATE ag.survey_response SET japanese = 'デンマーク' WHERE american = 'Denmark';
+UPDATE ag.survey_response SET japanese = '季節による' WHERE american = 'Depends on the season';
+UPDATE ag.survey_response SET japanese = '抑うつ' WHERE american = 'Depression';
+UPDATE ag.survey_response SET japanese = '抑うつ______' WHERE american = 'Depression______';
+UPDATE ag.survey_response SET japanese = '糖尿病または高血糖' WHERE american = 'Diabetes or high blood sugar';
+UPDATE ag.survey_response SET japanese = '医療専門家（医師、医師助手）によって診断されました。' WHERE american = '"Diagnosed by a medical professional (doctor, physician assistant)"';
+UPDATE ag.survey_response SET japanese = '代替医療の医師によって診断されました。' WHERE american = 'Diagnosed by an alternative medicine practitioner';
+UPDATE ag.survey_response SET japanese = '下痢' WHERE american = 'Diarrhea';
+UPDATE ag.survey_response SET japanese = '飲食物' WHERE american = 'Diet';
+UPDATE ag.survey_response SET japanese = '不満である' WHERE american = 'Dissatisfied';
+UPDATE ag.survey_response SET japanese = 'ジブチ' WHERE american = 'Djibouti';
+UPDATE ag.survey_response SET japanese = '博士号（例：PhD、EdD）' WHERE american = '"Doctorate (eg. PhD, EdD)"';
+UPDATE ag.survey_response SET japanese = 'ドミニカ' WHERE american = 'Dominica';
+UPDATE ag.survey_response SET japanese = 'ドミニカ共和国' WHERE american = 'Dominican Republic';
+UPDATE ag.survey_response SET japanese = '薬物（例：ペニシリン）' WHERE american = 'Drug (e.g. Penicillin)';
+UPDATE ag.survey_response SET japanese = 'エクアドル' WHERE american = 'Ecuador';
+UPDATE ag.survey_response SET japanese = 'エジプト' WHERE american = 'Egypt';
+UPDATE ag.survey_response SET japanese = 'エルサルバドル' WHERE american = 'El Salvador';
+UPDATE ag.survey_response SET japanese = 'てんかんまたは発作' WHERE american = 'Epilepsy or seizures';
+UPDATE ag.survey_response SET japanese = '赤道ギニア' WHERE american = 'Equatorial Guinea';
+UPDATE ag.survey_response SET japanese = 'エリトリア' WHERE american = 'Eritrea';
+UPDATE ag.survey_response SET japanese = '食道がん' WHERE american = 'Esophageal cancer';
+UPDATE ag.survey_response SET japanese = 'エストニア' WHERE american = 'Estonia';
+UPDATE ag.survey_response SET japanese = 'エチオピア' WHERE american = 'Ethiopia';
+UPDATE ag.survey_response SET japanese = '毎日' WHERE american = 'Every day';
+UPDATE ag.survey_response SET japanese = 'すばらしい' WHERE american = 'Excellent';
+UPDATE ag.survey_response SET japanese = '乳製品除去食' WHERE american = 'Exclude dairy';
+UPDATE ag.survey_response SET japanese = 'ナス科除去食' WHERE american = 'Exclude nightshades';
+UPDATE ag.survey_response SET japanese = '精製糖除去食' WHERE american = 'Exclude refined sugars';
+UPDATE ag.survey_response SET japanese = 'まあまあ' WHERE american = 'Fair';
+UPDATE ag.survey_response SET japanese = 'フォークランド諸島（マルビナス）' WHERE american = 'Falkland Islands (Malvinas)';
+UPDATE ag.survey_response SET japanese = '体調を崩した' WHERE american = 'Fallen ill physically';
+UPDATE ag.survey_response SET japanese = 'フェロー諸島' WHERE american = 'Faroe Islands';
+UPDATE ag.survey_response SET japanese = '疲労' WHERE american = 'Fatigue';
+UPDATE ag.survey_response SET japanese = '2月' WHERE american = 'February';
+UPDATE ag.survey_response SET japanese = '女性' WHERE american = 'Female';
+UPDATE ag.survey_response SET japanese = '発酵豆／味噌／納豆' WHERE american = 'Fermented beans/Miso/Natto';
+UPDATE ag.survey_response SET japanese = '発酵パン／サワードウ／インジェラ' WHERE american = 'Fermented bread/sourdough/injera';
+UPDATE ag.survey_response SET japanese = '発酵魚' WHERE american = 'Fermented fish';
+UPDATE ag.survey_response SET japanese = '腐乳' WHERE american = 'Fermented tofu';
+UPDATE ag.survey_response SET japanese = '発熱' WHERE american = 'Fever';
+UPDATE ag.survey_response SET japanese = '月に数回' WHERE american = 'Few times/month';
+UPDATE ag.survey_response SET japanese = '年に数回' WHERE american = 'Few times/year';
+UPDATE ag.survey_response SET japanese = 'フィジー' WHERE american = 'Fiji';
+UPDATE ag.survey_response SET japanese = 'ろ過された水道水（ピッチャー、蛇口または流し台下の浄水器、逆浸透システム、軟水器）' WHERE american = '"Filtered tap water (pitcher, faucet or under the sink water purifiers, reverse osmosis systems, water softener)"';
+UPDATE ag.survey_response SET japanese = 'フィンランド' WHERE american = 'Finland';
+UPDATE ag.survey_response SET japanese = '魚醤' WHERE american = 'Fish sauce';
+UPDATE ag.survey_response SET japanese = '柔軟性トレーニング' WHERE american = 'Flexibility training';
+UPDATE ag.survey_response SET japanese = 'フォドマップ（FODMAP）' WHERE american = 'FODMAP';
+UPDATE ag.survey_response SET japanese = '食品（ワイン、チョコレート、イチゴ） _________' WHERE american = '"Foods (wine, chocolate,strawberries)_________"';
+UPDATE ag.survey_response SET japanese = '強化ワイン' WHERE american = 'Fortified wine';
+UPDATE ag.survey_response SET japanese = 'フランス' WHERE american = 'France';
+UPDATE ag.survey_response SET japanese = 'フランス領ギアナ' WHERE american = 'French Guiana';
+UPDATE ag.survey_response SET japanese = 'フランス領ポリネシア' WHERE american = 'French Polynesia';
+UPDATE ag.survey_response SET japanese = 'フランス領南方・南極地域' WHERE american = 'French Southern Territories';
+UPDATE ag.survey_response SET japanese = '頻繁なまたは非常にひどい頭痛' WHERE american = 'Frequent or very bad headaches';
+UPDATE ag.survey_response SET japanese = '機能性食品（例：チアシード、ふすま）*' WHERE american = '"Functional food (e.g. chia seeds, wheat bran)*"';
+UPDATE ag.survey_response SET japanese = 'ガボン' WHERE american = 'Gabon';
+UPDATE ag.survey_response SET japanese = 'ガンビア' WHERE american = 'Gambia';
+UPDATE ag.survey_response SET japanese = '全般性不安障害' WHERE american = 'Generalized anxiety disorder';
+UPDATE ag.survey_response SET japanese = 'ジョージア' WHERE american = 'Georgia';
+UPDATE ag.survey_response SET japanese = 'ドイツ' WHERE american = 'Germany';
+UPDATE ag.survey_response SET japanese = '妊娠糖尿病' WHERE american = 'Gestational diabetes';
+UPDATE ag.survey_response SET japanese = 'ガーナ' WHERE american = 'Ghana';
+UPDATE ag.survey_response SET japanese = 'ジブラルタル' WHERE american = 'Gibraltar';
+UPDATE ag.survey_response SET japanese = '良い' WHERE american = 'Good';
+UPDATE ag.survey_response SET japanese = 'ギリシャ' WHERE american = 'Greece';
+UPDATE ag.survey_response SET japanese = 'グリーンランド' WHERE american = 'Greenland';
+UPDATE ag.survey_response SET japanese = 'グレナダ' WHERE american = 'Grenada';
+UPDATE ag.survey_response SET japanese = 'グアドループ' WHERE american = 'Guadeloupe';
+UPDATE ag.survey_response SET japanese = 'グアム' WHERE american = 'Guam';
+UPDATE ag.survey_response SET japanese = 'グアテマラ' WHERE american = 'Guatemala';
+UPDATE ag.survey_response SET japanese = 'ガーンジー' WHERE american = 'Guernsey';
+UPDATE ag.survey_response SET japanese = 'ギニア' WHERE american = 'Guinea';
+UPDATE ag.survey_response SET japanese = 'ギニアビサウ' WHERE american = 'Guinea-bissau';
+UPDATE ag.survey_response SET japanese = 'ガイアナ' WHERE american = 'Guyana';
+UPDATE ag.survey_response SET japanese = 'ハイチ' WHERE american = 'Haiti';
+UPDATE ag.survey_response SET japanese = 'ハラール食' WHERE american = 'Halaal';
+UPDATE ag.survey_response SET japanese = 'リンゴ酒' WHERE american = 'Hard cider';
+UPDATE ag.survey_response SET japanese = 'ハードコンブチャ（アルコール入り紅茶キノコ）' WHERE american = 'Hard kombucha';
+UPDATE ag.survey_response SET japanese = 'ハードセルツァー' WHERE american = 'Hard seltzer';
+UPDATE ag.survey_response SET japanese = 'ハードティー' WHERE american = 'Hard tea';
+UPDATE ag.survey_response SET japanese = '頭頚部がん' WHERE american = 'Head and Neck cancer';
+UPDATE ag.survey_response SET japanese = 'ハード島とマクドナルド諸島' WHERE american = 'Heard Island and Mcdonald Islands';
+UPDATE ag.survey_response SET japanese = '心疾患／心筋梗塞' WHERE american = 'Heart disease / Myocardial infarction';
+UPDATE ag.survey_response SET japanese = '心臓障害' WHERE american = 'Heart problems';
+UPDATE ag.survey_response SET japanese = '高校卒業またはGED同等' WHERE american = 'High school diploma or GED equivalent';
+UPDATE ag.survey_response SET japanese = 'ヒスパニック系またはラテン系' WHERE american = 'Hispanic or Latino';
+UPDATE ag.survey_response SET japanese = 'ヒト免疫不全ウイルス（HIV）' WHERE american = 'HIV';
+UPDATE ag.survey_response SET japanese = '教皇庁（バチカン市国）' WHERE american = 'Holy See (Vatican City State)';
+UPDATE ag.survey_response SET japanese = 'ホメオパシー薬' WHERE american = 'Homeopathic medicines';
+UPDATE ag.survey_response SET japanese = 'ホンジュラス' WHERE american = 'Honduras';
+UPDATE ag.survey_response SET japanese = '香港' WHERE american = 'Hong Kong';
+UPDATE ag.survey_response SET japanese = 'ホルモン療法' WHERE american = 'Hormone therapy';
+UPDATE ag.survey_response SET japanese = 'ホルモン__________' WHERE american = 'Hormones__________';
+UPDATE ag.survey_response SET japanese = '入院した' WHERE american = 'Hospitalized';
+UPDATE ag.survey_response SET japanese = 'ハンガリー' WHERE american = 'Hungary';
+UPDATE ag.survey_response SET japanese = '高血圧症' WHERE american = 'Hypertension';
+UPDATE ag.survey_response SET japanese = '温熱療法' WHERE american = 'Hyperthermia';
+UPDATE ag.survey_response SET japanese = '私は両手利きです。' WHERE american = 'I am ambidextrous';
+UPDATE ag.survey_response SET japanese = '私は左利きです。' WHERE american = 'I am left-handed';
+UPDATE ag.survey_response SET japanese = '私は右利きです。' WHERE american = 'I am right-handed';
+UPDATE ag.survey_response SET japanese = '私は特殊な食習慣をとっていない。' WHERE american = 'I do not eat a specialized diet';
+UPDATE ag.survey_response SET japanese = '発酵食品は食べていない' WHERE american = 'I do not eat fermented foods';
+UPDATE ag.survey_response SET japanese = '気分が悪くなるのでグルテンは食べません。' WHERE american = 'I do not eat gluten because it makes me feel bad';
+UPDATE ag.survey_response SET japanese = '断続的な断食はしていない。' WHERE american = 'I do not practice intermittent fasting';
+UPDATE ag.survey_response SET japanese = '食物繊維サプリメントは服用していません。' WHERE american = 'I do not take fiber supplements';
+UPDATE ag.survey_response SET japanese = '自身の活動はいずれも追跡していません。' WHERE american = 'I do not track any of my activities';
+UPDATE ag.survey_response SET japanese = 'デオドラントも制汗剤も使用していません。' WHERE american = 'I do not use deodorant or an antiperspirant';
+UPDATE ag.survey_response SET japanese = '寝る直前にこれらの機器は使用していません。' WHERE american = 'I do not use these devices before bed';
+UPDATE ag.survey_response SET japanese = '味のついていない普通の水は飲んでいない' WHERE american = '"I don’t drink plain, unflavored water"';
+UPDATE ag.survey_response SET japanese = '味のついていない普通の水は飲んでいない' WHERE american = '"I don''t drink plain, unflavored water"';
+UPDATE ag.survey_response SET japanese = '赤肉以外何でも食べる。' WHERE american = 'I eat anything except red meat';
+UPDATE ag.survey_response SET japanese = '例外なく何でも食べる（雑食）' WHERE american = 'I eat anything with no exclusions (omnivore)';
+UPDATE ag.survey_response SET japanese = '私は1年以上現在の居住状態で暮らしています。' WHERE american = 'I have lived in my current state of residence for more than a year.';
+UPDATE ag.survey_response SET japanese = '私が知っている限り食物アレルギーはありません。' WHERE american = 'I have no food allergies that I know of.';
+UPDATE ag.survey_response SET japanese = '私は過去1年の期間に、アメリカ合衆国外に行っていません。' WHERE american = 'I have not been outside of the United States in the past year.';
+UPDATE ag.survey_response SET japanese = '私は過去1年間にインフルエンザワクチンを接種していません。' WHERE american = 'I have not gotten the flu vaccine in the past year.';
+UPDATE ag.survey_response SET japanese = '摂取量は増えていない。' WHERE american = 'I have not increased my intake.';
+UPDATE ag.survey_response SET japanese = '私は過去1年間に抗生物質を服用していません。' WHERE american = 'I have not taken antibiotics in the past year.';
+UPDATE ag.survey_response SET japanese = 'サプリメントを服用しているが、どのような種類か知らない。*' WHERE american = '"I take a supplement, but do not know what kind*"';
+UPDATE ag.survey_response SET japanese = '便が硬かったり、出にくいことが多い——タイプ1および2' WHERE american = 'I tend to have hard stool or have difficulty passing stool -- Types 1 and 2';
+UPDATE ag.survey_response SET japanese = '便がゆるいまたは水っぽいことが多い——タイプ5、6および7' WHERE american = '"I tend to have loose or watery stool – Types 5, 6, and 7"';
+UPDATE ag.survey_response SET japanese = '普通の硬さの便のことが多い——タイプ3および4' WHERE american = 'I tend to have normally formed stool – Types 3 and 4';
+UPDATE ag.survey_response SET japanese = '私は制汗剤を使用しています。' WHERE american = 'I use an antiperspirant';
+UPDATE ag.survey_response SET japanese = '私はデオドラントを使っています。' WHERE american = 'I use deodorant';
+UPDATE ag.survey_response SET japanese = 'アイスランド' WHERE american = 'Iceland';
+UPDATE ag.survey_response SET japanese = '回腸結腸クローン病' WHERE american = 'Ileal and Colonic Crohn''s disease';
+UPDATE ag.survey_response SET japanese = '回腸クローン病' WHERE american = 'Ileal Crohn''s disease';
+UPDATE ag.survey_response SET japanese = '免疫障害' WHERE american = 'Immune disorder';
+UPDATE ag.survey_response SET japanese = '免疫療法' WHERE american = 'Immunotherapy';
+UPDATE ag.survey_response SET japanese = '午後' WHERE american = 'In the afternoon';
+UPDATE ag.survey_response SET japanese = '夜' WHERE american = 'In the evening';
+UPDATE ag.survey_response SET japanese = '午前中' WHERE american = 'In the morning';
+UPDATE ag.survey_response SET japanese = 'インチ' WHERE american = 'inches';
+UPDATE ag.survey_response SET japanese = '10ポンド以上増加' WHERE american = 'Increased more than 10 pounds';
+UPDATE ag.survey_response SET japanese = 'インド' WHERE american = 'India';
+UPDATE ag.survey_response SET japanese = 'インドネシア' WHERE american = 'Indonesia';
+UPDATE ag.survey_response SET japanese = '屋内' WHERE american = 'Indoors';
+UPDATE ag.survey_response SET japanese = '妨げている' WHERE american = 'Interfering';
+UPDATE ag.survey_response SET japanese = 'イヌリン（例：Fiber Choice）*' WHERE american = 'Inulin (e.g. Fiber Choice)*';
+UPDATE ag.survey_response SET japanese = 'イラン（イスラム共和国）' WHERE american = '"Iran, Islamic Republic of"';
+UPDATE ag.survey_response SET japanese = 'イラク' WHERE american = 'Iraq';
+UPDATE ag.survey_response SET japanese = 'アイルランド' WHERE american = 'Ireland';
+UPDATE ag.survey_response SET japanese = '刺激性を受けやすい、あるいは日常的な行動を避ける；' WHERE american = 'Irritability or avoidance of routine;';
+UPDATE ag.survey_response SET japanese = 'マン島' WHERE american = 'Isle of Man';
+UPDATE ag.survey_response SET japanese = '一軒家／農家（人口100人未満）' WHERE american = 'Isolated house/farm (population is less than 100)';
+UPDATE ag.survey_response SET japanese = 'イスラエル' WHERE american = 'Israel';
+UPDATE ag.survey_response SET japanese = 'イタリア' WHERE american = 'Italy';
+UPDATE ag.survey_response SET japanese = 'ジャマイカ' WHERE american = 'Jamaica';
+UPDATE ag.survey_response SET japanese = '1月' WHERE american = 'January';
+UPDATE ag.survey_response SET japanese = '日本' WHERE american = 'Japan';
+UPDATE ag.survey_response SET japanese = 'ジャージー' WHERE american = 'Jersey';
+UPDATE ag.survey_response SET japanese = 'ヨルダン' WHERE american = 'Jordan';
+UPDATE ag.survey_response SET japanese = '7月' WHERE american = 'July';
+UPDATE ag.survey_response SET japanese = '6月' WHERE american = 'June';
+UPDATE ag.survey_response SET japanese = 'カザフスタン' WHERE american = 'Kazakhstan';
+UPDATE ag.survey_response SET japanese = 'ケフィア（牛乳）' WHERE american = 'Kefir (milk)';
+UPDATE ag.survey_response SET japanese = 'ケフィア（水）' WHERE american = 'Kefir (water)';
+UPDATE ag.survey_response SET japanese = 'ケニア' WHERE american = 'Kenya';
+UPDATE ag.survey_response SET japanese = '腎がん' WHERE american = 'Kidney cancer';
+UPDATE ag.survey_response SET japanese = '腎臓障害' WHERE american = 'Kidney problems';
+UPDATE ag.survey_response SET japanese = 'キログラム' WHERE american = 'kilograms';
+UPDATE ag.survey_response SET japanese = 'キムチ' WHERE american = 'Kimchi';
+UPDATE ag.survey_response SET japanese = 'キリバス' WHERE american = 'Kiribati';
+UPDATE ag.survey_response SET japanese = '紅茶キノコ（コンブチャ）' WHERE american = 'Kombucha';
+UPDATE ag.survey_response SET japanese = '朝鮮民主主義人民共和国' WHERE american = '"Korea, Democratic People''s Republic of"';
+UPDATE ag.survey_response SET japanese = '大韓民国' WHERE american = '"Korea, Republic of"';
+UPDATE ag.survey_response SET japanese = 'コーシャ食' WHERE american = 'Kosher';
+UPDATE ag.survey_response SET japanese = 'クウェート' WHERE american = 'Kuwait';
+UPDATE ag.survey_response SET japanese = 'キルギスタン' WHERE american = 'Kyrgyzstan';
+UPDATE ag.survey_response SET japanese = '食欲低下' WHERE american = 'Lack of appetite';
+UPDATE ag.survey_response SET japanese = '睡眠不足____' WHERE american = 'Lack of sleep____';
+UPDATE ag.survey_response SET japanese = 'ラオス人民民主共和国' WHERE american = 'Lao People''s Democratic Republic';
+UPDATE ag.survey_response SET japanese = 'ラトビア' WHERE american = 'Latvia';
+UPDATE ag.survey_response SET japanese = 'レバノン' WHERE american = 'Lebanon';
+UPDATE ag.survey_response SET japanese = 'レソト' WHERE american = 'Lesotho';
+UPDATE ag.survey_response SET japanese = '5時間未満' WHERE american = 'less than 5';
+UPDATE ag.survey_response SET japanese = '白血病' WHERE american = 'Leukemia';
+UPDATE ag.survey_response SET japanese = 'リベリア' WHERE american = 'Liberia';
+UPDATE ag.survey_response SET japanese = 'リビア' WHERE american = 'Libya';
+UPDATE ag.survey_response SET japanese = 'リヒテンシュタイン' WHERE american = 'Liechtenstein';
+UPDATE ag.survey_response SET japanese = 'リトアニア' WHERE american = 'Lithuania';
+UPDATE ag.survey_response SET japanese = '肝臓がん' WHERE american = 'Liver cancer';
+UPDATE ag.survey_response SET japanese = '味覚や嗅覚の喪失' WHERE american = 'Loss of taste or smell';
+UPDATE ag.survey_response SET japanese = '失職した' WHERE american = 'Lost job';
+UPDATE ag.survey_response SET japanese = '軽い' WHERE american = 'Low';
+UPDATE ag.survey_response SET japanese = '肺がん' WHERE american = 'Lung cancer';
+UPDATE ag.survey_response SET japanese = 'ルクセンブルク' WHERE american = 'Luxembourg';
+UPDATE ag.survey_response SET japanese = 'リンパ腫' WHERE american = 'Lymphoma';
+UPDATE ag.survey_response SET japanese = 'マカオ' WHERE american = 'Macao';
+UPDATE ag.survey_response SET japanese = 'マケドニア旧ユーゴスラビア共和国' WHERE american = '"Macedonia, The Former Yugoslav Republic of"';
+UPDATE ag.survey_response SET japanese = 'マダガスカル' WHERE american = 'Madagascar';
+UPDATE ag.survey_response SET japanese = 'マラウィ' WHERE american = 'Malawi';
+UPDATE ag.survey_response SET japanese = 'マレーシア' WHERE american = 'Malaysia';
+UPDATE ag.survey_response SET japanese = 'モルディブ' WHERE american = 'Maldives';
+UPDATE ag.survey_response SET japanese = '男性' WHERE american = 'Male';
+UPDATE ag.survey_response SET japanese = 'マリ' WHERE american = 'Mali';
+UPDATE ag.survey_response SET japanese = '麦芽酒' WHERE american = 'Malt liquor';
+UPDATE ag.survey_response SET japanese = 'マルタ' WHERE american = 'Malta';
+UPDATE ag.survey_response SET japanese = '3月' WHERE american = 'March';
+UPDATE ag.survey_response SET japanese = 'マーシャル諸島' WHERE american = 'Marshall Islands';
+UPDATE ag.survey_response SET japanese = 'マルティニーク' WHERE american = 'Martinique';
+UPDATE ag.survey_response SET japanese = '修士号（MS、MAなど）' WHERE american = '"Master’s degree (e.g. MS, MA)"';
+UPDATE ag.survey_response SET japanese = 'モーリタニア' WHERE american = 'Mauritania';
+UPDATE ag.survey_response SET japanese = 'モーリシャス' WHERE american = 'Mauritius';
+UPDATE ag.survey_response SET japanese = '5月' WHERE american = 'May';
+UPDATE ag.survey_response SET japanese = 'マヨット' WHERE american = 'Mayotte';
+UPDATE ag.survey_response SET japanese = 'ミード' WHERE american = 'Mead';
+UPDATE ag.survey_response SET japanese = 'バルビツレートまたはオピオイドを含む医薬品__________' WHERE american = 'Medications that contain barbiturates or opioids__________';
+UPDATE ag.survey_response SET japanese = '黒色腫（皮膚）' WHERE american = 'Melanoma (skin)';
+UPDATE ag.survey_response SET japanese = 'メチルセルロース（例：Citrucel）*' WHERE american = 'Methylcellulose (e.g. Citrucel)*';
+UPDATE ag.survey_response SET japanese = '主要都市（人口100万人以上）' WHERE american = 'Metropolis (population is more than 1 million)';
+UPDATE ag.survey_response SET japanese = 'メキシコ' WHERE american = 'Mexico';
+UPDATE ag.survey_response SET japanese = '微小大腸炎' WHERE american = 'Microcolitis';
+UPDATE ag.survey_response SET japanese = 'ミクロネシア連邦' WHERE american = '"Micronesia, Federated States of"';
+UPDATE ag.survey_response SET japanese = '軽い' WHERE american = 'Mild';
+UPDATE ag.survey_response SET japanese = '中等度' WHERE american = 'Moderate';
+UPDATE ag.survey_response SET japanese = 'ある程度満足している' WHERE american = 'Moderately satisfied';
+UPDATE ag.survey_response SET japanese = '変更パレオダイエット' WHERE american = 'Modified paleo diet';
+UPDATE ag.survey_response SET japanese = 'モルドバ共和国' WHERE american = '"Moldova, Republic of"';
+UPDATE ag.survey_response SET japanese = 'モナコ' WHERE american = 'Monaco';
+UPDATE ag.survey_response SET japanese = 'モンゴル' WHERE american = 'Mongolia';
+UPDATE ag.survey_response SET japanese = 'モンクフルーツ' WHERE american = 'Monk fruit';
+UPDATE ag.survey_response SET japanese = 'モンテネグロ' WHERE american = 'Montenegro';
+UPDATE ag.survey_response SET japanese = '1ヶ月' WHERE american = 'Month';
+UPDATE ag.survey_response SET japanese = '毎月' WHERE american = 'Monthly';
+UPDATE ag.survey_response SET japanese = 'モンセラート' WHERE american = 'Montserrat';
+UPDATE ag.survey_response SET japanese = '1日3回以上' WHERE american = 'More than 2 times a day';
+UPDATE ag.survey_response SET japanese = '31種類以上' WHERE american = 'more than 30';
+UPDATE ag.survey_response SET japanese = '５杯以上' WHERE american = 'more than 4';
+UPDATE ag.survey_response SET japanese = '8時間を超える' WHERE american = 'more than 8';
+UPDATE ag.survey_response SET japanese = '半日に1回' WHERE american = 'More than half the days';
+UPDATE ag.survey_response SET japanese = '4人以上' WHERE american = 'More than three';
+UPDATE ag.survey_response SET japanese = 'モロッコ' WHERE american = 'Morocco';
+UPDATE ag.survey_response SET japanese = 'モザンビーク' WHERE american = 'Mozambique';
+UPDATE ag.survey_response SET japanese = '多民族' WHERE american = 'Multiracial';
+UPDATE ag.survey_response SET japanese = 'ミャンマー' WHERE american = 'Myanmar';
+UPDATE ag.survey_response SET japanese = 'ナミビア' WHERE american = 'Namibia';
+UPDATE ag.survey_response SET japanese = 'アメリカ先住民またはアラスカ先住民' WHERE american = 'Native American or Alaska Native';
+UPDATE ag.survey_response SET japanese = 'ハワイまたは他の太平洋諸島の先住民' WHERE american = 'Native Hawaiian or Other Pacific Islander';
+UPDATE ag.survey_response SET japanese = '欧州連合の他の国または英国で瓶詰めされた*天然のミネラルウォーターまたは湧き水' WHERE american = 'Natural mineral or spring water bottled* in another country in the European Union or the UK';
+UPDATE ag.survey_response SET japanese = '欧州連合または英国以外の国で瓶詰めされた*天然のミネラルウォーターまたは湧き水' WHERE american = 'Natural mineral or spring water bottled* in another country not in the European Union or the UK';
+UPDATE ag.survey_response SET japanese = '現地（例：居住国）で瓶詰めされた*天然のミネラルウォーターまたは湧き水' WHERE american = 'Natural mineral or spring water bottled* locally (i.e. in your country of residence)';
+UPDATE ag.survey_response SET japanese = 'ナウル' WHERE american = 'Nauru';
+UPDATE ag.survey_response SET japanese = '吐き気' WHERE american = 'Nausea';
+UPDATE ag.survey_response SET japanese = '吐き気および/または嘔吐；' WHERE american = 'Nausea and/or vomiting;';
+UPDATE ag.survey_response SET japanese = 'ほぼ毎日' WHERE american = 'Nearly every day';
+UPDATE ag.survey_response SET japanese = 'ネパール' WHERE american = 'Nepal';
+UPDATE ag.survey_response SET japanese = 'オランダ' WHERE american = 'Netherlands';
+UPDATE ag.survey_response SET japanese = 'オランダ領アンティル' WHERE american = 'Netherlands Antilles';
+UPDATE ag.survey_response SET japanese = '全くない' WHERE american = 'Never';
+UPDATE ag.survey_response SET japanese = 'ニューカレドニア' WHERE american = 'New Caledonia';
+UPDATE ag.survey_response SET japanese = 'ニュージーランド' WHERE american = 'New Zealand';
+UPDATE ag.survey_response SET japanese = 'ニカラグア' WHERE american = 'Nicaragua';
+UPDATE ag.survey_response SET japanese = 'ニジェール' WHERE american = 'Niger';
+UPDATE ag.survey_response SET japanese = 'ナイジェリア' WHERE american = 'Nigeria';
+UPDATE ag.survey_response SET japanese = '硝酸塩__________' WHERE american = 'Nitrates__________';
+UPDATE ag.survey_response SET japanese = 'ニウエ' WHERE american = 'Niue';
+UPDATE ag.survey_response SET japanese = 'いいえ' WHERE american = 'No';
+UPDATE ag.survey_response SET japanese = '正規の教育は受けていない' WHERE american = 'No formal education';
+UPDATE ag.survey_response SET japanese = '症状や兆候はなかった' WHERE american = 'No symptoms or signs';
+UPDATE ag.survey_response SET japanese = 'いいえ、この病状はありません。' WHERE american = '"No, I do not have this condition"';
+UPDATE ag.survey_response SET japanese = 'いいえ、アレルギー用の薬は一切服用していません。' WHERE american = '"No, I do not take any medications for my allergies."';
+UPDATE ag.survey_response SET japanese = 'いいえ、がんはなくなりました。' WHERE american = '"No, I no longer have cancer"';
+UPDATE ag.survey_response SET japanese = '1人もいない' WHERE american = 'None';
+UPDATE ag.survey_response SET japanese = 'いずれも該当しない' WHERE american = 'None of the above';
+UPDATE ag.survey_response SET japanese = 'ノーフォーク島' WHERE american = 'Norfolk Island';
+UPDATE ag.survey_response SET japanese = '北マリアナ諸島' WHERE american = 'Northern Mariana Islands';
+UPDATE ag.survey_response SET japanese = 'ノルウェー' WHERE american = 'Norway';
+UPDATE ag.survey_response SET japanese = '全くない' WHERE american = 'Not at all';
+UPDATE ag.survey_response SET japanese = 'どちらとも言えない' WHERE american = 'Not sure';
+UPDATE ag.survey_response SET japanese = 'どちらかわかりませんが、何らかのデオドラントか制汗剤を使用しています。' WHERE american = '"Not sure, but I use some form of deodorant or antiperspirant"';
+UPDATE ag.survey_response SET japanese = '11月' WHERE american = 'November';
+UPDATE ag.survey_response SET japanese = 'エンバクの食物繊維*' WHERE american = 'Oat fiber*';
+UPDATE ag.survey_response SET japanese = '10月' WHERE american = 'October';
+UPDATE ag.survey_response SET japanese = 'オマーン' WHERE american = 'Oman';
+UPDATE ag.survey_response SET japanese = '1日1回' WHERE american = 'Once a day';
+UPDATE ag.survey_response SET japanese = '週に1回' WHERE american = 'Once per week';
+UPDATE ag.survey_response SET japanese = '1人' WHERE american = 'One';
+UPDATE ag.survey_response SET japanese = '1回か2回' WHERE american = 'One or two days';
+UPDATE ag.survey_response SET japanese = 'ラマダン期間中のみ' WHERE american = 'Only during Ramadan';
+UPDATE ag.survey_response SET japanese = 'その他' WHERE american = 'Other';
+UPDATE ag.survey_response SET japanese = 'その他_____________' WHERE american = 'Other _____________';
+UPDATE ag.survey_response SET japanese = 'ここに記載されていないその他の制限' WHERE american = 'Other restrictions not described here';
+UPDATE ag.survey_response SET japanese = 'その他*' WHERE american = 'Other*';
+UPDATE ag.survey_response SET japanese = '屋外' WHERE american = 'Outdoors';
+UPDATE ag.survey_response SET japanese = '卵巣がん' WHERE american = 'Ovarian cancer';
+UPDATE ag.survey_response SET japanese = 'パキスタン' WHERE american = 'Pakistan';
+UPDATE ag.survey_response SET japanese = 'パラオ' WHERE american = 'Palau';
+UPDATE ag.survey_response SET japanese = 'パレオダイエットまたは原始人食' WHERE american = 'Paleo-diet or primal diet';
+UPDATE ag.survey_response SET japanese = 'パレスチナ占領地域' WHERE american = '"Palestinian Territory, Occupied"';
+UPDATE ag.survey_response SET japanese = 'パナマ' WHERE american = 'Panama';
+UPDATE ag.survey_response SET japanese = '膵臓がん' WHERE american = 'Pancreatic cancer';
+UPDATE ag.survey_response SET japanese = 'パプアニューギニア' WHERE american = 'Papua New Guinea';
+UPDATE ag.survey_response SET japanese = 'パラグアイ' WHERE american = 'Paraguay';
+UPDATE ag.survey_response SET japanese = '死亡' WHERE american = 'Passed away';
+UPDATE ag.survey_response SET japanese = 'ピーナッツ' WHERE american = 'Peanuts';
+UPDATE ag.survey_response SET japanese = '定期的な断食' WHERE american = 'Periodic fasting';
+UPDATE ag.survey_response SET japanese = 'ペルー' WHERE american = 'Peru';
+UPDATE ag.survey_response SET japanese = 'ペットの毛など' WHERE american = 'Pet dander';
+UPDATE ag.survey_response SET japanese = '褐色細胞腫および傍神経節腫がん' WHERE american = 'Pheochromocytoma and paraganglioma cancer';
+UPDATE ag.survey_response SET japanese = 'フィリピン' WHERE american = 'Philippines';
+UPDATE ag.survey_response SET japanese = '音恐怖症（音に対する敏感性）；' WHERE american = 'Phonophobia (sensitivity to sound);';
+UPDATE ag.survey_response SET japanese = '光力学治療' WHERE american = 'Photodynamic therapy';
+UPDATE ag.survey_response SET japanese = '光恐怖症（光に対する敏感性）；' WHERE american = 'Photophobia (sensitivity to light);';
+UPDATE ag.survey_response SET japanese = '漬け物' WHERE american = 'Pickled vegetables';
+UPDATE ag.survey_response SET japanese = 'ピトケアン' WHERE american = 'Pitcairn';
+UPDATE ag.survey_response SET japanese = 'ツタウルシ／ウルシ／ウルシ毒' WHERE american = 'Poison ivy/oak/sumac';
+UPDATE ag.survey_response SET japanese = 'ポーランド' WHERE american = 'Poland';
+UPDATE ag.survey_response SET japanese = '悪い' WHERE american = 'Poor';
+UPDATE ag.survey_response SET japanese = 'ポルトガル' WHERE american = 'Portugal';
+UPDATE ag.survey_response SET japanese = 'ポンド' WHERE american = 'pounds';
+UPDATE ag.survey_response SET japanese = '糖尿病前症' WHERE american = 'Prediabetes';
+UPDATE ag.survey_response SET japanese = '主に母乳' WHERE american = 'Primarily breast milk';
+UPDATE ag.survey_response SET japanese = '主に調整粉乳' WHERE american = 'Primarily infant formula';
+UPDATE ag.survey_response SET japanese = '専門職学位（MD、DDS、DVMなど）' WHERE american = '"Professional degree (e.g. MD,DDS, DVM)"';
+UPDATE ag.survey_response SET japanese = '前立腺がん' WHERE american = 'Prostate cancer';
+UPDATE ag.survey_response SET japanese = 'サイリウム（例：Metamucil）*' WHERE american = 'Psyllium (e.g. Metamucil)*';
+UPDATE ag.survey_response SET japanese = '心的外傷後ストレス障害（post-traumatic stress disorder、PTSD）' WHERE american = 'PTSD (post-traumatic stress disorder)';
+UPDATE ag.survey_response SET japanese = 'プエルトリコ' WHERE american = 'Puerto Rico';
+UPDATE ag.survey_response SET japanese = '肺塞栓症' WHERE american = 'Pulmonary embolism';
+UPDATE ag.survey_response SET japanese = '症状ありで自己隔離に入った' WHERE american = 'Put into self-quarantine with symptoms';
+UPDATE ag.survey_response SET japanese = '症状なしで自己隔離に入った（接触した可能性があるためなど）' WHERE american = 'Put into self-quarantine without symptoms (e.g. due to possible exposure)';
+UPDATE ag.survey_response SET japanese = 'カタール' WHERE american = 'Qatar';
+UPDATE ag.survey_response SET japanese = 'かなり妨げている' WHERE american = 'Quite interfering';
+UPDATE ag.survey_response SET japanese = 'かなりわかる' WHERE american = 'Quite Noticeable';
+UPDATE ag.survey_response SET japanese = 'かなり心配' WHERE american = 'Quite worried';
+UPDATE ag.survey_response SET japanese = '放射線療法' WHERE american = 'Radiotherapy';
+UPDATE ag.survey_response SET japanese = '生食（加熱調理していないダイエット）' WHERE american = 'Raw food diet';
+UPDATE ag.survey_response SET japanese = '直腸がん' WHERE american = 'Rectal cancer';
+UPDATE ag.survey_response SET japanese = '赤ワイン' WHERE american = 'Red wine';
+UPDATE ag.survey_response SET japanese = '収入が減った' WHERE american = 'Reduced ability to earn money';
+UPDATE ag.survey_response SET japanese = '安定した状態を維持' WHERE american = 'Remained stable';
+UPDATE ag.survey_response SET japanese = 'レユニオン' WHERE american = 'Reunion';
+UPDATE ag.survey_response SET japanese = 'ルーマニア' WHERE american = 'Romania';
+UPDATE ag.survey_response SET japanese = 'ロゼ・ワイン' WHERE american = 'Rose wine';
+UPDATE ag.survey_response SET japanese = 'ロシア連邦' WHERE american = 'Russian Federation';
+UPDATE ag.survey_response SET japanese = 'ルワンダ' WHERE american = 'Rwanda';
+UPDATE ag.survey_response SET japanese = 'サッカリン' WHERE american = 'Saccharin';
+UPDATE ag.survey_response SET japanese = 'セントヘレナ' WHERE american = 'Saint Helena';
+UPDATE ag.survey_response SET japanese = 'セントキッツ・ネイビス' WHERE american = 'Saint Kitts and Nevis';
+UPDATE ag.survey_response SET japanese = 'セントルシア' WHERE american = 'Saint Lucia';
+UPDATE ag.survey_response SET japanese = 'サンピエール島・ミクロン島' WHERE american = 'Saint Pierre and Miquelon';
+UPDATE ag.survey_response SET japanese = 'セントビンセント・グレナディーン' WHERE american = 'Saint Vincent and The Grenadines';
+UPDATE ag.survey_response SET japanese = '日本酒' WHERE american = 'Sake';
+UPDATE ag.survey_response SET japanese = 'サモア' WHERE american = 'Samoa';
+UPDATE ag.survey_response SET japanese = 'サンマリノ' WHERE american = 'San Marino';
+UPDATE ag.survey_response SET japanese = 'サントメ・プリンシペ' WHERE american = 'Sao Tome and Principe';
+UPDATE ag.survey_response SET japanese = '肉腫' WHERE american = 'Sarcoma';
+UPDATE ag.survey_response SET japanese = '満足している' WHERE american = 'Satisfied';
+UPDATE ag.survey_response SET japanese = 'サウジアラビア' WHERE american = 'Saudi Arabia';
+UPDATE ag.survey_response SET japanese = 'ザウアークラウト' WHERE american = 'Sauerkraut';
+UPDATE ag.survey_response SET japanese = '統合失調症' WHERE american = 'Schizophrenia';
+UPDATE ag.survey_response SET japanese = '季節性アレルギー' WHERE american = 'Seasonal allergies';
+UPDATE ag.survey_response SET japanese = '自己診断しました。' WHERE american = 'Self-diagnosed';
+UPDATE ag.survey_response SET japanese = 'セネガル' WHERE american = 'Senegal';
+UPDATE ag.survey_response SET japanese = '9月' WHERE american = 'September';
+UPDATE ag.survey_response SET japanese = 'セルビア' WHERE american = 'Serbia';
+UPDATE ag.survey_response SET japanese = '重篤なニキビまたは皮膚障害' WHERE american = 'Serious acne or skin problems';
+UPDATE ag.survey_response SET japanese = '重篤な胃腸障害' WHERE american = 'Serious stomach or bowel problems';
+UPDATE ag.survey_response SET japanese = '週に数日' WHERE american = 'Several days per week';
+UPDATE ag.survey_response SET japanese = '重い' WHERE american = 'Severe';
+UPDATE ag.survey_response SET japanese = 'セーシェル' WHERE american = 'Seychelles';
+UPDATE ag.survey_response SET japanese = '貝類' WHERE american = 'Shellfish';
+UPDATE ag.survey_response SET japanese = '息切れ' WHERE american = 'Shortness of breath';
+UPDATE ag.survey_response SET japanese = 'シエラレオネ' WHERE american = 'Sierra Leone';
+UPDATE ag.survey_response SET japanese = '幼児期／小児期以降' WHERE american = 'Since infancy/childhood';
+UPDATE ag.survey_response SET japanese = 'シンガポール' WHERE american = 'Singapore';
+UPDATE ag.survey_response SET japanese = '睡眠' WHERE american = 'Sleep';
+UPDATE ag.survey_response SET japanese = 'スロバキア' WHERE american = 'Slovakia';
+UPDATE ag.survey_response SET japanese = 'スロベニア' WHERE american = 'Slovenia';
+UPDATE ag.survey_response SET japanese = '"小さな町または村（人口100人超、1,000人未満）"' WHERE american = '"Small town or village (population is more than 100 and less than 1,000)"';
+UPDATE ag.survey_response SET japanese = '軟便' WHERE american = 'Soft stools';
+UPDATE ag.survey_response SET japanese = 'ソロモン諸島' WHERE american = 'Solomon Islands';
+UPDATE ag.survey_response SET japanese = 'ソマリア' WHERE american = 'Somalia';
+UPDATE ag.survey_response SET japanese = 'やや妨げている' WHERE american = 'Somewhat interfering';
+UPDATE ag.survey_response SET japanese = 'ややわかる' WHERE american = 'Somewhat noticeable';
+UPDATE ag.survey_response SET japanese = 'やや心配' WHERE american = 'Somewhat worried';
+UPDATE ag.survey_response SET japanese = '喉の痛み' WHERE american = 'Sore throat';
+UPDATE ag.survey_response SET japanese = 'サワービール' WHERE american = 'Sour beer';
+UPDATE ag.survey_response SET japanese = 'サワークリーム／クレームフレーシュ' WHERE american = 'Sour cream/crème fraiche';
+UPDATE ag.survey_response SET japanese = '南アフリカ' WHERE american = 'South Africa';
+UPDATE ag.survey_response SET japanese = 'サウスジョージア・サウスサンドウィッチ諸島' WHERE american = 'South Georgia and The South Sandwich Islands';
+UPDATE ag.survey_response SET japanese = 'スペイン' WHERE american = 'Spain';
+UPDATE ag.survey_response SET japanese = '発泡ワイン' WHERE american = 'Sparkling wine';
+UPDATE ag.survey_response SET japanese = 'ハードリカー／蒸留酒／強い酒' WHERE american = 'Spirits/liquors/hard alcohol';
+UPDATE ag.survey_response SET japanese = 'スリランカ' WHERE american = 'Sri Lanka';
+UPDATE ag.survey_response SET japanese = '幹細胞移植' WHERE american = 'Stem cell transplant';
+UPDATE ag.survey_response SET japanese = 'ステビア' WHERE american = 'Stevia';
+UPDATE ag.survey_response SET japanese = '胃がん' WHERE american = 'Stomach cancer';
+UPDATE ag.survey_response SET japanese = '腹痛' WHERE american = 'Stomachache';
+UPDATE ag.survey_response SET japanese = '筋力トレーニング' WHERE american = 'Strength training';
+UPDATE ag.survey_response SET japanese = 'ストレス__________' WHERE american = 'Stress__________';
+UPDATE ag.survey_response SET japanese = '脳卒中' WHERE american = 'Stroke';
+UPDATE ag.survey_response SET japanese = '薬物乱用' WHERE american = 'Substance abuse';
+UPDATE ag.survey_response SET japanese = 'スクラロース' WHERE american = 'Sucralose';
+UPDATE ag.survey_response SET japanese = 'スーダン' WHERE american = 'Sudan';
+UPDATE ag.survey_response SET japanese = '糖アルコール（ソルビトール、キシリトール、ラクチトール、マンニトール、エリスリトール、マルチトール）' WHERE american = '"Sugar alcohols (sorbitol, xylitol, lactitol, mannitol, erythritol, and maltitol)"';
+UPDATE ag.survey_response SET japanese = '日光' WHERE american = 'Sun';
+UPDATE ag.survey_response SET japanese = '手術' WHERE american = 'Surgery';
+UPDATE ag.survey_response SET japanese = 'スリナム' WHERE american = 'Suriname';
+UPDATE ag.survey_response SET japanese = 'スヴァールバル諸島およびヤンマイエン島' WHERE american = 'Svalbard and Jan Mayen';
+UPDATE ag.survey_response SET japanese = 'スワジランド' WHERE american = 'Swaziland';
+UPDATE ag.survey_response SET japanese = 'スウェーデン' WHERE american = 'Sweden';
+UPDATE ag.survey_response SET japanese = 'スイス' WHERE american = 'Switzerland';
+UPDATE ag.survey_response SET japanese = 'シリア・アラブ共和国' WHERE american = 'Syrian Arab Republic';
+UPDATE ag.survey_response SET japanese = '台湾' WHERE american = 'Taiwan';
+UPDATE ag.survey_response SET japanese = 'タジキスタン' WHERE american = 'Tajikistan';
+UPDATE ag.survey_response SET japanese = 'タンザニア連合共和国' WHERE american = '"Tanzania, United Republic of"';
+UPDATE ag.survey_response SET japanese = '水道水' WHERE american = 'Tap water';
+UPDATE ag.survey_response SET japanese = '標的（薬物）療法' WHERE american = 'Targeted (medication) therapy';
+UPDATE ag.survey_response SET japanese = 'テンペ' WHERE american = 'Tempeh';
+UPDATE ag.survey_response SET japanese = '精巣胚細胞性がん' WHERE american = 'Testicular germ cell cancer';
+UPDATE ag.survey_response SET japanese = 'タイ' WHERE american = 'Thailand';
+UPDATE ag.survey_response SET japanese = '3人' WHERE american = 'Three';
+UPDATE ag.survey_response SET japanese = '甲状腺がん' WHERE american = 'Thyroid cancer';
+UPDATE ag.survey_response SET japanese = '東チモール' WHERE american = 'Timor-leste';
+UPDATE ag.survey_response SET japanese = 'トーゴ' WHERE american = 'Togo';
+UPDATE ag.survey_response SET japanese = 'トケラウ' WHERE american = 'Tokelau';
+UPDATE ag.survey_response SET japanese = 'トンガ' WHERE american = 'Tonga';
+UPDATE ag.survey_response SET japanese = '"町（人口1,000人超、10万人未満）"' WHERE american = '"Town (population is more than 1,000 and less than 100,000)"';
+UPDATE ag.survey_response SET japanese = '木の実' WHERE american = 'Tree nuts';
+UPDATE ag.survey_response SET japanese = 'トリニダード・トバゴ' WHERE american = 'Trinidad and Tobago';
+UPDATE ag.survey_response SET japanese = 'チュニジア' WHERE american = 'Tunisia';
+UPDATE ag.survey_response SET japanese = 'トルコ' WHERE american = 'Turkey';
+UPDATE ag.survey_response SET japanese = 'トルクメニスタン' WHERE american = 'Turkmenistan';
+UPDATE ag.survey_response SET japanese = 'タークス・カイコス諸島' WHERE american = 'Turks and Caicos Islands';
+UPDATE ag.survey_response SET japanese = 'ツバル' WHERE american = 'Tuvalu';
+UPDATE ag.survey_response SET japanese = '2人' WHERE american = 'Two';
+UPDATE ag.survey_response SET japanese = '1型糖尿病' WHERE american = 'Type I diabetes';
+UPDATE ag.survey_response SET japanese = '2型糖尿病' WHERE american = 'Type II diabetes';
+UPDATE ag.survey_response SET japanese = 'ウガンダ' WHERE american = 'Uganda';
+UPDATE ag.survey_response SET japanese = 'ウクライナ' WHERE american = 'Ukraine';
+UPDATE ag.survey_response SET japanese = '潰瘍性大腸炎' WHERE american = 'Ulcerative Colitis';
+UPDATE ag.survey_response SET japanese = 'アラブ首長国連邦' WHERE american = 'United Arab Emirates';
+UPDATE ag.survey_response SET japanese = 'イギリス' WHERE american = 'United Kingdom';
+UPDATE ag.survey_response SET japanese = 'アメリカ合衆国' WHERE american = 'United States';
+UPDATE ag.survey_response SET japanese = '合衆国領有小離島' WHERE american = 'United States Minor Outlying Islands';
+UPDATE ag.survey_response SET japanese = 'ウルグアイ' WHERE american = 'Uruguay';
+UPDATE ag.survey_response SET japanese = '子宮がん' WHERE american = 'Uterine cancer';
+UPDATE ag.survey_response SET japanese = 'ぶどう膜メラノーマ' WHERE american = 'Uveal melanoma';
+UPDATE ag.survey_response SET japanese = 'ウズベキスタン' WHERE american = 'Uzbekistan';
+UPDATE ag.survey_response SET japanese = 'バヌアツ' WHERE american = 'Vanuatu';
+UPDATE ag.survey_response SET japanese = 'ビーガン' WHERE american = 'Vegan';
+UPDATE ag.survey_response SET japanese = 'ベジタリアン' WHERE american = 'Vegetarian';
+UPDATE ag.survey_response SET japanese = 'ベジタリアンだが、海産食品は食べる。' WHERE american = 'Vegetarian but eat seafood';
+UPDATE ag.survey_response SET japanese = 'ベネズエラ' WHERE american = 'Venezuela';
+UPDATE ag.survey_response SET japanese = '非常に不満である' WHERE american = 'Very dissatisfied';
+UPDATE ag.survey_response SET japanese = '大変良い' WHERE american = 'Very good';
+UPDATE ag.survey_response SET japanese = '非常に妨げている' WHERE american = 'Very interfering';
+UPDATE ag.survey_response SET japanese = '非常によくわかる' WHERE american = 'Very noticeable';
+UPDATE ag.survey_response SET japanese = '非常に悪い' WHERE american = 'Very poor';
+UPDATE ag.survey_response SET japanese = '大変満足している' WHERE american = 'Very satisfied';
+UPDATE ag.survey_response SET japanese = '非常に重い' WHERE american = 'Very severe';
+UPDATE ag.survey_response SET japanese = '非常に心配' WHERE american = 'Very worried';
+UPDATE ag.survey_response SET japanese = 'ベトナム' WHERE american = 'Vietnam';
+UPDATE ag.survey_response SET japanese = '激しい' WHERE american = 'Vigorous';
+UPDATE ag.survey_response SET japanese = '英領バージン諸島' WHERE american = '"Virgin Islands, British"';
+UPDATE ag.survey_response SET japanese = 'アメリカ領ヴァージン諸島' WHERE american = '"Virgin Islands, U.S."';
+UPDATE ag.survey_response SET japanese = '職業訓練' WHERE american = 'Vocational training';
+UPDATE ag.survey_response SET japanese = 'ウォリス・フツナ' WHERE american = 'Wallis and Futuna';
+UPDATE ag.survey_response SET japanese = '1週間' WHERE american = 'Week';
+UPDATE ag.survey_response SET japanese = '毎週' WHERE american = 'Weekly';
+UPDATE ag.survey_response SET japanese = '井戸水' WHERE american = 'Well water';
+UPDATE ag.survey_response SET japanese = '西サハラ' WHERE american = 'Western Sahara';
+UPDATE ag.survey_response SET japanese = 'ウェストン・プライス、またはその他の低穀物、低加工食品の食事' WHERE american = '"Weston-Price, or other low-grain, low processed food diet"';
+UPDATE ag.survey_response SET japanese = '小麦デキストリン（例： Benefiber ）*' WHERE american = 'Wheat dextrin (e.g. Benefiber)*';
+UPDATE ag.survey_response SET japanese = '白人' WHERE american = 'White';
+UPDATE ag.survey_response SET japanese = '白ワイン' WHERE american = 'White wine';
+UPDATE ag.survey_response SET japanese = 'ワイン' WHERE american = 'Wine';
+UPDATE ag.survey_response SET japanese = '過去10年以内' WHERE american = 'Within the last 10 years';
+UPDATE ag.survey_response SET japanese = '過去5年以内' WHERE american = 'Within the last 5 years';
+UPDATE ag.survey_response SET japanese = '過去1年以内' WHERE american = 'Within the last year';
+UPDATE ag.survey_response SET japanese = '過去3ヶ月以内' WHERE american = 'Within the past 3 months';
+UPDATE ag.survey_response SET japanese = '過去6ヶ月以内' WHERE american = 'Within the past 6 months';
+UPDATE ag.survey_response SET japanese = '過去1ヶ月以内' WHERE american = 'Within the past month';
+UPDATE ag.survey_response SET japanese = '過去1年以内' WHERE american = 'Within the past year';
+UPDATE ag.survey_response SET japanese = '1年' WHERE american = 'Year';
+UPDATE ag.survey_response SET japanese = 'イエメン' WHERE american = 'Yemen';
+UPDATE ag.survey_response SET japanese = 'はい' WHERE american = 'Yes';
+UPDATE ag.survey_response SET japanese = 'はい、医療専門家（医師、医師助手）によって診断されました。' WHERE american = '"Yes, diagnosed by a medical professional (doctor, physician assistant)"';
+UPDATE ag.survey_response SET japanese = 'はい、代替医療の医師によって診断されました。' WHERE american = '"Yes, diagnosed by an alternative medicine practitioner"';
+UPDATE ag.survey_response SET japanese = 'はい、セリアック病と診断されました。' WHERE american = '"Yes, diagnosed with celiac disease"';
+UPDATE ag.survey_response SET japanese = 'はい、グルテンアレルギー（抗グルテンIgG ）の診断を受けましたが、セリアック病ではありません。' WHERE american = '"Yes, diagnosed with gluten allergy (anti-gluten IgG), but not celiac disease"';
+UPDATE ag.survey_response SET japanese = 'はい、コロナらしい症状がいくつかあったが、陰性の検査結果だった' WHERE american = '"Yes, have had some possible symptoms but tested negative"';
+UPDATE ag.survey_response SET japanese = 'はい、コロナらしい症状がいくつかあったが、医師による診断は受けていない' WHERE american = '"Yes, have had some possible symptoms, but no diagnosis by doctor"';
+UPDATE ag.survey_response SET japanese = 'はい、「ピル」を服用しています。' WHERE american = '"Yes, I am taking the ""pill"""';
+UPDATE ag.survey_response SET japanese = 'はい、現在がんを患っています。' WHERE american = '"Yes, I currently have cancer"';
+UPDATE ag.survey_response SET japanese = 'はい、ホメオパシー薬を服用しています。' WHERE american = '"Yes, I take homeopathic medication."';
+UPDATE ag.survey_response SET japanese = 'はい、市販薬を服用しています。' WHERE american = '"Yes, I take over-the-counter medication."';
+UPDATE ag.survey_response SET japanese = 'はい、処方薬を服用しています。' WHERE american = '"Yes, I take prescription medication."';
+UPDATE ag.survey_response SET japanese = 'はい、避妊用パッチを使用しています。' WHERE american = '"Yes, I use a contraceptive patch"';
+UPDATE ag.survey_response SET japanese = 'はい、避妊用の膣リングを使用しています。' WHERE american = '"Yes, I use a contraceptive vaginal ring"';
+UPDATE ag.survey_response SET japanese = 'はい、銅製の子宮内避妊具を使用しています。' WHERE american = '"Yes, I use a copper IUD"';
+UPDATE ag.survey_response SET japanese = 'はい、ホルモン子宮内避妊具／インプラントを使用しています。' WHERE american = '"Yes, I use a hormonal IUD/implant"';
+UPDATE ag.survey_response SET japanese = 'はい、注射用避妊薬を使用しています。' WHERE american = '"Yes, I use an injected contraceptive"';
+UPDATE ag.survey_response SET japanese = 'はい、ここに記載されていない他の種類の薬を使用しています。' WHERE american = '"Yes, I use other types of medication not listed here."';
+UPDATE ag.survey_response SET japanese = 'はい、医療診断を受けたが、検査は受けていない' WHERE american = '"Yes, medical diagnosis, but no test"';
+UPDATE ag.survey_response SET japanese = 'はい、医療診断を受けているが検査を受けていない人と接触' WHERE american = '"Yes, someone with medical diagnosis, but no test"';
+UPDATE ag.survey_response SET japanese = 'はい、検査結果が陽性の人と接触' WHERE american = '"Yes, someone with positive test"';
+UPDATE ag.survey_response SET japanese = 'はい、コロナらしい症状はあるが医師による診断を受けていない人と接触' WHERE american = '"Yes, someone with possible symptoms, but no diagnosis by doctor"';
+UPDATE ag.survey_response SET japanese = 'はい、陽性の検査結果だった' WHERE american = '"Yes, with a positive test"';
+UPDATE ag.survey_response SET japanese = 'ヨーグルト／ラッシー' WHERE american = 'Yogurt/lassi';
+UPDATE ag.survey_response SET japanese = 'ザンビア' WHERE american = 'Zambia';
+UPDATE ag.survey_response SET japanese = 'ジンバブエ' WHERE american = 'Zimbabwe';
+UPDATE ag.survey_response SET japanese = 'アフリカ系アメリカ人' WHERE american = 'African American';
+UPDATE ag.survey_response SET japanese = '推奨通り常に' WHERE american = 'Always, as recommended';
+UPDATE ag.survey_response SET japanese = 'アジア・太平洋諸島系' WHERE american = 'Asian or Pacific Islander';
+UPDATE ag.survey_response SET japanese = 'ビール/サイダー' WHERE american = 'Beer/Cider';
+UPDATE ag.survey_response SET japanese = 'ボトル入り' WHERE american = 'Bottled';
+UPDATE ag.survey_response SET japanese = '白色人種' WHERE american = 'Caucasian';
+UPDATE ag.survey_response SET japanese = '都市' WHERE american = 'City';
+UPDATE ag.survey_response SET japanese = '大腸クローン病' WHERE american = 'Colonic Crohn''s Disease';
+UPDATE ag.survey_response SET japanese = 'クローン病' WHERE american = 'Crohn''s disease';
+UPDATE ag.survey_response SET japanese = '高校を卒業していない' WHERE american = 'Did not complete high school';
+UPDATE ag.survey_response SET japanese = 'ろ過された' WHERE american = 'Filtered';
+UPDATE ag.survey_response SET japanese = '大学院または専門職学位' WHERE american = 'Graduate or Professional degree';
+UPDATE ag.survey_response SET japanese = '高等学校またはGED同等' WHERE american = 'High School or GED equilivant';
+UPDATE ag.survey_response SET japanese = 'ヒスパニック系' WHERE american = 'Hispanic';
+UPDATE ag.survey_response SET japanese = '固形食と粉ミルク・母乳の両方を食べている' WHERE american = 'I eat both solid food and formula/breast milk';
+UPDATE ag.survey_response SET japanese = '回腸・大腸クローン病' WHERE american = 'Ileal and Colonic Crohn''s Disease';
+UPDATE ag.survey_response SET japanese = '回腸性クローン病' WHERE american = 'Ileal Crohn''s Disease';
+UPDATE ag.survey_response SET japanese = 'ほとんどの場合' WHERE american = 'Most of the time';
+UPDATE ag.survey_response SET japanese = '治療なし' WHERE american = 'No treatment';
+UPDATE ag.survey_response SET japanese = '該当なし' WHERE american = 'Not applicable';
+UPDATE ag.survey_response SET japanese = 'たまにある' WHERE american = 'Occasionally';
+UPDATE ag.survey_response SET japanese = '放射線治療' WHERE american = 'Radiation therapy';
+UPDATE ag.survey_response SET japanese = '稀にある' WHERE american = 'Rarely';
+UPDATE ag.survey_response SET japanese = '大学院または専門職' WHERE american = 'Some graduate school or professional';
+UPDATE ag.survey_response SET japanese = '酸味のあるビール' WHERE american = 'Sour beers';
+UPDATE ag.survey_response SET japanese = '蒸留酒・スピリッツ' WHERE american = 'Spirits/hard alcohol';
+UPDATE ag.survey_response SET japanese = '手術のみ' WHERE american = 'Surgery only';
+UPDATE ag.survey_response SET japanese = '潰瘍性大腸炎' WHERE american = 'Ulcerative colitis';
+UPDATE ag.survey_response SET japanese = '井戸' WHERE american = 'Well';
+UPDATE ag.survey_response SET japanese = 'はい、ヌーバリングを使っています' WHERE american = 'Yes, I use the NuvaRing';
+UPDATE ag.survey_response SET japanese = '一月二日' WHERE american = '44928';
+UPDATE ag.survey_response SET japanese = '二月三日' WHERE american = '44960';
+UPDATE ag.survey_response SET japanese = '三月四日' WHERE american = '44989';
+UPDATE ag.survey_response SET japanese = '1:00AM' WHERE american = '1:00AM';
+UPDATE ag.survey_response SET japanese = '1:00PM' WHERE american = '1:00PM';
+UPDATE ag.survey_response SET japanese = '1:30AM' WHERE american = '1:30AM';
+UPDATE ag.survey_response SET japanese = '1:30PM' WHERE american = '1:30PM';
+UPDATE ag.survey_response SET japanese = '10:00AM' WHERE american = '10:00AM';
+UPDATE ag.survey_response SET japanese = '10:00PM' WHERE american = '10:00PM';
+UPDATE ag.survey_response SET japanese = '10:30AM' WHERE american = '10:30AM';
+UPDATE ag.survey_response SET japanese = '10:30PM' WHERE american = '10:30PM';
+UPDATE ag.survey_response SET japanese = '11から20' WHERE american = '11 to 20';
+UPDATE ag.survey_response SET japanese = '11:00AM' WHERE american = '11:00AM';
+UPDATE ag.survey_response SET japanese = '11:00PM' WHERE american = '11:00PM';
+UPDATE ag.survey_response SET japanese = '11:30AM' WHERE american = '11:30AM';
+UPDATE ag.survey_response SET japanese = '11:30PM' WHERE american = '11:30PM';
+UPDATE ag.survey_response SET japanese = '12:00AM' WHERE american = '12:00AM';
+UPDATE ag.survey_response SET japanese = '12:00PM' WHERE american = '12:00PM';
+UPDATE ag.survey_response SET japanese = '12:30AM' WHERE american = '12:30AM';
+UPDATE ag.survey_response SET japanese = '12:30PM' WHERE american = '12:30PM';
+UPDATE ag.survey_response SET japanese = '2:00AM' WHERE american = '2:00AM';
+UPDATE ag.survey_response SET japanese = '2:00PM' WHERE american = '2:00PM';
+UPDATE ag.survey_response SET japanese = '2:30AM' WHERE american = '2:30AM';
+UPDATE ag.survey_response SET japanese = '2:30PM' WHERE american = '2:30PM';
+UPDATE ag.survey_response SET japanese = '21から30' WHERE american = '21 to 30';
+UPDATE ag.survey_response SET japanese = '3個以上' WHERE american = '3 or more';
+UPDATE ag.survey_response SET japanese = '3:00AM' WHERE american = '3:00AM';
+UPDATE ag.survey_response SET japanese = '3:00PM' WHERE american = '3:00PM';
+UPDATE ag.survey_response SET japanese = '3:30AM' WHERE american = '3:30AM';
+UPDATE ag.survey_response SET japanese = '3:30PM' WHERE american = '3:30PM';
+UPDATE ag.survey_response SET japanese = '4:00AM' WHERE american = '4:00AM';
+UPDATE ag.survey_response SET japanese = '4:00PM' WHERE american = '4:00PM';
+UPDATE ag.survey_response SET japanese = '4:30AM' WHERE american = '4:30AM';
+UPDATE ag.survey_response SET japanese = '4:30PM' WHERE american = '4:30PM';
+UPDATE ag.survey_response SET japanese = '4個以上' WHERE american = '4+';
+UPDATE ag.survey_response SET japanese = '5:00AM' WHERE american = '5:00AM';
+UPDATE ag.survey_response SET japanese = '5:00PM' WHERE american = '5:00PM';
+UPDATE ag.survey_response SET japanese = '5:30AM' WHERE american = '5:30AM';
+UPDATE ag.survey_response SET japanese = '5:30PM' WHERE american = '5:30PM';
+UPDATE ag.survey_response SET japanese = '5-6時間' WHERE american = '5-6 hours';
+UPDATE ag.survey_response SET japanese = '6から10' WHERE american = '6 to 10';
+UPDATE ag.survey_response SET japanese = '6:00AM' WHERE american = '6:00AM';
+UPDATE ag.survey_response SET japanese = '6:00PM' WHERE american = '6:00PM';
+UPDATE ag.survey_response SET japanese = '6:30AM' WHERE american = '6:30AM';
+UPDATE ag.survey_response SET japanese = '6:30PM' WHERE american = '6:30PM';
+UPDATE ag.survey_response SET japanese = '6-7時間' WHERE american = '6-7 hours';
+UPDATE ag.survey_response SET japanese = '7:00AM' WHERE american = '7:00AM';
+UPDATE ag.survey_response SET japanese = '7:00PM' WHERE american = '7:00PM';
+UPDATE ag.survey_response SET japanese = '7:30AM' WHERE american = '7:30AM';
+UPDATE ag.survey_response SET japanese = '7:30PM' WHERE american = '7:30PM';
+UPDATE ag.survey_response SET japanese = '7-8時間' WHERE american = '7-8 hours';
+UPDATE ag.survey_response SET japanese = '8時間以上' WHERE american = '8 or more hours';
+UPDATE ag.survey_response SET japanese = '8:00AM' WHERE american = '8:00AM';
+UPDATE ag.survey_response SET japanese = '8:00PM' WHERE american = '8:00PM';
+UPDATE ag.survey_response SET japanese = '8:30AM' WHERE american = '8:30AM';
+UPDATE ag.survey_response SET japanese = '8:30PM' WHERE american = '8:30PM';
+UPDATE ag.survey_response SET japanese = '9:00AM' WHERE american = '9:00AM';
+UPDATE ag.survey_response SET japanese = '9:00PM' WHERE american = '9:00PM';
+UPDATE ag.survey_response SET japanese = '9:30AM' WHERE american = '9:30AM';
+UPDATE ag.survey_response SET japanese = '9:30PM' WHERE american = '9:30PM';
+UPDATE ag.survey_response SET japanese = 'りんごの繊維' WHERE american = 'Apple fiber';
+UPDATE ag.survey_response SET japanese = '準学士号（例：AA,AS）' WHERE american = 'Associate''s degree (e.g. AA, AS))';
+UPDATE ag.survey_response SET japanese = '学士号（例：BA,BS）' WHERE american = 'Bachelor''s degree (e.g. BA, BS)';
+UPDATE ag.survey_response SET japanese = '初乳' WHERE american = 'Beestings';
+UPDATE ag.survey_response SET japanese = 'ありえない体の痛み' WHERE american = 'Body pain where it shouldn''t exist;';
+UPDATE ag.survey_response SET japanese = 'ボトル入り*の精製水（ラベルに「湧水」「ナチュラルミネラルウォーター」の表記がないもの）' WHERE american = 'Bottled* purified water (does not indicate "spring water" or "natural mineral water" on the label)';
+UPDATE ag.survey_response SET japanese = '市（人口10万人以上100万人未満）' WHERE american = 'City (population is more than 100,000 and less than 1 million)';
+UPDATE ag.survey_response SET japanese = 'コンゴ民主共和国' WHERE american = 'Congo, The Democratic Republic of The';
+UPDATE ag.survey_response SET japanese = '医療従事者（医師、医師助手）の診断によるもの' WHERE american = 'Diagnosed by a medical professional (doctor, physician assistant)';
+UPDATE ag.survey_response SET japanese = '博士号（例：PhD,EdD）' WHERE american = 'Doctorate (eg. PhD, EdD)';
+UPDATE ag.survey_response SET japanese = '分かりません' WHERE american = 'Don''t know';
+UPDATE ag.survey_response SET japanese = 'ろ過された水道水（ピッチャー、蛇口または洗面下の浄水器、逆浸透システム、水軟化器）' WHERE american = 'Filtered tap water (pitcher, faucet or under the sink water purifiers, reverse osmosis systems, water softener)';
+UPDATE ag.survey_response SET japanese = '5個以上' WHERE american = 'Five or more';
+UPDATE ag.survey_response SET japanese = '4' WHERE american = 'Four';
+UPDATE ag.survey_response SET japanese = '機能性食品（チアシード、小麦ふすまなど）' WHERE american = 'Functional food (e.g. chia seeds, wheat bran)';
+UPDATE ag.survey_response SET japanese = '頭痛' WHERE american = 'Headaches';
+UPDATE ag.survey_response SET japanese = '私は左利きです' WHERE american = 'I am left handed';
+UPDATE ag.survey_response SET japanese = '私は右利きです' WHERE american = 'I am right handed';
+UPDATE ag.survey_response SET japanese = '私はこの症状はありません' WHERE american = 'I do not have this condition';
+UPDATE ag.survey_response SET japanese = '私は飲みません' WHERE american = 'I don''t drink';
+UPDATE ag.survey_response SET japanese = '私は味のついていない水は飲まない' WHERE american = 'I don''t drink plain, unflavored water';
+UPDATE ag.survey_response SET japanese = '参考になる点がないので分からない' WHERE american = 'I don''t know, I do not have a point of reference';
+UPDATE ag.survey_response SET japanese = '過去1年間、居住国以外の国に行ったことがない。' WHERE american = 'I have not been outside of my country of residence in the past year.';
+UPDATE ag.survey_response SET japanese = '摂取量は増やしていない' WHERE american = 'I have not increased my intake';
+UPDATE ag.survey_response SET japanese = 'サプリメントを飲んでいるが、種類がわからない' WHERE american = 'I take a supplement, but do not know what kind';
+UPDATE ag.survey_response SET japanese = '便秘がち（便が出にくい）-タイプ1、2' WHERE american = 'I tend to be constipated (have difficulty passing stool) - Type 1 and 2';
+UPDATE ag.survey_response SET japanese = '下痢（水様便）になりやすい-タイプ5、6、7' WHERE american = 'I tend to have diarrhea (watery stool) - Type 5, 6 and 7';
+UPDATE ag.survey_response SET japanese = '正常な形の便が出やすい - タイプ3、4' WHERE american = 'I tend to have normal formed stool - Type 3 and 4';
+UPDATE ag.survey_response SET japanese = 'セリアック病と診断されました' WHERE american = 'I was diagnosed with celiac disease';
+UPDATE ag.survey_response SET japanese = 'セリアック病ではなく、グルテンアレルギー(抗グルテンIgG)と診断されました' WHERE american = 'I was diagnosed with gluten allergy (anti-gluten IgG), but not celiac disease';
+UPDATE ag.survey_response SET japanese = 'イヌリン（例：ファイバーチョイス）' WHERE american = 'Inulin (e.g. Fiber Choice)';
+UPDATE ag.survey_response SET japanese = 'イラン・イスラム共和国' WHERE american = 'Iran, Islamic Republic of';
+UPDATE ag.survey_response SET japanese = '朝鮮民主主義人民共和国' WHERE american = 'Korea, Democratic People''s Republic of';
+UPDATE ag.survey_response SET japanese = '大韓民国' WHERE american = 'Korea, Republic of';
+UPDATE ag.survey_response SET japanese = '食欲がない' WHERE american = 'Lack of appetitie';
+UPDATE ag.survey_response SET japanese = '5個以下' WHERE american = 'Less than 5';
+UPDATE ag.survey_response SET japanese = '5時間以下' WHERE american = 'Less than 5 hours';
+UPDATE ag.survey_response SET japanese = '1個以下' WHERE american = 'Less than one';
+UPDATE ag.survey_response SET japanese = '大リビア・アラブ社会主義人民ジャマーヒリーヤ国' WHERE american = 'Libyan Arab Jamahiriya';
+UPDATE ag.survey_response SET japanese = 'マケドニア旧ユーゴスラビア共和国' WHERE american = 'Macedonia, The Former Yugoslav Republic of';
+UPDATE ag.survey_response SET japanese = '修士号（例：MS、MA）' WHERE american = 'Master''s degree (e.g. MS, MA)';
+UPDATE ag.survey_response SET japanese = 'メチルセルロース（シトルセル等）' WHERE american = 'Methylcellulose (e.g. Citrucel)';
+UPDATE ag.survey_response SET japanese = 'ミクロネシア連邦' WHERE american = 'Micronesia, Federated States of';
+UPDATE ag.survey_response SET japanese = '改質されたパレオダイエット' WHERE american = 'modified paleo diet';
+UPDATE ag.survey_response SET japanese = 'モルドバ共和国' WHERE american = 'Moldova, Republic of';
+UPDATE ag.survey_response SET japanese = '30個以上' WHERE american = 'More than 30';
+UPDATE ag.survey_response SET japanese = '4個以上' WHERE american = 'More than 4';
+UPDATE ag.survey_response SET japanese = '筋肉痛' WHERE american = 'Muscle aches';
+UPDATE ag.survey_response SET japanese = '該当なし' WHERE american = 'N/A';
+UPDATE ag.survey_response SET japanese = 'いいえ、私はこの症状はありません' WHERE american = 'No, I do not have this condition';
+UPDATE ag.survey_response SET japanese = 'いいえ、私はアレルギーの薬を飲んでいません' WHERE american = 'No, I do not take any medications for my allergies';
+UPDATE ag.survey_response SET japanese = 'いいえ、私はもう癌ではありません' WHERE american = 'No, I no longer have cancer';
+UPDATE ag.survey_response SET japanese = 'よくわからないが、何らかのデオドラント・制汗剤を使っている' WHERE american = 'Not sure, but I use some form of deodorant/antiperspirant';
+UPDATE ag.survey_response SET japanese = 'オーツ麦の繊維' WHERE american = 'Oat fiber';
+UPDATE ag.survey_response SET japanese = '不定期（週1～2回程度）' WHERE american = 'Occasionally (1-2 times/week)';
+UPDATE ag.survey_response SET japanese = '雑食系' WHERE american = 'Omnivore';
+UPDATE ag.survey_response SET japanese = '雑食だが赤身肉は食べない' WHERE american = 'Omnivore but do not eat red meat';
+UPDATE ag.survey_response SET japanese = 'パレオダイエット' WHERE american = 'paleo-diet or primal diet';
+UPDATE ag.survey_response SET japanese = '被占領パレスチナ地域' WHERE american = 'Palestinian Territory, Occupied';
+UPDATE ag.survey_response SET japanese = 'ポイズンアイビー/オーク' WHERE american = 'Poison ivy/oak';
+UPDATE ag.survey_response SET japanese = '専門職学位（例：MD、DDS、DVMなど）' WHERE american = 'Professional degree (e.g. MD,DDS, DVM)';
+UPDATE ag.survey_response SET japanese = 'オオバコ（例：メタムシル）' WHERE american = 'Psyllium (e.g. Metamucil)';
+UPDATE ag.survey_response SET japanese = 'まれにある（数回/月）' WHERE american = 'Rarely (a few times/month)';
+UPDATE ag.survey_response SET japanese = 'ほとんどない（1回/週未満）。' WHERE american = 'Rarely (less than once/week)';
+UPDATE ag.survey_response SET japanese = '生食' WHERE american = 'raw food diet';
+UPDATE ag.survey_response SET japanese = '定期的に（3～5回/週）' WHERE american = 'Regularly (3-5 times/week)';
+UPDATE ag.survey_response SET japanese = '鼻水や鼻づまり' WHERE american = 'Runny or stuffy nose';
+UPDATE ag.survey_response SET japanese = '息切れや呼吸困難がある' WHERE american = 'Shortness of breath or difficulty breathing';
+UPDATE ag.survey_response SET japanese = '小規模な町村（人口が100人以上1,000人未満）' WHERE american = 'Small town or village (population is more than 100 and less than 1,000)';
+UPDATE ag.survey_response SET japanese = '一部の大学または専門学校' WHERE american = 'Some college or technical school';
+UPDATE ag.survey_response SET japanese = 'サワークリーム/クレームフレーシュ' WHERE american = 'Sour cream/creme fraiche';
+UPDATE ag.survey_response SET japanese = '糖アルコール類（ソルビトール、キシリトール、ラクチトール、マンニトール、エリスリトール、マルチトール）' WHERE american = 'Sugar alcohols (sorbitol, xylitol, lactitol, mannitol, erythritol, and maltitol)';
+UPDATE ag.survey_response SET japanese = '中華人民共和国台湾' WHERE american = 'Taiwan, Province of China';
+UPDATE ag.survey_response SET japanese = 'タンザニア連合共和国' WHERE american = 'Tanzania, United Republic of';
+UPDATE ag.survey_response SET japanese = '町（人口が1,000人以上100,000人未満）' WHERE american = 'Town (population is more than 1,000 and less than 100,000)';
+UPDATE ag.survey_response SET japanese = '不詳' WHERE american = 'Unspecified';
+UPDATE ag.survey_response SET japanese = '非常に深刻である' WHERE american = 'Very Severe';
+UPDATE ag.survey_response SET japanese = 'ベトナム' WHERE american = 'Viet Nam';
+UPDATE ag.survey_response SET japanese = '英領ヴァージン諸島' WHERE american = 'Virgin Islands, British';
+UPDATE ag.survey_response SET japanese = '米国バージン諸島' WHERE american = 'Virgin Islands, U.S.';
+UPDATE ag.survey_response SET japanese = 'ウェストンプライス、またはその他の低穀物、低加工食品ダイエット' WHERE american = 'Weston-Price, or other low-grain, low processed food diet';
+UPDATE ag.survey_response SET japanese = '小麦デキストリン（ベネファイバーなど）' WHERE american = 'Wheat dextrin (e.g. Benefiber)';
+UPDATE ag.survey_response SET japanese = '喘鳴' WHERE american = 'Wheezing';
+UPDATE ag.survey_response SET japanese = 'はい、認可された精神衛生専門家によって診断されています' WHERE american = 'Yes, diagnosed by a licensed mental health professional';
+UPDATE ag.survey_response SET japanese = 'はい、医療従事者（医師、医師助手）の診断を受けています' WHERE american = 'Yes, diagnosed by a medical professional (doctor, physician assistant)';
+UPDATE ag.survey_response SET japanese = 'はい、代替医療や補完医療による診断を受けています' WHERE american = 'Yes, diagnosed by an alternative or complementary practitioner';
+UPDATE ag.survey_response SET japanese = 'はい、いくつか考えられる症状がありましたが、検査は陰性でした' WHERE american = 'Yes, have had some possible symptoms but tested negative';
+UPDATE ag.survey_response SET japanese = 'はい、いくつか考えられる症状がありましたが、医師による診断を受けていません' WHERE american = 'Yes, have had some possible symptoms, but no diagnosis by doctor';
+UPDATE ag.survey_response SET japanese = 'はい、私は "ピル "を飲んでいます' WHERE american = 'Yes, I am taking the "pill"';
+UPDATE ag.survey_response SET japanese = 'はい、私は現在癌です' WHERE american = 'Yes, I currently have cancer';
+UPDATE ag.survey_response SET japanese = 'はい、ホメオパシーの薬を飲んでいます' WHERE american = 'Yes, I take homeopathic medication';
+UPDATE ag.survey_response SET japanese = 'はい、市販の薬を飲んでいます' WHERE american = 'Yes, I take over-the-counter medication';
+UPDATE ag.survey_response SET japanese = 'はい、処方箋薬を服用しています' WHERE american = 'Yes, I take prescription medication';
+UPDATE ag.survey_response SET japanese = 'はい、避妊用パッチを使用しています' WHERE american = 'Yes, I use a contraceptive patch';
+UPDATE ag.survey_response SET japanese = 'はい、避妊用の膣リングを使用しています' WHERE american = 'Yes, I use a contraceptive vaginal ring';
+UPDATE ag.survey_response SET japanese = 'はい、銅製のIUDを使用しています' WHERE american = 'Yes, I use a copper IUD';
+UPDATE ag.survey_response SET japanese = 'はい、ホルモン性IUD/インプラントを使用しています' WHERE american = 'Yes, I use a hormonal IUD/implant';
+UPDATE ag.survey_response SET japanese = 'はい、注射式の避妊具を使用しています' WHERE american = 'Yes, I use an injected contraceptive';
+UPDATE ag.survey_response SET japanese = 'はい、ここに記載されていない他の種類の薬を使用しています' WHERE american = 'Yes, I use other types of medication not listed here';
+UPDATE ag.survey_response SET japanese = 'はい、医学的な診断ですが、検査はありません' WHERE american = 'Yes, medical diagnosis, but no test';
+UPDATE ag.survey_response SET japanese = 'はい、医学的な診断はあるが、検査はしていない人' WHERE american = 'Yes, someone with medical diagnosis, but no test';
+UPDATE ag.survey_response SET japanese = 'はい、テストが陽性だった人' WHERE american = 'Yes, someone with positive test';
+UPDATE ag.survey_response SET japanese = 'はい、可能性のある症状があるが、医師による診断がない人' WHERE american = 'Yes, someone with possible symptoms, but no diagnosis by doctor';
+UPDATE ag.survey_response SET japanese = 'はい、陽性反応あり' WHERE american = 'Yes, with a positive test';
+UPDATE ag.survey_response SET japanese = '準学士号' WHERE american = 'Associate''s degree';
+UPDATE ag.survey_response SET japanese = '学士号' WHERE american = 'Bachelor''s degree';
+UPDATE ag.survey_response SET japanese = 'はい、注射式の避妊具を使用しています' WHERE american = 'Yes, I use an injected contraceptive (DMPA)';
+UPDATE ag.survey_response SET japanese = 'はい、避妊用パッチを使用しています' WHERE american = 'Yes, I use a contraceptive patch (Ortho-Evra)';
+UPDATE ag.survey_response SET japanese = 'はい、ホルモン性IUD/インプラントを使用しています' WHERE american = 'Yes, I use a hormonal IUD (Mirena)';
+UPDATE ag.survey_response SET japanese = american WHERE american IN ('1967','1','1-2','2-3','3-4','1966','1970','1969','1968','2018','2017','2016','2015','2014','2013','2012','2011','2010','2009','2008','2007','2006','2005','2004','2003','2002','2001','2000','1999','1998','1997','1996','1995','1994','1993','1992','1991','1990','1989','1988','1987','1986','1985','1984','1983','1982','1981','1980','1979','1978','1977','1976','1975','1974','1973','1972','1971','1965','1964','1963','1962','1961','1960','1959','1958','1957','1956','1955','1954','1953','1952','1951','1950','1949','1948','1947','1946','1945','1944','1943','1942','1941','1940','1939','1938','1937','1936','1935','1934','1933','1932','1931','1930','1929','1928','1927','1926','1925','1924','1923','1922','1921','1920','1919','1918','1917','1916','1915','1914','1913','1912','1911','1910','1909','1908','1907','1906','1905','1904','1903','1902','1901','1900','1899','1898','1897','1896','1895','1894','1893','1892','1891','1890','2020','2019');
