@@ -1,5 +1,5 @@
 from celery import Celery
-
+from microsetta_private_api.server import build_app
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
 PACKAGE = __name__.split('.')[0]
@@ -9,7 +9,10 @@ CELERY_BROKER_URI = 'celery_broker_uri'
 
 # derived from
 # https://medium.com/@frassetto.stefano/flask-celery-howto-d106958a15fe
-def init_celery(celery, app):
+def init_celery(celery, app=None):
+    if app is None:
+        new_app = build_app()
+        app = new_app.app
     celery.conf.update(app.config)
     celery.conf.task_default_queue = 'microsetta-private-api'
     TaskBase = celery.Task
