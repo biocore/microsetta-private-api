@@ -9,7 +9,7 @@ class Transaction:
     # Note: SimpleConnectionPool works only for single threaded applications
     #  Should we make the server multi threaded, we must switch to a
     #  ThreadedConnectionPool
-    _POOL = psycopg2.pool.ThreadedConnectionPool(
+    _POOL = psycopg2.pool.SimpleConnectionPool(
         1,
         20,
         user=AMGUT_CONFIG.user,
