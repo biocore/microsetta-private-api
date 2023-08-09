@@ -78,12 +78,12 @@ class PerkFulfillmentRepo(BaseRepo):
             # been processed and collect the necessary fields
             cur.execute(
                 "SELECT ftp.id ftp_id, ftp.transaction_id, ftp.perk_id, "
-                "ftp.quantity, ft.payer_email, fpfd.ffq_quantity, "
+                "ftp.quantity, fpfd.ffq_quantity, "
                 "fpfd.kit_quantity, fpfd.dak_article_code, "
                 "fpfd.fulfillment_spacing_number, "
                 "fpfd.fulfillment_spacing_unit, iu.first_name, iu.last_name, "
                 "iu.phone, iu.address_1, iu.address_2, iu.city, iu.state, "
-                "iu.postal_code, iu.country, iu.campaign_id "
+                "iu.postal_code, iu.country, iu.campaign_id, iu.email "
                 "FROM campaign.fundrazr_transaction_perk ftp "
                 "INNER JOIN campaign.transaction ft "
                 "ON ftp.transaction_id = ft.id "
@@ -99,7 +99,7 @@ class PerkFulfillmentRepo(BaseRepo):
             if row is not None:
                 if self._is_subscription(row):
                     subscription_id = \
-                        self._create_subscription(row['payer_email'],
+                        self._create_subscription(row['email'],
                                                   row['transaction_id'],
                                                   row['ftp_id'])
                 else:
@@ -119,7 +119,7 @@ class PerkFulfillmentRepo(BaseRepo):
                     error_info = self._fulfill_ffq(
                         row['ftp_id'],
                         template,
-                        row['payer_email'],
+                        row['email'],
                         row['first_name'],
                         subscription_id
                     )
@@ -148,7 +148,7 @@ class PerkFulfillmentRepo(BaseRepo):
                         error_info = self._fulfill_ffq(
                             row['ftp_id'],
                             row['kit_quantity'],
-                            row['payer_email'],
+                            row['email'],
                             row['first_name']
                         )
                         if error_info is not None:
@@ -230,7 +230,7 @@ class PerkFulfillmentRepo(BaseRepo):
             cur.execute(
                 "SELECT sf.fulfillment_id, sf.fulfillment_type, "
                 "sf.dak_article_code, sf.subscription_id, ftp.id ftp_id, "
-                "ft.payer_email, iu.first_name, iu.last_name, iu.phone, "
+                "iu.email iu_email, iu.first_name, iu.last_name, iu.phone, "
                 "iu.address_1, iu.address_2, iu.city, iu.state, "
                 "iu.postal_code, iu.country, iu.campaign_id, s.account_id, "
                 "a.email a_email, a.first_name a_first_name, "
@@ -265,7 +265,7 @@ class PerkFulfillmentRepo(BaseRepo):
                         first_name = row['a_first_name']
                     # If no account, fall back to original Fundrazr data
                     else:
-                        email = row['payer_email']
+                        email = row['iu_email']
                         first_name = row['first_name']
 
                     email_error = self._fulfill_ffq(
@@ -321,7 +321,7 @@ class PerkFulfillmentRepo(BaseRepo):
             cur.execute(
                 "SELECT fdo.fundrazr_transaction_perk_id ftp_id, "
                 "fdo.dak_order_id, kit.outbound_fedex_tracking, "
-                "t.payer_email, t.payer_first_name "
+                "iu.email, iu.first_name "
                 "FROM campaign.fundrazr_daklapack_orders fdo "
                 "INNER JOIN barcodes.daklapack_order dako "
                 "ON fdo.dak_order_id = dako.dak_order_id "
@@ -334,6 +334,8 @@ class PerkFulfillmentRepo(BaseRepo):
                 "ON fdo.fundrazr_transaction_perk_id = ftp.id "
                 "INNER JOIN campaign.transaction t "
                 "ON ftp.transaction_id = t.id "
+                "INNER JOIN campaign.interested_users iu "
+                "ON t.interested_user_id = iu.interested_user_id "
                 "WHERE fdo.tracking_sent = false"
             )
             rows = cur.fetchall()
@@ -341,11 +343,11 @@ class PerkFulfillmentRepo(BaseRepo):
             for r in rows:
                 try:
                     email_args = {
-                        "first_name": r['payer_first_name'],
+                        "first_name": r['first_name'],
                         "tracking_number": r['outbound_fedex_tracking']
                     }
 
-                    email_address = r['payer_email']
+                    email_address = r['email']
 
                     send_email(
                         email_address,
@@ -663,7 +665,9 @@ class PerkFulfillmentRepo(BaseRepo):
                 "FROM campaign.subscriptions s "
                 "INNER JOIN campaign.transaction t "
                 "ON s.transaction_id = t.id "
-                "WHERE account_id IS NULL AND LOWER(t.payer_email) = %s",
+                "INNER JOIN campaign.interested_users iu "
+                "ON t.interested_user_id = iu.interested_user_id "
+                "WHERE account_id IS NULL AND LOWER(iu.email) = %s",
                 (email, )
             )
             rows = cur.fetchall()
