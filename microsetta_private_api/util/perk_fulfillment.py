@@ -73,6 +73,8 @@ def check_shipping_updates():
         emails_sent, error_report = pfr.check_for_shipping_updates()
 
         if emails_sent > 0 or len(error_report) > 0:
+            t.commit()
+
             email_content = f"Emails sent: {emails_sent}\n"\
                             f"Errors: {error_report}"
             try:
