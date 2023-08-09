@@ -6,9 +6,9 @@ from psycopg2 import sql
 
 
 class Transaction:
-    # Note: SimpleConnectionPool works only for single threaded applications
-    #  Should we make the server multi threaded, we must switch to a
-    #  ThreadedConnectionPool
+    # Note: Using ThreadedConnectionPool as we've switched Celery to threaded
+    # mode. If we change that back to prefork, recommend changing the pool
+    # back to SimpleConnectionPool.
     _POOL = psycopg2.pool.ThreadedConnectionPool(
         1,
         20,
