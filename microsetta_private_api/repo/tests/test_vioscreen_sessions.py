@@ -5,7 +5,7 @@ from microsetta_private_api.model.vioscreen import (VioscreenSession,
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import (VioscreenSessionRepo,
                                                         VioscreenPercentEnergyRepo)  # noqa
-from datetime import datetime
+from datetime import datetime, date
 from copy import copy
 
 
@@ -27,7 +27,7 @@ VIOSCREEN_SESSION = VioscreenSession(sessionId='a session',
                                      endDate=None,
                                      cultureCode='foo',
                                      created=_to_dt(1, 1, 1970),
-                                     modified=_to_dt(1, 1, 1970))
+                                     modified=date.today())
 
 VIOSCREEN_PERCENT_ENERGY_COMPONENTS = [
     VioscreenPercentEnergyComponent('%mfatot',
