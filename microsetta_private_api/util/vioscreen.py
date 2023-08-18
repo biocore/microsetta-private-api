@@ -466,6 +466,19 @@ class VioscreenAdminAPI:
 
 
 @celery.task(ignore_result=False)
+def count_unfinished_sessions():
+    # obtain our current unfinished sessions to check
+    with Transaction() as t:
+        r = VioscreenSessionRepo(t)
+        unfinished_sessions = r.get_unfinished_sessions()
+
+        send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
+                   {"what": "Vioscreen session count",
+                    "content": len(unfinished_sessions)},
+                   EN_US)
+
+
+@celery.task(ignore_result=False)
 def update_session_detail():
     # The interaction with the API is occuring within a celery task
     # and the recommendation from celery is to avoid depending on synchronous
