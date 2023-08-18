@@ -139,16 +139,20 @@ class VioscreenSessionRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             # criteria 1, vio_ids which are not in vioscreen_sessions
             cur.execute("""SELECT distinct(vio_id)
-                           FROM ag.vioscreen_registry
-                           WHERE vio_id NOT IN (
+                           FROM ag.vioscreen_registry vr
+                           INNER JOIN ag.ag_login_surveys als
+                           ON vr.vio_id = als.survey_id
+                           WHERE vr.vio_id NOT IN (
                                SELECT distinct(username)
-                               FROM ag.vioscreen_sessions)""")
+                               FROM ag.vioscreen_sessions)
+                           AND als.creation_time >= (CURRENT_DATE - 30)""")
             not_in_vioscreen_sessions = [VioscreenSession.from_registry(u[0])
                                          for u in cur.fetchall()]
 
             # criteria 2 and 3
             cur.execute(f"""SELECT {self._sql_cols}
-                            FROM ag.vioscreen_sessions""")
+                            FROM ag.vioscreen_sessions
+                            WHERE modified >= (CURRENT_DATE - 30)""")
 
             # array_agg doesn't work over these datatypes... ugh. this
             # almost certainly could be done better directly within SQL
