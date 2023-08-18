@@ -28,7 +28,9 @@ VIOSCREEN_SESSION = VioscreenSession(sessionId='a session',
                                      endDate=None,
                                      cultureCode='foo',
                                      created=_to_dt(1, 1, 1970),
-                                     modified=_to_dt(today.year, today.month, today.day))
+                                     modified=_to_dt(
+                                         today.month, today.day, today.year
+                                     ))
 
 VIOSCREEN_PERCENT_ENERGY_COMPONENTS = [
     VioscreenPercentEnergyComponent('%mfatot',
