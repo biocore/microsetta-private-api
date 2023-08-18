@@ -19,6 +19,7 @@ VIOSCREEN_USERNAME1 = '3379e14164fac0ed'
 BARCODE_UUID_FOR_VIOSESSION = '66ec7d9a-400d-4d71-bce8-fdf79d2be554'
 BARCODE_UUID_NOTIN_REGISTRY = 'edee4af9-65b2-4ed1-ba66-5bf58383005e'
 
+today = date.today()
 VIOSCREEN_SESSION = VioscreenSession(sessionId='a session',
                                      username='a user',
                                      protocolId=1234,
@@ -27,7 +28,7 @@ VIOSCREEN_SESSION = VioscreenSession(sessionId='a session',
                                      endDate=None,
                                      cultureCode='foo',
                                      created=_to_dt(1, 1, 1970),
-                                     modified=date.today())
+                                     modified=_to_dt(today.year, today.month, today.day))
 
 VIOSCREEN_PERCENT_ENERGY_COMPONENTS = [
     VioscreenPercentEnergyComponent('%mfatot',
