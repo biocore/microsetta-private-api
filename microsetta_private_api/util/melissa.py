@@ -25,7 +25,7 @@ def verify_address(address_1, address_2=None, address_3=None, city=None,
 
     with Transaction() as t:
         # The response codes we can treat as deliverable
-        GOOD_CODES = ["AV25", "AV24", "AV23", "AV22"]
+        GOOD_CODES = ["AV25", "AV24", "AV23", "AV22", "AV21"]
 
         melissa_repo = MelissaRepo(t)
 

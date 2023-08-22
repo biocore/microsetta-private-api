@@ -1978,6 +1978,8 @@ paths:
                     type: string
                   'country':
                     type: string
+                  'error_codes':
+                    type: array
         '400':
           description: Address already valid
         '404':
