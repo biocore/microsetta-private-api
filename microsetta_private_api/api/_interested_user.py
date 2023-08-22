@@ -121,7 +121,7 @@ def get_interested_user_address_update(interested_user_id, email):
                         interested_user.country
                     )
 
-                    if isinstance(melissa_result, bool):
+                    if melissa_result is False:
                         # We shouldn't reach this point, but it means the
                         # address wasn't actually checked
                         return jsonify(
