@@ -84,4 +84,4 @@ UPDATE ag.survey_question SET css_classes = 'tmi-survey-radio-vertical' WHERE su
 -- As part of the Daklapack API specs, the TMI account that orders a kit will appear on the label in the companyName field.
 -- We're going to set our fulfillment account's name to Microsetta Initiative to be as descriptive and professional as possible.
 -- In the long term, it would be good to see if we can discontinue use of this field.
-UPDATE ag.account SET first_name = 'Microsetta', last_name = 'Initiative' WHERE ag.account_id = '000fc4cd-8fa4-db8b-e050-8a800c5d81b7';
+UPDATE ag.account SET first_name = 'Microsetta', last_name = 'Initiative' WHERE id = '000fc4cd-8fa4-db8b-e050-8a800c5d81b7';
