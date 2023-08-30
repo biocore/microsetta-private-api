@@ -45,10 +45,10 @@ def init_celery(celery, app):
            "task": "microsetta_private_api.util.fundrazr.get_fundrazr_transactions",  # noqa
            "schedule": 60 * 60  # every hour
         },
-        # "fulfill_new_transactions": {
-        #    "task": "microsetta_private_api.util.perk_fulfillment.fulfill_new_transactions",  # noqa
-        #    "schedule": 60 * 60  # every hour
-        # },
+        "fulfill_new_transactions": {
+           "task": "microsetta_private_api.util.perk_fulfillment.fulfill_new_transactions",  # noqa
+           "schedule": 60 * 60  # every hour
+        },
         # "fulfill_subscriptions": {
         #    "task": "microsetta_private_api.util.perk_fulfillment.process_subscription_fulfillments",  # noqa
         #    "schedule": 60 * 60 * 24  # every 24 hours
