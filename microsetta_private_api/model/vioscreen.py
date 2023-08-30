@@ -581,3 +581,22 @@ class VioscreenComposite(ModelBase):
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
+
+
+class VioscreenRegistryEntry(ModelBase):
+    def __init__(self, survey_id, vioscreen_status, creation_time, sample_id,
+                 registration_code):
+        self.survey_id = survey_id
+        self.vioscreen_status = vioscreen_status
+        self.creation_time = creation_time
+        self.sample_id = sample_id
+        self.registration_code = registration_code
+
+    def to_api(self):
+        return {
+            'survey_id': self.survey_id,
+            'vioscreen_status': self.vioscreen_status,
+            'creation_time': self.creation_time,
+            'sample_id': self.sample_id,
+            'registration_code': self.registration_code
+        }

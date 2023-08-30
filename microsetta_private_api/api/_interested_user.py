@@ -6,6 +6,7 @@ from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
+from microsetta_private_api.repo.melissa_repo import MelissaRepo
 from microsetta_private_api.tasks import send_email
 
 
@@ -95,15 +96,46 @@ def get_interested_user_address_update(interested_user_id, email):
                     message="Invalid user."
                 ), 404
             else:
-                # if the address is already valid, no reason to update
+                # If the address is already valid, no reason to update.
                 if interested_user.address_valid:
                     return jsonify(
                         code=400,
                         message="Address already verified."
                     ), 400
                 else:
-                    # we've determined it's a valid user and their address
-                    # needs to be fixed, so we return a subset of their info
+                    # We've determined it's a valid user and their address
+                    # needs to be fixed, so we return a subset of their info.
+                    # Certain paths into the database allow null address_2
+                    # which causes problems, so we change it to "".
+                    if interested_user.address_2 is None:
+                        interested_user.address_2 = ""
+
+                    # We also need to grab the reason(s) that Melissa couldn't
+                    # verify the address.
+                    melissa_repo = MelissaRepo(t)
+                    melissa_result = melissa_repo.check_duplicate(
+                        interested_user.address_1,
+                        interested_user.address_2,
+                        interested_user.address_3,
+                        interested_user.postal_code,
+                        interested_user.country
+                    )
+
+                    if melissa_result is False:
+                        # We shouldn't reach this point, but it means the
+                        # address wasn't actually checked
+                        return jsonify(
+                            code=404,
+                            message="Address verification data missing."
+                        ), 404
+
+                    result_codes = melissa_result['result_codes'].split(",")
+                    error_codes = []
+                    for code in result_codes:
+                        # We're only interested in AE codes
+                        if code[0:2] == "AE":
+                            error_codes.append(code)
+
                     return jsonify(
                         interested_user_id=interested_user.interested_user_id,
                         email=interested_user.email,
@@ -113,7 +145,8 @@ def get_interested_user_address_update(interested_user_id, email):
                         city=interested_user.city,
                         state=interested_user.state,
                         postal_code=interested_user.postal_code,
-                        country=interested_user.country
+                        country=interested_user.country,
+                        error_codes=error_codes
                     ), 200
 
 
@@ -146,8 +179,6 @@ def put_interested_user_address_update(body):
                 interested_user.address_1 = body['address_1']
                 interested_user.address_2 = body['address_2']
                 interested_user.address_3 = body['address_3']
-                interested_user.residential_address = \
-                    body['residential_address']
                 interested_user.phone = body['phone']
                 interested_user.city = body['city']
                 interested_user.state = body['state']

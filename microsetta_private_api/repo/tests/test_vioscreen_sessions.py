@@ -5,7 +5,7 @@ from microsetta_private_api.model.vioscreen import (VioscreenSession,
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import (VioscreenSessionRepo,
                                                         VioscreenPercentEnergyRepo)  # noqa
-from datetime import datetime
+from datetime import datetime, date
 from copy import copy
 
 
@@ -19,6 +19,7 @@ VIOSCREEN_USERNAME1 = '3379e14164fac0ed'
 BARCODE_UUID_FOR_VIOSESSION = '66ec7d9a-400d-4d71-bce8-fdf79d2be554'
 BARCODE_UUID_NOTIN_REGISTRY = 'edee4af9-65b2-4ed1-ba66-5bf58383005e'
 
+today = date.today()
 VIOSCREEN_SESSION = VioscreenSession(sessionId='a session',
                                      username='a user',
                                      protocolId=1234,
@@ -27,7 +28,9 @@ VIOSCREEN_SESSION = VioscreenSession(sessionId='a session',
                                      endDate=None,
                                      cultureCode='foo',
                                      created=_to_dt(1, 1, 1970),
-                                     modified=_to_dt(1, 1, 1970))
+                                     modified=_to_dt(
+                                         today.month, today.day, today.year
+                                     ))
 
 VIOSCREEN_PERCENT_ENERGY_COMPONENTS = [
     VioscreenPercentEnergyComponent('%mfatot',
@@ -127,7 +130,11 @@ class VioscreenSessions(unittest.TestCase):
         with Transaction() as t:
             r = VioscreenSessionRepo(t)
             cur = t.cursor()
-            cur.execute("SELECT vio_id FROM ag.vioscreen_registry")
+            cur.execute("""SELECT DISTINCT(vio_id)
+                           FROM ag.vioscreen_registry vr
+                           INNER JOIN ag.ag_login_surveys als
+                           ON vr.vio_id = als.survey_id
+                           AND als.creation_time >= (CURRENT_DATE - 30)""")
             exp = {r[0] for r in cur.fetchall()}
             obs = r.get_unfinished_sessions()
             self.assertEqual({r.username for r in obs}, exp)
@@ -138,7 +145,11 @@ class VioscreenSessions(unittest.TestCase):
             self.assertTrue(obs)
 
             # our base session is still unfinished (no end date)
-            cur.execute("SELECT vio_id FROM ag.vioscreen_registry")
+            cur.execute("""SELECT DISTINCT(vio_id)
+                           FROM ag.vioscreen_registry vr
+                           INNER JOIN ag.ag_login_surveys als
+                           ON vr.vio_id = als.survey_id
+                           AND als.creation_time >= (CURRENT_DATE - 30)""")
             exp = {r[0] for r in cur.fetchall()}
             obs = r.get_unfinished_sessions()
             self.assertEqual({r.username for r in obs}, exp)
@@ -160,7 +171,11 @@ class VioscreenSessions(unittest.TestCase):
         with Transaction() as t:
             r = VioscreenSessionRepo(t)
             cur = t.cursor()
-            cur.execute("SELECT vio_id FROM ag.vioscreen_registry")
+            cur.execute("""SELECT DISTINCT(vio_id)
+                           FROM ag.vioscreen_registry vr
+                           INNER JOIN ag.ag_login_surveys als
+                           ON vr.vio_id = als.survey_id
+                           AND als.creation_time >= (CURRENT_DATE - 30)""")
             exp = {r[0] for r in cur.fetchall()}
             obs = r.get_unfinished_sessions()
             self.assertEqual({r.username for r in obs}, exp)
@@ -177,7 +192,11 @@ class VioscreenSessions(unittest.TestCase):
             self.assertTrue(obs)
 
             # our sessions are unfinished
-            cur.execute("SELECT vio_id FROM ag.vioscreen_registry")
+            cur.execute("""SELECT DISTINCT(vio_id)
+                           FROM ag.vioscreen_registry vr
+                           INNER JOIN ag.ag_login_surveys als
+                           ON vr.vio_id = als.survey_id
+                           AND als.creation_time >= (CURRENT_DATE - 30)""")
             exp = {r[0] for r in cur.fetchall()}
             obs = r.get_unfinished_sessions()
             self.assertEqual({r.username for r in obs}, exp)
@@ -189,9 +208,13 @@ class VioscreenSessions(unittest.TestCase):
             self.assertTrue(obs)
 
             # one session is finished, and we only actually understand the
-            # sematics of a single session anyway, so under our current
+            # semantics of a single session anyway, so under our current
             # operating assumptions, this users FFQ is now complete
-            cur.execute("SELECT vio_id FROM ag.vioscreen_registry")
+            cur.execute("""SELECT DISTINCT(vio_id)
+                           FROM ag.vioscreen_registry vr
+                           INNER JOIN ag.ag_login_surveys als
+                           ON vr.vio_id = als.survey_id
+                           AND als.creation_time >= (CURRENT_DATE - 30)""")
             exp = {r[0] for r in cur.fetchall()}
             obs = r.get_unfinished_sessions()
             self.assertEqual({r.username for r in obs},

@@ -1,21 +1,18 @@
 import uuid
-
 import jwt
 from flask import jsonify
 from jwt import InvalidTokenError
-
 from werkzeug.exceptions import Unauthorized, Forbidden, NotFound
-
 from microsetta_private_api.api.literals import AUTHROCKET_PUB_KEY, \
     INVALID_TOKEN_MSG, JWT_ISS_CLAIM_KEY, JWT_SUB_CLAIM_KEY, \
     JWT_EMAIL_CLAIM_KEY, ACCT_NOT_FOUND_MSG, CRONJOB_PUB_KEY
 from microsetta_private_api.model.account import Account, AuthorizationMatch
 from microsetta_private_api.model.address import Address
 from microsetta_private_api.repo.account_repo import AccountRepo
-from microsetta_private_api.repo.activation_repo import ActivationRepo
-from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.config_manager import SERVER_CONFIG
+from microsetta_private_api.repo.perk_fulfillment_repo import\
+    PerkFulfillmentRepo
 from microsetta_private_api.util.google_geocoding import geocode_address
 
 
@@ -61,11 +58,6 @@ def register_account(body, token_info):
     # First register with AuthRocket, then come here to make the account
     new_acct_id = str(uuid.uuid4())
     body["id"] = new_acct_id
-    # Account.from_dict requires a kit_name, even if blank
-    kit_name = body.get("kit_name", "")
-    body["kit_name"] = kit_name
-    code = body.get("code", "")
-    body["code"] = code
 
     # We need these keys to exist to create the account object, but we'll
     # update them momentarily
@@ -76,33 +68,19 @@ def register_account(body, token_info):
     account_obj = Account.from_dict(body, token_info[JWT_ISS_CLAIM_KEY],
                                     token_info[JWT_SUB_CLAIM_KEY])
 
-    if kit_name == "" and code == "":
-        return jsonify(
-            code=400,
-            message="Account registration requires "
-                    "valid kit ID or activation code"), 400
-
     with Transaction() as t:
-        activation_repo = ActivationRepo(t)
-        if code != "":
-            can_activate, cause = activation_repo.can_activate_with_cause(
-                body["email"],
-                code
-            )
-            if not can_activate:
-                return jsonify(code=404, message=cause), 404
-            else:
-                activation_repo.use_activation_code(body["email"], code)
-
-        if kit_name != "":
-            kit_repo = KitRepo(t)
-            kit = kit_repo.get_kit_all_samples(kit_name)
-            if kit is None:
-                return jsonify(code=404, message="Kit name not found"), 404
-
         acct_repo = AccountRepo(t)
         acct_repo.create_account(account_obj)
         new_acct = acct_repo.get_account(new_acct_id)
+
+        # Check for unclaimed subscriptions attached to the email address
+        pfr = PerkFulfillmentRepo(t)
+        subscription_ids = pfr.get_unclaimed_subscriptions_by_email(
+            new_acct.email
+        )
+        # If we find any, claim them
+        for sub_id in subscription_ids:
+            pfr.claim_unclaimed_subscription(sub_id, new_acct_id)
 
         # Now that we've successfully created an account, geocode it
         latitude, longitude, _, _, cannot_geocode = geocode_address(
@@ -156,7 +134,8 @@ def update_account(account_id, body, token_info):
             body['address']['city'],
             body['address']['state'],
             body['address']['post_code'],
-            body['address']['country_code']
+            body['address']['country_code'],
+            body['address']['street2']
         )
         acc.language = body['language']
 

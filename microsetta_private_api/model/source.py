@@ -13,20 +13,18 @@ class HumanInfo:
             child_info = {}
 
         return HumanInfo(
-            consent["participant_email"],
             is_juvenile,
             child_info.get("parent_1_name"),
             child_info.get("parent_2_name"),
             child_info.get("deceased_parent"),
             consent_date,
             date_revoked,
-            child_info.get("obtainer_name"),
+            child_info.get("assent_obtainer"),
             age_range)
 
-    def __init__(self, email, is_juvenile,
+    def __init__(self, is_juvenile,
                  parent1_name, parent2_name, deceased_parent,
                  consent_date, date_revoked, assent_obtainer, age_range):
-        self.email = email
         self.is_juvenile = is_juvenile
         self.parent1_name = parent1_name
         self.parent2_name = parent2_name
@@ -37,16 +35,14 @@ class HumanInfo:
         self.age_range = age_range
 
     def to_api(self):
-        consent = {"participant_email": self.email,
-                   "age_range": self.age_range}
+        consent = {"age_range": self.age_range}
 
         if self.is_juvenile:
             consent.update({
-                "participant_email": self.email,
                 "parent_1_name": self.parent1_name,
                 "parent_2_name": self.parent2_name,
                 "deceased_parent": self.deceased_parent,
-                "obtainer_name": self.assent_obtainer
+                "assent_obtainer": self.assent_obtainer
             })
 
         result = {"consent": consent}
@@ -81,10 +77,10 @@ class Source(ModelBase):
 
     def to_api(self):
         result = {
-                    "source_type": self.source_type,
-                    "source_name": self.name,
-                    "source_id": self.id
-                 }
+            "source_type": self.source_type,
+            "source_name": self.name,
+            "source_id": self.id
+        }
 
         result.update(self.source_data.to_api())
         return result

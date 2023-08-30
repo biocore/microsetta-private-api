@@ -10,6 +10,7 @@ from dateutil.parser import isoparse
 from urllib.parse import urlencode
 from unittest import TestCase
 from math import isclose
+from uuid import uuid4
 import microsetta_private_api.server
 from microsetta_private_api import localization
 from microsetta_private_api.model.preparation import Preparation
@@ -18,7 +19,9 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
-from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
+from microsetta_private_api.repo.survey_template_repo import (
+    SurveyTemplateRepo as st_repo
+)
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.vioscreen_repo import (
     VioscreenSessionRepo, VioscreenPercentEnergyRepo,
@@ -71,16 +74,17 @@ DUMMY_ACCT_INFO = {
         "country_code": "US",
         "post_code": "12345",
         "state": "CA",
-        "street": "123 Main St. E. Apt. 2"
+        "street": "123 Main St. E.",
+        "street2": "Apt. 2"
     },
     "email": TEST_EMAIL,
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
-    KIT_NAME_KEY: EXISTING_KIT_NAME,
     "latitude": 32.8798916,
     "longitude": -117.2363115,
-    "cannot_geocode": False
+    "cannot_geocode": False,
+    "consent_privacy_terms": True
 }
 DUMMY_ACCT_INFO_2 = {
     "address": {
@@ -88,16 +92,17 @@ DUMMY_ACCT_INFO_2 = {
         "country_code": "US",
         "post_code": "44074",
         "state": "OH",
-        "street": "489 College St."
+        "street": "489 College St.",
+        "street2": ""
     },
     "email": TEST_EMAIL_2,
     "first_name": "Obie",
     "last_name": "Dobie",
     "language": "en_US",
-    KIT_NAME_KEY: EXISTING_KIT_NAME_2,
     "latitude": 32.8798916,
     "longitude": -117.2363115,
-    "cannot_geocode": False
+    "cannot_geocode": False,
+    "consent_privacy_terms": True
 }
 DUMMY_ACCT_ADMIN = {
     "address": {
@@ -105,15 +110,16 @@ DUMMY_ACCT_ADMIN = {
         "country_code": "US",
         "post_code": "44074",
         "state": "OH",
-        "street": "489 College St."
+        "street": "489 College St.",
+        "street2": ""
     },
     "email": TEST_EMAIL_3,
     "first_name": "Obie",
     "last_name": "Dobie",
-    KIT_NAME_KEY: EXISTING_KIT_NAME_2,
     "latitude": 32.8798916,
     "longitude": -117.2363115,
-    "cannot_geocode": False
+    "cannot_geocode": False,
+    "consent_privacy_terms": True,
 }
 
 SOURCE_ID_1 = "9fba75a5-6fbf-42be-9624-731b6a9a161a"
@@ -122,7 +128,6 @@ DUMMY_HUMAN_SOURCE = {
                 'source_name': 'Bo',
                 'source_type': 'human',
                 'consent': {
-                    'participant_email': 'bo@bo.com',
                     'age_range': "18-plus"
                 },
             }
@@ -130,19 +135,25 @@ DUMMY_CONSENT_DATE = datetime.datetime.strptime('Jun 1 2005', '%b %d %Y')
 
 PRIMARY_SURVEY_TEMPLATE_ID = 1  # primary survey
 DUMMY_ANSWERED_SURVEY_ID = "5935e83a-a726-49af-b6dc-d68f1eacca5b"
-# This is a model of a partially-filled survey that includes
+
+# This is a model of two partially-filled surveys that include
 # a single-select field, a multi-select field with multiple
 # entries selected, an input field required to be an integer,
 # an input field required to be single-line string, and a text field
-# including a line break
-DUMMY_SURVEY_ANSWERS_MODEL = {
-    '6': 'Yes',
-    '30': ['Red wine', 'Spirits/hard alcohol'],
-    '104': 'candy corn\ngreen m&ms',
-    '107': 'Female',
-    '108': 68,
-    '109': 'inches',
-    '115': 'K7G-2G8'}
+# including a line break.
+
+DUMMY_SURVEY_ANSWERS_10 = {
+        '108': '68',
+        '109': 'inches',
+        '115': 'K7G-2G8',
+        '502': 'Female',
+    }
+
+DUMMY_SURVEY_ANSWERS_17 = {
+        '6': 'Yes',
+        '104': 'candy corn\ngreen m&ms',
+        '433': ['Oat fiber', 'Apple fiber'],
+    }
 
 DUMMY_EMPTY_SAMPLE_INFO = {
     'accession_urls': [],
@@ -198,6 +209,11 @@ FAKE_BARCODES = [BC1, BC2, BC3]
 FAKE_SAMPLES = [S1, S2, S3]
 FAKE_KIT = "12345678-aaaa-aaaa-aaaa-bbbbccccccce"
 FAKE_KIT_PW = "MockItToMe"
+
+DATA_CONSENT = "data"
+BIOSPECIMEN_CONSENT = "biospecimen"
+ADULT_DATA_CONSENT = "adult_data"
+ADULT_BIOSPECIMEN_CONSENT = "adult_biospecimen"
 
 
 def make_headers(fake_token):
@@ -321,7 +337,7 @@ def delete_dummy_accts():
         survey_answers_repo = SurveyAnswersRepo(t)
         sample_repo = SampleRepo(t)
         barcode_repo = BarcodeRepo(t)
-        template_repo = SurveyTemplateRepo(t)
+        template_repo = st_repo(t)
 
         # Delete fake kit and barcode preps
         barcode_repo.delete_preparation(BC1, 1234)
@@ -474,13 +490,14 @@ def _create_dummy_acct_from_t(t, create_dummy_1=True,
                 input_obj['address']['city'],
                 input_obj['address']['state'],
                 input_obj['address']['post_code'],
-                input_obj['address']['country_code']
+                input_obj['address']['country_code'],
+                input_obj['address']['street2']
             ),
             input_obj['latitude'],
             input_obj['longitude'],
             input_obj['cannot_geocode'],
-            input_obj['kit_name'],
-            input_obj['language']
+            input_obj['language'],
+            input_obj['consent_privacy_terms']
         )
     else:
         acct = Account.from_dict(input_obj, iss, sub)
@@ -495,7 +512,7 @@ def create_dummy_answered_survey(dummy_acct_id, dummy_source_id,
                                  survey_model=None, dummy_sample_id=None):
 
     if survey_model is None:
-        survey_model = DUMMY_SURVEY_ANSWERS_MODEL
+        survey_model = DUMMY_SURVEY_ANSWERS_10
 
     with Transaction() as t:
         survey_answers_repo = SurveyAnswersRepo(t)
@@ -624,6 +641,19 @@ class ApiTests(TestCase):
         # is there some better pattern I can use to split up what should be
         # a 'with' call?
         self.client.__exit__(None, None, None)
+
+        # references to dummy admins need to be removed from
+        # ag.account_removal_log before delete_dummy_accts() will be
+        # successful.
+        ids = (ACCT_ID_1, ACCT_ID_2, ACCT_ID_3)
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("DELETE FROM ag.account_removal_log WHERE account_id"
+                        " IN %s", (ids,))
+            cur.execute("DELETE FROM ag.account_removal_log WHERE admin_id IN"
+                        " %s", (ids,))
+            t.commit()
+
         delete_dummy_accts()
 
     def run_query_and_content_required_field_test(self, url, action,
@@ -687,6 +717,7 @@ class ApiTests(TestCase):
                                           dummy_acct_dict=None):
         if dummy_acct_dict is None:
             dummy_acct_dict = DUMMY_ACCT_INFO
+        response_obj.pop('kit_name')
 
         # check expected additional fields/values appear in response body:
         # Note that "d.get()" returns none if key not found, doesn't throw err
@@ -759,38 +790,6 @@ class AccountsTests(ApiTests):
 
         # check account id provided in body matches that in location header
         self.assertTrue(real_acct_id_from_loc, real_acct_id_from_body)
-
-    def test_accounts_create_fail_400_without_required_fields(self):
-        """Return 400 validation fail if don't provide a required field """
-        input_obj = copy.deepcopy(DUMMY_ACCT_INFO)
-        input_obj.pop('latitude', None)
-        input_obj.pop('longitude', None)
-        input_obj.pop('cannot_geocode', None)
-
-        self.run_query_and_content_required_field_test(
-            "/api/accounts", "post",
-            self.default_querystring_dict,
-            input_obj,
-            skip_fields=["kit_name"])
-
-    def test_accounts_create_fail_404(self):
-        """Return 404 if provided kit name is not found in db."""
-
-        # create post input json
-        input_obj = copy.deepcopy(DUMMY_ACCT_INFO)
-        input_obj[KIT_NAME_KEY] = MISSING_KIT_NAME
-        input_json = json.dumps(input_obj)
-
-        # execute accounts post (create)
-        response = self.client.post(
-            self.accounts_url,
-            content_type='application/json',
-            data=input_json,
-            headers=MOCK_HEADERS
-        )
-
-        # check response code
-        self.assertEqual(404, response.status_code)
 
     def test_accounts_create_fail_422(self):
         """Return 422 if provided email is in use in db."""
@@ -911,7 +910,9 @@ class AccountTests(ApiTests):
 
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, dummy_sample_id=MOCK_SAMPLE_ID)
+            dummy_acct_id, dummy_source_id,
+            survey_template_id=st_repo.DIET_ID,
+            dummy_sample_id=MOCK_SAMPLE_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
             dummy_acct_id, dummy_source_id)
@@ -950,13 +951,6 @@ class AccountTests(ApiTests):
 
         self.assertEqual(200, response.status_code)
         response_obj = json.loads(response.data)
-
-        for k in DUMMY_ACCT_INFO:
-            if k in (KIT_NAME_KEY, 'language', 'cannot_geocode', 'latitude',
-                     'longitude'):
-                continue
-            self.assertNotEqual(DUMMY_ACCT_INFO[k],
-                                response_obj[k])
 
         # verify deleting is idempotent
         response = self.client.delete(
@@ -1008,8 +1002,6 @@ class AccountTests(ApiTests):
 
         self.assertEqual(response_obj['source_name'],
                          'scrubbed')
-        self.assertEqual(response_obj['consent']['participant_email'],
-                         'scrubbed@microsetta.ucsd.edu')
 
         # pull the sample details
         response = self.client.get(
@@ -1047,7 +1039,7 @@ class AccountTests(ApiTests):
         response = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s?language_tag=en_us' %  # noqa
             (dummy_acct_id, dummy_source_id,
-             SurveyTemplateRepo.POLYPHENOL_FFQ_ID),
+             st_repo.POLYPHENOL_FFQ_ID),
             headers=self.dummy_auth)
 
         # delete the source
@@ -1097,13 +1089,16 @@ class AccountTests(ApiTests):
         self.assertEqual(204, response.status_code)
 
         # verify it is deleted
-        response = self.client.get(
-            '/api/accounts/%s?%s' %
-            (dummy_acct_id, self.default_lang_querystring),
-            headers=make_headers(FAKE_TOKEN_ADMIN))
-
-        # check response code
-        self.assertEqual(404, response.status_code)
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute(
+                "SELECT account_type "
+                "FROM ag.account "
+                "WHERE id = %s",
+                (dummy_acct_id,)
+            )
+            row = cur.fetchone()
+            self.assertEqual(row[0], "deleted")
 
     def test_account_scrub_non_existant(self):
         response = self.client.delete(
@@ -1153,7 +1148,7 @@ class AccountTests(ApiTests):
         response = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/%s?language_tag=en_us' %  # noqa
             (dummy_acct_id, dummy_source_id,
-             SurveyTemplateRepo.POLYPHENOL_FFQ_ID),
+             st_repo.POLYPHENOL_FFQ_ID),
             headers=self.dummy_auth)
 
         # now let's scrub it
@@ -1231,18 +1226,16 @@ class AccountTests(ApiTests):
 
     # region account update/put tests
     @staticmethod
-    def make_updated_acct_dict(keep_kit_name=False):
+    def make_updated_acct_dict():
         result = copy.deepcopy(DUMMY_ACCT_INFO)
-
-        if not keep_kit_name:
-            result.pop(KIT_NAME_KEY)
 
         result["address"] = {
             "city": "Oakland",
             "country_code": "US",
             "post_code": "99228",
             "state": "CA",
-            "street": "641 Queen St. E"
+            "street": "641 Queen St. E",
+            "street2": "Test"
         }
 
         return result
@@ -1251,7 +1244,7 @@ class AccountTests(ApiTests):
         """Successfully update existing account"""
         dummy_acct_id = create_dummy_acct()
 
-        changed_acct_dict = self.make_updated_acct_dict(keep_kit_name=True)
+        changed_acct_dict = self.make_updated_acct_dict()
 
         # create post input json
         input_json = json.dumps(changed_acct_dict)
@@ -1281,6 +1274,7 @@ class AccountTests(ApiTests):
         changed_acct_dict.pop('latitude', None)
         changed_acct_dict.pop('longitude', None)
         changed_acct_dict.pop('cannot_geocode', None)
+        changed_acct_dict.pop("consent_privacy_terms")
 
         input_url = "/api/accounts/{0}".format(dummy_acct_id)
         self.run_query_and_content_required_field_test(
@@ -1401,6 +1395,167 @@ class AccountTests(ApiTests):
         # check response code
         self.assertEqual(response.status_code, 404)
     # endregion account/email_match tests
+
+    def test_request_account_removal(self):
+        # create a dummy account and then confirm it is not present in the
+        # delete-queue.
+        dummy_acct_id = create_dummy_acct(create_dummy_1=True)
+
+        # this admin account needs to be created, but the metadata for it
+        # is already associated w/make_headers(FAKE_TOKEN_ADMIN).
+        create_dummy_acct(create_dummy_1=False, iss=ACCT_MOCK_ISS_3,
+                          sub=ACCT_MOCK_SUB_3, dummy_is_admin=True)
+
+        # check to see if account_id is already in the removal queue. It
+        # shouldn't be.
+        response = self.client.get(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        # Like similar functions, GET will return status-code 200 as long as
+        # the query was successful. Whether it is in the queue (True) or not
+        # (False) is stored in the response data under the 'status' key.
+        self.assertEqual(200, response.status_code)
+        self.assertFalse(json.loads(response.data)['status'])
+
+        # submit a request for this account to be removed.
+        response = self.client.put(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Request Accepted")
+
+        # Verify it is now present in the queue.
+        response = self.client.get(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertTrue(json.loads(response.data)['status'])
+
+        # try to request a second time. Verify that an error is returned
+        # instead.
+        response = self.client.put(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(422, response.status_code)
+
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Account is already in removal queue")
+
+        # attempt to remove the account id from the account removal queue
+        # and cancel the deletion request.
+        response = self.client.delete(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        # Verify it is not present in the queue.
+        response = self.client.get(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(200, response.status_code)
+
+        self.assertFalse(json.loads(response.data)['status'])
+
+        # attempt to remove the request again and confirm that an error
+        # is returned.
+        response = self.client.delete(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        self.assertEqual(422, response.status_code)
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Account is not in removal queue")
+
+        # now let's test having an admin ignore the request.
+        # first, put the user back in the queue.
+        response = self.client.put(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Request Accepted")
+
+        response = self.client.put(
+            f'/api/admin/account_removal/{dummy_acct_id}',
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(204, response.status_code)
+
+        # Note that the behavior for an admin ignoring the request is
+        # identical to a user cancelling the request except that there will be
+        # a log entry in ag.account_removal_log if an admin ignored the
+        # request. Either way the request is removed from the queue.
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute("""SELECT account_id, reviewed_on, CURRENT_TIMESTAMP
+                           FROM ag.account_removal_log ORDER BY id DESC""")
+            (a_id, r_date, n_date) = cur.fetchone()
+
+            # verify that the account in the log belongs to our dummy user.
+            self.assertEqual(dummy_acct_id, a_id)
+
+            # check that the admin just completed this review. Verify that
+            # the review occured in the last minute.
+            self.assertTrue((n_date - r_date).total_seconds() < 60)
+
+        # attempt to ignore the request again and confirm that an error
+        # is returned.
+        response = self.client.put(
+            f'/api/admin/account_removal/{dummy_acct_id}',
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        self.assertEqual(422, response.status_code)
+
+        self.assertEqual(json.loads(response.data)['message'],
+                         "Account is not in removal queue")
+
+        # generate a random UUID4 value and assume that it is not a valid
+        # account number because of its statistical uniqueness. Attempt to
+        # query for an account w/this number and confirm that it will not be
+        # found.
+
+        uri = '/api/accounts/%s/removal_queue' % uuid4()
+
+        response = self.client.get(uri, headers=self.dummy_auth)
+
+        self.assertEqual(404, response.status_code)
+
+        results = json.loads(response.data)
+        self.assertIn('detail', results)
+        self.assertEqual(results['detail'], 'Account not found')
+
+        # push the dummy_acct_id account back onto the queue and attempt to
+        # delete the account. Then confirm that the account no longer exists:
+
+        # mimic a user pressing the 'Delete Account' button in their
+        # accounts page. This will put the account_id for dummy_acct_id back
+        # in the queue.
+        response = self.client.put(
+            f'/api/accounts/{dummy_acct_id}/removal_queue',
+            headers=self.dummy_auth)
+
+        # confirm that the operation was a success.
+        self.assertEqual(200, response.status_code)
+
+        # Attempt to delete user dummy_acct_id using the account_removal
+        # endpoint. Note this endpoint wraps our standard account_delete()
+        # functionality; it deletes the id from the delete-queue and logs the
+        # deletion in a separate 'log' table, before calling account_delete().
+        response = self.client.delete(
+            f'/api/admin/account_removal/{dummy_acct_id}',
+            headers=make_headers(FAKE_TOKEN_ADMIN))
+
+        # confirm that the operation was a success.
+        self.assertEqual(204, response.status_code)
 
 
 @pytest.mark.usefixtures("client")
@@ -1549,6 +1704,138 @@ class SourceTests(ApiTests):
 
 
 @pytest.mark.usefixtures("client")
+class ConsentTests(ApiTests):
+    def setUp(self):
+        super().setUp()
+        self.signature_to_delete = None
+
+    def tearDown(self):
+        with Transaction() as t:
+            cur = t.cursor()
+            if self.signature_to_delete is not None:
+                cur.execute(
+                    "DELETE FROM ag.consent_audit "
+                    "WHERE signature_id = %s",
+                    (self.signature_to_delete, )
+                )
+                t.commit()
+
+        super().tearDown()
+
+    def sign_data_consent(self):
+        """Checks data consent for a source and sings the consent"""
+
+        dummy_acct_id, dummy_source_resp = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        consent_status = self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            headers=self.dummy_auth)
+
+        self.assertTrue(consent_status["result"])
+
+        CONSENT_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
+
+        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        consent_data.update("consent_type", ADULT_DATA_CONSENT)
+        consent_data.update("consent_id", CONSENT_ID)
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
+
+    def sign_biospecimen_consent(self):
+        """Checks biospecimen consent for a source and sings the consent"""
+
+        dummy_acct_id, source_resp = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        consent_status = self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, source_resp["source_id"], BIOSPECIMEN_CONSENT),
+            headers=self.dummy_auth)
+
+        self.assertTrue(consent_status["result"])
+
+        CONSENT_ID_BIO = "6b1595a5-4003-4d0f-aa91-56947eaf2901"
+
+        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
+        consent_data.update("consent_type", ADULT_BIOSPECIMEN_CONSENT)
+        consent_data.update("consent_id", CONSENT_ID_BIO)
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, source_resp["source_id"], BIOSPECIMEN_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
+
+    def test_get_signed_consent(self):
+        # Create our account and source to work from
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                cur.execute(
+                    "SELECT consent_id "
+                    "FROM ag.consent_documents "
+                    "WHERE locale = 'en_US' AND consent_type = 'adult_data' "
+                    "ORDER BY date_time DESC LIMIT 1"
+                )
+                row = cur.fetchone()
+                adult_data_consent = row['consent_id']
+
+        consent_data = {
+            "age_range": "18-plus",
+            "participant_name": "Bo",
+            "consent_type": ADULT_DATA_CONSENT,
+            "consent_id": adult_data_consent
+        }
+
+        response = self.client.post(
+            '/api/accounts/%s/source/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
+
+        # Now let's get that signed consent back
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, "data"),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+
+        response_data = json.loads(response.data)
+        self.assertEqual(
+            response_data['source_id'],
+            dummy_source_id
+        )
+        self.assertEqual(
+            response_data['consent_id'],
+            adult_data_consent
+        )
+
+        # need to clean this up in tearDown
+        self.signature_to_delete = response_data['signature_id']
+
+
+@pytest.mark.usefixtures("client")
 class SurveyTests(ApiTests):
     def test_myfoodrepo_slots(self):
         get_resp = self.client.get('/api/slots/myfoodrepo/?language_tag=en_US',
@@ -1561,7 +1848,7 @@ class SurveyTests(ApiTests):
         self.assertEqual(data['number_of_available_slots'],
                          data['total_number_of_slots'])
 
-    def _validate_survey_info(self, response, expected_output, expected_model):
+    def _validate_survey_info(self, response, exp_out, exp_model):
         # load the response body
         get_resp_obj = json.loads(response.data)
 
@@ -1569,13 +1856,13 @@ class SurveyTests(ApiTests):
         # database is not stable, so pop survey text value out and test it
         # separately
         observed_model = get_resp_obj.pop('survey_text')
-        self.assertEqual(expected_output, get_resp_obj)
 
-        # check dict keys
-        self.assertEqual(set(observed_model), set(expected_model))
+        self.assertEqual(exp_out, get_resp_obj)
+
+        self.assertEqual(set(observed_model), set(exp_model))
         for k in observed_model:
             obs = observed_model[k]
-            exp = expected_model[k]
+            exp = exp_model[k]
 
             if isinstance(obs, list):
                 obs = sorted(obs)
@@ -1602,24 +1889,21 @@ class SurveyTests(ApiTests):
         self.assertEqual(200, get_response.status_code)
         return real_id_from_loc, get_response
 
-    def _make_expected_survey_output(self, replacement_dict,
-                                     real_id_from_loc, base_dict=None):
-        if base_dict is None:
-            base_dict = DUMMY_SURVEY_ANSWERS_MODEL
-        expected_model = copy.deepcopy(base_dict)
-        for k, v in replacement_dict.items():
-            expected_model[k] = v
+    def _make_exp_survey_out(self, real_id_from_loc, base_dict,
+                             survey_template_id,
+                             survey_template_title):
+        exp_model = copy.deepcopy(base_dict)
 
-        expected_output = {
-            "survey_template_id": PRIMARY_SURVEY_TEMPLATE_ID,
+        exp_out = {
+            "survey_template_id": survey_template_id,
             "survey_status": None,
-            "survey_template_title": "Primary Questionnaire",
+            "survey_template_title": survey_template_title,
             "survey_template_version": "1.0",
             "survey_template_type": "local",
             "survey_id": real_id_from_loc,
         }
 
-        return expected_output, expected_model
+        return exp_out, exp_model
 
     def test_survey_create_success(self):
         """Successfully create a new answered survey"""
@@ -1633,16 +1917,42 @@ class SurveyTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
-                    'survey_text': DUMMY_SURVEY_ANSWERS_MODEL
+                    'survey_template_id': st_repo.BASIC_INFO_ID,
+                    'survey_text': DUMMY_SURVEY_ANSWERS_10
                 }),
             headers=self.dummy_auth
         )
 
         real_id_from_loc, get_resp = self._validate_survey_create(post_resp)
-        expected_output, expected_model = self._make_expected_survey_output(
-            {'108': '68'}, real_id_from_loc)
-        self._validate_survey_info(get_resp, expected_output, expected_model)
+        exp_out, exp_model = self._make_exp_survey_out(real_id_from_loc,
+                                                       DUMMY_SURVEY_ANSWERS_10,
+                                                       st_repo.BASIC_INFO_ID,
+                                                       'Basic Information')
+        self._validate_survey_info(get_resp, exp_out, exp_model)
+
+        post_resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys?%s'
+            % (dummy_acct_id, dummy_source_id, self.default_lang_querystring),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    'survey_template_id': st_repo.DIET_ID,
+                    'survey_text': DUMMY_SURVEY_ANSWERS_17
+                }),
+            headers=self.dummy_auth
+        )
+
+        # After the reorganization of the surveys, the set of questions was
+        # largely split into two surveys. Rather than find a single survey
+        # with all possible types, perform two create operations and validate
+        # them instead.
+        real_id_from_loc, get_resp = self._validate_survey_create(post_resp)
+
+        exp_out, exp_m = self._make_exp_survey_out(real_id_from_loc,
+                                                   DUMMY_SURVEY_ANSWERS_17,
+                                                   st_repo.DIET_ID,
+                                                   'Diet')
+        self._validate_survey_info(get_resp, exp_out, exp_m)
 
     def test_survey_create_success_empty(self):
         """Successfully create a new answered survey without any answers"""
@@ -1656,16 +1966,18 @@ class SurveyTests(ApiTests):
             content_type='application/json',
             data=json.dumps(
                 {
-                    'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
+                    'survey_template_id': st_repo.BASIC_INFO_ID,
                     'survey_text': {}
                 }),
             headers=self.dummy_auth
         )
 
         real_id_from_loc, get_resp = self._validate_survey_create(post_resp)
-        expected_output, expected_model = self._make_expected_survey_output(
-            {'108': ""}, real_id_from_loc, base_dict={})
-        self._validate_survey_info(get_resp, expected_output, expected_model)
+        exp_out, exp_model = self._make_exp_survey_out(real_id_from_loc,
+                                                       {'108': ''},
+                                                       st_repo.BASIC_INFO_ID,
+                                                       'Basic Information')
+        self._validate_survey_info(get_resp, exp_out, exp_model)
 
 
 @pytest.mark.usefixtures("client")
@@ -1737,6 +2049,7 @@ class SampleTests(ApiTests):
         exp = DUMMY_EMPTY_SAMPLE_INFO.copy()
         exp['source_id'] = SOURCE_ID_1
         exp['account_id'] = ACCT_ID_1
+        exp['kit_id'] = None
 
         self.assertEqual(get_resp_obj, [exp])
 
@@ -1750,7 +2063,9 @@ class SampleTests(ApiTests):
             create_dummy_1=True)
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         dummy_answered_survey_id = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id)
+            dummy_acct_id,
+            dummy_source_id,
+            survey_template_id=st_repo.BASIC_INFO_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}'.format(
             dummy_acct_id, dummy_source_id)
@@ -1781,16 +2096,17 @@ class SampleTests(ApiTests):
         self.assertEqual(200, get_response.status_code)
 
         # ensure there is precisely one survey associated with this sample
-        expected_output = [
+        exp_out = [
             {'survey_id': dummy_answered_survey_id,
-             'survey_template_id': PRIMARY_SURVEY_TEMPLATE_ID,
+             'survey_template_id': st_repo.BASIC_INFO_ID,
              'survey_status': None,
-             'survey_template_title': "Primary Questionnaire",
+             'survey_template_title': "Basic Information",
              'survey_template_version': '1.0',
-             'survey_template_type': 'local'
+             'survey_template_type': 'local',
+             'percentage_completed': None
              }]
         get_resp_obj = json.loads(get_response.data)
-        self.assertEqual(get_resp_obj, expected_output)
+        self.assertEqual(get_resp_obj, exp_out)
 
         # TODO: We should also have tests of associating a survey to a sample
         #  that fail with with a 401 for answered survey not found and
@@ -1804,7 +2120,9 @@ class SampleTests(ApiTests):
         create_dummy_kit(dummy_acct_id, dummy_source_id,
                          associate_sample=False)
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id)
+            dummy_acct_id,
+            dummy_source_id,
+            survey_template_id=st_repo.BASIC_INFO_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
             dummy_acct_id, dummy_source_id)
@@ -1857,7 +2175,9 @@ class SampleTests(ApiTests):
         create_dummy_kit(dummy_acct_id, dummy_source_id,
                          associate_sample=True)
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id)
+            dummy_acct_id,
+            dummy_source_id,
+            survey_template_id=st_repo.DIET_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples/{2}'.format(
             dummy_acct_id, dummy_source_id, MOCK_SAMPLE_ID)
@@ -1878,6 +2198,7 @@ class SampleTests(ApiTests):
         now = datetime.datetime.now()
         delta = relativedelta(years=now.year-11)
         date = now+delta
+
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),
             content_type='application/json',
@@ -1895,8 +2216,9 @@ class SampleTests(ApiTests):
 
         # if sample date is greater than 30 days
         now = datetime.datetime.now()
-        delta = relativedelta(months=now.month+2)
-        date = now+delta
+        delta = relativedelta(months=now.month + 2)
+        date = now + delta
+
         post_resp = self.client.put(
             '%s?%s' % (base_url, self.default_lang_querystring),
             content_type='application/json',
@@ -1976,8 +2298,11 @@ class SampleTests(ApiTests):
             create_dummy_1=True)
 
         create_dummy_kit(dummy_acct_id, dummy_source_id)
+
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, dummy_sample_id=MOCK_SAMPLE_ID)
+            dummy_acct_id, dummy_source_id,
+            survey_template_id=st_repo.BASIC_INFO_ID,
+            dummy_sample_id=MOCK_SAMPLE_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
             dummy_acct_id, dummy_source_id)
@@ -2018,7 +2343,10 @@ class SampleTests(ApiTests):
 
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         _ = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, dummy_sample_id=MOCK_SAMPLE_ID)
+            dummy_acct_id,
+            dummy_source_id,
+            survey_template_id=st_repo.BASIC_INFO_ID,
+            dummy_sample_id=MOCK_SAMPLE_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
             dummy_acct_id, dummy_source_id)
@@ -2091,7 +2419,10 @@ class SampleTests(ApiTests):
             create_dummy_1=True)
         create_dummy_kit(dummy_acct_id, dummy_source_id)
         dummy_answered_survey_id = create_dummy_answered_survey(
-            dummy_acct_id, dummy_source_id, dummy_sample_id=MOCK_SAMPLE_ID)
+            dummy_acct_id,
+            dummy_source_id,
+            survey_template_id=st_repo.BASIC_INFO_ID,
+            dummy_sample_id=MOCK_SAMPLE_ID)
 
         base_url = '/api/accounts/{0}/sources/{1}/samples'.format(
             dummy_acct_id, dummy_source_id)
@@ -2169,7 +2500,6 @@ class VioscreenTests(ApiTests):
             self.src_id = src_id
             self.samp_id = samp_id
             self.vio_id = '674533d367f222d2'
-
             cur.execute("""INSERT INTO ag.vioscreen_registry
                            (account_id, source_id, sample_id, vio_id)
                            VALUES (%s, %s, %s, %s)""",
@@ -2231,8 +2561,7 @@ class VioscreenTests(ApiTests):
 
     def _url_constructor(self):
         return (f'/api/accounts/{self.acct_id}'
-                f'/sources/{self.src_id}'
-                f'/samples/{self.samp_id}')
+                f'/sources/{self.src_id}')
 
     def test_get_sample_vioscreen_session_200(self):
         vioscreen_session = VioscreenSession(

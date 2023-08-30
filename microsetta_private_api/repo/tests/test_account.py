@@ -16,13 +16,15 @@ DUMMY_ACCT_INFO_1 = {
         "country_code": "US",
         "post_code": "12345",
         "state": "CA",
-        "street": "123 Main St. E. Apt. 2"
+        "street": "123 Main St. E.",
+        "street2": "Apt. 2"
     },
     "email": "geocode_test_1@testing.com",
     "first_name": "Jane",
     "last_name": "Doe",
     "language": "en_US",
     "kit_name": 'jb_qhxqe',
+    "consent_privacy_terms": True,
     "id": ACCT_ID_1
 }
 ACCT_MOCK_ISS_1 = "MrUnitTest.go"

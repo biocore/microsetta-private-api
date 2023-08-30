@@ -14,26 +14,28 @@ class AccountRepo(BaseRepo):
     read_cols = "id, email, " \
                 "account_type, auth_issuer, auth_sub, " \
                 "first_name, last_name, " \
-                "street, city, state, post_code, country_code, " \
+                "street, street2, city, state, post_code, country_code, " \
                 "created_with_kit_id, preferred_language, " \
-                "creation_time, update_time, latitude, longitude, "\
+                "consent_privacy_terms, creation_time, update_time, " \
+                "latitude, longitude, "\
                 "cannot_geocode"
 
     write_cols = "id, email, " \
                  "account_type, auth_issuer, auth_sub, " \
                  "first_name, last_name, " \
-                 "street, city, state, post_code, country_code, " \
-                 "created_with_kit_id, preferred_language, latitude, "\
-                 "longitude, cannot_geocode"
+                 "street, street2, city, state, post_code, country_code, " \
+                 "preferred_language, latitude, longitude, cannot_geocode, " \
+                 "consent_privacy_terms"
 
     @staticmethod
     def _row_to_addr(r):
         return Address(r["street"], r["city"], r["state"], r["post_code"],
-                       r["country_code"])
+                       r["country_code"], r["street2"])
 
     @staticmethod
     def _addr_to_row(addr):
         return (addr.street,
+                addr.street2,
                 addr.city,
                 addr.state,
                 addr.post_code,
@@ -47,8 +49,9 @@ class AccountRepo(BaseRepo):
             r['first_name'], r['last_name'],
             AccountRepo._row_to_addr(r),
             r['latitude'], r['longitude'], r['cannot_geocode'],
-            r['created_with_kit_id'],
             r['preferred_language'],
+            r['consent_privacy_terms'],
+            r['created_with_kit_id'],
             r['creation_time'], r['update_time'])
 
     @staticmethod
@@ -57,8 +60,8 @@ class AccountRepo(BaseRepo):
                 a.account_type, a.auth_issuer, a.auth_sub,
                 a.first_name, a.last_name) + \
                 AccountRepo._addr_to_row(a.address) + \
-                (a.created_with_kit_id, a.language, a.latitude, a.longitude,
-                 a.cannot_geocode)
+                (a.language, a.latitude, a.longitude,
+                 a.cannot_geocode, a.consent_privacy_terms)
 
     def claim_legacy_account(self, email, auth_iss, auth_sub):
         # Returns now-claimed legacy account if an unclaimed legacy account
@@ -129,7 +132,7 @@ class AccountRepo(BaseRepo):
     def get_account(self, account_id):
         with self._transaction.dict_cursor() as cur:
             cur.execute("SELECT " + AccountRepo.read_cols + " FROM "
-                        "account "
+                        "ag.account "
                         "WHERE "
                         "account.id = %s", (account_id,))
             r = cur.fetchone()
@@ -141,6 +144,11 @@ class AccountRepo(BaseRepo):
     def update_account(self, account):
         with self._transaction.cursor() as cur:
             row = AccountRepo._account_to_row(account)
+
+            # remove consent_privacy_terms from the row since we don't
+            # update it
+            consent_pos = len(row) - 1
+            row = row[:consent_pos]
 
             # Shift id to end since it appears in the WHERE clause
             row_id = row[0:1]
@@ -156,11 +164,11 @@ class AccountRepo(BaseRepo):
                             "first_name = %s, "
                             "last_name = %s, "
                             "street = %s, "
+                            "street2 = %s, "
                             "city = %s, "
                             "state = %s, "
                             "post_code = %s, "
                             "country_code = %s, "
-                            "created_with_kit_id = %s, "
                             "preferred_language = %s, "
                             "latitude = %s, "
                             "longitude = %s, "
@@ -184,14 +192,14 @@ class AccountRepo(BaseRepo):
     def create_account(self, account):
         try:
             with self._transaction.cursor() as cur:
-                cur.execute("INSERT INTO account (" +
+                cur.execute("INSERT INTO ag.account (" +
                             AccountRepo.write_cols +
                             ") "
                             "VALUES("
                             "%s, %s, "
                             "%s, %s, %s, "
                             "%s, %s, "
-                            "%s, %s, %s, %s, %s, "
+                            "%s, %s, %s, %s, %s, %s, "
                             "%s, %s, %s, %s, %s)",
                             AccountRepo._account_to_row(account))
                 return cur.rowcount == 1
@@ -263,6 +271,7 @@ class AccountRepo(BaseRepo):
         account.first_name = 'scrubbed'
         account.last_name = 'scrubbed'
         account.address.street = 'scrubbed'
+        account.address.street2 = 'scrubbed'
         account.address.city = 'scrubbed'
         account.address.state = 'NA'
         account.address.post_code = 'scrubbed'
