@@ -75,6 +75,36 @@ class SourceRepoTests(unittest.TestCase):
 
             self.assertTrue(obs.source_data.date_revoked is not None)
 
+    def test_update_legacy_source_age_range_succeed(self):
+        with Transaction() as t:
+            # First, we need to update the test source to an age_range of
+            # 'legacy'
+            cur = t.cursor()
+            cur.execute("UPDATE ag.source "
+                        "SET age_range = 'legacy' "
+                        "WHERE id = %s",
+                        (HUMAN_SOURCE.id, )
+                        )
+
+            # Now, let's update it
+            sr = SourceRepo(t)
+            obs = sr.update_legacy_source_age_range(
+                HUMAN_SOURCE.id,
+                "18-plus"
+            )
+            self.assertTrue(obs)
+
+    def test_update_legacy_source_age_range_fail(self):
+        # We'll try to update the human source without setting its age range
+        # to 'legacy'
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            obs = sr.update_legacy_source_age_range(
+                HUMAN_SOURCE.id,
+                "18-plus"
+            )
+            self.assertFalse(obs)
+
 
 if __name__ == '__main__':
     unittest.main()

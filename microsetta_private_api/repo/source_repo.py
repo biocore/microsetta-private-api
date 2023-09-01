@@ -144,6 +144,18 @@ class SourceRepo(BaseRepo):
                         )
             return cur.rowcount == 1
 
+    def update_legacy_source_age_range(self, source_id, age_range):
+        # We need to allow sources with an age_range of 'legacy' to update
+        # their age_range, but we do not want to expose this to any other
+        # update paths.
+        with self._transaction.cursor() as cur:
+            cur.execute("UPDATE ag.source "
+                        "SET age_range = %s "
+                        "WHERE id = %s AND age_range = 'legacy'",
+                        (age_range, source_id)
+                        )
+            return cur.rowcount == 1
+
     def create_source(self, source):
         with self._transaction.cursor() as cur:
             acct_repo = AccountRepo(self._transaction)
