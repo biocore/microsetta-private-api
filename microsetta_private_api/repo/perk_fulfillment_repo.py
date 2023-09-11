@@ -9,7 +9,7 @@ from microsetta_private_api.model.subscription import Subscription
 from microsetta_private_api.admin.admin_impl import\
     create_daklapack_order_internal
 from microsetta_private_api.model.daklapack_order import FEDEX_PROVIDER,\
-    FEDEX_2DAY_SHIPPING
+    FEDEX_GROUND_SHIPPING
 from microsetta_private_api.model.activation_code import ActivationCode
 from microsetta_private_api.tasks import send_email
 from microsetta_private_api.localization import EN_US
@@ -429,7 +429,7 @@ class PerkFulfillmentRepo(BaseRepo):
             "address": address_dict,
             "quantity": quantity,
             "shipping_provider": FEDEX_PROVIDER,
-            "shipping_type": FEDEX_2DAY_SHIPPING
+            "shipping_type": FEDEX_GROUND_SHIPPING
         }
         result = create_daklapack_order_internal(daklapack_order)
         if not result['order_success']:

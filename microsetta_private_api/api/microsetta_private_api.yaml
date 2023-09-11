@@ -776,6 +776,7 @@ paths:
         - $ref: '#/components/parameters/survey_redirect_url'
         - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/vio_id'
       responses:
         '200':
           description: Successfully returned a specific survey template
@@ -1098,6 +1099,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/vio_id'
         - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
@@ -1126,6 +1128,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/vio_id'
         - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
@@ -1154,6 +1157,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/vio_id'
         - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
@@ -1182,6 +1186,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/vio_id'
         - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
@@ -1210,6 +1215,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/vio_id'
         - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
@@ -1238,6 +1244,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/vio_id'
         - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
@@ -1266,6 +1273,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/vio_id'
         - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
@@ -1294,6 +1302,7 @@ paths:
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/vioscreen_ext_sample_id'
         - $ref: '#/components/parameters/registration_code'
+        - $ref: '#/components/parameters/vio_id'
         - $ref: '#/components/parameters/timestamp'
       responses:
         '200':
@@ -3064,6 +3073,13 @@ components:
       schema:
         $ref: '#/components/schemas/registration_code'
       required: False
+    vio_id:
+      name: vio_id
+      in: query
+      description: Identifies vioscreen sessions for edge cases where neither a sample ID nor registration code exist
+      schema:
+        $ref: '#/components/schemas/vio_id'
+      required: False
     timestamp:
       name: timestamp
       in: query
@@ -3724,6 +3740,9 @@ components:
     registration_code:
       type: string
       example: "TMI-UV94L-97JN7-MWUFX"
+    vio_id:
+      type: string
+      example: "abcdef123456"
     creation_time:
       type: string
       readOnly: true
