@@ -780,6 +780,7 @@ class SurveyTemplateRepo(BaseRepo):
             existing = self.get_vioscreen_id_if_exists(account_id, source_id,
                                                        sample_id,
                                                        registration_code,
+                                                       None,
                                                        vio_id)
 
             if existing is None:

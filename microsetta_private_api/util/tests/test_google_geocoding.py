@@ -62,7 +62,7 @@ UCSD_GEOCODING_RESULTS = {
          "formatted_address": "9500 Gilman Dr, La Jolla, CA 92093, USA",
          "geometry": {
             "location": {
-               "lat": 32.8798916,
+               "lat": 32.8798977,
                "lng": -117.2363115
             },
             "location_type": "ROOFTOP",
