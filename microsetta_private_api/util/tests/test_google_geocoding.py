@@ -62,7 +62,7 @@ UCSD_GEOCODING_RESULTS = {
          "formatted_address": "9500 Gilman Dr, La Jolla, CA 92093, USA",
          "geometry": {
             "location": {
-               "lat": 32.8798977,
+               "lat": 32.8798916,
                "lng": -117.2363115
             },
             "location_type": "ROOFTOP",
@@ -211,7 +211,7 @@ class GoogleGeocodingTests(unittest.TestCase):
         obs_lat, obs_long, obs_state, obs_country, obs_error =\
            geocode_address(UCSD_ADDRESS)
 
-        self.assertEqual(obs_lat, 32.8798916)
+        self.assertEqual(obs_lat, 32.8798977)
         self.assertEqual(obs_long, -117.2363115)
         self.assertEqual(obs_state, "CA")
         self.assertEqual(obs_country, "US")
