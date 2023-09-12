@@ -14,7 +14,7 @@ from microsetta_private_api.repo.vioscreen_repo import (
 def _get_session_by_account_details(account_id, source_id,
                                     sample_id=None,
                                     registration_code=None,
-                                    timestamp=None):
+                                    timestamp=None, vio_id=None):
     with Transaction() as t:
         surv_temp = SurveyTemplateRepo(t)
         vio_sess = VioscreenSessionRepo(t)
@@ -24,7 +24,8 @@ def _get_session_by_account_details(account_id, source_id,
                                                  source_id,
                                                  sample_id,
                                                  registration_code,
-                                                 timestamp)
+                                                 timestamp,
+                                                 vio_id)
         if vio_username is None:
             return True, (jsonify(code=404, message="Username not found"), 404)
 
@@ -38,7 +39,7 @@ def _get_session_by_account_details(account_id, source_id,
 def read_vioscreen_session(account_id, source_id, token_info,
                            sample_id=None,
                            registration_code=None,
-                           timestamp=None):
+                           timestamp=None, vio_id=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -46,7 +47,7 @@ def read_vioscreen_session(account_id, source_id, token_info,
                                         source_id,
                                         sample_id,
                                         registration_code,
-                                        timestamp)
+                                        timestamp, vio_id)
     if is_error:
         return vioscreen_session
 
@@ -56,7 +57,7 @@ def read_vioscreen_session(account_id, source_id, token_info,
 def read_vioscreen_percent_energy(account_id, source_id, token_info,
                                   sample_id=None,
                                   registration_code=None,
-                                  timestamp=None):
+                                  timestamp=None, vio_id=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -64,7 +65,7 @@ def read_vioscreen_percent_energy(account_id, source_id, token_info,
                                         source_id,
                                         sample_id,
                                         registration_code,
-                                        timestamp)
+                                        timestamp, vio_id)
     if is_error:
         return vioscreen_session
 
@@ -82,7 +83,7 @@ def read_vioscreen_percent_energy(account_id, source_id, token_info,
 def read_vioscreen_dietary_score(account_id, source_id, token_info,
                                  sample_id=None,
                                  registration_code=None,
-                                 timestamp=None):
+                                 timestamp=None, vio_id=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -90,7 +91,8 @@ def read_vioscreen_dietary_score(account_id, source_id, token_info,
                                         source_id,
                                         sample_id,
                                         registration_code,
-                                        timestamp)
+                                        timestamp,
+                                        vio_id)
     if is_error:
         return vioscreen_session
 
@@ -108,7 +110,7 @@ def read_vioscreen_dietary_score(account_id, source_id, token_info,
 def read_vioscreen_supplements(account_id, source_id, token_info,
                                sample_id=None,
                                registration_code=None,
-                               timestamp=None):
+                               timestamp=None, vio_id=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -116,7 +118,8 @@ def read_vioscreen_supplements(account_id, source_id, token_info,
                                         source_id,
                                         sample_id,
                                         registration_code,
-                                        timestamp)
+                                        timestamp,
+                                        vio_id)
     if is_error:
         return vioscreen_session
 
@@ -135,7 +138,7 @@ def read_vioscreen_food_components(account_id, source_id,
                                    token_info,
                                    sample_id=None,
                                    registration_code=None,
-                                   timestamp=None):
+                                   timestamp=None, vio_id=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -143,7 +146,8 @@ def read_vioscreen_food_components(account_id, source_id,
                                         source_id,
                                         sample_id,
                                         registration_code,
-                                        timestamp)
+                                        timestamp,
+                                        vio_id)
     if is_error:
         return vioscreen_session
 
@@ -161,7 +165,7 @@ def read_vioscreen_food_components(account_id, source_id,
 def read_vioscreen_eating_patterns(account_id, source_id, token_info,
                                    sample_id=None,
                                    registration_code=None,
-                                   timestamp=None):
+                                   timestamp=None, vio_id=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -169,7 +173,8 @@ def read_vioscreen_eating_patterns(account_id, source_id, token_info,
                                         source_id,
                                         sample_id,
                                         registration_code,
-                                        timestamp)
+                                        timestamp,
+                                        vio_id)
     if is_error:
         return vioscreen_session
 
@@ -186,7 +191,7 @@ def read_vioscreen_eating_patterns(account_id, source_id, token_info,
 
 def read_vioscreen_mpeds(account_id, source_id, token_info,
                          sample_id=None, registration_code=None,
-                         timestamp=None):
+                         timestamp=None, vio_id=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -194,7 +199,8 @@ def read_vioscreen_mpeds(account_id, source_id, token_info,
                                         source_id,
                                         sample_id,
                                         registration_code,
-                                        timestamp)
+                                        timestamp,
+                                        vio_id)
     if is_error:
         return vioscreen_session
 
@@ -211,7 +217,7 @@ def read_vioscreen_mpeds(account_id, source_id, token_info,
 def read_vioscreen_food_consumption(account_id, source_id, token_info,
                                     sample_id=None,
                                     registration_code=None,
-                                    timestamp=None):
+                                    timestamp=None, vio_id=None):
     _validate_account_access(token_info, account_id)
 
     is_error, vioscreen_session = \
@@ -219,7 +225,8 @@ def read_vioscreen_food_consumption(account_id, source_id, token_info,
                                         source_id,
                                         sample_id,
                                         registration_code,
-                                        timestamp)
+                                        timestamp,
+                                        vio_id)
     if is_error:
         return vioscreen_session
 

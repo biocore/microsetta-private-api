@@ -767,7 +767,7 @@ class SurveyTemplateRepo(BaseRepo):
 
     def create_vioscreen_id(self, account_id, source_id,
                             sample_id=None,
-                            registration_code=None):
+                            registration_code=None, vio_id=None):
         with self._transaction.cursor() as cur:
             # This transaction scans for existing IDs,
             # then generates a new ID if none exist
@@ -779,7 +779,9 @@ class SurveyTemplateRepo(BaseRepo):
             # test if an existing ID is available
             existing = self.get_vioscreen_id_if_exists(account_id, source_id,
                                                        sample_id,
-                                                       registration_code)
+                                                       registration_code,
+                                                       None,
+                                                       vio_id)
 
             if existing is None:
                 vioscreen_id = secrets.token_hex(8)
@@ -831,7 +833,8 @@ class SurveyTemplateRepo(BaseRepo):
     def get_vioscreen_id_if_exists(self, account_id, source_id,
                                    sample_id=None,
                                    registration_code=None,
-                                   timestamp=None):
+                                   timestamp=None,
+                                   vio_id=None):
         """Obtain a vioscreen ID if it exists"""
         with self._transaction.cursor() as cur:
             # Find an active vioscreen survey for this account+source+sample
@@ -852,6 +855,14 @@ class SurveyTemplateRepo(BaseRepo):
                             "registration_code=%s AND "
                             "deleted=false",
                             (account_id, source_id, registration_code))
+            elif vio_id is not None:
+                cur.execute("SELECT vio_id FROM "
+                            "vioscreen_registry WHERE "
+                            "account_id=%s AND "
+                            "source_id=%s AND "
+                            "vio_id=%s AND "
+                            "deleted=false",
+                            (account_id, source_id, vio_id))
             elif timestamp is not None:
                 cur.execute("SELECT DISTINCT "
                             "vioscreen_registry.vio_id, "
