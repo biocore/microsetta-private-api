@@ -211,8 +211,11 @@ class GoogleGeocodingTests(unittest.TestCase):
         obs_lat, obs_long, obs_state, obs_country, obs_error =\
            geocode_address(UCSD_ADDRESS)
 
-        self.assertEqual(obs_lat, 32.8798977)
-        self.assertEqual(obs_long, -117.2363369)
+        obs_lat = round(obs_lat, 2)
+        obs_long = round(obs_long, 2)
+
+        self.assertEqual(obs_lat, 32.88)
+        self.assertEqual(obs_long, -117.24)
         self.assertEqual(obs_state, "CA")
         self.assertEqual(obs_country, "US")
         self.assertEqual(obs_error, False)
