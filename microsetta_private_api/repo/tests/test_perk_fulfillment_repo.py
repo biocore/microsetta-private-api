@@ -964,6 +964,32 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
                 error_list = pfr.process_subscription_fulfillment(f_id)
                 self.assertEqual(len(error_list), 0)
 
+    def test_check_perk_fulfillment_active_true(self):
+        with Transaction() as t:
+            # Update the database column to reflect a state of True
+            cur = t.cursor()
+            cur.execute(
+                "UPDATE ag.settings SET perk_fulfillment_active = TRUE"
+            )
+
+            # Now verify that our helper function returns the correct state
+            pfr = PerkFulfillmentRepo(t)
+            res = pfr.check_perk_fulfillment_active()
+            self.assertTrue(res)
+
+    def test_check_perk_fulfillment_active_false(self):
+        with Transaction() as t:
+            # Update the database column to reflect a state of False
+            cur = t.cursor()
+            cur.execute(
+                "UPDATE ag.settings SET perk_fulfillment_active = FALSE"
+            )
+
+            # Now verify that our helper function returns the correct state
+            pfr = PerkFulfillmentRepo(t)
+            res = pfr.check_perk_fulfillment_active()
+            self.assertFalse(res)
+
     def _count_ffq_registration_codes(self, t):
         cur = t.cursor()
         cur.execute(

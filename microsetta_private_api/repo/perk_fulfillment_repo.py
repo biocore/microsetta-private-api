@@ -780,3 +780,12 @@ class PerkFulfillmentRepo(BaseRepo):
                 "template_args": email_args
             })
         EventLogRepo(self._transaction).add_event(event)
+
+    def check_perk_fulfillment_active(self):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT perk_fulfillment_active "
+                "FROM ag.settings "
+            )
+            row = cur.fetchone()
+            return row['perk_fulfillment_active']

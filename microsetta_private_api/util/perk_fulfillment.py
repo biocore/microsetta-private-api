@@ -13,27 +13,32 @@ def fulfill_new_transactions():
 
     with Transaction() as t:
         pfr = PerkFulfillmentRepo(t)
-        ftp_ids = pfr.get_pending_fulfillments()
+        pf_active = pfr.check_perk_fulfillment_active()
 
-    for ftp_id in ftp_ids:
+    if pf_active:
         with Transaction() as t:
             pfr = PerkFulfillmentRepo(t)
-            error_list = pfr.process_pending_fulfillment(ftp_id)
-            if len(error_list) > 0:
-                for error in error_list:
-                    error_report.append(error)
+            ftp_ids = pfr.get_pending_fulfillments()
 
-            t.commit()
+        for ftp_id in ftp_ids:
+            with Transaction() as t:
+                pfr = PerkFulfillmentRepo(t)
+                error_list = pfr.process_pending_fulfillment(ftp_id)
+                if len(error_list) > 0:
+                    for error in error_list:
+                        error_report.append(error)
 
-    if len(error_report) > 0:
-        try:
-            send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
-                       {"what": "Perk Fulfillment Errors",
-                        "content": error_report},
-                       EN_US)
-        except:  # noqa
-            # try our best to email
-            pass
+                t.commit()
+
+        if len(error_report) > 0:
+            try:
+                send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
+                           {"what": "Perk Fulfillment Errors",
+                            "content": error_report},
+                           EN_US)
+            except:  # noqa
+                # try our best to email
+                pass
 
 
 @celery.task(ignore_result=True)
@@ -42,28 +47,35 @@ def process_subscription_fulfillments():
 
     with Transaction() as t:
         pfr = PerkFulfillmentRepo(t)
-        fulfillment_ids = pfr.get_subscription_fulfillments()
+        pf_active = pfr.check_perk_fulfillment_active()
 
-    for fulfillment_id in fulfillment_ids:
+    if pf_active:
         with Transaction() as t:
             pfr = PerkFulfillmentRepo(t)
-            error_list = pfr.process_subscription_fulfillment(fulfillment_id)
+            fulfillment_ids = pfr.get_subscription_fulfillments()
 
-            if len(error_list) > 0:
-                for error in error_list:
-                    error_report.append(error)
+        for fulfillment_id in fulfillment_ids:
+            with Transaction() as t:
+                pfr = PerkFulfillmentRepo(t)
+                error_list = pfr.process_subscription_fulfillment(
+                    fulfillment_id
+                )
 
-            t.commit()
+                if len(error_list) > 0:
+                    for error in error_list:
+                        error_report.append(error)
 
-    if len(error_report) > 0:
-        try:
-            send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
-                       {"what": "Subscription Fulfillment Errors",
-                        "content": error_report},
-                       EN_US)
-        except:  # noqa
-            # try our best to email
-            pass
+                t.commit()
+
+        if len(error_report) > 0:
+            try:
+                send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
+                           {"what": "Subscription Fulfillment Errors",
+                            "content": error_report},
+                           EN_US)
+            except:  # noqa
+                # try our best to email
+                pass
 
 
 @celery.task(ignore_result=True)
