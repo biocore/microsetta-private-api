@@ -283,3 +283,27 @@ class SourceRepo(BaseRepo):
             if r is None:
                 return {'source_duplicate': False}
             return {'source_duplicate': True}
+
+    def check_source_post_overhaul(self, account_id, source_id):
+        """Check whether source was created after the TMI overhaul deployment
+
+        Parameters
+        ----------
+        account_id : str, uuid
+            The associated account ID to check
+        source_id : str, uuid
+            The associated source ID to check
+
+        Returns
+        -------
+        True if the source is post-overhaul, False otherwise
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT id "
+                "FROM ag.source "
+                "WHERE account_id = %s AND id = %s "
+                "AND creation_time >= '2023-08-30 09:10:00'",
+                (account_id, source_id)
+            )
+            return cur.rowcount == 1

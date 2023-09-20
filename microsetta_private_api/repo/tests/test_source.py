@@ -105,6 +105,31 @@ class SourceRepoTests(unittest.TestCase):
             )
             self.assertFalse(obs)
 
+    def test_check_source_post_overhaul_true(self):
+        # We'll check a newly created source and confirm that it's
+        # treated as post-overhaul. The source created during setUp
+        # can safely be used as-is.
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            obs = sr.check_source_post_overhaul(ACCOUNT_ID, HUMAN_SOURCE.id)
+            self.assertTrue(obs)
+
+    def test_check_source_post_overhaul_false(self):
+        # Now we'll modify the creation_time column by hand and confirm it's
+        # treated as pre-overhaul
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute(
+                "UPDATE ag.source "
+                "SET creation_time = '2023-01-01 10:00:00' "
+                "WHERE id = %s",
+                (HUMAN_SOURCE.id, )
+            )
+
+            sr = SourceRepo(t)
+            obs = sr.check_source_post_overhaul(ACCOUNT_ID, HUMAN_SOURCE.id)
+            self.assertFalse(obs)
+
 
 if __name__ == '__main__':
     unittest.main()
