@@ -81,7 +81,9 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
         # at the creation_time on the source. Anything pre-overhaul is
         # prevented from signing a new consent document.
         if source.source_data.age_range not in ["legacy", "18-plus"] and\
-                not source_repo.check_source_post_overhaul(account_id, source_id):
+                not source_repo.check_source_post_overhaul(
+                    account_id, source_id
+                ):
             return jsonify(
                 code=403, message="Minors may not sign new consent documents"
             ), 403
