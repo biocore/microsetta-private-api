@@ -493,7 +493,9 @@ class UserTransaction(BaseRepo):
                                EN_US)
 
                     # Log the email being sent
-                    self._log_email(template, payment.contact_email, email_args)
+                    self._log_email(
+                        template, payment.contact_email, email_args
+                    )
                 except:  # noqa
                     # try our best to email
                     pass
