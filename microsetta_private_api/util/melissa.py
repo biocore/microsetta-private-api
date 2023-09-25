@@ -30,7 +30,7 @@ def verify_address(address_1, address_2=None, address_3=None, city=None,
         melissa_repo = MelissaRepo(t)
 
         dupe_status = melissa_repo.check_duplicate(address_1, address_2,
-                                                   address_3, postal, country)
+                                                   postal, country)
 
         if dupe_status is not False:
             # duplicate record - return result with an added field noting dupe

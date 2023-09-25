@@ -45,8 +45,7 @@ class MelissaRepo(BaseRepo):
             else:
                 return record_id
 
-    def check_duplicate(self, address_1, address_2, address_3, postal,
-                        country):
+    def check_duplicate(self, address_1, address_2, postal, country):
         """
         Check if an address has already been verified to avoid duplicate
             queries against the Melissa API
@@ -59,7 +58,6 @@ class MelissaRepo(BaseRepo):
         ----------
         address_1 - Primary street address
         address_2 - Secondary street address
-        address_3 - Tertiary street address
         postal - Postal code
         country - Country
 
@@ -72,18 +70,16 @@ class MelissaRepo(BaseRepo):
             cur.execute("""SELECT * FROM campaign.melissa_address_queries
                             WHERE (source_address_1 = %s
                             AND source_address_2 = %s
-                            AND source_address_3 = %s
                             AND source_postal = %s
                             AND source_country = %s
                             AND result_processed = true)
                             OR (result_address_1 = %s
                             AND result_address_2 = %s
-                            AND result_address_3 = %s
                             AND result_postal = %s
                             AND result_country = %s
                             AND result_processed = true)""",
-                        (address_1, address_2, address_3, postal, country,
-                         address_1, address_2, address_3, postal, country))
+                        (address_1, address_2, postal, country,
+                         address_1, address_2, postal, country))
             row = cur.fetchone()
             if row is None:
                 return False

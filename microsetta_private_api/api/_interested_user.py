@@ -116,7 +116,6 @@ def get_interested_user_address_update(interested_user_id, email):
                     melissa_result = melissa_repo.check_duplicate(
                         interested_user.address_1,
                         interested_user.address_2,
-                        interested_user.address_3,
                         interested_user.postal_code,
                         interested_user.country
                     )
