@@ -67,19 +67,36 @@ class MelissaRepo(BaseRepo):
         Full table row is record is a duplicate
         """
         with self._transaction.dict_cursor() as cur:
-            cur.execute("""SELECT * FROM campaign.melissa_address_queries
-                            WHERE (source_address_1 = %s
-                            AND source_address_2 = %s
-                            AND source_postal = %s
-                            AND source_country = %s
-                            AND result_processed = true)
-                            OR (result_address_1 = %s
-                            AND result_address_2 = %s
-                            AND result_postal = %s
-                            AND result_country = %s
-                            AND result_processed = true)""",
-                        (address_1, address_2, postal, country,
-                         address_1, address_2, postal, country))
+            # We need to gracefully handle a null/None value for address_2 as
+            # psycopg won't automatically handle = NULL vs. IS NULL
+            if address_2 is None:
+                cur.execute("""SELECT * FROM campaign.melissa_address_queries
+                                WHERE (source_address_1 = %s
+                                AND source_address_2 IS NULL
+                                AND source_postal = %s
+                                AND source_country = %s
+                                AND result_processed = true)
+                                OR (result_address_1 = %s
+                                AND result_address_2 IS NULL
+                                AND result_postal = %s
+                                AND result_country = %s
+                                AND result_processed = true)""",
+                            (address_1, postal, country,
+                             address_1, postal, country))
+            else:
+                cur.execute("""SELECT * FROM campaign.melissa_address_queries
+                                WHERE (source_address_1 = %s
+                                AND source_address_2 = %s
+                                AND source_postal = %s
+                                AND source_country = %s
+                                AND result_processed = true)
+                                OR (result_address_1 = %s
+                                AND result_address_2 = %s
+                                AND result_postal = %s
+                                AND result_country = %s
+                                AND result_processed = true)""",
+                            (address_1, address_2, postal, country,
+                             address_1, address_2, postal, country))
             row = cur.fetchone()
             if row is None:
                 return False
