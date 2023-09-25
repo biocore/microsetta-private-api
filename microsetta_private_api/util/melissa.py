@@ -70,12 +70,16 @@ def verify_address(address_1, address_2=None, address_3=None, city=None,
                           "ctry": country}
 
             # Melissa API behaves oddly if it receives null values for a2
-            # and a3 - don't send if we don't have actual data for them
+            # and a3, convert to "" if necessary
             if address_2 is not None:
                 url_params["a2"] = address_2
+            else:
+                url_params["a2"] = ""
 
             if address_3 is not None:
                 url_params["a3"] = address_3
+            else:
+                url_params["a3"] = ""
 
             url = SERVER_CONFIG["melissa_url"] + "?%s" % \
                 urllib.parse.urlencode(url_params)
