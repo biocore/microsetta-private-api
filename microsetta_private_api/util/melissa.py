@@ -119,7 +119,7 @@ def verify_address(address_1, address_2=None, address_3=None, city=None,
                         r_good = True
                         break
 
-                if not r_good and r_good_conditional and not r_errors_present:
+                if r_good_conditional and not r_errors_present:
                     r_good = True
 
                 r_address_1 = record_obj["AddressLine1"]

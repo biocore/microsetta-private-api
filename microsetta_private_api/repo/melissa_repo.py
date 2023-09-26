@@ -71,7 +71,7 @@ class MelissaRepo(BaseRepo):
             # psycopg won't automatically handle = NULL vs. IS NULL
             sql = """SELECT * FROM campaign.melissa_address_queries
                                 WHERE (source_address_1 = %s
-                                AND source_{0} 
+                                AND source_{0}
                                 AND source_postal = %s
                                 AND source_country = %s
                                 AND result_processed = true)
