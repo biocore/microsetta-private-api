@@ -105,18 +105,12 @@ def get_interested_user_address_update(interested_user_id, email):
                 else:
                     # We've determined it's a valid user and their address
                     # needs to be fixed, so we return a subset of their info.
-                    # Certain paths into the database allow null address_2
-                    # which causes problems, so we change it to "".
-                    if interested_user.address_2 is None:
-                        interested_user.address_2 = ""
-
                     # We also need to grab the reason(s) that Melissa couldn't
                     # verify the address.
                     melissa_repo = MelissaRepo(t)
                     melissa_result = melissa_repo.check_duplicate(
                         interested_user.address_1,
                         interested_user.address_2,
-                        interested_user.address_3,
                         interested_user.postal_code,
                         interested_user.country
                     )
