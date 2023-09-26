@@ -69,34 +69,28 @@ class MelissaRepo(BaseRepo):
         with self._transaction.dict_cursor() as cur:
             # We need to gracefully handle a null/None value for address_2 as
             # psycopg won't automatically handle = NULL vs. IS NULL
+            sql = """SELECT * FROM campaign.melissa_address_queries
+                                WHERE (source_address_1 = %s
+                                AND source_{0} 
+                                AND source_postal = %s
+                                AND source_country = %s
+                                AND result_processed = true)
+                                OR (result_address_1 = %s
+                                AND result_{0}
+                                AND result_postal = %s
+                                AND result_country = %s
+                                AND result_processed = true)"""
             if address_2 is None:
-                cur.execute("""SELECT * FROM campaign.melissa_address_queries
-                                WHERE (source_address_1 = %s
-                                AND source_address_2 IS NULL
-                                AND source_postal = %s
-                                AND source_country = %s
-                                AND result_processed = true)
-                                OR (result_address_1 = %s
-                                AND result_address_2 IS NULL
-                                AND result_postal = %s
-                                AND result_country = %s
-                                AND result_processed = true)""",
-                            (address_1, postal, country,
-                             address_1, postal, country))
+                address_2_is_null = 'address_2 IS NULL'
+                sql = sql.format(address_2_is_null)
+                arguments = (address_1, postal, country,
+                             address_1, postal, country)
             else:
-                cur.execute("""SELECT * FROM campaign.melissa_address_queries
-                                WHERE (source_address_1 = %s
-                                AND source_address_2 = %s
-                                AND source_postal = %s
-                                AND source_country = %s
-                                AND result_processed = true)
-                                OR (result_address_1 = %s
-                                AND result_address_2 = %s
-                                AND result_postal = %s
-                                AND result_country = %s
-                                AND result_processed = true)""",
-                            (address_1, address_2, postal, country,
-                             address_1, address_2, postal, country))
+                address_2_is_not_null = 'address_2 = %s'
+                sql = sql.format(address_2_is_not_null)
+                arguments = (address_1, address_2, postal, country,
+                             address_1, address_2, postal, country)
+            cur.execute(sql, arguments)
             row = cur.fetchone()
             if row is None:
                 return False
