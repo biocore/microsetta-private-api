@@ -2265,6 +2265,40 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/admin/perk_fulfillment_state':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_perk_fulfillment_state
+      tags:
+        - Admin
+      summary: Get the current state of whether perk fulfillment tasks are running
+      description: Get the current state of whether perk fulfillment tasks are running
+      responses:
+        '200':
+          description: Object containing state of perk fulfillment
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+    put:
+      operationId: microsetta_private_api.admin.admin_impl.update_perk_fulfillment_state
+      tags:
+        - Admin
+      summary: Update the state of whether perk fulfillment tasks are running
+      description: Update the state of whether perk fulfillment tasks are running
+      parameters:
+        - $ref: '#/components/parameters/perk_fulfillment_state'
+      responses:
+        '200':
+          description: Object containing state of perk fulfillment
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
   '/admin/verify_address':
     get:
       operationId: microsetta_private_api.admin.admin_impl.address_verification
@@ -3088,7 +3122,6 @@ components:
       schema:
         $ref: '#/components/schemas/creation_time'
       required: False
-
     source_type:
       name: source_type
       in: query
@@ -3119,6 +3152,12 @@ components:
       description: FFQ Code
       schema:
         $ref: '#/components/schemas/ffq_code'
+    perk_fulfillment_state:
+      name: perk_fulfillment_state
+      in: query
+      description: Boolean representing whether perk fulfillment tasks are running
+      schema:
+        $ref: '#/components/schemas/perk_fulfillment_state'
 
   responses:
     401Unauthorized:   # Can be referenced as '#/components/responses/401Unauthorized'
@@ -3147,6 +3186,11 @@ components:
             $ref: '#/components/schemas/Error'
 
   schemas:
+    # settings section
+    perk_fulfillment_state:
+      type: boolean
+      example: True
+
     # account section
     account_id:
       type: string
