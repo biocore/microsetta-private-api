@@ -1183,6 +1183,7 @@ class SurveyTemplateRepo(BaseRepo):
             localization.EN_GB: "survey_response.british",
             localization.ES_MX: "survey_response.spanish",
             localization.ES_ES: "survey_response.spain_spanish",
+            localization.JA_JP: "survey_response.japanese"
         }
 
         if language_tag not in tag_to_col:
