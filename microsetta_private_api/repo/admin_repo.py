@@ -1390,3 +1390,20 @@ class AdminRepo(BaseRepo):
                 (code,)
             )
         return code
+
+    def get_perk_fulfillment_state(self):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT perk_fulfillment_active "
+                "FROM ag.settings"
+            )
+            row = cur.fetchone()
+            return row[0]
+
+    def update_perk_fulfillment_state(self, new_state):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "UPDATE ag.settings "
+                "SET perk_fulfillment_active = %s",
+                (new_state, )
+            )
