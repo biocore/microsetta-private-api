@@ -192,10 +192,10 @@ class PerkFulfillmentRepo(BaseRepo):
                                 subscription_id
                             )
                             if not status:
-                                # Daklapack order failed, let the error percolate
+                                # Dak order failed, let the error percolate
                                 error_report.append(
-                                    f"Error placing Daklapack order for ftp_id "
-                                    f"{row['ftp_id']}: {return_val}"
+                                    f"Error placing Daklapack order for "
+                                    f"ftp_id {row['ftp_id']}: {return_val}"
                                 )
 
                 cur.execute(
