@@ -333,11 +333,13 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
             cur.execute(
                 "DELETE FROM campaign.fundrazr_transaction_perk "
                 "WHERE id IN %s",
-                ((
-                     self.ffq_ftp_id,
-                     self.kit_ftp_id,
-                     self.two_kit_ftp_id,
-                     self.sub_ftp_id),
+                (
+                    (
+                        self.ffq_ftp_id,
+                        self.kit_ftp_id,
+                        self.two_kit_ftp_id,
+                        self.sub_ftp_id
+                    ),
                 )
             )
             cur.execute(
