@@ -39,7 +39,7 @@ SELECT
 -- Next, we'll create the new records in campaign.fundrazr_transaction_perk.
 -- We'll decrement quantity by 1 to reflect the kit that was already processed for each order.
 INSERT INTO campaign.fundrazr_transaction_perk (transaction_id, perk_id, quantity, processed)
-SELECT CONCAT(id, '-manual-patch-132'), perk_id, quantity-1, FALSE
+SELECT CONCAT(transaction_id, '-manual-patch-132'), perk_id, quantity-1, FALSE
     FROM campaign.fundrazr_transaction_perk WHERE transaction_id IN ('73A565339S129053J', '9G656551639672613', '8X951176NJ262430Y');
 
 -- Lastly, we're going to set the original records in campaign.fundrazr_transaction_perk to a quantity of 1 to reflect what was fulfilled
