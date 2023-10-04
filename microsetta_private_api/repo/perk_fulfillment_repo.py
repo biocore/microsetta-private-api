@@ -143,7 +143,7 @@ class PerkFulfillmentRepo(BaseRepo):
                             self._schedule_ffq(
                                 subscription_id,
                                 fulfillment_date,
-                                False
+                                fulfilled=False
                             )
                         else:
                             error_info = self._fulfill_ffq(
@@ -184,8 +184,11 @@ class PerkFulfillmentRepo(BaseRepo):
                             self._schedule_kit(subscription_id,
                                                fulfillment_date,
                                                row['dak_article_code'],
-                                               False)
+                                               fulfilled=False)
                         else:
+                            # We hard-code a quantity of 1 here because
+                            # the actual quantity is controlled by
+                            # row['quantity'] and row['kit_quantity'].
                             status, return_val = self._fulfill_kit(
                                 row,
                                 1,
