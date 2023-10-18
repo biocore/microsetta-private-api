@@ -19,15 +19,15 @@ CREATE TABLE ag.external_reports (
 
 -- Add Japanese translations for survey groups
 UPDATE ag.survey_group SET japanese = '基本情報' WHERE group_order = -10; -- Basic Information
-UPDATE ag.survey_group SET japanese = '自宅において' WHERE group_order = -11; -- At Home
+UPDATE ag.survey_group SET japanese = '住まい' WHERE group_order = -11; -- At Home
 UPDATE ag.survey_group SET japanese = '生活様式' WHERE group_order = -12; -- Lifestyle
 UPDATE ag.survey_group SET japanese = '消化器' WHERE group_order = -13; -- Gut
-UPDATE ag.survey_group SET japanese = '健康全般' WHERE group_order = -14; -- General Health
+UPDATE ag.survey_group SET japanese = '健康状態について' WHERE group_order = -14; -- General Health
 UPDATE ag.survey_group SET japanese = '健康診断' WHERE group_order = -15; -- Health Diagnosis
 UPDATE ag.survey_group SET japanese = 'アレルギー' WHERE group_order = -16; -- Allergies
-UPDATE ag.survey_group SET japanese = '食事' WHERE group_order = -17; -- Diet
+UPDATE ag.survey_group SET japanese = '食習慣' WHERE group_order = -17; -- Diet
 UPDATE ag.survey_group SET japanese = '食事の詳細' WHERE group_order = -18; -- Detailed Diet
-UPDATE ag.survey_group SET japanese = '他の' WHERE group_order = -22; -- Other
+UPDATE ag.survey_group SET japanese = 'その他' WHERE group_order = -22; -- Other
 
 -- Add missing Japanese translations for survey questions
 UPDATE ag.survey_question SET japanese = 'どれくらい定期的にチームスポーツに参加していますか？' WHERE survey_question_id = 333;
@@ -42,7 +42,7 @@ UPDATE ag.survey_question SET japanese = '家畜をよく触ったり定期的�
 UPDATE ag.survey_question SET japanese = 'この研究に参加していて、そのことをあなたに自発的に伝えた人々と、あなたとの関係（パートナー、子供など）をお答えください。' WHERE survey_question_id = 316;
 UPDATE ag.survey_question SET japanese = '種類／商品名：' WHERE survey_question_id = 490;
 UPDATE ag.survey_question SET japanese = 'この研究に参加していて、そのことをあなたに自発的に伝えた同居人は誰ですか？' WHERE survey_question_id = 319;
-UPDATE ag.survey_question SET japanese = '参加者名' WHERE survey_question_id = 508;
+UPDATE ag.survey_question SET japanese = 'その参加者の名前' WHERE survey_question_id = 508;
 UPDATE ag.survey_question SET japanese = 'この人とあなたは血のつながりがありますか？' WHERE survey_question_id = 509;
 UPDATE ag.survey_question SET japanese = 'この人はあなたと一緒に住んでいますか？' WHERE survey_question_id = 510;
 UPDATE ag.survey_question SET japanese = 'あなたの犬は主にどこにいますか？' WHERE survey_question_id = 501;
@@ -58,7 +58,7 @@ UPDATE ag.survey_question SET japanese = '過去1週間に、膨満感（おな�
 UPDATE ag.survey_question SET japanese = '過去1週間で、お腹が鳴る／胃が鳴ることはどれくらいありましたか？' WHERE survey_question_id = 365;
 UPDATE ag.survey_question SET japanese = 'ホルモン' WHERE survey_question_id = 518;
 UPDATE ag.survey_question SET japanese = '今までに皮膚疾患の診断を受けたことはありますか？' WHERE survey_question_id = 500;
-UPDATE ag.survey_question SET japanese = '現在、何らかのホルモン避妊法を使用していますか？' WHERE survey_question_id = 497;
+UPDATE ag.survey_question SET japanese = '現在、何らかの避妊法を使用していますか？' WHERE survey_question_id = 497;
 UPDATE ag.survey_question SET japanese = 'どのような皮膚疾患と診断されましたか？' WHERE survey_question_id = 374;
 UPDATE ag.survey_question SET japanese = 'その皮膚疾患はどのように診断されましたか？' WHERE survey_question_id = 375;
 UPDATE ag.survey_question SET japanese = '出産予定日：' WHERE survey_question_id = 370;
@@ -88,7 +88,7 @@ UPDATE ag.survey_question SET japanese = '通常、1日に何回食事をしま�
 UPDATE ag.survey_question SET japanese = '通常、1日に何回軽食（おやつ）を食べますか？' WHERE survey_question_id = 426;
 UPDATE ag.survey_question SET japanese = '毎日のカロリーのほとんどはいつ摂取しますか？' WHERE survey_question_id = 427;
 UPDATE ag.survey_question SET japanese = '繊維サプリメントを服用する場合、どのような種類のものを服用していますか？該当するものをすべて選択してください。' WHERE survey_question_id = 433;
-UPDATE ag.survey_question SET japanese = 'あなたは母乳や調整粉乳から栄養のほとんどを受け取っている乳児ですか、それとも成人用栄養シェイクから栄養のほとんど（1日のカロリーの75%以上）を受け取っている成人ですか？' WHERE survey_question_id = 498;
+UPDATE ag.survey_question SET japanese = 'あなたは栄養源がほぼ母乳または調整粉ミルクの乳児、または栄養源が1日の摂取カロリーうち75％以上が経腸栄養剤など、液体栄養である成人のいずれかですか？' WHERE survey_question_id = 498;
 UPDATE ag.survey_question SET japanese = '上記に記載されていないその他の特殊な食事制限があったら列挙／説明してください。' WHERE survey_question_id = 424;
 UPDATE ag.survey_question SET japanese = '通常、寝る前の最後の食事や軽食を何時に食べますか？' WHERE survey_question_id = 428;
 UPDATE ag.survey_question SET japanese = '繊維サプリメントをどれくらいの回数服用していますか？' WHERE survey_question_id = 434;
@@ -113,6 +113,10 @@ UPDATE ag.survey_question SET japanese = '現在の睡眠パターンにどの�
 UPDATE ag.survey_question SET japanese = '睡眠障害があなたの生活に悪影響を与えている事をまわりの人はどの程度気づいていると思いますか？' WHERE survey_question_id = 233;
 UPDATE ag.survey_question SET japanese = 'あなたは自身の睡眠障害をどの程度辛く感じていますか？' WHERE survey_question_id = 234;
 UPDATE ag.survey_question SET japanese = '現在、睡眠障害が毎日の生活に支障をきたしていますか？（日中の疲労、機嫌、仕事、家事の生産性、集中力、記憶力など）' WHERE survey_question_id = 235;
+UPDATE ag.survey_question SET japanese = '健康食品サプリ、ハーブサプリメントを服用していますか？' WHERE survey_question_id = 6;
+UPDATE ag.survey_question SET japanese = '過去一ヶ月の間に、新型コロナウイルス/COVID -19に感染している可能性が高い人と接触したことはありますか?(該当するもの全てにチェックを入れてください)' WHERE survey_question_id = 211;
+UPDATE ag.survey_question SET japanese = '過去一ヶ月の間に、新型コロナウイルス/COVID -19に感染した疑いはありますか？' WHERE survey_question_id = 212;
+UPDATE ag.survey_question SET japanese = 'その他、自分自身の微生物に何か影響を与えると思う事柄があればご記入下さい。' WHERE survey_question_id = 116;
 
 -- Add missing translations for survey responses
 UPDATE ag.survey_response SET japanese = '0' WHERE american = '0';
@@ -155,7 +159,7 @@ UPDATE ag.survey_response SET japanese = 'ないはずの体の部分に痛み�
 UPDATE ag.survey_response SET japanese = '瓶詰めされた*精製水（ラベルに「湧き水」あるいは「天然ミネラルウォーター」とは表示されていない）' WHERE american = 'Bottled* purified water (does not indicate "spring water" or "natural mineral water" on the label)';
 UPDATE ag.survey_response SET japanese = '脳がん（神経膠腫および神経膠芽腫を含む）' WHERE american = 'Brain cancer (includes gliomas and glioblastomas)';
 UPDATE ag.survey_response SET japanese = '乳がん' WHERE american = 'Breast cancer';
-UPDATE ag.survey_response SET japanese = 'カロリーは1日にわたって均等に分配している' WHERE american = 'Calories are evenly distributed throughout the day';
+UPDATE ag.survey_response SET japanese = '1日のうち、均等に摂取するように配分している' WHERE american = 'Calories are evenly distributed throughout the day';
 UPDATE ag.survey_response SET japanese = '子宮頸がん' WHERE american = 'Cervical cancer';
 UPDATE ag.survey_response SET japanese = '胆管がん' WHERE american = 'Cholangiocarcinoma';
 UPDATE ag.survey_response SET japanese = '結腸がん' WHERE american = 'Colon cancer';
@@ -209,7 +213,7 @@ UPDATE ag.survey_response SET japanese = '主要都市（人口100万人以上�
 UPDATE ag.survey_response SET japanese = 'モンクフルーツ' WHERE american = 'Monk fruit';
 UPDATE ag.survey_response SET japanese = '毎月' WHERE american = 'Monthly';
 UPDATE ag.survey_response SET japanese = '1日3回以上' WHERE american = 'More than 2 times a day';
-UPDATE ag.survey_response SET japanese = '５杯以上' WHERE american = 'More than 4';
+UPDATE ag.survey_response SET japanese = '5回以上' WHERE american = 'More than 4';
 UPDATE ag.survey_response SET japanese = '多民族' WHERE american = 'Multiracial';
 UPDATE ag.survey_response SET japanese = 'アメリカ先住民またはアラスカ先住民' WHERE american = 'Native American or Alaska Native';
 UPDATE ag.survey_response SET japanese = 'ハワイまたは他の太平洋諸島の先住民' WHERE american = 'Native Hawaiian or Other Pacific Islander';
@@ -273,10 +277,10 @@ UPDATE ag.survey_response SET japanese = 'はい、現在がんを患ってい�
 UPDATE ag.survey_response SET japanese = 'はい、ホメオパシー薬を服用しています。' WHERE american = 'Yes, I take homeopathic medication';
 UPDATE ag.survey_response SET japanese = 'はい、市販薬を服用しています。' WHERE american = 'Yes, I take over-the-counter medication';
 UPDATE ag.survey_response SET japanese = 'はい、処方薬を服用しています。' WHERE american = 'Yes, I take prescription medication';
-UPDATE ag.survey_response SET japanese = 'はい、避妊用パッチを使用しています。' WHERE american = 'Yes, I use a contraceptive patch';
-UPDATE ag.survey_response SET japanese = 'はい、避妊用の膣リングを使用しています。' WHERE american = 'Yes, I use a contraceptive vaginal ring';
-UPDATE ag.survey_response SET japanese = 'はい、ホルモン子宮内避妊具／インプラントを使用しています。' WHERE american = 'Yes, I use a hormonal IUD/implant';
-UPDATE ag.survey_response SET japanese = 'はい、注射用避妊薬を使用しています。' WHERE american = 'Yes, I use an injected contraceptive';
+UPDATE ag.survey_response SET japanese = 'はい、避妊パッチを使用しています。' WHERE american = 'Yes, I use a contraceptive patch';
+UPDATE ag.survey_response SET japanese = 'はい、避妊リングを使用しています。' WHERE american = 'Yes, I use a contraceptive vaginal ring';
+UPDATE ag.survey_response SET japanese = 'はい、子宮内避妊器具/避妊インプラントを使用しています。' WHERE american = 'Yes, I use a hormonal IUD/implant';
+UPDATE ag.survey_response SET japanese = 'はい、避妊注射を行っています。' WHERE american = 'Yes, I use an injected contraceptive';
 UPDATE ag.survey_response SET japanese = 'はい、ここに記載されていない他の種類の薬を使用しています。' WHERE american = 'Yes, I use other types of medication not listed here';
 UPDATE ag.survey_response SET japanese = 'はい、医療専門家（医師、医師助手）によって診断されました。' WHERE american = 'Yes, diagnosed by a medical professional (doctor, physician assistant)';
 UPDATE ag.survey_response SET japanese = 'はい、代替医療の医師によって診断されました。' WHERE american = 'Yes, diagnosed by an alternative or complementary practitioner';
@@ -295,7 +299,13 @@ UPDATE ag.survey_response SET japanese = '喘鳴(ゼーゼーとした咳）' WH
 UPDATE ag.survey_response SET japanese = '3回以上' WHERE american = '3 or more';
 UPDATE ag.survey_response SET japanese = '両方使います' WHERE american = 'I use both';
 UPDATE ag.survey_response SET japanese = '発酵食品は作りません。' WHERE american = 'I do not produce fermented foods';
-UPDATE ag.survey_response SET japanese = 'いいえ。私は子宮内避妊具銅IUDを使用しています' WHERE american = 'No, I use a copper IUD';
+UPDATE ag.survey_response SET japanese = 'いいえ、銅付加子宮内避妊器具を使用しています。' WHERE american = 'No, I use a copper IUD';
+UPDATE ag.survey_response SET japanese = 'はい、検査陽性の人と接触しました。' WHERE american = 'Yes, someone with positive test';
+UPDATE ag.survey_response SET japanese = 'はい、医師の診断は受けたが、検査はしていない人' WHERE american = 'Yes, someone with medical diagnosis, but no test';
+UPDATE ag.survey_response SET japanese = 'はい、陽性の可能性があるが医師による診断を受けていない人と接触しました。' WHERE american = 'Yes, someone with possible symptoms, but no diagnosis by doctor';
+UPDATE ag.survey_response SET japanese = 'はい、検査陽性でした。' WHERE american = 'Yes, with a positive test';
+UPDATE ag.survey_response SET japanese = 'はい、医師の診断は受けたが、検査はしていない人' WHERE american = 'Yes, medical diagnosis, but no test';
+UPDATE ag.survey_response SET japanese = '症状や兆候はありませんでした。' WHERE american = 'No symptoms or signs';
 
 -- Load Japanese consent documents
 -- Critical to note that we only have adult data/biospecimen documents, so Japanese users may not create profiles for minors
