@@ -751,7 +751,7 @@ class MigrationSupport:
         JFFQ_FILE_LABEL = "食物摂取頻度調査票"
 
         if not os.path.exists(ffq_key_path):
-            print("Key not found")
+            print("Key not found:" + ffq_key_path)
             return
 
         print("Key found, proceeding")
