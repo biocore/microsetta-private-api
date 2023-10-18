@@ -751,8 +751,10 @@ class MigrationSupport:
         JFFQ_FILE_LABEL = "食物摂取頻度調査票"
 
         if not os.path.exists(ffq_key_path):
+            print("Key not found")
             return
 
+        print("Key found, proceeding")
         with open(ffq_key_path) as csv_file:
             csv_contents = csv.reader(csv_file)
             header = True
