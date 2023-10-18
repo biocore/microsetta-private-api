@@ -1,3 +1,22 @@
+-- Create the table that will house external reports
+-- NB: The file_title column will not go through any translation mechanisms. It might be wise to revisit this in the future, but since our only current use
+-- is for highly specific documents with a pre-defined language (FFQs from the THDMI Japan project), the approach makes sense.
+
+-- The report_type value will dictate which section of the My Reports tab it displays under.
+-- I'm setting the enum up to reflect current structure (sample = My Kits/ffq = My FFQs) but this could be extended to "Other" or various specifics later.
+CREATE TYPE EXTERNAL_REPORT_TYPE AS ENUM ('sample', 'ffq');
+CREATE TABLE ag.external_reports (
+    external_report_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    source_id UUID NOT NULL,
+    file_name VARCHAR NOT NULL, -- The file name that will be used when the user downloads the file
+    file_title VARCHAR NOT NULL, -- The label that will be displayed in the UI when the user views their list of reports
+    file_type VARCHAR NOT NULL, -- The Content-Type header that Interface will use to render the file for display/download
+    file_contents BYTEA NOT NULL,
+    report_type EXTERNAL_REPORT_TYPE NOT NULL,
+
+    CONSTRAINT fk_external_reports_source FOREIGN KEY (source_id) REFERENCES ag.source (id)
+);
+
 -- Add Japanese translations for survey groups
 UPDATE ag.survey_group SET japanese = '基本情報' WHERE group_order = -10; -- Basic Information
 UPDATE ag.survey_group SET japanese = '自宅において' WHERE group_order = -11; -- At Home

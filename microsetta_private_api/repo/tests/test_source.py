@@ -25,10 +25,33 @@ class SourceRepoTests(unittest.TestCase):
         with Transaction() as t:
             sr = SourceRepo(t)
             sr.create_source(HUMAN_SOURCE)
+
+            file_name = "test_source.py"
+            file_label = "Test Source Repo"
+            fh = open(file_name, "rb")
+            file_contents = fh.read()
+            fh.close()
+            cur = t.cursor()
+            cur.execute(
+                "INSERT INTO ag.external_reports ("
+                "source_id, file_name, file_title, file_type, "
+                "file_contents, report_type"
+                ") VALUES (%s, %s, %s, %s, %s, %s)",
+                (HUMAN_SOURCE.id, file_name, file_label,
+                 "application/pdf", file_contents, "ffq")
+            )
+
             t.commit()
 
     def tearDown(self):
         with Transaction() as t:
+            cur = t.cursor()
+            cur.execute(
+                "DELETE FROM ag.external_reports "
+                "WHERE source_id = %s",
+                (HUMAN_SOURCE.id, )
+            )
+
             sr = SourceRepo(t)
             sr.delete_source(HUMAN_SOURCE.account_id,
                              HUMAN_SOURCE.id)
@@ -129,6 +152,66 @@ class SourceRepoTests(unittest.TestCase):
             sr = SourceRepo(t)
             obs = sr.check_source_post_overhaul(ACCOUNT_ID, HUMAN_SOURCE.id)
             self.assertFalse(obs)
+
+    def test_get_external_reports(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            obs = sr.get_external_reports(HUMAN_SOURCE.id)
+
+            # We should observe one external report
+            self.assertEqual(len(obs), 1)
+
+    def test_get_external_reports_fake_source(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            # Changed the source ID's second section from "ffff" to "aaaa"
+            obs = sr.get_external_reports(
+                "ffffffff-aaaa-cccc-aaaa-aaaaaaaaaaaa"
+            )
+
+            # We should observe zero external reports
+            self.assertEqual(len(obs), 0)
+
+    def test_get_external_report(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            reports = sr.get_external_reports(HUMAN_SOURCE.id)
+
+            er = reports[0]
+            obs = sr.get_external_report(
+                HUMAN_SOURCE.id, er.external_report_id
+            )
+
+            self.assertEqual(obs.source_id, HUMAN_SOURCE.id)
+            self.assertEqual(obs.file_title, "Test Source Repo")
+
+    def test_get_external_report_fail(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            reports = sr.get_external_reports(HUMAN_SOURCE.id)
+
+            er = reports[0]
+            obs = sr.get_external_report(
+                "ffffffff-aaaa-cccc-aaaa-aaaaaaaaaaaa", er.external_report_id
+            )
+
+            self.assertEqual(obs, None)
+
+    def test_get_external_report_bytes(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            reports = sr.get_external_reports(HUMAN_SOURCE.id)
+
+            er = reports[0]
+            obs = sr.get_external_report(
+                HUMAN_SOURCE.id, er.external_report_id
+            )
+
+            fh = open("test_source.py", "rb")
+            act = fh.read()
+            fh.close()
+
+            self.assertEqual(bytes(obs.file_contents), act)
 
 
 if __name__ == '__main__':

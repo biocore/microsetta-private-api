@@ -742,6 +742,56 @@ class MigrationSupport:
                     (r[0], hsi))
         TRN.execute()
 
+    @staticmethod
+    def migrate_133(TRN):
+        ffq_key_path = SERVER_CONFIG["japanese_ffqs_path_key"]
+        ffq_file_path = SERVER_CONFIG["japanese_ffqs_path_reports"]
+
+        # The below string translates to "Food frequency questionnaire"
+        JFFQ_FILE_LABEL = "食物摂取頻度調査票"
+
+        if not os.path.exists(ffq_key_path):
+            return
+
+        with open(ffq_key_path) as csv_file:
+            csv_contents = csv.reader(csv_file)
+            header = True
+
+            for csv_row in csv_contents:
+                if header:
+                    header = False
+                    continue
+                ffq_id, barcode = csv_row
+
+                # Find the source associated with the barcode and make sure
+                # it wasn't scrubbed or removed
+                TRN.add(
+                    "SELECT akb.source_id "
+                    "FROM ag.ag_kit_barcodes akb "
+                    "INNER JOIN ag.source s "
+                    "ON akb.source_id = s.id "
+                    "WHERE akb.barcode = %s AND s.date_revoked IS NULL",
+                    (barcode, )
+                )
+                rows = TRN.execute()[-1]
+
+                if len(rows) == 1:
+                    row = rows[0]
+                    source_id = row[0]
+                    pdf_name = ffq_id + ".pdf"
+                    pdf_path = ffq_file_path + pdf_name
+                    pdf_contents = open(pdf_path, "rb").read()
+
+                    TRN.add(
+                        "INSERT INTO ag.external_reports ("
+                        "source_id, file_name, file_title, file_type, "
+                        "file_contents, report_type"
+                        ") VALUES (%s, %s, %s, %s, %s, %s)",
+                        (source_id, pdf_name, JFFQ_FILE_LABEL,
+                         "application/pdf", pdf_contents, "ffq")
+                    )
+        TRN.execute()
+
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
         "0050.sql": migrate_50.__func__,
@@ -753,6 +803,7 @@ class MigrationSupport:
         # "0082.sql": migrate_82.__func__
         # ...
         "0096.sql": migrate_96.__func__,
+        "0133.sql": migrate_133.__func__
     }
 
     @classmethod

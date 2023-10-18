@@ -1,6 +1,7 @@
 import uuid
+import base64
 from datetime import date
-from flask import jsonify
+from flask import jsonify, make_response
 
 from microsetta_private_api.api._account import _validate_account_access
 from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG,\
@@ -194,3 +195,51 @@ def check_prompt_survey_update(account_id, source_id, token_info):
         s_t_r = SurveyTemplateRepo(t)
         prompt_update = s_t_r.check_prompt_survey_update(source_id)
         return jsonify({"prompt": prompt_update}), 200
+
+
+def get_external_reports(account_id, source_id, token_info):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        reports = source_repo.get_external_reports(source_id)
+        return jsonify(reports), 200
+
+
+def get_external_report(
+        account_id, source_id, external_report_id, token_info
+):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        report = source_repo.get_external_report(
+            source_id, external_report_id
+        )
+        # Trying to jsonify the actual contents gets ugly, so we return
+        # everything else here, and the contents in get_external_report_bytes
+        report.file_contents = ""
+
+        if report is None:
+            return jsonify(code=404, message="Report not found"), 404
+        return jsonify(report.to_api()), 200
+
+
+def get_external_report_bytes(
+        account_id, source_id, external_report_id, token_info
+):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        source_repo = SourceRepo(t)
+        report = source_repo.get_external_report(
+            source_id, external_report_id
+        )
+
+        if report is None:
+            return jsonify(code=404, message="Report not found"), 404
+
+        response = make_response(bytes(report.file_contents))
+        response.headers.set("Content-Type", "application/pdf")
+
+        return response

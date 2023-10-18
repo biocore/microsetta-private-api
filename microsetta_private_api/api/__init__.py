@@ -18,7 +18,8 @@ from ._consent import (
 from ._source import (
     create_source, read_source, update_source, read_sources,
     create_human_source_from_consent, check_duplicate_source_name,
-    scrub_source, check_source_ffq_prereqs, check_prompt_survey_update
+    scrub_source, check_source_ffq_prereqs, check_prompt_survey_update,
+    get_external_reports, get_external_report, get_external_report_bytes
 )
 from ._survey import (
     read_survey_template, read_survey_templates, read_answered_survey,
@@ -84,6 +85,9 @@ __all__ = [
     'read_source',
     'check_source_ffq_prereqs',
     'check_prompt_survey_update',
+    'get_external_reports',
+    'get_external_report',
+    'get_external_report_bytes',
     'update_source',
     'scrub_source',
     'read_sources',
