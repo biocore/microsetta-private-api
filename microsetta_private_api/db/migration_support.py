@@ -754,7 +754,6 @@ class MigrationSupport:
             print("Key not found:" + ffq_key_path)
             return
 
-        print("Key found, proceeding")
         with open(ffq_key_path) as csv_file:
             csv_contents = csv.reader(csv_file)
             header = True
@@ -792,6 +791,8 @@ class MigrationSupport:
                         (source_id, pdf_name, JFFQ_FILE_LABEL,
                          "application/pdf", pdf_contents, "ffq")
                     )
+                else:
+                    print("No mapping: " + ffq_id + " - " + barcode)
         TRN.execute()
 
     MIGRATION_LOOKUP = {
