@@ -202,6 +202,8 @@ def get_external_reports(account_id, source_id, token_info):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         reports = source_repo.get_external_reports(source_id)
+        for r in reports:
+            r.file_contents = ""
         return jsonify(reports), 200
 
 
