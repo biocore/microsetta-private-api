@@ -1,5 +1,4 @@
 import uuid
-import base64
 from datetime import date
 from flask import jsonify, make_response
 
