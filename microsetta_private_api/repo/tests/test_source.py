@@ -28,9 +28,9 @@ class SourceRepoTests(unittest.TestCase):
 
             file_name = "test_source.py"
             file_label = "Test Source Repo"
-            fh = open(file_name, "rb")
-            file_contents = fh.read()
-            fh.close()
+            # Opening and reading a file's contents doesn't appear to work on
+            # GitHub during workflow, so we need to fake the contents
+            file_contents = b'Imagine a full file here'
             cur = t.cursor()
             cur.execute(
                 "INSERT INTO ag.external_reports ("
@@ -207,9 +207,7 @@ class SourceRepoTests(unittest.TestCase):
                 HUMAN_SOURCE.id, er.external_report_id
             )
 
-            fh = open("test_source.py", "rb")
-            act = fh.read()
-            fh.close()
+            act = b'Imagine a full file here'
 
             self.assertEqual(bytes(obs.file_contents), act)
 
