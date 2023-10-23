@@ -3515,7 +3515,7 @@ components:
     file_contents:
       type: string
     report_type:
-      enum: ["sample", "ffq"]
+      enum: ["kit", "ffq"]
     nonhuman_source:
       type: object
       properties:
