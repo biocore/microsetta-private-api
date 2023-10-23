@@ -178,9 +178,10 @@ class SourceRepoTests(unittest.TestCase):
             reports = sr.get_external_reports(HUMAN_SOURCE.id)
 
             er = reports[0]
-            obs = sr.get_external_report(
+            obs_reports = sr.get_external_reports(
                 HUMAN_SOURCE.id, er.external_report_id
             )
+            obs = obs_reports[0]
 
             self.assertEqual(obs.source_id, HUMAN_SOURCE.id)
             self.assertEqual(obs.file_title, "Test Source Repo")
@@ -191,11 +192,11 @@ class SourceRepoTests(unittest.TestCase):
             reports = sr.get_external_reports(HUMAN_SOURCE.id)
 
             er = reports[0]
-            obs = sr.get_external_report(
+            obs_reports = sr.get_external_reports(
                 "ffffffff-aaaa-cccc-aaaa-aaaaaaaaaaaa", er.external_report_id
             )
 
-            self.assertEqual(obs, None)
+            self.assertEqual(len(obs_reports), 0)
 
     def test_get_external_report_bytes(self):
         with Transaction() as t:
@@ -203,9 +204,10 @@ class SourceRepoTests(unittest.TestCase):
             reports = sr.get_external_reports(HUMAN_SOURCE.id)
 
             er = reports[0]
-            obs = sr.get_external_report(
+            obs_reports = sr.get_external_reports(
                 HUMAN_SOURCE.id, er.external_report_id
             )
+            obs = obs_reports[0]
 
             act = b'Imagine a full file here'
 

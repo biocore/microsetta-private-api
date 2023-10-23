@@ -3,8 +3,8 @@
 -- is for highly specific documents with a pre-defined language (FFQs from the THDMI Japan project), the approach makes sense.
 
 -- The report_type value will dictate which section of the My Reports tab it displays under.
--- I'm setting the enum up to reflect current structure (sample = My Kits/ffq = My FFQs) but this could be extended to "Other" or various specifics later.
-CREATE TYPE EXTERNAL_REPORT_TYPE AS ENUM ('sample', 'ffq');
+-- I'm setting the enum up to reflect current structure (kit = My Kits/ffq = My FFQs) but this could be extended later.
+CREATE TYPE EXTERNAL_REPORT_TYPE AS ENUM ('kit', 'ffq');
 CREATE TABLE ag.external_reports (
     external_report_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     source_id UUID NOT NULL,

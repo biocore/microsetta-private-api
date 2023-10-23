@@ -212,15 +212,17 @@ def get_external_report(
 
     with Transaction() as t:
         source_repo = SourceRepo(t)
-        report = source_repo.get_external_report(
+        reports = source_repo.get_external_reports(
             source_id, external_report_id
         )
+        if len(reports) != 1:
+            return jsonify(code=404, message="Report not found"), 404
+
+        report = reports[0]
+
         # Trying to jsonify the actual contents gets ugly, so we return
         # everything else here, and the contents in get_external_report_bytes
         report.file_contents = ""
-
-        if report is None:
-            return jsonify(code=404, message="Report not found"), 404
         return jsonify(report.to_api()), 200
 
 
@@ -231,14 +233,15 @@ def get_external_report_bytes(
 
     with Transaction() as t:
         source_repo = SourceRepo(t)
-        report = source_repo.get_external_report(
+        reports = source_repo.get_external_reports(
             source_id, external_report_id
         )
 
-        if report is None:
+        if len(reports) != 1:
             return jsonify(code=404, message="Report not found"), 404
 
+        report = reports[0]
         response = make_response(bytes(report.file_contents))
-        response.headers.set("Content-Type", "application/pdf")
+        response.headers.set("Content-Type", report.file_type)
 
         return response

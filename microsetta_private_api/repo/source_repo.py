@@ -313,7 +313,7 @@ class SourceRepo(BaseRepo):
             )
             return cur.rowcount == 1
 
-    def get_external_reports(self, source_id):
+    def get_external_reports(self, source_id, external_report_id=None):
         """Retrieve list of external reports for a given source, if any
         NB: We only extract certain columns because there's no need to waste
         resources on the actual file_contents until the user hits the path
@@ -323,45 +323,27 @@ class SourceRepo(BaseRepo):
         ----------
         source_id : uuid
             The associated source ID
+        external_report_id : uuid
+            The ID of a single external report to pull
 
         Returns
         -------
         List of ExternalReports
         """
         with self._transaction.dict_cursor() as cur:
-            cur.execute(
-                "SELECT external_report_id, source_id, file_title, "
-                "report_type "
-                "FROM ag.external_reports "
-                "WHERE source_id = %s",
-                (source_id, )
-            )
+            if external_report_id is None:
+                cur.execute(
+                    "SELECT * "
+                    "FROM ag.external_reports "
+                    "WHERE source_id = %s",
+                    (source_id, )
+                )
+            else:
+                cur.execute(
+                    "SELECT * "
+                    "FROM ag.external_reports "
+                    "WHERE source_id = %s AND external_report_id = %s",
+                    (source_id, external_report_id)
+                )
             rows = cur.fetchall()
             return [_row_to_external_report(r) for r in rows]
-
-    def get_external_report(self, source_id, external_report_id):
-        """ Retrieve the full contents of an external report
-
-        Parameters
-        ----------
-        source_id : uuid
-            The associated source ID
-        external_report_id : uuid
-            The external report ID
-
-        Returns
-        -------
-        ExternalReport object or None if not found
-        """
-        with self._transaction.dict_cursor() as cur:
-            cur.execute(
-                "SELECT * "
-                "FROM ag.external_reports "
-                "WHERE source_id = %s AND external_report_id = %s",
-                (source_id, external_report_id)
-            )
-            if cur.rowcount == 1:
-                row = cur.fetchone()
-                return _row_to_external_report(row)
-            else:
-                return None
