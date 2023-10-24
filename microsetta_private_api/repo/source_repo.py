@@ -5,6 +5,7 @@ from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo
+from microsetta_private_api.model.external_report import ExternalReport
 
 from werkzeug.exceptions import NotFound
 from hashlib import sha512
@@ -55,6 +56,10 @@ def _row_to_source(r):
     row_to_obj = row_to_obj_funcs_by_type[
         r['source_type']]
     return Source(r[0], r[1], r[2], r[3], row_to_obj(r))
+
+
+def _row_to_external_report(r):
+    return ExternalReport.from_dict(r)
 
 
 # Note: By convention, this references sources by both account_id AND source_id
@@ -307,3 +312,38 @@ class SourceRepo(BaseRepo):
                 (account_id, source_id)
             )
             return cur.rowcount == 1
+
+    def get_external_reports(self, source_id, external_report_id=None):
+        """Retrieve list of external reports for a given source, if any
+        NB: We only extract certain columns because there's no need to waste
+        resources on the actual file_contents until the user hits the path
+        to view/download the report
+
+        Parameters
+        ----------
+        source_id : uuid
+            The associated source ID
+        external_report_id : uuid
+            The ID of a single external report to pull
+
+        Returns
+        -------
+        List of ExternalReports
+        """
+        with self._transaction.dict_cursor() as cur:
+            if external_report_id is None:
+                cur.execute(
+                    "SELECT * "
+                    "FROM ag.external_reports "
+                    "WHERE source_id = %s",
+                    (source_id, )
+                )
+            else:
+                cur.execute(
+                    "SELECT * "
+                    "FROM ag.external_reports "
+                    "WHERE source_id = %s AND external_report_id = %s",
+                    (source_id, external_report_id)
+                )
+            rows = cur.fetchall()
+            return [_row_to_external_report(r) for r in rows]

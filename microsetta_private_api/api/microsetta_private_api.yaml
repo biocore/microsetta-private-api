@@ -679,6 +679,79 @@ paths:
           $ref: '#/components/responses/422UnprocessableEntity'
           # NB: This would be returned if source cannot be deleted bc has a sample assigned to it
 
+  '/accounts/{account_id}/sources/{source_id}/external_reports':
+    get:
+      operationId: microsetta_private_api.api.get_external_reports
+      tags:
+        - Sources
+      summary: Get external reports attached to the source
+      description: Get external reports attached to the source
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Successfully returned list of external reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/external_report'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  '/accounts/{account_id}/sources/{source_id}/external_reports/{external_report_id}':
+    get:
+      operationId: microsetta_private_api.api.get_external_report
+      tags:
+        - Sources
+      summary: Get full contents of external report
+      description: Get full contents of external report
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/external_report_id'
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Successfully returned external report information
+          content:
+            application/json:
+              schema:
+                type: "object"
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/accounts/{account_id}/sources/{source_id}/external_reports/{external_report_id}/bytes':
+    get:
+      operationId: microsetta_private_api.api.get_external_report_bytes
+      tags:
+        - Sources
+      summary: Get full contents of external report
+      description: Get full contents of external report
+      parameters:
+        - $ref: '#/components/parameters/account_id'
+        - $ref: '#/components/parameters/source_id'
+        - $ref: '#/components/parameters/external_report_id'
+        - $ref: '#/components/parameters/language_tag'
+      responses:
+        '200':
+          description: Successfully returned contents of an external report
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   '/accounts/{account_id}/sources/{source_id}/check_ffq_prereqs':
     get:
       operationId: microsetta_private_api.api.check_source_ffq_prereqs
@@ -3049,6 +3122,12 @@ components:
       description: Type of consent
       schema:
         $ref: '#/components/schemas/consent_type'
+    external_report_id:
+      name: external_report_id
+      in: path
+      description: Unique identifier of external report
+      schema:
+        $ref: '#/components/schemas/external_report_id'
 
     # query parameters
     activation_code:
@@ -3470,6 +3549,18 @@ components:
       type: string
     assent_content:
       type: string
+    external_report_id:
+      type: string
+    file_name:
+      type: string
+    file_title:
+      type: string
+    file_type:
+      type: string
+    file_contents:
+      type: string
+    report_type:
+      enum: ["kit", "ffq"]
     nonhuman_source:
       type: object
       properties:
@@ -3517,6 +3608,27 @@ components:
                   type: string
               additionalProperties: false
       additionalProperties: false
+    external_report:
+      type: object
+      properties:
+        external_report_id:
+          $ref: '#/components/schemas/external_report_id'
+        source_id:
+          $ref: '#/components/schemas/source_id'
+        file_name:
+          $ref: '#/components/schemas/file_name'
+        file_title:
+          $ref: '#/components/schemas/file_title'
+        file_type:
+          $ref: '#/components/schemas/file_type'
+        file_contents:
+          $ref: '#/components/schemas/file_contents'
+        report_type:
+          $ref: '#/components/schemas/report_type'
+      required:
+        - external_report_id
+        - source_id
+        - report_type
 
     # survey template section
     survey_template_id:
