@@ -1,5 +1,6 @@
 openapi-spec-validator < 0.2.10
 connexion[swagger-ui] < 2.7.1
+swagger-ui-bundle
 jsonschema < 4.0.0
 pyjwt[crypto] < 2.2.0
 pytest
