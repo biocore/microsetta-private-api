@@ -1111,7 +1111,7 @@ class IntegrationTests(TestCase):
         new_source = json.loads(resp.data)
 
         consent_status = self.client.get(
-            '/api/accounts/%s/source/%s/consent/%s' %
+            '/api/accounts/%s/source/%s/consent/%s?language_tag=en_US' %
             (ACCT_ID, new_source["source_id"], "data"),
             headers=MOCK_HEADERS)
 
@@ -1120,7 +1120,7 @@ class IntegrationTests(TestCase):
         self.assertTrue(consent_res["result"])
 
         response = self.client.post(
-            '/api/accounts/%s/source/%s/consent/%s' %
+            '/api/accounts/%s/source/%s/consent/%s?language_tag=en_US' %
             (ACCT_ID, new_source["source_id"], "data"),
             content_type='application/json',
             data=json.dumps(SOURCE_DATA),
