@@ -1120,7 +1120,7 @@ class IntegrationTests(TestCase):
         self.assertTrue(consent_res["result"])
 
         response = self.client.post(
-            '/api/accounts/%s/source/%s/consent/%s?language_tag=en_US' %
+            '/api/accounts/%s/source/%s/consent/%s' %
             (ACCT_ID, new_source["source_id"], "data"),
             content_type='application/json',
             data=json.dumps(SOURCE_DATA),

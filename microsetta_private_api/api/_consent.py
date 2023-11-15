@@ -58,7 +58,7 @@ def check_consent_signature(
     return jsonify({"result": res}), 200
 
 
-def sign_consent_doc(account_id, source_id, body, token_info):
+def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:

@@ -125,6 +125,7 @@ class ConsentRepo(BaseRepo):
                 "ORDER BY sign_date DESC",
                 (source_id, ('%' + consent_type + '%'), language_tag)
             )
+            print(cur.query)
 
             r = cur.fetchone()
             if r is None:
