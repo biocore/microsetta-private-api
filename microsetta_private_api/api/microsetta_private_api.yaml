@@ -410,6 +410,7 @@ paths:
         - $ref: '#/components/parameters/account_id'
         - $ref: '#/components/parameters/source_id'
         - $ref: '#/components/parameters/consent_type'
+        - $ref: '#/components/parameters/language_tag'
       responses:
         '200':
           description: Consent Signature Status

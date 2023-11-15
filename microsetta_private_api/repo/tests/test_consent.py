@@ -15,18 +15,6 @@ SOURCE_ID = '4affcca2-1ca4-480d-88a4-b6dd2a3ba55b'
 INVALID_DOC_ID = 'ecabc635-3df8-49ee-ae19-db3db03c7393'
 ACCT_ID = '500d79fc-99e8-4c48-b911-a72005c9e0c9'
 
-DATA_DOC = {"consent_type": "Adult Consent - Data",
-            "locale": "en_US",
-            "consent": "Adult Data Consent",
-            "reconsent": '1'
-            }
-
-BIO_DOC = {"consent_type": "Adult Consent - Biospecimen",
-           "locale": "en_US",
-           "consent": "Adult Biospecimen Consent",
-           "reconsent": '1'
-           }
-
 CORRECT_SIGN = {"source_id": SOURCE_ID,
                 "date_time": datetime.now(),
                 "parent_1_name": None,
@@ -245,7 +233,7 @@ class ConsentRepoTests(unittest.TestCase):
         with Transaction() as t:
             consent_repo = ConsentRepo(t)
             source = INVALID_SOURCE_SIGN['source_id']
-            res = consent_repo.is_consent_required(source, "Data")
+            res = consent_repo.is_consent_required(source, "data", "en_US")
             self.assertTrue(res)
 
     def test_get_latest_signed_consent(self):
@@ -301,6 +289,147 @@ class ConsentRepoTests(unittest.TestCase):
             res = consent_repo.get_latest_signed_consent(source, "data")
             self.assertEqual(res.consent_id, self.adult_data_consent)
 
+    def test_reconsent_false(self):
+        # In this test, we're going to sign an English Adult Data consent
+        # document, then insert a new Spanish MX Adult Data consent document,
+        # then assert that reconsent is not required for an English user.
+
+        with Transaction() as t:
+            consent_repo = ConsentRepo(t)
+            acct_repo = AccountRepo(t)
+            source_repo = SourceRepo(t)
+
+            # Set up test account with sources
+            acc = Account(ACCT_ID,
+                          "foo@baz.com",
+                          "standard",
+                          "https://MOCKUNITTEST.com",
+                          "1234ThisIsNotARealSub",
+                          "Dan",
+                          "H",
+                          Address(
+                              "123 Dan Lane",
+                              "Danville",
+                              "CA",
+                              12345,
+                              "US"
+                          ),
+                          32.8798916,
+                          -117.2363115,
+                          False,
+                          "en_US",
+                          True)
+            acct_repo.create_account(acc)
+
+            source = CORRECT_SIGN["source_id"]
+            source_repo.create_source(Source(
+                source,
+                ACCT_ID,
+                Source.SOURCE_TYPE_HUMAN,
+                "Dummy",
+                HumanInfo(False, None, None,
+                          False, datetime.utcnow(), None,
+                          "Mr. Obtainer",
+                          "18-plus")
+            ))
+
+            CORRECT_SIGN.update({"consent_id": self.adult_data_consent})
+            signature_id = str(uuid.uuid4())
+            sign = ConsentSignature.from_dict(
+                CORRECT_SIGN,
+                source,
+                signature_id
+            )
+            res = consent_repo.sign_consent(ACCT_ID, sign)
+            self.assertTrue(res)
+
+            # Insert a new es_MX Adult Data consent. We need to set the date
+            # forward to simulate the passage of time between a signature
+            # and the creation of a new consent.
+            with t.dict_cursor() as cur:
+                cur.execute(
+                    "INSERT INTO ag.consent_documents ("
+                    "consent_type, locale, date_time, consent_content, "
+                    "reconsent_required, account_id) "
+                    "VALUES ('adult_data', 'es_MX', "
+                    "CURRENT_DATE + INTERVAL '1 day', 'Legalese', TRUE, "
+                    "'000fc4cd-8fa4-db8b-e050-8a800c5d81b7')"
+                )
+
+            # Now verify that our English source doesn't need to reconsent
+            res = consent_repo.is_consent_required(source, "data", "en_US")
+            self.assertFalse(res)
+
+    def test_reconsent_true(self):
+        # In this test, we're going to sign an English Adult Data consent
+        # document, then insert a new English Adult Data consent document,
+        # then assert that reconsent is required for an English user.
+
+        with Transaction() as t:
+            consent_repo = ConsentRepo(t)
+            acct_repo = AccountRepo(t)
+            source_repo = SourceRepo(t)
+
+            # Set up test account with sources
+            acc = Account(ACCT_ID,
+                          "foo@baz.com",
+                          "standard",
+                          "https://MOCKUNITTEST.com",
+                          "1234ThisIsNotARealSub",
+                          "Dan",
+                          "H",
+                          Address(
+                              "123 Dan Lane",
+                              "Danville",
+                              "CA",
+                              12345,
+                              "US"
+                          ),
+                          32.8798916,
+                          -117.2363115,
+                          False,
+                          "en_US",
+                          True)
+            acct_repo.create_account(acc)
+
+            source = CORRECT_SIGN["source_id"]
+            source_repo.create_source(Source(
+                source,
+                ACCT_ID,
+                Source.SOURCE_TYPE_HUMAN,
+                "Dummy",
+                HumanInfo(False, None, None,
+                          False, datetime.utcnow(), None,
+                          "Mr. Obtainer",
+                          "18-plus")
+            ))
+
+            CORRECT_SIGN.update({"consent_id": self.adult_data_consent})
+            signature_id = str(uuid.uuid4())
+            sign = ConsentSignature.from_dict(
+                CORRECT_SIGN,
+                source,
+                signature_id
+            )
+            res = consent_repo.sign_consent(ACCT_ID, sign)
+            self.assertTrue(res)
+
+            # Insert a new en_US Adult Data consent. We need to set the date
+            # forward to simulate the passage of time between a signature
+            # and the creation of a new consent.
+            with t.dict_cursor() as cur:
+                cur.execute(
+                    "INSERT INTO ag.consent_documents ("
+                    "consent_type, locale, date_time, consent_content, "
+                    "reconsent_required, account_id) "
+                    "VALUES ('adult_data', 'en_US', "
+                    "CURRENT_DATE + INTERVAL '1 day', 'Legalese', TRUE, "
+                    "'000fc4cd-8fa4-db8b-e050-8a800c5d81b7')"
+                )
+
+            # Now verify that our English source doesn't need to reconsent
+            res = consent_repo.is_consent_required(source, "data", "en_US")
+            self.assertTrue(res)
 
 if __name__ == '__main__':
     unittest.main()

@@ -113,15 +113,18 @@ class ConsentRepo(BaseRepo):
             else:
                 return _row_to_consent_document(r)
 
-    def is_consent_required(self, source_id, consent_type):
+    def is_consent_required(self, source_id, consent_type, language_tag):
         with self._transaction.dict_cursor() as cur:
-            cur.execute("SELECT " + self.signature_read_cols + " FROM "
-                        "ag.consent_audit INNER JOIN ag.consent_documents "
-                        "USING (consent_id) "
-                        "WHERE consent_audit.source_id = %s and "
-                        "consent_documents.consent_type "
-                        "LIKE %s ORDER BY sign_date DESC",
-                        (source_id, ('%' + consent_type + '%')))
+            cur.execute(
+                "SELECT " + self.signature_read_cols + " FROM "
+                "ag.consent_audit INNER JOIN ag.consent_documents "
+                "USING (consent_id) "
+                "WHERE consent_audit.source_id = %s "
+                "AND consent_documents.consent_type LIKE %s "
+                "AND consent_documents.locale = %s "
+                "ORDER BY sign_date DESC",
+                (source_id, ('%' + consent_type + '%'), language_tag)
+            )
 
             r = cur.fetchone()
             if r is None:
@@ -129,9 +132,11 @@ class ConsentRepo(BaseRepo):
             elif r['reconsent_required']:
                 consent_doc_type = r["consent_type"]
                 cur.execute("SELECT date_time FROM "
-                            "ag.consent_documents WHERE consent_type = %s "
+                            "ag.consent_documents "
+                            "WHERE consent_type = %s "
+                            "AND locale = %s "
                             "ORDER BY date_time DESC LIMIT 1",
-                            (consent_doc_type,))
+                            (consent_doc_type, language_tag))
 
                 s = cur.fetchone()
                 if s is None:
