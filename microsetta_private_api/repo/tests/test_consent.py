@@ -356,6 +356,17 @@ class ConsentRepoTests(unittest.TestCase):
                     "'000fc4cd-8fa4-db8b-e050-8a800c5d81b7')"
                 )
 
+                # GitHub workflow stores the consent creation time as GMT
+                # so we're going to pretend the English one day older to allow
+                # the reconsent check to work properly. This is not an issue
+                # in the production environment.
+                cur.execute(
+                    "UPDATE ag.consent_documents "
+                    "SET date_time = CURRENT_DATE - INTERVAL '1 day' "
+                    "WHERE consent_id = %s",
+                    (self.adult_data_consent, )
+                )
+
             # Now verify that our English source doesn't need to reconsent
             res = consent_repo.is_consent_required(source, "data", "en_US")
             self.assertFalse(res)
@@ -427,6 +438,16 @@ class ConsentRepoTests(unittest.TestCase):
                     "'000fc4cd-8fa4-db8b-e050-8a800c5d81b7')"
                 )
 
+                # GitHub workflow stores the consent creation time as GMT
+                # so we're going to pretend the English one day older to allow
+                # the reconsent check to work properly. This is not an issue
+                # in the production environment.
+                cur.execute(
+                    "UPDATE ag.consent_documents "
+                    "SET date_time = CURRENT_DATE - INTERVAL '1 day' "
+                    "WHERE consent_id = %s",
+                    (self.adult_data_consent, )
+                )
             # Now verify that our English source doesn't need to reconsent
             res = consent_repo.is_consent_required(source, "data", "en_US")
             self.assertTrue(res)
