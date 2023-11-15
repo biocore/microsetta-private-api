@@ -145,8 +145,8 @@ class ConsentRepo(BaseRepo):
                     sign_date = r["sign_date"]
                     doc_date = s["date_time"]
 
-                    print("Sign Date: " + sign_date)
-                    print("Doc Date: " + doc_date)
+                    print("Sign Date: " + sign_date.strftime("%m/%d/%Y, %H:%M:%S"))
+                    print("Doc Date: " + doc_date.strftime("%m/%d/%Y, %H:%M:%S"))
 
                     print("Fail 150")
                     return doc_date > sign_date
