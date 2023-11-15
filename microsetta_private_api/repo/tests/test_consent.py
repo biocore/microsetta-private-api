@@ -431,5 +431,6 @@ class ConsentRepoTests(unittest.TestCase):
             res = consent_repo.is_consent_required(source, "data", "en_US")
             self.assertTrue(res)
 
+
 if __name__ == '__main__':
     unittest.main()

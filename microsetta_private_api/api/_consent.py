@@ -44,17 +44,21 @@ def get_consent_doc(account_id, consent_id, token_info):
         return jsonify(code=404, message=CONSENT_DOC_NOT_FOUND_MSG), 404
 
 
-def check_consent_signature(account_id, source_id, consent_type, language_tag, token_info):
+def check_consent_signature(
+        account_id, source_id, consent_type, language_tag, token_info
+):
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         consent_repo = ConsentRepo(t)
-        res = consent_repo.is_consent_required(source_id, consent_type, language_tag)
+        res = consent_repo.is_consent_required(
+            source_id, consent_type, language_tag
+        )
 
     return jsonify({"result": res}), 200
 
 
-def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
+def sign_consent_doc(account_id, source_id, body, token_info):
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
