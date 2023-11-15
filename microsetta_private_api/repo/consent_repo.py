@@ -125,11 +125,9 @@ class ConsentRepo(BaseRepo):
                 "ORDER BY sign_date DESC",
                 (source_id, ('%' + consent_type + '%'), language_tag)
             )
-            print(cur.query)
 
             r = cur.fetchone()
             if r is None:
-                print("Fail 131")
                 return True
             elif r['reconsent_required']:
                 consent_doc_type = r["consent_type"]
@@ -142,11 +140,13 @@ class ConsentRepo(BaseRepo):
 
                 s = cur.fetchone()
                 if s is None:
-                    print("Fail 144")
                     return True
                 else:
                     sign_date = r["sign_date"]
                     doc_date = s["date_time"]
+
+                    print("Sign Date: " + sign_date)
+                    print("Doc Date: " + doc_date)
 
                     print("Fail 150")
                     return doc_date > sign_date
