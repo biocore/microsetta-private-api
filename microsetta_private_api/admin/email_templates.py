@@ -26,7 +26,7 @@ class EmailMessage(Enum):
         EventSubtype.EMAIL_ACTIVATION
     )
     incorrect_sample_type = (
-        gettext("Your Microsetta Initiative status update: attention needed"),
+        gettext("Microsetta Initiative update: attention needed"),
         "email/incorrect_sample_type.jinja2",
         ("contact_name", "sample_barcode", "recorded_type", "received_type",
          "resolution_url"),
@@ -35,21 +35,21 @@ class EmailMessage(Enum):
     )
     missing_sample_info = (
         gettext(
-            "Your Microsetta Initiative status update: information needed"),
+            "Microsetta Initiative update: information needed"),
         "email/missing_sample_info.jinja2",
         ("contact_name", "sample_barcode", "received_type", "resolution_url"),
         EventType.EMAIL,
         EventSubtype.EMAIL_MISSING_SAMPLE_INFO
     )
     sample_is_valid = (
-        gettext("Your Microsetta Initiative status update and next steps"),
+        gettext("We received your Microsetta Initiative sample"),
         "email/sample_is_valid.jinja2",
         ("contact_name",),
         EventType.EMAIL,
         EventSubtype.EMAIL_SAMPLE_IS_VALID
     )
     no_associated_source = (
-        gettext("Your Microsetta Initiative status update: "
+        gettext("Microsetta Initiative update: "
                 "critical information needed"),
         "email/no_associated_source.jinja2",
         ("contact_name", "sample_barcode", "resolution_url"),
@@ -65,7 +65,7 @@ class EmailMessage(Enum):
     )
     address_invalid = (
         gettext(
-            "Your Microsetta Initiative status update: information needed"),
+            "Microsetta Initiative update: information needed"),
         "email/address_invalid.jinja2",
         ("contact_name", "resolution_url"),
         EventType.EMAIL,
@@ -81,7 +81,7 @@ class EmailMessage(Enum):
     )
     thank_you_with_kit = (
         gettext(
-            "Registration code & kit update!"),
+            "Microsetta Initiative registration code & kit update"),
         "email/thank_you_with_kit.jinja2",
         ("first_name", "registration_code", "interface_endpoint"),
         EventType.EMAIL,
@@ -89,7 +89,7 @@ class EmailMessage(Enum):
     )
     thank_you_no_kit = (
         gettext(
-            "Your questionnaire is ready!"),
+            "Your Microsetta Initiative questionnaire is ready"),
         "email/thank_you_no_kit.jinja2",
         ("first_name", "registration_code", "interface_endpoint"),
         EventType.EMAIL,
@@ -97,7 +97,7 @@ class EmailMessage(Enum):
     )
     kit_tracking_number = (
         gettext(
-            "Your kit is on its way!"),
+            "Your Microsetta Initiative kit has shipped"),
         "email/kit_tracking_number.jinja2",
         ("first_name", "tracking_number"),
         EventType.EMAIL,
