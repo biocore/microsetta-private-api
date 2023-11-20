@@ -124,6 +124,11 @@ def check_email_match(account_id, token_info):
 def update_account(account_id, body, token_info):
     acc = _validate_account_access(token_info, account_id)
 
+    # Prevent users outside Japan from selecting Japanese
+    if body['language'] == "ja_JP" and\
+            body['address']['country_code'] != "JP":
+        return jsonify(code=422, message="Invalid language selected"), 422
+
     with Transaction() as t:
         acct_repo = AccountRepo(t)
         acc.first_name = body['first_name']
