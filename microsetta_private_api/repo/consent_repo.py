@@ -134,20 +134,20 @@ class ConsentRepo(BaseRepo):
         bool
             True if the user needs to reconsent, False otherwise
         """
+        if age_range == "18-plus":
+            consent_type = "adult_" + consent_type
+        elif age_range == "13-17":
+            consent_type = "adolescent_" + consent_type
+        elif age_range == "7-12":
+            consent_type = "child_" + consent_type
+        elif age_range == "0-6":
+            consent_type = "parent_" + consent_type
+        else:
+            # Source is either "legacy" or lacks an age.
+            # Either way, make them reconsent so they're forced to choose
+            # an age range.
+            return True
         with self._transaction.dict_cursor() as cur:
-            if age_range == "18-plus":
-                consent_type = "adult_" + consent_type
-            elif age_range == "13-17":
-                consent_type = "adolescent_" + consent_type
-            elif age_range == "7-12":
-                consent_type = "child_" + consent_type
-            elif age_range == "0-6":
-                consent_type = "parent_" + consent_type
-            else:
-                # Source is either "legacy" or lacks an age.
-                # Either way, make them reconsent so they're forced to choose
-                # an age range.
-                return True
 
             # Grab the maximum consent version that requires reconsent
             cur.execute(
