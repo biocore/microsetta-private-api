@@ -71,7 +71,8 @@ CONSENT_DOC_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2281"
 CONSENT_DOC = {"consent_type": "adult_data",
                "locale": "en_US",
                "consent": "Adult Data Consent",
-               "reconsent": 'true'
+               "reconsent": 'true',
+               "version": 9999
                }
 
 

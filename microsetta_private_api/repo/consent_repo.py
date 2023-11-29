@@ -13,7 +13,8 @@ def _consent_document_to_row(s):
            s.date_time,
            s.consent_content,
            s.account_id,
-           s.reconsent)
+           s.reconsent,
+           s.version)
     return row
 
 
@@ -25,7 +26,9 @@ def _row_to_consent_document(r):
         r["date_time"],
         r["consent_content"],
         getattr(r, 'account_id', None),
-        r["reconsent_required"])
+        r["reconsent_required"],
+        r["version"]
+    )
 
 
 def _consent_signature_to_row(s):
@@ -64,11 +67,12 @@ class ConsentRepo(BaseRepo):
         super().__init__(transaction)
 
     doc_read_cols = "distinct on (consent_type) consent_id, consent_type, " \
-                    "locale, date_time, consent_content, reconsent_required" \
+                    "locale, date_time, consent_content, reconsent_required,"\
+                    " version"
 
     doc_write_cols = "consent_id, consent_type, " \
                      "locale, date_time, consent_content, " \
-                     "account_id, reconsent_required"
+                     "account_id, reconsent_required, version"
 
     signature_read_cols = "signature_id, consent_type, " \
                           "consent_audit.date_time AS sign_date, "\
@@ -84,7 +88,7 @@ class ConsentRepo(BaseRepo):
             cur.execute("INSERT INTO ag.consent_documents (" +
                         self.doc_write_cols + ") "
                         "VALUES( %s, %s, %s, %s, %s, "
-                        "%s, %s) ",
+                        "%s, %s, %s) ",
                         _consent_document_to_row(consent))
             return cur.rowcount == 1
 
@@ -113,36 +117,60 @@ class ConsentRepo(BaseRepo):
             else:
                 return _row_to_consent_document(r)
 
-    def is_consent_required(self, source_id, consent_type):
+    def is_consent_required(self, source_id, age_range, consent_type):
+        """Determine whether a source needs to agree to a new consent document
+
+        Parameters
+        ----------
+        source_id : uuid4
+            The id of the source whose consent needs to be verified
+        age_range : str
+            The source's age range
+        consent_type : str
+            data or biospecimen
+
+        Returns
+        -------
+        bool
+            True if the user needs to reconsent, False otherwise
+        """
+        if age_range == "18-plus":
+            consent_type = "adult_" + consent_type
+        elif age_range == "13-17":
+            consent_type = "adolescent_" + consent_type
+        elif age_range == "7-12":
+            consent_type = "child_" + consent_type
+        elif age_range == "0-6":
+            consent_type = "parent_" + consent_type
+        else:
+            # Source is either "legacy" or lacks an age.
+            # Either way, make them reconsent so they're forced to choose
+            # an age range.
+            return True
         with self._transaction.dict_cursor() as cur:
-            cur.execute("SELECT " + self.signature_read_cols + " FROM "
-                        "ag.consent_audit INNER JOIN ag.consent_documents "
-                        "USING (consent_id) "
-                        "WHERE consent_audit.source_id = %s and "
-                        "consent_documents.consent_type "
-                        "LIKE %s ORDER BY sign_date DESC",
-                        (source_id, ('%' + consent_type + '%')))
 
+            # Grab the maximum consent version that requires reconsent
+            cur.execute(
+                "SELECT MAX(version) AS version "
+                "FROM ag.consent_documents "
+                "WHERE reconsent_required = TRUE"
+            )
             r = cur.fetchone()
-            if r is None:
-                return True
-            elif r['reconsent_required']:
-                consent_doc_type = r["consent_type"]
-                cur.execute("SELECT date_time FROM "
-                            "ag.consent_documents WHERE consent_type = %s "
-                            "ORDER BY date_time DESC LIMIT 1",
-                            (consent_doc_type,))
+            version = r['version']
 
-                s = cur.fetchone()
-                if s is None:
-                    return True
-                else:
-                    sign_date = r["sign_date"]
-                    doc_date = s["date_time"]
-
-                    return doc_date > sign_date
-            else:
-                return r["reconsent_required"]
+            # Now check if the source has agreed to that version of the given
+            # type of consent document
+            cur.execute(
+                "SELECT ca.signature_id "
+                "FROM ag.consent_audit ca "
+                "INNER JOIN ag.consent_documents cd "
+                "ON ca.consent_id = cd.consent_id "
+                "WHERE cd.version = %s "
+                "AND cd.consent_type = %s "
+                "AND ca.source_id = %s",
+                (version, consent_type, source_id)
+            )
+            return cur.rowcount == 0
 
     def _is_valid_consent_sign(self, sign, doc):
         res = True
