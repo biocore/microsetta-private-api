@@ -72,7 +72,7 @@ CONSENT_DOC = {"consent_type": "adult_data",
                "locale": "en_US",
                "consent": "Adult Data Consent",
                "reconsent": 'true',
-               "version": 1
+               "version": 9999
                }
 
 
