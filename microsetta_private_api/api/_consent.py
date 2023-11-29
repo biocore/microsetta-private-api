@@ -49,7 +49,12 @@ def check_consent_signature(account_id, source_id, consent_type, token_info):
 
     with Transaction() as t:
         consent_repo = ConsentRepo(t)
-        res = consent_repo.is_consent_required(source_id, consent_type)
+        source_repo = SourceRepo(t)
+        source = source_repo.get_source(account_id, source_id)
+        age_range = source.source_data.age_range
+        res = consent_repo.is_consent_required(
+            source_id, age_range, consent_type
+        )
 
     return jsonify({"result": res}), 200
 
