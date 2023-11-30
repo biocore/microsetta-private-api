@@ -137,9 +137,13 @@ def update_sample_association(account_id, source_id, sample_id, body,
         except ValueError:
             raise BadRequest("Invalid sample_datetime")
         curdate = datetime.now(sample_datetime.tzinfo)
-        lower_limit = curdate + relativedelta(years=-10)
+        lower_limit = curdate + relativedelta(years=-1)
         upper_limit = curdate + relativedelta(months=+1)
-        if sample_datetime < lower_limit or sample_datetime > upper_limit:
+        is_admin = token_grants_admin_access(token_info)
+
+        # Allow admins to bypass the back-dating/forward-dating limits
+        if (sample_datetime < lower_limit or sample_datetime > upper_limit)\
+                and not is_admin:
             raise BadRequest('Invalid sample date')
         # sample_site will not be present if its environmental. this will
         # default to None if the key is not present
@@ -151,7 +155,6 @@ def update_sample_association(account_id, source_id, sample_id, body,
             body["sample_notes"]
         )
 
-        is_admin = token_grants_admin_access(token_info)
         sample_repo.update_info(account_id, source_id, sample_info,
                                 override_locked=is_admin)
 
