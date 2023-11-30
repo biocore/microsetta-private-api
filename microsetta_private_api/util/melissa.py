@@ -16,15 +16,21 @@ GOOD_CODES = ["AV25", "AV24", "AV23", "AV22", "AV21"]
 GOOD_CODES_NO_ERROR = ["AV14"]
 
 
-def verify_address(address_1, address_2=None, address_3=None, city=None,
-                   state=None, postal=None, country=None):
+def verify_address(
+        address_1, address_2=None, address_3=None, city=None, state=None,
+        postal=None, country=None, block_po_boxes=True
+):
     """
     Required parameters: address_1, postal, country
-    Optional parameters: address_2, address_3, city, state
+    Optional parameters: address_2, address_3, city, state, block_po_boxes
 
     Note - postal and country default to None as you can't have non-default
-            arguments after default arguments, and preserving structural order
-            makes sense for addresses
+           arguments after default arguments, and preserving structural order
+           makes sense for addresses
+    Note 2 - block_po_boxes defaults to True because our only current use for
+             Melissa is verifying shipping addresses. If a future use arises
+             where PO boxes are acceptable, pass block_po_boxes=False into
+             this function
     """
 
     if address_1 is None or len(address_1) < 1 or postal is None or\
@@ -121,6 +127,16 @@ def verify_address(address_1, address_2=None, address_3=None, city=None,
 
                 if r_good_conditional and not r_errors_present:
                     r_good = True
+
+                # We can't ship to PO boxes, so we need to block them even if
+                # the address is otherwise valid. We check for the AddressType
+                # key, as it's only applicable to US addresses
+                if block_po_boxes and "AddressType" in record_obj:
+                    if record_obj["AddressType"] == "P":
+                        # Mark the record bad
+                        r_good = False
+                        # Inject a custom error code to indicate why
+                        r_codes += ",AEPOBOX"
 
                 r_address_1 = record_obj["AddressLine1"]
                 r_address_2 = record_obj["AddressLine2"]
