@@ -920,7 +920,7 @@ class AccountTests(ApiTests):
 
         sample_body = {'sample_site': 'Stool',
                        "sample_notes": "foobar",
-                       'sample_datetime': "2017-07-21T17:32:28Z"}
+                       'sample_datetime': datetime.datetime.utcnow()}
 
         put_resp = self.client.put(
             '%s?%s' % (sample_url, self.default_lang_querystring),
@@ -2353,7 +2353,7 @@ class SampleTests(ApiTests):
         sample_url = "{0}/{1}".format(base_url, MOCK_SAMPLE_ID)
 
         body = {'sample_site': 'Stool', "sample_notes": "",
-                'sample_datetime': "2017-07-21T17:32:28Z"}
+                'sample_datetime': datetime.datetime.utcnow()}
 
         put_resp = self.client.put(
             '%s?%s' % (sample_url, self.default_lang_querystring),
@@ -2376,7 +2376,7 @@ class SampleTests(ApiTests):
 
         # attempt to modify the locked sample as the participant
         body = {'sample_site': 'Saliva', "sample_notes": "",
-                'sample_datetime': "2017-07-21T17:32:28Z"}
+                'sample_datetime': datetime.datetime.utcnow()}
 
         put_resp = self.client.put(
             '%s?%s' % (sample_url, self.default_lang_querystring),
