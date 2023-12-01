@@ -1016,8 +1016,11 @@ class AccountTests(ApiTests):
         self.assertEqual(response_obj['sample_site'],
                          sample_body['sample_site'])
 
+        response_ts = datetime.strptime(
+            response_obj['sample_datetime'], "%Y-%m-%dT%H:%M:%S.%f"
+        )
         self.assertEqual(
-            response_obj['sample_datetime'],
+            response_ts.strftime("%Y-%m-%d %H:%M:%S"),
             sample_body['sample_datetime'].strftime("%Y-%m-%d %H:%M:%S")
         )
 
