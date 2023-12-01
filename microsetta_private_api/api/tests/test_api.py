@@ -920,7 +920,7 @@ class AccountTests(ApiTests):
 
         sample_body = {'sample_site': 'Stool',
                        "sample_notes": "foobar",
-                       'sample_datetime': "2017-07-21T17:32:28Z"}
+                       'sample_datetime': datetime.datetime.utcnow()}
 
         put_resp = self.client.put(
             '%s?%s' % (sample_url, self.default_lang_querystring),
@@ -1016,10 +1016,13 @@ class AccountTests(ApiTests):
         self.assertEqual(response_obj['sample_site'],
                          sample_body['sample_site'])
 
-        # strip the trailing "Z" which comes from the database... easier
-        # than loading into datetime
-        self.assertEqual(response_obj['sample_datetime'],
-                         sample_body['sample_datetime'][:-1])
+        response_ts = datetime.datetime.strptime(
+            response_obj['sample_datetime'], "%Y-%m-%dT%H:%M:%S.%f"
+        )
+        self.assertEqual(
+            response_ts.strftime("%Y-%m-%d %H:%M:%S"),
+            sample_body['sample_datetime'].strftime("%Y-%m-%d %H:%M:%S")
+        )
 
     # This test specifically verifies that the scenario in Private API
     # issue #492 - where a user takes an external survey, deletes the source,
@@ -2353,7 +2356,7 @@ class SampleTests(ApiTests):
         sample_url = "{0}/{1}".format(base_url, MOCK_SAMPLE_ID)
 
         body = {'sample_site': 'Stool', "sample_notes": "",
-                'sample_datetime': "2017-07-21T17:32:28Z"}
+                'sample_datetime': datetime.datetime.utcnow()}
 
         put_resp = self.client.put(
             '%s?%s' % (sample_url, self.default_lang_querystring),
@@ -2376,7 +2379,7 @@ class SampleTests(ApiTests):
 
         # attempt to modify the locked sample as the participant
         body = {'sample_site': 'Saliva', "sample_notes": "",
-                'sample_datetime': "2017-07-21T17:32:28Z"}
+                'sample_datetime': datetime.datetime.utcnow()}
 
         put_resp = self.client.put(
             '%s?%s' % (sample_url, self.default_lang_querystring),
