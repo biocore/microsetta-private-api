@@ -1016,10 +1016,10 @@ class AccountTests(ApiTests):
         self.assertEqual(response_obj['sample_site'],
                          sample_body['sample_site'])
 
-        # strip the trailing "Z" which comes from the database... easier
-        # than loading into datetime
-        self.assertEqual(response_obj['sample_datetime'],
-                         sample_body['sample_datetime'][:-1])
+        self.assertEqual(
+            response_obj['sample_datetime'],
+            sample_body['sample_datetime'].strftime("%Y-%m-%d %H:%M:%S")
+        )
 
     # This test specifically verifies that the scenario in Private API
     # issue #492 - where a user takes an external survey, deletes the source,
