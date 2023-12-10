@@ -220,7 +220,6 @@ FAKE_KIT_PW = "MockItToMe"
 DATA_CONSENT = "data"
 BIOSPECIMEN_CONSENT = "biospecimen"
 ADULT_DATA_CONSENT = "adult_data"
-CHILD_DATA_CONSENT = "child_data"
 ADULT_BIOSPECIMEN_CONSENT = "adult_biospecimen"
 
 
@@ -1906,7 +1905,7 @@ class ConsentTests(ApiTests):
             data=json.dumps(consent_data),
             headers=self.dummy_auth)
 
-        # And assert that it fails
+        # And assert that it works
         self.assertEquals(201, response.status_code)
 
     def test_get_signed_consent(self):
