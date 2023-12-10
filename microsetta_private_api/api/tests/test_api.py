@@ -220,6 +220,7 @@ FAKE_KIT_PW = "MockItToMe"
 DATA_CONSENT = "data"
 BIOSPECIMEN_CONSENT = "biospecimen"
 ADULT_DATA_CONSENT = "adult_data"
+CHILD_DATA_CONSENT = "child_data"
 ADULT_BIOSPECIMEN_CONSENT = "adult_biospecimen"
 
 
@@ -1747,7 +1748,6 @@ class ConsentTests(ApiTests):
         self.assertTrue(consent_status["result"])
 
         consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
-
         consent_data = {
             "age_range": "18-plus",
             "participant_name": "Bo",
@@ -1773,7 +1773,8 @@ class ConsentTests(ApiTests):
 
         consent_status = self.client.get(
             '/api/accounts/%s/sources/%s/consent/%s' %
-            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            (dummy_acct_id, dummy_source_resp["source_id"],
+             BIOSPECIMEN_CONSENT),
             headers=self.dummy_auth)
 
         self.assertTrue(consent_status["result"])
@@ -1782,13 +1783,14 @@ class ConsentTests(ApiTests):
         consent_data = {
             "age_range": "18-plus",
             "participant_name": "Bo",
-            "consent_type": ADULT_DATA_CONSENT,
+            "consent_type": ADULT_BIOSPECIMEN_CONSENT,
             "consent_id": consent_id
         }
 
         response = self.client.post(
             '/api/accounts/%s/sources/%s/consent/%s' %
-            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            (dummy_acct_id, dummy_source_resp["source_id"],
+             BIOSPECIMEN_CONSENT),
             content_type='application/json',
             data=json.dumps(consent_data),
             headers=self.dummy_auth)
@@ -1809,11 +1811,13 @@ class ConsentTests(ApiTests):
 
         self.assertTrue(consent_status["result"])
 
-        CONSENT_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
-
-        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
-        consent_data.update("consent_type", ADULT_DATA_CONSENT)
-        consent_data.update("consent_id", CONSENT_ID)
+        consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
+        consent_data = {
+            "age_range": "18-plus",
+            "participant_name": "Bo",
+            "consent_type": ADULT_DATA_CONSENT,
+            "consent_id": consent_id
+        }
 
         response = self.client.post(
             '/api/accounts/%s/sources/%s/consent/%s' %
@@ -1847,6 +1851,63 @@ class ConsentTests(ApiTests):
 
         # And assert that it fails
         self.assertEquals(403, response.status_code)
+
+    def sign_data_consent_new_age_valid(self):
+        """
+        In this test, we'll create a child source, then re-consent as an adult
+        """
+
+        dummy_acct_id, dummy_source_resp = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE_CHILD,
+            create_dummy_1=True)
+
+        consent_status = self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            headers=self.dummy_auth)
+
+        self.assertTrue(consent_status["result"])
+
+        consent_data = {
+            "age_range": "7-12",
+            "assent_id": "27d6bd39-07b0-44d8-8c2e-05d80eb1eb56",
+            "consent_child": "Yes",
+            "participant_name": "Bo",
+            "consent_witness": "Yes",
+            "assent_obtainer": "Assent",
+            "consent_id": "b0d6be28-663b-4be8-9f54-f53f4cbf9a1f",
+            "consent_type": "parent_data",
+            "consent_parent": "Yes",
+            "parent_1_name": 'Parent'
+        }
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
+
+        # Now, try to sign another consent as an adult
+        consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
+        consent_data = {
+            "age_range": "18-plus",
+            "participant_name": "Bo",
+            "consent_type": ADULT_DATA_CONSENT,
+            "consent_id": consent_id
+        }
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        # And assert that it fails
+        self.assertEquals(201, response.status_code)
 
     def test_get_signed_consent(self):
         # Create our account and source to work from
