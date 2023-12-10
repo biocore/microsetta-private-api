@@ -58,6 +58,7 @@ def _row_to_consent_signature(r):
         r["assent_obtainer"],
         r["assent_id"],
         "",
+        "",
         ""
     )
 
@@ -135,12 +136,16 @@ class ConsentRepo(BaseRepo):
             True if the user needs to reconsent, False otherwise
         """
         if age_range == "18-plus":
+            consent_join = "ca.consent_id"
             consent_type = "adult_" + consent_type
         elif age_range == "13-17":
+            consent_join = "ca.assent_id"
             consent_type = "adolescent_" + consent_type
         elif age_range == "7-12":
+            consent_join = "ca.assent_id"
             consent_type = "child_" + consent_type
         elif age_range == "0-6":
+            consent_join = "ca.consent_id"
             consent_type = "parent_" + consent_type
         else:
             # Source is either "legacy" or lacks an age.
@@ -159,15 +164,20 @@ class ConsentRepo(BaseRepo):
             version = r['version']
 
             # Now check if the source has agreed to that version of the given
-            # type of consent document
+            # type of consent document. For toddlers and adults, we check the
+            # consent_id column in ag.consent_audit, whereas kids and
+            # teens use the assent_id column.
+            sql = """SELECT ca.signature_id 
+                     FROM ag.consent_audit ca 
+                     INNER JOIN ag.consent_documents cd 
+                     ON {0} = cd.consent_id
+                     WHERE cd.version = %s 
+                     AND cd.consent_type = %s 
+                     AND ca.source_id = %s"""
+            sql = sql.format(consent_join)
+
             cur.execute(
-                "SELECT ca.signature_id "
-                "FROM ag.consent_audit ca "
-                "INNER JOIN ag.consent_documents cd "
-                "ON ca.consent_id = cd.consent_id "
-                "WHERE cd.version = %s "
-                "AND cd.consent_type = %s "
-                "AND ca.source_id = %s",
+                sql,
                 (version, consent_type, source_id)
             )
             return cur.rowcount == 0
@@ -276,10 +286,11 @@ class ConsentRepo(BaseRepo):
             else:
                 consent_signature = _row_to_consent_signature(row)
 
-                survey_doc = self.get_consent_document(
+                consent_doc = self.get_consent_document(
                     consent_signature.consent_id
                 )
-                consent_signature.consent_content = survey_doc.consent_content
+                consent_signature.consent_content =\
+                    consent_doc.consent_content
 
                 if consent_signature.assent_id is not None:
                     assent_doc = self.get_consent_document(
@@ -287,5 +298,8 @@ class ConsentRepo(BaseRepo):
                     )
                     consent_signature.assent_content =\
                         assent_doc.consent_content
+                    consent_signature.consent_type = assent_doc.consent_type
+                else:
+                    consent_signature.consent_type = consent_doc.consent_type
 
                 return consent_signature
