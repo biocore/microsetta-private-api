@@ -81,7 +81,7 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
                 cur_age_index = human_consent_age_groups.index(
                     source.source_data.age_range
                 )
-            except ValueError as e:
+            except ValueError:
                 # Catch any sources that have a blank, "legacy", or faulty
                 # age_range
                 cur_age_index = -1
@@ -91,7 +91,7 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
                 new_age_index = human_consent_age_groups.index(
                     body['age_range']
                 )
-            except ValueError as e:
+            except ValueError:
                 # Shouldn't reach this point, but if we do, reject it
                 return jsonify(
                     code=403, message="Invalid age_range update"

@@ -167,12 +167,12 @@ class ConsentRepo(BaseRepo):
             # type of consent document. For toddlers and adults, we check the
             # consent_id column in ag.consent_audit, whereas kids and
             # teens use the assent_id column.
-            sql = """SELECT ca.signature_id 
-                     FROM ag.consent_audit ca 
-                     INNER JOIN ag.consent_documents cd 
+            sql = """SELECT ca.signature_id
+                     FROM ag.consent_audit ca
+                     INNER JOIN ag.consent_documents cd
                      ON {0} = cd.consent_id
-                     WHERE cd.version = %s 
-                     AND cd.consent_type = %s 
+                     WHERE cd.version = %s
+                     AND cd.consent_type = %s
                      AND ca.source_id = %s"""
             sql = sql.format(consent_join)
 
