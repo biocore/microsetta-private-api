@@ -793,3 +793,57 @@ class PerkFulfillmentRepo(BaseRepo):
             )
             row = cur.fetchone()
             return row['perk_fulfillment_active']
+    
+    def get_ffq_codes_by_email(self, email):
+        email = "%" + email + "%"
+        with self._transaction.dict_cursor() as cur:
+            # Note: Use left join to differentiate email not found possibility
+            cur.execute(
+                """
+                WITH all_codes AS (
+                    SELECT 
+                        iu.email,
+                        tr.created AS transaction_created_time,
+                        frc.ffq_registration_code,
+                        frc.registration_code_used
+                    FROM campaign.interested_users AS iu
+                    LEFT JOIN campaign.transaction AS tr
+                    ON iu.interested_user_id = tr.interested_user_id
+                    LEFT JOIN campaign.fundrazr_transaction_perk AS ftp
+                    ON tr.id = ftp.transaction_id
+                    LEFT JOIN campaign.fundrazr_ffq_codes AS ffc
+                    ON ftp.id = ffc.fundrazr_transaction_perk_id
+                    LEFT JOIN campaign.ffq_registration_codes AS frc
+                    ON ffc.ffq_registration_code = frc.ffq_registration_code
+                    WHERE iu.email ILIKE %s
+                ), count_codes AS (
+                    SELECT
+                        ac1.email, 
+                        COUNT(ac1.ffq_registration_code) AS num_codes
+                    FROM all_codes AS ac1
+                    GROUP BY ac1.email
+                )
+                SELECT DISTINCT
+                    ac.email,
+                    CASE WHEN
+                        cc.num_codes = 0 THEN NULL
+                    ELSE
+                        ac.transaction_created_time
+                    END,
+                    ac.ffq_registration_code,
+                    ac.registration_code_used
+                FROM all_codes AS ac
+                LEFT JOIN count_codes AS cc
+                ON ac.email = cc.email
+                WHERE
+                    ac.ffq_registration_code IS NOT NULL
+                OR
+                    cc.num_codes = 0
+                ORDER BY 
+                    ac.email ASC,
+                    ac.registration_code_used DESC
+                """,
+                (email,)
+            )
+            rows = cur.fetchall()
+            return [dict(row) for row in rows]

@@ -12,6 +12,7 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.model.campaign import (FundRazrPayment, Item,
                                                    Shipping)
 from microsetta_private_api.model.address import Address
+from microsetta_private_api.model.activation_code import ActivationCode
 from microsetta_private_api.model.daklapack_order import DaklapackOrder
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -1173,6 +1174,261 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
         )
         res = cur.fetchone()
         return res[0]
+    
+    
+    def test_get_ffq_codes_by_email(self):        
+        # simplistic setup by directly play with test db
+        # interested users
+        with Transaction() as t:
+            cur = t.cursor()
+            emails = ["iu@foo.com"] * 3 + ["iu2@baz.com", "test@foo.com"]
+            cur.execute(
+                "INSERT INTO campaign.interested_users " + \
+                "(campaign_id, first_name, last_name, email) VALUES " + \
+                ", ".join([
+                    f"('{self.test_campaign_id1}', 'First', 'Last', '{email}')" 
+                    for email in emails
+                ]) + \
+                "RETURNING interested_user_id"
+            )
+            iu_ids = [tup[0] for tup in cur.fetchall()]
+            t.commit()
+
+        # Test: no ffq without transaction
+        with Transaction() as t:
+            pfr = PerkFulfillmentRepo(t)
+            ffq_code = pfr.get_ffq_codes_by_email("iu2@baz.com")
+            self.assertEqual(len(ffq_code), 1)
+            self.assertEqual(ffq_code[0]['email'], "iu2@baz.com")
+            self.assertIsNone(ffq_code[0]['transaction_created_time'])
+            self.assertIsNone(ffq_code[0]['ffq_registration_code'])
+
+            ffq_code = pfr.get_ffq_codes_by_email(emails[0])
+            self.assertIsNone(ffq_code[0]['ffq_registration_code'])
+
+        # transactions
+        with Transaction() as t:
+            cur = t.cursor()
+            tx_ids = {
+                f"MT{idx + 1}": iu_id 
+                for idx, iu_id in enumerate(iu_ids)
+            }
+            tx_ids['MT6'] = iu_ids[-1]  # extra tx for test@foo.com
+            cur.execute(
+                "INSERT INTO campaign.transaction VALUES " + \
+                ", ".join([
+                    f"('{tx_id}', '{iu_id}', 'fundrazr', '4Tqx5', " + \
+                    "'2023-01-01', 100, 100, 'usd', 'First', 'Last', " + \
+                    "'fake@bar.com', 'paypal', 'coolcool', TRUE)"
+                    for tx_id, iu_id in tx_ids.items()
+                ])
+            )
+            t.commit()
+
+        # Test: no ffq with transaction
+        with Transaction() as t:
+            pfr = PerkFulfillmentRepo(t)
+
+            # unique email with no code
+            ffq_code = pfr.get_ffq_codes_by_email("iu2@baz.com")
+            self.assertEqual(len(ffq_code), 1)
+            self.assertEqual(ffq_code[0]['email'], "iu2@baz.com")
+            self.assertIsNone(ffq_code[0]['transaction_created_time'])
+            self.assertIsNone(ffq_code[0]['ffq_registration_code'])
+
+            # duplicate email with no code
+            ffq_code = pfr.get_ffq_codes_by_email("iu@foo.com")
+            self.assertEqual(len(ffq_code), 1)
+            self.assertEqual(ffq_code[0]['email'], "iu@foo.com")
+            self.assertIsNone(ffq_code[0]['ffq_registration_code'])
+
+        # fundrazr transaction perks
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute(
+                "INSERT INTO campaign.fundrazr_transaction_perk " + \
+                "(transaction_id, perk_id, quantity, processed) VALUES " + \
+                ", ".join([
+                    f"('{tx_id}', '3QeVd', 1, TRUE)" for tx_id in tx_ids
+                    if tx_id != 'MT3'
+                ]) + \
+                "RETURNING id"
+            )
+            ftp_ids = {
+                tup[0]: tx_id 
+                for tup, tx_id in zip(cur.fetchall(), tx_ids)
+            }
+            t.commit()
+
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute(
+                "INSERT INTO campaign.fundrazr_transaction_perk "
+                "(transaction_id, perk_id, quantity, processed) VALUES "
+                "('MT5', '3QeW6', 1, TRUE)"
+                "RETURNING id"
+            )  # extra ftp for test@foo.com
+            ftp_ids[cur.fetchone()[0]] = 'MT5'
+            t.commit()
+        
+        # ffq registration codes
+        new_ffq_codes = [ActivationCode.generate_code() for _ in range(6)]
+        ffq_reg_codes = [  # odd idx: used
+            (code, 'NULL') if idx % 2 == 0 else (code, "'2023-02-01'")
+            for idx, code in enumerate(new_ffq_codes)
+        ]
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute(
+                "INSERT INTO campaign.ffq_registration_codes VALUES " + \
+                ", ".join([
+                    f"('{code}', {used})" for code, used in ffq_reg_codes
+                ])
+            )
+            t.commit()
+
+        # fundrazr ffq codes
+        fundrazr_ffq_codes = dict()
+        ftp_ids_lst = list(ftp_ids.keys())
+        for idx, code in enumerate(new_ffq_codes):
+            if idx <= 3:
+                fundrazr_ffq_codes[code] = ftp_ids_lst[idx]
+            else: # 2 codes
+                fundrazr_ffq_codes[code] = ftp_ids_lst[4]
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute(
+                "INSERT INTO campaign.fundrazr_ffq_codes VALUES " + \
+                ", ".join([
+                    f"('{ftp_id}', '{code}')"
+                    for code, ftp_id in fundrazr_ffq_codes.items()
+                ])
+            )
+            t.commit()
+        
+        # Test: email not found
+        with Transaction() as t:
+            pfr = PerkFulfillmentRepo(t)
+            ffq_code = pfr.get_ffq_codes_by_email("fake@email.com")
+            self.assertEqual(len(ffq_code), 0)
+        
+        # Test: 1 ffq code
+        with Transaction() as t:
+            pfr = PerkFulfillmentRepo(t)
+            ffq_code = pfr.get_ffq_codes_by_email("iu2@baz.com")
+            self.assertEqual(len(ffq_code), 1)
+            self.assertEqual(ffq_code[0]['email'], "iu2@baz.com")
+            self.assertEqual(
+                ffq_code[0]['transaction_created_time'].strftime('%Y-%m-%d'),
+                '2023-01-01'
+            )
+            self.assertEqual(
+                ffq_code[0]['ffq_registration_code'], new_ffq_codes[2]
+            )
+            self.assertIsNone(ffq_code[0]['registration_code_used'])
+
+        # Test: 3 duplicate emails, 2 codes
+        with Transaction() as t:
+            pfr = PerkFulfillmentRepo(t)
+            ffq_code = pfr.get_ffq_codes_by_email("iu@foo.com")
+            self.assertEqual(len(ffq_code), 2)
+            self.assertTrue(
+                ffq_code[0]['email'] == ffq_code[1]['email'] == "iu@foo.com"
+            )
+            self.assertEqual(
+                ffq_code[0]['transaction_created_time'].strftime('%Y-%m-%d'),
+                '2023-01-01'
+            )
+            got_codes = [
+                ffq_code[i]['ffq_registration_code'] 
+                for i in range(2)
+            ]
+            self.assertEqual(set(got_codes), set(new_ffq_codes[:2]))
+
+        # Test: unique email, 3 codes
+        with Transaction() as t:
+            pfr = PerkFulfillmentRepo(t)
+            ffq_code = pfr.get_ffq_codes_by_email("test@foo.com")
+            self.assertEqual(len(ffq_code), 3)
+            self.assertTrue(
+                ffq_code[0]['email'] == ffq_code[2]['email'] == "test@foo.com"
+            )
+            self.assertEqual(
+                ffq_code[2]['transaction_created_time'].strftime('%Y-%m-%d'),
+                '2023-01-01'
+            )
+            got_codes = [
+                ffq_code[i]['ffq_registration_code'] 
+                for i in range(3)
+            ]
+            self.assertEqual(set(got_codes), set(new_ffq_codes[3:]))
+        
+        # Test: match multiple emails
+        with Transaction() as t:
+            pfr = PerkFulfillmentRepo(t)
+            ffq_code = pfr.get_ffq_codes_by_email("iu")
+            self.assertEqual(len(ffq_code), 3)
+            self.assertTrue(
+                ffq_code[1]['email'] == ffq_code[2]['email'] == "iu@foo.com"
+            )
+            self.assertEqual(ffq_code[0]['email'], "iu2@baz.com")
+            self.assertEqual(
+                ffq_code[1]['transaction_created_time'].strftime('%Y-%m-%d'),
+                '2023-01-01'
+            )
+            got_codes = [
+                ffq_code[i]['ffq_registration_code'] 
+                for i in range(3)
+            ]
+            self.assertEqual(set(got_codes), set(new_ffq_codes[:3]))
+
+        # Test: match multiple emails
+        with Transaction() as t:
+            pfr = PerkFulfillmentRepo(t)
+            ffq_code = pfr.get_ffq_codes_by_email("foo.com")
+            self.assertEqual(len(ffq_code), 5)
+            got_codes = [
+                ffq_code[i]['ffq_registration_code'] 
+                for i in range(5)
+            ]
+            self.assertNotIn(new_ffq_codes[2], got_codes)
+
+        # clear down
+        with Transaction() as t:
+            cur = t.cursor()
+
+            # fundrazr ffq codes
+            cur.execute(
+                "DELETE FROM campaign.fundrazr_ffq_codes AS ffc "
+                "WHERE ffc.ffq_registration_code "
+                f"IN {str(tuple(new_ffq_codes))}"
+            )
+
+            # ffq registration codes
+            cur.execute(
+                "DELETE FROM campaign.ffq_registration_codes AS frc "
+                "WHERE frc.ffq_registration_code "
+                f"IN {str(tuple(new_ffq_codes))}"
+            )
+
+            # fundrazr transaction perks
+            cur.execute(
+                "DELETE FROM campaign.fundrazr_transaction_perk AS ftp "
+                f"WHERE ftp.id IN {str(tuple(ftp_ids.keys()))}"
+            )
+
+            # transactions
+            cur.execute(
+                "DELETE FROM campaign.transaction AS tr "
+                f"WHERE tr.id IN {str(tuple(tx_ids.keys()))}"
+            )
+
+            # interested users
+            cur.execute(
+                "DELETE FROM campaign.interested_users AS iu "
+                f"WHERE iu.interested_user_id IN {str(tuple(iu_ids))}"
+            )
+            t.commit()
 
 
 if __name__ == '__main__':

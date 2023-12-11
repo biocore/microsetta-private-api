@@ -7,7 +7,9 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
 from microsetta_private_api.repo.melissa_repo import MelissaRepo
+from microsetta_private_api.repo.perk_fulfillment_repo import PerkFulfillmentRepo
 from microsetta_private_api.tasks import send_email
+from microsetta_private_api.admin.admin_impl import validate_admin_access
 
 
 def create_interested_user(body):
@@ -276,3 +278,17 @@ def _validate_user_match(interested_user, email):
         # someone doesn't stumble upon a valid email and/or id.
         # if they don't both match, treat as invalid
         return interested_user.email == email
+
+
+def search_ffq_codes_by_email(email, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        pfr = PerkFulfillmentRepo(t)
+        ffq_diag = pfr.get_ffq_codes_by_email(email)
+        ffq_codes_obj = {
+            "ffq_codes": ffq_diag
+        }
+        if ffq_diag is None:
+            return jsonify(code=404, message="Email not found"), 404
+        return jsonify(ffq_codes_obj), 200
