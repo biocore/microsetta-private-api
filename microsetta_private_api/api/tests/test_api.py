@@ -1754,7 +1754,7 @@ class ConsentTests(ApiTests):
         response_obj = json.loads(response.data)
         self.assertTrue(response_obj["result"])
 
-        adult_data_consent_id = self._get_consent_id("adult_data")
+        adult_data_consent_id = self._get_consent_id(ADULT_DATA_CONSENT)
         consent_data = {
             "age_range": HUMAN_CONSENT_ADULT,
             "participant_name": "Bo",
@@ -1796,7 +1796,7 @@ class ConsentTests(ApiTests):
         response_obj = json.loads(response.data)
         self.assertTrue(response_obj["result"])
 
-        adult_biospecimen_consent_id = self._get_consent_id("adult_data")
+        adult_biospecimen_consent_id = self._get_consent_id(ADULT_BIOSPECIMEN_CONSENT)
         consent_data = {
             "age_range": HUMAN_CONSENT_ADULT,
             "participant_name": "Bo",
@@ -1813,24 +1813,13 @@ class ConsentTests(ApiTests):
 
         self.assertEquals(201, response.status_code)
 
-        with Transaction() as t:
-            cur = t.dict_cursor()
-            cur.execute(
-                "SELECT * FROM ag.consent_audit "
-                "WHERE source_id = %s",
-                (dummy_source_id,)
-            )
-            rows = cur.fetchall()
-            for row in rows:
-                print(row)
-
         # Grab the signature to delete in teardown
         response = self.client.get(
             '/api/accounts/%s/sources/%s/signed_consent/%s' %
             (dummy_acct_id, dummy_source_id, BIOSPECIMEN_CONSENT),
             headers=self.dummy_auth
         )
-        print(response.data)
+
         self.assertEquals(200, response.status_code)
         response_data = json.loads(response.data)
         self.signatures_to_delete.append(response_data['signature_id'])
@@ -1850,7 +1839,7 @@ class ConsentTests(ApiTests):
         response_obj = json.loads(response.data)
         self.assertTrue(response_obj["result"])
 
-        adult_data_consent_id = self._get_consent_id("adult_data")
+        adult_data_consent_id = self._get_consent_id(ADULT_DATA_CONSENT)
         consent_data = {
             "age_range": HUMAN_CONSENT_ADULT,
             "participant_name": "Bo",
@@ -1956,7 +1945,7 @@ class ConsentTests(ApiTests):
         self.signatures_to_delete.append(response_data['signature_id'])
 
         # Now, try to sign another consent as an adult
-        adult_data_consent_id = self._get_consent_id("adult_data")
+        adult_data_consent_id = self._get_consent_id(ADULT_DATA_CONSENT)
         consent_data = {
             "age_range": HUMAN_CONSENT_ADULT,
             "participant_name": "Bo",
@@ -1990,7 +1979,7 @@ class ConsentTests(ApiTests):
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
 
-        adult_data_consent_id = self._get_consent_id("adult_data")
+        adult_data_consent_id = self._get_consent_id(ADULT_DATA_CONSENT)
 
         consent_data = {
             "age_range": HUMAN_CONSENT_ADULT,
