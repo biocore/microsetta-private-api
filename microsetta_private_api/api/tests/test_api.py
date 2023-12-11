@@ -1813,6 +1813,17 @@ class ConsentTests(ApiTests):
 
         self.assertEquals(201, response.status_code)
 
+        with Transaction() as t:
+            cur = t.dict_cursor()
+            cur.execute(
+                "SELECT * FROM ag.consent_audit "
+                "WHERE source_id = %s",
+                (dummy_source_id,)
+            )
+            rows = cur.fetchall()
+            for row in rows:
+                print(row)
+
         # Grab the signature to delete in teardown
         response = self.client.get(
             '/api/accounts/%s/sources/%s/signed_consent/%s' %
