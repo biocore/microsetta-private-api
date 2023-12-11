@@ -1732,7 +1732,7 @@ class ConsentTests(ApiTests):
 
         super().tearDown()
 
-    def sign_data_consent(self):
+    def test_sign_data_consent(self):
         """Checks data consent for a source and sings the consent"""
 
         dummy_acct_id, dummy_source_resp = create_dummy_source(
@@ -1763,7 +1763,7 @@ class ConsentTests(ApiTests):
 
         self.assertEquals(201, response.status_code)
 
-    def sign_biospecimen_consent(self):
+    def test_sign_biospecimen_consent(self):
         """Checks biospecimen consent for a source and sings the consent"""
 
         dummy_acct_id, dummy_source_resp = create_dummy_source(
@@ -1796,7 +1796,7 @@ class ConsentTests(ApiTests):
 
         self.assertEquals(201, response.status_code)
 
-    def sign_data_consent_new_age_invalid(self):
+    def test_sign_data_consent_new_age_invalid(self):
         """In this test, we'll try to re-consent as an invalid age range"""
 
         dummy_acct_id, dummy_source_resp = create_dummy_source(
@@ -1851,7 +1851,7 @@ class ConsentTests(ApiTests):
         # And assert that it fails
         self.assertEquals(403, response.status_code)
 
-    def sign_data_consent_new_age_valid(self):
+    def test_sign_data_consent_new_age_valid(self):
         """
         In this test, we'll create a child source, then re-consent as an adult
         """
