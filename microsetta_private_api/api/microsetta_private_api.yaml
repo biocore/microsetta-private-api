@@ -2061,6 +2061,8 @@ paths:
                     type: string
                   'country':
                     type: string
+                  'phone':
+                    type: string
                   'error_codes':
                     type: array
         '400':
@@ -2098,6 +2100,8 @@ paths:
                   type: string
                 'residential_address':
                   type: boolean
+                'phone':
+                  type: string
               required:
                 - interested_user_id
                 - email
@@ -2105,6 +2109,7 @@ paths:
                 - city
                 - state
                 - postal
+                - phone
       responses:
         '200':
           description: Interested user ID

@@ -140,6 +140,7 @@ def get_interested_user_address_update(interested_user_id, email):
                         state=interested_user.state,
                         postal_code=interested_user.postal_code,
                         country=interested_user.country,
+                        phone=interested_user.phone,
                         error_codes=error_codes
                     ), 200
 
@@ -155,6 +156,14 @@ def put_interested_user_address_update(body):
             message="Invalid user."
         ), 404
     else:
+        required_fields = ['address_1', 'city', 'state', 'postal', 'phone']
+        for f in required_fields:
+            if body.get(f, "") == "":
+                return jsonify(
+                    code=400,
+                    message="Failed to update address due to missing fields."
+                ), 400
+
         with Transaction() as t:
             i_u_repo = InterestedUserRepo(t)
             interested_user = \
