@@ -156,7 +156,6 @@ def put_interested_user_address_update(body):
             message="Invalid user."
         ), 404
     else:
-        rf_pass = True
         required_fields = ['address_1', 'city', 'state', 'postal', 'phone']
         for f in required_fields:
             if body.get(f, "") == "":
