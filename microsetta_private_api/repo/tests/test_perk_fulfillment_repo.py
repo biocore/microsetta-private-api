@@ -1174,21 +1174,20 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
         )
         res = cur.fetchone()
         return res[0]
-    
-    
-    def test_get_ffq_codes_by_email(self):        
+
+    def test_get_ffq_codes_by_email(self):
         # simplistic setup by directly play with test db
         # interested users
         with Transaction() as t:
             cur = t.cursor()
             emails = ["iu@foo.com"] * 3 + ["iu2@baz.com", "test@foo.com"]
             cur.execute(
-                "INSERT INTO campaign.interested_users " + \
-                "(campaign_id, first_name, last_name, email) VALUES " + \
+                "INSERT INTO campaign.interested_users " +
+                "(campaign_id, first_name, last_name, email) VALUES " +
                 ", ".join([
-                    f"('{self.test_campaign_id1}', 'First', 'Last', '{email}')" 
+                    f"('{self.test_campaign_id1}', 'First', 'Last', '{email}')"
                     for email in emails
-                ]) + \
+                ]) +
                 "RETURNING interested_user_id"
             )
             iu_ids = [tup[0] for tup in cur.fetchall()]
@@ -1210,15 +1209,15 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
         with Transaction() as t:
             cur = t.cursor()
             tx_ids = {
-                f"MT{idx + 1}": iu_id 
+                f"MT{idx + 1}": iu_id
                 for idx, iu_id in enumerate(iu_ids)
             }
             tx_ids['MT6'] = iu_ids[-1]  # extra tx for test@foo.com
             cur.execute(
-                "INSERT INTO campaign.transaction VALUES " + \
+                "INSERT INTO campaign.transaction VALUES " +
                 ", ".join([
-                    f"('{tx_id}', '{iu_id}', 'fundrazr', '4Tqx5', " + \
-                    "'2023-01-01', 100, 100, 'usd', 'First', 'Last', " + \
+                    f"('{tx_id}', '{iu_id}', 'fundrazr', '4Tqx5', " +
+                    "'2023-01-01', 100, 100, 'usd', 'First', 'Last', " +
                     "'fake@bar.com', 'paypal', 'coolcool', TRUE)"
                     for tx_id, iu_id in tx_ids.items()
                 ])
@@ -1246,16 +1245,16 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
         with Transaction() as t:
             cur = t.cursor()
             cur.execute(
-                "INSERT INTO campaign.fundrazr_transaction_perk " + \
-                "(transaction_id, perk_id, quantity, processed) VALUES " + \
+                "INSERT INTO campaign.fundrazr_transaction_perk " +
+                "(transaction_id, perk_id, quantity, processed) VALUES " +
                 ", ".join([
                     f"('{tx_id}', '3QeVd', 1, TRUE)" for tx_id in tx_ids
                     if tx_id != 'MT3'
-                ]) + \
+                ]) +
                 "RETURNING id"
             )
             ftp_ids = {
-                tup[0]: tx_id 
+                tup[0]: tx_id
                 for tup, tx_id in zip(cur.fetchall(), tx_ids)
             }
             t.commit()
@@ -1270,7 +1269,7 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
             )  # extra ftp for test@foo.com
             ftp_ids[cur.fetchone()[0]] = 'MT5'
             t.commit()
-        
+
         # ffq registration codes
         new_ffq_codes = [ActivationCode.generate_code() for _ in range(6)]
         ffq_reg_codes = [  # odd idx: used
@@ -1280,7 +1279,7 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
         with Transaction() as t:
             cur = t.cursor()
             cur.execute(
-                "INSERT INTO campaign.ffq_registration_codes VALUES " + \
+                "INSERT INTO campaign.ffq_registration_codes VALUES " +
                 ", ".join([
                     f"('{code}', {used})" for code, used in ffq_reg_codes
                 ])
@@ -1293,25 +1292,25 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
         for idx, code in enumerate(new_ffq_codes):
             if idx <= 3:
                 fundrazr_ffq_codes[code] = ftp_ids_lst[idx]
-            else: # 2 codes
+            else:  # 2 codes
                 fundrazr_ffq_codes[code] = ftp_ids_lst[4]
         with Transaction() as t:
             cur = t.cursor()
             cur.execute(
-                "INSERT INTO campaign.fundrazr_ffq_codes VALUES " + \
+                "INSERT INTO campaign.fundrazr_ffq_codes VALUES " +
                 ", ".join([
                     f"('{ftp_id}', '{code}')"
                     for code, ftp_id in fundrazr_ffq_codes.items()
                 ])
             )
             t.commit()
-        
+
         # Test: email not found
         with Transaction() as t:
             pfr = PerkFulfillmentRepo(t)
             ffq_code = pfr.get_ffq_codes_by_email("fake@email.com")
             self.assertEqual(len(ffq_code), 0)
-        
+
         # Test: 1 ffq code
         with Transaction() as t:
             pfr = PerkFulfillmentRepo(t)
@@ -1340,7 +1339,7 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
                 '2023-01-01'
             )
             got_codes = [
-                ffq_code[i]['ffq_registration_code'] 
+                ffq_code[i]['ffq_registration_code']
                 for i in range(2)
             ]
             self.assertEqual(set(got_codes), set(new_ffq_codes[:2]))
@@ -1358,11 +1357,11 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
                 '2023-01-01'
             )
             got_codes = [
-                ffq_code[i]['ffq_registration_code'] 
+                ffq_code[i]['ffq_registration_code']
                 for i in range(3)
             ]
             self.assertEqual(set(got_codes), set(new_ffq_codes[3:]))
-        
+
         # Test: match multiple emails
         with Transaction() as t:
             pfr = PerkFulfillmentRepo(t)
@@ -1377,7 +1376,7 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
                 '2023-01-01'
             )
             got_codes = [
-                ffq_code[i]['ffq_registration_code'] 
+                ffq_code[i]['ffq_registration_code']
                 for i in range(3)
             ]
             self.assertEqual(set(got_codes), set(new_ffq_codes[:3]))
@@ -1388,7 +1387,7 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
             ffq_code = pfr.get_ffq_codes_by_email("foo.com")
             self.assertEqual(len(ffq_code), 5)
             got_codes = [
-                ffq_code[i]['ffq_registration_code'] 
+                ffq_code[i]['ffq_registration_code']
                 for i in range(5)
             ]
             self.assertNotIn(new_ffq_codes[2], got_codes)

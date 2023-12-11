@@ -7,7 +7,8 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
 from microsetta_private_api.repo.melissa_repo import MelissaRepo
-from microsetta_private_api.repo.perk_fulfillment_repo import PerkFulfillmentRepo
+from microsetta_private_api.repo.perk_fulfillment_repo import\
+    PerkFulfillmentRepo
 from microsetta_private_api.tasks import send_email
 from microsetta_private_api.admin.admin_impl import validate_admin_access
 

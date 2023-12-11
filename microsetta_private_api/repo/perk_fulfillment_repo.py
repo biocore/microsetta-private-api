@@ -793,7 +793,7 @@ class PerkFulfillmentRepo(BaseRepo):
             )
             row = cur.fetchone()
             return row['perk_fulfillment_active']
-    
+
     def get_ffq_codes_by_email(self, email):
         email = "%" + email + "%"
         with self._transaction.dict_cursor() as cur:
@@ -801,7 +801,7 @@ class PerkFulfillmentRepo(BaseRepo):
             cur.execute(
                 """
                 WITH all_codes AS (
-                    SELECT 
+                    SELECT
                         iu.email,
                         tr.created AS transaction_created_time,
                         frc.ffq_registration_code,
@@ -818,7 +818,7 @@ class PerkFulfillmentRepo(BaseRepo):
                     WHERE iu.email ILIKE %s
                 ), count_codes AS (
                     SELECT
-                        ac1.email, 
+                        ac1.email,
                         COUNT(ac1.ffq_registration_code) AS num_codes
                     FROM all_codes AS ac1
                     GROUP BY ac1.email
@@ -839,7 +839,7 @@ class PerkFulfillmentRepo(BaseRepo):
                     ac.ffq_registration_code IS NOT NULL
                 OR
                     cc.num_codes = 0
-                ORDER BY 
+                ORDER BY
                     ac.email ASC,
                     ac.registration_code_used DESC
                 """,
