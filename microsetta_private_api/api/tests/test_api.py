@@ -1819,6 +1819,7 @@ class ConsentTests(ApiTests):
             (dummy_acct_id, dummy_source_id, BIOSPECIMEN_CONSENT),
             headers=self.dummy_auth
         )
+        print(response.data)
         self.assertEquals(200, response.status_code)
         response_data = json.loads(response.data)
         self.signatures_to_delete.append(response_data['signature_id'])
