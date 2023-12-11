@@ -401,7 +401,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  '/accounts/{account_id}/source/{source_id}/consent/{consent_type}':
+  '/accounts/{account_id}/sources/{source_id}/consent/{consent_type}':
     get:
       operationId: microsetta_private_api.api.check_consent_signature
       tags:

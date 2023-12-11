@@ -1939,7 +1939,7 @@ class ConsentTests(ApiTests):
         }
 
         response = self.client.post(
-            '/api/accounts/%s/source/%s/consent/%s' %
+            '/api/accounts/%s/sources/%s/consent/%s' %
             (dummy_acct_id, dummy_source_id, DATA_CONSENT),
             content_type='application/json',
             data=json.dumps(consent_data),
