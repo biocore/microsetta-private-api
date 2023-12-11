@@ -1723,16 +1723,16 @@ class SourceTests(ApiTests):
 class ConsentTests(ApiTests):
     def setUp(self):
         super().setUp()
-        self.signature_to_delete = None
+        self.signatures_to_delete = []
 
     def tearDown(self):
-        with Transaction() as t:
-            cur = t.cursor()
-            if self.signature_to_delete is not None:
+        if len(self.signatures_to_delete) > 0:
+            with Transaction() as t:
+                cur = t.cursor()
                 cur.execute(
                     "DELETE FROM ag.consent_audit "
-                    "WHERE signature_id = %s",
-                    (self.signature_to_delete, )
+                    "WHERE signature_id IN %s",
+                    (self.signatures_to_delete, )
                 )
                 t.commit()
 
@@ -1770,6 +1770,16 @@ class ConsentTests(ApiTests):
 
         self.assertEquals(201, response.status_code)
 
+        # Grab the signature to delete in teardown
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+        response_data = json.loads(response.data)
+        self.signatures_to_delete.append(response_data['signature_id'])
+
     def test_sign_biospecimen_consent(self):
         """Checks biospecimen consent for a source and sings the consent"""
 
@@ -1801,6 +1811,16 @@ class ConsentTests(ApiTests):
             headers=self.dummy_auth)
 
         self.assertEquals(201, response.status_code)
+
+        # Grab the signature to delete in teardown
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, BIOSPECIMEN_CONSENT),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+        response_data = json.loads(response.data)
+        self.signatures_to_delete.append(response_data['signature_id'])
 
     def test_sign_data_consent_new_age_invalid(self):
         """In this test, we'll try to re-consent as an invalid age range"""
@@ -1860,6 +1880,16 @@ class ConsentTests(ApiTests):
         # And assert that it fails
         self.assertEquals(403, response.status_code)
 
+        # Grab the signature to delete in teardown
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+        response_data = json.loads(response.data)
+        self.signatures_to_delete.append(response_data['signature_id'])
+
     def test_sign_data_consent_new_age_valid(self):
         """
         In this test, we'll create a child source, then re-consent as an adult
@@ -1902,6 +1932,16 @@ class ConsentTests(ApiTests):
 
         self.assertEquals(201, response.status_code)
 
+        # Grab the signature ID so we can clean it up later
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+        response_data = json.loads(response.data)
+        self.signatures_to_delete.append(response_data['signature_id'])
+
         # Now, try to sign another consent as an adult
         adult_data_consent_id = self._get_consent_id("adult_data")
         consent_data = {
@@ -1920,6 +1960,16 @@ class ConsentTests(ApiTests):
 
         # And assert that it works
         self.assertEquals(201, response.status_code)
+
+        # Grab the signature to delete in teardown
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+        response_data = json.loads(response.data)
+        self.signatures_to_delete.append(response_data['signature_id'])
 
     def test_get_signed_consent(self):
         # Create our account and source to work from
@@ -1963,8 +2013,8 @@ class ConsentTests(ApiTests):
             adult_data_consent_id
         )
 
-        # need to clean this up in tearDown
-        self.signature_to_delete = response_data['signature_id']
+        # Need to clean up the signature
+        self.signatures_to_delete.append(response_data['signature_id'])
 
     def _get_consent_id(self, consent_type):
         with Transaction() as t:
