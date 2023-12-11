@@ -1727,12 +1727,13 @@ class ConsentTests(ApiTests):
 
     def tearDown(self):
         if len(self.signatures_to_delete) > 0:
+            delete_sigs = tuple(self.signatures_to_delete)
             with Transaction() as t:
                 cur = t.cursor()
                 cur.execute(
                     "DELETE FROM ag.consent_audit "
                     "WHERE signature_id IN %s",
-                    (self.signatures_to_delete, )
+                    (delete_sigs, )
                 )
                 t.commit()
 
