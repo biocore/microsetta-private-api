@@ -1,5 +1,6 @@
-from microsetta_private_api.model.consent import ConsentDocument
-from microsetta_private_api.model.consent import ConsentSignature
+from microsetta_private_api.model.consent import ConsentDocument,\
+    ConsentSignature, HUMAN_CONSENT_TODDLER, HUMAN_CONSENT_CHILD,\
+    HUMAN_CONSENT_ADOLESCENT, HUMAN_CONSENT_ADULT
 from microsetta_private_api.repo.base_repo import BaseRepo
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.source_repo import SourceRepo
@@ -135,16 +136,16 @@ class ConsentRepo(BaseRepo):
         bool
             True if the user needs to reconsent, False otherwise
         """
-        if age_range == "18-plus":
+        if age_range == HUMAN_CONSENT_ADULT:
             consent_join = "ca.consent_id"
             consent_type = "adult_" + consent_type
-        elif age_range == "13-17":
+        elif age_range == HUMAN_CONSENT_ADOLESCENT:
             consent_join = "ca.assent_id"
             consent_type = "adolescent_" + consent_type
-        elif age_range == "7-12":
+        elif age_range == HUMAN_CONSENT_CHILD:
             consent_join = "ca.assent_id"
             consent_type = "child_" + consent_type
-        elif age_range == "0-6":
+        elif age_range == HUMAN_CONSENT_TODDLER:
             consent_join = "ca.consent_id"
             consent_type = "parent_" + consent_type
         else:

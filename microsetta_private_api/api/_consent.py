@@ -3,7 +3,8 @@ import uuid
 from microsetta_private_api import localization
 from microsetta_private_api.api._account import \
     _validate_account_access
-from microsetta_private_api.model.consent import ConsentSignature
+from microsetta_private_api.model.consent import ConsentSignature,\
+    HUMAN_CONSENT_AGE_GROUPS
 from microsetta_private_api.repo.consent_repo import ConsentRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
@@ -62,8 +63,6 @@ def check_consent_signature(account_id, source_id, consent_type, token_info):
 def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
     _validate_account_access(token_info, account_id)
 
-    human_consent_age_groups = ["0-6", "7-12", "13-17", "18-plus"]
-
     with Transaction() as t:
         # Sources are now permitted to update their age range, but only if it
         # moves the source to an older age group. For this purpose, "legacy"
@@ -78,7 +77,7 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
             # Let's make sure it's a valid change. First, grab the index of
             # their current age range.
             try:
-                cur_age_index = human_consent_age_groups.index(
+                cur_age_index = HUMAN_CONSENT_AGE_GROUPS.index(
                     source.source_data.age_range
                 )
             except ValueError:
@@ -88,7 +87,7 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
 
             # Next, make sure their new age range is valid
             try:
-                new_age_index = human_consent_age_groups.index(
+                new_age_index = HUMAN_CONSENT_AGE_GROUPS.index(
                     body['age_range']
                 )
             except ValueError:

@@ -43,6 +43,8 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenMPeds, VioscreenMPedsComponent,
     VioscreenFoodConsumption, VioscreenFoodConsumptionComponent
 )
+from microsetta_private_api.model.consent import HUMAN_CONSENT_CHILD,\
+    HUMAN_CONSENT_ADULT
 from microsetta_private_api.api.tests.test_integration import \
     _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
 from dateutil.relativedelta import relativedelta
@@ -128,14 +130,14 @@ DUMMY_HUMAN_SOURCE = {
                 'source_name': 'Bo',
                 'source_type': 'human',
                 'consent': {
-                    'age_range': "18-plus"
+                    'age_range': HUMAN_CONSENT_ADULT
                 },
             }
 DUMMY_HUMAN_SOURCE_CHILD = {
                 'source_name': 'Bo',
                 'source_type': 'human',
                 'consent': {
-                    'age_range': "7-12",
+                    'age_range': HUMAN_CONSENT_CHILD,
                     'child_info': {
                         "parent_1_name": "Parental Unit",
                         "assent_obtainer": "Assent Person"
@@ -1751,12 +1753,12 @@ class ConsentTests(ApiTests):
         response_obj = json.loads(response.data)
         self.assertTrue(response_obj["result"])
 
-        consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
+        adult_data_consent_id = self._get_consent_id("adult_data")
         consent_data = {
-            "age_range": "18-plus",
+            "age_range": HUMAN_CONSENT_ADULT,
             "participant_name": "Bo",
             "consent_type": ADULT_DATA_CONSENT,
-            "consent_id": consent_id
+            "consent_id": adult_data_consent_id
         }
 
         response = self.client.post(
@@ -1783,12 +1785,12 @@ class ConsentTests(ApiTests):
         response_obj = json.loads(response.data)
         self.assertTrue(response_obj["result"])
 
-        consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
+        adult_biospecimen_consent_id = self._get_consent_id("adult_data")
         consent_data = {
-            "age_range": "18-plus",
+            "age_range": HUMAN_CONSENT_ADULT,
             "participant_name": "Bo",
             "consent_type": ADULT_BIOSPECIMEN_CONSENT,
-            "consent_id": consent_id
+            "consent_id": adult_biospecimen_consent_id
         }
 
         response = self.client.post(
@@ -1815,12 +1817,12 @@ class ConsentTests(ApiTests):
         response_obj = json.loads(response.data)
         self.assertTrue(response_obj["result"])
 
-        consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
+        adult_data_consent_id = self._get_consent_id("adult_data")
         consent_data = {
-            "age_range": "18-plus",
+            "age_range": HUMAN_CONSENT_ADULT,
             "participant_name": "Bo",
             "consent_type": ADULT_DATA_CONSENT,
-            "consent_id": consent_id
+            "consent_id": adult_data_consent_id
         }
 
         response = self.client.post(
@@ -1833,14 +1835,16 @@ class ConsentTests(ApiTests):
         self.assertEquals(201, response.status_code)
 
         # Now, try to sign another consent as a child
+        parent_data_consent_id = self._get_consent_id("parent_data")
+        child_data_assent_id = self._get_consent_id("child_data")
         consent_data = {
-            "age_range": "7-12",
-            "assent_id": "27d6bd39-07b0-44d8-8c2e-05d80eb1eb56",
+            "age_range": HUMAN_CONSENT_CHILD,
+            "assent_id": child_data_assent_id,
             "consent_child": "Yes",
             "participant_name": "Bo",
             "consent_witness": "Yes",
             "assent_obtainer": "Assent",
-            "consent_id": "b0d6be28-663b-4be8-9f54-f53f4cbf9a1f",
+            "consent_id": parent_data_consent_id,
             "consent_type": "parent_data",
             "consent_parent": "Yes",
             "parent_1_name": 'Parent'
@@ -1873,14 +1877,17 @@ class ConsentTests(ApiTests):
         response_obj = json.loads(response.data)
         self.assertTrue(response_obj["result"])
 
+        parent_data_consent_id = self._get_consent_id("parent_data")
+        child_data_assent_id = self._get_consent_id("child_data")
+
         consent_data = {
-            "age_range": "7-12",
-            "assent_id": "27d6bd39-07b0-44d8-8c2e-05d80eb1eb56",
+            "age_range": HUMAN_CONSENT_CHILD,
+            "assent_id": child_data_assent_id,
             "consent_child": "Yes",
             "participant_name": "Bo",
             "consent_witness": "Yes",
             "assent_obtainer": "Assent",
-            "consent_id": "b0d6be28-663b-4be8-9f54-f53f4cbf9a1f",
+            "consent_id": parent_data_consent_id,
             "consent_type": "parent_data",
             "consent_parent": "Yes",
             "parent_1_name": 'Parent'
@@ -1896,12 +1903,12 @@ class ConsentTests(ApiTests):
         self.assertEquals(201, response.status_code)
 
         # Now, try to sign another consent as an adult
-        consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
+        adult_data_consent_id = self._get_consent_id("adult_data")
         consent_data = {
-            "age_range": "18-plus",
+            "age_range": HUMAN_CONSENT_ADULT,
             "participant_name": "Bo",
             "consent_type": ADULT_DATA_CONSENT,
-            "consent_id": consent_id
+            "consent_id": adult_data_consent_id
         }
 
         response = self.client.post(
@@ -1920,22 +1927,13 @@ class ConsentTests(ApiTests):
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
 
-        with Transaction() as t:
-            with t.dict_cursor() as cur:
-                cur.execute(
-                    "SELECT consent_id "
-                    "FROM ag.consent_documents "
-                    "WHERE locale = 'en_US' AND consent_type = 'adult_data' "
-                    "ORDER BY date_time DESC LIMIT 1"
-                )
-                row = cur.fetchone()
-                adult_data_consent = row['consent_id']
+        adult_data_consent_id = self._get_consent_id("adult_data")
 
         consent_data = {
-            "age_range": "18-plus",
+            "age_range": HUMAN_CONSENT_ADULT,
             "participant_name": "Bo",
             "consent_type": ADULT_DATA_CONSENT,
-            "consent_id": adult_data_consent
+            "consent_id": adult_data_consent_id
         }
 
         response = self.client.post(
@@ -1962,11 +1960,24 @@ class ConsentTests(ApiTests):
         )
         self.assertEqual(
             response_data['consent_id'],
-            adult_data_consent
+            adult_data_consent_id
         )
 
         # need to clean this up in tearDown
         self.signature_to_delete = response_data['signature_id']
+
+    def _get_consent_id(self, consent_type):
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                cur.execute(
+                    "SELECT consent_id "
+                    "FROM ag.consent_documents "
+                    "WHERE locale = 'en_US' AND consent_type = %s "
+                    "ORDER BY date_time DESC LIMIT 1",
+                    (consent_type, )
+                )
+                row = cur.fetchone()
+                return row['consent_id']
 
 
 @pytest.mark.usefixtures("client")
