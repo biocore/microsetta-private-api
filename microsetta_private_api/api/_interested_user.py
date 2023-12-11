@@ -160,13 +160,10 @@ def put_interested_user_address_update(body):
         required_fields = ['address_1', 'city', 'state', 'postal', 'phone']
         for f in required_fields:
             if body.get(f, "") == "":
-                rf_pass = False
-
-        if not rf_pass:
-            return jsonify(
-                code=400,
-                message="Failed to update address due to missing fields."
-            ), 400
+                return jsonify(
+                    code=400,
+                    message="Failed to update address due to missing fields."
+                ), 400
 
         with Transaction() as t:
             i_u_repo = InterestedUserRepo(t)
