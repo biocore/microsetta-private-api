@@ -1743,12 +1743,13 @@ class ConsentTests(ApiTests):
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
 
-        consent_status = self.client.get(
+        response = self.client.get(
             '/api/accounts/%s/sources/%s/consent/%s' %
             (dummy_acct_id, dummy_source_id, DATA_CONSENT),
             headers=self.dummy_auth)
 
-        self.assertTrue(consent_status["result"])
+        response_obj = json.loads(response.data)
+        self.assertTrue(response_obj["result"])
 
         consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
         consent_data = {
@@ -1774,12 +1775,13 @@ class ConsentTests(ApiTests):
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
 
-        consent_status = self.client.get(
+        response = self.client.get(
             '/api/accounts/%s/sources/%s/consent/%s' %
             (dummy_acct_id, dummy_source_id, BIOSPECIMEN_CONSENT),
             headers=self.dummy_auth)
 
-        self.assertTrue(consent_status["result"])
+        response_obj = json.loads(response.data)
+        self.assertTrue(response_obj["result"])
 
         consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
         consent_data = {
@@ -1805,12 +1807,13 @@ class ConsentTests(ApiTests):
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
 
-        consent_status = self.client.get(
+        response = self.client.get(
             '/api/accounts/%s/sources/%s/consent/%s' %
             (dummy_acct_id, dummy_source_id, DATA_CONSENT),
             headers=self.dummy_auth)
 
-        self.assertTrue(consent_status["result"])
+        response_obj = json.loads(response.data)
+        self.assertTrue(response_obj["result"])
 
         consent_id = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
         consent_data = {
@@ -1862,12 +1865,13 @@ class ConsentTests(ApiTests):
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE_CHILD,
             create_dummy_1=True)
 
-        consent_status = self.client.get(
+        response = self.client.get(
             '/api/accounts/%s/sources/%s/consent/%s' %
             (dummy_acct_id, dummy_source_id, DATA_CONSENT),
             headers=self.dummy_auth)
 
-        self.assertTrue(consent_status["result"])
+        response_obj = json.loads(response.data)
+        self.assertTrue(response_obj["result"])
 
         consent_data = {
             "age_range": "7-12",
