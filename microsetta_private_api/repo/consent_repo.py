@@ -5,6 +5,7 @@ from microsetta_private_api.repo.base_repo import BaseRepo
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.exceptions import RepoException
+from psycopg2 import sql
 
 
 def _consent_document_to_row(s):
@@ -137,16 +138,16 @@ class ConsentRepo(BaseRepo):
             True if the user needs to reconsent, False otherwise
         """
         if age_range == HUMAN_CONSENT_ADULT:
-            consent_join = "ca.consent_id"
+            consent_join = "consent_id"
             consent_type = "adult_" + consent_type
         elif age_range == HUMAN_CONSENT_ADOLESCENT:
-            consent_join = "ca.assent_id"
+            consent_join = "assent_id"
             consent_type = "adolescent_" + consent_type
         elif age_range == HUMAN_CONSENT_CHILD:
-            consent_join = "ca.assent_id"
+            consent_join = "assent_id"
             consent_type = "child_" + consent_type
         elif age_range == HUMAN_CONSENT_TODDLER:
-            consent_join = "ca.consent_id"
+            consent_join = "consent_id"
             consent_type = "parent_" + consent_type
         else:
             # Source is either "legacy" or lacks an age.
@@ -168,17 +169,18 @@ class ConsentRepo(BaseRepo):
             # type of consent document. For toddlers and adults, we check the
             # consent_id column in ag.consent_audit, whereas kids and
             # teens use the assent_id column.
-            sql = """SELECT ca.signature_id
-                     FROM ag.consent_audit ca
-                     INNER JOIN ag.consent_documents cd
-                     ON {0} = cd.consent_id
-                     WHERE cd.version = %s
-                     AND cd.consent_type = %s
-                     AND ca.source_id = %s"""
-            sql = sql.format(consent_join)
+            query = sql.SQL(
+                "SELECT ca.signature_id "
+                "FROM ag.consent_audit ca "
+                "INNER JOIN ag.consent_documents cd "
+                "ON ca.{} = cd.consent_id "
+                "WHERE cd.version = %s "
+                "AND cd.consent_type = %s "
+                "AND ca.source_id = %s"
+            ).format(sql.Identifier(consent_join))
 
             cur.execute(
-                sql,
+                query,
                 (version, consent_type, source_id)
             )
             return cur.rowcount == 0

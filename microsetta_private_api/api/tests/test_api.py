@@ -1796,7 +1796,9 @@ class ConsentTests(ApiTests):
         response_obj = json.loads(response.data)
         self.assertTrue(response_obj["result"])
 
-        adult_biospecimen_consent_id = self._get_consent_id(ADULT_BIOSPECIMEN_CONSENT)
+        adult_biospecimen_consent_id = self._get_consent_id(
+            ADULT_BIOSPECIMEN_CONSENT
+        )
         consent_data = {
             "age_range": HUMAN_CONSENT_ADULT,
             "participant_name": "Bo",
