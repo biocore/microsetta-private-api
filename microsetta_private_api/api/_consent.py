@@ -3,7 +3,8 @@ import uuid
 from microsetta_private_api import localization
 from microsetta_private_api.api._account import \
     _validate_account_access
-from microsetta_private_api.model.consent import ConsentSignature
+from microsetta_private_api.model.consent import ConsentSignature,\
+    HUMAN_CONSENT_AGE_GROUPS
 from microsetta_private_api.repo.consent_repo import ConsentRepo
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
@@ -63,35 +64,52 @@ def sign_consent_doc(account_id, source_id, consent_type, body, token_info):
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
-        # Sources with an age_range of "legacy" will select an age range
-        # the first time they sign a new consent document. We need to
-        # catch legacy sources as they come in and update their age.
+        # Sources are now permitted to update their age range, but only if it
+        # moves the source to an older age group. For this purpose, "legacy"
+        # is treated as younger than "0-6", as they're choosing an age group
+        # for the first time.
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
         if source is None:
             return jsonify(code=404, message=SRC_NOT_FOUND_MSG), 404
 
-        if source.source_data.age_range == "legacy":
-            update_success = source_repo.update_legacy_source_age_range(
+        if source.source_data.age_range != body['age_range']:
+            # Let's make sure it's a valid change. First, grab the index of
+            # their current age range.
+            try:
+                cur_age_index = HUMAN_CONSENT_AGE_GROUPS.index(
+                    source.source_data.age_range
+                )
+            except ValueError:
+                # Catch any sources that have a blank, "legacy", or faulty
+                # age_range
+                cur_age_index = -1
+
+            # Next, make sure their new age range is valid
+            try:
+                new_age_index = HUMAN_CONSENT_AGE_GROUPS.index(
+                    body['age_range']
+                )
+            except ValueError:
+                # Shouldn't reach this point, but if we do, reject it
+                return jsonify(
+                    code=403, message="Invalid age_range update"
+                ), 403
+
+            # Finally, make sure the new age_range isn't younger than the
+            # current age_range.
+            if new_age_index < cur_age_index:
+                return jsonify(
+                    code=403, message="Invalid age_range update"
+                ), 403
+
+            update_success = source_repo.update_source_age_range(
                 source_id, body['age_range']
             )
             if not update_success:
                 return jsonify(
                     code=403, message="Invalid age_range update"
                 ), 403
-
-        # NB For the time being, we need to block any pre-overhaul under-18
-        # profiles from re-consenting. For API purposes, the safest way to
-        # check whether it's a pre-overhaul or post-overhaul source is to look
-        # at the creation_time on the source. Anything pre-overhaul is
-        # prevented from signing a new consent document.
-        if source.source_data.age_range not in ["legacy", "18-plus"] and\
-                not source_repo.check_source_post_overhaul(
-                    account_id, source_id
-                ):
-            return jsonify(
-                code=403, message="Minors may not sign new consent documents"
-            ), 403
 
         # Now back to the normal flow of signing a consent document
         consent_repo = ConsentRepo(t)

@@ -4,7 +4,8 @@ from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.consent_repo import ConsentRepo
-from microsetta_private_api.model.consent import ConsentSignature
+from microsetta_private_api.model.consent import ConsentSignature,\
+    HUMAN_CONSENT_ADULT
 from microsetta_private_api.model.source import HumanInfo, Source
 from microsetta_private_api.repo.account_repo import AccountRepo
 from microsetta_private_api.model.account import Account
@@ -33,7 +34,7 @@ CORRECT_SIGN = {"source_id": SOURCE_ID,
                 "parent_2_name": None,
                 "deceased__parent":  None,
                 "assent_obtainer": None,
-                "age_range": "18-plus"
+                "age_range": HUMAN_CONSENT_ADULT
                 }
 
 INVALID_SOURCE_SIGN = {"signature_id": '21cac84d-951d-470e-a001-463d911f1222',
@@ -134,7 +135,7 @@ class ConsentRepoTests(unittest.TestCase):
                 HumanInfo(False, None, None,
                           False, datetime.utcnow(), None,
                           "Mr. Obtainer",
-                          "18-plus")
+                          HUMAN_CONSENT_ADULT)
             ))
 
             CORRECT_SIGN.update({"consent_id": self.adult_data_consent})
@@ -185,7 +186,7 @@ class ConsentRepoTests(unittest.TestCase):
                 HumanInfo(False, None, None,
                           False, datetime.utcnow(), None,
                           "Mr. Obtainer",
-                          "18-plus")
+                          HUMAN_CONSENT_ADULT)
             ))
 
             CORRECT_SIGN.update({"consent_id": self.adult_bio_consent})
@@ -245,7 +246,9 @@ class ConsentRepoTests(unittest.TestCase):
         with Transaction() as t:
             consent_repo = ConsentRepo(t)
             source = INVALID_SOURCE_SIGN['source_id']
-            res = consent_repo.is_consent_required(source, "18-plus", "data")
+            res = consent_repo.is_consent_required(
+                source, HUMAN_CONSENT_ADULT, "data"
+            )
             self.assertTrue(res)
 
     def test_get_latest_signed_consent(self):
@@ -285,7 +288,7 @@ class ConsentRepoTests(unittest.TestCase):
                 HumanInfo(False, None, None,
                           False, datetime.utcnow(), None,
                           "Mr. Obtainer",
-                          "18-plus")
+                          HUMAN_CONSENT_ADULT)
             ))
 
             CORRECT_SIGN.update({"consent_id": self.adult_data_consent})
@@ -340,7 +343,7 @@ class ConsentRepoTests(unittest.TestCase):
                 HumanInfo(False, None, None,
                           False, datetime.utcnow(), None,
                           "Mr. Obtainer",
-                          "18-plus")
+                          HUMAN_CONSENT_ADULT)
             ))
 
             CORRECT_SIGN.update({"consent_id": self.adult_data_consent})
@@ -354,7 +357,9 @@ class ConsentRepoTests(unittest.TestCase):
             self.assertTrue(res)
 
             # Now verify that our source doesn't need to reconsent
-            res = consent_repo.is_consent_required(source, "18-plus", "data")
+            res = consent_repo.is_consent_required(
+                source, HUMAN_CONSENT_ADULT, "data"
+            )
             self.assertFalse(res)
 
     def test_is_consent_required_true_legacy(self):
@@ -443,7 +448,7 @@ class ConsentRepoTests(unittest.TestCase):
                 HumanInfo(False, None, None,
                           False, datetime.utcnow(), None,
                           "Mr. Obtainer",
-                          "18-plus")
+                          HUMAN_CONSENT_ADULT)
             ))
 
             CORRECT_SIGN.update({"consent_id": self.adult_data_consent})
@@ -458,7 +463,7 @@ class ConsentRepoTests(unittest.TestCase):
 
             # Now verify that our source still has to consent for biospecimen
             res = consent_repo.is_consent_required(
-                source, "18-plus", "biospecimen"
+                source, HUMAN_CONSENT_ADULT, "biospecimen"
             )
             self.assertTrue(res)
 
@@ -475,7 +480,7 @@ class ConsentRepoTests(unittest.TestCase):
 
             # And assert that we no longer need to reconsent for that type
             res = consent_repo.is_consent_required(
-                source, "18-plus", "biospecimen"
+                source, HUMAN_CONSENT_ADULT, "biospecimen"
             )
             self.assertFalse(res)
 

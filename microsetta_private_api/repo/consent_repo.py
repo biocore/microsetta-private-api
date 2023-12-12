@@ -1,9 +1,11 @@
-from microsetta_private_api.model.consent import ConsentDocument
-from microsetta_private_api.model.consent import ConsentSignature
+from microsetta_private_api.model.consent import ConsentDocument,\
+    ConsentSignature, HUMAN_CONSENT_TODDLER, HUMAN_CONSENT_CHILD,\
+    HUMAN_CONSENT_ADOLESCENT, HUMAN_CONSENT_ADULT
 from microsetta_private_api.repo.base_repo import BaseRepo
 from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.exceptions import RepoException
+from psycopg2 import sql
 
 
 def _consent_document_to_row(s):
@@ -57,6 +59,7 @@ def _row_to_consent_signature(r):
         r["deceased_parent"],
         r["assent_obtainer"],
         r["assent_id"],
+        "",
         "",
         ""
     )
@@ -134,13 +137,17 @@ class ConsentRepo(BaseRepo):
         bool
             True if the user needs to reconsent, False otherwise
         """
-        if age_range == "18-plus":
+        if age_range == HUMAN_CONSENT_ADULT:
+            consent_join = "consent_id"
             consent_type = "adult_" + consent_type
-        elif age_range == "13-17":
+        elif age_range == HUMAN_CONSENT_ADOLESCENT:
+            consent_join = "assent_id"
             consent_type = "adolescent_" + consent_type
-        elif age_range == "7-12":
+        elif age_range == HUMAN_CONSENT_CHILD:
+            consent_join = "assent_id"
             consent_type = "child_" + consent_type
-        elif age_range == "0-6":
+        elif age_range == HUMAN_CONSENT_TODDLER:
+            consent_join = "consent_id"
             consent_type = "parent_" + consent_type
         else:
             # Source is either "legacy" or lacks an age.
@@ -159,15 +166,21 @@ class ConsentRepo(BaseRepo):
             version = r['version']
 
             # Now check if the source has agreed to that version of the given
-            # type of consent document
-            cur.execute(
+            # type of consent document. For toddlers and adults, we check the
+            # consent_id column in ag.consent_audit, whereas kids and
+            # teens use the assent_id column.
+            query = sql.SQL(
                 "SELECT ca.signature_id "
                 "FROM ag.consent_audit ca "
                 "INNER JOIN ag.consent_documents cd "
-                "ON ca.consent_id = cd.consent_id "
+                "ON ca.{} = cd.consent_id "
                 "WHERE cd.version = %s "
                 "AND cd.consent_type = %s "
-                "AND ca.source_id = %s",
+                "AND ca.source_id = %s"
+            ).format(sql.Identifier(consent_join))
+
+            cur.execute(
+                query,
                 (version, consent_type, source_id)
             )
             return cur.rowcount == 0
@@ -276,10 +289,11 @@ class ConsentRepo(BaseRepo):
             else:
                 consent_signature = _row_to_consent_signature(row)
 
-                survey_doc = self.get_consent_document(
+                consent_doc = self.get_consent_document(
                     consent_signature.consent_id
                 )
-                consent_signature.consent_content = survey_doc.consent_content
+                consent_signature.consent_content =\
+                    consent_doc.consent_content
 
                 if consent_signature.assent_id is not None:
                     assent_doc = self.get_consent_document(
@@ -287,5 +301,8 @@ class ConsentRepo(BaseRepo):
                     )
                     consent_signature.assent_content =\
                         assent_doc.consent_content
+                    consent_signature.consent_type = assent_doc.consent_type
+                else:
+                    consent_signature.consent_type = consent_doc.consent_type
 
                 return consent_signature
