@@ -1285,13 +1285,13 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
             self.assertEqual(len(ffq_code), 0)
 
             # Test: no ffq without transaction
-            ffq_code = pfr.get_ffq_codes_by_email("empty2@b.com") # unique
+            ffq_code = pfr.get_ffq_codes_by_email("empty2@b.com")  # unique
             self.assertEqual(len(ffq_code), 1)
             self.assertEqual(ffq_code[0]['email'], "empty2@b.com")
             self.assertIsNone(ffq_code[0]['transaction_created_time'])
             self.assertIsNone(ffq_code[0]['ffq_registration_code'])
 
-            ffq_code = pfr.get_ffq_codes_by_email("empty@dup.com") # duplicate
+            ffq_code = pfr.get_ffq_codes_by_email("empty@dup.com")  # duplicate
             self.assertEqual(len(ffq_code), 1)
             self.assertEqual(ffq_code[0]['email'], "empty@dup.com")
             self.assertIsNone(ffq_code[0]['ffq_registration_code'])
@@ -1372,6 +1372,7 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
                 for i in range(5)
             ]
             self.assertNotIn(self.new_ffq_codes[2], got_codes)
+
 
 if __name__ == '__main__':
     unittest.main()
