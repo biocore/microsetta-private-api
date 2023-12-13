@@ -2216,6 +2216,33 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '404':
           $ref: '#/components/responses/404NotFound'
+  
+  '/admin/search/ffq_codes/{email}':
+    get:
+      operationId: microsetta_private_api.api._interested_user.search_ffq_codes_by_email
+      tags:
+        - Admin
+      summary: Retrieve FFQ codes by an email query
+      description: Retrieve FFQ codes by an email query
+      parameters:
+        - in: path
+          name: email
+          description: user email address to search for
+          schema:
+            type: string
+            example: "test@test.com"
+          required: true
+      responses:
+        '200':
+          description: Object containing ffq codes and info related to the email (if any)
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   '/admin/search/interested_users/{email}':
     get:
