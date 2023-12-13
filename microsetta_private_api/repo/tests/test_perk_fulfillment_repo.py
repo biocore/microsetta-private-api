@@ -428,7 +428,8 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
             )
             cur.execute(
                 "DELETE FROM campaign.transaction "
-                "WHERE id IN %s",
+                "WHERE id IN %s "
+                "RETURNING interested_user_id",
                 (
                     (
                         FFQ_TRANSACTION_ID,
@@ -439,10 +440,16 @@ class PerkFulfillmentRepoTests(unittest.TestCase):
                     ),
                 )
             )
+            inserted_iu_ids = [tup[0] for tup in cur.fetchall()]
             cur.execute(
                 "DELETE FROM campaign.interested_users AS iu "
                 "WHERE iu.interested_user_id IN %s",
-                (tuple(self.iu_ids), )
+                (
+                    (
+                        *inserted_iu_ids,
+                        *self.iu_ids
+                    ),
+                )  # self.iu_ids contains iu without transaction
             )
             cur.execute(
                 "DELETE FROM campaign.campaigns_projects "
