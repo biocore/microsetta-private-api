@@ -4,7 +4,7 @@ from microsetta_private_api.model.model_base import ModelBase
 
 class Sample(ModelBase):
     def __init__(self, sample_id, datetime_collected, site, notes, barcode,
-                 latest_scan_timestamp, source_id, account_id,
+                 latest_scan_timestamp, source_id, account_id, last_update,
                  sample_projects, latest_scan_status, kit_id=None):
         self.id = sample_id
         # NB: datetime_collected may be None if sample not yet used
@@ -17,6 +17,7 @@ class Sample(ModelBase):
         # NB: _latest_scan_timestamp may be None if not yet returned to lab
         self._latest_scan_timestamp = latest_scan_timestamp
         self._latest_scan_status = latest_scan_status
+        self.last_update = last_update
         self.sample_projects = sample_projects
 
         self.source_id = source_id
@@ -42,7 +43,7 @@ class Sample(ModelBase):
 
     @classmethod
     def from_db(cls, sample_id, date_collected, time_collected,
-                site, notes, barcode, latest_scan_timestamp,
+                site, notes, barcode, latest_scan_timestamp, last_update,
                 source_id, account_id, sample_projects, latest_scan_status):
         datetime_collected = None
         # NB a sample may NOT have date and time collected if it has been sent
@@ -51,7 +52,7 @@ class Sample(ModelBase):
             datetime_collected = datetime.combine(date_collected,
                                                   time_collected)
         return cls(sample_id, datetime_collected, site, notes, barcode,
-                   latest_scan_timestamp, source_id,
+                latest_scan_timestamp, last_update, source_id,
                    account_id, sample_projects, latest_scan_status)
 
     def to_api(self):
@@ -62,7 +63,9 @@ class Sample(ModelBase):
             "sample_edit_locked": self.edit_locked,
             "sample_remove_locked": self.remove_locked,
             "sample_datetime": self.datetime_collected,
+            "latest_scan_timestamp": self._latest_scan_timestamp,
             "sample_notes": self.notes,
+            "last_update": self.last_update,
             "source_id": self.source_id,
             "account_id": self.account_id,
             "sample_projects": list(self.sample_projects),
