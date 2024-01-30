@@ -21,7 +21,7 @@ class SampleRepo(BaseRepo):
         latest_scan.scan_timestamp,
         ag.source.id,
         ag.source.account_id,
-        ag.ag_kit_barcodes.last_update
+        ag.ag_kit_barcodes.latest_sample_information_update
         FROM ag.ag_kit_barcodes
         LEFT JOIN (
             SELECT barcode, max(scan_timestamp) AS scan_timestamp
@@ -46,7 +46,7 @@ class SampleRepo(BaseRepo):
         latest_scan.scan_timestamp,
         ag.source.id,
         ag.source.account_id,
-        ag.ag_kit_barcodes.last_update
+        ag.ag_kit_barcodes.latest_sample_information_update
         FROM ag.ag_kit_barcodes
         LEFT JOIN (
             SELECT barcode, max(scan_timestamp) AS scan_timestamp
@@ -306,7 +306,7 @@ class SampleRepo(BaseRepo):
                         "sample_time = %s, "
                         "site_sampled = %s, "
                         "notes = %s, "
-                        "last_update = %s "
+                        "latest_sample_information_update = %s "
                         "WHERE "
                         "ag_kit_barcode_id = %s",
                         (

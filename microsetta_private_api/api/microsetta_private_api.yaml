@@ -3463,6 +3463,11 @@ components:
       type: string
       nullable: true
       example: "Oops, I dropped it"
+    latest_sample_information_update:
+      type: string
+      format: date-time
+      example: "2017-07-21T17:32:28Z"
+      nullable: true
     sample_site:
       enum: ["Blood (skin prick)", "Saliva", "Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
              "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", null]
@@ -3512,6 +3517,8 @@ components:
           $ref: '#/components/schemas/sample_datetime'
         sample_notes:
           $ref: '#/components/schemas/sample_notes'
+        latest_sample_information_update:
+          $ref: '#/components/schemas/latest_sample_information_update'
         sample_projects:
           $ref: '#/components/schemas/sample_projects'
         source_id:
