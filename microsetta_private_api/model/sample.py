@@ -52,7 +52,7 @@ class Sample(ModelBase):
             datetime_collected = datetime.combine(date_collected,
                                                   time_collected)
         return cls(sample_id, datetime_collected, site, notes, barcode,
-                latest_scan_timestamp, last_update, source_id,
+                   latest_scan_timestamp, last_update, source_id,
                    account_id, sample_projects, latest_scan_status)
 
     def to_api(self):
@@ -63,9 +63,9 @@ class Sample(ModelBase):
             "sample_edit_locked": self.edit_locked,
             "sample_remove_locked": self.remove_locked,
             "sample_datetime": self.datetime_collected,
-            "latest_scan_timestamp": self._latest_scan_timestamp,
+            "sample_latest_scan_timestamp": self._latest_scan_timestamp,
             "sample_notes": self.notes,
-            "last_update": self.last_update,
+            "sample_last_update": self.last_update,
             "source_id": self.source_id,
             "account_id": self.account_id,
             "sample_projects": list(self.sample_projects),
