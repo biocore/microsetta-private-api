@@ -4,8 +4,9 @@ from microsetta_private_api.model.model_base import ModelBase
 
 class Sample(ModelBase):
     def __init__(self, sample_id, datetime_collected, site, notes, barcode,
-                 latest_scan_timestamp, source_id, account_id, latest_sample_information_update,
-                 sample_projects, latest_scan_status, kit_id=None):
+                 latest_scan_timestamp, source_id, account_id,
+                 latest_sample_information_update, sample_projects,
+                 latest_scan_status, kit_id=None):
         self.id = sample_id
         # NB: datetime_collected may be None if sample not yet used
         self.datetime_collected = datetime_collected
@@ -17,7 +18,8 @@ class Sample(ModelBase):
         # NB: _latest_scan_timestamp may be None if not yet returned to lab
         self._latest_scan_timestamp = latest_scan_timestamp
         self._latest_scan_status = latest_scan_status
-        self.latest_sample_information_update = latest_sample_information_update
+        self.latest_sample_information_update \
+            = latest_sample_information_update
         self.sample_projects = sample_projects
 
         self.source_id = source_id
@@ -43,8 +45,9 @@ class Sample(ModelBase):
 
     @classmethod
     def from_db(cls, sample_id, date_collected, time_collected,
-                site, notes, barcode, latest_scan_timestamp, latest_sample_information_update,
-                source_id, account_id, sample_projects, latest_scan_status):
+                site, notes, barcode, latest_scan_timestamp,
+                latest_sample_information_update, source_id,
+                account_id, sample_projects, latest_scan_status):
         datetime_collected = None
         # NB a sample may NOT have date and time collected if it has been sent
         # out but not yet used
@@ -52,8 +55,8 @@ class Sample(ModelBase):
             datetime_collected = datetime.combine(date_collected,
                                                   time_collected)
         return cls(sample_id, datetime_collected, site, notes, barcode,
-                   latest_scan_timestamp, latest_sample_information_update, source_id,
-                   account_id, sample_projects, latest_scan_status)
+                   latest_scan_timestamp, latest_sample_information_update,
+                   source_id, account_id, sample_projects, latest_scan_status)
 
     def to_api(self):
         return {
@@ -65,7 +68,8 @@ class Sample(ModelBase):
             "sample_datetime": self.datetime_collected,
             "sample_latest_scan_timestamp": self._latest_scan_timestamp,
             "sample_notes": self.notes,
-            "sample_latest_sample_information_update": self.latest_sample_information_update,
+            "sample_latest_sample_information_update":
+                self.latest_sample_information_update,
             "source_id": self.source_id,
             "account_id": self.account_id,
             "sample_projects": list(self.sample_projects),
