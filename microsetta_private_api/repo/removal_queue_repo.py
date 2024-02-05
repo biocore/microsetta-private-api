@@ -1,7 +1,5 @@
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.exceptions import RepoException
-from microsetta_private_api.model.removal_queue_requests \
-    import RemovalQueueRequest
 
 
 class RemovalQueueRepo(BaseRepo):
@@ -17,9 +15,9 @@ class RemovalQueueRepo(BaseRepo):
             return False if count == 0 else True
 
     def _row_to_removal(self, r):
-        return RemovalQueueRequest(r['id'], r['account_id'], r['email'],
-                                   r['first_name'], r['last_name'],
-                                   r['requested_on'])
+        return self.__class__(r['id'], r['account_id'], r['email'],
+                              r['first_name'], r['last_name'],
+                              r['requested_on'])
 
     def get_all_account_removal_requests(self):
         with self._transaction.dict_cursor() as cur:
