@@ -1,5 +1,7 @@
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.exceptions import RepoException
+from microsetta_private_api.model.removal_queue_requests \
+    import RemovalQueueRequest
 
 
 class RemovalQueueRepo(BaseRepo):
@@ -13,6 +15,31 @@ class RemovalQueueRepo(BaseRepo):
             count = cur.fetchone()[0]
 
             return False if count == 0 else True
+
+    def _row_to_removal(self, r):
+        return RemovalQueueRequest(r['id'], r['account_id'], r['email'],
+                                   r['first_name'], r['last_name'],
+                                   r['requested_on'])
+
+    def get_all_account_removal_requests(self):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute("""
+                SELECT
+                    ag.delete_account_queue.id,
+                    ag.delete_account_queue.account_id,
+                    ag.delete_account_queue.requested_on,
+                    ag.account.first_name,
+                    ag.account.last_name,
+                    ag.account.email
+                FROM
+                    ag.account
+                JOIN
+                    ag.delete_account_queue ON ag.account.id
+                        = ag.delete_account_queue.account_id
+            """)
+            rows = cur.fetchall()
+
+            return [self._row_to_removal(r) for r in rows]
 
     def check_request_remove_account(self, account_id):
         with self._transaction.cursor() as cur:
@@ -43,7 +70,8 @@ class RemovalQueueRepo(BaseRepo):
             cur.execute("DELETE FROM delete_account_queue WHERE account_id ="
                         " %s", (account_id,))
 
-    def update_queue(self, account_id, admin_email, disposition):
+    def update_queue(self, account_id, admin_email,
+                     disposition, delete_reason):
         if not self.check_request_remove_account(account_id):
             raise RepoException("Account is not in removal queue")
 
@@ -69,9 +97,11 @@ class RemovalQueueRepo(BaseRepo):
             # add an entry to the log detailing who reviewed the account
             # and when.
             cur.execute("INSERT INTO account_removal_log (account_id, "
-                        "admin_id, disposition, requested_on) VALUES (%s,"
-                        " %s, %s, %s)", (account_id, admin_id, disposition,
-                                         requested_on))
+                        "admin_id, disposition, requested_on, delete_reason) "
+                        "VALUES (%s, %s, %s, %s, %s)", (account_id,
+                                                        admin_id, disposition,
+                                                        requested_on,
+                                                        delete_reason))
 
             # delete the entry from queue. Note that reviewed entries are
             # deleted from the queue whether or not they were approved

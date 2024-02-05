@@ -1419,9 +1419,11 @@ class AccountTests(ApiTests):
         self.assertFalse(json.loads(response.data)['status'])
 
         # submit a request for this account to be removed.
+        delete_reason = "User requested account removal"
         response = self.client.put(
             f'/api/accounts/{dummy_acct_id}/removal_queue',
-            headers=self.dummy_auth)
+            headers=self.dummy_auth,
+            json={'delete_reason': delete_reason})
 
         self.assertEqual(200, response.status_code)
 
@@ -1434,8 +1436,9 @@ class AccountTests(ApiTests):
             headers=self.dummy_auth)
 
         self.assertEqual(200, response.status_code)
-
-        self.assertTrue(json.loads(response.data)['status'])
+        removal_info = json.loads(response.data)
+        self.assertTrue(removal_info['status'])
+        # self.assertEqual(removal_info['delete_reason'], delete_reason)
 
         # try to request a second time. Verify that an error is returned
         # instead.
@@ -1485,7 +1488,8 @@ class AccountTests(ApiTests):
                          "Request Accepted")
 
         response = self.client.put(
-            f'/api/admin/account_removal/{dummy_acct_id}',
+            f'/api/admin/account_removal/{dummy_acct_id}'
+            f'?delete_reason={delete_reason}',
             headers=make_headers(FAKE_TOKEN_ADMIN))
 
         self.assertEqual(204, response.status_code)
@@ -1551,7 +1555,8 @@ class AccountTests(ApiTests):
         # functionality; it deletes the id from the delete-queue and logs the
         # deletion in a separate 'log' table, before calling account_delete().
         response = self.client.delete(
-            f'/api/admin/account_removal/{dummy_acct_id}',
+            f'/api/admin/account_removal/{dummy_acct_id}'
+            f'?delete_reason={delete_reason}',
             headers=make_headers(FAKE_TOKEN_ADMIN))
 
         # confirm that the operation was a success.

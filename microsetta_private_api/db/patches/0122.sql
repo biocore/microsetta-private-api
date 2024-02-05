@@ -17,5 +17,6 @@ CREATE TABLE ag.account_removal_log (
     -- user makes multiple requests.
     disposition DISPOSITION_TYPE,
     requested_on timestamptz,
-    reviewed_on timestamptz default current_timestamp
+    reviewed_on timestamptz default current_timestamp,
+    delete_reason VARCHAR
 );

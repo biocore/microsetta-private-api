@@ -2353,6 +2353,11 @@ paths:
         - Admin
       parameters:
         - $ref: '#/components/parameters/account_id'
+        - name: delete_reason
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Updates queue, log before calling delete_account()
