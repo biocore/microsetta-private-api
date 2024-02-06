@@ -314,7 +314,7 @@ class SampleRepo(BaseRepo):
                             sample_time,
                             sample_info.site,
                             sample_info.notes,
-                            datetime.datetime.utcnow(),
+                            datetime.datetime.now(),
                             sample_info.id
                         ))
 
