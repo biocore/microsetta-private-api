@@ -176,6 +176,8 @@ DUMMY_EMPTY_SAMPLE_INFO = {
     'sample_edit_locked': False,
     'sample_remove_locked': False,
     'sample_notes': None,
+    'sample_latest_sample_information_update': None,
+    'sample_latest_scan_timestamp': None,
     'sample_projects': ['American Gut Project'],
     'account_id': None,
     'source_id': None,
@@ -188,6 +190,8 @@ DUMMY_FILLED_SAMPLE_INFO = {
     'sample_edit_locked': False,
     'sample_remove_locked': False,
     'sample_notes': "Oops, I dropped it",
+    'sample_latest_sample_information_update': "2018-07-21T17:32:28Z",
+    'sample_latest_scan_timestamp': "2016-07-21T17:32:28Z",
     'sample_projects': ['American Gut Project'],
     'account_id': 'foobar',
     'source_id': 'foobarbaz',
@@ -588,6 +592,7 @@ def create_dummy_sample_objects(filled=False):
                     None,
                     info_dict['source_id'],
                     info_dict['account_id'],
+                    None,
                     info_dict["sample_projects"],
                     None)
 
@@ -2652,6 +2657,7 @@ class SampleTests(ApiTests):
             # make sure the sample's collection info is wiped
             sample_repo = SampleRepo(t)
             obs_sample = sample_repo._get_sample_by_id(MOCK_SAMPLE_ID)
+            obs_sample.latest_sample_information_update = None
             self.assertEqual(expected_sample.__dict__, obs_sample.__dict__)
 
             # make sure answered survey no longer associated with any samples
