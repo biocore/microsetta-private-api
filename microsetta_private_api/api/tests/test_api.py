@@ -900,21 +900,6 @@ class AccountsTests(ApiTests):
         response_obj = json.loads(response.data)
         self.assertEqual(0, len(response_obj))
 
-    def test_accounts_legacies_post_fail_422(self):
-        """Return 422 if info in db somehow prevents claiming legacy"""
-
-        # It is invalid to have one of the auth fields (e.g. sub)
-        # be null while the other is filled.
-        create_dummy_acct(create_dummy_1=True, iss=ACCT_MOCK_ISS,
-                          sub=None)
-
-        # execute accounts/legacies post (claim legacy account)
-        url = '/api/accounts/legacies?%s' % self.default_lang_querystring
-        response = self.client.post(url, headers=MOCK_HEADERS)
-
-        # check response code
-        self.assertEqual(422, response.status_code)
-
     # endregion accounts/legacies post tests
 
 

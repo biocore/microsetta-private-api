@@ -188,6 +188,10 @@ class AccountRepo(BaseRepo):
                     raise RepoException("Cannot claim more than one account")
                 # Unknown exception, re raise it.
                 raise e
+            except psycopg2.errors.CheckViolation:
+                raise RepoException(
+                    "Faulty Authorization Status - Contact Admin"
+                )
 
     def create_account(self, account):
         try:
@@ -215,6 +219,8 @@ class AccountRepo(BaseRepo):
 
             # Unknown exception, re raise it.
             raise e
+        except psycopg2.errors.CheckViolation:
+            raise RepoException("Faulty Authorization Status - Contact Admin")
 
     def delete_account(self, account_id):
         with self._transaction.cursor() as cur:
