@@ -1,7 +1,7 @@
--- Feb 12, 2024
--- Add user_delete_reason to ag.delete_account_queue
-ALTER TABLE ag.delete_account_queue
-    ADD COLUMN user_delete_reason VARCHAR;
+-- Feb 5, 2024
+-- Add delete_reason to ag.account_removal_log
+ALTER TABLE ag.account_removal_log
+    ADD COLUMN delete_reason VARCHAR;
 
-COMMENT ON COLUMN ag.delete_account_queue.user_delete_reason
-    IS 'Reason the user gave for deleting the account.';
+COMMENT ON COLUMN ag.account_removal_log.delete_reason
+    IS 'Reason the admin gave for deleting the account.';
