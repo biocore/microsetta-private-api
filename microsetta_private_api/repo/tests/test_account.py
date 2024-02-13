@@ -4,11 +4,13 @@ import datetime
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.account_repo import AccountRepo
+from microsetta_private_api.model.account import Account
 
 
 ACCOUNT_ID = '607f6723-c704-4b52-bc26-556a9aec85f6'
 BAD_ACCOUNT_ID = 'badbadba-dbad-badb-adba-dbadbadbadba'
 
+AUTH_ACCT_ID = '0004f77e-d3fd-404a-8f5c-3d548a5b0a3f'
 ACCT_ID_1 = '7a98df6a-e4db-40f4-91ec-627ac315d881'
 DUMMY_ACCT_INFO_1 = {
     "address": {
@@ -25,12 +27,13 @@ DUMMY_ACCT_INFO_1 = {
     "language": "en_US",
     "kit_name": 'jb_qhxqe',
     "consent_privacy_terms": True,
+    "latitude": 32.8798916,
+    "longitude": -117.2363115,
+    "cannot_geocode": False,
     "id": ACCT_ID_1
 }
 ACCT_MOCK_ISS_1 = "MrUnitTest.go"
 ACCT_MOCK_SUB_1 = "NotARealSub"
-RESULT_LAT = 32.882274018668355
-RESULT_LONG = -117.2353976693118
 
 
 class AccountTests(unittest.TestCase):
@@ -38,6 +41,7 @@ class AccountTests(unittest.TestCase):
         with Transaction() as t:
             ar = AccountRepo(t)
             self.untouched = ar.get_account(ACCOUNT_ID)
+            self.untouched_auth = ar.get_account(AUTH_ACCT_ID)
 
     def test_scrub(self):
         with Transaction() as t:
@@ -85,6 +89,71 @@ class AccountTests(unittest.TestCase):
             ar = AccountRepo(t)
             with self.assertRaises(RepoException):
                 ar.scrub(BAD_ACCOUNT_ID)
+
+    def test_faulty_auth_status_insert(self):
+        # none of the tests commit
+        # success: both non-null
+        with Transaction() as t:
+            ar = AccountRepo(t)
+            acct_1 = Account.from_dict(
+                DUMMY_ACCT_INFO_1,
+                ACCT_MOCK_ISS_1,
+                ACCT_MOCK_SUB_1
+            )
+            self.assertTrue(ar.create_account(acct_1))
+
+        # success: both null
+        with Transaction() as t:
+            ar = AccountRepo(t)
+            acct_2 = Account.from_dict(DUMMY_ACCT_INFO_1, None, None)
+            self.assertTrue(ar.create_account(acct_2))
+
+        # fail: sub null
+        with Transaction() as t:
+            ar = AccountRepo(t)
+            acct_3 = Account.from_dict(
+                DUMMY_ACCT_INFO_1,
+                ACCT_MOCK_ISS_1,
+                None
+            )
+            with self.assertRaises(RepoException):
+                ar.create_account(acct_3)
+
+        # fail: iss null
+        with Transaction() as t:
+            ar = AccountRepo(t)
+            acct_4 = Account.from_dict(
+                DUMMY_ACCT_INFO_1,
+                None,
+                ACCT_MOCK_SUB_1
+            )
+            with self.assertRaises(RepoException):
+                ar.create_account(acct_4)
+
+    def test_faulty_auth_status_update(self):
+        # none of the tests commit
+        # success: both non-null
+        with Transaction() as t:
+            ar = AccountRepo(t)
+            self.untouched_auth.auth_issuer = ACCT_MOCK_ISS_1
+            self.untouched_auth.auth_sub = ACCT_MOCK_SUB_1
+            self.assertTrue(ar.update_account(self.untouched_auth))
+
+        # fail: sub null
+        with Transaction() as t:
+            ar = AccountRepo(t)
+            self.untouched_auth.auth_issuer = ACCT_MOCK_ISS_1
+            self.untouched_auth.auth_sub = None
+            with self.assertRaises(RepoException):
+                ar.update_account(self.untouched_auth)
+
+        # fail: iss null
+        with Transaction() as t:
+            ar = AccountRepo(t)
+            self.untouched_auth.auth_issuer = None
+            self.untouched_auth.auth_sub = ACCT_MOCK_SUB_1
+            with self.assertRaises(RepoException):
+                ar.update_account(self.untouched_auth)
 
 
 if __name__ == '__main__':
