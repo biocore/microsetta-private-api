@@ -95,7 +95,7 @@ class RemovalQueueTests(unittest.TestCase):
 
             # use request_remove_account() to push the valid account onto
             # the queue.
-            rqr.request_remove_account(self.acc.id)
+            rqr.request_remove_account(self.acc.id, 'delete reason')
 
             # assume request_remove_account() succeeded.
             # check_request_remove_account() should return True.
@@ -120,7 +120,7 @@ class RemovalQueueTests(unittest.TestCase):
             rqr = RemovalQueueRepo(t)
             # use request_remove_account() to push the valid account onto
             # the queue.
-            rqr.request_remove_account(self.acc.id)
+            rqr.request_remove_account(self.acc.id, 'delete reason')
 
             # assume check_request_remove_account() works correctly.
             # verify account is now in the queue.
@@ -131,20 +131,21 @@ class RemovalQueueTests(unittest.TestCase):
             rqr = RemovalQueueRepo(t)
 
             # remove a valid account twice
-            rqr.request_remove_account(self.acc.id)
+            rqr.request_remove_account(self.acc.id, 'delete reason')
             with self.assertRaises(RepoException):
-                rqr.request_remove_account(self.acc.id)
+                rqr.request_remove_account(self.acc.id, 'delete reason')
 
             # remove a non-existant id.
             with self.assertRaises(ForeignKeyViolation):
-                rqr.request_remove_account(RemovalQueueTests.bad_id)
+                rqr.request_remove_account(RemovalQueueTests.bad_id,
+                                           'delete reason')
 
     def test_cancel_request_remove_account(self):
         with Transaction() as t:
             rqr = RemovalQueueRepo(t)
             # use request_remove_account() to push the valid account onto
             # the queue.
-            rqr.request_remove_account(self.acc.id)
+            rqr.request_remove_account(self.acc.id, 'delete reason')
 
             # assume check_request_remove_account() works correctly.
             # verify account is now in the queue.
@@ -177,7 +178,7 @@ class RemovalQueueTests(unittest.TestCase):
 
             # use request_remove_account() to push the valid account onto
             # the queue.
-            rqr.request_remove_account(self.acc.id)
+            rqr.request_remove_account(self.acc.id, 'delete reason')
 
             # cancel the request to delete the account twice.
             rqr.cancel_request_remove_account(self.acc.id)
@@ -189,7 +190,7 @@ class RemovalQueueTests(unittest.TestCase):
             rqr = RemovalQueueRepo(t)
 
             # push the standard account onto the queue.
-            rqr.request_remove_account(self.acc.id)
+            rqr.request_remove_account(self.acc.id, 'delete reason')
 
             # update_queue should migrate the relevant information to the
             # ag.account_removal_log table and delete the entry from the
@@ -235,7 +236,7 @@ class RemovalQueueTests(unittest.TestCase):
             rqr = RemovalQueueRepo(t)
 
             # push the standard account onto the queue.
-            rqr.request_remove_account(self.acc.id)
+            rqr.request_remove_account(self.acc.id, 'delete reason')
 
             # ensure that an Error is raised when an invalid admin
             # email address is passed.

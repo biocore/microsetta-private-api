@@ -1422,8 +1422,7 @@ class AccountTests(ApiTests):
         delete_reason = "User requested account removal"
         response = self.client.put(
             f'/api/accounts/{dummy_acct_id}/removal_queue',
-            headers=self.dummy_auth,
-            json={'delete_reason': delete_reason})
+            headers=self.dummy_auth)
 
         self.assertEqual(200, response.status_code)
 

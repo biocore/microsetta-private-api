@@ -19,7 +19,7 @@ class RemovalQueueRepo(BaseRepo):
     def _row_to_removal(self, r):
         return RemovalQueueRequest(r['id'], r['account_id'], r['email'],
                                    r['first_name'], r['last_name'],
-                                   r['requested_on'])
+                                   r['requested_on'], r['user_delete_reason'])
 
     def get_all_account_removal_requests(self):
         with self._transaction.dict_cursor() as cur:
@@ -28,6 +28,7 @@ class RemovalQueueRepo(BaseRepo):
                     ag.delete_account_queue.id,
                     ag.delete_account_queue.account_id,
                     ag.delete_account_queue.requested_on,
+                    ag.delete_account_queue.user_delete_reason,
                     ag.account.first_name,
                     ag.account.last_name,
                     ag.account.email
@@ -49,7 +50,7 @@ class RemovalQueueRepo(BaseRepo):
 
             return False if count == 0 else True
 
-    def request_remove_account(self, account_id):
+    def request_remove_account(self, account_id, user_delete_reason):
         with self._transaction.cursor() as cur:
             cur.execute("SELECT account_id from delete_account_queue where "
                         "account_id = %s", (account_id,))
@@ -58,9 +59,13 @@ class RemovalQueueRepo(BaseRepo):
             if result is not None:
                 raise RepoException("Account is already in removal queue")
 
+            user_delete_reason_value = user_delete_reason \
+                if user_delete_reason else None
+
             cur.execute(
-                "INSERT INTO delete_account_queue (account_id) VALUES (%s)",
-                (account_id,))
+                "INSERT INTO delete_account_queue (account_id, "
+                "user_delete_reason) VALUES (%s, %s)",
+                (account_id, user_delete_reason_value))
 
     def cancel_request_remove_account(self, account_id):
         if not self.check_request_remove_account(account_id):
