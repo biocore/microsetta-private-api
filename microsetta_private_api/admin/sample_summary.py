@@ -56,6 +56,8 @@ def per_sample(project, barcodes, strip_sampleid):
             if sample is None:
                 sample_status = None
                 sample_site = None
+                sample_date = None
+                sample_time = None
                 ffq_complete = None
                 ffq_taken = None
             else:
@@ -64,6 +66,16 @@ def per_sample(project, barcodes, strip_sampleid):
                     sample._latest_scan_timestamp
                 )
                 sample_site = sample.site
+
+                # get sample date, time
+                sample_datetime = sample.datetime_collected
+                if sample_datetime is not None:
+                    sample_date = sample_datetime.date().isoformat()
+                    sample_time = sample_datetime.time().isoformat()
+                else:
+                    sample_date = None
+                    sample_time = None
+
                 ffq_complete, ffq_taken, _ = vs_repo.get_ffq_status_by_sample(
                     sample.id
                 )
@@ -73,6 +85,8 @@ def per_sample(project, barcodes, strip_sampleid):
                 "project": project,
                 "source-type": source_type,
                 "site-sampled": sample_site,
+                "sample-date": sample_date,
+                "sample-time": sample_time,
                 "account-email": account_email,
                 "vioscreen_username": vio_id,
                 "ffq-taken": ffq_taken,
