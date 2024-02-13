@@ -1,3 +1,4 @@
+import datetime
 import werkzeug
 from werkzeug.exceptions import NotFound
 
@@ -19,7 +20,8 @@ class SampleRepo(BaseRepo):
         ag.ag_kit_barcodes.barcode,
         latest_scan.scan_timestamp,
         ag.source.id,
-        ag.source.account_id
+        ag.source.account_id,
+        ag.ag_kit_barcodes.latest_sample_information_update
         FROM ag.ag_kit_barcodes
         LEFT JOIN (
             SELECT barcode, max(scan_timestamp) AS scan_timestamp
@@ -43,7 +45,8 @@ class SampleRepo(BaseRepo):
         ag.ag_kit_barcodes.barcode,
         latest_scan.scan_timestamp,
         ag.source.id,
-        ag.source.account_id
+        ag.source.account_id,
+        ag.ag_kit_barcodes.latest_sample_information_update
         FROM ag.ag_kit_barcodes
         LEFT JOIN (
             SELECT barcode, max(scan_timestamp) AS scan_timestamp
@@ -302,7 +305,8 @@ class SampleRepo(BaseRepo):
                         "sample_date = %s, "
                         "sample_time = %s, "
                         "site_sampled = %s, "
-                        "notes = %s "
+                        "notes = %s, "
+                        "latest_sample_information_update = %s "
                         "WHERE "
                         "ag_kit_barcode_id = %s",
                         (
@@ -310,6 +314,7 @@ class SampleRepo(BaseRepo):
                             sample_time,
                             sample_info.site,
                             sample_info.notes,
+                            datetime.datetime.now(),
                             sample_info.id
                         ))
 
