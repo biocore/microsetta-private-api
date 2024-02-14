@@ -43,6 +43,8 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenMPeds, VioscreenMPedsComponent,
     VioscreenFoodConsumption, VioscreenFoodConsumptionComponent
 )
+from microsetta_private_api.model.consent import HUMAN_CONSENT_CHILD,\
+    HUMAN_CONSENT_ADULT
 from microsetta_private_api.api.tests.test_integration import \
     _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
 from dateutil.relativedelta import relativedelta
@@ -128,7 +130,18 @@ DUMMY_HUMAN_SOURCE = {
                 'source_name': 'Bo',
                 'source_type': 'human',
                 'consent': {
-                    'age_range': "18-plus"
+                    'age_range': HUMAN_CONSENT_ADULT
+                },
+            }
+DUMMY_HUMAN_SOURCE_CHILD = {
+                'source_name': 'Bo',
+                'source_type': 'human',
+                'consent': {
+                    'age_range': HUMAN_CONSENT_CHILD,
+                    'child_info': {
+                        "parent_1_name": "Parental Unit",
+                        "assent_obtainer": "Assent Person"
+                    }
                 },
             }
 DUMMY_CONSENT_DATE = datetime.datetime.strptime('Jun 1 2005', '%b %d %Y')
@@ -163,6 +176,8 @@ DUMMY_EMPTY_SAMPLE_INFO = {
     'sample_edit_locked': False,
     'sample_remove_locked': False,
     'sample_notes': None,
+    'sample_latest_sample_information_update': None,
+    'sample_latest_scan_timestamp': None,
     'sample_projects': ['American Gut Project'],
     'account_id': None,
     'source_id': None,
@@ -175,6 +190,8 @@ DUMMY_FILLED_SAMPLE_INFO = {
     'sample_edit_locked': False,
     'sample_remove_locked': False,
     'sample_notes': "Oops, I dropped it",
+    'sample_latest_sample_information_update': "2018-07-21T17:32:28Z",
+    'sample_latest_scan_timestamp': "2016-07-21T17:32:28Z",
     'sample_projects': ['American Gut Project'],
     'account_id': 'foobar',
     'source_id': 'foobarbaz',
@@ -575,6 +592,7 @@ def create_dummy_sample_objects(filled=False):
                     None,
                     info_dict['source_id'],
                     info_dict['account_id'],
+                    None,
                     info_dict["sample_projects"],
                     None)
 
@@ -882,21 +900,6 @@ class AccountsTests(ApiTests):
         response_obj = json.loads(response.data)
         self.assertEqual(0, len(response_obj))
 
-    def test_accounts_legacies_post_fail_422(self):
-        """Return 422 if info in db somehow prevents claiming legacy"""
-
-        # It is invalid to have one of the auth fields (e.g. sub)
-        # be null while the other is filled.
-        create_dummy_acct(create_dummy_1=True, iss=ACCT_MOCK_ISS,
-                          sub=None)
-
-        # execute accounts/legacies post (claim legacy account)
-        url = '/api/accounts/legacies?%s' % self.default_lang_querystring
-        response = self.client.post(url, headers=MOCK_HEADERS)
-
-        # check response code
-        self.assertEqual(422, response.status_code)
-
     # endregion accounts/legacies post tests
 
 
@@ -920,7 +923,7 @@ class AccountTests(ApiTests):
 
         sample_body = {'sample_site': 'Stool',
                        "sample_notes": "foobar",
-                       'sample_datetime': "2017-07-21T17:32:28Z"}
+                       'sample_datetime': datetime.datetime.utcnow()}
 
         put_resp = self.client.put(
             '%s?%s' % (sample_url, self.default_lang_querystring),
@@ -1016,10 +1019,13 @@ class AccountTests(ApiTests):
         self.assertEqual(response_obj['sample_site'],
                          sample_body['sample_site'])
 
-        # strip the trailing "Z" which comes from the database... easier
-        # than loading into datetime
-        self.assertEqual(response_obj['sample_datetime'],
-                         sample_body['sample_datetime'][:-1])
+        response_ts = datetime.datetime.strptime(
+            response_obj['sample_datetime'], "%Y-%m-%dT%H:%M:%S.%f"
+        )
+        self.assertEqual(
+            response_ts.strftime("%Y-%m-%d %H:%M:%S"),
+            sample_body['sample_datetime'].strftime("%Y-%m-%d %H:%M:%S")
+        )
 
     # This test specifically verifies that the scenario in Private API
     # issue #492 - where a user takes an external survey, deletes the source,
@@ -1711,78 +1717,257 @@ class SourceTests(ApiTests):
 class ConsentTests(ApiTests):
     def setUp(self):
         super().setUp()
-        self.signature_to_delete = None
+        self.signatures_to_delete = []
 
     def tearDown(self):
-        with Transaction() as t:
-            cur = t.cursor()
-            if self.signature_to_delete is not None:
+        if len(self.signatures_to_delete) > 0:
+            delete_sigs = tuple(self.signatures_to_delete)
+            with Transaction() as t:
+                cur = t.cursor()
                 cur.execute(
                     "DELETE FROM ag.consent_audit "
-                    "WHERE signature_id = %s",
-                    (self.signature_to_delete, )
+                    "WHERE signature_id IN %s",
+                    (delete_sigs, )
                 )
                 t.commit()
 
         super().tearDown()
 
-    def sign_data_consent(self):
+    def test_sign_data_consent(self):
         """Checks data consent for a source and sings the consent"""
 
-        dummy_acct_id, dummy_source_resp = create_dummy_source(
+        dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
 
-        consent_status = self.client.get(
+        response = self.client.get(
             '/api/accounts/%s/sources/%s/consent/%s' %
-            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
             headers=self.dummy_auth)
 
-        self.assertTrue(consent_status["result"])
+        response_obj = json.loads(response.data)
+        self.assertTrue(response_obj["result"])
 
-        CONSENT_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2233"
-
-        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
-        consent_data.update("consent_type", ADULT_DATA_CONSENT)
-        consent_data.update("consent_id", CONSENT_ID)
+        adult_data_consent_id = self._get_consent_id(ADULT_DATA_CONSENT)
+        consent_data = {
+            "age_range": HUMAN_CONSENT_ADULT,
+            "participant_name": "Bo",
+            "consent_type": ADULT_DATA_CONSENT,
+            "consent_id": adult_data_consent_id
+        }
 
         response = self.client.post(
             '/api/accounts/%s/sources/%s/consent/%s' %
-            (dummy_acct_id, dummy_source_resp["source_id"], DATA_CONSENT),
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
             content_type='application/json',
             data=json.dumps(consent_data),
             headers=self.dummy_auth)
 
         self.assertEquals(201, response.status_code)
 
-    def sign_biospecimen_consent(self):
+        # Grab the signature to delete in teardown
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+        response_data = json.loads(response.data)
+        self.signatures_to_delete.append(response_data['signature_id'])
+
+    def test_sign_biospecimen_consent(self):
         """Checks biospecimen consent for a source and sings the consent"""
 
-        dummy_acct_id, source_resp = create_dummy_source(
+        dummy_acct_id, dummy_source_id = create_dummy_source(
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
 
-        consent_status = self.client.get(
+        response = self.client.get(
             '/api/accounts/%s/sources/%s/consent/%s' %
-            (dummy_acct_id, source_resp["source_id"], BIOSPECIMEN_CONSENT),
+            (dummy_acct_id, dummy_source_id, BIOSPECIMEN_CONSENT),
             headers=self.dummy_auth)
 
-        self.assertTrue(consent_status["result"])
+        response_obj = json.loads(response.data)
+        self.assertTrue(response_obj["result"])
 
-        CONSENT_ID_BIO = "6b1595a5-4003-4d0f-aa91-56947eaf2901"
-
-        consent_data = copy.deepcopy(DUMMY_HUMAN_SOURCE)
-        consent_data.update("consent_type", ADULT_BIOSPECIMEN_CONSENT)
-        consent_data.update("consent_id", CONSENT_ID_BIO)
+        adult_biospecimen_consent_id = self._get_consent_id(
+            ADULT_BIOSPECIMEN_CONSENT
+        )
+        consent_data = {
+            "age_range": HUMAN_CONSENT_ADULT,
+            "participant_name": "Bo",
+            "consent_type": ADULT_BIOSPECIMEN_CONSENT,
+            "consent_id": adult_biospecimen_consent_id
+        }
 
         response = self.client.post(
             '/api/accounts/%s/sources/%s/consent/%s' %
-            (dummy_acct_id, source_resp["source_id"], BIOSPECIMEN_CONSENT),
+            (dummy_acct_id, dummy_source_id, BIOSPECIMEN_CONSENT),
             content_type='application/json',
             data=json.dumps(consent_data),
             headers=self.dummy_auth)
 
         self.assertEquals(201, response.status_code)
+
+        # Grab the signature to delete in teardown
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, BIOSPECIMEN_CONSENT),
+            headers=self.dummy_auth
+        )
+
+        self.assertEquals(200, response.status_code)
+        response_data = json.loads(response.data)
+        self.signatures_to_delete.append(response_data['signature_id'])
+
+    def test_sign_data_consent_new_age_invalid(self):
+        """In this test, we'll try to re-consent as an invalid age range"""
+
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
+            create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            headers=self.dummy_auth)
+
+        response_obj = json.loads(response.data)
+        self.assertTrue(response_obj["result"])
+
+        adult_data_consent_id = self._get_consent_id(ADULT_DATA_CONSENT)
+        consent_data = {
+            "age_range": HUMAN_CONSENT_ADULT,
+            "participant_name": "Bo",
+            "consent_type": ADULT_DATA_CONSENT,
+            "consent_id": adult_data_consent_id
+        }
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
+
+        # Now, try to sign another consent as a child
+        parent_data_consent_id = self._get_consent_id("parent_data")
+        child_data_assent_id = self._get_consent_id("child_data")
+        consent_data = {
+            "age_range": HUMAN_CONSENT_CHILD,
+            "assent_id": child_data_assent_id,
+            "consent_child": "Yes",
+            "participant_name": "Bo",
+            "consent_witness": "Yes",
+            "assent_obtainer": "Assent",
+            "consent_id": parent_data_consent_id,
+            "consent_type": "parent_data",
+            "consent_parent": "Yes",
+            "parent_1_name": 'Parent'
+        }
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        # And assert that it fails
+        self.assertEquals(403, response.status_code)
+
+        # Grab the signature to delete in teardown
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+        response_data = json.loads(response.data)
+        self.signatures_to_delete.append(response_data['signature_id'])
+
+    def test_sign_data_consent_new_age_valid(self):
+        """
+        In this test, we'll create a child source, then re-consent as an adult
+        """
+
+        dummy_acct_id, dummy_source_id = create_dummy_source(
+            "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE_CHILD,
+            create_dummy_1=True)
+
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            headers=self.dummy_auth)
+
+        response_obj = json.loads(response.data)
+        self.assertTrue(response_obj["result"])
+
+        parent_data_consent_id = self._get_consent_id("parent_data")
+        child_data_assent_id = self._get_consent_id("child_data")
+
+        consent_data = {
+            "age_range": HUMAN_CONSENT_CHILD,
+            "assent_id": child_data_assent_id,
+            "consent_child": "Yes",
+            "participant_name": "Bo",
+            "consent_witness": "Yes",
+            "assent_obtainer": "Assent",
+            "consent_id": parent_data_consent_id,
+            "consent_type": "parent_data",
+            "consent_parent": "Yes",
+            "parent_1_name": 'Parent'
+        }
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        self.assertEquals(201, response.status_code)
+
+        # Grab the signature ID so we can clean it up later
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+        response_data = json.loads(response.data)
+        self.signatures_to_delete.append(response_data['signature_id'])
+
+        # Now, try to sign another consent as an adult
+        adult_data_consent_id = self._get_consent_id(ADULT_DATA_CONSENT)
+        consent_data = {
+            "age_range": HUMAN_CONSENT_ADULT,
+            "participant_name": "Bo",
+            "consent_type": ADULT_DATA_CONSENT,
+            "consent_id": adult_data_consent_id
+        }
+
+        response = self.client.post(
+            '/api/accounts/%s/sources/%s/consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            content_type='application/json',
+            data=json.dumps(consent_data),
+            headers=self.dummy_auth)
+
+        # And assert that it works
+        self.assertEquals(201, response.status_code)
+
+        # Grab the signature to delete in teardown
+        response = self.client.get(
+            '/api/accounts/%s/sources/%s/signed_consent/%s' %
+            (dummy_acct_id, dummy_source_id, DATA_CONSENT),
+            headers=self.dummy_auth
+        )
+        self.assertEquals(200, response.status_code)
+        response_data = json.loads(response.data)
+        self.signatures_to_delete.append(response_data['signature_id'])
 
     def test_get_signed_consent(self):
         # Create our account and source to work from
@@ -1790,26 +1975,17 @@ class ConsentTests(ApiTests):
             "Bo", Source.SOURCE_TYPE_HUMAN, DUMMY_HUMAN_SOURCE,
             create_dummy_1=True)
 
-        with Transaction() as t:
-            with t.dict_cursor() as cur:
-                cur.execute(
-                    "SELECT consent_id "
-                    "FROM ag.consent_documents "
-                    "WHERE locale = 'en_US' AND consent_type = 'adult_data' "
-                    "ORDER BY date_time DESC LIMIT 1"
-                )
-                row = cur.fetchone()
-                adult_data_consent = row['consent_id']
+        adult_data_consent_id = self._get_consent_id(ADULT_DATA_CONSENT)
 
         consent_data = {
-            "age_range": "18-plus",
+            "age_range": HUMAN_CONSENT_ADULT,
             "participant_name": "Bo",
             "consent_type": ADULT_DATA_CONSENT,
-            "consent_id": adult_data_consent
+            "consent_id": adult_data_consent_id
         }
 
         response = self.client.post(
-            '/api/accounts/%s/source/%s/consent/%s' %
+            '/api/accounts/%s/sources/%s/consent/%s' %
             (dummy_acct_id, dummy_source_id, DATA_CONSENT),
             content_type='application/json',
             data=json.dumps(consent_data),
@@ -1832,11 +2008,24 @@ class ConsentTests(ApiTests):
         )
         self.assertEqual(
             response_data['consent_id'],
-            adult_data_consent
+            adult_data_consent_id
         )
 
-        # need to clean this up in tearDown
-        self.signature_to_delete = response_data['signature_id']
+        # Need to clean up the signature
+        self.signatures_to_delete.append(response_data['signature_id'])
+
+    def _get_consent_id(self, consent_type):
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                cur.execute(
+                    "SELECT consent_id "
+                    "FROM ag.consent_documents "
+                    "WHERE locale = 'en_US' AND consent_type = %s "
+                    "ORDER BY date_time DESC LIMIT 1",
+                    (consent_type, )
+                )
+                row = cur.fetchone()
+                return row['consent_id']
 
 
 @pytest.mark.usefixtures("client")
@@ -2357,7 +2546,7 @@ class SampleTests(ApiTests):
         sample_url = "{0}/{1}".format(base_url, MOCK_SAMPLE_ID)
 
         body = {'sample_site': 'Stool', "sample_notes": "",
-                'sample_datetime': "2017-07-21T17:32:28Z"}
+                'sample_datetime': datetime.datetime.utcnow()}
 
         put_resp = self.client.put(
             '%s?%s' % (sample_url, self.default_lang_querystring),
@@ -2380,7 +2569,7 @@ class SampleTests(ApiTests):
 
         # attempt to modify the locked sample as the participant
         body = {'sample_site': 'Saliva', "sample_notes": "",
-                'sample_datetime': "2017-07-21T17:32:28Z"}
+                'sample_datetime': datetime.datetime.utcnow()}
 
         put_resp = self.client.put(
             '%s?%s' % (sample_url, self.default_lang_querystring),
@@ -2457,6 +2646,7 @@ class SampleTests(ApiTests):
             # make sure the sample's collection info is wiped
             sample_repo = SampleRepo(t)
             obs_sample = sample_repo._get_sample_by_id(MOCK_SAMPLE_ID)
+            obs_sample.latest_sample_information_update = None
             self.assertEqual(expected_sample.__dict__, obs_sample.__dict__)
 
             # make sure answered survey no longer associated with any samples

@@ -1,5 +1,16 @@
 from datetime import datetime
 
+HUMAN_CONSENT_TODDLER = "0-6"
+HUMAN_CONSENT_CHILD = "7-12"
+HUMAN_CONSENT_ADOLESCENT = "13-17"
+HUMAN_CONSENT_ADULT = "18-plus"
+HUMAN_CONSENT_AGE_GROUPS = (
+    HUMAN_CONSENT_TODDLER,
+    HUMAN_CONSENT_CHILD,
+    HUMAN_CONSENT_ADOLESCENT,
+    HUMAN_CONSENT_ADULT
+)
+
 
 class ConsentDocument:
     @staticmethod
@@ -9,15 +20,16 @@ class ConsentDocument:
         date_time = datetime.now()
         consent = input_dict["consent"]
         reconsent = input_dict["reconsent"]
+        version = input_dict["version"]
         return ConsentDocument(
             consent_id, consent_type, locale,
             date_time, consent, account_id,
-            reconsent
+            reconsent, version
         )
 
     def __init__(self, consent_id, consent_type, locale,
                  date_time, consent_content,
-                 account_id, reconsent):
+                 account_id, reconsent, version):
         self.consent_id = consent_id
         self.consent_type = consent_type
         self.locale = locale
@@ -25,15 +37,17 @@ class ConsentDocument:
         self.consent_content = consent_content
         self.account_id = account_id
         self.reconsent = reconsent
+        self.version = version
 
     def to_api(self):
         result = {
-                    "consent_id": self.consent_id,
-                    "consent_type": self.consent_type,
-                    "locale": self.locale,
-                    "document": self.consent_content,
-                    "reconsent_required": self.reconsent
-                }
+            "consent_id": self.consent_id,
+            "consent_type": self.consent_type,
+            "locale": self.locale,
+            "document": self.consent_content,
+            "reconsent_required": self.reconsent,
+            "version": self.version
+        }
 
         return result
 
@@ -50,6 +64,7 @@ class ConsentSignature:
         assent_id = input_dict.get("assent_id")
         consent_content = input_dict.get("consent_content")
         assent_content = input_dict.get("assent_content")
+        consent_type = input_dict.get("consent_type")
 
         return ConsentSignature(
             signature_id,
@@ -62,13 +77,14 @@ class ConsentSignature:
             assent_obtainer,
             assent_id,
             consent_content,
-            assent_content
+            assent_content,
+            consent_type
         )
 
     def __init__(self, signature_id, consent_id, source_id,
                  date_time, parent_1_name, parent_2_name,
                  deceased_parent, assent_obtainer, assent_id,
-                 consent_content, assent_content):
+                 consent_content, assent_content, consent_type):
         self.signature_id = signature_id
         self.consent_id = consent_id
         self.source_id = source_id
@@ -80,6 +96,7 @@ class ConsentSignature:
         self.assent_id = assent_id
         self.consent_content = consent_content
         self.assent_content = assent_content
+        self.consent_type = consent_type
 
     def to_api(self):
         return {'signature_id': self.signature_id,
@@ -92,5 +109,6 @@ class ConsentSignature:
                 'assent_obtainer': self.assent_obtainer,
                 'assent_id': self.assent_id,
                 'consent_content': self.consent_content,
-                'assent_content': self.assent_content
+                'assent_content': self.assent_content,
+                'consent_type': self.consent_type
                 }

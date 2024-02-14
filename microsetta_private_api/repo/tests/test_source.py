@@ -18,6 +18,7 @@ HUMAN_SOURCE = Source('ffffffff-ffff-cccc-aaaa-aaaaaaaaaaaa',
                                 None, None, None,
                                 datetime.datetime.now(),
                                 None, None, '18-plus'))
+FAKE_SOURCE_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
 
 
 class SourceRepoTests(unittest.TestCase):
@@ -25,10 +26,33 @@ class SourceRepoTests(unittest.TestCase):
         with Transaction() as t:
             sr = SourceRepo(t)
             sr.create_source(HUMAN_SOURCE)
+
+            file_name = "test_source.py"
+            file_label = "Test Source Repo"
+            # Opening and reading a file's contents doesn't appear to work on
+            # GitHub during workflow, so we need to fake the contents
+            file_contents = b'Imagine a full file here'
+            cur = t.cursor()
+            cur.execute(
+                "INSERT INTO ag.external_reports ("
+                "source_id, file_name, file_title, file_type, "
+                "file_contents, report_type"
+                ") VALUES (%s, %s, %s, %s, %s, %s)",
+                (HUMAN_SOURCE.id, file_name, file_label,
+                 "application/pdf", file_contents, "ffq")
+            )
+
             t.commit()
 
     def tearDown(self):
         with Transaction() as t:
+            cur = t.cursor()
+            cur.execute(
+                "DELETE FROM ag.external_reports "
+                "WHERE source_id = %s",
+                (HUMAN_SOURCE.id, )
+            )
+
             sr = SourceRepo(t)
             sr.delete_source(HUMAN_SOURCE.account_id,
                              HUMAN_SOURCE.id)
@@ -74,6 +98,109 @@ class SourceRepoTests(unittest.TestCase):
             self.assertNotEqual(obs.name, HUMAN_SOURCE.name)
 
             self.assertTrue(obs.source_data.date_revoked is not None)
+
+    def test_update_source_age_range_succeed(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            obs = sr.update_source_age_range(
+                HUMAN_SOURCE.id,
+                "18-plus"
+            )
+            self.assertTrue(obs)
+
+    def test_update_source_age_range_fail(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            obs = sr.update_source_age_range(
+                FAKE_SOURCE_ID,
+                "18-plus"
+            )
+            self.assertFalse(obs)
+
+    def test_check_source_post_overhaul_true(self):
+        # We'll check a newly created source and confirm that it's
+        # treated as post-overhaul. The source created during setUp
+        # can safely be used as-is.
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            obs = sr.check_source_post_overhaul(ACCOUNT_ID, HUMAN_SOURCE.id)
+            self.assertTrue(obs)
+
+    def test_check_source_post_overhaul_false(self):
+        # Now we'll modify the creation_time column by hand and confirm it's
+        # treated as pre-overhaul
+        with Transaction() as t:
+            cur = t.cursor()
+            cur.execute(
+                "UPDATE ag.source "
+                "SET creation_time = '2023-01-01 10:00:00' "
+                "WHERE id = %s",
+                (HUMAN_SOURCE.id, )
+            )
+
+            sr = SourceRepo(t)
+            obs = sr.check_source_post_overhaul(ACCOUNT_ID, HUMAN_SOURCE.id)
+            self.assertFalse(obs)
+
+    def test_get_external_reports(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            obs = sr.get_external_reports(HUMAN_SOURCE.id)
+
+            # We should observe one external report
+            self.assertEqual(len(obs), 1)
+
+    def test_get_external_reports_fake_source(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            # Changed the source ID's second section from "ffff" to "aaaa"
+            obs = sr.get_external_reports(
+                "ffffffff-aaaa-cccc-aaaa-aaaaaaaaaaaa"
+            )
+
+            # We should observe zero external reports
+            self.assertEqual(len(obs), 0)
+
+    def test_get_external_report(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            reports = sr.get_external_reports(HUMAN_SOURCE.id)
+
+            er = reports[0]
+            obs_reports = sr.get_external_reports(
+                HUMAN_SOURCE.id, er.external_report_id
+            )
+            obs = obs_reports[0]
+
+            self.assertEqual(obs.source_id, HUMAN_SOURCE.id)
+            self.assertEqual(obs.file_title, "Test Source Repo")
+
+    def test_get_external_report_fail(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            reports = sr.get_external_reports(HUMAN_SOURCE.id)
+
+            er = reports[0]
+            obs_reports = sr.get_external_reports(
+                "ffffffff-aaaa-cccc-aaaa-aaaaaaaaaaaa", er.external_report_id
+            )
+
+            self.assertEqual(len(obs_reports), 0)
+
+    def test_get_external_report_bytes(self):
+        with Transaction() as t:
+            sr = SourceRepo(t)
+            reports = sr.get_external_reports(HUMAN_SOURCE.id)
+
+            er = reports[0]
+            obs_reports = sr.get_external_reports(
+                HUMAN_SOURCE.id, er.external_report_id
+            )
+            obs = obs_reports[0]
+
+            act = b'Imagine a full file here'
+
+            self.assertEqual(bytes(obs.file_contents), act)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 import psycopg2
 import json
 import datetime
+import uuid
 
 from microsetta_private_api.client.fundrazr import FundrazrClient
 from microsetta_private_api.repo.base_repo import BaseRepo
@@ -10,6 +11,9 @@ from microsetta_private_api.repo.interested_user_repo import InterestedUserRepo
 from microsetta_private_api.tasks import send_email
 from microsetta_private_api.config_manager import SERVER_CONFIG
 from microsetta_private_api.localization import EN_US
+from microsetta_private_api.model.log_event import LogEvent
+from microsetta_private_api.repo.event_log_repo import EventLogRepo
+from microsetta_private_api.admin.email_templates import EmailMessage
 
 
 class UnknownItem(psycopg2.errors.ForeignKeyViolation):
@@ -479,11 +483,19 @@ class UserTransaction(BaseRepo):
                 try:
                     # TODO - will need to add actual language flag to the email
                     # Fundrazr doesn't provide a language flag, defer for now
+                    template = "address_invalid"
+                    email_args = {"contact_name": cn,
+                                  "resolution_url": resolution_url}
+
                     send_email(payment.contact_email,
-                               "address_invalid",
-                               {"contact_name": cn,
-                                "resolution_url": resolution_url},
+                               template,
+                               email_args,
                                EN_US)
+
+                    # Log the email being sent
+                    self._log_email(
+                        template, payment.contact_email, email_args
+                    )
                 except:  # noqa
                     # try our best to email
                     pass
@@ -786,3 +798,21 @@ class UserTransaction(BaseRepo):
                 entry['fundrazr_perks'] = fundrazr_data.get(entry['id'])
 
         return [payment_from_db(data) for data in trn_data]
+
+    def _log_email(self, template, email_address, email_args):
+        # Log the event of the email being sent
+        template_info = EmailMessage[template]
+        event = LogEvent(
+            uuid.uuid4(),
+            template_info.event_type,
+            template_info.event_subtype,
+            None,
+            {
+                # account_id and email are necessary to allow searching the
+                # event log.
+                "account_id": None,
+                "email": email_address,
+                "template": template,
+                "template_args": email_args
+            })
+        EventLogRepo(self._transaction).add_event(event)

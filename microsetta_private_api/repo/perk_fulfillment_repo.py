@@ -97,59 +97,32 @@ class PerkFulfillmentRepo(BaseRepo):
             )
             row = cur.fetchone()
             if row is not None:
-                if self._is_subscription(row):
-                    subscription_id = \
-                        self._create_subscription(row['email'],
-                                                  row['transaction_id'],
-                                                  row['ftp_id'])
-                else:
-                    subscription_id = None
-
-                # If there are any FFQs attached to the perk, immediately
-                # fulfill the first one
-                if row['ffq_quantity'] > 0:
-                    # If the perk is a kit or subscription, send thank you
-                    # email with kit content. Otherwise, send thank you
-                    # for FFQ only
-                    if row['kit_quantity'] > 0:
-                        template = "thank_you_with_kit"
+                for perk_qty in range(row['quantity']):
+                    if self._is_subscription(row):
+                        subscription_id = \
+                            self._create_subscription(row['email'],
+                                                      row['transaction_id'],
+                                                      row['ftp_id'])
                     else:
-                        template = "thank_you_no_kit"
+                        subscription_id = None
 
-                    error_info = self._fulfill_ffq(
-                        row['ftp_id'],
-                        template,
-                        row['email'],
-                        row['first_name'],
-                        subscription_id
-                    )
-                    if error_info is not None:
-                        error_report.append(
-                            f"Error sending FFQ email for ftp_id "
-                            f"{row['ftp_id']}: {error_info}"
-                        )
+                    # If there are any FFQs attached to the perk, immediately
+                    # fulfill the first one
+                    if row['ffq_quantity'] > 0:
+                        # If the perk is a kit or subscription, send thank you
+                        # email with kit content. Otherwise, send thank you
+                        # for FFQ only
+                        if row['kit_quantity'] > 0:
+                            template = "thank_you_with_kit"
+                        else:
+                            template = "thank_you_no_kit"
 
-                # Then, if there are more FFQs, schedule/fulfill them as
-                # appropriate based on fulfillment_spacing_number
-                for x in range(1, row['ffq_quantity']):
-                    if row['fulfillment_spacing_number'] > 0:
-                        fulfillment_date =\
-                            self._future_fulfillment_date(
-                                row['fulfillment_spacing_number'],
-                                row['fulfillment_spacing_unit'],
-                                x
-                            )
-                        self._schedule_ffq(
-                            subscription_id,
-                            fulfillment_date,
-                            False
-                        )
-                    else:
                         error_info = self._fulfill_ffq(
                             row['ftp_id'],
-                            row['kit_quantity'],
+                            template,
                             row['email'],
-                            row['first_name']
+                            row['first_name'],
+                            subscription_id
                         )
                         if error_info is not None:
                             error_report.append(
@@ -157,34 +130,37 @@ class PerkFulfillmentRepo(BaseRepo):
                                 f"{row['ftp_id']}: {error_info}"
                             )
 
-                # If there are any kits attached to the perk, immediately
-                # fulfill the first one
-                if row['kit_quantity'] > 0:
-                    status, return_val = self._fulfill_kit(
-                        row,
-                        1,
-                        subscription_id
-                    )
-                    if not status:
-                        # Daklapack order failed, let the error percolate
-                        error_report.append(
-                            f"Error placing Daklapack order for ftp_id "
-                            f"{row['ftp_id']}: {return_val}"
-                        )
-
-                for x in range(1, row['kit_quantity']):
-                    if row['fulfillment_spacing_number'] > 0:
-                        fulfillment_date =\
-                            self._future_fulfillment_date(
-                                row['fulfillment_spacing_number'],
-                                row['fulfillment_spacing_unit'],
-                                x
+                    # Then, if there are more FFQs, schedule/fulfill them as
+                    # appropriate based on fulfillment_spacing_number
+                    for x in range(1, row['ffq_quantity']):
+                        if row['fulfillment_spacing_number'] > 0:
+                            fulfillment_date =\
+                                self._future_fulfillment_date(
+                                    row['fulfillment_spacing_number'],
+                                    row['fulfillment_spacing_unit'],
+                                    x
+                                )
+                            self._schedule_ffq(
+                                subscription_id,
+                                fulfillment_date,
+                                fulfilled=False
                             )
-                        self._schedule_kit(subscription_id,
-                                           fulfillment_date,
-                                           row['dak_article_code'],
-                                           False)
-                    else:
+                        else:
+                            error_info = self._fulfill_ffq(
+                                row['ftp_id'],
+                                row['kit_quantity'],
+                                row['email'],
+                                row['first_name']
+                            )
+                            if error_info is not None:
+                                error_report.append(
+                                    f"Error sending FFQ email for ftp_id "
+                                    f"{row['ftp_id']}: {error_info}"
+                                )
+
+                    # If there are any kits attached to the perk, immediately
+                    # fulfill the first one
+                    if row['kit_quantity'] > 0:
                         status, return_val = self._fulfill_kit(
                             row,
                             1,
@@ -196,6 +172,34 @@ class PerkFulfillmentRepo(BaseRepo):
                                 f"Error placing Daklapack order for ftp_id "
                                 f"{row['ftp_id']}: {return_val}"
                             )
+
+                    for x in range(1, row['kit_quantity']):
+                        if row['fulfillment_spacing_number'] > 0:
+                            fulfillment_date =\
+                                self._future_fulfillment_date(
+                                    row['fulfillment_spacing_number'],
+                                    row['fulfillment_spacing_unit'],
+                                    x
+                                )
+                            self._schedule_kit(subscription_id,
+                                               fulfillment_date,
+                                               row['dak_article_code'],
+                                               fulfilled=False)
+                        else:
+                            # We hard-code a quantity of 1 here because
+                            # the actual quantity is controlled by
+                            # row['quantity'] and row['kit_quantity'].
+                            status, return_val = self._fulfill_kit(
+                                row,
+                                1,
+                                subscription_id
+                            )
+                            if not status:
+                                # Dak order failed, let the error percolate
+                                error_report.append(
+                                    f"Error placing Daklapack order for "
+                                    f"ftp_id {row['ftp_id']}: {return_val}"
+                                )
 
                 cur.execute(
                     "UPDATE campaign.fundrazr_transaction_perk "
@@ -780,3 +784,66 @@ class PerkFulfillmentRepo(BaseRepo):
                 "template_args": email_args
             })
         EventLogRepo(self._transaction).add_event(event)
+
+    def check_perk_fulfillment_active(self):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT perk_fulfillment_active "
+                "FROM ag.settings "
+            )
+            row = cur.fetchone()
+            return row['perk_fulfillment_active']
+
+    def get_ffq_codes_by_email(self, email):
+        email = "%" + email + "%"
+        with self._transaction.dict_cursor() as cur:
+            # Note: Use left join to differentiate email not found possibility
+            cur.execute(
+                """
+                WITH all_codes AS (
+                    SELECT
+                        iu.email,
+                        tr.created AS transaction_created_time,
+                        frc.ffq_registration_code,
+                        frc.registration_code_used
+                    FROM campaign.interested_users AS iu
+                    LEFT JOIN campaign.transaction AS tr
+                    ON iu.interested_user_id = tr.interested_user_id
+                    LEFT JOIN campaign.fundrazr_transaction_perk AS ftp
+                    ON tr.id = ftp.transaction_id
+                    LEFT JOIN campaign.fundrazr_ffq_codes AS ffc
+                    ON ftp.id = ffc.fundrazr_transaction_perk_id
+                    LEFT JOIN campaign.ffq_registration_codes AS frc
+                    ON ffc.ffq_registration_code = frc.ffq_registration_code
+                    WHERE iu.email ILIKE %s
+                ), count_codes AS (
+                    SELECT
+                        ac1.email,
+                        COUNT(ac1.ffq_registration_code) AS num_codes
+                    FROM all_codes AS ac1
+                    GROUP BY ac1.email
+                )
+                SELECT DISTINCT
+                    ac.email,
+                    CASE WHEN
+                        cc.num_codes = 0 THEN NULL
+                    ELSE
+                        ac.transaction_created_time
+                    END,
+                    ac.ffq_registration_code,
+                    ac.registration_code_used
+                FROM all_codes AS ac
+                LEFT JOIN count_codes AS cc
+                ON ac.email = cc.email
+                WHERE
+                    ac.ffq_registration_code IS NOT NULL
+                OR
+                    cc.num_codes = 0
+                ORDER BY
+                    ac.email ASC,
+                    ac.registration_code_used DESC
+                """,
+                (email,)
+            )
+            rows = cur.fetchall()
+            return [dict(row) for row in rows]

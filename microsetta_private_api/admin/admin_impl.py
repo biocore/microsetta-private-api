@@ -919,3 +919,21 @@ def get_vioscreen_sample_to_user(token_info):
         st_repo = SurveyTemplateRepo(t)
         data = st_repo.get_vioscreen_sample_to_user()
     return jsonify(data), 200
+
+
+def get_perk_fulfillment_state(token_info):
+    validate_admin_access(token_info)
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        pf_state = admin_repo.get_perk_fulfillment_state()
+    return jsonify({"pf_state": pf_state}), 200
+
+
+def update_perk_fulfillment_state(token_info, perk_fulfillment_state):
+    validate_admin_access(token_info)
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        admin_repo.update_perk_fulfillment_state(perk_fulfillment_state)
+        pf_state = admin_repo.get_perk_fulfillment_state()
+        t.commit()
+    return jsonify({"pf_state": pf_state}), 200

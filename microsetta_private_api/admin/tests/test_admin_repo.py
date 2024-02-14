@@ -1344,3 +1344,43 @@ class AdminRepoTests(AdminTests):
                 )
                 row = cur.fetchone()
                 self.assertEqual(row['registration_code_used'], None)
+
+    def test_get_perk_fulfillment_state(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            with t.cursor() as cur:
+                cur.execute(
+                    "UPDATE ag.settings "
+                    "SET perk_fulfillment_active = TRUE"
+                )
+
+                obs = admin_repo.get_perk_fulfillment_state()
+                self.assertTrue(obs)
+
+                cur.execute(
+                    "UPDATE ag.settings "
+                    "SET perk_fulfillment_active = False"
+                )
+
+                obs = admin_repo.get_perk_fulfillment_state()
+                self.assertFalse(obs)
+
+    def test_update_perk_fulfillment_state(self):
+        with Transaction() as t:
+            with t.cursor() as cur:
+                admin_repo = AdminRepo(t)
+                admin_repo.update_perk_fulfillment_state(True)
+                cur.execute(
+                    "SELECT perk_fulfillment_active "
+                    "FROM ag.settings"
+                )
+                obs = cur.fetchone()
+                self.assertTrue(obs[0])
+
+                admin_repo.update_perk_fulfillment_state(False)
+                cur.execute(
+                    "SELECT perk_fulfillment_active "
+                    "FROM ag.settings"
+                )
+                obs = cur.fetchone()
+                self.assertFalse(obs[0])

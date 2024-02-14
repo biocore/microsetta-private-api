@@ -7,7 +7,10 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
 from microsetta_private_api.repo.melissa_repo import MelissaRepo
+from microsetta_private_api.repo.perk_fulfillment_repo import\
+    PerkFulfillmentRepo
 from microsetta_private_api.tasks import send_email
+from microsetta_private_api.admin.admin_impl import validate_admin_access
 
 
 def create_interested_user(body):
@@ -105,18 +108,12 @@ def get_interested_user_address_update(interested_user_id, email):
                 else:
                     # We've determined it's a valid user and their address
                     # needs to be fixed, so we return a subset of their info.
-                    # Certain paths into the database allow null address_2
-                    # which causes problems, so we change it to "".
-                    if interested_user.address_2 is None:
-                        interested_user.address_2 = ""
-
                     # We also need to grab the reason(s) that Melissa couldn't
                     # verify the address.
                     melissa_repo = MelissaRepo(t)
                     melissa_result = melissa_repo.check_duplicate(
                         interested_user.address_1,
                         interested_user.address_2,
-                        interested_user.address_3,
                         interested_user.postal_code,
                         interested_user.country
                     )
@@ -146,6 +143,7 @@ def get_interested_user_address_update(interested_user_id, email):
                         state=interested_user.state,
                         postal_code=interested_user.postal_code,
                         country=interested_user.country,
+                        phone=interested_user.phone,
                         error_codes=error_codes
                     ), 200
 
@@ -161,6 +159,14 @@ def put_interested_user_address_update(body):
             message="Invalid user."
         ), 404
     else:
+        required_fields = ['address_1', 'city', 'state', 'postal', 'phone']
+        for f in required_fields:
+            if body.get(f, "") == "":
+                return jsonify(
+                    code=400,
+                    message="Failed to update address due to missing fields."
+                ), 400
+
         with Transaction() as t:
             i_u_repo = InterestedUserRepo(t)
             interested_user = \
@@ -282,3 +288,17 @@ def _validate_user_match(interested_user, email):
         # someone doesn't stumble upon a valid email and/or id.
         # if they don't both match, treat as invalid
         return interested_user.email == email
+
+
+def search_ffq_codes_by_email(email, token_info):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        pfr = PerkFulfillmentRepo(t)
+        ffq_diag = pfr.get_ffq_codes_by_email(email)
+        ffq_codes_obj = {
+            "ffq_codes": ffq_diag
+        }
+        if ffq_diag is None:
+            return jsonify(code=404, message="Email not found"), 404
+        return jsonify(ffq_codes_obj), 200

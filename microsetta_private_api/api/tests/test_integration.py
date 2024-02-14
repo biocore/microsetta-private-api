@@ -71,7 +71,8 @@ CONSENT_DOC_ID = "b8245ca9-e5ba-4f8f-a84a-887c0d6a2281"
 CONSENT_DOC = {"consent_type": "adult_data",
                "locale": "en_US",
                "consent": "Adult Data Consent",
-               "reconsent": 'true'
+               "reconsent": 'true',
+               "version": 9999
                }
 
 
@@ -1111,7 +1112,7 @@ class IntegrationTests(TestCase):
         new_source = json.loads(resp.data)
 
         consent_status = self.client.get(
-            '/api/accounts/%s/source/%s/consent/%s' %
+            '/api/accounts/%s/sources/%s/consent/%s' %
             (ACCT_ID, new_source["source_id"], "data"),
             headers=MOCK_HEADERS)
 
@@ -1120,7 +1121,7 @@ class IntegrationTests(TestCase):
         self.assertTrue(consent_res["result"])
 
         response = self.client.post(
-            '/api/accounts/%s/source/%s/consent/%s' %
+            '/api/accounts/%s/sources/%s/consent/%s' %
             (ACCT_ID, new_source["source_id"], "data"),
             content_type='application/json',
             data=json.dumps(SOURCE_DATA),
