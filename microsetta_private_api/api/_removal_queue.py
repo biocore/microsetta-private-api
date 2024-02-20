@@ -15,13 +15,13 @@ def check_request_remove_account(account_id, token_info):
         return jsonify(result), 200
 
 
-def request_remove_account(account_id, token_info):
+def request_remove_account(account_id, token_info, user_delete_reason=None):
     # raises 401 if method fails
     _validate_account_access(token_info, account_id)
 
     with Transaction() as t:
         rq_repo = RemovalQueueRepo(t)
-        rq_repo.request_remove_account(account_id)
+        rq_repo.request_remove_account(account_id, user_delete_reason)
         t.commit()
 
     return jsonify(code=200, message="Request Accepted"), 200
