@@ -491,6 +491,7 @@ def query_project_barcode_stats(body, token_info, strip_sampleid):
 def query_barcode_stats(body, token_info, strip_sampleid):
     validate_admin_access(token_info)
     if 'sample_barcodes' in body:
+        project_id = None
         barcodes = body["sample_barcodes"]
     elif 'project_id' in body:
         project_id = body["project_id"]
@@ -502,7 +503,7 @@ def query_barcode_stats(body, token_info, strip_sampleid):
         unprocessed_barcodes = barcodes[1000:]
         barcodes = barcodes[0:1000]
 
-    results = {'samples': per_sample(None, barcodes, strip_sampleid)}
+    results = {'samples': per_sample(project_id, barcodes, strip_sampleid)}
 
     if unprocessed_barcodes:
         results['partial_result'] = True
