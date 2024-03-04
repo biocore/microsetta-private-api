@@ -46,7 +46,7 @@ def per_sample(project, barcodes, strip_sampleid):
             # find all projects for barcode
             projects_info = diag['projects_info']
             all_projects = [proj_obj['project'] for proj_obj in projects_info]
-            barcode_project = '; '.join(all_projects)
+            barcode_project = '; '.join(sorted(all_projects))
 
             if source is not None and source_type == Source.SOURCE_TYPE_HUMAN:
 
