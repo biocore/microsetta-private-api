@@ -1281,6 +1281,28 @@ class AdminApiTests(TestCase):
         # content: should have exactly the same projects
         self.assertEqual(response_projects[1], response_projects[2])
 
+    def test_query_barcode_stats_by_project(self):
+        input_json = json.dumps({'project_id': 19})  # expect 5 barcodes
+        exp_barcodes = [
+            '000035369', '000035370', '000035371',
+            '000035372', '000035373'
+        ]
+
+        response = self.client.post(
+            "api/admin/account_barcode_summary?strip_sampleid=False",
+            content_type='application/json',
+            data=input_json,
+            headers=MOCK_HEADERS
+        )
+        # an empty string project should be unknown
+        self.assertEqual(200, response.status_code)
+
+        response_obj = json.loads(response.data)
+        self.assertIn('samples', response_obj)
+        response_obj = response_obj['samples']
+        self.assertEqual(len(response_obj), 5)
+        self.assertEqual([v['sampleid'] for v in response_obj], exp_barcodes)
+
     def test_send_email(self):
         def mock_func(*args, **kwargs):
             pass
