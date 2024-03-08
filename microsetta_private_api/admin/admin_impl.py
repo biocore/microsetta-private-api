@@ -835,6 +835,7 @@ def delete_account(account_id, token_info):
         src_repo = SourceRepo(t)
         samp_repo = SampleRepo(t)
         sar_repo = SurveyAnswersRepo(t)
+        interested_users_repo = InterestedUserRepo(t)
 
         acct = acct_repo.get_account(account_id)
         if acct is None:
@@ -871,6 +872,8 @@ def delete_account(account_id, token_info):
                 src_repo.scrub(account_id, source.id)
 
         acct_repo.scrub(account_id)
+
+        interested_users_repo.scrub(acct.email)
 
         t.commit()
 

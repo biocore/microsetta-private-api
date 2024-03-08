@@ -324,6 +324,50 @@ class InterestedUserRepoTests(unittest.TestCase):
             # Verify that the user is now opted out
             self.assertFalse(i_u.confirm_consent)
 
+    def test_scrub_interested_users_success(self):
+        # Create a test interested user
+        dummy_user = {
+            "campaign_id": self.test_campaign_id,
+            "first_name": "Test",
+            "last_name": "McTesterson",
+            "email": "test@testing.com"
+        }
+        interested_user = InterestedUser.from_dict(dummy_user)
+        with Transaction() as t:
+            interested_user_repo = InterestedUserRepo(t)
+            iuid = interested_user_repo.insert_interested_user(interested_user)
+
+            # Scrub the interested user with the right email
+            interested_user_repo.scrub("test@testing.com")
+
+            # Verify that the interested user is scrubbed
+            obs = interested_user_repo.get_interested_user_by_id(iuid)
+            self.assertEqual(obs.first_name, 'scrubbed')
+            self.assertEqual(obs.last_name, 'scrubbed')
+            self.assertEqual(obs.email, 'scrubbed')
+
+    def test_scrub_interested_users_failure(self):
+        # Create a test interested user
+        dummy_user = {
+            "campaign_id": self.test_campaign_id,
+            "first_name": "Test",
+            "last_name": "McTesterson",
+            "email": "test@testing.com"
+        }
+        interested_user = InterestedUser.from_dict(dummy_user)
+        with Transaction() as t:
+            interested_user_repo = InterestedUserRepo(t)
+            iuid = interested_user_repo.insert_interested_user(interested_user)
+
+            # Scrub the interested user with the wrong email
+            interested_user_repo.scrub("wrong@testing.com")
+
+            # Verify that the interested user isn't scrubbed
+            obs = interested_user_repo.get_interested_user_by_id(iuid)
+            self.assertEqual(obs.first_name, 'Test')
+            self.assertEqual(obs.last_name, 'McTesterson')
+            self.assertEqual(obs.email, 'test@testing.com')
+
 
 if __name__ == '__main__':
     unittest.main()

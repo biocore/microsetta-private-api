@@ -207,3 +207,45 @@ class InterestedUserRepo(BaseRepo):
                         (interested_user_id,)
                     )
                     return False
+
+    def get_interested_user_by_just_email(self, email):
+        # email = "%" + email + "%"
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT * FROM campaign.interested_users "
+                "WHERE lower(email) = lower(%s)",
+                (email,)
+            )
+            rs = cur.fetchall()
+            return [__class__._row_to_interested_user(r) for r in rs]
+
+    def scrub(self, interested_user_email):
+        interested_users = self. \
+            get_interested_user_by_just_email(interested_user_email)
+        updated = False
+
+        for interested_user in interested_users:
+            interested_user.first_name = "scrubbed"
+            interested_user.last_name = "scrubbed"
+            interested_user.email = "scrubbed"
+            interested_user.phone = "scrubbed"
+            interested_user.address_1 = "scrubbed"
+            interested_user.address_2 = "scrubbed"
+            interested_user.address_3 = "scrubbed"
+            interested_user.city = "scrubbed"
+            interested_user.state = "scrubbed"
+            interested_user.postal_code = "scrubbed"
+            interested_user.country = "scrubbed"
+            interested_user.latitude = 0
+            interested_user.longitude = 0
+            interested_user.confirm_consent = False
+            interested_user.ip_address = "scrubbed"
+            interested_user.address_checked = False
+            interested_user.address_valid = False
+            interested_user.residential_address = False
+
+            if self.update_interested_user(interested_user) == 1:
+                updated = True
+            else:
+                updated = False
+        return updated
