@@ -1384,3 +1384,66 @@ class AdminRepoTests(AdminTests):
                 )
                 obs = cur.fetchone()
                 self.assertFalse(obs[0])
+
+    def test_generate_novel_barcodes_admin_success(self):
+        number_of_kits = 1
+        number_of_samples = 3
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            new_barcodes = admin_repo._generate_novel_barcodes_admin
+            (number_of_kits, number_of_samples)
+            self.assertEqual(len(new_barcodes),
+                             number_of_kits * number_of_samples)
+            self.assertTrue(all(barcode.startswith('X')
+                                for barcode in new_barcodes))
+
+    def test_generate_novel_barcodes_admin_failure(self):
+        number_of_kits = 0
+        number_of_samples = 3
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            new_barcodes = admin_repo._generate_novel_barcodes_admin
+            (number_of_kits, number_of_samples)
+            self.assertTrue(new_barcodes == [])
+
+    def test_insert_barcodes_admin_success(self):
+        kit_barcode = [['test', 'X00332312']]
+        project_id = '1'
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            admin_repo._insert_barcodes_to_existing_kit
+            (kit_barcode, project_id)
+            with t.cursor() as cur:
+                cur.execute(
+                    "SELECT barcode "
+                    "FROM barcodes.barcode "
+                    "WHERE kit_id = %s",
+                    ('test',)
+                )
+                obs = cur.fetchall()
+                self.assertEqual(obs[0][0], 'X00332312')
+
+    def test_insert_barcodes_admin_fail_nonexisting_kit(self):
+        # test that inserting barcodes to a non-existent kit fails
+        kit_barcode = [['test1123', 'X00332312']]
+        project_id = '1'
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            with self.assertRaises(psycopg2.errors.ForeignKeyViolation):
+                admin_repo._insert_barcodes_to_existing_kit
+                (kit_barcode, project_id)
+
+    def test_insert_barcodes_admin_fail_dup_barcodes(self):
+        # test that inserting duplicate barcode fails
+        kit_barcode = [['test', '000000001']]
+        project_id = '1'
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            with self.assertRaises(psycopg2.errors.UniqueViolation):
+                admin_repo._insert_barcodes_to_existing_kit
+                (kit_barcode, project_id)

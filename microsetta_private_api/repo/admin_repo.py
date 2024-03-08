@@ -851,6 +851,80 @@ class AdminRepo(BaseRepo):
 
         return kit_name_and_barcode_tuples_list, new_barcodes
 
+    def _generate_novel_barcodes_admin(self,
+                                       number_of_kits,
+                                       number_of_samples):
+        """Generate specified number of random barcodes for admin"""
+
+        total_barcodes = number_of_kits * number_of_samples
+
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT max(right(barcode,8)::integer) "
+                "FROM barcodes.barcode "
+                "WHERE barcode LIKE 'X%' OR barcode LIKE '0%'"
+            )
+            start_bc = cur.fetchone()[0] + 1
+            new_barcodes = ['X%0.8d' % (start_bc + i)
+                            for i in range(total_barcodes)]
+        return new_barcodes
+
+    def _insert_barcodes_to_existing_kit(self,
+                                         kit_name_and_barcode_tuples_list,
+                                         project_ids):
+        """Insert barcodes into the database for an exisiting kit
+        Parameters
+        ----------
+        kit_name_and_barcode_tuples_list: list of tuple of str
+            Kit name and associated barcode (one tuple per barcode)
+        project_ids : list of int
+            Project ids that all barcodes are to be associated with
+        """
+        # check for empty input
+        if kit_name_and_barcode_tuples_list \
+                is None or len(kit_name_and_barcode_tuples_list) == 0:
+            raise ValueError("kit_name_and_barcode_tuples_list "
+                             "cannot be empty")
+
+        # integer project ids come in as strings ...
+        project_ids = [int(x) for x in project_ids]
+
+        is_tmi = self._are_any_projects_tmi(project_ids)
+
+        with self._transaction.cursor() as cur:
+            # add new barcodes to barcode table
+            barcode_insertions = [(n, b, 'unassigned')
+                                  for n, b in kit_name_and_barcode_tuples_list]
+            cur.executemany("INSERT INTO barcode (kit_id, barcode, status) "
+                            "VALUES (%s, %s, %s)",
+                            barcode_insertions)
+
+            # create barcode project associations
+            barcode_projects = []
+            for barcode in [b for _, b in kit_name_and_barcode_tuples_list]:
+                for prj_id in project_ids:
+                    barcode_projects.append((barcode, prj_id))
+            cur.executemany("INSERT INTO project_barcode "
+                            "(barcode, project_id) "
+                            "VALUES (%s, %s)", barcode_projects)
+            if is_tmi:
+                # for each new barcode, add a record to the ag_kit_barcodes
+                # table associating it to its ag kit, creating a new
+                # "sample_barcode"
+                kit_barcodes_insert = [(i, b)
+                                       for i, b
+                                       in kit_name_and_barcode_tuples_list]
+
+                try:
+                    cur.executemany("INSERT INTO ag_kit_barcodes "
+                                    "(ag_kit_id, barcode) "
+                                    "SELECT ag_kit_id, %s "
+                                    "FROM ag_kit "
+                                    "WHERE supplied_kit_id = %s",
+                                    [(b, i) for i, b in kit_barcodes_insert])
+                except Exception as e:
+                    print("Error executing query:", e)
+
     def _create_kits(self, kit_names, new_barcodes,
                      kit_name_and_barcode_tuples_list,
                      number_of_samples, project_ids, kits_details=None):

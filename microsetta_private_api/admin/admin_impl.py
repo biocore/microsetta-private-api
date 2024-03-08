@@ -268,6 +268,31 @@ def create_kits(body, token_info):
     return jsonify(kits), 201
 
 
+def generate_barcodes(body):
+
+    number_of_kits = body['number_of_kits']
+    number_of_samples = body['number_of_samples']
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        barcode = admin_repo._generate_novel_barcodes_admin(
+            number_of_kits, number_of_samples)
+        t.commit()
+    return barcode
+
+
+def insert_barcodes(body):
+
+    barcode = body['barcodes']
+    project_id = [body['project_id']]
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        admin_repo._insert_barcodes_to_existing_kit(barcode, project_id)
+        t.commit()
+    return '', 204
+
+
 def get_account_events(account_id, token_info):
     validate_admin_access(token_info)
 
