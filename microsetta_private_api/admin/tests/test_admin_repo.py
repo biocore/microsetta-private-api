@@ -1391,8 +1391,8 @@ class AdminRepoTests(AdminTests):
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            new_barcodes = admin_repo._generate_novel_barcodes_admin
-            (number_of_kits, number_of_samples)
+            new_barcodes = admin_repo._generate_novel_barcodes_admin(
+                number_of_kits, number_of_samples)
             self.assertEqual(len(new_barcodes),
                              number_of_kits * number_of_samples)
             self.assertTrue(all(barcode.startswith('X')
@@ -1404,8 +1404,8 @@ class AdminRepoTests(AdminTests):
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            new_barcodes = admin_repo._generate_novel_barcodes_admin
-            (number_of_kits, number_of_samples)
+            new_barcodes = admin_repo._generate_novel_barcodes_admin(
+                number_of_kits, number_of_samples)
             self.assertTrue(new_barcodes == [])
 
     def test_insert_barcodes_admin_success(self):
@@ -1414,8 +1414,8 @@ class AdminRepoTests(AdminTests):
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            admin_repo._insert_barcodes_to_existing_kit
-            (kit_barcode, project_id)
+            admin_repo._insert_barcodes_to_existing_kit(
+                kit_barcode, project_id)
             with t.cursor() as cur:
                 cur.execute(
                     "SELECT barcode "
@@ -1434,8 +1434,8 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             with self.assertRaises(psycopg2.errors.ForeignKeyViolation):
-                admin_repo._insert_barcodes_to_existing_kit
-                (kit_barcode, project_id)
+                admin_repo._insert_barcodes_to_existing_kit(
+                    kit_barcode, project_id)
 
     def test_insert_barcodes_admin_fail_dup_barcodes(self):
         # test that inserting duplicate barcode fails
@@ -1445,5 +1445,5 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             with self.assertRaises(psycopg2.errors.UniqueViolation):
-                admin_repo._insert_barcodes_to_existing_kit
-                (kit_barcode, project_id)
+                admin_repo._insert_barcodes_to_existing_kit(
+                    kit_barcode, project_id)
