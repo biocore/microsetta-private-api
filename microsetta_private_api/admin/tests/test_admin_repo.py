@@ -1409,7 +1409,15 @@ class AdminRepoTests(AdminTests):
             self.assertTrue(new_barcodes == [])
 
     def test_insert_barcodes_admin_success(self):
-        kit_barcode = [['test', 'X00332312']]
+        number_of_kits = 1
+        number_of_samples = 1
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            new_barcode = admin_repo._generate_novel_barcodes_admin(
+                    number_of_kits, number_of_samples)
+
+        kit_barcode = [['test', new_barcode[0]]]
         project_id = '1'
 
         with Transaction() as t:
@@ -1424,7 +1432,7 @@ class AdminRepoTests(AdminTests):
                     ('test',)
                 )
                 obs = cur.fetchall()
-                self.assertEqual(obs[0][0], 'X00332312')
+                self.assertEqual(obs[0][0], new_barcode[0])
 
     def test_insert_barcodes_admin_fail_nonexisting_kit(self):
         # test that inserting barcodes to a non-existent kit fails
