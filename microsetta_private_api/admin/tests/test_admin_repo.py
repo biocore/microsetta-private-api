@@ -448,7 +448,7 @@ class AdminRepoTests(AdminTests):
             output_id = admin_repo.create_project(input)
 
             # create some fake kits
-            created = admin_repo.create_kits(2, 3, 'foo', [output_id, ])
+            created = admin_repo.create_kits(2, 3, 'foo', None, [output_id, ])
 
             exp = []
             for kit in created['created']:
@@ -603,13 +603,14 @@ class AdminRepoTests(AdminTests):
                 admin_repo.create_kits(5,
                                        3,
                                        '',
+                                       None,
                                        [10000,
                                         SurveyTemplateRepo.VIOSCREEN_ID])
 
     def test_create_kits_success_not_microsetta(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            non_tmi = admin_repo.create_kits(5, 3, '',
+            non_tmi = admin_repo.create_kits(5, 3, '', None,
                                              [33])
             self.assertEqual(['created', ], list(non_tmi.keys()))
             self.assertEqual(len(non_tmi['created']), 5)
@@ -637,7 +638,7 @@ class AdminRepoTests(AdminTests):
     def test_create_kits_success_is_microsetta(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            tmi = admin_repo.create_kits(4, 2, 'foo',
+            tmi = admin_repo.create_kits(4, 2, 'foo', None,
                                          [1])
             self.assertEqual(['created', ], list(tmi.keys()))
             self.assertEqual(len(tmi['created']), 4)
@@ -1418,12 +1419,12 @@ class AdminRepoTests(AdminTests):
                     number_of_kits, number_of_samples)
 
         kit_barcode = [['test', new_barcode[0]]]
-        project_id = '1'
+        project_ids = '1'
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             admin_repo._insert_barcodes_to_existing_kit(
-                kit_barcode, project_id)
+                kit_barcode, project_ids)
             with t.cursor() as cur:
                 cur.execute(
                     "SELECT barcode "
@@ -1437,21 +1438,64 @@ class AdminRepoTests(AdminTests):
     def test_insert_barcodes_admin_fail_nonexisting_kit(self):
         # test that inserting barcodes to a non-existent kit fails
         kit_barcode = [['test1123', 'X00332312']]
-        project_id = '1'
+        project_ids = '1'
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             with self.assertRaises(psycopg2.errors.ForeignKeyViolation):
                 admin_repo._insert_barcodes_to_existing_kit(
-                    kit_barcode, project_id)
+                    kit_barcode, project_ids)
 
     def test_insert_barcodes_admin_fail_dup_barcodes(self):
         # test that inserting duplicate barcode fails
         kit_barcode = [['test', '000000001']]
-        project_id = '1'
+        project_ids = '1'
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             with self.assertRaises(psycopg2.errors.UniqueViolation):
                 admin_repo._insert_barcodes_to_existing_kit(
-                    kit_barcode, project_id)
+                    kit_barcode, project_ids)
+
+    def test_user_barcode_create_kit_success(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            user_barcode = 'X99887769'
+            admin_repo.create_kits(number_of_kits=1,
+                                   number_of_samples=1,
+                                   kit_prefix='',
+                                   user_barcodes=[user_barcode],
+                                   project_ids=[1])
+            with t.cursor() as cur:
+                cur.execute(
+                    "SELECT barcode "
+                    "FROM barcodes.barcode "
+                    "WHERE barcode = %s",
+                    (user_barcode,)
+                )
+                obs = cur.fetchall()
+                self.assertEqual(obs[0][0], user_barcode)
+
+    def test_user_barcode_dup_create_kit_fail(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            user_barcode = '000000001'
+            with self.assertRaises(psycopg2.errors.UniqueViolation):
+                admin_repo.create_kits(number_of_kits=1,
+                                       number_of_samples=1,
+                                       kit_prefix='',
+                                       user_barcodes=[user_barcode],
+                                       project_ids=[1])
+
+    def test_user_barcodes_num_samples_mismatch_create_kit_fail(self):
+        # When creating a kit, if a user selects just one sample, but
+        # provides two user barcodes, the transaction should fail
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            with self.assertRaises(psycopg2.errors.ForeignKeyViolation):
+                admin_repo.create_kits(number_of_kits=1,
+                                       number_of_samples=1,
+                                       kit_prefix='',
+                                       user_barcodes=['X92384885',
+                                                      'X92384886'],
+                                       project_ids=[1])

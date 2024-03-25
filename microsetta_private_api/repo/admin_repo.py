@@ -747,7 +747,7 @@ class AdminRepo(BaseRepo):
         return prefix + '_' + rand_name
 
     def create_kits(self, number_of_kits, number_of_samples, kit_prefix,
-                    project_ids):
+                    user_barcodes, project_ids):
         """Create multiple kits, each with the same number of samples
 
         Parameters
@@ -763,9 +763,17 @@ class AdminRepo(BaseRepo):
         """
 
         kit_names = self._generate_novel_kit_names(number_of_kits, kit_prefix)
-        kit_name_and_barcode_tuples_list, new_barcodes = \
-            self._generate_novel_barcodes(
-                number_of_kits, number_of_samples, kit_names)
+
+        if user_barcodes:
+            new_barcodes = user_barcodes
+            kit_name_and_barcode_tuples_list = []
+            for i in range(number_of_samples * number_of_kits):
+                kit_name_and_barcode_tuples_list.append(
+                    (kit_names[0], user_barcodes[i]))
+        else:
+            kit_name_and_barcode_tuples_list, new_barcodes = \
+                self._generate_novel_barcodes(
+                    number_of_kits, number_of_samples, kit_names)
 
         return self._create_kits(kit_names, new_barcodes,
                                  kit_name_and_barcode_tuples_list,
