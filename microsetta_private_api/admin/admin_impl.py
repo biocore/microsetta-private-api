@@ -272,8 +272,7 @@ def create_kits(body, token_info):
     return jsonify(kits), 201
 
 
-def generate_barcodes(body, token_info):
-    validate_admin_access(token_info)
+def generate_barcodes(body):
 
     number_of_kits = body['number_of_kits']
     number_of_samples = body['number_of_samples']
@@ -286,8 +285,7 @@ def generate_barcodes(body, token_info):
     return barcode
 
 
-def insert_barcodes(body, token_info):
-    validate_admin_access(token_info)
+def insert_barcodes(body):
 
     barcode = body['barcodes']
     project_id = [body['project_id']]
