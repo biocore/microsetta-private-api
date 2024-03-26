@@ -286,8 +286,7 @@ def generate_barcodes(body, token_info):
     return barcode
 
 
-def insert_barcodes(body, token_info):
-    validate_admin_access(token_info)
+def insert_barcodes(body):
 
     barcode = body['barcodes']
     project_id = [body['project_id']]
