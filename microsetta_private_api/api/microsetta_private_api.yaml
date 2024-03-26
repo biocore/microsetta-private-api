@@ -2764,6 +2764,65 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/admin/create/barcodes':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.generate_barcodes
+      tags:
+        - Admin
+      summary: Create barcodes
+      description: Create barcodes for an exisiting kit
+      requestBody:
+        content:
+          application/json:
+            schema:
+                type: "object"
+                properties:
+                  number_of_kits:
+                    type: integer
+                  number_of_samples:
+                    type: integer
+                required:
+                  - number_of_kits
+                  - number_of_samples
+      responses:
+        '201':
+          description: Barcodes were successfully created
+          content:
+            application/json:
+              schema:
+                type: array
+
+  '/admin/insert_barcodes':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.insert_barcodes
+      tags:
+        - Admin
+      summary: Insert barcodes into the database
+      description: Insert barcodes into the database
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                barcodes:
+                  type: array
+                  items:
+                    type: array
+                kit_id:
+                  type: string
+                project_id:
+                  type: integer
+      responses:
+        '201':
+          description: Barcodes were successfully inserted
+          content:
+            application/json:
+              schema:
+                type: array
+        '500':
+          description: Duplicate barcodes found
+          
   '/admin/events/accounts/{account_id}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.get_account_events

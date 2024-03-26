@@ -253,19 +253,48 @@ def create_kits(body, token_info):
     number_of_samples = body['number_of_samples']
     kit_prefix = body.get('kit_id_prefix', None)
     project_ids = body['project_ids']
+    user_barcodes = body.get('user_barcodes', [])
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
 
         try:
-            kits = admin_repo.create_kits(number_of_kits, number_of_samples,
-                                          kit_prefix, project_ids)
+            kits = admin_repo.create_kits(number_of_kits,
+                                          number_of_samples,
+                                          kit_prefix,
+                                          user_barcodes,
+                                          project_ids)
         except KeyError:
             return jsonify(code=422, message="Unable to create kits"), 422
         else:
             t.commit()
 
     return jsonify(kits), 201
+
+
+def generate_barcodes(body):
+
+    number_of_kits = body['number_of_kits']
+    number_of_samples = body['number_of_samples']
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        barcode = admin_repo._generate_novel_barcodes_admin(
+            number_of_kits, number_of_samples)
+        t.commit()
+    return barcode
+
+
+def insert_barcodes(body):
+
+    barcode = body['barcodes']
+    project_id = [body['project_id']]
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        admin_repo._insert_barcodes_to_existing_kit(barcode, project_id)
+        t.commit()
+    return '', 204
 
 
 def get_account_events(account_id, token_info):
