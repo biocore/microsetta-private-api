@@ -101,12 +101,6 @@ def register_account(body, token_info):
 
 def read_account(account_id, token_info):
     acc = _validate_account_access(token_info, account_id)
-    if acc.language == "ja_JP":
-        with Transaction() as t:
-            acct_repo = AccountRepo(t)
-            acc.language = "en_US"
-            acct_repo.update_account(acc)
-            t.commit()
     return jsonify(acc.to_api()), 200
 
 

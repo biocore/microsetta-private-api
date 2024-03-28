@@ -61,6 +61,9 @@ class Account(ModelBase):
         self.creation_time = creation_time
         self.update_time = update_time
         self.language = language
+        if (self.language == "ja_JP"):
+            self.language = "en_US"
+            language = self.language
         self.consent_privacy_terms = consent_privacy_terms
 
     def to_api(self):
