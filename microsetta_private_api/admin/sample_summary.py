@@ -23,13 +23,12 @@ def per_sample(project, barcodes, strip_sampleid):
         template_repo = SurveyTemplateRepo(t)
         vs_repo = VioscreenSessionRepo(t)
 
-        if project is not None:
-            project_barcodes = admin_repo.get_project_barcodes(project)
-        else:
-            project = 'Unspecified'
-
+        # all associated projects returned for each barcode,
+        # so no universal project needed
         if barcodes is None:
-            barcodes = project_barcodes
+            if project is None:
+                return summaries
+            barcodes = admin_repo.get_project_barcodes(project)
 
         for barcode in barcodes:
             diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
@@ -43,6 +42,11 @@ def per_sample(project, barcodes, strip_sampleid):
             account_email = None if account is None else account.email
             source_type = None if source is None else source.source_type
             vio_id = None
+
+            # find all projects for barcode
+            projects_info = diag['projects_info']
+            all_projects = [proj_obj['project'] for proj_obj in projects_info]
+            barcode_project = '; '.join(sorted(all_projects))
 
             if source is not None and source_type == Source.SOURCE_TYPE_HUMAN:
 
@@ -82,7 +86,7 @@ def per_sample(project, barcodes, strip_sampleid):
 
             summary = {
                 "sampleid": None if strip_sampleid else barcode,
-                "project": project,
+                "project": barcode_project,
                 "source-type": source_type,
                 "site-sampled": sample_site,
                 "sample-date": sample_date,
