@@ -209,7 +209,6 @@ class InterestedUserRepo(BaseRepo):
                     return False
 
     def get_interested_user_by_just_email(self, email):
-        # email = "%" + email + "%"
         with self._transaction.dict_cursor() as cur:
             cur.execute(
                 "SELECT * FROM campaign.interested_users "
@@ -222,7 +221,6 @@ class InterestedUserRepo(BaseRepo):
     def scrub(self, interested_user_email):
         interested_users = self. \
             get_interested_user_by_just_email(interested_user_email)
-        updated = False
 
         for interested_user in interested_users:
             interested_user.first_name = "scrubbed"
@@ -236,8 +234,8 @@ class InterestedUserRepo(BaseRepo):
             interested_user.state = "scrubbed"
             interested_user.postal_code = "scrubbed"
             interested_user.country = "scrubbed"
-            interested_user.latitude = 0
-            interested_user.longitude = 0
+            interested_user.latitude = None
+            interested_user.longitude = None
             interested_user.confirm_consent = False
             interested_user.ip_address = "scrubbed"
             interested_user.address_checked = False
@@ -245,7 +243,6 @@ class InterestedUserRepo(BaseRepo):
             interested_user.residential_address = False
 
             if self.update_interested_user(interested_user) == 1:
-                updated = True
+                pass
             else:
-                updated = False
-        return updated
+                raise RepoException("Error scrubbing interested user")
