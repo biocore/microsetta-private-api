@@ -242,7 +242,6 @@ class InterestedUserRepo(BaseRepo):
             interested_user.address_valid = False
             interested_user.residential_address = False
 
-            if self.update_interested_user(interested_user) == 1:
-                pass
-            else:
-                raise RepoException("Error scrubbing interested user")
+            if not self.update_interested_user(interested_user):
+                raise RepoException("Error scrubbing interested user: "
+                                    + interested_user.interested_user_id)
