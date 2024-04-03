@@ -66,6 +66,9 @@ class InterestedUserRepo(BaseRepo):
                 "state = %s, "
                 "postal_code = %s, "
                 "country = %s, "
+                "latitude = %s, "
+                "longitude = %s, "
+                "confirm_consent = %s, "
                 "address_checked = %s, "
                 "address_valid = %s, "
                 "residential_address = %s, "
@@ -82,6 +85,9 @@ class InterestedUserRepo(BaseRepo):
                  interested_user.state,
                  interested_user.postal_code,
                  interested_user.country,
+                 interested_user.latitude,
+                 interested_user.longitude,
+                 interested_user.confirm_consent,
                  interested_user.address_checked,
                  interested_user.address_valid,
                  interested_user.residential_address,
