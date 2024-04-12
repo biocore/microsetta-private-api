@@ -1,7 +1,10 @@
+from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.qiita import qclient
 from microsetta_private_api.repo.metadata_repo import retrieve_metadata
 from microsetta_private_api.repo.metadata_repo._constants import MISSING_VALUE
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
+from microsetta_private_api.repo.transaction import Transaction
 
 
 class QiitaRepo(BaseRepo):
@@ -35,6 +38,26 @@ class QiitaRepo(BaseRepo):
         list
             Any error detail when constructing metadata
         """
+        # lock survey-sample association
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            sar_repo = SurveyAnswersRepo(t)
+
+            for sample_barcode in barcodes:
+                ids = admin_repo._get_ids_relevant_to_barcode(sample_barcode)
+
+                if ids is not None:
+                    account_id = ids.get('account_id')
+                    source_id = ids.get('source_id')
+                    sample_id = ids.get('sample_id')
+
+                    survey_ids = sar_repo.list_answered_surveys_by_sample(
+                        account_id, source_id, sample_id)
+
+                    for survey_id in survey_ids:
+                        sar_repo.associate_answered_survey_with_sample(
+                            account_id, source_id, sample_id, survey_id)
+
         if barcodes is None:
             with self._transaction.cursor() as cur:
                 # obtain all barcodes, which are part of the AG table,
