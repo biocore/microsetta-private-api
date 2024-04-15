@@ -51,7 +51,7 @@ class QiitaRepo(BaseRepo):
                     source_id = ids.get('source_id')
                     sample_id = ids.get('sample_id')
 
-                    survey_ids = sar_repo.list_answered_surveys_by_sample(
+                    survey_ids = sar_repo.list_answered_surveys(
                         account_id, source_id, sample_id)
 
                     for survey_id in survey_ids:
