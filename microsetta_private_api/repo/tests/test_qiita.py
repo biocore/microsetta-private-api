@@ -69,6 +69,31 @@ class AdminTests(TestCase):
                                       "associated with any surveys "
                                       "matching this template id")}])
 
+    def test_lock_sample_to_survey(self):
+        test_barcode = '000012914'
+        test_barcodes = [test_barcode]
+        test_survey_id = '000a1da7d9d7e35b'
+
+        with Transaction() as t:
+            with t.cursor() as cur:
+                for sample_barcode in test_barcodes:
+                    cur.execute("SELECT * FROM ag.source_barcodes_surveys "
+                                "WHERE barcode = %s AND survey_id = %s",
+                                (sample_barcode, test_survey_id))
+                    barcode_does_not_exist_before = cur.fetchone() is None
+
+                    qiita_repo = QiitaRepo(t)
+                    qiita_repo.lock_sample_to_survey(test_barcodes)
+
+                    cur.execute("SELECT * FROM source_barcodes_surveys "
+                                "WHERE barcode=%s AND survey_id=%s",
+                                (sample_barcode, test_survey_id))
+                    inserted_found = cur.fetchone()
+                    barcode_exists_after = inserted_found is not None
+
+                    self.assertTrue(barcode_does_not_exist_before)
+                    self.assertTrue(barcode_exists_after)
+
 
 if __name__ == '__main__':
     main()

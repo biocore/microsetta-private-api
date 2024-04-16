@@ -8,6 +8,29 @@ from microsetta_private_api.repo.transaction import Transaction
 
 
 class QiitaRepo(BaseRepo):
+    def lock_sample_to_survey(self, barcodes):
+        # lock survey-sample association
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            sar_repo = SurveyAnswersRepo(t)
+
+            for sample_barcode in barcodes:
+                ids = admin_repo._get_ids_relevant_to_barcode(sample_barcode)
+
+                if ids is not None:
+                    account_id = ids.get('account_id')
+                    source_id = ids.get('source_id')
+                    sample_id = ids.get('sample_id')
+
+                    survey_ids = sar_repo.list_answered_surveys(
+                        account_id, source_id)
+
+                    for survey_id in survey_ids:
+                        sar_repo.associate_answered_survey_with_sample(
+                            account_id, source_id, sample_id, survey_id)
+
+            t.commit()
+
     def push_metadata_to_qiita(self, barcodes=None):
         """Attempt to format and push metadata for the set of barcodes
 
@@ -39,24 +62,7 @@ class QiitaRepo(BaseRepo):
             Any error detail when constructing metadata
         """
         # lock survey-sample association
-        with Transaction() as t:
-            admin_repo = AdminRepo(t)
-            sar_repo = SurveyAnswersRepo(t)
-
-            for sample_barcode in barcodes:
-                ids = admin_repo._get_ids_relevant_to_barcode(sample_barcode)
-
-                if ids is not None:
-                    account_id = ids.get('account_id')
-                    source_id = ids.get('source_id')
-                    sample_id = ids.get('sample_id')
-
-                    survey_ids = sar_repo.list_answered_surveys(
-                        account_id, source_id, sample_id)
-
-                    for survey_id in survey_ids:
-                        sar_repo.associate_answered_survey_with_sample(
-                            account_id, source_id, sample_id, survey_id)
+        self.lock_sample_to_survey(barcodes)
 
         if barcodes is None:
             with self._transaction.cursor() as cur:
