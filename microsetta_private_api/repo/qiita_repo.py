@@ -61,8 +61,6 @@ class QiitaRepo(BaseRepo):
         list
             Any error detail when constructing metadata
         """
-        # lock survey-sample association
-        self.lock_sample_to_survey(barcodes)
 
         if barcodes is None:
             with self._transaction.cursor() as cur:
@@ -93,6 +91,9 @@ class QiitaRepo(BaseRepo):
                 barcodes = {r[0] for r in cur.fetchall()}
         else:
             barcodes = set(barcodes)
+
+        # lock survey-sample association
+        self.lock_sample_to_survey(barcodes)
 
         # determine what samples are already known in qiita
         samples_in_qiita = set(qclient.get('/api/v1/study/10317/samples'))
