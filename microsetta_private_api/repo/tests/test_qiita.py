@@ -71,12 +71,12 @@ class AdminTests(TestCase):
                                       "matching this template id")}])
 
     def test_lock_sample_to_survey(self):
-        test_account_id = 'ed5ab96f-fc55-ead5-e040-8a80115d1c4b'
-        test_source_id = '1d7138e7-f1a7-421b-8c58-9245b2bc343e'
-        test_sample_id = 'ed5ab96f-fc57-ead5-e040-8a80115d1c4b'
-        test_barcode = '000012914'
+        test_account_id = 'd8592c74-85ee-2135-e040-8a80115d6401'
+        test_source_id = '6c1c628e-7d78-4dc7-afd9-3061fa9866ba'
+        test_sample_id = 'd8592c74-85f0-2135-e040-8a80115d6401'
+        test_barcode = '000001766'
         test_barcodes = [test_barcode]
-        test_survey_id = '000a1da7d9d7e35b'
+        test_survey_id = 'd089fe280548bb96'
 
         # first we need to disassociate the sample with the survey
         with Transaction() as t:
