@@ -78,6 +78,7 @@ class AdminTests(TestCase):
         test_barcodes = [test_barcode]
         test_survey_id = '000a1da7d9d7e35b'
 
+        # first we need to disassociate the sample with the survey
         with Transaction() as t:
             answers_repo = SurveyAnswersRepo(t)
             answered_survey_ids = answers_repo.list_answered_surveys_by_sample(
@@ -90,9 +91,11 @@ class AdminTests(TestCase):
 
             t.commit()
 
+        # now we can test the association lock
         with Transaction() as t:
             with t.cursor() as cur:
                 for sample_barcode in test_barcodes:
+                    # let's check to make sure the disassociation worked
                     cur.execute("SELECT * FROM ag.source_barcodes_surveys "
                                 "WHERE barcode = %s AND survey_id = %s",
                                 (sample_barcode, test_survey_id))
@@ -101,6 +104,7 @@ class AdminTests(TestCase):
                     qiita_repo = QiitaRepo(t)
                     qiita_repo.lock_sample_to_survey(test_barcodes)
 
+                    # now let's check make sure the association worked
                     cur.execute("SELECT * FROM source_barcodes_surveys "
                                 "WHERE barcode=%s AND survey_id=%s",
                                 (sample_barcode, test_survey_id))
