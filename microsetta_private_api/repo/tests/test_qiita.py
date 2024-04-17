@@ -1,5 +1,6 @@
 from unittest import TestCase, main
 from unittest.mock import patch
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.qiita_repo import QiitaRepo
 
@@ -70,9 +71,24 @@ class AdminTests(TestCase):
                                       "matching this template id")}])
 
     def test_lock_sample_to_survey(self):
+        test_account_id = 'ed5ab96f-fc55-ead5-e040-8a80115d1c4b'
+        test_source_id = '1d7138e7-f1a7-421b-8c58-9245b2bc343e'
+        test_sample_id = 'ed5ab96f-fc57-ead5-e040-8a80115d1c4b'
         test_barcode = '000012914'
         test_barcodes = [test_barcode]
         test_survey_id = '000a1da7d9d7e35b'
+
+        with Transaction() as t:
+            answers_repo = SurveyAnswersRepo(t)
+            answered_survey_ids = answers_repo.list_answered_surveys_by_sample(
+                test_account_id, test_source_id, test_sample_id)
+
+            for curr_answered_survey_id in answered_survey_ids:
+                answers_repo.dissociate_answered_survey_from_sample(
+                    test_account_id, test_source_id,
+                    test_sample_id, curr_answered_survey_id)
+
+            t.commit()
 
         with Transaction() as t:
             with t.cursor() as cur:

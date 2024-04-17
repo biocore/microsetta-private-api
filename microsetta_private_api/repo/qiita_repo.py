@@ -1,3 +1,4 @@
+from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.qiita import qclient
@@ -25,9 +26,12 @@ class QiitaRepo(BaseRepo):
                     survey_ids = sar_repo.list_answered_surveys(
                         account_id, source_id)
 
-                    for survey_id in survey_ids:
-                        sar_repo.associate_answered_survey_with_sample(
-                            account_id, source_id, sample_id, survey_id)
+                    if survey_ids is not None:
+                        for survey_id in survey_ids:
+                            sar_repo.associate_answered_survey_with_sample(
+                                account_id, source_id, sample_id, survey_id)
+                    else:
+                        raise RepoException("Survey IDs not found for barcode")
 
             t.commit()
 
