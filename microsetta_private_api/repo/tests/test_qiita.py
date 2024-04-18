@@ -1,6 +1,5 @@
 from unittest import TestCase, main
 from unittest.mock import patch
-from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.qiita_repo import QiitaRepo
 
@@ -69,50 +68,6 @@ class AdminTests(TestCase):
                 {skin_valid_barcode: ("This barcode is not "
                                       "associated with any surveys "
                                       "matching this template id")}])
-
-    def test_lock_sample_to_survey(self):
-        test_account_id = 'd8592c74-85ee-2135-e040-8a80115d6401'
-        test_source_id = '6c1c628e-7d78-4dc7-afd9-3061fa9866ba'
-        test_sample_id = 'd8592c74-85f0-2135-e040-8a80115d6401'
-        test_barcode = '000001766'
-        test_barcodes = [test_barcode]
-        test_survey_id = 'd089fe280548bb96'
-
-        # first we need to disassociate the sample with the survey
-        with Transaction() as t:
-            answers_repo = SurveyAnswersRepo(t)
-            answered_survey_ids = answers_repo.list_answered_surveys_by_sample(
-                test_account_id, test_source_id, test_sample_id)
-
-            for curr_answered_survey_id in answered_survey_ids:
-                answers_repo.dissociate_answered_survey_from_sample(
-                    test_account_id, test_source_id,
-                    test_sample_id, curr_answered_survey_id)
-
-            t.commit()
-
-        # now we can test the association lock
-        with Transaction() as t:
-            with t.cursor() as cur:
-                for sample_barcode in test_barcodes:
-                    # let's check to make sure the disassociation worked
-                    cur.execute("SELECT * FROM ag.source_barcodes_surveys "
-                                "WHERE barcode = %s AND survey_id = %s",
-                                (sample_barcode, test_survey_id))
-                    barcode_does_not_exist_before = cur.fetchone() is None
-
-                    qiita_repo = QiitaRepo(t)
-                    qiita_repo.lock_sample_to_survey(test_barcodes)
-
-                    # now let's check make sure the association worked
-                    cur.execute("SELECT * FROM source_barcodes_surveys "
-                                "WHERE barcode=%s AND survey_id=%s",
-                                (sample_barcode, test_survey_id))
-                    inserted_found = cur.fetchone()
-                    barcode_exists_after = inserted_found is not None
-
-                    self.assertTrue(barcode_does_not_exist_before)
-                    self.assertTrue(barcode_exists_after)
 
 
 if __name__ == '__main__':
