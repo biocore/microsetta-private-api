@@ -120,7 +120,7 @@ class AdminTests(TestCase):
         # now lock the barcode to the survey that was recently submitted
         with Transaction() as t:
             qiita_repo = QiitaRepo(t)
-            qiita_repo.lock_sample_to_survey(test_barcodes)
+            qiita_repo.lock_completed_surveys_to_barcodes(test_barcodes)
 
             with t.dict_cursor() as cur:
                 cur.execute("SELECT * FROM source_barcodes_surveys "
