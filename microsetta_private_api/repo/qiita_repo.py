@@ -1,4 +1,3 @@
-from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.qiita import qclient
@@ -9,7 +8,7 @@ from microsetta_private_api.repo.transaction import Transaction
 
 
 class QiitaRepo(BaseRepo):
-    def lock_sample_to_survey(self, barcodes):
+    def lock_completed_surveys_to_barcodes(self, barcodes):
         # lock survey-sample association
         with Transaction() as t:
             admin_repo = AdminRepo(t)
@@ -30,8 +29,6 @@ class QiitaRepo(BaseRepo):
                         for survey_id in survey_ids:
                             sar_repo.associate_answered_survey_with_sample(
                                 account_id, source_id, sample_id, survey_id)
-                    else:
-                        raise RepoException("Survey IDs not found for barcode")
 
             t.commit()
 
@@ -96,9 +93,6 @@ class QiitaRepo(BaseRepo):
         else:
             barcodes = set(barcodes)
 
-        # lock survey-sample association
-        self.lock_sample_to_survey(barcodes)
-
         # determine what samples are already known in qiita
         samples_in_qiita = set(qclient.get('/api/v1/study/10317/samples'))
 
@@ -117,6 +111,9 @@ class QiitaRepo(BaseRepo):
         # 1000 samples max per request. We can always use multiple
         # calls to this function if and as needed.
         to_push = list(barcodes - samples_in_qiita)[:1000]
+
+        # lock survey-sample association
+        self.lock_completed_surveys_to_barcodes(barcodes)
 
         # short circuit if we do not have anything to push
         if len(to_push) == 0:
