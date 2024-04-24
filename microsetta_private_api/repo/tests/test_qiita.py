@@ -70,7 +70,7 @@ class AdminTests(TestCase):
                                       "associated with any surveys "
                                       "matching this template id")}])
 
-    def test_lock_sample_to_survey(self):
+    def test_lock_completed_surveys_to_barcodes(self):
 
         test_barcode = '000069747'
         test_barcodes = [test_barcode]
@@ -115,7 +115,6 @@ class AdminTests(TestCase):
                 account_id,
                 source_id,
                 'en_US', 10, survey_10)
-            t.commit()
 
         # now lock the barcode to the survey that was recently submitted
         with Transaction() as t:

@@ -113,7 +113,7 @@ class QiitaRepo(BaseRepo):
         to_push = list(barcodes - samples_in_qiita)[:1000]
 
         # lock survey-sample association
-        self.lock_completed_surveys_to_barcodes(barcodes)
+        self.lock_completed_surveys_to_barcodes(to_push)
 
         # short circuit if we do not have anything to push
         if len(to_push) == 0:
