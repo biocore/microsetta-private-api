@@ -115,6 +115,7 @@ class AdminTests(TestCase):
                 account_id,
                 source_id,
                 'en_US', 10, survey_10)
+            t.commit()
 
         # now lock the barcode to the survey that was recently submitted
         with Transaction() as t:
