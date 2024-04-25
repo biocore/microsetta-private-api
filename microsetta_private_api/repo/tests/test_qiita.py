@@ -124,7 +124,6 @@ class AdminTests(TestCase):
                 cur.execute("SELECT * FROM source_barcodes_surveys "
                             "WHERE barcode = '000069747'")
                 rows_after = cur.fetchall()
-            t.commit()
 
         self.assertGreater(len(rows_after), len(rows_before))
 
