@@ -115,10 +115,8 @@ class AdminTests(TestCase):
                 account_id,
                 source_id,
                 'en_US', 10, survey_10)
-            t.commit()
 
-        # now lock the barcode to the survey that was recently submitted
-        with Transaction() as t:
+            # now lock the barcode to the survey that was recently submitted
             qiita_repo = QiitaRepo(t)
             qiita_repo.lock_completed_surveys_to_barcodes(test_barcodes)
 
@@ -126,6 +124,7 @@ class AdminTests(TestCase):
                 cur.execute("SELECT * FROM source_barcodes_surveys "
                             "WHERE barcode = '000069747'")
                 rows_after = cur.fetchall()
+            t.commit()
 
         self.assertGreater(len(rows_after), len(rows_before))
 

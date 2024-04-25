@@ -4,13 +4,12 @@ from microsetta_private_api.qiita import qclient
 from microsetta_private_api.repo.metadata_repo import retrieve_metadata
 from microsetta_private_api.repo.metadata_repo._constants import MISSING_VALUE
 from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
-from microsetta_private_api.repo.transaction import Transaction
 
 
 class QiitaRepo(BaseRepo):
     def lock_completed_surveys_to_barcodes(self, barcodes):
         # lock survey-sample association
-        with Transaction() as t:
+        with self._transaction as t:
             admin_repo = AdminRepo(t)
             sar_repo = SurveyAnswersRepo(t)
 
@@ -29,8 +28,6 @@ class QiitaRepo(BaseRepo):
                         for survey_id in survey_ids:
                             sar_repo.associate_answered_survey_with_sample(
                                 account_id, source_id, sample_id, survey_id)
-
-            t.commit()
 
     def push_metadata_to_qiita(self, barcodes=None):
         """Attempt to format and push metadata for the set of barcodes
