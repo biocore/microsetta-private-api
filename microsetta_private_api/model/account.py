@@ -1,6 +1,7 @@
 from enum import Enum
 from microsetta_private_api.model.model_base import ModelBase
 from microsetta_private_api.model.address import Address
+from microsetta_private_api.localization import EN_US, JA_JP
 
 
 class AuthorizationMatch(Enum):
@@ -61,9 +62,8 @@ class Account(ModelBase):
         self.creation_time = creation_time
         self.update_time = update_time
         self.language = language
-        if (self.language == "ja_JP"):
-            self.language = "en_US"
-            language = self.language
+        if (self.language == JA_JP):
+            self.language = EN_US
         self.consent_privacy_terms = consent_privacy_terms
 
     def to_api(self):
