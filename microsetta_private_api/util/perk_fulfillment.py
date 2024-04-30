@@ -50,9 +50,7 @@ def process_subscription_fulfillments():
         pf_active = pfr.check_perk_fulfillment_active()
 
     if pf_active:
-        with Transaction() as t:
-            pfr = PerkFulfillmentRepo(t)
-            fulfillment_ids = pfr.get_subscription_fulfillments()
+        fulfillment_ids = pfr.get_subscription_fulfillments()
 
         for fulfillment_id in fulfillment_ids:
             with Transaction() as t:
@@ -82,21 +80,24 @@ def process_subscription_fulfillments():
 def check_shipping_updates():
     with Transaction() as t:
         pfr = PerkFulfillmentRepo(t)
-        emails_sent, error_report = pfr.check_for_shipping_updates()
+        pf_active = pfr.check_perk_fulfillment_active()
 
-        if emails_sent > 0 or len(error_report) > 0:
-            t.commit()
+        if pf_active:
+            emails_sent, error_report = pfr.check_for_shipping_updates()
 
-            email_content = f"Emails sent: {emails_sent}\n"\
-                            f"Errors: {error_report}"
-            try:
-                send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
-                           {"what": "Automated Tracking Updates Output",
-                            "content": email_content},
-                           EN_US)
-            except:  # noqa
-                # try our best to email
-                pass
+            if emails_sent > 0 or len(error_report) > 0:
+                t.commit()
+
+                email_content = f"Emails sent: {emails_sent}\n"\
+                                f"Errors: {error_report}"
+                try:
+                    send_email(SERVER_CONFIG['pester_email'], "pester_daniel",
+                               {"what": "Automated Tracking Updates Output",
+                                "content": email_content},
+                               EN_US)
+                except:  # noqa
+                    # try our best to email
+                    pass
 
 
 @celery.task(ignore_result=True)
