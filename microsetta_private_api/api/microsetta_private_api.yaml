@@ -184,6 +184,12 @@ paths:
       description: Request account to be removed
       parameters:
         - $ref: '#/components/parameters/account_id'
+        - name: user_delete_reason
+          in: query
+          description: Reason for account deletion
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: Successfully requested for account to be removed
@@ -199,6 +205,12 @@ paths:
         description: Cancel request for account to be removed
         parameters:
           - $ref: '#/components/parameters/account_id'
+          - name: user_delete_reason
+            in: query
+            description: Reason for account deletion
+            required: false
+            schema:
+              type: string
         responses:
           '200':
             description: Successfully canceled request
@@ -2504,6 +2516,11 @@ paths:
         - Admin
       parameters:
         - $ref: '#/components/parameters/account_id'
+        - name: delete_reason
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Updates queue, log before calling delete_account()
