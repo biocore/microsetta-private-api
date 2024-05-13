@@ -491,6 +491,7 @@ def query_project_barcode_stats(body, token_info, strip_sampleid):
 def query_barcode_stats(body, token_info, strip_sampleid):
     validate_admin_access(token_info)
     if 'sample_barcodes' in body:
+        project_id = None
         barcodes = body["sample_barcodes"]
     elif 'project_id' in body:
         project_id = body["project_id"]
@@ -502,7 +503,7 @@ def query_barcode_stats(body, token_info, strip_sampleid):
         unprocessed_barcodes = barcodes[1000:]
         barcodes = barcodes[0:1000]
 
-    results = {'samples': per_sample(None, barcodes, strip_sampleid)}
+    results = {'samples': per_sample(project_id, barcodes, strip_sampleid)}
 
     if unprocessed_barcodes:
         results['partial_result'] = True
@@ -835,6 +836,7 @@ def delete_account(account_id, token_info):
         src_repo = SourceRepo(t)
         samp_repo = SampleRepo(t)
         sar_repo = SurveyAnswersRepo(t)
+        interested_users_repo = InterestedUserRepo(t)
 
         acct = acct_repo.get_account(account_id)
         if acct is None:
@@ -872,6 +874,8 @@ def delete_account(account_id, token_info):
 
         acct_repo.scrub(account_id)
 
+        interested_users_repo.scrub(acct.email)
+
         t.commit()
 
     return None, 204
@@ -885,7 +889,8 @@ def ignore_removal_request(account_id, token_info):
         try:
             # remove the user from the queue, noting the admin who allowed it
             # and the time the action was performed.
-            rq_repo.update_queue(account_id, token_info['email'], 'ignored')
+            rq_repo.update_queue(account_id, token_info['email'],
+                                 'ignored', None)
             t.commit()
         except RepoException as e:
             raise e
@@ -893,7 +898,7 @@ def ignore_removal_request(account_id, token_info):
     return None, 204
 
 
-def allow_removal_request(account_id, token_info):
+def allow_removal_request(account_id, token_info, delete_reason):
     validate_admin_access(token_info)
 
     with Transaction() as t:
@@ -902,7 +907,8 @@ def allow_removal_request(account_id, token_info):
         try:
             # remove the user from the queue, noting the admin who allowed it
             # and the time the action was performed.
-            rq_repo.update_queue(account_id, token_info['email'], 'deleted')
+            rq_repo.update_queue(account_id, token_info['email'],
+                                 'deleted', delete_reason)
             t.commit()
         except RepoException as e:
             raise e
