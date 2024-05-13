@@ -2578,6 +2578,11 @@ paths:
                 technician_notes:
                   type: string
                   example: "Sample Processing Complete!"
+                observations:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Observation 1", "Observation 2"]
       responses:
         '201':
           description: Successfully recorded new barcode scan

@@ -323,7 +323,8 @@ class AdminRepoTests(AdminTests):
             "barcode": test_barcode,
             "scan_timestamp": make_tz_datetime(2017, 7, 16),
             "sample_status": 'no-registered-account',
-            "technician_notes": "huh?"
+            "technician_notes": "huh?",
+            "observations": None
         }
 
         second_scan = {
@@ -331,7 +332,9 @@ class AdminRepoTests(AdminTests):
             "barcode": test_barcode,
             "scan_timestamp": make_tz_datetime(2020, 12, 4),
             "sample_status": 'sample-is-valid',
-            "technician_notes": None
+            "technician_notes": None,
+            "observations": None
+
         }
         try:
             add_dummy_scan(first_scan)
@@ -347,6 +350,7 @@ class AdminRepoTests(AdminTests):
                 self.assertGreater(len(diag['projects_info']), 0)
                 self.assertEqual(len(diag['scans_info']), 2)
                 # order matters in the returned vals, so test that
+                print(diag['scans_info'][0], first_scan)
                 self.assertEqual(diag['scans_info'][0], first_scan)
                 self.assertEqual(diag['scans_info'][1], second_scan)
                 self.assertEqual(diag['latest_scan'], second_scan)
@@ -780,6 +784,7 @@ class AdminRepoTests(AdminTests):
             TEST_BARCODE = '000000001'
             TEST_STATUS = "sample-has-inconsistencies"
             TEST_NOTES = "THIS IS A UNIT TEST"
+            TEST_OBSERVATIONS = "THIS IS A UNIT TEST"
             admin_repo = AdminRepo(t)
 
             # check that before doing a scan, no scans are recorded for this
@@ -791,7 +796,8 @@ class AdminRepoTests(AdminTests):
                 TEST_BARCODE,
                 {
                     "sample_status": TEST_STATUS,
-                    "technician_notes": TEST_NOTES
+                    "technician_notes": TEST_NOTES,
+                    "observations": TEST_OBSERVATIONS
                 }
             )
 

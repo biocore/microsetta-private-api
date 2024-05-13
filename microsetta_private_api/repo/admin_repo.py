@@ -391,7 +391,7 @@ class AdminRepo(BaseRepo):
             # are positive you know what already depends on it.
             cur.execute("SELECT barcode_scan_id, barcode, "
                         "scan_timestamp, sample_status, "
-                        "technician_notes "
+                        "technician_notes, observations "
                         "FROM barcodes.barcode_scans "
                         "WHERE barcode=%s "
                         "ORDER BY scan_timestamp asc",
@@ -424,6 +424,10 @@ class AdminRepo(BaseRepo):
                     and barcode_info is None:
                 return None
 
+            cur.execute("SELECT * "
+                        "FROM ag.observation_errors")
+            observations = _rows_to_dicts_list(cur.fetchall())
+
             diagnostic = {
                 "account": account,
                 "source": source,
@@ -431,7 +435,8 @@ class AdminRepo(BaseRepo):
                 "latest_scan": latest_scan,
                 "scans_info": scans_info,
                 "barcode_info": barcode_info,
-                "projects_info": projects_info
+                "projects_info": projects_info,
+                "observations": observations
             }
 
             if grab_kit:
@@ -1166,6 +1171,7 @@ class AdminRepo(BaseRepo):
                 raise RepoException("ERROR: Multiple barcode entries would be "
                                     "affected by scan; failing out")
 
+            observations_str = ', '.join(scan_info['observations'])
             # put a new row in the barcodes.barcode_scans table
             new_uuid = str(uuid.uuid4())
             scan_args = (
@@ -1173,14 +1179,16 @@ class AdminRepo(BaseRepo):
                 sample_barcode,
                 datetime.datetime.now(),
                 scan_info['sample_status'],
-                scan_info['technician_notes']
+                scan_info['technician_notes'],
+                observations_str
+
             )
 
             cur.execute(
                 "INSERT INTO barcodes.barcode_scans "
                 "(barcode_scan_id, barcode, scan_timestamp, "
-                "sample_status, technician_notes) "
-                "VALUES (%s, %s, %s, %s, %s)",
+                "sample_status, technician_notes, observations) "
+                "VALUES (%s, %s, %s, %s, %s, %s)",
                 scan_args
             )
 
