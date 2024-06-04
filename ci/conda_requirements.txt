@@ -4,3 +4,4 @@ flask < 3.0.0
 natsort
 pycryptodome
 pandas < 2.0.0
+werkzeug < 3.0.0
