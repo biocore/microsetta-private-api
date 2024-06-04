@@ -31,6 +31,20 @@ INSERT INTO barcodes.barcode_scans (barcode, scan_timestamp, sample_status, tech
     SELECT '0364352596', scan_timestamp, sample_status, technician_notes
     FROM barcodes.barcode_scans
     WHERE barcode = 'X00236845';
+
+INSERT INTO ag.vioscreen_registry (account_id, source_id, sample_id, vio_id, deleted, registration_code)
+    WITH temp_1 AS (
+        SELECT vr.account_id, vr.source_id, vr.vio_id, vr.deleted, vr.registration_code
+        FROM ag.vioscreen_registry vr
+        INNER JOIN ag.ag_kit_barcodes akb ON vr.sample_id = akb.ag_kit_barcode_id
+        WHERE akb.barcode = 'X00236845'
+    ),
+    temp_2 AS (
+        SELECT ag_kit_barcode_id
+        FROM ag.ag_kit_barcodes
+        WHERE barcode = '0364352596'
+    )
+    SELECT temp_1.account_id, temp_1.source_id, temp_2.ag_kit_barcode_id, temp_1.vio_id, temp_1.deleted, temp_1.registration_code FROM temp_1, temp_2;
 -- End copying X00236845 to 0364352596
 
 -- Begin copying 000031307 to 0364406520
@@ -61,4 +75,18 @@ INSERT INTO barcodes.barcode_scans (barcode, scan_timestamp, sample_status, tech
     SELECT '0364406520', scan_timestamp, sample_status, technician_notes
     FROM barcodes.barcode_scans
     WHERE barcode = '000031307';
+
+INSERT INTO ag.vioscreen_registry (account_id, source_id, sample_id, vio_id, deleted, registration_code)
+    WITH temp_1 AS (
+        SELECT vr.account_id, vr.source_id, vr.vio_id, vr.deleted, vr.registration_code
+        FROM ag.vioscreen_registry vr
+        INNER JOIN ag.ag_kit_barcodes akb ON vr.sample_id = akb.ag_kit_barcode_id
+        WHERE akb.barcode = '000031307'
+    ),
+    temp_2 AS (
+        SELECT ag_kit_barcode_id
+        FROM ag.ag_kit_barcodes
+        WHERE barcode = '0364406520'
+    )
+    SELECT temp_1.account_id, temp_1.source_id, temp_2.ag_kit_barcode_id, temp_1.vio_id, temp_1.deleted, temp_1.registration_code FROM temp_1, temp_2;
 -- End copying 000031307 to 0364406520
