@@ -1,28 +1,56 @@
 -- May 13, 2024
--- Create two tables for observation categories and observation errors list
--- Add observations column to barcode_scans table
-CREATE TABLE observation_categories (
-    categories VARCHAR(255) PRIMARY KEY
+-- Create table to store observation categories
+CREATE TABLE sample_observation_categories (
+    category VARCHAR(255) PRIMARY KEY
 );
 
-INSERT INTO observation_categories (categories) VALUES ('Sample'), ('Swab'), ('Tube');
+-- Insert predefined observation categories
+INSERT INTO sample_observation_categories (category)
+VALUES ('Sample'), ('Swab'), ('Tube');
 
-CREATE TABLE observation_errors (
-    category VARCHAR(255),
-    error VARCHAR(255),
-    project_id INT,
-    FOREIGN KEY (category) REFERENCES observation_categories(categories)
+-- Create table to store sample observations
+CREATE TABLE sample_observations (
+    observation_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    category VARCHAR(255) NOT NULL,
+    observation VARCHAR(255) NOT NULL,
+    FOREIGN KEY (category) REFERENCES sample_observation_categories(category),
+    UNIQUE (category, observation)
 );
 
-INSERT INTO observation_errors (category, error, project_id) VALUES
-('Tube', 'Tube is not intact', 118),
-('Tube', 'Screw cap is loose', 118),
-('Tube', 'Insufficient ethanol', 118),
-('Tube', 'No ethanol', 118),
-('Swab', 'No swab in tube', 118),
-('Swab', 'Multiple swabs in tube', 118),
-('Swab', 'Incorrect swab type', 118),
-('Sample', 'No visible sample', 118),
-('Sample', 'Excess sample on swab', 118);
+-- Create table to store associations between observations and projects
+CREATE TABLE sample_observation_project_associations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    observation_id UUID NOT NULL,
+    project_id INT NOT NULL,
+    FOREIGN KEY (observation_id) REFERENCES sample_observations(observation_id),
+    UNIQUE (observation_id)
+);
 
-ALTER TABLE barcodes.barcode_scans ADD COLUMN observations VARCHAR(255);
+-- Insert predefined observations and associate them with a project
+WITH inserted_observations AS (
+    INSERT INTO sample_observations (category, observation)
+    VALUES
+    ('Tube', 'Tube is not intact'),
+    ('Tube', 'Screw cap is loose'),
+    ('Tube', 'Insufficient ethanol'),
+    ('Tube', 'No ethanol'),
+    ('Swab', 'No swab in tube'),
+    ('Swab', 'Multiple swabs in tube'),
+    ('Swab', 'Incorrect swab type'),
+    ('Sample', 'No visible sample'),
+    ('Sample', 'Excess sample on swab')
+    RETURNING observation_id, category, observation
+)
+INSERT INTO sample_observation_project_associations (observation_id, project_id)
+SELECT observation_id, 1
+FROM inserted_observations;
+
+-- Create table to store observation ids associated with barcode scans ids
+CREATE TABLE sample_barcode_scan_observations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    barcode_scan_id UUID NOT NULL,
+    observation_id UUID NOT NULL,
+    FOREIGN KEY (barcode_scan_id) REFERENCES barcodes.barcode_scans(barcode_scan_id),
+    FOREIGN KEY (observation_id) REFERENCES sample_observations(observation_id),
+    UNIQUE (barcode_scan_id, observation_id)
+);

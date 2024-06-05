@@ -376,7 +376,8 @@ class AdminRepo(BaseRepo):
             # get (partial) projects_info list for this barcode
             query = f"""
                     SELECT {p.DB_PROJ_NAME_KEY}, {p.IS_MICROSETTA_KEY},
-                    {p.BANK_SAMPLES_KEY}, {p.PLATING_START_DATE_KEY}
+                    {p.BANK_SAMPLES_KEY}, {p.PLATING_START_DATE_KEY},
+                    project_id
                     FROM barcodes.project
                     INNER JOIN barcodes.project_barcode
                     USING (project_id)
@@ -385,17 +386,42 @@ class AdminRepo(BaseRepo):
             cur.execute(query, (sample_barcode,))
             # this can't be None; worst-case is an empty list
             projects_info = _rows_to_dicts_list(cur.fetchall())
+            print("Projects info", projects_info)
 
             # get scans_info list for this barcode
             # NB: ORDER MATTERS here. Do not change the order unless you
             # are positive you know what already depends on it.
-            cur.execute("SELECT barcode_scan_id, barcode, "
-                        "scan_timestamp, sample_status, "
-                        "technician_notes, observations "
-                        "FROM barcodes.barcode_scans "
-                        "WHERE barcode=%s "
-                        "ORDER BY scan_timestamp asc",
-                        (sample_barcode,))
+            cur.execute("""
+                SELECT
+                    bs.barcode_scan_id,
+                    bs.barcode,
+                    bs.scan_timestamp,
+                    bs.sample_status,
+                    bs.technician_notes,
+                    array_agg(so.observation) AS observations,
+                    array_agg(p.project_id) AS project_ids
+                FROM
+                    barcodes.barcode_scans bs
+                LEFT JOIN
+                    sample_barcode_scan_observations bso ON bs.barcode_scan_id
+                        = bso.barcode_scan_id
+                LEFT JOIN
+                    sample_observations so ON bso.observation_id
+                        = so.observation_id
+                LEFT JOIN
+                    sample_observation_project_associations sopa
+                        ON so.observation_id = sopa.observation_id
+                LEFT JOIN
+                    barcodes.project p ON sopa.project_id = p.project_id
+                WHERE
+                    bs.barcode = %s
+                GROUP BY
+                    bs.barcode_scan_id, bs.barcode, bs.scan_timestamp,
+                    bs.sample_status, bs.technician_notes
+                ORDER BY
+                    bs.scan_timestamp ASC
+            """, (sample_barcode,))
+
             # this can't be None; worst-case is an empty list
             scans_info = _rows_to_dicts_list(cur.fetchall())
 
@@ -424,8 +450,12 @@ class AdminRepo(BaseRepo):
                     and barcode_info is None:
                 return None
 
-            cur.execute("SELECT * "
-                        "FROM ag.observation_errors")
+            cur.execute("""
+                SELECT so.*, sopa.project_id
+                FROM ag.sample_observations so
+                JOIN ag.sample_observation_project_associations sopa
+                ON so.observation_id = sopa.observation_id
+            """)
             observations = _rows_to_dicts_list(cur.fetchall())
 
             diagnostic = {
@@ -1089,7 +1119,6 @@ class AdminRepo(BaseRepo):
                 raise RepoException("ERROR: Multiple barcode entries would be "
                                     "affected by scan; failing out")
 
-            observations_str = ', '.join(scan_info['observations'])
             # put a new row in the barcodes.barcode_scans table
             new_uuid = str(uuid.uuid4())
             scan_args = (
@@ -1098,17 +1127,35 @@ class AdminRepo(BaseRepo):
                 datetime.datetime.now(),
                 scan_info['sample_status'],
                 scan_info['technician_notes'],
-                observations_str
-
             )
 
             cur.execute(
                 "INSERT INTO barcodes.barcode_scans "
                 "(barcode_scan_id, barcode, scan_timestamp, "
-                "sample_status, technician_notes, observations) "
-                "VALUES (%s, %s, %s, %s, %s, %s)",
+                "sample_status, technician_notes) "
+                "VALUES (%s, %s, %s, %s, %s)",
                 scan_args
             )
+
+            if scan_info['observations']:
+                print("Scan infoooo", scan_info['observations'])
+                for observation in scan_info['observations']:
+                    cur.execute(
+                        "SELECT observation_id FROM sample_observations "
+                        "WHERE observation = %s",
+                        (observation,)
+                    )
+
+                    observation_id = cur.fetchone()[0]
+
+                    cur.execute(
+                        """
+                        INSERT INTO sample_barcode_scan_observations
+                        (barcode_scan_id, observation_id)
+                        VALUES (%s, %s)
+                        """,
+                        (new_uuid, observation_id)
+                    )
 
             return new_uuid
 
