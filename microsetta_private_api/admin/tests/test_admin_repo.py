@@ -5,6 +5,7 @@ import psycopg2
 import psycopg2.extras
 from dateutil.relativedelta import relativedelta
 
+from microsetta_private_api.exceptions import RepoException
 import microsetta_private_api.model.project as p
 
 from werkzeug.exceptions import Unauthorized, NotFound
@@ -324,7 +325,7 @@ class AdminRepoTests(AdminTests):
             "scan_timestamp": make_tz_datetime(2017, 7, 16),
             "sample_status": 'no-registered-account',
             "technician_notes": "huh?",
-            "observations": None
+            "observations": [None]
         }
 
         second_scan = {
@@ -333,7 +334,7 @@ class AdminRepoTests(AdminTests):
             "scan_timestamp": make_tz_datetime(2020, 12, 4),
             "sample_status": 'sample-is-valid',
             "technician_notes": None,
-            "observations": None
+            "observations": [None]
 
         }
         try:
@@ -871,17 +872,15 @@ class AdminRepoTests(AdminTests):
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
             self.assertEqual(len(diag['scans_info']), 0)
 
-            admin_repo.scan_barcode(
-                TEST_BARCODE,
-                {
-                    "sample_status": TEST_STATUS,
-                    "technician_notes": TEST_NOTES,
-                    "observations": TEST_OBSERVATIONS
-                }
-            )
-            diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            first_scan = diag['scans_info'][0]
-            self.assertEqual(len(first_scan['observations']), 3)
+            with self.assertRaises(RepoException):
+                admin_repo.scan_barcode(
+                    TEST_BARCODE,
+                    {
+                        "sample_status": TEST_STATUS,
+                        "technician_notes": TEST_NOTES,
+                        "observations": TEST_OBSERVATIONS
+                    }
+                )
 
     def test_scan_barcode_error_nonexistent(self):
         with Transaction() as t:

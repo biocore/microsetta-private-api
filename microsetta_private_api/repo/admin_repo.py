@@ -386,7 +386,6 @@ class AdminRepo(BaseRepo):
             cur.execute(query, (sample_barcode,))
             # this can't be None; worst-case is an empty list
             projects_info = _rows_to_dicts_list(cur.fetchall())
-            print("Projects info", projects_info)
 
             # get scans_info list for this barcode
             # NB: ORDER MATTERS here. Do not change the order unless you
@@ -398,8 +397,7 @@ class AdminRepo(BaseRepo):
                     bs.scan_timestamp,
                     bs.sample_status,
                     bs.technician_notes,
-                    array_agg(so.observation) AS observations,
-                    array_agg(p.project_id) AS project_ids
+                    array_agg(so.observation) AS observations
                 FROM
                     barcodes.barcode_scans bs
                 LEFT JOIN
@@ -411,8 +409,6 @@ class AdminRepo(BaseRepo):
                 LEFT JOIN
                     sample_observation_project_associations sopa
                         ON so.observation_id = sopa.observation_id
-                LEFT JOIN
-                    barcodes.project p ON sopa.project_id = p.project_id
                 WHERE
                     bs.barcode = %s
                 GROUP BY
@@ -1138,7 +1134,6 @@ class AdminRepo(BaseRepo):
             )
 
             if scan_info['observations']:
-                print("Scan infoooo", scan_info['observations'])
                 for observation in scan_info['observations']:
                     cur.execute(
                         "SELECT observation_id FROM sample_observations "
@@ -1146,7 +1141,14 @@ class AdminRepo(BaseRepo):
                         (observation,)
                     )
 
-                    observation_id = cur.fetchone()[0]
+                    result = cur.fetchone()
+                    if result is None:
+                        raise RepoException(
+                            f"No observation_id found for "
+                            f"observation: {observation}"
+                        )
+
+                    observation_id = result[0]
 
                     cur.execute(
                         """
