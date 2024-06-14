@@ -2546,6 +2546,25 @@ paths:
         '401':
           $ref: '#/components/responses/401Unauthorized'
 
+  '/admin/scan/observations/{sample_barcode}':
+    get:
+      operationId: microsetta_private_api.admin.admin_impl.get_observations
+      tags:
+        - Admin
+      parameters:
+        - $ref: '#/components/parameters/sample_barcode'
+      summary: Return a list of observations
+      description: Return a list of observations
+      responses:
+        '200':
+          description: Array of observations
+          content:
+            application/json:
+              schema:
+                type: array
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
   '/admin/scan/{sample_barcode}':
     post:
       # Note: We might want to be able to differentiate system administrator operations

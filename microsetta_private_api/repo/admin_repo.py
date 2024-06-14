@@ -397,23 +397,24 @@ class AdminRepo(BaseRepo):
                     bs.scan_timestamp,
                     bs.sample_status,
                     bs.technician_notes,
-                    array_agg(so.observation) AS observations
+                    so.observation_id,
+                    so.observation AS observations
                 FROM
                     barcodes.barcode_scans bs
                 LEFT JOIN
-                    sample_barcode_scan_observations bso ON bs.barcode_scan_id
-                        = bso.barcode_scan_id
+                    barcodes.sample_barcode_scan_observations bso
+                        ON bs.barcode_scan_id = bso.barcode_scan_id
                 LEFT JOIN
-                    sample_observations so ON bso.observation_id
-                        = so.observation_id
+                    barcodes.sample_observations so
+                        ON bso.observation_id = so.observation_id
                 LEFT JOIN
-                    sample_observation_project_associations sopa
+                    barcodes.sample_observation_project_associations sopa
                         ON so.observation_id = sopa.observation_id
                 WHERE
                     bs.barcode = %s
                 GROUP BY
                     bs.barcode_scan_id, bs.barcode, bs.scan_timestamp,
-                    bs.sample_status, bs.technician_notes
+                    bs.sample_status, bs.technician_notes, so.observation_id
                 ORDER BY
                     bs.scan_timestamp ASC
             """, (sample_barcode,))
@@ -446,14 +447,6 @@ class AdminRepo(BaseRepo):
                     and barcode_info is None:
                 return None
 
-            cur.execute("""
-                SELECT so.*, sopa.project_id
-                FROM ag.sample_observations so
-                JOIN ag.sample_observation_project_associations sopa
-                ON so.observation_id = sopa.observation_id
-            """)
-            observations = _rows_to_dicts_list(cur.fetchall())
-
             diagnostic = {
                 "account": account,
                 "source": source,
@@ -461,8 +454,7 @@ class AdminRepo(BaseRepo):
                 "latest_scan": latest_scan,
                 "scans_info": scans_info,
                 "barcode_info": barcode_info,
-                "projects_info": projects_info,
-                "observations": observations
+                "projects_info": projects_info
             }
 
             if grab_kit:
@@ -473,6 +465,23 @@ class AdminRepo(BaseRepo):
                 diagnostic["kit"] = kit
 
             return diagnostic
+
+    def retrieve_observations_by_project(self, sample_barcode):
+        def _rows_to_dicts_list(rows):
+            return [dict(x) for x in rows]
+
+        with self._transaction.dict_cursor() as cur:
+            cur.execute("""
+                        SELECT so.*, sopa.project_id
+                FROM barcodes.sample_observations so
+                JOIN barcodes.sample_observation_project_associations sopa
+                ON so.observation_id = sopa.observation_id
+                JOIN barcodes.project_barcode pb
+                ON sopa.project_id = pb.project_id
+                WHERE pb.barcode = %s
+            """, (sample_barcode,))
+            observations = _rows_to_dicts_list(cur.fetchall())
+            return observations
 
     def get_project_name(self, project_id):
         """Obtain the name of a project using the project_id
@@ -1100,7 +1109,6 @@ class AdminRepo(BaseRepo):
 
     def scan_barcode(self, sample_barcode, scan_info):
         with self._transaction.cursor() as cur:
-
             # not actually using the result, just checking there IS one
             # to ensure this is a valid barcode
             cur.execute(
@@ -1122,7 +1130,7 @@ class AdminRepo(BaseRepo):
                 sample_barcode,
                 datetime.datetime.now(),
                 scan_info['sample_status'],
-                scan_info['technician_notes'],
+                scan_info['technician_notes']
             )
 
             cur.execute(
@@ -1137,7 +1145,7 @@ class AdminRepo(BaseRepo):
                 for observation in scan_info['observations']:
                     cur.execute(
                         "SELECT observation_id FROM sample_observations "
-                        "WHERE observation = %s",
+                        "WHERE observation_id = %s",
                         (observation,)
                     )
 
@@ -1149,6 +1157,27 @@ class AdminRepo(BaseRepo):
                         )
 
                     observation_id = result[0]
+
+                    cur.execute(
+                        """
+                        SELECT so.observation_id
+                        FROM barcodes.sample_observations so
+                        JOIN barcodes.sample_observation_project_associations
+                        sopa ON so.observation_id = sopa.observation_id
+                        JOIN project_barcode pb
+                        ON sopa.project_id = pb.project_id
+                        WHERE so.observation_id = %s AND pb.barcode = %s
+                        """,
+                        (observation_id, sample_barcode)
+                    )
+
+                    result = cur.fetchone()
+                    if result is None:
+                        raise RepoException(
+                            f"Observation {observation} is not associated with"
+                            "any project for the given barcode"
+                            "{sample_barcode}"
+                        )
 
                     cur.execute(
                         """

@@ -325,7 +325,8 @@ class AdminRepoTests(AdminTests):
             "scan_timestamp": make_tz_datetime(2017, 7, 16),
             "sample_status": 'no-registered-account',
             "technician_notes": "huh?",
-            "observations": [None]
+            "observation_id": None,
+            "observations": None
         }
 
         second_scan = {
@@ -334,7 +335,8 @@ class AdminRepoTests(AdminTests):
             "scan_timestamp": make_tz_datetime(2020, 12, 4),
             "sample_status": 'sample-is-valid',
             "technician_notes": None,
-            "observations": [None]
+            "observation_id": None,
+            "observations": None
 
         }
         try:
@@ -351,6 +353,7 @@ class AdminRepoTests(AdminTests):
                 self.assertGreater(len(diag['projects_info']), 0)
                 self.assertEqual(len(diag['scans_info']), 2)
                 # order matters in the returned vals, so test that
+                print(diag['scans_info'][0], first_scan)
                 self.assertEqual(diag['scans_info'][0], first_scan)
                 self.assertEqual(diag['scans_info'][1], second_scan)
                 self.assertEqual(diag['latest_scan'], second_scan)
@@ -780,10 +783,10 @@ class AdminRepoTests(AdminTests):
             # TODO FIXME HACK:  Need to build mock barcodes rather than using
             #  these fixed ones
 
-            TEST_BARCODE = '000000001'
+            TEST_BARCODE = '000010860'
             TEST_STATUS = "sample-has-inconsistencies"
             TEST_NOTES = "THIS IS A UNIT TEST"
-            TEST_OBSERVATIONS = ["Tube is not intact"]
+            TEST_OBSERVATIONS = ["604c5a39-f22d-4c5b-9029-fb36e836f315"]
             admin_repo = AdminRepo(t)
 
             # check that before doing a scan, no scans are recorded for this
@@ -806,12 +809,13 @@ class AdminRepoTests(AdminTests):
             first_scan = diag['scans_info'][0]
             self.assertEqual(first_scan['technician_notes'], TEST_NOTES)
             self.assertEqual(first_scan['sample_status'], TEST_STATUS)
-            self.assertEqual(first_scan['observations'], TEST_OBSERVATIONS)
+            self.assertEqual(first_scan['observation_id'],
+                             TEST_OBSERVATIONS[0])
 
     def test_scan_with_no_observations(self):
         with Transaction() as t:
 
-            TEST_BARCODE = '000000001'
+            TEST_BARCODE = '000010860'
             TEST_NOTES = "THIS IS A UNIT TEST"
             TEST_STATUS = "sample-has-inconsistencies"
             admin_repo = AdminRepo(t)
@@ -830,17 +834,16 @@ class AdminRepoTests(AdminTests):
             )
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
             first_scan = diag['scans_info'][0]
-            self.assertEqual(first_scan['observations'], [None])
+            self.assertEqual(first_scan['observations'], None)
 
     def test_scan_with_multiple_observations(self):
         with Transaction() as t:
 
-            TEST_BARCODE = '000000001'
+            TEST_BARCODE = '000010860'
             TEST_NOTES = "THIS IS A UNIT TEST"
             TEST_STATUS = "sample-has-inconsistencies"
-            TEST_OBSERVATIONS = ["Tube is not intact",
-                                 "Screw cap is loose",
-                                 "Insufficient ethanol"]
+            TEST_OBSERVATIONS = ["604c5a39-f22d-4c5b-9029-fb36e836f315",
+                                 "ad374d60-466d-4db0-9a91-5e3e8aec7698"]
             admin_repo = AdminRepo(t)
 
             # check that before doing a scan, no scans are recorded for this
@@ -857,7 +860,11 @@ class AdminRepoTests(AdminTests):
             )
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
             first_scan = diag['scans_info'][0]
-            self.assertEqual(len(first_scan['observations']), 3)
+            second_scan = diag['scans_info'][1]
+            self.assertEqual(first_scan['observation_id'],
+                             TEST_OBSERVATIONS[0])
+            self.assertEqual(second_scan['observation_id'],
+                             TEST_OBSERVATIONS[1])
 
     def test_scan_with_wrong_observation(self):
         with Transaction() as t:
@@ -865,7 +872,7 @@ class AdminRepoTests(AdminTests):
             TEST_BARCODE = '000000001'
             TEST_NOTES = "THIS IS A UNIT TEST"
             TEST_STATUS = "sample-has-inconsistencies"
-            TEST_OBSERVATIONS = ["Wrong"]
+            TEST_OBSERVATIONS = ["ad374d60-466d-4db0-9a91-5e3e8aec7698"]
             admin_repo = AdminRepo(t)
 
             # check that before doing a scan, no scans are recorded for this
