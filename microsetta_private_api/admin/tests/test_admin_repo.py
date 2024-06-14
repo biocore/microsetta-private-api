@@ -786,31 +786,37 @@ class AdminRepoTests(AdminTests):
             TEST_BARCODE = '000010860'
             TEST_STATUS = "sample-has-inconsistencies"
             TEST_NOTES = "THIS IS A UNIT TEST"
-            TEST_OBSERVATIONS = ["604c5a39-f22d-4c5b-9029-fb36e836f315"]
             admin_repo = AdminRepo(t)
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT observation_id "
+                            "FROM "
+                            "barcodes.sample_observation_project_associations "
+                            "WHERE project_id = 1")
+                observation_id = cur.fetchone()
 
-            # check that before doing a scan, no scans are recorded for this
-            diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            self.assertEqual(len(diag['scans_info']), 0)
+                # check that before doing a scan,
+                # no scans are recorded for this
+                diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
+                self.assertEqual(len(diag['scans_info']), 0)
 
-            # do a scan
-            admin_repo.scan_barcode(
-                TEST_BARCODE,
-                {
-                    "sample_status": TEST_STATUS,
-                    "technician_notes": TEST_NOTES,
-                    "observations": TEST_OBSERVATIONS
-                }
-            )
+                # do a scan
+                admin_repo.scan_barcode(
+                    TEST_BARCODE,
+                    {
+                        "sample_status": TEST_STATUS,
+                        "technician_notes": TEST_NOTES,
+                        "observations": observation_id
+                    }
+                )
 
-            # show that now a scan is recorded for this barcode
-            diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            self.assertEqual(len(diag['scans_info']), 1)
-            first_scan = diag['scans_info'][0]
-            self.assertEqual(first_scan['technician_notes'], TEST_NOTES)
-            self.assertEqual(first_scan['sample_status'], TEST_STATUS)
-            self.assertEqual(first_scan['observation_id'],
-                             TEST_OBSERVATIONS[0])
+                # show that now a scan is recorded for this barcode
+                diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
+                self.assertEqual(len(diag['scans_info']), 1)
+                first_scan = diag['scans_info'][0]
+                self.assertEqual(first_scan['technician_notes'], TEST_NOTES)
+                self.assertEqual(first_scan['sample_status'], TEST_STATUS)
+                self.assertEqual(first_scan['observation_id'],
+                                 observation_id[0])
 
     def test_scan_with_no_observations(self):
         with Transaction() as t:
@@ -842,29 +848,36 @@ class AdminRepoTests(AdminTests):
             TEST_BARCODE = '000010860'
             TEST_NOTES = "THIS IS A UNIT TEST"
             TEST_STATUS = "sample-has-inconsistencies"
-            TEST_OBSERVATIONS = ["604c5a39-f22d-4c5b-9029-fb36e836f315",
-                                 "ad374d60-466d-4db0-9a91-5e3e8aec7698"]
             admin_repo = AdminRepo(t)
 
-            # check that before doing a scan, no scans are recorded for this
-            diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            self.assertEqual(len(diag['scans_info']), 0)
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT observation_id "
+                            "FROM "
+                            "barcodes.sample_observation_project_associations "
+                            "WHERE project_id = 1")
+                rows = cur.fetchmany(2)
+                observation_ids = [row['observation_id'] for row in rows]
 
-            admin_repo.scan_barcode(
-                TEST_BARCODE,
-                {
-                    "sample_status": TEST_STATUS,
-                    "technician_notes": TEST_NOTES,
-                    "observations": TEST_OBSERVATIONS
-                }
-            )
-            diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-            first_scan = diag['scans_info'][0]
-            second_scan = diag['scans_info'][1]
-            self.assertEqual(first_scan['observation_id'],
-                             TEST_OBSERVATIONS[0])
-            self.assertEqual(second_scan['observation_id'],
-                             TEST_OBSERVATIONS[1])
+                # check that before doing a scan,
+                # no scans are recorded for this
+                diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
+                self.assertEqual(len(diag['scans_info']), 0)
+
+                admin_repo.scan_barcode(
+                    TEST_BARCODE,
+                    {
+                        "sample_status": TEST_STATUS,
+                        "technician_notes": TEST_NOTES,
+                        "observations": observation_ids
+                    }
+                )
+                diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
+                first_scan = diag['scans_info'][0]
+                second_scan = diag['scans_info'][1]
+                self.assertEqual(first_scan['observation_id'],
+                                 observation_ids[0])
+                self.assertEqual(second_scan['observation_id'],
+                                 observation_ids[1])
 
     def test_scan_with_wrong_observation(self):
         with Transaction() as t:
