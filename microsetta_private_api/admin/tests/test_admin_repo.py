@@ -1392,8 +1392,8 @@ class AdminRepoTests(AdminTests):
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            new_barcodes = admin_repo._generate_novel_barcodes_admin(
-                number_of_kits, number_of_samples)
+            new_barcodes = admin_repo._generate_novel_barcodes(
+                number_of_kits, number_of_samples, kit_names=None)
             self.assertEqual(len(new_barcodes),
                              number_of_kits * number_of_samples)
             self.assertTrue(all(barcode.startswith('X')
@@ -1405,8 +1405,8 @@ class AdminRepoTests(AdminTests):
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            new_barcodes = admin_repo._generate_novel_barcodes_admin(
-                number_of_kits, number_of_samples)
+            new_barcodes = admin_repo._generate_novel_barcodes(
+                number_of_kits, number_of_samples, kit_names=None)
             self.assertTrue(new_barcodes == [])
 
     def test_insert_barcodes_admin_success(self):
@@ -1415,8 +1415,8 @@ class AdminRepoTests(AdminTests):
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            new_barcode = admin_repo._generate_novel_barcodes_admin(
-                    number_of_kits, number_of_samples)
+            new_barcode = admin_repo._generate_novel_barcodes(
+                    number_of_kits, number_of_samples, kit_names=None)
 
         kit_barcode = [['test', new_barcode[0]]]
         project_ids = '1'

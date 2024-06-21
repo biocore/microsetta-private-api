@@ -863,24 +863,6 @@ class AdminRepo(BaseRepo):
             else:
                 return new_barcodes
 
-    def _generate_novel_barcodes_admin(self,
-                                       number_of_kits,
-                                       number_of_samples):
-        """Generate specified number of random barcodes for admin"""
-
-        total_barcodes = number_of_kits * number_of_samples
-
-        with self._transaction.cursor() as cur:
-            cur.execute(
-                "SELECT max(right(barcode,8)::integer) "
-                "FROM barcodes.barcode "
-                "WHERE barcode LIKE 'X%' OR barcode LIKE '0%'"
-            )
-            start_bc = cur.fetchone()[0] + 1
-            new_barcodes = ['X%0.8d' % (start_bc + i)
-                            for i in range(total_barcodes)]
-        return new_barcodes
-
     def _insert_barcodes_to_existing_kit(self,
                                          kit_name_and_barcode_tuples_list,
                                          project_ids):
