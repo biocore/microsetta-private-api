@@ -375,8 +375,10 @@ class AdminRepo(BaseRepo):
 
             # get (partial) projects_info list for this barcode
             query = f"""
-                    SELECT {p.DB_PROJ_NAME_KEY}, {p.IS_MICROSETTA_KEY},
-                    {p.BANK_SAMPLES_KEY}, {p.PLATING_START_DATE_KEY}
+                    SELECT project_id, {p.DB_PROJ_NAME_KEY},
+                    {p.IS_MICROSETTA_KEY},
+                    {p.BANK_SAMPLES_KEY},
+                    {p.PLATING_START_DATE_KEY}
                     FROM barcodes.project
                     INNER JOIN barcodes.project_barcode
                     USING (project_id)
@@ -849,15 +851,17 @@ class AdminRepo(BaseRepo):
             start_bc = cur.fetchone()[0] + 1
             new_barcodes = ['X%0.8d' % (start_bc + i)
                             for i in range(total_barcodes)]
+            if kit_names:
+                kit_name_and_barcode_tuples_list = []
+                barcode_offset = range(0, total_barcodes, number_of_samples)
+                for offset, name in zip(barcode_offset, kit_names):
+                    for i in range(number_of_samples):
+                        kit_name_and_barcode_tuples_list.append(
+                            (name, new_barcodes[offset + i]))
 
-            kit_name_and_barcode_tuples_list = []
-            barcode_offset = range(0, total_barcodes, number_of_samples)
-            for offset, name in zip(barcode_offset, kit_names):
-                for i in range(number_of_samples):
-                    kit_name_and_barcode_tuples_list.append(
-                        (name, new_barcodes[offset + i]))
-
-        return kit_name_and_barcode_tuples_list, new_barcodes
+                return kit_name_and_barcode_tuples_list, new_barcodes
+            else:
+                return new_barcodes
 
     def _generate_novel_barcodes_admin(self,
                                        number_of_kits,
@@ -909,9 +913,10 @@ class AdminRepo(BaseRepo):
 
             # create barcode project associations
             barcode_projects = []
-            for barcode in [b for _, b in kit_name_and_barcode_tuples_list]:
+            for barcode in {b for _, b in kit_name_and_barcode_tuples_list}:
                 for prj_id in project_ids:
-                    barcode_projects.append((barcode, prj_id))
+                    if (barcode, prj_id) not in barcode_projects:
+                        barcode_projects.append((barcode, prj_id))
             cur.executemany("INSERT INTO project_barcode "
                             "(barcode, project_id) "
                             "VALUES (%s, %s)", barcode_projects)

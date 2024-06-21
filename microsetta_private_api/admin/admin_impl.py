@@ -272,29 +272,64 @@ def create_kits(body, token_info):
     return jsonify(kits), 201
 
 
-def generate_barcodes(body, token_info):
-    validate_admin_access(token_info)
+def handle_barcodes(body):
+    action = body.get('action')
 
-    number_of_kits = body['number_of_kits']
-    number_of_samples = body['number_of_samples']
+    if action == 'create':
+        return generate_barcodes(body)
+    elif action == 'insert':
+        return insert_barcodes(body)
+    else:
+        raise ValueError("Invalid action specified")
+
+
+def generate_barcodes(body):
+    if 'generate_barcode_single' in body:
+        if body['generate_barcode_single'] == 'on':
+            number_of_kits = 1
+            number_of_samples = 1
+    else:
+        number_of_kits = len(body['kit_ids'])
+        number_of_samples = 1
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-        barcode = admin_repo._generate_novel_barcodes_admin(
-            number_of_kits, number_of_samples)
+        barcode = admin_repo._generate_novel_barcodes(
+            number_of_kits, number_of_samples, kit_names=None)
         t.commit()
     return barcode
 
 
-def insert_barcodes(body, token_info):
-    validate_admin_access(token_info)
+def insert_barcodes(body):
+    kit_ids = body['kit_ids']
+    barcodes = body['barcodes']
 
-    barcode = body['barcodes']
-    project_id = [body['project_id']]
+    # Ensure kit_ids is a list, even if it's a single value
+    if isinstance(kit_ids, str):
+        kit_ids = [kit_ids]
 
+    # Check if the lengths match
+    if len(kit_ids) != len(barcodes):
+        raise ValueError("The number of kit IDs "
+                         "must match the number of barcodes")
+
+    # Create list of tuples
+    kit_name_and_barcode_tuples_list = list(zip(kit_ids, barcodes))
+
+    project_ids = []
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-        admin_repo._insert_barcodes_to_existing_kit(barcode, project_id)
+        for kit_id in kit_ids:
+            diag = admin_repo.retrieve_diagnostics_by_kit_id(kit_id)
+            if diag['sample_diagnostic_info']:
+                sample_info = diag['sample_diagnostic_info'][0]
+                if sample_info['projects_info']:
+                    project_id = sample_info['projects_info'][0]['project_id']
+                    project_ids.append(str(project_id))
+
+        admin_repo. \
+            _insert_barcodes_to_existing_kit(kit_name_and_barcode_tuples_list,
+                                             project_ids)
         t.commit()
     return '', 204
 

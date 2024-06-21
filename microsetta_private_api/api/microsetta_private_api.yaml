@@ -2781,64 +2781,42 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/admin/create/barcodes':
+  '/admin/barcodes':
     post:
-      operationId: microsetta_private_api.admin.admin_impl.generate_barcodes
+      operationId: microsetta_private_api.admin.admin_impl.handle_barcodes
       tags:
         - Admin
-      summary: Create barcodes
-      description: Create barcodes for an exisiting kit
-      requestBody:
-        content:
-          application/json:
-            schema:
-                type: "object"
-                properties:
-                  number_of_kits:
-                    type: integer
-                  number_of_samples:
-                    type: integer
-                required:
-                  - number_of_kits
-                  - number_of_samples
-      responses:
-        '201':
-          description: Barcodes were successfully created
-          content:
-            application/json:
-              schema:
-                type: array
-
-  '/admin/insert_barcodes':
-    post:
-      operationId: microsetta_private_api.admin.admin_impl.insert_barcodes
-      tags:
-        - Admin
-      summary: Insert barcodes into the database
-      description: Insert barcodes into the database
+      summary: Create or insert barcodes
+      description: Create barcodes for an existing kit or insert barcodes into the database
       requestBody:
         content:
           application/json:
             schema:
               type: "object"
               properties:
+                action:
+                  type: string
+                  enum: [create, insert]
+                  description: Specify 'create' to generate new barcodes or 'insert' to insert provided barcodes
                 barcodes:
                   type: array
                   items:
-                    type: array
+                    type: string
+                  description: Barcodes to insert (required if action is 'insert')
                 kit_id:
                   type: string
-                project_id:
-                  type: integer
+                  description: Kit ID to associate the barcodes with (required if action is 'insert')
+              required:
+                - action
       responses:
         '201':
-          description: Barcodes were successfully inserted
+          description: Barcodes were successfully created or inserted
           content:
             application/json:
               schema:
                 type: array
         '500':
-          description: Duplicate barcodes found
+          description: Duplicate barcodes found (only relevant for insert action)
           
   '/admin/events/accounts/{account_id}':
     get:
