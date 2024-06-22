@@ -1433,7 +1433,8 @@ class AdminRepoTests(AdminTests):
                     ('test',)
                 )
                 obs = cur.fetchall()
-                print("OBS", obs[0][0])
+                print("OBS", obs, obs[0][0])
+                print("OBS indices", obs[1][0], obs[2][0], obs[3][0])
                 print("Barcode gen", new_barcode[0])
                 self.assertEqual(obs[0][0], new_barcode[0])
 
