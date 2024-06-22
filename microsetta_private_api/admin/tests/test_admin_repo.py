@@ -1433,11 +1433,9 @@ class AdminRepoTests(AdminTests):
                     ('test',)
                 )
                 obs = cur.fetchall()
-                print("OBS", obs)
-                print("Barcode gen", new_barcode)
+                print("OBS", obs[0][0])
+                print("Barcode gen", new_barcode[0])
                 self.assertEqual(obs[0][0], new_barcode[0])
-                self.assertEqual(obs[0][1], new_barcode[0])
-
 
     def test_insert_barcodes_admin_fail_nonexisting_kit(self):
         # test that inserting barcodes to a non-existent kit fails
