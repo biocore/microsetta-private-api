@@ -24,7 +24,7 @@ CREATE TABLE barcodes.sample_observation_project_associations (
     project_id INT NOT NULL,
     FOREIGN KEY (observation_id) REFERENCES barcodes.sample_observations(observation_id),
     FOREIGN KEY (project_id) REFERENCES barcodes.project(project_id),
-    UNIQUE (observation_id)
+    UNIQUE (observation_id, project_id)
 );
 
 -- Insert predefined observations and associate them with a project

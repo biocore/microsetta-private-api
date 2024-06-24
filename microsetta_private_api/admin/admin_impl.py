@@ -156,20 +156,11 @@ def scan_barcode(token_info, sample_barcode, body):
 def get_observations(token_info, sample_barcode):
     validate_admin_access(token_info)
 
-    if not sample_barcode:
-        response = jsonify({"error": "Barcode is required"})
-        response.status_code = 400
-        return response
-
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-        observation = \
-            admin_repo.retrieve_observations_by_project(sample_barcode)
-        t.commit()
-
-    response = jsonify({"observation": observation})
-    response.status_code = 201
-    return response
+        observations = admin_repo.\
+            retrieve_observations_by_project(sample_barcode)
+    return jsonify(observations), 200
 
 
 def sample_pulldown_single_survey(token_info,

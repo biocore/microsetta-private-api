@@ -466,21 +466,22 @@ class AdminRepo(BaseRepo):
 
             return diagnostic
 
-    def retrieve_observations_by_project(self, sample_barcode):
-        def _rows_to_dicts_list(rows):
-            return [dict(x) for x in rows]
+    def _rows_to_dicts_list(rows):
+        return [dict(x) for x in rows]
 
+    def retrieve_observations_by_project(self, sample_barcode):
         with self._transaction.dict_cursor() as cur:
             cur.execute("""
-                        SELECT so.*, sopa.project_id
+                SELECT DISTINCT ON (so.observation_id) so.*, sopa.project_id
                 FROM barcodes.sample_observations so
                 JOIN barcodes.sample_observation_project_associations sopa
                 ON so.observation_id = sopa.observation_id
                 JOIN barcodes.project_barcode pb
                 ON sopa.project_id = pb.project_id
                 WHERE pb.barcode = %s
+                ORDER BY so.observation_id, sopa.project_id
             """, (sample_barcode,))
-            observations = _rows_to_dicts_list(cur.fetchall())
+            observations = __class__._rows_to_dicts_list(cur.fetchall())
             return observations
 
     def get_project_name(self, project_id):
