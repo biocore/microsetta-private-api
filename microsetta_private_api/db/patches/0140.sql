@@ -1,4 +1,4 @@
--- In 0139.sql, we cloned to samples into new barcodes. Unfortunately, one of the source barcodes provided was incorrect.
+-- In 0139.sql, we cloned two samples into new barcodes. Unfortunately, one of the source barcodes provided was incorrect.
 -- This patch completely backs out the erroneous clone, then clones the correct sample.
 
 -- First, we completely erase what we created for 0364406520
