@@ -253,19 +253,85 @@ def create_kits(body, token_info):
     number_of_samples = body['number_of_samples']
     kit_prefix = body.get('kit_id_prefix', None)
     project_ids = body['project_ids']
+    user_barcodes = body.get('user_barcodes', [])
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
 
         try:
-            kits = admin_repo.create_kits(number_of_kits, number_of_samples,
-                                          kit_prefix, project_ids)
+            kits = admin_repo.create_kits(number_of_kits,
+                                          number_of_samples,
+                                          kit_prefix,
+                                          user_barcodes,
+                                          project_ids)
         except KeyError:
             return jsonify(code=422, message="Unable to create kits"), 422
         else:
             t.commit()
 
     return jsonify(kits), 201
+
+
+def handle_barcodes(body):
+    action = body.get('action')
+
+    if action == 'create':
+        return generate_barcodes(body)
+    elif action == 'insert':
+        return insert_barcodes(body)
+    else:
+        raise ValueError("Invalid action specified")
+
+
+def generate_barcodes(body):
+    if 'generate_barcode_single' in body:
+        if body['generate_barcode_single'] == 'on':
+            number_of_kits = 1
+            number_of_samples = 1
+    else:
+        number_of_kits = len(body['kit_ids'])
+        number_of_samples = 1
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        barcode = admin_repo._generate_novel_barcodes(
+            number_of_kits, number_of_samples, kit_names=None)
+        t.commit()
+    return barcode
+
+
+def insert_barcodes(body):
+    kit_ids = body['kit_ids']
+    barcodes = body['barcodes']
+
+    # Ensure kit_ids is a list, even if it's a single value
+    if isinstance(kit_ids, str):
+        kit_ids = [kit_ids]
+
+    # Check if the lengths match
+    if len(kit_ids) != len(barcodes):
+        raise ValueError("The number of kit IDs "
+                         "must match the number of barcodes")
+
+    # Create list of tuples
+    kit_name_and_barcode_tuples_list = list(zip(kit_ids, barcodes))
+
+    project_ids = []
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        for kit_id in kit_ids:
+            diag = admin_repo.retrieve_diagnostics_by_kit_id(kit_id)
+            if diag['sample_diagnostic_info']:
+                sample_info = diag['sample_diagnostic_info'][0]
+                if sample_info['projects_info']:
+                    project_id = sample_info['projects_info'][0]['project_id']
+                    project_ids.append(str(project_id))
+
+        admin_repo. \
+            _insert_barcodes_to_existing_kit(kit_name_and_barcode_tuples_list,
+                                             project_ids)
+        t.commit()
+    return '', 204
 
 
 def get_account_events(account_id, token_info):
