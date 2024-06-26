@@ -695,7 +695,8 @@ class AdminApiTests(TestCase):
             scan_info = {
                 "sample_barcode": self.TEST_BARCODE,
                 "sample_status": "sample-is-valid",
-                "technician_notes": ""
+                "technician_notes": "",
+                "observations": []
             }
             input_json = json.dumps(scan_info)
 
