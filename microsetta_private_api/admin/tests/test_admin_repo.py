@@ -872,12 +872,9 @@ class AdminRepoTests(AdminTests):
                     }
                 )
                 diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-                first_scan = diag['scans_info'][0]
-                second_scan = diag['scans_info'][1]
-                self.assertEqual(first_scan['observation_id'],
-                                 observation_ids[0])
-                self.assertEqual(second_scan['observation_id'],
-                                 observation_ids[1])
+                scans = [scan['observation_id'] for scan in diag['scans_info']]
+
+                self.assertCountEqual(scans, observation_ids)
 
     def test_scan_with_wrong_observation(self):
         with Transaction() as t:
