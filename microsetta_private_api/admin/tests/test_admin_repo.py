@@ -326,7 +326,8 @@ class AdminRepoTests(AdminTests):
             "sample_status": 'no-registered-account',
             "technician_notes": "huh?",
             "observation_id": None,
-            "observations": None
+            "observations": None,
+            "category": None
         }
 
         second_scan = {
@@ -336,8 +337,8 @@ class AdminRepoTests(AdminTests):
             "sample_status": 'sample-is-valid',
             "technician_notes": None,
             "observation_id": None,
-            "observations": None
-
+            "observations": None,
+            "category": None
         }
         try:
             add_dummy_scan(first_scan)

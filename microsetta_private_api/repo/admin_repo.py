@@ -398,7 +398,8 @@ class AdminRepo(BaseRepo):
                     bs.sample_status,
                     bs.technician_notes,
                     so.observation_id,
-                    so.observation AS observations
+                    so.observation AS observations,
+                    so.category
                 FROM
                     barcodes.barcode_scans bs
                 LEFT JOIN
@@ -414,7 +415,8 @@ class AdminRepo(BaseRepo):
                     bs.barcode = %s
                 GROUP BY
                     bs.barcode_scan_id, bs.barcode, bs.scan_timestamp,
-                    bs.sample_status, bs.technician_notes, so.observation_id
+                    bs.sample_status, bs.technician_notes, so.observation_id,
+                        so.category
                 ORDER BY
                     bs.scan_timestamp ASC
             """, (sample_barcode,))
