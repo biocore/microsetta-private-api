@@ -397,9 +397,10 @@ class AdminRepo(BaseRepo):
                     bs.scan_timestamp,
                     bs.sample_status,
                     bs.technician_notes,
-                    so.observation_id,
-                    so.observation AS observations,
-                    so.category
+                    json_agg(json_build_object('observation_id',
+                        so.observation_id, 'observation',
+                        so.observation, 'category', so.category))
+                        AS observations
                 FROM
                     barcodes.barcode_scans bs
                 LEFT JOIN
@@ -415,8 +416,7 @@ class AdminRepo(BaseRepo):
                     bs.barcode = %s
                 GROUP BY
                     bs.barcode_scan_id, bs.barcode, bs.scan_timestamp,
-                    bs.sample_status, bs.technician_notes, so.observation_id,
-                        so.category
+                    bs.sample_status, bs.technician_notes
                 ORDER BY
                     bs.scan_timestamp ASC
             """, (sample_barcode,))

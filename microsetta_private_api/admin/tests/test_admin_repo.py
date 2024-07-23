@@ -325,9 +325,8 @@ class AdminRepoTests(AdminTests):
             "scan_timestamp": make_tz_datetime(2017, 7, 16),
             "sample_status": 'no-registered-account',
             "technician_notes": "huh?",
-            "observation_id": None,
-            "observations": None,
-            "category": None
+            "observations": [{'observation_id': None, 'observation': None,
+                              'category': None}]
         }
 
         second_scan = {
@@ -336,9 +335,8 @@ class AdminRepoTests(AdminTests):
             "scan_timestamp": make_tz_datetime(2020, 12, 4),
             "sample_status": 'sample-is-valid',
             "technician_notes": None,
-            "observation_id": None,
-            "observations": None,
-            "category": None
+            "observations": [{'observation_id': None, 'observation': None,
+                              'category': None}]
         }
         try:
             add_dummy_scan(first_scan)
@@ -814,10 +812,12 @@ class AdminRepoTests(AdminTests):
                 diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
                 self.assertEqual(len(diag['scans_info']), 1)
                 first_scan = diag['scans_info'][0]
+                first_observation = first_scan['observations'][0]
+                scan_observation_id = first_observation['observation_id']
+
                 self.assertEqual(first_scan['technician_notes'], TEST_NOTES)
                 self.assertEqual(first_scan['sample_status'], TEST_STATUS)
-                self.assertEqual(first_scan['observation_id'],
-                                 observation_id[0])
+                self.assertEqual(scan_observation_id, observation_id[0])
 
     def test_scan_with_no_observations(self):
         with Transaction() as t:
@@ -841,7 +841,9 @@ class AdminRepoTests(AdminTests):
             )
             diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
             first_scan = diag['scans_info'][0]
-            self.assertEqual(first_scan['observations'], None)
+            first_observation = first_scan['observations'][0]
+            scan_observation = first_observation['observation']
+            self.assertEqual(scan_observation, None)
 
     def test_scan_with_multiple_observations(self):
         with Transaction() as t:
@@ -873,9 +875,11 @@ class AdminRepoTests(AdminTests):
                     }
                 )
                 diag = admin_repo.retrieve_diagnostics_by_barcode(TEST_BARCODE)
-                scans = [scan['observation_id'] for scan in diag['scans_info']]
+                scans = [scan['observations'] for scan in diag['scans_info']]
+                scans_observation_ids = [obs['observation_id'] for scan in
+                                         scans for obs in scan]
 
-                self.assertCountEqual(scans, observation_ids)
+                self.assertEqual(scans_observation_ids, observation_ids)
 
     def test_scan_with_wrong_observation(self):
         with Transaction() as t:
