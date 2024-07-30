@@ -153,6 +153,16 @@ def scan_barcode(token_info, sample_barcode, body):
     return response
 
 
+def get_observations(token_info, sample_barcode):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        observations = admin_repo.\
+            retrieve_observations_by_project(sample_barcode)
+    return jsonify(observations), 200
+
+
 def sample_pulldown_single_survey(token_info,
                                   sample_barcode,
                                   survey_template_id):

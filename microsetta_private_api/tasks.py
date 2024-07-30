@@ -8,7 +8,7 @@ from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.qiita_repo import QiitaRepo
-from microsetta_private_api.localization import EN_US
+from microsetta_private_api.localization import EN_US, JA_JP
 from microsetta_private_api.config_manager import SERVER_CONFIG
 import pandas as pd
 import tempfile
@@ -22,6 +22,8 @@ import traceback
 @celery.task(ignore_result=True)
 def send_email(email, template_name, template_args, language):
     template = EmailMessage[template_name]
+    if language == JA_JP:
+        language = EN_US
 
     with flask_babel.force_locale(language):
         SendEmail.send(email, template, template_args)
