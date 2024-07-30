@@ -2328,7 +2328,8 @@ class SampleTests(ApiTests):
         any_status = 'sample-has-inconsistencies'
         post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
                                      json={'sample_status': any_status,
-                                           'technician_notes': "foobar"},
+                                           'technician_notes': "foobar",
+                                           'observations': []},
                                      headers=make_headers(FAKE_TOKEN_ADMIN))
         self.assertEqual(201, post_resp.status_code)
 
@@ -2383,7 +2384,8 @@ class SampleTests(ApiTests):
         bad_status = 'sample-has-inconsistencies'
         post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
                                      json={'sample_status': bad_status,
-                                           'technician_notes': "foobar"},
+                                           'technician_notes': "foobar",
+                                           'observations': []},
                                      headers=make_headers(FAKE_TOKEN_ADMIN))
         self.assertEqual(201, post_resp.status_code)
 
@@ -2448,7 +2450,8 @@ class SampleTests(ApiTests):
         good_status = "sample-is-valid"
         post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
                                      json={'sample_status': good_status,
-                                           'technician_notes': "foobar"},
+                                           'technician_notes': "foobar",
+                                           'observations': []},
                                      headers=make_headers(FAKE_TOKEN_ADMIN))
         self.assertEqual(201, post_resp.status_code)
 
@@ -2508,7 +2511,8 @@ class SampleTests(ApiTests):
                               dummy_is_admin=True)
         post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
                                      json={'sample_status': 'sample-is-valid',
-                                           'technician_notes': "foobar"},
+                                           'technician_notes': "foobar",
+                                           'observations': []},
                                      headers=make_headers(FAKE_TOKEN_ADMIN))
         self.assertEqual(201, post_resp.status_code)
 
@@ -2563,7 +2567,8 @@ class SampleTests(ApiTests):
                               dummy_is_admin=True)
         post_resp = self.client.post('/api/admin/scan/%s' % BARCODE,
                                      json={'sample_status': 'sample-is-valid',
-                                           'technician_notes': "foobar"},
+                                           'technician_notes': "foobar",
+                                           'observations': []},
                                      headers=make_headers(FAKE_TOKEN_ADMIN))
         self.assertEqual(201, post_resp.status_code)
 
