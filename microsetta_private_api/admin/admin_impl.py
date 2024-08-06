@@ -282,35 +282,49 @@ def create_kits(body, token_info):
     return jsonify(kits), 201
 
 
-def handle_barcodes(body):
+def handle_barcodes(body, token_info):
+    validate_admin_access(token_info)
+
     action = body.get('action')
 
     if action == 'create':
-        return generate_barcodes(body)
+        return generate_barcodes(body, token_info)
     elif action == 'insert':
-        return insert_barcodes(body)
+        return insert_barcodes(body, token_info)
     else:
         raise ValueError("Invalid action specified")
 
 
-def generate_barcodes(body):
+def generate_barcodes(body, token_info):
+    validate_admin_access(token_info)
+
     if 'generate_barcode_single' in body:
         if body['generate_barcode_single'] == 'on':
             number_of_kits = 1
             number_of_samples = 1
+    elif 'generate_barcodes' in body:
+        number_of_kits = (body['num_kits'])
+        number_of_samples = (body['num_samples'])
     else:
         number_of_kits = len(body['kit_ids'])
         number_of_samples = 1
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
+
+        kit_names = admin_repo._generate_novel_kit_names(
+            number_of_kits, kit_prefix=None)
+
         barcode = admin_repo._generate_novel_barcodes(
-            number_of_kits, number_of_samples, kit_names=None)
+            number_of_kits, number_of_samples, kit_names)
+
         t.commit()
-    return barcode
+    return barcode[1]
 
 
-def insert_barcodes(body):
+def insert_barcodes(body, token_info):
+    validate_admin_access(token_info)
+
     kit_ids = body['kit_ids']
     barcodes = body['barcodes']
 
@@ -329,18 +343,24 @@ def insert_barcodes(body):
     project_ids = []
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-        for kit_id in kit_ids:
-            diag = admin_repo.retrieve_diagnostics_by_kit_id(kit_id)
-            if diag['sample_diagnostic_info']:
+        try:
+            for kit_id in kit_ids:
+                diag = admin_repo.retrieve_diagnostics_by_kit_id(kit_id)
+                if not diag or 'sample_diagnostic_info' not in diag:
+                    raise ValueError(f"Invalid Kit ID: {kit_id}")
                 sample_info = diag['sample_diagnostic_info'][0]
                 if sample_info['projects_info']:
                     project_id = sample_info['projects_info'][0]['project_id']
                     project_ids.append(str(project_id))
 
-        admin_repo. \
-            _insert_barcodes_to_existing_kit(kit_name_and_barcode_tuples_list,
-                                             project_ids)
-        t.commit()
+            admin_repo._insert_barcodes_to_existing_kit(
+                kit_name_and_barcode_tuples_list, project_ids)
+            t.commit()
+        except ValueError as e:
+            return {"error": str(e)}, 400
+        except Exception as e:
+            return {"error": str(e)}, 500
+
     return '', 204
 
 

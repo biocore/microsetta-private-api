@@ -1,3 +1,4 @@
+from collections import Counter
 from unittest import TestCase
 from datetime import date, datetime, timedelta, timezone
 import dateutil.parser
@@ -1495,12 +1496,17 @@ class AdminRepoTests(AdminTests):
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
+
+            kit_names = admin_repo._generate_novel_kit_names(
+                number_of_kits, kit_prefix=None)
+
             new_barcodes = admin_repo._generate_novel_barcodes(
-                number_of_kits, number_of_samples, kit_names=None)
-            self.assertEqual(len(new_barcodes),
+                number_of_kits, number_of_samples, kit_names)
+            
+            self.assertEqual(len(new_barcodes[1]),
                              number_of_kits * number_of_samples)
-            self.assertTrue(all(barcode.startswith('X')
-                                for barcode in new_barcodes))
+            self.assertTrue(all(barcodes.startswith('X')
+                            for barcodes in new_barcodes[1]))
 
     def test_generate_novel_barcodes_admin_failure(self):
         number_of_kits = 0
@@ -1508,9 +1514,14 @@ class AdminRepoTests(AdminTests):
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
+
+            kit_names = admin_repo._generate_novel_kit_names(
+                number_of_kits, kit_prefix=None)
+
             new_barcodes = admin_repo._generate_novel_barcodes(
-                number_of_kits, number_of_samples, kit_names=None)
-            self.assertTrue(new_barcodes == [])
+                number_of_kits, number_of_samples, kit_names)
+            
+            self.assertTrue(new_barcodes[1] == [], [])
 
     def test_insert_barcodes_admin_success(self):
         number_of_kits = 1
@@ -1518,16 +1529,23 @@ class AdminRepoTests(AdminTests):
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            new_barcode = admin_repo._generate_novel_barcodes(
-                    number_of_kits, number_of_samples, kit_names=None)
 
-        kit_barcode = [['test', new_barcode[0]]]
+            kit_names = admin_repo._generate_novel_kit_names(
+                number_of_kits, kit_prefix=None)
+
+            new_barcode = admin_repo._generate_novel_barcodes(
+                    number_of_kits, number_of_samples, kit_names)
+        
+        new_barcode[1].insert(0, 'test')
+        kit_name_and_barcode_tuple = (new_barcode[1][0], new_barcode[1][1])
+
+        kit_name_and_barcode_tuples_list = [kit_name_and_barcode_tuple]        
         project_ids = '1'
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             admin_repo._insert_barcodes_to_existing_kit(
-                kit_barcode, project_ids)
+                kit_name_and_barcode_tuples_list, project_ids)
             with t.cursor() as cur:
                 cur.execute(
                     "SELECT barcode "
@@ -1536,7 +1554,9 @@ class AdminRepoTests(AdminTests):
                     ('test',)
                 )
                 obs = cur.fetchall()
-                self.assertEqual(obs[4][0], new_barcode[0])
+                obs_first_element = obs[0][0]
+                new_barcode_second_element = new_barcode[0][0][1]
+                self.assertEqual(obs_first_element, new_barcode_second_element)
 
     def test_insert_barcodes_admin_fail_nonexisting_kit(self):
         # test that inserting barcodes to a non-existent kit fails

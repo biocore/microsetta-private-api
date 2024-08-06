@@ -870,7 +870,7 @@ class AdminRepo(BaseRepo):
     def _generate_novel_barcodes(self, number_of_kits, number_of_samples,
                                  kit_names):
         """Generate specified number of random barcodes for input kit names"""
-
+        print("kit name", kit_names)
         total_barcodes = number_of_kits * number_of_samples
 
         with self._transaction.cursor() as cur:
@@ -892,17 +892,15 @@ class AdminRepo(BaseRepo):
             start_bc = cur.fetchone()[0] + 1
             new_barcodes = ['X%0.8d' % (start_bc + i)
                             for i in range(total_barcodes)]
-            if kit_names:
-                kit_name_and_barcode_tuples_list = []
-                barcode_offset = range(0, total_barcodes, number_of_samples)
-                for offset, name in zip(barcode_offset, kit_names):
-                    for i in range(number_of_samples):
-                        kit_name_and_barcode_tuples_list.append(
-                            (name, new_barcodes[offset + i]))
 
-                return kit_name_and_barcode_tuples_list, new_barcodes
-            else:
-                return new_barcodes
+            kit_name_and_barcode_tuples_list = []
+            barcode_offset = range(0, total_barcodes, number_of_samples)
+            for offset, name in zip(barcode_offset, kit_names):
+                for i in range(number_of_samples):
+                    kit_name_and_barcode_tuples_list.append(
+                        (name, new_barcodes[offset + i]))
+
+            return kit_name_and_barcode_tuples_list, new_barcodes
 
     def _insert_barcodes_to_existing_kit(self,
                                          kit_name_and_barcode_tuples_list,
@@ -915,6 +913,7 @@ class AdminRepo(BaseRepo):
         project_ids : list of int
             Project ids that all barcodes are to be associated with
         """
+        print("Insert", kit_name_and_barcode_tuples_list)
         # check for empty input
         if kit_name_and_barcode_tuples_list \
                 is None or len(kit_name_and_barcode_tuples_list) == 0:
@@ -924,12 +923,16 @@ class AdminRepo(BaseRepo):
         # integer project ids come in as strings ...
         project_ids = [int(x) for x in project_ids]
 
+        if len(set(project_ids)) > 1:
+            raise ValueError("All project_ids must be identical")
+
         is_tmi = self._are_any_projects_tmi(project_ids)
 
         with self._transaction.cursor() as cur:
             # add new barcodes to barcode table
             barcode_insertions = [(n, b, 'unassigned')
                                   for n, b in kit_name_and_barcode_tuples_list]
+            print("Barcode insertions: ", barcode_insertions)
             cur.executemany("INSERT INTO barcode (kit_id, barcode, status) "
                             "VALUES (%s, %s, %s)",
                             barcode_insertions)
