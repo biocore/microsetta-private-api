@@ -870,7 +870,7 @@ class AdminRepo(BaseRepo):
     def _generate_novel_barcodes(self, number_of_kits, number_of_samples,
                                  kit_names):
         """Generate specified number of random barcodes for input kit names"""
-        print("kit name", kit_names)
+
         total_barcodes = number_of_kits * number_of_samples
 
         with self._transaction.cursor() as cur:
@@ -913,7 +913,7 @@ class AdminRepo(BaseRepo):
         project_ids : list of int
             Project ids that all barcodes are to be associated with
         """
-        print("Insert", kit_name_and_barcode_tuples_list)
+
         # check for empty input
         if kit_name_and_barcode_tuples_list \
                 is None or len(kit_name_and_barcode_tuples_list) == 0:
@@ -932,7 +932,7 @@ class AdminRepo(BaseRepo):
             # add new barcodes to barcode table
             barcode_insertions = [(n, b, 'unassigned')
                                   for n, b in kit_name_and_barcode_tuples_list]
-            print("Barcode insertions: ", barcode_insertions)
+
             cur.executemany("INSERT INTO barcode (kit_id, barcode, status) "
                             "VALUES (%s, %s, %s)",
                             barcode_insertions)
