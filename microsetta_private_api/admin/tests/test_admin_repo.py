@@ -1,4 +1,3 @@
-from collections import Counter
 from unittest import TestCase
 from datetime import date, datetime, timedelta, timezone
 import dateutil.parser
@@ -1502,7 +1501,7 @@ class AdminRepoTests(AdminTests):
 
             new_barcodes = admin_repo._generate_novel_barcodes(
                 number_of_kits, number_of_samples, kit_names)
-            
+
             self.assertEqual(len(new_barcodes[1]),
                              number_of_kits * number_of_samples)
             self.assertTrue(all(barcodes.startswith('X')
@@ -1520,7 +1519,7 @@ class AdminRepoTests(AdminTests):
 
             new_barcodes = admin_repo._generate_novel_barcodes(
                 number_of_kits, number_of_samples, kit_names)
-            
+
             self.assertTrue(new_barcodes[1] == [], [])
 
     def test_insert_barcodes_admin_success(self):
@@ -1535,11 +1534,12 @@ class AdminRepoTests(AdminTests):
 
             new_barcode = admin_repo._generate_novel_barcodes(
                     number_of_kits, number_of_samples, kit_names)
-        
+
         new_barcode[1].insert(0, 'test')
         kit_name_and_barcode_tuple = (new_barcode[1][0], new_barcode[1][1])
 
-        kit_name_and_barcode_tuples_list = [kit_name_and_barcode_tuple]        
+        kit_name_and_barcode_tuples_list = [
+            kit_name_and_barcode_tuple]
         project_ids = '1'
 
         with Transaction() as t:
@@ -1554,7 +1554,7 @@ class AdminRepoTests(AdminTests):
                     ('test',)
                 )
                 obs = cur.fetchall()
-                obs_first_element = obs[0][0]
+                obs_first_element = obs[4][0]
                 new_barcode_second_element = new_barcode[0][0][1]
                 self.assertEqual(obs_first_element, new_barcode_second_element)
 
