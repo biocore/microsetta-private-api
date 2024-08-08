@@ -285,41 +285,43 @@ def create_kits(body, token_info):
 def handle_barcodes(body, token_info):
     validate_admin_access(token_info)
 
+    kit_ids = body['kit_ids']
+
+    if isinstance(kit_ids, str):
+        kit_ids = [kit_ids]
+
+    for kit_id in kit_ids:
+        response, code = search_kit_id(token_info, kit_id)
+        if code == 404:
+            raise ValueError("Invalid Kit ID")
+
     action = body.get('action')
 
     if action == 'create':
-        return generate_barcodes(body, token_info)
+        if 'generate_barcode_single' in body:
+            if body['generate_barcode_single'] == 'on':
+                number_of_kits = 1
+                number_of_samples = 1
+        elif 'generate_barcodes' in body:
+            number_of_kits = (body['num_kits'])
+            number_of_samples = (body['num_samples'])
+        else:
+            number_of_kits = len(body['kit_ids'])
+            number_of_samples = 1
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            barcode = admin_repo._generate_novel_barcodes(
+                number_of_kits, number_of_samples, kit_names=kit_ids)
+
+        return barcode[1]
+
     elif action == 'insert':
         return insert_barcodes(body, token_info)
+
     else:
         raise ValueError("Invalid action specified")
-
-
-def generate_barcodes(body, token_info):
-    validate_admin_access(token_info)
-
-    if 'generate_barcode_single' in body:
-        if body['generate_barcode_single'] == 'on':
-            number_of_kits = 1
-            number_of_samples = 1
-    elif 'generate_barcodes' in body:
-        number_of_kits = (body['num_kits'])
-        number_of_samples = (body['num_samples'])
-    else:
-        number_of_kits = len(body['kit_ids'])
-        number_of_samples = 1
-
-    with Transaction() as t:
-        admin_repo = AdminRepo(t)
-
-        kit_names = admin_repo._generate_novel_kit_names(
-            number_of_kits, kit_prefix=None)
-
-        barcode = admin_repo._generate_novel_barcodes(
-            number_of_kits, number_of_samples, kit_names)
-
-        t.commit()
-    return barcode[1]
 
 
 def insert_barcodes(body, token_info):

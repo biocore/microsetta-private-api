@@ -923,9 +923,6 @@ class AdminRepo(BaseRepo):
         # integer project ids come in as strings ...
         project_ids = [int(x) for x in project_ids]
 
-        if len(set(project_ids)) > 1:
-            raise ValueError("All project_ids must be identical")
-
         is_tmi = self._are_any_projects_tmi(project_ids)
 
         with self._transaction.cursor() as cur:
