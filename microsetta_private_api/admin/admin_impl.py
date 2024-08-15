@@ -60,6 +60,17 @@ def search_kit_id(token_info, kit_id):
         return jsonify(diag), 200
 
 
+def kit_id_exists(token_info, kit_id):
+    validate_admin_access(token_info)
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        diag = admin_repo.check_kit_id_exists(kit_id)
+        if diag is None:
+            return jsonify(code=404, message="Kit ID not found"), 404
+        return jsonify(diag), 200
+
+
 def search_email(token_info, email):
     validate_admin_access(token_info)
 
@@ -264,6 +275,8 @@ def create_kits(body, token_info):
     kit_prefix = body.get('kit_id_prefix', None)
     project_ids = body['project_ids']
     user_barcodes = body.get('user_barcodes', [])
+    remaining_barcodes_to_generate = body.get(
+        'remaining_samples_to_generate', [])
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
@@ -273,6 +286,7 @@ def create_kits(body, token_info):
                                           number_of_samples,
                                           kit_prefix,
                                           user_barcodes,
+                                          remaining_barcodes_to_generate,
                                           project_ids)
         except KeyError:
             return jsonify(code=422, message="Unable to create kits"), 422
@@ -291,9 +305,9 @@ def handle_barcodes(body, token_info):
         kit_ids = [kit_ids]
 
     for kit_id in kit_ids:
-        response, code = search_kit_id(token_info, kit_id)
+        response, code = kit_id_exists(token_info, kit_id)
         if code == 404:
-            raise ValueError("Invalid Kit ID")
+            return jsonify(code=404, message='Kit ID not found'), 404
 
     action = body.get('action')
 
@@ -315,13 +329,15 @@ def handle_barcodes(body, token_info):
             barcode = admin_repo._generate_novel_barcodes(
                 number_of_kits, number_of_samples, kit_names=kit_ids)
 
-        return barcode[1]
+            t.commit()
+
+        return jsonify(barcode[1])
 
     elif action == 'insert':
         return insert_barcodes(body, token_info)
 
     else:
-        raise ValueError("Invalid action specified")
+        return jsonify(code=404, message='Invalid action'), 404
 
 
 def insert_barcodes(body, token_info):
@@ -336,32 +352,24 @@ def insert_barcodes(body, token_info):
 
     # Check if the lengths match
     if len(kit_ids) != len(barcodes):
-        raise ValueError("The number of kit IDs "
-                         "must match the number of barcodes")
+        raise ValueError("The number of kit IDs must "
+                         "match the number of barcodes")
 
-    # Create list of tuples
-    kit_name_and_barcode_tuples_list = list(zip(kit_ids, barcodes))
-
-    project_ids = []
     with Transaction() as t:
         admin_repo = AdminRepo(t)
-        try:
-            for kit_id in kit_ids:
-                diag = admin_repo.retrieve_diagnostics_by_kit_id(kit_id)
-                if not diag or 'sample_diagnostic_info' not in diag:
-                    raise ValueError(f"Invalid Kit ID: {kit_id}")
-                sample_info = diag['sample_diagnostic_info'][0]
-                if sample_info['projects_info']:
-                    project_id = sample_info['projects_info'][0]['project_id']
-                    project_ids.append(str(project_id))
 
-            admin_repo._insert_barcodes_to_existing_kit(
-                kit_name_and_barcode_tuples_list, project_ids)
-            t.commit()
-        except ValueError as e:
-            return {"error": str(e)}, 400
-        except Exception as e:
-            return {"error": str(e)}, 500
+        insertion_data = []
+        for kit_id, barcode in zip(kit_ids, barcodes):
+            diag = admin_repo.retrieve_diagnostics_by_kit_id(kit_id)
+            sample_info = diag['sample_diagnostic_info'][0]
+            if sample_info['projects_info']:
+                for project in sample_info['projects_info']:
+                    project_id = str(project['project_id'])
+                    insertion_data.append((kit_id, barcode, project_id))
+
+        admin_repo._insert_barcodes_to_existing_kit(insertion_data)
+
+        t.commit()
 
     return '', 204
 
