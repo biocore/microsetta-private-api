@@ -1166,6 +1166,19 @@ class AdminRepo(BaseRepo):
 
         return row
 
+    def check_barcode_exists(self, barcode):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT barcode "
+                "FROM "
+                "barcodes.barcode "
+                "WHERE "
+                "barcode = %s",
+                (barcode,))
+            row = cur.fetchone()
+
+        return row
+
     def retrieve_diagnostics_by_kit_id(self, supplied_kit_id):
         kit_repo = KitRepo(self._transaction)
         kit = kit_repo.get_kit_all_samples(supplied_kit_id)
