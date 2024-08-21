@@ -35,7 +35,9 @@ from ._vioscreen import (
     get_vioscreen_dietary_scores_by_component,
     get_vioscreen_dietary_scores_descriptions,
     get_vioscreen_food_components_by_code,
-    get_vioscreen_food_components_descriptions
+    get_vioscreen_food_components_descriptions,
+    get_vioscreen_mpeds_by_code,
+    get_vioscreen_mpeds_descriptions
 )
 
 from ._campaign import (
@@ -102,6 +104,8 @@ __all__ = [
     'get_vioscreen_dietary_scores_descriptions',
     'get_vioscreen_food_components_by_code',
     'get_vioscreen_food_components_descriptions',
+    'get_vioscreen_mpeds_by_code',
+    'get_vioscreen_mpeds_descriptions',
     'get_campaign_information',
     'create_interested_user'
 ]

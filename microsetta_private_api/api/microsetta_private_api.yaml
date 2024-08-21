@@ -1163,6 +1163,52 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
+  '/vioscreen/mpeds/code/{mpeds_code}':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_mpeds_by_code
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen mpeds for a specific code
+      description: Get information about Vioscreen mpedsfor a specific code
+      parameters:
+        - $ref: '#/components/parameters/mpeds_code'
+      responses:
+        '200':
+          description: Successfully returned mpeds information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  '/vioscreen/mpeds':
+    get:
+      operationId: microsetta_private_api.api.get_vioscreen_mpeds_descriptions
+      tags:
+        - Vioscreen
+      summary: Get information about Vioscreen mpeds descriptions
+      description: Get information about Vioscreen mpeds descriptions
+      responses:
+        '200':
+          description: Successfully returned mpeds information
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
   # NB: "surveys" is used as a path component in two different ways (here nested under sample and above nested
   # directly under source.  The dev team assessed this and decided this dual usage was not unacceptably confusing.
   '/accounts/{account_id}/sources/{source_id}/samples/{sample_id}/surveys':
@@ -2305,6 +2351,12 @@ components:
       description: Food Components Code
       schema:
         $ref: '#/components/schemas/fc_code'
+    mpeds_code:
+      name: mpeds_code
+      in: path
+      description: MPeds Code
+      schema:
+        $ref: '#/components/schemas/mpeds_code'
 
     # query parameters
     activation_code:
@@ -2967,6 +3019,9 @@ components:
     fc_code:
       type: string
       example: "acesupot"
+    mpeds_code:
+      type: string
+      example: "V_TOTAL"
 
     # error section
     Error: # Taken straight from https://swagger.io/docs/specification/describing-responses/

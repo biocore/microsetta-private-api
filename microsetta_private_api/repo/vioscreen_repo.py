@@ -464,7 +464,8 @@ class VioscreenDietaryScoreRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT score
                            FROM ag.vioscreen_dietaryscore
-                           WHERE scoresType = %s AND code = %s""",
+                           WHERE scoresType = %s AND code = %s
+                           ORDER BY sessionId""",
                         (scoresType, code))
 
             rows = cur.fetchall()
@@ -834,7 +835,8 @@ class VioscreenFoodComponentsRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             cur.execute("""SELECT amount
                            FROM ag.vioscreen_foodcomponents
-                           WHERE code = %s""",
+                           WHERE code = %s
+                           ORDER BY sessionId""",
                         (code,))
 
             rows = cur.fetchall()
@@ -1136,6 +1138,9 @@ class VioscreenMPedsRepo(BaseRepo):
             raise NotFound("No such code: " + code)
 
         return self._CODES[code]
+
+    def get_mpeds_descriptions(self):
+        return self._CODES
 
 
 class VioscreenFoodConsumptionRepo(BaseRepo):

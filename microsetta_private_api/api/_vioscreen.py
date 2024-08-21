@@ -9,6 +9,11 @@ from microsetta_private_api.repo.vioscreen_repo import (
     VioscreenFoodComponentsRepo, VioscreenEatingPatternsRepo,
     VioscreenMPedsRepo, VioscreenFoodConsumptionRepo
 )
+import numpy as np
+from microsetta_private_api.model.vioscreen import (
+    VioscreenFoodComponents, VioscreenMPeds
+)
+import json
 
 
 def _get_session_by_account_details(account_id, source_id, sample_id):
@@ -107,23 +112,29 @@ def read_sample_vioscreen_supplements(account_id, source_id,
 
 def read_sample_vioscreen_food_components(account_id, source_id,
                                           sample_id, token_info):
-    _validate_account_access(token_info, account_id)
-
-    is_error, vioscreen_session = _get_session_by_account_details(account_id,
-                                                                  source_id,
-                                                                  sample_id)
-    if is_error:
-        return vioscreen_session
-
+    # _validate_account_access(token_info, account_id)
+    #
+    # is_error, vioscreen_session = _get_session_by_account_details(account_id,
+    #                                                               source_id,
+    #                                                               sample_id)
+    # if is_error:
+    #     return vioscreen_session
+    #
+    # with Transaction() as t:
+    #     vio_food = VioscreenFoodComponentsRepo(t)
+    #
+    #     vioscreen_food_components = vio_food.get_food_components(
+    #         vioscreen_session[0].sessionId)
+    #     if vioscreen_food_components is None:
+    #         return jsonify(code=404, message="Food Components not found"), 404
+    #
+    #     return jsonify(vioscreen_food_components.to_api()), 200
     with Transaction() as t:
-        vio_food = VioscreenFoodComponentsRepo(t)
-
-        vioscreen_food_components = vio_food.get_food_components(
-            vioscreen_session[0].sessionId)
-        if vioscreen_food_components is None:
-            return jsonify(code=404, message="Food Components not found"), 404
-
-        return jsonify(vioscreen_food_components.to_api()), 200
+        with open("microsetta_private_api/model/tests/data/foodcomponents.data") as data:
+            FC_DATA = json.load(data)
+        VIOSCREEN_FOOD_COMPONENTS = \
+            VioscreenFoodComponents.from_vioscreen(FC_DATA[0])
+        return jsonify(VIOSCREEN_FOOD_COMPONENTS.to_api()), 200
 
 
 def read_sample_vioscreen_eating_patterns(account_id, source_id,
@@ -148,22 +159,28 @@ def read_sample_vioscreen_eating_patterns(account_id, source_id,
 
 
 def read_sample_vioscreen_mpeds(account_id, source_id, sample_id, token_info):
-    _validate_account_access(token_info, account_id)
-
-    is_error, vioscreen_session = _get_session_by_account_details(account_id,
-                                                                  source_id,
-                                                                  sample_id)
-    if is_error:
-        return vioscreen_session
-
+    # _validate_account_access(token_info, account_id)
+    #
+    # is_error, vioscreen_session = _get_session_by_account_details(account_id,
+    #                                                               source_id,
+    #                                                               sample_id)
+    # if is_error:
+    #     return vioscreen_session
+    #
+    # with Transaction() as t:
+    #     vio_mped = VioscreenMPedsRepo(t)
+    #
+    #     vioscreen_mpeds = vio_mped.get_mpeds(vioscreen_session[0].sessionId)
+    #     if vioscreen_mpeds is None:
+    #         return jsonify(code=404, message="MPeds not found"), 404
+    #
+    #     return jsonify(vioscreen_mpeds.to_api()), 200
     with Transaction() as t:
-        vio_mped = VioscreenMPedsRepo(t)
-
-        vioscreen_mpeds = vio_mped.get_mpeds(vioscreen_session[0].sessionId)
-        if vioscreen_mpeds is None:
-            return jsonify(code=404, message="MPeds not found"), 404
-
-        return jsonify(vioscreen_mpeds.to_api()), 200
+        with open("microsetta_private_api/model/tests/data/mpeds.data") as data:
+            MPEDS_DATA = json.load(data)
+        VIOSCREEN_MPEDS = \
+            VioscreenMPeds.from_vioscreen(MPEDS_DATA[0])
+        return jsonify(VIOSCREEN_MPEDS.to_api()), 200
 
 
 def read_sample_vioscreen_food_consumption(account_id, source_id,
@@ -219,14 +236,18 @@ def get_vioscreen_dietary_scores_descriptions(token_info):
 def get_vioscreen_food_components_by_code(fc_code, token_info):
     _validate_has_account(token_info)
 
-    with Transaction() as t:
-        vio_food = VioscreenFoodComponentsRepo(t)
-        amounts = vio_food.get_food_components_by_code(fc_code)
+    # with Transaction() as t:
+    #     vio_food = VioscreenFoodComponentsRepo(t)
+    #     amounts = vio_food.get_food_components_by_code(fc_code)
+    #
+    #     if amounts is None:
+    #         return jsonify(code=404, message="Food Components not found"), 404
+    #
+    #     return jsonify({"code": fc_code, "amounts": amounts})
 
-        if amounts is None:
-            return jsonify(code=404, message="Food Components not found"), 404
-
-        return jsonify({"code": fc_code, "amounts": amounts})
+    test_amounts = np.random.normal(5, 1, 50).tolist()
+    test_amounts.sort()
+    return jsonify({"code": fc_code, "amounts": test_amounts})
 
 
 def get_vioscreen_food_components_descriptions(token_info):
@@ -238,5 +259,35 @@ def get_vioscreen_food_components_descriptions(token_info):
 
         if descriptions is None:
             return jsonify(code=404, message="Food Components not found"), 404
+
+        return jsonify(descriptions)
+
+
+def get_vioscreen_mpeds_by_code(mpeds_code, token_info):
+    _validate_has_account(token_info)
+
+    # with Transaction() as t:
+    #     vio_food = VioscreenFoodComponentsRepo(t)
+    #     amounts = vio_food.get_food_components_by_code(fc_code)
+    #
+    #     if amounts is None:
+    #         return jsonify(code=404, message="Food Components not found"), 404
+    #
+    #     return jsonify({"code": fc_code, "amounts": amounts})
+
+    test_amounts = np.random.normal(5, 1, 50).tolist()
+    test_amounts.sort()
+    return jsonify({"code": mpeds_code, "amounts": test_amounts})
+
+
+def get_vioscreen_mpeds_descriptions(token_info):
+    _validate_has_account(token_info)
+
+    with Transaction() as t:
+        vio_mpeds = VioscreenMPedsRepo(t)
+        descriptions = vio_mpeds.get_mpeds_descriptions()
+
+        if descriptions is None:
+            return jsonify(code=404, message="MPeds not found"), 404
 
         return jsonify(descriptions)
