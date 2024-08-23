@@ -275,8 +275,6 @@ def create_kits(body, token_info):
     kit_prefix = body.get('kit_id_prefix', None)
     project_ids = body['project_ids']
     user_barcodes = body.get('user_barcodes', [])
-    remaining_barcodes_to_generate = body.get(
-        'remaining_samples_to_generate', [])
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
@@ -286,7 +284,6 @@ def create_kits(body, token_info):
                                           number_of_samples,
                                           kit_prefix,
                                           user_barcodes,
-                                          remaining_barcodes_to_generate,
                                           project_ids)
         except KeyError:
             return jsonify(code=422, message="Unable to create kits"), 422
