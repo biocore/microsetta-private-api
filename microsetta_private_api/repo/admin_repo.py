@@ -801,7 +801,7 @@ class AdminRepo(BaseRepo):
             Number of samples that each kit will contain
         kit_prefix : str or None
             A prefix to put on to the kit IDs, this is optional.
-        user_barcodes : list of str
+        user_barcodes : list of lists of str
             User provided barcodes to use for the kits. If None, barcodes will
             be generated.
         project_ids : list of int

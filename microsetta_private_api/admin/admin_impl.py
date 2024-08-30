@@ -301,7 +301,7 @@ def handle_barcodes(body, token_info):
 
     if action == 'create':
         if 'generate_barcode_single' in body:
-            if body['generate_barcode_single'] == 'on':
+            if body['generate_barcode_single']:
                 number_of_kits = 1
                 number_of_samples = 1
         elif 'generate_barcodes' in body:
