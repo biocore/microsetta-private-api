@@ -60,17 +60,6 @@ def search_kit_id(token_info, kit_id):
         return jsonify(diag), 200
 
 
-def kit_id_exists(token_info, kit_id):
-    validate_admin_access(token_info)
-
-    with Transaction() as t:
-        admin_repo = AdminRepo(t)
-        diag = admin_repo.check_kit_id_exists(kit_id)
-        if diag is None:
-            return jsonify(code=404, message=f'Kit ID {kit_id} not found'), 404
-        return jsonify(diag), 200
-
-
 def search_email(token_info, email):
     validate_admin_access(token_info)
 
@@ -302,9 +291,9 @@ def handle_barcodes(body, token_info):
         kit_ids = [kit_ids]
 
     with Transaction() as t:
-        admin_repo = AdminRepo(t)
+        kit_repo = KitRepo(t)
         for kit_id in kit_ids:
-            diag = admin_repo.check_kit_id_exists(kit_id)
+            diag = kit_repo.get_kit_all_samples(kit_id)
             if diag is None:
                 return jsonify(f'Kit ID {kit_id} not found'), 404
 
@@ -330,7 +319,7 @@ def handle_barcodes(body, token_info):
 
             t.commit()
 
-        return jsonify(barcode[1])
+        return jsonify(barcode[1]), 201
 
     elif action == 'insert':
         return insert_barcodes(body, token_info)
@@ -352,14 +341,14 @@ def insert_barcodes(body, token_info):
     with Transaction() as t:
         admin_repo = AdminRepo(t)
         for barcode in barcodes:
-            diag = admin_repo.check_barcode_exists(barcode)
+            diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
             if diag is not None:
                 return jsonify(f'Barcode {barcode} already exists'), 404
 
     # Check if the lengths match
     if len(kit_ids) != len(barcodes):
-        raise ValueError("The number of kit IDs must "
-                         "match the number of barcodes")
+        return jsonify("The number of kit IDs must "
+                       "match the number of barcodes"), 400
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)

@@ -880,7 +880,6 @@ class AdminRepoTests(AdminTests):
                 scans = [scan['observations'] for scan in diag['scans_info']]
                 scans_observation_ids = [obs['observation_id'] for scan in
                                          scans for obs in scan]
-
                 self.assertEqual(scans_observation_ids, observation_ids)
 
     def test_scan_with_wrong_observation(self):
@@ -1593,16 +1592,4 @@ class AdminRepoTests(AdminTests):
                                        1,
                                        '',
                                        [user_barcode],
-                                       [1])
-
-    def test_user_barcodes_num_samples_mismatch_create_kit_fail(self):
-        # When creating a kit, if a user selects just one sample, but
-        # provides two user barcodes, the transaction should fail
-        with Transaction() as t:
-            admin_repo = AdminRepo(t)
-            with self.assertRaises(ValueError):
-                admin_repo.create_kits(1,
-                                       1,
-                                       '',
-                                       ['X92384885', 'X92384886'],
                                        [1])
