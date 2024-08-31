@@ -80,9 +80,12 @@ def per_sample(project, barcodes, strip_sampleid):
                     sample_date = None
                     sample_time = None
 
-                ffq_complete, ffq_taken, _ = vs_repo.get_ffq_status_by_sample(
-                    sample.id
-                )
+                if source:
+                    ffq_complete, ffq_taken, _ = \
+                        vs_repo.get_ffq_status_by_source(source.id)
+                else:
+                    ffq_complete = False
+                    ffq_taken = False
 
             summary = {
                 "sampleid": None if strip_sampleid else barcode,

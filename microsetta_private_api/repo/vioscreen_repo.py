@@ -168,7 +168,7 @@ class VioscreenSessionRepo(BaseRepo):
 
             return not_in_vioscreen_sessions + incomplete_sessions
 
-    def get_ffq_status_by_sample(self, sample_uuid):
+    def get_ffq_status_by_source(self, source_uuid):
         """Obtain the FFQ status for a given sample
 
         Parameters
@@ -190,17 +190,17 @@ class VioscreenSessionRepo(BaseRepo):
                            FROM ag.vioscreen_sessions AS vs
                            JOIN ag.vioscreen_registry AS vr
                                ON vs.username=vr.vio_id
-                           WHERE sample_id=%s""", (sample_uuid, ))
+                           WHERE source_id=%s""", (source_uuid, ))
             res = cur.fetchall()
             if len(res) == 0:
                 return (False, False, None)
-            elif len(res) == 1:
-                status = res[0][0]
-                is_complete = status == 'Finished'
-                is_taken = status in ('Started', 'Review', 'Finished')
-                return (is_complete, is_taken, status)
             else:
-                raise ValueError("A sample should not have multiple FFQs")
+                results = []
+                for status in res:
+                    is_complete = status[0] == 'Finished'
+                    is_taken = status[0] in ('Started', 'Review', 'Finished')
+                    results.append((is_complete, is_taken, status[0]))
+                return results
 
     def get_missing_ffqs(self):
         """The set of valid sessions which lack FFQ data
