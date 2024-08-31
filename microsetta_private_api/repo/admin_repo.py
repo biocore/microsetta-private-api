@@ -376,7 +376,8 @@ class AdminRepo(BaseRepo):
             # get (partial) projects_info list for this barcode
             query = f"""
                     SELECT {p.DB_PROJ_NAME_KEY}, {p.IS_MICROSETTA_KEY},
-                    {p.BANK_SAMPLES_KEY}, {p.PLATING_START_DATE_KEY}
+                    {p.BANK_SAMPLES_KEY}, {p.PLATING_START_DATE_KEY},
+                    project_id
                     FROM barcodes.project
                     INNER JOIN barcodes.project_barcode
                     USING (project_id)
@@ -389,13 +390,37 @@ class AdminRepo(BaseRepo):
             # get scans_info list for this barcode
             # NB: ORDER MATTERS here. Do not change the order unless you
             # are positive you know what already depends on it.
-            cur.execute("SELECT barcode_scan_id, barcode, "
-                        "scan_timestamp, sample_status, "
-                        "technician_notes "
-                        "FROM barcodes.barcode_scans "
-                        "WHERE barcode=%s "
-                        "ORDER BY scan_timestamp asc",
-                        (sample_barcode,))
+            cur.execute("""
+                SELECT
+                    bs.barcode_scan_id,
+                    bs.barcode,
+                    bs.scan_timestamp,
+                    bs.sample_status,
+                    bs.technician_notes,
+                    json_agg(json_build_object('observation_id',
+                        so.observation_id, 'observation',
+                        so.observation, 'category', so.category))
+                        AS observations
+                FROM
+                    barcodes.barcode_scans bs
+                LEFT JOIN
+                    barcodes.sample_barcode_scan_observations bso
+                        ON bs.barcode_scan_id = bso.barcode_scan_id
+                LEFT JOIN
+                    barcodes.sample_observations so
+                        ON bso.observation_id = so.observation_id
+                LEFT JOIN
+                    barcodes.sample_observation_project_associations sopa
+                        ON so.observation_id = sopa.observation_id
+                WHERE
+                    bs.barcode = %s
+                GROUP BY
+                    bs.barcode_scan_id, bs.barcode, bs.scan_timestamp,
+                    bs.sample_status, bs.technician_notes
+                ORDER BY
+                    bs.scan_timestamp ASC
+            """, (sample_barcode,))
+
             # this can't be None; worst-case is an empty list
             scans_info = _rows_to_dicts_list(cur.fetchall())
 
@@ -442,6 +467,24 @@ class AdminRepo(BaseRepo):
                 diagnostic["kit"] = kit
 
             return diagnostic
+
+    def _rows_to_dicts_list(rows):
+        return [dict(x) for x in rows]
+
+    def retrieve_observations_by_project(self, sample_barcode):
+        with self._transaction.dict_cursor() as cur:
+            cur.execute("""
+                SELECT DISTINCT ON (so.observation_id) so.*, sopa.project_id
+                FROM barcodes.sample_observations so
+                JOIN barcodes.sample_observation_project_associations sopa
+                ON so.observation_id = sopa.observation_id
+                JOIN barcodes.project_barcode pb
+                ON sopa.project_id = pb.project_id
+                WHERE pb.barcode = %s
+                ORDER BY so.observation_id, sopa.project_id
+            """, (sample_barcode,))
+            observations = __class__._rows_to_dicts_list(cur.fetchall())
+            return observations
 
     def get_project_name(self, project_id):
         """Obtain the name of a project using the project_id
@@ -1069,7 +1112,6 @@ class AdminRepo(BaseRepo):
 
     def scan_barcode(self, sample_barcode, scan_info):
         with self._transaction.cursor() as cur:
-
             # not actually using the result, just checking there IS one
             # to ensure this is a valid barcode
             cur.execute(
@@ -1101,6 +1143,53 @@ class AdminRepo(BaseRepo):
                 "VALUES (%s, %s, %s, %s, %s)",
                 scan_args
             )
+
+            if scan_info['observations']:
+                for observation in scan_info['observations']:
+                    cur.execute(
+                        "SELECT observation_id FROM sample_observations "
+                        "WHERE observation_id = %s",
+                        (observation,)
+                    )
+
+                    result = cur.fetchone()
+                    if result is None:
+                        raise RepoException(
+                            f"No observation_id found for "
+                            f"observation: {observation}"
+                        )
+
+                    observation_id = result[0]
+
+                    cur.execute(
+                        """
+                        SELECT so.observation_id
+                        FROM barcodes.sample_observations so
+                        JOIN barcodes.sample_observation_project_associations
+                        sopa ON so.observation_id = sopa.observation_id
+                        JOIN project_barcode pb
+                        ON sopa.project_id = pb.project_id
+                        WHERE so.observation_id = %s AND pb.barcode = %s
+                        """,
+                        (observation_id, sample_barcode)
+                    )
+
+                    result = cur.fetchone()
+                    if result is None:
+                        raise RepoException(
+                            f"Observation {observation} is not associated with"
+                            "any project for the given barcode"
+                            "{sample_barcode}"
+                        )
+
+                    cur.execute(
+                        """
+                        INSERT INTO sample_barcode_scan_observations
+                        (barcode_scan_id, observation_id)
+                        VALUES (%s, %s)
+                        """,
+                        (new_uuid, observation_id)
+                    )
 
             return new_uuid
 
