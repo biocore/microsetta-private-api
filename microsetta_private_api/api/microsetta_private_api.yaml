@@ -3833,6 +3833,9 @@ components:
           $ref: '#/components/schemas/project_name'
         is_microsetta:
           type: boolean
+        qiita_study_id:
+          type: string
+          nullable: true
         bank_samples:
           type: boolean
         plating_start_date:

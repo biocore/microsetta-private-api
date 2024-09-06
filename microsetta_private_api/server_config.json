@@ -46,5 +46,6 @@
   "google_geocoding_url": "https://maps.googleapis.com/maps/api/geocode/json",
   "google_geocoding_key": "geocoding_key_placeholder",
   "japanese_ffqs_path_key": "/tmp/japanese_ffqs/key.csv",
-  "japanese_ffqs_path_reports": "/tmp/japanese_ffqs/"
+  "japanese_ffqs_path_reports": "/tmp/japanese_ffqs/",
+  "qiita_auth_csv_path": "/tmp/qiita_study_id/key.csv"
 }

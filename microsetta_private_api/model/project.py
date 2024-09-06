@@ -7,6 +7,7 @@ import datetime
 PROJ_NAME_KEY = 'project_name'
 DB_PROJ_NAME_KEY = 'project'
 IS_MICROSETTA_KEY = 'is_microsetta'
+QIITA_STUDY_ID_KEY = 'qiita_study_id'
 BANK_SAMPLES_KEY = 'bank_samples'
 PLATING_START_DATE_KEY = 'plating_start_date'
 CONTACT_NAME_KEY = 'contact_name'
@@ -105,6 +106,7 @@ class Project:
         self.bank_samples = kwargs[BANK_SAMPLES_KEY]
 
         # all the remaining fields are optional and default to None
+        self.qiita_study_id = kwargs.get(QIITA_STUDY_ID_KEY)
         self.plating_start_date = kwargs.get(PLATING_START_DATE_KEY)
         self.contact_name = kwargs.get(CONTACT_NAME_KEY)
         self.additional_contact_name = kwargs.get(ADDTL_CONTACT_NAME_KEY)

@@ -264,6 +264,7 @@ class AdminTests(TestCase):
 class AdminRepoTests(AdminTests):
     _FULL_PROJECT_DICT = {p.PROJ_NAME_KEY: 'full_test_proj',
                           p.IS_MICROSETTA_KEY: True,
+                          p.QIITA_STUDY_ID_KEY: None,
                           p.BANK_SAMPLES_KEY: False,
                           p.PLATING_START_DATE_KEY: None,
                           p.CONTACT_NAME_KEY: "Jane Doe",
@@ -484,6 +485,8 @@ class AdminRepoTests(AdminTests):
                 full_project_dict["project_id"] = output_id
                 full_project_dict[p.DB_PROJ_NAME_KEY] = \
                     full_project_dict.pop(p.PROJ_NAME_KEY)
+                print("obs dict", obs_dict)
+                print("full proj dict", full_project_dict)
                 self.assertEqual(obs_dict, full_project_dict)
 
                 # NB: No need to clean up test project created because it is in

@@ -795,6 +795,34 @@ class MigrationSupport:
                     print("No mapping: " + ffq_id + " - " + barcode)
         TRN.execute()
 
+    @staticmethod
+    def migrate_143(TRN):
+        qiita_auth_csv_path = SERVER_CONFIG["qiita_auth_csv_path"]
+
+        if not os.path.exists(qiita_auth_csv_path):
+            print("File not found:" + qiita_auth_csv_path)
+            return
+
+        with open(qiita_auth_csv_path, mode='r', encoding='utf-8') as csv_file:
+            csv_reader = csv.reader(csv_file)
+            header = True
+
+            for row in csv_reader:
+                if header:
+                    header = False
+                    continue
+
+                qiita_study_id, qiita_client_id, qiita_client_secret = row
+
+                TRN.add(
+                    "INSERT INTO barcodes.qiita_api_authentication ("
+                    "qiita_study_id, qiita_client_id, qiita_client_secret"
+                    ") VALUES (%s, %s, %s)",
+                    (qiita_study_id, qiita_client_id, qiita_client_secret)
+                )
+
+        TRN.execute()
+
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
         "0050.sql": migrate_50.__func__,
@@ -806,7 +834,8 @@ class MigrationSupport:
         # "0082.sql": migrate_82.__func__
         # ...
         "0096.sql": migrate_96.__func__,
-        "0133.sql": migrate_133.__func__
+        "0133.sql": migrate_133.__func__,
+        "0143.sql": migrate_143.__func__
     }
 
     @classmethod

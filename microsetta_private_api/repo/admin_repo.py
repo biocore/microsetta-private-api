@@ -26,7 +26,8 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 # TODO: Refactor repeated elements in project-related sql queries?
 PROJECT_FIELDS = f"""
                 project_id, {p.DB_PROJ_NAME_KEY},
-                {p.IS_MICROSETTA_KEY}, {p.BANK_SAMPLES_KEY},
+                {p.IS_MICROSETTA_KEY}, {p.QIITA_STUDY_ID_KEY},
+                {p.BANK_SAMPLES_KEY},
                 {p.PLATING_START_DATE_KEY}, {p.CONTACT_NAME_KEY},
                 {p.ADDTL_CONTACT_NAME_KEY}, {p.CONTACT_EMAIL_KEY},
                 {p.DEADLINES_KEY}, {p.NUM_SUBJECTS_KEY},
@@ -537,10 +538,11 @@ class AdminRepo(BaseRepo):
                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                     %s, %s, %s, %s, %s, %s, %s);"""
+                     %s, %s, %s, %s, %s, %s, %s, %s);"""
 
             cur.execute(query,
                         [id_, project.project_name, project.is_microsetta,
+                         project.qiita_study_id,
                          project.bank_samples, project.plating_start_date,
                          project.contact_name, project.additional_contact_name,
                          project.contact_email, project.deadlines,
@@ -587,6 +589,7 @@ class AdminRepo(BaseRepo):
                     {p.SUBPROJECT_NAME_KEY}=%s,
                     {p.ALIAS_KEY}=%s,
                     {p.IS_MICROSETTA_KEY}=%s,
+                    {p.QIITA_STUDY_ID_KEY}=%s,
                     {p.SPONSOR_KEY}=%s,
                     {p.COORDINATION_KEY}=%s,
                     {p.CONTACT_NAME_KEY}=%s,
@@ -626,6 +629,7 @@ class AdminRepo(BaseRepo):
                             project.subproject_name,
                             project.alias,
                             project.is_microsetta,
+                            project.qiita_study_id,
                             project.sponsor,
                             project.coordination,
                             project.contact_name,
