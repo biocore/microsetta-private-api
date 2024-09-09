@@ -409,9 +409,6 @@ class AdminRepo(BaseRepo):
                 LEFT JOIN
                     barcodes.sample_observations so
                         ON bso.observation_id = so.observation_id
-                LEFT JOIN
-                    barcodes.sample_observation_project_associations sopa
-                        ON so.observation_id = sopa.observation_id
                 WHERE
                     bs.barcode = %s
                 GROUP BY
