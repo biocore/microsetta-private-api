@@ -278,6 +278,7 @@ class VioscreenSessions(unittest.TestCase):
             # enumerate the empirically observed states from vioscreen
             # (is_complete, has_taken, exact_status)
             obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
+            print("obs", obs)
             self.assertEqual(obs[1], (True, True, 'Finished'))
 
             session.status = 'Started'
