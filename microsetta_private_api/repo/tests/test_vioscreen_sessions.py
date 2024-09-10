@@ -278,28 +278,24 @@ class VioscreenSessions(unittest.TestCase):
             # enumerate the empirically observed states from vioscreen
             # (is_complete, has_taken, exact_status)
             obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            self.assertEqual(obs, [(True, True, 'Finished'),
-                                   (True, True, 'Finished')])
+            self.assertEqual(obs, (True, True, 'Finished'))
 
             session.status = 'Started'
             session.endDate = None
             r.upsert_session(session)
 
             obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            self.assertEqual(obs, [(False, True, 'Started'),
-                                   (False, True, 'Started')])
+            self.assertEqual(obs, (False, True, 'Started'))
 
             session.status = 'New'
             r.upsert_session(session)
             obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            self.assertEqual(obs, [(False, False, 'New'),
-                                   (False, False, 'New')])
+            self.assertEqual(obs, (False, False, 'New'))
 
             session.status = 'Review'
             r.upsert_session(session)
             obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            self.assertEqual(obs, [(False, True, 'Review'),
-                                   (False, True, 'Review')])
+            self.assertEqual(obs, (False, True, 'Review'))
 
 
 if __name__ == '__main__':
