@@ -267,6 +267,15 @@ class VioscreenSessions(unittest.TestCase):
             r = VioscreenSessionRepo(t)
             r.upsert_session(session_copy)
             session = r.get_sessions_by_username(VIOSCREEN_USERNAME1)[0]
+            
+            cur = t.cursor()
+            query = """
+                SELECT source_id
+                FROM ag.vioscreen_registry
+                WHERE sample_id = %s
+            """
+            cur.execute(query, (BARCODE_UUID_FOR_VIOSESSION,))
+            source_id = cur.fetchone()
 
             obs = r.get_ffq_status_by_source(SOURCE_ID_NOTIN_REGISTRY)
             self.assertEqual(obs, (False, False, None))
@@ -277,26 +286,25 @@ class VioscreenSessions(unittest.TestCase):
 
             # enumerate the empirically observed states from vioscreen
             # (is_complete, has_taken, exact_status)
-            obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            print("obs", obs)
-            self.assertEqual(obs[1], (True, True, 'Finished'))
+            obs = r.get_ffq_status_by_source(source_id)
+            self.assertEqual(obs, (True, True, 'Finishedd'))
 
             session.status = 'Started'
             session.endDate = None
             r.upsert_session(session)
 
-            obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            self.assertEqual(obs[1], (False, True, 'Started'))
+            obs = r.get_ffq_status_by_source(source_id)
+            self.assertEqual(obs, (False, True, 'Started'))
 
             session.status = 'New'
             r.upsert_session(session)
-            obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            self.assertEqual(obs[1], (False, False, 'New'))
+            obs = r.get_ffq_status_by_source(source_id)
+            self.assertEqual(obs, (False, False, 'New'))
 
             session.status = 'Review'
             r.upsert_session(session)
-            obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            self.assertEqual(obs[1], (False, True, 'Review'))
+            obs = r.get_ffq_status_by_source(source_id)
+            self.assertEqual(obs, (False, True, 'Review'))
 
 
 if __name__ == '__main__':
