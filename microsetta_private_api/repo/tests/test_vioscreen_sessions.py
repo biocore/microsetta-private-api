@@ -18,7 +18,7 @@ VIOSCREEN_USERNAME1 = '3379e14164fac0ed'
 # in ag_test db, this uuid corresponds to VIOSCREEN_USERNAME1
 BARCODE_UUID_FOR_VIOSESSION = '66ec7d9a-400d-4d71-bce8-fdf79d2be554'
 BARCODE_UUID_NOTIN_REGISTRY = 'edee4af9-65b2-4ed1-ba66-5bf58383005e'
-SOURCE_ID_FOR_VIOSESSION = 'f1978151-d3b8-4638-a633-ff6bd56a52c1'
+SOURCE_ID_FOR_VIOSESSION = '6d343527-ab68-4e01-9ef7-16943dc5cee0'
 SOURCE_ID_NOTIN_REGISTRY = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
 
 
@@ -278,24 +278,28 @@ class VioscreenSessions(unittest.TestCase):
             # enumerate the empirically observed states from vioscreen
             # (is_complete, has_taken, exact_status)
             obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            self.assertEqual(obs, (True, True, 'Finished'))
+            self.assertEqual(obs, [(True, True, 'Finished'),
+                                   (True, True, 'Finished')])
 
             session.status = 'Started'
             session.endDate = None
             r.upsert_session(session)
 
             obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            self.assertEqual(obs, (False, True, 'Started'))
+            self.assertEqual(obs, [(False, True, 'Started'),
+                                   (False, True, 'Started')])
 
             session.status = 'New'
             r.upsert_session(session)
             obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            self.assertEqual(obs, (False, False, 'New'))
+            self.assertEqual(obs, [(False, False, 'New'),
+                                   (False, False, 'New')])
 
             session.status = 'Review'
             r.upsert_session(session)
             obs = r.get_ffq_status_by_source(SOURCE_ID_FOR_VIOSESSION)
-            self.assertEqual(obs, (False, True, 'Review'))
+            self.assertEqual(obs, [(False, True, 'Review'),
+                                   (False, True, 'Review')])
 
 
 if __name__ == '__main__':

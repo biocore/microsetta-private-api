@@ -169,11 +169,11 @@ class VioscreenSessionRepo(BaseRepo):
             return not_in_vioscreen_sessions + incomplete_sessions
 
     def get_ffq_status_by_source(self, source_uuid):
-        """Obtain the FFQ status for a given sample
+        """Obtain the FFQ status for a given source
 
         Parameters
         ----------
-        sample_uuid : UUID4
+        source_uuid : UUID4
             The UUID to check the status of
 
         Returns
