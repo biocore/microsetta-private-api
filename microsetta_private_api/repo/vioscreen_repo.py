@@ -55,10 +55,6 @@ class VioscreenSessionRepo(BaseRepo):
                                {doupdateset}
                            """,
                         tuple([getattr(session, attr) for attr in self.COLS]))
-            cur.execute("SELECT * FROM ag.vioscreen_sessions "
-                        "WHERE sessionId = %s", (session.sessionId,))
-            rows = cur.fetchall()
-            print("Upserted rows:", rows)
             return cur.rowcount == 1
 
     def get_session(self, sessionId):
