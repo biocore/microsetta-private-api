@@ -168,7 +168,7 @@ class VioscreenSessionRepo(BaseRepo):
 
             return not_in_vioscreen_sessions + incomplete_sessions
 
-    def get_ffq_status_by_source(self, source_uuid):
+    def get_ffq_status_by_vio_id(self, vio_id):
         """Obtain the FFQ status for a given source
 
         Parameters
@@ -186,21 +186,38 @@ class VioscreenSessionRepo(BaseRepo):
                 if there is no FFQ associated with the sample.
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT status
+            cur.execute("""SELECT source_id
+                           FROM ag.vioscreen_registry
+                           WHERE vio_id = %s""", (vio_id, ))
+
+            source_res = cur.fetchone()
+
+            if source_res is None:
+                return (False, False, None)
+
+            source_id = source_res[0]
+
+            cur.execute("""SELECT vs.status, akb.sample_date,
+                           akb.sample_time, vs.startdate
                            FROM ag.vioscreen_sessions AS vs
                            JOIN ag.vioscreen_registry AS vr
-                               ON vs.username=vr.vio_id
-                           WHERE source_id=%s""", (source_uuid, ))
-            res = cur.fetchall()
-            if len(res) == 0:
+                                ON vs.username = vr.vio_id
+                           LEFT JOIN ag.ag_kit_barcodes AS akb
+                                ON vr.source_id = akb.source_id
+                           WHERE vr.source_id = %s
+                           ORDER BY ABS(EXTRACT(EPOCH FROM
+                                (akb.sample_date - vs.startdate)))
+                           LIMIT 1""", (source_id, ))
+
+            res = cur.fetchone()
+
+            if res is None:
                 return (False, False, None)
             else:
-                results = []
-                for status in res:
-                    is_complete = status[0] == 'Finished'
-                    is_taken = status[0] in ('Started', 'Review', 'Finished')
-                    results.append((is_complete, is_taken, status[0]))
-                return results
+                status = res[0]
+                is_complete = status == 'Finished'
+                is_taken = status in ('Started', 'Review', 'Finished')
+                return is_complete, is_taken, status
 
     def get_missing_ffqs(self):
         """The set of valid sessions which lack FFQ data

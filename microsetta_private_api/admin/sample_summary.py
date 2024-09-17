@@ -58,9 +58,9 @@ def per_sample(project, barcodes, strip_sampleid):
                         template_repo.get_vioscreen_id_if_exists(account.id,
                                                                  source.id,
                                                                  None)
-                if source:
+                if vio_id:
                     ffq_complete, ffq_taken, _ = \
-                        vs_repo.get_ffq_status_by_source(source.id)
+                        vs_repo.get_ffq_status_by_vio_id(vio_id)
                 else:
                     ffq_complete = False
                     ffq_taken = False

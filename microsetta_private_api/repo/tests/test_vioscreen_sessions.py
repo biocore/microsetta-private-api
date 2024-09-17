@@ -268,17 +268,8 @@ class VioscreenSessions(unittest.TestCase):
             r.upsert_session(session_copy)
             session = r.get_sessions_by_username(VIOSCREEN_USERNAME1)[0]
 
-            cur = t.cursor()
-            source_id_query = """
-                SELECT source_id
-                FROM ag.vioscreen_registry
-                WHERE sample_id = %s
-            """
-            cur.execute(source_id_query, (BARCODE_UUID_FOR_VIOSESSION,))
-            source_id = cur.fetchone()
-
-            obs = r.get_ffq_status_by_source(SOURCE_ID_NOTIN_REGISTRY)
-            self.assertEqual(obs, (False, False, None))
+            obs = r.get_ffq_status_by_vio_id(VIOSCREEN_USERNAME1)
+            self.assertEqual(obs, (False, False, 'something'))
 
             session.status = 'Finished'
             session.endDate = _to_dt(2, 1, 1970)
@@ -286,29 +277,25 @@ class VioscreenSessions(unittest.TestCase):
 
             # enumerate the empirically observed states from vioscreen
             # (is_complete, has_taken, exact_status)
-            obs = r.get_ffq_status_by_source(source_id)
-            self.assertEqual(obs, [(True, True, 'Finished'),
-                                   (True, True, 'Finished')])
+            obs = r.get_ffq_status_by_vio_id(VIOSCREEN_USERNAME1)
+            self.assertEqual(obs, (True, True, 'Finished'))
 
             session.status = 'Started'
             session.endDate = None
             r.upsert_session(session)
 
-            obs = r.get_ffq_status_by_source(source_id)
-            self.assertEqual(obs, [(False, True, 'Started'),
-                                   (False, True, 'Started')])
+            obs = r.get_ffq_status_by_vio_id(VIOSCREEN_USERNAME1)
+            self.assertEqual(obs, (False, True, 'Started'))
 
             session.status = 'New'
             r.upsert_session(session)
-            obs = r.get_ffq_status_by_source(source_id)
-            self.assertEqual(obs, [(False, False, 'New'),
-                                   (False, False, 'New')])
+            obs = r.get_ffq_status_by_vio_id(VIOSCREEN_USERNAME1)
+            self.assertEqual(obs, (False, False, 'New'))
 
             session.status = 'Review'
             r.upsert_session(session)
-            obs = r.get_ffq_status_by_source(source_id)
-            self.assertEqual(obs, [(False, True, 'Review'),
-                                   (False, True, 'Review')])
+            obs = r.get_ffq_status_by_vio_id(VIOSCREEN_USERNAME1)
+            self.assertEqual(obs, (False, True, 'Review'))
 
 
 if __name__ == '__main__':
