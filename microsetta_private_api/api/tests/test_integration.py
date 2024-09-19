@@ -410,6 +410,7 @@ class IntegrationTests(TestCase):
                              [SurveyTemplateRepo.VIOSCREEN_ID,
                               SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                               SurveyTemplateRepo.SPAIN_FFQ_ID,
+                              SurveyTemplateRepo.SKIN_SCORING_APP_FFQ_ID,
                               SurveyTemplateRepo.BASIC_INFO_ID,
                               SurveyTemplateRepo.AT_HOME_ID,
                               SurveyTemplateRepo.LIFESTYLE_ID,
@@ -625,6 +626,42 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 404)
 
+    @skipIf(SERVER_CONFIG['skin_scoring_app_ffq_url'] in
+            ('', 'ssafq_placeholder'),
+            "Skin Scoring App FFQ secrets not provided")
+    def test_bobo_takes_skin_scoring_app_ffq(self):
+        bobo = self._bobo_to_claim_a_sample()
+
+        # take Skin Scoring App FFQ
+        resp = self.client.get(
+            '/api/accounts/%s/sources/%s/survey_templates/10005'
+            '?language_tag=en_US' %
+            (ACCT_ID, bobo['source_id']),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp)
+        data = json.loads(resp.data)
+        exp_start = SERVER_CONFIG['skin_scoring_app_ffq_url']
+        url = data['survey_template_text']['url']
+        self.assertTrue(url.startswith(exp_start))
+
+        # verify we err if we attempt to answer the survey. an "answer" here is
+        # undefined
+        resp = self.client.post(
+            '/api/accounts/%s/sources/%s/surveys'
+            '?language_tag=en_US' %
+            (ACCT_ID, bobo['source_id']),
+            content_type='application/json',
+            data=json.dumps(
+                {
+                    "survey_template_id":
+                        SurveyTemplateRepo.SKIN_SCORING_APP_FFQ_ID,
+                    "survey_text": {'key': 'stuff'}
+                }),
+            headers=MOCK_HEADERS
+        )
+        check_response(resp, 404)
+
     @skipIf(SERVER_CONFIG['spain_ffq_url'] in ('', 'sffq_placeholder'),
             "Spain FFQ secrets not provided")
     def test_bobo_takes_spain_ffq(self):
@@ -693,6 +730,7 @@ class IntegrationTests(TestCase):
                                  SurveyTemplateRepo.MYFOODREPO_ID,
                                  SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                                  SurveyTemplateRepo.SPAIN_FFQ_ID,
+                                 SurveyTemplateRepo.SKIN_SCORING_APP_FFQ_ID,
                                  SurveyTemplateRepo.BASIC_INFO_ID,
                                  SurveyTemplateRepo.AT_HOME_ID,
                                  SurveyTemplateRepo.LIFESTYLE_ID,

@@ -14,7 +14,7 @@ from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 from microsetta_private_api.util import vioscreen, myfoodrepo, vue_adapter, \
-    polyphenol_ffq
+    polyphenol_ffq, skin_scoring_app_ffq
 from microsetta_private_api.util.vioscreen import VioscreenAdminAPI
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
@@ -43,6 +43,7 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
                                 SurveyTemplateRepo.VIOSCREEN_ID,
                                 SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                                 SurveyTemplateRepo.SPAIN_FFQ_ID,
+                                SurveyTemplateRepo.SKIN_SCORING_APP_FFQ_ID,
                                 SurveyTemplateRepo.BASIC_INFO_ID,
                                 SurveyTemplateRepo.AT_HOME_ID,
                                 SurveyTemplateRepo.LIFESTYLE_ID,
@@ -181,6 +182,37 @@ def _remote_survey_url_spain_ffq(transaction, account_id, source_id):
     return SERVER_CONFIG['spain_ffq_url']
 
 
+def _remote_survey_url_skin_scoring_app_ffq(transaction,
+                                            account_id,
+                                            source_id,
+                                            language_tag):
+    st_repo = SurveyTemplateRepo(transaction)
+
+    skin_scoring_app_ffq_id, study = \
+        st_repo.get_skin_scoring_app_ffq_id_if_exists(account_id,
+                                                      source_id)
+
+    if skin_scoring_app_ffq_id is None:
+        study = 'SBI'
+        sample_repo = SampleRepo(transaction)
+        samples = sample_repo.get_samples_by_source(account_id, source_id)
+        for s in samples:
+            for s_p in s.sample_projects:
+                if s_p.startswith('SBI'):
+                    study = 'SBI'
+                    break
+
+        skin_scoring_app_ffq_id = \
+            st_repo.create_skin_scoring_app_ffq_entry(account_id,
+                                                      source_id,
+                                                      language_tag,
+                                                      study)
+
+    return skin_scoring_app_ffq.gen_ffq_url(skin_scoring_app_ffq_id,
+                                            study,
+                                            language_tag)
+
+
 def read_survey_template(account_id, source_id, survey_template_id,
                          language_tag, token_info, survey_redirect_url=None,
                          vioscreen_ext_sample_id=None,
@@ -220,6 +252,11 @@ def read_survey_template(account_id, source_id, survey_template_id,
                 url = _remote_survey_url_spain_ffq(t,
                                                    account_id,
                                                    source_id)
+            elif survey_template_id == \
+                    SurveyTemplateRepo.SKIN_SCORING_APP_FFQ_ID:
+                url = _remote_survey_url_skin_scoring_app_ffq(t,
+                                                              account_id,
+                                                              source_id)
             else:
                 raise ValueError(f"Cannot generate URL for survey "
                                  f"{survey_template_id}")
