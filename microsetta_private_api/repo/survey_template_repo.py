@@ -1,5 +1,6 @@
 import random
 import string
+import psycopg2
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
@@ -25,7 +26,7 @@ class SurveyTemplateRepo(BaseRepo):
     MYFOODREPO_ID = 10002
     POLYPHENOL_FFQ_ID = 10003
     SPAIN_FFQ_ID = 10004
-    SKIN_SCORING_APP_FFQ_ID = 10005
+    SKIN_SCORING_APP_ID = 10005
     BASIC_INFO_ID = 10
     AT_HOME_ID = 11
     LIFESTYLE_ID = 12
@@ -39,6 +40,7 @@ class SurveyTemplateRepo(BaseRepo):
     SURFERS_ID = 20
     COVID19_ID = 21
     OTHER_ID = 22
+    SBI_PROJECT_ID = 23
 
     SURVEY_INFO = {
         # For now, let's keep legacy survey info as well.
@@ -108,9 +110,9 @@ class SurveyTemplateRepo(BaseRepo):
             "1.0",
             "remote"
         ),
-        SKIN_SCORING_APP_FFQ_ID: SurveyTemplateLinkInfo(
-            SKIN_SCORING_APP_FFQ_ID,
-            "Skin Scoring App FFQ",
+        SKIN_SCORING_APP_ID: SurveyTemplateLinkInfo(
+            SKIN_SCORING_APP_ID,
+            "Skin Scoring App",
             "1.0",
             "remote"
         ),
@@ -764,12 +766,11 @@ class SurveyTemplateRepo(BaseRepo):
                                AND source_id=%s""",
                         (account_id, source_id))
 
-    def create_skin_scoring_app_ffq_entry(self,
-                                          account_id,
-                                          source_id,
-                                          language_tag,
-                                          study):
-        """Return a newly created Skin Scoring App FFQ ID
+    def create_skin_scoring_app_entry(self,
+                                      account_id,
+                                      source_id,
+                                      language_tag,):
+        """Return a newly created Skin Scoring App ID
 
         Parameters
         ----------
@@ -779,42 +780,54 @@ class SurveyTemplateRepo(BaseRepo):
             The source UUID
         language_tag: str
             The user's language tag
-        study: str
-            The study variable we'll pass to L'Oréal's FFQ
 
         Returns
         -------
         str
-            The newly created Skin Scoring App FFQ ID
+            The newly created Skin Scoring App ID
         """
         characters = string.ascii_lowercase + string.digits
-        skin_scoring_app_ffq_id = ''.join(random.choices(characters, k=8))
 
-        with self._transaction.cursor() as cur:
-            cur.execute("""INSERT INTO ag.skin_scoring_app_ffq_registry
-                        (skin_scoring_app_ffq_id, account_id,
-                         source_id, language_tag, study)
-                        VALUES (%s, %s, %s, %s, %s)""",
-                        (skin_scoring_app_ffq_id, account_id,
-                         source_id, language_tag, study))
+        for attempt in range(5):
+            skin_scoring_app_id = ''.join(random.choices(characters, k=8))
 
-            # Put a survey into ag_login_surveys
-            cur.execute("INSERT INTO ag_login_surveys("
-                        "ag_login_id, "
-                        "survey_id, "
-                        "vioscreen_status, "
-                        "source_id, "
-                        "survey_template_id) "
-                        "VALUES(%s, %s, %s, %s, %s)",
-                        (account_id, skin_scoring_app_ffq_id, None, source_id,
-                            SurveyTemplateRepo.SKIN_SCORING_APP_FFQ_ID))
+            try:
+                with self._transaction.cursor() as cur:
+                    cur.execute("""INSERT INTO ag.skin_scoring_app_registry
+                                (skin_scoring_app_id, account_id,
+                                source_id, language_tag)
+                                VALUES (%s, %s, %s, %s)""",
+                                (skin_scoring_app_id, account_id,
+                                 source_id, language_tag))
 
-            return skin_scoring_app_ffq_id
+                    # Put a survey into ag_login_surveys
+                    cur.execute("INSERT INTO ag_login_surveys("
+                                "ag_login_id, "
+                                "survey_id, "
+                                "vioscreen_status, "
+                                "source_id, "
+                                "survey_template_id) "
+                                "VALUES(%s, %s, %s, %s, %s)",
+                                (account_id, skin_scoring_app_id, None, source_id,
+                                    SurveyTemplateRepo.SKIN_SCORING_APP_ID))
 
-    def get_skin_scoring_app_ffq_id_if_exists(self,
-                                              account_id,
-                                              source_id):
-        """Return a Skin Scoring App FFQ ID if one exists
+                    return skin_scoring_app_id
+            except psycopg2.IntegrityError as e:
+                self._transaction.rollback()
+
+                if e.pgcode == '23505':
+                    print(f"Duplicate ID '{skin_scoring_app_id}' "
+                          f"detected. Retrying... (Attempt {attempt + 1}/{5})")
+                else:
+                    raise
+
+        raise Exception(f"Unable to generate a unique Skin Scoring App ID after 5 attempts")
+
+
+    def get_skin_scoring_app_id_if_exists(self,
+                                          account_id,
+                                          source_id):
+        """Return a Skin Scoring App ID if one exists
 
         Parameters
         ----------
@@ -825,28 +838,28 @@ class SurveyTemplateRepo(BaseRepo):
 
         Returns
         -------
-        (UUID, str) or (None, None)
-            The associated Skin Scoring App FFQ ID and study
+        (str) or (None)
+            The associated Skin Scoring App ID
             It's impossible to find one without the other
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT skin_scoring_app_ffq_id, study
-                        FROM ag.skin_scoring_app_ffq_registry
+            cur.execute("""SELECT skin_scoring_app_id
+                        FROM ag.skin_scoring_app_registry
                         WHERE account_id=%s AND source_id=%s""",
                         (account_id, source_id))
             res = cur.fetchone()
 
             if res is None:
-                return (None, None)
+                return None
             else:
                 return res
 
-    def delete_skin_scoring_app_ffq(self, account_id, source_id):
-        """Intended for admin use, remove Skin Scoring App FFQ entries
+    def delete_skin_scoring_app(self, account_id, source_id):
+        """Intended for admin use, remove Skin Scoring App entries
 
         This method is idempotent.
 
-        This method deletes ALL Skin Scoring App FFQ surveys associated with an
+        This method deletes ALL Skin Scoring App surveys associated with an
         account and source
 
         This is a hard delete, we REMOVE rows rather than setting a flag
@@ -860,15 +873,15 @@ class SurveyTemplateRepo(BaseRepo):
         """
         with self._transaction.cursor() as cur:
             existing, _ = \
-                self.get_skin_scoring_app_ffq_id_if_exists(account_id,
-                                                           source_id)
+                self.get_skin_scoring_app_id_if_exists(account_id,
+                                                       source_id)
             if existing is not None:
                 cur.execute("""DELETE FROM ag.ag_login_surveys
                                WHERE ag_login_id=%s
                                    AND source_id=%s
                                    AND survey_id=%s""",
                             (account_id, source_id, existing))
-            cur.execute("""DELETE FROM ag.skin_scoring_app_ffq_registry
+            cur.execute("""DELETE FROM ag.skin_scoring_app_registry
                            WHERE account_id=%s
                                AND source_id=%s""",
                         (account_id, source_id))
@@ -1245,7 +1258,7 @@ class SurveyTemplateRepo(BaseRepo):
         getters = (self.get_myfoodrepo_id_if_exists,
                    self.get_polyphenol_ffq_id_if_exists,
                    self.get_spain_ffq_id_if_exists,
-                   self.get_skin_scoring_app_ffq_id_if_exists,
+                   self.get_skin_scoring_app_id_if_exists,
                    self.get_vioscreen_all_ids_if_exists)
 
         for get in getters:
@@ -1426,7 +1439,7 @@ class SurveyTemplateRepo(BaseRepo):
                                       self.MYFOODREPO_ID,
                                       self.POLYPHENOL_FFQ_ID,
                                       self.SPAIN_FFQ_ID,
-                                      self.SKIN_SCORING_APP_FFQ_ID]:
+                                      self.SKIN_SCORING_APP_ID]:
                 raise ValueError("survey_template_id must be for a local "
                                  "survey")
         else:

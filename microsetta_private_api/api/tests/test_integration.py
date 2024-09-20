@@ -410,7 +410,7 @@ class IntegrationTests(TestCase):
                              [SurveyTemplateRepo.VIOSCREEN_ID,
                               SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                               SurveyTemplateRepo.SPAIN_FFQ_ID,
-                              SurveyTemplateRepo.SKIN_SCORING_APP_FFQ_ID,
+                              SurveyTemplateRepo.SKIN_SCORING_APP_ID,
                               SurveyTemplateRepo.BASIC_INFO_ID,
                               SurveyTemplateRepo.AT_HOME_ID,
                               SurveyTemplateRepo.LIFESTYLE_ID,
@@ -626,13 +626,13 @@ class IntegrationTests(TestCase):
         )
         check_response(resp, 404)
 
-    @skipIf(SERVER_CONFIG['skin_scoring_app_ffq_url'] in
-            ('', 'ssafq_placeholder'),
-            "Skin Scoring App FFQ secrets not provided")
-    def test_bobo_takes_skin_scoring_app_ffq(self):
+    @skipIf(SERVER_CONFIG['skin_scoring_app_url'] in
+            ('', 'ssa_placeholder'),
+            "Skin Scoring App secrets not provided")
+    def test_bobo_takes_skin_scoring_app(self):
         bobo = self._bobo_to_claim_a_sample()
 
-        # take Skin Scoring App FFQ
+        # take Skin Scoring App
         resp = self.client.get(
             '/api/accounts/%s/sources/%s/survey_templates/10005'
             '?language_tag=en_US' %
@@ -641,7 +641,7 @@ class IntegrationTests(TestCase):
         )
         check_response(resp)
         data = json.loads(resp.data)
-        exp_start = SERVER_CONFIG['skin_scoring_app_ffq_url']
+        exp_start = SERVER_CONFIG['skin_scoring_app_url']
         url = data['survey_template_text']['url']
         self.assertTrue(url.startswith(exp_start))
 
@@ -655,7 +655,7 @@ class IntegrationTests(TestCase):
             data=json.dumps(
                 {
                     "survey_template_id":
-                        SurveyTemplateRepo.SKIN_SCORING_APP_FFQ_ID,
+                        SurveyTemplateRepo.SKIN_SCORING_APP_ID,
                     "survey_text": {'key': 'stuff'}
                 }),
             headers=MOCK_HEADERS
@@ -730,7 +730,7 @@ class IntegrationTests(TestCase):
                                  SurveyTemplateRepo.MYFOODREPO_ID,
                                  SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                                  SurveyTemplateRepo.SPAIN_FFQ_ID,
-                                 SurveyTemplateRepo.SKIN_SCORING_APP_FFQ_ID,
+                                 SurveyTemplateRepo.SKIN_SCORING_APP_ID,
                                  SurveyTemplateRepo.BASIC_INFO_ID,
                                  SurveyTemplateRepo.AT_HOME_ID,
                                  SurveyTemplateRepo.LIFESTYLE_ID,
