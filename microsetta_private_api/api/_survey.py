@@ -191,7 +191,7 @@ def _remote_survey_url_skin_scoring_app(transaction,
     skin_scoring_app_id = \
         st_repo.get_skin_scoring_app_id_if_exists(account_id,
                                                   source_id)
-    
+
     if skin_scoring_app_id is None:
         sample_repo = SampleRepo(transaction)
         samples = sample_repo.get_samples_by_source(account_id, source_id)

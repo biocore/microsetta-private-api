@@ -808,7 +808,8 @@ class SurveyTemplateRepo(BaseRepo):
                                 "source_id, "
                                 "survey_template_id) "
                                 "VALUES(%s, %s, %s, %s, %s)",
-                                (account_id, skin_scoring_app_id, None, source_id,
+                                (account_id, skin_scoring_app_id, None,
+                                 source_id,
                                     SurveyTemplateRepo.SKIN_SCORING_APP_ID))
 
                     return skin_scoring_app_id
@@ -821,8 +822,8 @@ class SurveyTemplateRepo(BaseRepo):
                 else:
                     raise
 
-        raise Exception(f"Unable to generate a unique Skin Scoring App ID after 5 attempts")
-
+        raise Exception("Unable to generate a unique "
+                        "Skin Scoring App ID after 5 attempts")
 
     def get_skin_scoring_app_id_if_exists(self,
                                           account_id,
