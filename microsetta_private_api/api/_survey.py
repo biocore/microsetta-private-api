@@ -32,34 +32,71 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
     # survey_group = group_order;
 
     with Transaction() as t:
-        source_repo = SourceRepo(t)
-        source = source_repo.get_source(account_id, source_id)
-        if source is None:
-            return jsonify(code=404, message="No source found"), 404
-        template_repo = SurveyTemplateRepo(t)
-        if source.source_type == Source.SOURCE_TYPE_HUMAN:
-            return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [
-                                SurveyTemplateRepo.VIOSCREEN_ID,
-                                SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
-                                SurveyTemplateRepo.SPAIN_FFQ_ID,
-                                SurveyTemplateRepo.SKIN_SCORING_APP_ID,
-                                SurveyTemplateRepo.BASIC_INFO_ID,
-                                SurveyTemplateRepo.AT_HOME_ID,
-                                SurveyTemplateRepo.LIFESTYLE_ID,
-                                SurveyTemplateRepo.GUT_ID,
-                                SurveyTemplateRepo.GENERAL_HEALTH_ID,
-                                SurveyTemplateRepo.HEALTH_DIAG_ID,
-                                SurveyTemplateRepo.ALLERGIES_ID,
-                                SurveyTemplateRepo.DIET_ID,
-                                SurveyTemplateRepo.DETAILED_DIET_ID,
-                                SurveyTemplateRepo.OTHER_ID
-                            ]]), 200
-        elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
-            return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [2]]), 200
+        # Checking samples to see any have permission to
+        # see any skin related surveys
+        sample_repo = SampleRepo(t)
+        samples = sample_repo.get_samples_by_source(account_id, source_id)
+        for s in samples:
+            for skin_samples in s.sample_projects:
+                if skin_samples.startswith('Skin'):
+                    break
+        if samples:
+            source_repo = SourceRepo(t)
+            source = source_repo.get_source(account_id, source_id)
+            if source is None:
+                return jsonify(code=404, message="No source found"), 404
+            template_repo = SurveyTemplateRepo(t)
+            if source.source_type == Source.SOURCE_TYPE_HUMAN:
+                return jsonify([template_repo.get_survey_template_link_info(x)
+                                for x in [
+                                    SurveyTemplateRepo.VIOSCREEN_ID,
+                                    SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                                    SurveyTemplateRepo.SPAIN_FFQ_ID,
+                                    SurveyTemplateRepo.SKIN_SCORING_APP_ID,
+                                    SurveyTemplateRepo.BASIC_INFO_ID,
+                                    SurveyTemplateRepo.AT_HOME_ID,
+                                    SurveyTemplateRepo.LIFESTYLE_ID,
+                                    SurveyTemplateRepo.GUT_ID,
+                                    SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                                    SurveyTemplateRepo.HEALTH_DIAG_ID,
+                                    SurveyTemplateRepo.ALLERGIES_ID,
+                                    SurveyTemplateRepo.DIET_ID,
+                                    SurveyTemplateRepo.DETAILED_DIET_ID,
+                                    SurveyTemplateRepo.OTHER_ID
+                                ]]), 200
+            elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
+                return jsonify([template_repo.get_survey_template_link_info(x)
+                                for x in [2]]), 200
+            else:
+                return jsonify([]), 200
         else:
-            return jsonify([]), 200
+            source_repo = SourceRepo(t)
+            source = source_repo.get_source(account_id, source_id)
+            if source is None:
+                return jsonify(code=404, message="No source found"), 404
+            template_repo = SurveyTemplateRepo(t)
+            if source.source_type == Source.SOURCE_TYPE_HUMAN:
+                return jsonify([template_repo.get_survey_template_link_info(x)
+                                for x in [
+                                    SurveyTemplateRepo.VIOSCREEN_ID,
+                                    SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                                    SurveyTemplateRepo.SPAIN_FFQ_ID,
+                                    SurveyTemplateRepo.BASIC_INFO_ID,
+                                    SurveyTemplateRepo.AT_HOME_ID,
+                                    SurveyTemplateRepo.LIFESTYLE_ID,
+                                    SurveyTemplateRepo.GUT_ID,
+                                    SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                                    SurveyTemplateRepo.HEALTH_DIAG_ID,
+                                    SurveyTemplateRepo.ALLERGIES_ID,
+                                    SurveyTemplateRepo.DIET_ID,
+                                    SurveyTemplateRepo.DETAILED_DIET_ID,
+                                    SurveyTemplateRepo.OTHER_ID
+                                ]]), 200
+            elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
+                return jsonify([template_repo.get_survey_template_link_info(x)
+                                for x in [2]]), 200
+            else:
+                return jsonify([]), 200
 
 
 def _remote_survey_url_vioscreen(transaction, account_id, source_id,
@@ -193,13 +230,6 @@ def _remote_survey_url_skin_scoring_app(transaction,
                                                   source_id)
 
     if skin_scoring_app_id is None:
-        sample_repo = SampleRepo(transaction)
-        samples = sample_repo.get_samples_by_source(account_id, source_id)
-        for s in samples:
-            for s_p in s.sample_projects:
-                if s_p.startswith('SBI'):
-                    break
-
         skin_scoring_app_id = \
             st_repo.create_skin_scoring_app_entry(account_id,
                                                   source_id,

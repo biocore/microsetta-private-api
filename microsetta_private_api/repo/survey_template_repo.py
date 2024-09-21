@@ -40,7 +40,6 @@ class SurveyTemplateRepo(BaseRepo):
     SURFERS_ID = 20
     COVID19_ID = 21
     OTHER_ID = 22
-    SBI_PROJECT_ID = 23
 
     SURVEY_INFO = {
         # For now, let's keep legacy survey info as well.
@@ -873,7 +872,7 @@ class SurveyTemplateRepo(BaseRepo):
             The source UUID
         """
         with self._transaction.cursor() as cur:
-            existing, _ = \
+            existing = \
                 self.get_skin_scoring_app_id_if_exists(account_id,
                                                        source_id)
             if existing is not None:
