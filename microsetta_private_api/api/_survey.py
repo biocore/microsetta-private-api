@@ -36,67 +36,45 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         # see any skin related surveys
         sample_repo = SampleRepo(t)
         samples = sample_repo.get_samples_by_source(account_id, source_id)
-        for s in samples:
-            for skin_samples in s.sample_projects:
-                if skin_samples.startswith('Skin'):
-                    break
-        if samples:
-            source_repo = SourceRepo(t)
-            source = source_repo.get_source(account_id, source_id)
-            if source is None:
-                return jsonify(code=404, message="No source found"), 404
-            template_repo = SurveyTemplateRepo(t)
-            if source.source_type == Source.SOURCE_TYPE_HUMAN:
-                return jsonify([template_repo.get_survey_template_link_info(x)
-                                for x in [
-                                    SurveyTemplateRepo.VIOSCREEN_ID,
-                                    SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
-                                    SurveyTemplateRepo.SPAIN_FFQ_ID,
-                                    SurveyTemplateRepo.SKIN_SCORING_APP_ID,
-                                    SurveyTemplateRepo.BASIC_INFO_ID,
-                                    SurveyTemplateRepo.AT_HOME_ID,
-                                    SurveyTemplateRepo.LIFESTYLE_ID,
-                                    SurveyTemplateRepo.GUT_ID,
-                                    SurveyTemplateRepo.GENERAL_HEALTH_ID,
-                                    SurveyTemplateRepo.HEALTH_DIAG_ID,
-                                    SurveyTemplateRepo.ALLERGIES_ID,
-                                    SurveyTemplateRepo.DIET_ID,
-                                    SurveyTemplateRepo.DETAILED_DIET_ID,
-                                    SurveyTemplateRepo.OTHER_ID
-                                ]]), 200
-            elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
-                return jsonify([template_repo.get_survey_template_link_info(x)
-                                for x in [2]]), 200
-            else:
-                return jsonify([]), 200
+
+        has_skin_sample = any(skin_samples.startswith('Skin')
+                              for s in samples
+                              for skin_samples in s.sample_projects)
+
+        source_repo = SourceRepo(t)
+        source = source_repo.get_source(account_id, source_id)
+
+        if source is None:
+            return jsonify(code=404, message="No source found"), 404
+
+        template_repo = SurveyTemplateRepo(t)
+
+        if source.source_type == Source.SOURCE_TYPE_HUMAN:
+            template_ids = [
+                SurveyTemplateRepo.VIOSCREEN_ID,
+                SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                SurveyTemplateRepo.SPAIN_FFQ_ID,
+                SurveyTemplateRepo.BASIC_INFO_ID,
+                SurveyTemplateRepo.AT_HOME_ID,
+                SurveyTemplateRepo.LIFESTYLE_ID,
+                SurveyTemplateRepo.GUT_ID,
+                SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                SurveyTemplateRepo.HEALTH_DIAG_ID,
+                SurveyTemplateRepo.ALLERGIES_ID,
+                SurveyTemplateRepo.DIET_ID,
+                SurveyTemplateRepo.DETAILED_DIET_ID,
+                SurveyTemplateRepo.OTHER_ID
+            ]
+            if has_skin_sample:
+                template_ids.append(SurveyTemplateRepo.SKIN_SCORING_APP_ID)
+
+        elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
+            template_ids = [2]
         else:
-            source_repo = SourceRepo(t)
-            source = source_repo.get_source(account_id, source_id)
-            if source is None:
-                return jsonify(code=404, message="No source found"), 404
-            template_repo = SurveyTemplateRepo(t)
-            if source.source_type == Source.SOURCE_TYPE_HUMAN:
-                return jsonify([template_repo.get_survey_template_link_info(x)
-                                for x in [
-                                    SurveyTemplateRepo.VIOSCREEN_ID,
-                                    SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
-                                    SurveyTemplateRepo.SPAIN_FFQ_ID,
-                                    SurveyTemplateRepo.BASIC_INFO_ID,
-                                    SurveyTemplateRepo.AT_HOME_ID,
-                                    SurveyTemplateRepo.LIFESTYLE_ID,
-                                    SurveyTemplateRepo.GUT_ID,
-                                    SurveyTemplateRepo.GENERAL_HEALTH_ID,
-                                    SurveyTemplateRepo.HEALTH_DIAG_ID,
-                                    SurveyTemplateRepo.ALLERGIES_ID,
-                                    SurveyTemplateRepo.DIET_ID,
-                                    SurveyTemplateRepo.DETAILED_DIET_ID,
-                                    SurveyTemplateRepo.OTHER_ID
-                                ]]), 200
-            elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
-                return jsonify([template_repo.get_survey_template_link_info(x)
-                                for x in [2]]), 200
-            else:
-                return jsonify([]), 200
+            template_ids = []
+
+        return jsonify([template_repo.get_survey_template_link_info(x)
+                        for x in template_ids]), 200
 
 
 def _remote_survey_url_vioscreen(transaction, account_id, source_id,
