@@ -40,6 +40,7 @@ class SurveyTemplateRepo(BaseRepo):
     SURFERS_ID = 20
     COVID19_ID = 21
     OTHER_ID = 22
+    SBI_PROJECT_ID = 58
 
     SURVEY_INFO = {
         # For now, let's keep legacy survey info as well.

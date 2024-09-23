@@ -32,18 +32,6 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
     # survey_group = group_order;
 
     with Transaction() as t:
-        # Checking samples to see any have permission to
-        # see any skin related surveys
-        sample_repo = SampleRepo(t)
-        samples = sample_repo.get_samples_by_source(account_id, source_id)
-        if samples is not None:
-            has_skin_sample = any(skin_samples is not None and
-                                  skin_samples.startswith('Skin')
-                                  for s in samples
-                                  for skin_samples in s.sample_projects)
-        else:
-            has_skin_sample = False
-
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
 
@@ -53,6 +41,14 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
 
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
+            # Checking samples to see if any have
+            # permission to see Skin Scoring App survey
+            sample_repo = SampleRepo(t)
+            samples = sample_repo.get_samples_by_source(account_id, source_id)
+            has_skin_sample = any(
+                s.project_id == SurveyTemplateRepo.SBI_PROJECT_ID
+                for s in samples) if samples else False
+
             template_ids = [
                 SurveyTemplateRepo.VIOSCREEN_ID,
                 SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
@@ -75,7 +71,6 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
             template_ids = [2]
         else:
             template_ids = []
-        print("temp ids", template_ids)
 
         return jsonify([template_repo.get_survey_template_link_info(x)
                         for x in template_ids]), 200

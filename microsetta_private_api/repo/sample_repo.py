@@ -258,6 +258,9 @@ class SampleRepo(BaseRepo):
                 sample.kit_id = self._get_supplied_kit_id_by_sample(
                     sample.barcode
                 )
+                sample.project_id = self._get_project_id_by_sample(
+                    sample.barcode
+                )
                 samples.append(sample)
             return samples
 
@@ -398,6 +401,17 @@ class SampleRepo(BaseRepo):
             cur.execute(
                 "SELECT kit_id "
                 "FROM barcodes.barcode "
+                "WHERE barcode = %s",
+                (sample_barcode, )
+            )
+            row = cur.fetchone()
+            return row[0]
+
+    def _get_project_id_by_sample(self, sample_barcode):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT project_id "
+                "FROM barcodes.project_barcode "
                 "WHERE barcode = %s",
                 (sample_barcode, )
             )
