@@ -36,10 +36,13 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         # see any skin related surveys
         sample_repo = SampleRepo(t)
         samples = sample_repo.get_samples_by_source(account_id, source_id)
-
-        has_skin_sample = any(skin_samples.startswith('Skin')
-                              for s in samples
-                              for skin_samples in s.sample_projects)
+        if samples is not None:
+            has_skin_sample = any(skin_samples is not None and
+                                  skin_samples.startswith('Skin')
+                                  for s in samples
+                                  for skin_samples in s.sample_projects)
+        else:
+            has_skin_sample = False
 
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
@@ -72,6 +75,7 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
             template_ids = [2]
         else:
             template_ids = []
+        print("temp ids", template_ids)
 
         return jsonify([template_repo.get_survey_template_link_info(x)
                         for x in template_ids]), 200
