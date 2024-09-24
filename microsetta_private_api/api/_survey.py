@@ -45,9 +45,13 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
             # permission to see Skin Scoring App survey
             sample_repo = SampleRepo(t)
             samples = sample_repo.get_samples_by_source(account_id, source_id)
-            has_skin_sample = any(
-                s.project_id == SurveyTemplateRepo.SBI_PROJECT_ID
-                for s in samples) if samples else False
+            if samples:
+                has_skin_sample = any(
+                    SurveyTemplateRepo.SBI_PROJECT_ID
+                    in s.project_id for s in samples
+                )
+            else:
+                has_skin_sample = False
 
             template_ids = [
                 SurveyTemplateRepo.VIOSCREEN_ID,

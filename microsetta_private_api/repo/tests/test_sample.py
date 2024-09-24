@@ -168,6 +168,30 @@ class SampleTests(unittest.TestCase):
             )
             self.assertEqual(kit_id, supplied_kit_id)
 
+    def test_get_project_ids_by_sample(self):
+        with Transaction() as t:
+            # First we'll create a kit so that we have a kit_id/barcode combo
+            # to test with
+            admin_repo = AdminRepo(t)
+            res = admin_repo.create_kits(
+                1,
+                1,
+                "UNITTEST",
+                [1, 2]
+            )
+
+            # Extract the info from results. We know we created 1 kit with 1
+            # sample so we don't need to iterate
+            kit_info = res['created'][0]
+            sample_barcode = kit_info['sample_barcodes'][0]
+
+            # Verify that the function returns the correct project_id
+            sample_repo = SampleRepo(t)
+            project_ids = sample_repo._get_project_ids_by_sample(
+                sample_barcode
+            )
+            self.assertEqual([1, 2], project_ids)
+
 
 if __name__ == '__main__':
     unittest.main()

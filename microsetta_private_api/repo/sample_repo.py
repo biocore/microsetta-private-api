@@ -258,7 +258,7 @@ class SampleRepo(BaseRepo):
                 sample.kit_id = self._get_supplied_kit_id_by_sample(
                     sample.barcode
                 )
-                sample.project_id = self._get_project_id_by_sample(
+                sample.project_id = self._get_project_ids_by_sample(
                     sample.barcode
                 )
                 samples.append(sample)
@@ -407,7 +407,7 @@ class SampleRepo(BaseRepo):
             row = cur.fetchone()
             return row[0]
 
-    def _get_project_id_by_sample(self, sample_barcode):
+    def _get_project_ids_by_sample(self, sample_barcode):
         with self._transaction.cursor() as cur:
             cur.execute(
                 "SELECT project_id "
@@ -415,8 +415,10 @@ class SampleRepo(BaseRepo):
                 "WHERE barcode = %s",
                 (sample_barcode, )
             )
-            row = cur.fetchone()
-            return row[0]
+            rows = cur.fetchall()
+
+            project_ids = [row[0] for row in rows]
+            return project_ids
 
     def scrub(self, account_id, source_id, sample_id):
         """Wipe out free text information for a sample

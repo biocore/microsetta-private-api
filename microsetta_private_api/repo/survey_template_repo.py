@@ -788,7 +788,7 @@ class SurveyTemplateRepo(BaseRepo):
         """
         characters = string.ascii_lowercase + string.digits
 
-        for attempt in range(5):
+        while True:
             skin_scoring_app_id = ''.join(random.choices(characters, k=8))
 
             try:
@@ -810,20 +810,11 @@ class SurveyTemplateRepo(BaseRepo):
                                 "VALUES(%s, %s, %s, %s, %s)",
                                 (account_id, skin_scoring_app_id, None,
                                  source_id,
-                                    SurveyTemplateRepo.SKIN_SCORING_APP_ID))
+                                 SurveyTemplateRepo.SKIN_SCORING_APP_ID))
 
                     return skin_scoring_app_id
-            except psycopg2.IntegrityError as e:
+            except psycopg2.IntegrityError:
                 self._transaction.rollback()
-
-                if e.pgcode == '23505':
-                    print(f"Duplicate ID '{skin_scoring_app_id}' "
-                          f"detected. Retrying... (Attempt {attempt + 1}/{5})")
-                else:
-                    raise
-
-        raise Exception("Unable to generate a unique "
-                        "Skin Scoring App ID after 5 attempts")
 
     def get_skin_scoring_app_id_if_exists(self,
                                           account_id,
@@ -853,39 +844,7 @@ class SurveyTemplateRepo(BaseRepo):
             if res is None:
                 return None
             else:
-                return res
-
-    def delete_skin_scoring_app(self, account_id, source_id):
-        """Intended for admin use, remove Skin Scoring App entries
-
-        This method is idempotent.
-
-        This method deletes ALL Skin Scoring App surveys associated with an
-        account and source
-
-        This is a hard delete, we REMOVE rows rather than setting a flag
-
-        Parameters
-        ----------
-        account_id : str, UUID
-            The account UUID
-        source_id : str, UUID
-            The source UUID
-        """
-        with self._transaction.cursor() as cur:
-            existing = \
-                self.get_skin_scoring_app_id_if_exists(account_id,
-                                                       source_id)
-            if existing is not None:
-                cur.execute("""DELETE FROM ag.ag_login_surveys
-                               WHERE ag_login_id=%s
-                                   AND source_id=%s
-                                   AND survey_id=%s""",
-                            (account_id, source_id, existing))
-            cur.execute("""DELETE FROM ag.skin_scoring_app_registry
-                           WHERE account_id=%s
-                               AND source_id=%s""",
-                        (account_id, source_id))
+                return res[0]
 
     def get_vioscreen_sample_to_user(self):
         """Obtain a mapping of sample barcode to vioscreen user"""

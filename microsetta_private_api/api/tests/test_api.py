@@ -384,8 +384,6 @@ def delete_dummy_accts():
                 template_repo.delete_polyphenol_ffq(curr_acct_id,
                                                     curr_source.id)
                 template_repo.delete_spain_ffq(curr_acct_id, curr_source.id)
-                template_repo.delete_skin_scoring_app(curr_acct_id,
-                                                      curr_source.id)
 
                 # Dissociate all samples linked to this source from all
                 # answered surveys linked to this source, then delete all
