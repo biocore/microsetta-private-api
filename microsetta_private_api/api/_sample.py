@@ -28,6 +28,7 @@ def read_sample_associations(account_id, source_id, token_info):
     with Transaction() as t:
         sample_repo = SampleRepo(t)
         samples = sample_repo.get_samples_by_source(account_id, source_id)
+        print("samples", dir(samples))
 
     api_samples = [x.to_api() for x in samples]
     return jsonify(api_samples), 200

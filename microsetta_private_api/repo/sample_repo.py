@@ -106,7 +106,14 @@ class SampleRepo(BaseRepo):
                                    override_locked=False):
         with self._transaction.cursor() as cur:
             existing_sample = self._get_sample_by_id(sample_id)
-            if existing_sample.remove_locked and not override_locked:
+            print("existing sample", dir(existing_sample))
+            print("existing samples source id", existing_sample.source_id)
+            print("source id", source_id)
+            # if the sample is not associated with a source, then
+            # we can skip the lock checks
+            if existing_sample.source_id is not None \
+                    and existing_sample.remove_locked and not override_locked:
+                print("raise repo exception", existing_sample.source_id)
                 raise RepoException(
                     "Sample association locked: Sample already received")
 
