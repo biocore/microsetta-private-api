@@ -110,7 +110,6 @@ class SampleRepo(BaseRepo):
             # we can skip the lock checks
             if existing_sample.source_id is not None \
                     and existing_sample.remove_locked and not override_locked:
-                print("raise repo exception", existing_sample.source_id)
                 raise RepoException(
                     "Sample association locked: Sample already received")
 
