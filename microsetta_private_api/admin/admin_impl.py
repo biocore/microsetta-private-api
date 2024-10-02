@@ -56,7 +56,7 @@ def search_kit_id(token_info, kit_id):
         admin_repo = AdminRepo(t)
         diag = admin_repo.retrieve_diagnostics_by_kit_id(kit_id)
         if diag is None:
-            return jsonify(code=404, message="Kit ID not found"), 404
+            return jsonify(code=404, message=f'Kit ID {kit_id} not found'), 404
         return jsonify(diag), 200
 
 
@@ -263,19 +263,110 @@ def create_kits(body, token_info):
     number_of_samples = body['number_of_samples']
     kit_prefix = body.get('kit_id_prefix', None)
     project_ids = body['project_ids']
+    user_barcodes = body.get('user_barcodes', [])
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
 
         try:
-            kits = admin_repo.create_kits(number_of_kits, number_of_samples,
-                                          kit_prefix, project_ids)
+            kits = admin_repo.create_kits(number_of_kits,
+                                          number_of_samples,
+                                          kit_prefix,
+                                          user_barcodes,
+                                          project_ids)
         except KeyError:
             return jsonify(code=422, message="Unable to create kits"), 422
         else:
             t.commit()
 
     return jsonify(kits), 201
+
+
+def handle_barcodes(body, token_info):
+    validate_admin_access(token_info)
+
+    kit_ids = body['kit_ids']
+
+    if isinstance(kit_ids, str):
+        kit_ids = [kit_ids]
+
+    with Transaction() as t:
+        kit_repo = KitRepo(t)
+        for kit_id in kit_ids:
+            diag = kit_repo.get_kit_all_samples(kit_id)
+            if diag is None:
+                return jsonify(f'Kit ID {kit_id} not found'), 404
+
+    action = body.get('action')
+
+    if action == 'create':
+        if 'generate_barcode_single' in body:
+            if body['generate_barcode_single']:
+                number_of_kits = 1
+                number_of_samples = 1
+        elif 'generate_barcodes' in body:
+            number_of_kits = (body['num_kits'])
+            number_of_samples = (body['num_samples'])
+        else:
+            number_of_kits = len(body['kit_ids'])
+            number_of_samples = 1
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            barcode = admin_repo._generate_novel_barcodes(
+                number_of_kits, number_of_samples, kit_names=kit_ids)
+
+            t.commit()
+
+        return jsonify(barcode[1]), 201
+
+    elif action == 'insert':
+        return insert_barcodes(body, token_info)
+
+    else:
+        return jsonify(code=404, message='Invalid action'), 404
+
+
+def insert_barcodes(body, token_info):
+    validate_admin_access(token_info)
+
+    kit_ids = body['kit_ids']
+    barcodes = body['barcodes']
+
+    # Ensure kit_ids is a list, even if it's a single value
+    if isinstance(kit_ids, str):
+        kit_ids = [kit_ids]
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+        for barcode in barcodes:
+            diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
+            if diag is not None:
+                return jsonify(f'Barcode {barcode} already exists'), 404
+
+    # Check if the lengths match
+    if len(kit_ids) != len(barcodes):
+        return jsonify("The number of kit IDs must "
+                       "match the number of barcodes"), 400
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+
+        insertion_data = []
+        for kit_id, barcode in zip(kit_ids, barcodes):
+            diag = admin_repo.retrieve_diagnostics_by_kit_id(kit_id)
+            sample_info = diag['sample_diagnostic_info'][0]
+            if sample_info['projects_info']:
+                for project in sample_info['projects_info']:
+                    project_id = str(project['project_id'])
+                    insertion_data.append((kit_id, barcode, project_id))
+
+        admin_repo._insert_barcodes_to_existing_kit(insertion_data)
+
+        t.commit()
+
+    return '', 204
 
 
 def get_account_events(account_id, token_info):
