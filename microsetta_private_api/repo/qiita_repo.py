@@ -1,10 +1,33 @@
+from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.base_repo import BaseRepo
 from microsetta_private_api.qiita import qclient
 from microsetta_private_api.repo.metadata_repo import retrieve_metadata
 from microsetta_private_api.repo.metadata_repo._constants import MISSING_VALUE
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 
 
 class QiitaRepo(BaseRepo):
+    def lock_completed_surveys_to_barcodes(self, barcodes):
+        # lock survey-sample association
+        admin_repo = AdminRepo(self._transaction)
+        sar_repo = SurveyAnswersRepo(self._transaction)
+
+        for sample_barcode in barcodes:
+            ids = admin_repo._get_ids_relevant_to_barcode(sample_barcode)
+
+            if ids is not None:
+                account_id = ids.get('account_id')
+                source_id = ids.get('source_id')
+                sample_id = ids.get('sample_id')
+
+                survey_ids = sar_repo.list_answered_surveys(
+                    account_id, source_id)
+
+                if survey_ids is not None:
+                    for survey_id in survey_ids:
+                        sar_repo.associate_answered_survey_with_sample(
+                            account_id, source_id, sample_id, survey_id)
+
     def push_metadata_to_qiita(self, barcodes=None):
         """Attempt to format and push metadata for the set of barcodes
 
@@ -35,6 +58,7 @@ class QiitaRepo(BaseRepo):
         list
             Any error detail when constructing metadata
         """
+
         if barcodes is None:
             with self._transaction.cursor() as cur:
                 # obtain all barcodes, which are part of the AG table,
@@ -83,6 +107,9 @@ class QiitaRepo(BaseRepo):
         # 1000 samples max per request. We can always use multiple
         # calls to this function if and as needed.
         to_push = list(barcodes - samples_in_qiita)[:1000]
+
+        # lock survey-sample association
+        self.lock_completed_surveys_to_barcodes(to_push)
 
         # short circuit if we do not have anything to push
         if len(to_push) == 0:
