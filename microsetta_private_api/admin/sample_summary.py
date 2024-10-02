@@ -1,4 +1,5 @@
 from microsetta_private_api.model.source import Source
+from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -7,12 +8,40 @@ from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from werkzeug.exceptions import NotFound
 
 
-def get_barcodes_for(project_id):
+def get_barcodes_by_project_id(project_id):
     if project_id is None:
         raise ValueError("project_id must be defined.")
 
     with Transaction() as t:
         return AdminRepo(t).get_project_barcodes(project_id)
+    
+def get_barcodes_by_kit_ids(kit_ids):
+    if kit_ids is None:
+        raise ValueError("kit_id must be defined.")
+
+    with Transaction() as t:
+        return AdminRepo(t).get_kit_barcodes(kit_ids)
+    
+def get_barcodes_by_emails(emails):
+    if emails is None:
+        raise ValueError("email must be defined.")
+
+    with Transaction() as t:
+        return AdminRepo(t).get_email_barcodes(emails)
+    
+def get_barcodes_by_outbound_tracking_numbers(outbound_tracking_numbers):
+    if outbound_tracking_numbers is None:
+        raise ValueError("outbound_tracking_numbers must be defined.")
+
+    with Transaction() as t:
+        return AdminRepo(t).get_outbound_tracking_barcodes(outbound_tracking_numbers)
+    
+def get_barcodes_by_inbound_tracking_numbers(inbound_tracking_numbers):
+    if inbound_tracking_numbers is None:
+        raise ValueError("inbound_tracking_numbers must be defined.")
+
+    with Transaction() as t:
+        return AdminRepo(t).get_inbound_tracking_barcodes(inbound_tracking_numbers)
 
 
 def per_sample(project, barcodes, strip_sampleid):
@@ -21,6 +50,7 @@ def per_sample(project, barcodes, strip_sampleid):
         admin_repo = AdminRepo(t)
         sample_repo = SampleRepo(t)
         template_repo = SurveyTemplateRepo(t)
+        kit_repo = KitRepo(t)
         vs_repo = VioscreenSessionRepo(t)
 
         # all associated projects returned for each barcode,
@@ -83,6 +113,10 @@ def per_sample(project, barcodes, strip_sampleid):
                 ffq_complete, ffq_taken, _ = vs_repo.get_ffq_status_by_sample(
                     sample.id
                 )
+            
+            kit_id_name = kit_repo.get_kit_id_name_by_barcode(barcode)
+            outbound_fedex_tracking = admin_repo.get_outbound_tracking_by_barcodes(barcode)
+            inbound_fedex_tracking = admin_repo.get_inbound_tracking_by_barcodes(barcode)
 
             summary = {
                 "sampleid": None if strip_sampleid else barcode,
@@ -96,7 +130,11 @@ def per_sample(project, barcodes, strip_sampleid):
                 "ffq-taken": ffq_taken,
                 "ffq-complete": ffq_complete,
                 "sample-status": sample_status,
-                "sample-received": sample_status is not None
+                "sample-received": sample_status is not None,
+                "kit-id": kit_id_name,
+                "outbound-tracking": outbound_fedex_tracking,
+                "inbound-tracking": inbound_fedex_tracking
+
             }
 
             for status in ["sample-is-valid",

@@ -29,7 +29,9 @@ from microsetta_private_api.admin.daklapack_communication import \
     post_daklapack_orders
 from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
-from microsetta_private_api.admin.sample_summary import get_barcodes_for
+from microsetta_private_api.admin.sample_summary import get_barcodes_by_project_id,\
+    get_barcodes_by_kit_ids, get_barcodes_by_emails,\
+    get_barcodes_by_outbound_tracking_numbers, get_barcodes_by_inbound_tracking_numbers
 from microsetta_private_api.util.melissa import verify_address
 from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
@@ -500,12 +502,26 @@ def query_project_barcode_stats(body, token_info, strip_sampleid):
 
 def query_barcode_stats(body, token_info, strip_sampleid):
     validate_admin_access(token_info)
+    print("body", body)
     if 'sample_barcodes' in body:
         project_id = None
         barcodes = body["sample_barcodes"]
+    elif 'kit_ids' in body:
+        project_id = None
+        barcodes = get_barcodes_by_kit_ids(body["kit_ids"])
+        print("kit id barcodes", barcodes)
+    elif 'emails' in body:
+        project_id = None
+        barcodes = get_barcodes_by_emails(body["emails"])
+    elif 'outbound_tracking_numbers' in body:
+        project_id = None
+        barcodes = get_barcodes_by_outbound_tracking_numbers(body["outbound_tracking_numbers"])
+    elif 'inbound_tracking_numbers' in body:
+        project_id = None
+        barcodes = get_barcodes_by_inbound_tracking_numbers(body["inbound_tracking_numbers"])
     elif 'project_id' in body:
         project_id = body["project_id"]
-        barcodes = get_barcodes_for(project_id)
+        barcodes = get_barcodes_by_project_id(project_id)
 
     unprocessed_barcodes = None
 

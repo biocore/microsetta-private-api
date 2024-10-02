@@ -555,6 +555,202 @@ class AdminRepo(BaseRepo):
             else:
                 cur.execute(query, [project_id, ])
                 return list([v[0] for v in cur.fetchall()])
+            
+    def get_kit_barcodes(self, kit_ids):
+        """Obtain the barcodes associated with a kit
+
+        Parameters
+        ----------
+        kit_ids : list
+            The list of kit IDs to obtain barcodes for
+
+        Returns
+        -------
+        list
+            The list of observed barcodes
+        """
+        query_kit_ids = """
+            SELECT ag_kit_id
+            FROM ag.ag_kit
+            WHERE supplied_kit_id IN %s
+        """
+
+        with self._transaction.cursor() as cur:
+            cur.execute(query_kit_ids, [tuple(kit_ids)])
+            ag_kit_ids = [row[0] for row in cur.fetchall()]
+
+            if not ag_kit_ids:
+                return []
+
+            query_barcodes = """
+                SELECT barcode
+                FROM ag.ag_kit_barcodes
+                WHERE ag_kit_id IN %s
+            """
+            cur.execute(query_barcodes, [tuple(ag_kit_ids)])
+            return [row[0] for row in cur.fetchall()]
+        
+    def get_email_barcodes(self, emails):
+        """Obtain the barcodes associated with an email
+
+        Parameters
+        ----------
+        emails : list
+            The list of emails to obtain barcodes for
+
+        Returns
+        -------
+        list
+            The list of observed barcodes
+        """
+        query_emails = """
+            SELECT created_with_kit_id
+            FROM ag.account
+            WHERE email IN %s
+        """
+
+        with self._transaction.cursor() as cur:
+            cur.execute(query_emails, [tuple(emails)])
+            created_with_kit_ids = [row[0] for row in cur.fetchall()]
+
+            if not created_with_kit_ids:
+                return []
+
+            query_barcodes = """
+                SELECT barcode
+                FROM barcodes.barcode
+                WHERE kit_id IN %s
+            """
+            cur.execute(query_barcodes, [tuple(created_with_kit_ids)])
+            return [row[0] for row in cur.fetchall()]
+        
+    def get_outbound_tracking_barcodes(self, outbound_tracking_numbers):
+        """Obtain the barcodes associated with an outbound tracking number
+
+        Parameters
+        ----------
+        outbound_tracking_numbers : list
+            The list of outbound tracking numbers to obtain barcodes for
+
+        Returns
+        -------
+        list
+            The list of observed barcodes
+        """
+        query_outbound_tracking = """
+            SELECT kit_id
+            FROM barcodes.kit
+            WHERE outbound_fedex_tracking IN %s
+        """
+
+        with self._transaction.cursor() as cur:
+            cur.execute(query_outbound_tracking, [tuple(outbound_tracking_numbers)])
+            kit_ids = [row[0] for row in cur.fetchall()]
+
+            if not kit_ids:
+                return []
+
+            query_barcodes = """
+                SELECT barcode
+                FROM barcodes.barcode
+                WHERE kit_id IN %s
+            """
+            cur.execute(query_barcodes, [tuple(kit_ids)])
+            return [row[0] for row in cur.fetchall()]
+        
+    def get_inbound_tracking_barcodes(self, inbound_tracking_numbers):
+        """Obtain the barcodes associated with an inbound tracking number
+
+        Parameters
+        ----------
+        inbound_tracking_numbers : list
+            The list of inbound tracking numbers to obtain barcodes for
+
+        Returns
+        -------
+        list
+            The list of observed barcodes
+        """
+        query_inbound_tracking = """
+            SELECT kit_id
+            FROM barcodes.kit
+            WHERE inbound_fedex_tracking IN %s
+        """
+
+        with self._transaction.cursor() as cur:
+            cur.execute(query_inbound_tracking, [tuple(inbound_tracking_numbers)])
+            kit_ids = [row[0] for row in cur.fetchall()]
+
+            if not kit_ids:
+                return []
+
+            query_barcodes = """
+                SELECT barcode
+                FROM barcodes.barcode
+                WHERE kit_id IN %s
+            """
+            cur.execute(query_barcodes, [tuple(kit_ids)])
+            return [row[0] for row in cur.fetchall()]
+
+    def get_outbound_tracking_by_barcodes(self, barcodes):
+        """Obtain the outbound tracking numbers associated with a barcode
+
+        Parameters
+        ----------
+        barcodes : list
+            The list of barcodes to obtain outbound tracking numbers for
+
+        Returns
+        -------
+        list
+            The list of observed outbound tracking numbers
+        """
+        query = """
+            SELECT k.outbound_fedex_tracking
+            FROM barcodes.barcode b
+            JOIN barcodes.kit k ON b.kit_id = k.kit_id
+            WHERE b.barcode IN %s
+        """
+
+        with self._transaction.cursor() as cur:
+            cur.execute(query, [tuple(barcodes)])
+
+            rows = cur.fetchall()
+
+            if len(rows) == 0:
+                return None
+
+            return [row[0] for row in rows]
+        
+    def get_inbound_tracking_by_barcodes(self, barcodes):
+        """Obtain the inbound tracking numbers associated with a barcode
+
+        Parameters
+        ----------
+        barcodes : list
+            The list of barcodes to obtain inbound tracking numbers for
+
+        Returns
+        -------
+        list
+            The list of observed inbound tracking numbers
+        """
+        query = """
+            SELECT k.inbound_fedex_tracking
+            FROM barcodes.barcode b
+            JOIN barcodes.kit k ON b.kit_id = k.kit_id
+            WHERE b.barcode IN %s
+        """
+
+        with self._transaction.cursor() as cur:
+            cur.execute(query, [tuple(barcodes)])
+
+            rows = cur.fetchall()
+
+            if len(rows) == 0:
+                return None
+
+            return [row[0] for row in rows]
 
     def create_project(self, project):
         """Create a project entry in the database
