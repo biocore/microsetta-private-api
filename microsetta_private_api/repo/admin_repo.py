@@ -555,7 +555,7 @@ class AdminRepo(BaseRepo):
             else:
                 cur.execute(query, [project_id, ])
                 return list([v[0] for v in cur.fetchall()])
-            
+
     def get_kit_barcodes(self, kit_ids):
         """Obtain the barcodes associated with a kit
 
@@ -589,7 +589,7 @@ class AdminRepo(BaseRepo):
             """
             cur.execute(query_barcodes, [tuple(ag_kit_ids)])
             return [row[0] for row in cur.fetchall()]
-        
+
     def get_email_barcodes(self, emails):
         """Obtain the barcodes associated with an email
 
@@ -623,7 +623,7 @@ class AdminRepo(BaseRepo):
             """
             cur.execute(query_barcodes, [tuple(created_with_kit_ids)])
             return [row[0] for row in cur.fetchall()]
-        
+
     def get_outbound_tracking_barcodes(self, outbound_tracking_numbers):
         """Obtain the barcodes associated with an outbound tracking number
 
@@ -644,7 +644,8 @@ class AdminRepo(BaseRepo):
         """
 
         with self._transaction.cursor() as cur:
-            cur.execute(query_outbound_tracking, [tuple(outbound_tracking_numbers)])
+            cur.execute(query_outbound_tracking,
+                        [tuple(outbound_tracking_numbers)])
             kit_ids = [row[0] for row in cur.fetchall()]
 
             if not kit_ids:
@@ -657,7 +658,7 @@ class AdminRepo(BaseRepo):
             """
             cur.execute(query_barcodes, [tuple(kit_ids)])
             return [row[0] for row in cur.fetchall()]
-        
+
     def get_inbound_tracking_barcodes(self, inbound_tracking_numbers):
         """Obtain the barcodes associated with an inbound tracking number
 
@@ -678,7 +679,8 @@ class AdminRepo(BaseRepo):
         """
 
         with self._transaction.cursor() as cur:
-            cur.execute(query_inbound_tracking, [tuple(inbound_tracking_numbers)])
+            cur.execute(query_inbound_tracking,
+                        [tuple(inbound_tracking_numbers)])
             kit_ids = [row[0] for row in cur.fetchall()]
 
             if not kit_ids:
@@ -721,7 +723,7 @@ class AdminRepo(BaseRepo):
                 return None
 
             return [row[0] for row in rows]
-        
+
     def get_inbound_tracking_by_barcodes(self, barcodes):
         """Obtain the inbound tracking numbers associated with a barcode
 
@@ -751,6 +753,80 @@ class AdminRepo(BaseRepo):
                 return None
 
             return [row[0] for row in rows]
+
+    def get_first_scan_timestamp_by_barcodes(self, barcodes):
+        """Obtain the first scan timestamp and
+           sample status associated with a barcode
+
+        Parameters
+        ----------
+        barcodes : list
+            The list of barcodes to obtain first
+            scan timestamps and sample statuses for
+
+        Returns
+        -------
+        list
+            A list of tuples where each tuple contains
+            the first scan timestamp and sample status
+        """
+
+        if isinstance(barcodes, str):
+            barcodes = [barcodes]
+
+        query = """
+            SELECT MIN(scan_timestamp), sample_status
+            FROM barcodes.barcode_scans
+            WHERE barcode = %s
+            GROUP BY sample_status
+            ORDER BY MIN(scan_timestamp)
+            LIMIT 1
+        """
+
+        with self._transaction.cursor() as cur:
+            for barcode in barcodes:
+                cur.execute(query, [barcode])
+                result = cur.fetchone()
+                results = result[0], result[1]
+
+            return results
+
+    def get_last_scan_timestamp_by_barcodes(self, barcodes):
+        """Obtain the last scan timestamp and
+           sample status associated with a barcode
+
+        Parameters
+        ----------
+        barcodes : list
+            The list of barcodes to obtain last
+            scan timestamps and sample statuses for
+
+        Returns
+        -------
+        list
+            A list of tuples where each tuple contains
+            the last scan timestamp and sample status
+        """
+
+        if isinstance(barcodes, str):
+            barcodes = [barcodes]
+
+        query = """
+            SELECT MAX(scan_timestamp), sample_status
+            FROM barcodes.barcode_scans
+            WHERE barcode = %s
+            GROUP BY sample_status
+            ORDER BY MAX(scan_timestamp) DESC
+            LIMIT 1
+        """
+
+        with self._transaction.cursor() as cur:
+            for barcode in barcodes:
+                cur.execute(query, [barcode])
+                result = cur.fetchone()
+                results = result[0], result[1]
+
+            return results
 
     def create_project(self, project):
         """Create a project entry in the database

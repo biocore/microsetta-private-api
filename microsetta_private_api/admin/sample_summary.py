@@ -14,34 +14,40 @@ def get_barcodes_by_project_id(project_id):
 
     with Transaction() as t:
         return AdminRepo(t).get_project_barcodes(project_id)
-    
+
+
 def get_barcodes_by_kit_ids(kit_ids):
     if kit_ids is None:
         raise ValueError("kit_id must be defined.")
 
     with Transaction() as t:
         return AdminRepo(t).get_kit_barcodes(kit_ids)
-    
+
+
 def get_barcodes_by_emails(emails):
     if emails is None:
         raise ValueError("email must be defined.")
 
     with Transaction() as t:
         return AdminRepo(t).get_email_barcodes(emails)
-    
+
+
 def get_barcodes_by_outbound_tracking_numbers(outbound_tracking_numbers):
     if outbound_tracking_numbers is None:
         raise ValueError("outbound_tracking_numbers must be defined.")
 
     with Transaction() as t:
-        return AdminRepo(t).get_outbound_tracking_barcodes(outbound_tracking_numbers)
-    
+        return AdminRepo(t).get_outbound_tracking_barcodes
+    (outbound_tracking_numbers)
+
+
 def get_barcodes_by_inbound_tracking_numbers(inbound_tracking_numbers):
     if inbound_tracking_numbers is None:
         raise ValueError("inbound_tracking_numbers must be defined.")
 
     with Transaction() as t:
-        return AdminRepo(t).get_inbound_tracking_barcodes(inbound_tracking_numbers)
+        return AdminRepo(t).get_inbound_tracking_barcodes
+    (inbound_tracking_numbers)
 
 
 def per_sample(project, barcodes, strip_sampleid):
@@ -113,10 +119,16 @@ def per_sample(project, barcodes, strip_sampleid):
                 ffq_complete, ffq_taken, _ = vs_repo.get_ffq_status_by_sample(
                     sample.id
                 )
-            
+
             kit_id_name = kit_repo.get_kit_id_name_by_barcode(barcode)
-            outbound_fedex_tracking = admin_repo.get_outbound_tracking_by_barcodes(barcode)
-            inbound_fedex_tracking = admin_repo.get_inbound_tracking_by_barcodes(barcode)
+            outbound_fedex_tracking = \
+                admin_repo.get_outbound_tracking_by_barcodes(barcode)
+            inbound_fedex_tracking = \
+                admin_repo.get_inbound_tracking_by_barcodes(barcode)
+            first_scan_timestamp_status = \
+                admin_repo.get_first_scan_timestamp_by_barcodes(barcode)
+            last_scan_timestamp_status = \
+                admin_repo.get_last_scan_timestamp_by_barcodes(barcode)
 
             summary = {
                 "sampleid": None if strip_sampleid else barcode,
@@ -133,8 +145,9 @@ def per_sample(project, barcodes, strip_sampleid):
                 "sample-received": sample_status is not None,
                 "kit-id": kit_id_name,
                 "outbound-tracking": outbound_fedex_tracking,
-                "inbound-tracking": inbound_fedex_tracking
-
+                "inbound-tracking": inbound_fedex_tracking,
+                "first-scan-timestamp-status": first_scan_timestamp_status,
+                "last-scan-timestamp-status": last_scan_timestamp_status
             }
 
             for status in ["sample-is-valid",

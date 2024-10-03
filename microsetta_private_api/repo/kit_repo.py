@@ -67,12 +67,12 @@ class KitRepo(BaseRepo):
             else:
                 samples = [sample_repo._get_sample_by_id(r[1]) for r in rows]
                 return Kit(rows[0][0], samples)
-            
+
     def get_kit_id_name_by_barcode(self, barcode):
         with self._transaction.cursor() as cur:
             cur.execute("""
-                        SELECT kit_id 
-                        FROM barcodes.barcode 
+                        SELECT kit_id
+                        FROM barcodes.barcode
                         WHERE barcode = %s
                         """, (barcode,))
 
