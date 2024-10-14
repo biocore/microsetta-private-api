@@ -395,6 +395,41 @@ class SurveyTemplateTests(unittest.TestCase):
                                                          TEST1_SOURCE_ID)
             self.assertEqual(obs, None)
 
+    def test_create_skin_scoring_app_entry_valid(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.create_skin_scoring_app_entry(TEST1_ACCOUNT_ID,
+                                                              TEST1_SOURCE_ID,
+                                                              'en_US')
+        self.assertEqual(len(obs), 8)
+
+    def test_create_skin_scoring_app_entry_invalid(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            with self.assertRaises(InvalidTextRepresentation):
+                template_repo.create_skin_scoring_app_entry('',
+                                                            TEST1_SOURCE_ID,
+                                                            'en_US')
+
+    def test_get_skin_scoring_app_id_if_exists_true(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            test_ssa_id = template_repo.create_skin_scoring_app_entry(
+                TEST1_ACCOUNT_ID, TEST1_SOURCE_ID, 'en_US'
+            )
+            obs = template_repo.get_skin_scoring_app_id_if_exists(
+                TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
+            )
+            self.assertEqual(test_ssa_id, obs)
+
+    def test_get_skin_scoring_app_id_if_exists_false(self):
+        with Transaction() as t:
+            template_repo = SurveyTemplateRepo(t)
+            obs = template_repo.get_skin_scoring_app_id_if_exists(
+                TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
+            )
+            self.assertEqual(obs, None)
+
     def test_create_vioscreen_id_valid(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
