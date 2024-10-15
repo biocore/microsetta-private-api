@@ -352,7 +352,6 @@ class AdminRepoTests(AdminTests):
                 self.assertGreater(len(diag['projects_info']), 0)
                 self.assertEqual(len(diag['scans_info']), 2)
                 # order matters in the returned vals, so test that
-                print(diag['scans_info'][0], first_scan)
                 self.assertEqual(diag['scans_info'][0], first_scan)
                 self.assertEqual(diag['scans_info'][1], second_scan)
                 self.assertEqual(diag['latest_scan'], second_scan)
@@ -454,7 +453,11 @@ class AdminRepoTests(AdminTests):
             output_id = admin_repo.create_project(input)
 
             # create some fake kits
-            created = admin_repo.create_kits(2, 3, 'foo', [output_id, ])
+            created = admin_repo.create_kits(2,
+                                             3,
+                                             'foo',
+                                             None,
+                                             [output_id, ])
 
             exp = []
             for kit in created['created']:
@@ -609,14 +612,14 @@ class AdminRepoTests(AdminTests):
                 admin_repo.create_kits(5,
                                        3,
                                        '',
+                                       None,
                                        [10000,
                                         SurveyTemplateRepo.VIOSCREEN_ID])
 
     def test_create_kits_success_not_microsetta(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            non_tmi = admin_repo.create_kits(5, 3, '',
-                                             [33])
+            non_tmi = admin_repo.create_kits(5, 3, '', None, [33])
             self.assertEqual(['created', ], list(non_tmi.keys()))
             self.assertEqual(len(non_tmi['created']), 5)
             for obj in non_tmi['created']:
@@ -643,8 +646,7 @@ class AdminRepoTests(AdminTests):
     def test_create_kits_success_is_microsetta(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            tmi = admin_repo.create_kits(4, 2, 'foo',
-                                         [1])
+            tmi = admin_repo.create_kits(4, 2, 'foo', None, [1])
             self.assertEqual(['created', ], list(tmi.keys()))
             self.assertEqual(len(tmi['created']), 4)
             for obj in tmi['created']:
@@ -878,7 +880,6 @@ class AdminRepoTests(AdminTests):
                 scans = [scan['observations'] for scan in diag['scans_info']]
                 scans_observation_ids = [obs['observation_id'] for scan in
                                          scans for obs in scan]
-
                 self.assertEqual(scans_observation_ids, observation_ids)
 
     def test_scan_with_wrong_observation(self):
@@ -1487,3 +1488,108 @@ class AdminRepoTests(AdminTests):
                 )
                 obs = cur.fetchone()
                 self.assertFalse(obs[0])
+
+    def test_generate_novel_barcodes_admin_success(self):
+        number_of_kits = 1
+        number_of_samples = 3
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            kit_names = admin_repo._generate_novel_kit_names(
+                number_of_kits, kit_prefix=None)
+
+            new_barcodes = admin_repo._generate_novel_barcodes(
+                number_of_kits, number_of_samples, kit_names)
+
+            self.assertEqual(len(new_barcodes[1]),
+                             number_of_kits * number_of_samples)
+            self.assertTrue(all(barcodes.startswith('X')
+                            for barcodes in new_barcodes[1]))
+
+    def test_generate_novel_barcodes_admin_failure(self):
+        number_of_kits = 0
+        number_of_samples = 3
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            kit_names = admin_repo._generate_novel_kit_names(
+                number_of_kits, kit_prefix=None)
+
+            new_barcodes = admin_repo._generate_novel_barcodes(
+                number_of_kits, number_of_samples, kit_names)
+
+            self.assertTrue(new_barcodes[1] == [], [])
+
+    def test_insert_barcodes_admin_success(self):
+        kit_name = 'test'
+        barcode = 'X00332312'
+        project_id = '1'
+        kit_name_barcode_prj_id_tuple = [(kit_name, barcode, project_id)]
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            admin_repo._insert_barcodes_to_existing_kit(
+                kit_name_barcode_prj_id_tuple
+            )
+
+            with t.cursor() as cur:
+                cur.execute(
+                    "SELECT barcode "
+                    "FROM barcodes.barcode "
+                    "WHERE kit_id = %s AND barcode = %s",
+                    (kit_name, barcode)
+                )
+                obs = cur.fetchone()
+                self.assertIsNotNone(obs,
+                                     "Expected barcode not found in database")
+
+    def test_insert_barcodes_admin_fail_nonexisting_kit(self):
+        # test that inserting barcodes to a non-existent kit fails
+        kit_name_barcode_prj_id_tuple = [['test1123', 'X00332312', '1']]
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            with self.assertRaises(psycopg2.errors.ForeignKeyViolation):
+                admin_repo._insert_barcodes_to_existing_kit(
+                    kit_name_barcode_prj_id_tuple)
+
+    def test_insert_barcodes_admin_fail_dup_barcodes(self):
+        # test that inserting duplicate barcode fails
+        kit_name_barcode_prj_id_tuple = [['test', '000000001', '1']]
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            with self.assertRaises(psycopg2.errors.UniqueViolation):
+                admin_repo._insert_barcodes_to_existing_kit(
+                    kit_name_barcode_prj_id_tuple)
+
+    def test_user_barcode_create_kit_success(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            admin_repo.create_kits(1,
+                                   1,
+                                   '',
+                                   [['X99887769']],
+                                   [1])
+            with t.cursor() as cur:
+                cur.execute(
+                    "SELECT barcode "
+                    "FROM barcodes.barcode "
+                    "WHERE barcode = %s",
+                    ('X99887769',)
+                )
+                obs = cur.fetchall()
+                self.assertEqual(obs[0][0], 'X99887769')
+
+    def test_user_barcode_dup_create_kit_fail(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            user_barcode = ['000000001']
+            with self.assertRaises(psycopg2.errors.UniqueViolation):
+                admin_repo.create_kits(1,
+                                       1,
+                                       '',
+                                       [user_barcode],
+                                       [1])

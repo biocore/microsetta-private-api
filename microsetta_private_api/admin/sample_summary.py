@@ -83,6 +83,7 @@ def per_sample(project, barcodes, strip_sampleid):
                 ffq_complete, ffq_taken, _ = vs_repo.get_ffq_status_by_sample(
                     sample.id
                 )
+                print("ffq complete", ffq_complete, "ffq taken", ffq_taken)
 
             summary = {
                 "sampleid": None if strip_sampleid else barcode,
