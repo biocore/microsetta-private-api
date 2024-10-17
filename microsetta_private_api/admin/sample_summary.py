@@ -1,5 +1,4 @@
 from microsetta_private_api.model.source import Source
-from microsetta_private_api.repo.kit_repo import KitRepo
 from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
@@ -56,7 +55,6 @@ def per_sample(project, barcodes, strip_sampleid):
         admin_repo = AdminRepo(t)
         sample_repo = SampleRepo(t)
         template_repo = SurveyTemplateRepo(t)
-        kit_repo = KitRepo(t)
         vs_repo = VioscreenSessionRepo(t)
 
         # all associated projects returned for each barcode,
@@ -120,7 +118,7 @@ def per_sample(project, barcodes, strip_sampleid):
                     sample.id
                 )
 
-            kit_id_name = kit_repo.get_kit_id_name_by_barcode(barcode)
+            kit_id_name = sample_repo._get_supplied_kit_id_by_sample(barcode)
             outbound_fedex_tracking = \
                 admin_repo.get_outbound_tracking_by_barcodes(barcode)
             inbound_fedex_tracking = \

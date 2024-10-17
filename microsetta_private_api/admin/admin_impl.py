@@ -504,23 +504,19 @@ def query_project_barcode_stats(body, token_info, strip_sampleid):
 
 def query_barcode_stats(body, token_info, strip_sampleid):
     validate_admin_access(token_info)
-    print("body", body)
+
+    project_id = None
+
     if 'sample_barcodes' in body:
-        project_id = None
         barcodes = body["sample_barcodes"]
     elif 'kit_ids' in body:
-        project_id = None
         barcodes = get_barcodes_by_kit_ids(body["kit_ids"])
-        print("kit id barcodes", barcodes)
     elif 'emails' in body:
-        project_id = None
         barcodes = get_barcodes_by_emails(body["emails"])
     elif 'outbound_tracking_numbers' in body:
-        project_id = None
         barcodes = get_barcodes_by_outbound_tracking_numbers
         (body["outbound_tracking_numbers"])
     elif 'inbound_tracking_numbers' in body:
-        project_id = None
         barcodes = get_barcodes_by_inbound_tracking_numbers
         (body["inbound_tracking_numbers"])
     elif 'project_id' in body:

@@ -604,25 +604,17 @@ class AdminRepo(BaseRepo):
             The list of observed barcodes
         """
         query_emails = """
-            SELECT created_with_kit_id
-            FROM ag.account
-            WHERE email IN %s
+            SELECT akb.barcode
+            FROM ag.source AS s
+            JOIN ag.ag_kit_barcodes AS akb
+            ON s.id = akb.source_id
+            WHERE s.participant_email IN %s
         """
 
         with self._transaction.cursor() as cur:
             cur.execute(query_emails, [tuple(emails)])
-            created_with_kit_ids = [row[0] for row in cur.fetchall()]
-
-            if not created_with_kit_ids:
-                return []
-
-            query_barcodes = """
-                SELECT barcode
-                FROM barcodes.barcode
-                WHERE kit_id IN %s
-            """
-            cur.execute(query_barcodes, [tuple(created_with_kit_ids)])
-            return [row[0] for row in cur.fetchall()]
+            barcodes = [row[0] for row in cur.fetchall()]
+            return barcodes
 
     def get_outbound_tracking_barcodes(self, outbound_tracking_numbers):
         """Obtain the barcodes associated with an outbound tracking number
@@ -787,9 +779,10 @@ class AdminRepo(BaseRepo):
             for barcode in barcodes:
                 cur.execute(query, [barcode])
                 result = cur.fetchone()
-                results = result[0], result[1]
+                if result:
+                    results = result[0], result[1]
 
-            return results
+                    return results
 
     def get_last_scan_timestamp_by_barcodes(self, barcodes):
         """Obtain the last scan timestamp and
@@ -819,14 +812,14 @@ class AdminRepo(BaseRepo):
             ORDER BY MAX(scan_timestamp) DESC
             LIMIT 1
         """
-
+        results = []
         with self._transaction.cursor() as cur:
             for barcode in barcodes:
                 cur.execute(query, [barcode])
                 result = cur.fetchone()
-                results = result[0], result[1]
-
-            return results
+                if result:
+                    results.append((result[0], result[1]))
+                    return results
 
     def create_project(self, project):
         """Create a project entry in the database
