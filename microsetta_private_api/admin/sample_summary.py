@@ -8,42 +8,27 @@ from werkzeug.exceptions import NotFound
 
 
 def get_barcodes_by_project_id(project_id):
-    if project_id is None:
-        raise ValueError("project_id must be defined.")
-
     with Transaction() as t:
         return AdminRepo(t).get_project_barcodes(project_id)
 
 
 def get_barcodes_by_kit_ids(kit_ids):
-    if kit_ids is None:
-        raise ValueError("kit_id must be defined.")
-
     with Transaction() as t:
         return AdminRepo(t).get_kit_barcodes(kit_ids)
 
 
 def get_barcodes_by_emails(emails):
-    if emails is None:
-        raise ValueError("email must be defined.")
-
     with Transaction() as t:
         return AdminRepo(t).get_email_barcodes(emails)
 
 
 def get_barcodes_by_outbound_tracking_numbers(outbound_tracking_numbers):
-    if outbound_tracking_numbers is None:
-        raise ValueError("outbound_tracking_numbers must be defined.")
-
     with Transaction() as t:
         return AdminRepo(t).get_outbound_tracking_barcodes
     (outbound_tracking_numbers)
 
 
 def get_barcodes_by_inbound_tracking_numbers(inbound_tracking_numbers):
-    if inbound_tracking_numbers is None:
-        raise ValueError("inbound_tracking_numbers must be defined.")
-
     with Transaction() as t:
         return AdminRepo(t).get_inbound_tracking_barcodes
     (inbound_tracking_numbers)
