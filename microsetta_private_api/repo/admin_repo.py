@@ -594,8 +594,9 @@ class AdminRepo(BaseRepo):
             query += """
                 JOIN ag.ag_kit_barcodes AS akb ON akb.barcode = b.barcode
                 JOIN ag.source AS s ON s.id = akb.source_id
+                JOIN ag.account AS a ON s.account_id = a.id
             """
-            conditions.append("s.participant_email IN %s")
+            conditions.append("a.email IN %s")
             params.append(tuple(emails))
 
         if outbound_tracking_numbers:
