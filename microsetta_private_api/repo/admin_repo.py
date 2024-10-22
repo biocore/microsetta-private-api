@@ -556,135 +556,64 @@ class AdminRepo(BaseRepo):
                 cur.execute(query, [project_id, ])
                 return list([v[0] for v in cur.fetchall()])
 
-    def get_kit_barcodes(self, kit_ids):
-        """Obtain the barcodes associated with a kit
+    def get_barcodes_filter(self, kit_ids=None, emails=None,
+                            outbound_tracking_numbers=None,
+                            inbound_tracking_numbers=None):
+        """Obtain the barcodes based on different filtering criteria.
 
         Parameters
         ----------
-        kit_ids : list
-            The list of kit IDs to obtain barcodes for
+        kit_ids : list, optional
+            List of kit IDs to obtain barcodes for.
+        emails : list, optional
+            List of emails to obtain barcodes for.
+        outbound_tracking_numbers : list, optional
+            List of outbound tracking numbers to obtain barcodes for.
+        inbound_tracking_numbers : list, optional
+            List of inbound tracking numbers to obtain barcodes for.
 
         Returns
         -------
         list
-            The list of observed barcodes
+            The list of observed barcodes based on the provided criteria.
         """
-        query_kit_ids = """
-            SELECT ag_kit_id
-            FROM ag.ag_kit
-            WHERE supplied_kit_id IN %s
+        query = """
+            SELECT b.barcode
+            FROM barcodes.barcode AS b
+            JOIN barcodes.kit AS k ON b.kit_id = k.kit_id
         """
 
-        with self._transaction.cursor() as cur:
-            cur.execute(query_kit_ids, [tuple(kit_ids)])
-            ag_kit_ids = [row[0] for row in cur.fetchall()]
+        conditions = []
+        params = []
 
-            if not ag_kit_ids:
-                return []
+        if kit_ids:
+            conditions.append("k.kit_id IN %s")
+            params.append(tuple(kit_ids))
 
-            query_barcodes = """
-                SELECT barcode
-                FROM ag.ag_kit_barcodes
-                WHERE ag_kit_id IN %s
+        if emails:
+            query += """
+                JOIN ag.ag_kit_barcodes AS akb ON akb.barcode = b.barcode
+                JOIN ag.source AS s ON s.id = akb.source_id
             """
-            cur.execute(query_barcodes, [tuple(ag_kit_ids)])
-            return [row[0] for row in cur.fetchall()]
+            conditions.append("s.participant_email IN %s")
+            params.append(tuple(emails))
 
-    def get_email_barcodes(self, emails):
-        """Obtain the barcodes associated with an email
+        if outbound_tracking_numbers:
+            conditions.append("k.outbound_fedex_tracking IN %s")
+            params.append(tuple(outbound_tracking_numbers))
 
-        Parameters
-        ----------
-        emails : list
-            The list of emails to obtain barcodes for
+        if inbound_tracking_numbers:
+            conditions.append("k.inbound_fedex_tracking IN %s")
+            params.append(tuple(inbound_tracking_numbers))
 
-        Returns
-        -------
-        list
-            The list of observed barcodes
-        """
-        query_emails = """
-            SELECT akb.barcode
-            FROM ag.source AS s
-            JOIN ag.ag_kit_barcodes AS akb
-            ON s.id = akb.source_id
-            WHERE s.participant_email IN %s
-        """
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
 
         with self._transaction.cursor() as cur:
-            cur.execute(query_emails, [tuple(emails)])
+            cur.execute(query, params)
             barcodes = [row[0] for row in cur.fetchall()]
-            return barcodes
 
-    def get_outbound_tracking_barcodes(self, outbound_tracking_numbers):
-        """Obtain the barcodes associated with an outbound tracking number
-
-        Parameters
-        ----------
-        outbound_tracking_numbers : list
-            The list of outbound tracking numbers to obtain barcodes for
-
-        Returns
-        -------
-        list
-            The list of observed barcodes
-        """
-        query_outbound_tracking = """
-            SELECT kit_id
-            FROM barcodes.kit
-            WHERE outbound_fedex_tracking IN %s
-        """
-
-        with self._transaction.cursor() as cur:
-            cur.execute(query_outbound_tracking,
-                        [tuple(outbound_tracking_numbers)])
-            kit_ids = [row[0] for row in cur.fetchall()]
-
-            if not kit_ids:
-                return []
-
-            query_barcodes = """
-                SELECT barcode
-                FROM barcodes.barcode
-                WHERE kit_id IN %s
-            """
-            cur.execute(query_barcodes, [tuple(kit_ids)])
-            return [row[0] for row in cur.fetchall()]
-
-    def get_inbound_tracking_barcodes(self, inbound_tracking_numbers):
-        """Obtain the barcodes associated with an inbound tracking number
-
-        Parameters
-        ----------
-        inbound_tracking_numbers : list
-            The list of inbound tracking numbers to obtain barcodes for
-
-        Returns
-        -------
-        list
-            The list of observed barcodes
-        """
-        query_inbound_tracking = """
-            SELECT kit_id
-            FROM barcodes.kit
-            WHERE inbound_fedex_tracking IN %s
-        """
-
-        with self._transaction.cursor() as cur:
-            cur.execute(query_inbound_tracking,
-                        [tuple(inbound_tracking_numbers)])
-            kit_ids = [row[0] for row in cur.fetchall()]
-
-            if not kit_ids:
-                return []
-
-            query_barcodes = """
-                SELECT barcode
-                FROM barcodes.barcode
-                WHERE kit_id IN %s
-            """
-            cur.execute(query_barcodes, [tuple(kit_ids)])
-            return [row[0] for row in cur.fetchall()]
+        return barcodes
 
     def get_outbound_tracking_by_barcodes(self, barcodes):
         """Obtain the outbound tracking numbers associated with a barcode

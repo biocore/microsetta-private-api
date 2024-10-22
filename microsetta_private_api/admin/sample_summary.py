@@ -14,24 +14,24 @@ def get_barcodes_by_project_id(project_id):
 
 def get_barcodes_by_kit_ids(kit_ids):
     with Transaction() as t:
-        return AdminRepo(t).get_kit_barcodes(kit_ids)
+        return AdminRepo(t).get_barcodes_filter(kit_ids=kit_ids)
 
 
 def get_barcodes_by_emails(emails):
     with Transaction() as t:
-        return AdminRepo(t).get_email_barcodes(emails)
+        return AdminRepo(t).get_barcodes_filter(emails=emails)
 
 
 def get_barcodes_by_outbound_tracking_numbers(outbound_tracking_numbers):
     with Transaction() as t:
-        return AdminRepo(t).get_outbound_tracking_barcodes
-    (outbound_tracking_numbers)
+        return AdminRepo(t).get_barcodes_filter(
+            outbound_tracking_numbers=outbound_tracking_numbers)
 
 
 def get_barcodes_by_inbound_tracking_numbers(inbound_tracking_numbers):
     with Transaction() as t:
-        return AdminRepo(t).get_inbound_tracking_barcodes
-    (inbound_tracking_numbers)
+        return AdminRepo(t).get_barcodes_filter(
+            inbound_tracking_numbers=inbound_tracking_numbers)
 
 
 def per_sample(project, barcodes, strip_sampleid):
