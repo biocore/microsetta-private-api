@@ -57,6 +57,20 @@ def per_sample(project, barcodes, strip_sampleid):
             sample = diag['sample']
             account = diag['account']
             source = diag['source']
+            first_scans_info = diag['scans_info']
+            last_scans_info = diag['latest_scan']
+            if first_scans_info:
+                first_scan_timestamp = first_scans_info[0]['scan_timestamp']
+                first_scan_status = first_scans_info[0]['sample_status']
+            else:
+                first_scan_timestamp = None
+                first_scan_status = None
+            if last_scans_info:
+                latest_scan_timestamp = last_scans_info['scan_timestamp']
+                latest_scan_status = last_scans_info['sample_status']
+            else:
+                latest_scan_timestamp = None
+                latest_scan_status = None
 
             account_email = None if account is None else account.email
             source_type = None if source is None else source.source_type
@@ -103,15 +117,18 @@ def per_sample(project, barcodes, strip_sampleid):
                     sample.id
                 )
 
-            kit_id_name = sample_repo._get_supplied_kit_id_by_sample(barcode)
-            outbound_fedex_tracking = \
-                admin_repo.get_outbound_tracking_by_barcodes(barcode)
-            inbound_fedex_tracking = \
-                admin_repo.get_inbound_tracking_by_barcodes(barcode)
-            first_scan_timestamp_status = \
-                admin_repo.get_first_scan_timestamp_by_barcodes(barcode)
-            last_scan_timestamp_status = \
-                admin_repo.get_last_scan_timestamp_by_barcodes(barcode)
+            kit_by_barcode = admin_repo.get_kit_by_barcode([barcode])
+
+            if kit_by_barcode and len(kit_by_barcode) > 0:
+                info = kit_by_barcode[0]
+
+                kit_id_name = info['kit_id']
+                outbound_fedex_tracking = info['outbound_tracking']
+                inbound_fedex_tracking = info['inbound_tracking']
+            else:
+                kit_id_name = None
+                outbound_fedex_tracking = None
+                inbound_fedex_tracking = None
 
             summary = {
                 "sampleid": None if strip_sampleid else barcode,
@@ -126,11 +143,13 @@ def per_sample(project, barcodes, strip_sampleid):
                 "ffq-complete": ffq_complete,
                 "sample-status": sample_status,
                 "sample-received": sample_status is not None,
+                "first-scan-timestamp": first_scan_timestamp,
+                "first-scan-status": first_scan_status,
+                "latest-scan-timestamp": latest_scan_timestamp,
+                "latest-scan-status": latest_scan_status,
                 "kit-id": kit_id_name,
                 "outbound-tracking": outbound_fedex_tracking,
                 "inbound-tracking": inbound_fedex_tracking,
-                "first-scan-timestamp-status": first_scan_timestamp_status,
-                "last-scan-timestamp-status": last_scan_timestamp_status
             }
 
             for status in ["sample-is-valid",

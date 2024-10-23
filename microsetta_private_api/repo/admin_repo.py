@@ -616,24 +616,35 @@ class AdminRepo(BaseRepo):
 
         return barcodes
 
-    def get_outbound_tracking_by_barcodes(self, barcodes):
-        """Obtain the outbound tracking numbers associated with a barcode
+    def get_kit_by_barcode(self, barcodes):
+        """Obtain the outbound tracking, inbound tracking numbers,
+        and kit ID associated with a list of barcodes.
 
         Parameters
         ----------
         barcodes : list
-            The list of barcodes to obtain outbound tracking numbers for
+            The list of barcodes to obtain information for.
 
         Returns
         -------
-        list
-            The list of observed outbound tracking numbers
+        list of dict
+            A list of dictionaries with outbound tracking,
+            inbound tracking, and kit ID for each barcode.
         """
         query = """
-            SELECT k.outbound_fedex_tracking
-            FROM barcodes.barcode b
-            JOIN barcodes.kit k ON b.kit_id = k.kit_id
-            WHERE b.barcode IN %s
+            SELECT
+                b.barcode,
+                k.outbound_fedex_tracking,
+                k.inbound_fedex_tracking,
+                k.kit_id
+            FROM
+                barcodes.barcode b
+            JOIN
+                barcodes.kit k
+            ON
+                b.kit_id = k.kit_id
+            WHERE
+                b.barcode IN %s
         """
 
         with self._transaction.cursor() as cur:
@@ -644,112 +655,15 @@ class AdminRepo(BaseRepo):
             if len(rows) == 0:
                 return None
 
-            return [row[0] for row in rows]
-
-    def get_inbound_tracking_by_barcodes(self, barcodes):
-        """Obtain the inbound tracking numbers associated with a barcode
-
-        Parameters
-        ----------
-        barcodes : list
-            The list of barcodes to obtain inbound tracking numbers for
-
-        Returns
-        -------
-        list
-            The list of observed inbound tracking numbers
-        """
-        query = """
-            SELECT k.inbound_fedex_tracking
-            FROM barcodes.barcode b
-            JOIN barcodes.kit k ON b.kit_id = k.kit_id
-            WHERE b.barcode IN %s
-        """
-
-        with self._transaction.cursor() as cur:
-            cur.execute(query, [tuple(barcodes)])
-
-            rows = cur.fetchall()
-
-            if len(rows) == 0:
-                return None
-
-            return [row[0] for row in rows]
-
-    def get_first_scan_timestamp_by_barcodes(self, barcodes):
-        """Obtain the first scan timestamp and
-           sample status associated with a barcode
-
-        Parameters
-        ----------
-        barcodes : list
-            The list of barcodes to obtain first
-            scan timestamps and sample statuses for
-
-        Returns
-        -------
-        list
-            A list of tuples where each tuple contains
-            the first scan timestamp and sample status
-        """
-
-        if isinstance(barcodes, str):
-            barcodes = [barcodes]
-
-        query = """
-            SELECT MIN(scan_timestamp), sample_status
-            FROM barcodes.barcode_scans
-            WHERE barcode = %s
-            GROUP BY sample_status
-            ORDER BY MIN(scan_timestamp)
-            LIMIT 1
-        """
-
-        with self._transaction.cursor() as cur:
-            for barcode in barcodes:
-                cur.execute(query, [barcode])
-                result = cur.fetchone()
-                if result:
-                    results = result[0], result[1]
-
-                    return results
-
-    def get_last_scan_timestamp_by_barcodes(self, barcodes):
-        """Obtain the last scan timestamp and
-           sample status associated with a barcode
-
-        Parameters
-        ----------
-        barcodes : list
-            The list of barcodes to obtain last
-            scan timestamps and sample statuses for
-
-        Returns
-        -------
-        list
-            A list of tuples where each tuple contains
-            the last scan timestamp and sample status
-        """
-
-        if isinstance(barcodes, str):
-            barcodes = [barcodes]
-
-        query = """
-            SELECT MAX(scan_timestamp), sample_status
-            FROM barcodes.barcode_scans
-            WHERE barcode = %s
-            GROUP BY sample_status
-            ORDER BY MAX(scan_timestamp) DESC
-            LIMIT 1
-        """
-        results = []
-        with self._transaction.cursor() as cur:
-            for barcode in barcodes:
-                cur.execute(query, [barcode])
-                result = cur.fetchone()
-                if result:
-                    results.append((result[0], result[1]))
-                    return results
+            return [
+                {
+                    "barcode": row[0],
+                    "outbound_tracking": row[1],
+                    "inbound_tracking": row[2],
+                    "kit_id": row[3]
+                }
+                for row in rows
+            ]
 
     def create_project(self, project):
         """Create a project entry in the database
