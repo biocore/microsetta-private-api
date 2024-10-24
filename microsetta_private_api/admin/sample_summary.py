@@ -40,7 +40,7 @@ def per_sample(project, barcodes, strip_sampleid):
         admin_repo = AdminRepo(t)
         sample_repo = SampleRepo(t)
         template_repo = SurveyTemplateRepo(t)
-        vs_repo = VioscreenRepo()
+        vs_repo = VioscreenRepo(t)
 
         # all associated projects returned for each barcode,
         # so no universal project needed
