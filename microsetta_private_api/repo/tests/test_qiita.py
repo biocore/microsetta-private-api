@@ -1,5 +1,6 @@
 from unittest import TestCase, main
 from unittest.mock import patch
+from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.qiita_repo import QiitaRepo
 
@@ -68,6 +69,63 @@ class AdminTests(TestCase):
                 {skin_valid_barcode: ("This barcode is not "
                                       "associated with any surveys "
                                       "matching this template id")}])
+
+    def test_lock_completed_surveys_to_barcodes(self):
+
+        test_barcode = '000069747'
+        test_barcodes = [test_barcode]
+
+        with Transaction() as t:
+            with t.dict_cursor() as cur:
+                # first, find the ids for the barcode and survey we're using
+                # as they are dynamically generated.
+                cur.execute("select ag_login_id, source_id from "
+                            "ag_login_surveys a join source_barcodes_surveys b"
+                            " on a.survey_id = b.survey_id and b.barcode = "
+                            "'000069747' and survey_template_id = 1")
+                row = cur.fetchone()
+                account_id = row[0]
+                source_id = row[1]
+
+                cur.execute("select ag_kit_barcode_id from ag_kit_barcodes "
+                            "where barcode = '000069747'")
+                row = cur.fetchone()
+
+                cur.execute("SELECT * FROM source_barcodes_surveys "
+                            "WHERE barcode = '000069747'")
+                rows_before = cur.fetchall()
+
+            # submit a survey for the barcode
+            sar = SurveyAnswersRepo(t)
+            survey_10 = {
+                '22': 'Unspecified',
+                '108': 'Unspecified',
+                '109': 'Unspecified',
+                '110': 'Unspecified',
+                '111': 'Unspecified',
+                '112': '1990',
+                '113': 'Unspecified',
+                '115': 'Unspecified',
+                '148': 'Unspecified',
+                '492': 'Unspecified',
+                '493': 'Unspecified',
+                '502': 'Male'
+            }
+            sar.submit_answered_survey(
+                account_id,
+                source_id,
+                'en_US', 10, survey_10)
+
+            # now lock the barcode to the survey that was recently submitted
+            qiita_repo = QiitaRepo(t)
+            qiita_repo.lock_completed_surveys_to_barcodes(test_barcodes)
+
+            with t.dict_cursor() as cur:
+                cur.execute("SELECT * FROM source_barcodes_surveys "
+                            "WHERE barcode = '000069747'")
+                rows_after = cur.fetchall()
+
+        self.assertGreater(len(rows_after), len(rows_before))
 
 
 if __name__ == '__main__':

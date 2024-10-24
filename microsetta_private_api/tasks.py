@@ -86,3 +86,4 @@ def update_qiita_metadata():
                        {"what": "qiita metadata push errors",
                         "content": json.dumps(error, indent=2)},
                        EN_US)
+        t.commit()
