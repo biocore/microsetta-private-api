@@ -553,6 +553,115 @@ class AdminRepo(BaseRepo):
                 cur.execute(query, [project_id, ])
                 return list([v[0] for v in cur.fetchall()])
 
+    def get_barcodes_filter(self, kit_ids=None, emails=None,
+                            outbound_tracking_numbers=None,
+                            inbound_tracking_numbers=None):
+        """Obtain the barcodes based on different filtering criteria.
+
+        Parameters
+        ----------
+        kit_ids : list, optional
+            List of kit IDs to obtain barcodes for.
+        emails : list, optional
+            List of emails to obtain barcodes for.
+        outbound_tracking_numbers : list, optional
+            List of outbound tracking numbers to obtain barcodes for.
+        inbound_tracking_numbers : list, optional
+            List of inbound tracking numbers to obtain barcodes for.
+
+        Returns
+        -------
+        list
+            The list of observed barcodes based on the provided criteria.
+        """
+        query = """
+            SELECT b.barcode
+            FROM barcodes.barcode AS b
+            JOIN barcodes.kit AS k ON b.kit_id = k.kit_id
+        """
+
+        conditions = []
+        params = []
+
+        if kit_ids:
+            conditions.append("k.kit_id IN %s")
+            params.append(tuple(kit_ids))
+
+        if emails:
+            query += """
+                JOIN ag.ag_kit_barcodes AS akb ON akb.barcode = b.barcode
+                JOIN ag.source AS s ON s.id = akb.source_id
+                JOIN ag.account AS a ON s.account_id = a.id
+            """
+            conditions.append("a.email IN %s")
+            params.append(tuple(emails))
+
+        if outbound_tracking_numbers:
+            conditions.append("k.outbound_fedex_tracking IN %s")
+            params.append(tuple(outbound_tracking_numbers))
+
+        if inbound_tracking_numbers:
+            conditions.append("k.inbound_fedex_tracking IN %s")
+            params.append(tuple(inbound_tracking_numbers))
+
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        with self._transaction.cursor() as cur:
+            cur.execute(query, params)
+            barcodes = [row[0] for row in cur.fetchall()]
+
+        return barcodes
+
+    def get_kit_by_barcode(self, barcodes):
+        """Obtain the outbound tracking, inbound tracking numbers,
+        and kit ID associated with a list of barcodes.
+
+        Parameters
+        ----------
+        barcodes : list
+            The list of barcodes to obtain information for.
+
+        Returns
+        -------
+        list of dict
+            A list of dictionaries with outbound tracking,
+            inbound tracking, and kit ID for each barcode.
+        """
+        query = """
+            SELECT
+                b.barcode,
+                k.outbound_fedex_tracking,
+                k.inbound_fedex_tracking,
+                k.kit_id
+            FROM
+                barcodes.barcode b
+            JOIN
+                barcodes.kit k
+            ON
+                b.kit_id = k.kit_id
+            WHERE
+                b.barcode IN %s
+        """
+
+        with self._transaction.cursor() as cur:
+            cur.execute(query, [tuple(barcodes)])
+
+            rows = cur.fetchall()
+
+            if len(rows) == 0:
+                return None
+
+            return [
+                {
+                    "barcode": row[0],
+                    "outbound_tracking": row[1],
+                    "inbound_tracking": row[2],
+                    "kit_id": row[3]
+                }
+                for row in rows
+            ]
+
     def create_project(self, project):
         """Create a project entry in the database
 
