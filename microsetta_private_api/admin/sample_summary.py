@@ -3,7 +3,6 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
-from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from werkzeug.exceptions import NotFound
 
 
@@ -40,7 +39,6 @@ def per_sample(project, barcodes, strip_sampleid):
         admin_repo = AdminRepo(t)
         sample_repo = SampleRepo(t)
         template_repo = SurveyTemplateRepo(t)
-        vs_repo = VioscreenSessionRepo(t)
 
         # all associated projects returned for each barcode,
         # so no universal project needed
@@ -112,10 +110,6 @@ def per_sample(project, barcodes, strip_sampleid):
                 else:
                     sample_date = None
                     sample_time = None
-
-                ffq_complete, ffq_taken, _ = vs_repo.get_ffq_status_by_sample(
-                    sample.id
-                )
 
             kit_by_barcode = admin_repo.get_kit_by_barcode([barcode])
 
