@@ -49,10 +49,24 @@ def per_sample(project, barcodes, strip_sampleid):
             barcode_project = '; '.join(sorted(all_projects))
 
             if source is not None and source_type == Source.SOURCE_TYPE_HUMAN:
-
                 vio_id = template_repo.get_vioscreen_id_if_exists(account.id,
                                                                   source.id,
                                                                   sample.id)
+                # fall back on matching with source id
+                if not vio_id:
+                    vio_id = \
+                        template_repo.get_vioscreen_id_if_exists(account.id,
+                                                                 source.id,
+                                                                 None)
+                if vio_id:
+                    ffq_complete, ffq_taken, _ = \
+                        vs_repo.get_ffq_status_by_vio_id(vio_id)
+                else:
+                    ffq_complete = False
+                    ffq_taken = False
+            else:
+                ffq_complete = False
+                ffq_taken = False
 
             # at least one sample has been observed that "is_microsetta",
             # described in the barcodes.project_barcode table, but which is
@@ -79,10 +93,6 @@ def per_sample(project, barcodes, strip_sampleid):
                 else:
                     sample_date = None
                     sample_time = None
-
-                ffq_complete, ffq_taken, _ = vs_repo.get_ffq_status_by_sample(
-                    sample.id
-                )
 
             summary = {
                 "sampleid": None if strip_sampleid else barcode,
