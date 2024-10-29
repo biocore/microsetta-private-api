@@ -7,12 +7,31 @@ from microsetta_private_api.repo.vioscreen_repo import VioscreenSessionRepo
 from werkzeug.exceptions import NotFound
 
 
-def get_barcodes_for(project_id):
-    if project_id is None:
-        raise ValueError("project_id must be defined.")
-
+def get_barcodes_by_project_id(project_id):
     with Transaction() as t:
         return AdminRepo(t).get_project_barcodes(project_id)
+
+
+def get_barcodes_by_kit_ids(kit_ids):
+    with Transaction() as t:
+        return AdminRepo(t).get_barcodes_filter(kit_ids=kit_ids)
+
+
+def get_barcodes_by_emails(emails):
+    with Transaction() as t:
+        return AdminRepo(t).get_barcodes_filter(emails=emails)
+
+
+def get_barcodes_by_outbound_tracking_numbers(outbound_tracking_numbers):
+    with Transaction() as t:
+        return AdminRepo(t).get_barcodes_filter(
+            outbound_tracking_numbers=outbound_tracking_numbers)
+
+
+def get_barcodes_by_inbound_tracking_numbers(inbound_tracking_numbers):
+    with Transaction() as t:
+        return AdminRepo(t).get_barcodes_filter(
+            inbound_tracking_numbers=inbound_tracking_numbers)
 
 
 def per_sample(project, barcodes, strip_sampleid):
@@ -38,6 +57,20 @@ def per_sample(project, barcodes, strip_sampleid):
             sample = diag['sample']
             account = diag['account']
             source = diag['source']
+            first_scans_info = diag['scans_info']
+            last_scans_info = diag['latest_scan']
+            if first_scans_info:
+                first_scan_timestamp = first_scans_info[0]['scan_timestamp']
+                first_scan_status = first_scans_info[0]['sample_status']
+            else:
+                first_scan_timestamp = None
+                first_scan_status = None
+            if last_scans_info:
+                latest_scan_timestamp = last_scans_info['scan_timestamp']
+                latest_scan_status = last_scans_info['sample_status']
+            else:
+                latest_scan_timestamp = None
+                latest_scan_status = None
 
             account_email = None if account is None else account.email
             source_type = None if source is None else source.source_type
@@ -94,6 +127,19 @@ def per_sample(project, barcodes, strip_sampleid):
                     sample_date = None
                     sample_time = None
 
+            kit_by_barcode = admin_repo.get_kit_by_barcode([barcode])
+
+            if kit_by_barcode and len(kit_by_barcode) > 0:
+                info = kit_by_barcode[0]
+
+                kit_id_name = info['kit_id']
+                outbound_fedex_tracking = info['outbound_tracking']
+                inbound_fedex_tracking = info['inbound_tracking']
+            else:
+                kit_id_name = None
+                outbound_fedex_tracking = None
+                inbound_fedex_tracking = None
+
             summary = {
                 "sampleid": None if strip_sampleid else barcode,
                 "project": barcode_project,
@@ -106,7 +152,14 @@ def per_sample(project, barcodes, strip_sampleid):
                 "ffq-taken": ffq_taken,
                 "ffq-complete": ffq_complete,
                 "sample-status": sample_status,
-                "sample-received": sample_status is not None
+                "sample-received": sample_status is not None,
+                "first-scan-timestamp": first_scan_timestamp,
+                "first-scan-status": first_scan_status,
+                "latest-scan-timestamp": latest_scan_timestamp,
+                "latest-scan-status": latest_scan_status,
+                "kit-id": kit_id_name,
+                "outbound-tracking": outbound_fedex_tracking,
+                "inbound-tracking": inbound_fedex_tracking,
             }
 
             for status in ["sample-is-valid",
