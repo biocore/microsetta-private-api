@@ -33,7 +33,7 @@ from microsetta_private_api.admin.sample_summary import \
     get_barcodes_by_project_id,\
     get_barcodes_by_kit_ids, get_barcodes_by_emails,\
     get_barcodes_by_outbound_tracking_numbers,\
-    get_barcodes_by_inbound_tracking_numbers
+    get_barcodes_by_inbound_tracking_numbers, get_barcodes_by_dak_order_ids
 from microsetta_private_api.util.melissa import verify_address
 from microsetta_private_api.util.query_builder_to_sql import build_condition
 from werkzeug.exceptions import Unauthorized
@@ -520,6 +520,10 @@ def query_barcode_stats(body, token_info, strip_sampleid):
     elif 'inbound_tracking_numbers' in body:
         barcodes = get_barcodes_by_inbound_tracking_numbers(
             body["inbound_tracking_numbers"]
+        )
+    elif 'dak_order_ids' in body:
+        barcodes = get_barcodes_by_dak_order_ids(
+            body['dak_order_ids']
         )
     elif 'project_id' in body:
         project_id = body["project_id"]
