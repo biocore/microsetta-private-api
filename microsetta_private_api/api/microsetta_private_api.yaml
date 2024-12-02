@@ -3014,6 +3014,10 @@ paths:
                   type: array
                   items:
                     type: string
+                'dak_order_ids':
+                  type: array
+                  items:
+                    type: string
       responses:
         '200':
           description: Return an object containing a list of dictionaries of sample status for requested accounts

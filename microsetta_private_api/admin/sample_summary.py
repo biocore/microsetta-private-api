@@ -34,6 +34,13 @@ def get_barcodes_by_inbound_tracking_numbers(inbound_tracking_numbers):
             inbound_tracking_numbers=inbound_tracking_numbers)
 
 
+def get_barcodes_by_dak_order_ids(dak_order_ids):
+    with Transaction() as t:
+        return AdminRepo(t).get_barcodes_filter(
+            dak_order_ids=dak_order_ids
+        )
+
+
 def per_sample(project, barcodes, strip_sampleid):
     summaries = []
     with Transaction() as t:
@@ -73,6 +80,8 @@ def per_sample(project, barcodes, strip_sampleid):
                 latest_scan_status = None
 
             account_email = None if account is None else account.email
+            account_fname = None if account is None else account.first_name
+            account_lname = None if account is None else account.last_name
             source_type = None if source is None else source.source_type
             vio_id = None
 
@@ -135,10 +144,12 @@ def per_sample(project, barcodes, strip_sampleid):
                 kit_id_name = info['kit_id']
                 outbound_fedex_tracking = info['outbound_tracking']
                 inbound_fedex_tracking = info['inbound_tracking']
+                daklapack_order_id = info['dak_order_id']
             else:
                 kit_id_name = None
                 outbound_fedex_tracking = None
                 inbound_fedex_tracking = None
+                daklapack_order_id = None
 
             summary = {
                 "sampleid": None if strip_sampleid else barcode,
@@ -148,6 +159,8 @@ def per_sample(project, barcodes, strip_sampleid):
                 "sample-date": sample_date,
                 "sample-time": sample_time,
                 "account-email": account_email,
+                "account-first-name": account_fname,
+                "account-last-name": account_lname,
                 "vioscreen_username": vio_id,
                 "ffq-taken": ffq_taken,
                 "ffq-complete": ffq_complete,
@@ -160,6 +173,7 @@ def per_sample(project, barcodes, strip_sampleid):
                 "kit-id": kit_id_name,
                 "outbound-tracking": outbound_fedex_tracking,
                 "inbound-tracking": inbound_fedex_tracking,
+                "daklapack-order-id": daklapack_order_id
             }
 
             for status in ["sample-is-valid",

@@ -1593,26 +1593,116 @@ class AdminRepoTests(AdminTests):
                 inbound_tracking_numbers=['99999'])
             self.assertEqual(barcodes, [])
 
-    def test_get_kit_by_barcode_success(self):
-        with Transaction() as t:
-            setup_sql = """
-                INSERT INTO barcodes.kit (kit_id, box_id)
-                VALUES ('test1', '0001e15f-4170-4b28-b111-191cd567c348');
+    def test_get_barcodes_filter_dak_order_ids_success(self):
+        dak_order_id = 'd77e111e-ded2-4817-9240-7e94c6712102'
+        kit_id = 'test1'
+        kit_uuid = '2fd79f11-f377-4fa8-99f3-cc184192180b'
+        outbound_tracking = 'FEDEX_OUT_1234'
+        inbound_tracking = 'FEDEX_IN_5678'
+        barcode = '00001234'
 
-                INSERT INTO barcodes.barcode (barcode, kit_id)
-                VALUES ('00001234', 'test1');
-            """
+        with Transaction() as t:
             with t.cursor() as cur:
-                cur.execute(setup_sql)
+                # Insert Daklapack order
+                cur.execute(
+                    "INSERT INTO barcodes.daklapack_order "
+                    "(dak_order_id, submitter_acct_id, order_json) "
+                    "VALUES (%s, %s, '{}')",
+                    (dak_order_id, ADMIN_ACCT_ID)
+                )
+
+                # Insert Kit
+                cur.execute(
+                    "INSERT INTO barcodes.kit "
+                    "(kit_uuid, kit_id, box_id, outbound_fedex_tracking, "
+                    "inbound_fedex_tracking) "
+                    "VALUES (%s, %s, '0001e15f-4170-4b28-b111-191cd567c348', "
+                    "%s, %s)",
+                    (kit_uuid, kit_id, outbound_tracking, inbound_tracking)
+                )
+
+                # Insert Daklapack order to kit record
+                cur.execute(
+                    "INSERT INTO barcodes.daklapack_order_to_kit "
+                    "(dak_order_id, kit_uuid) "
+                    "VALUES (%s, %s)",
+                    (dak_order_id, kit_uuid)
+                )
+
+                # Insert barcode
+                cur.execute(
+                    "INSERT INTO barcodes.barcode (barcode, kit_id) "
+                    "VALUES (%s, %s)",
+                    (barcode, kit_id)
+                )
+
+            admin_repo = AdminRepo(t)
+            barcodes = admin_repo.get_barcodes_filter(
+                dak_order_ids=[dak_order_id]
+            )
+            self.assertEqual(barcodes, [barcode])
+
+    def test_get_barcodes_filter_dak_order_ids_failure(self):
+        dak_order_id = 'd77e111e-ded2-4817-9240-7e94c6712102'
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            barcodes = admin_repo.get_barcodes_filter(
+                dak_order_ids=[dak_order_id]
+            )
+            self.assertEqual(barcodes, [])
+
+    def test_get_kit_by_barcode_success(self):
+        dak_order_id = 'd77e111e-ded2-4817-9240-7e94c6712102'
+        kit_id = 'test1'
+        kit_uuid = '2fd79f11-f377-4fa8-99f3-cc184192180b'
+        outbound_tracking = 'FEDEX_OUT_1234'
+        inbound_tracking = 'FEDEX_IN_5678'
+        barcode = '00001234'
+
+        with Transaction() as t:
+            with t.cursor() as cur:
+                # Insert Daklapack order
+                cur.execute(
+                    "INSERT INTO barcodes.daklapack_order "
+                    "(dak_order_id, submitter_acct_id, order_json) "
+                    "VALUES (%s, %s, '{}')",
+                    (dak_order_id, ADMIN_ACCT_ID)
+                )
+
+                # Insert Kit
+                cur.execute(
+                    "INSERT INTO barcodes.kit "
+                    "(kit_uuid, kit_id, box_id, outbound_fedex_tracking, "
+                    "inbound_fedex_tracking) "
+                    "VALUES (%s, %s, '0001e15f-4170-4b28-b111-191cd567c348', "
+                    "%s, %s)",
+                    (kit_uuid, kit_id, outbound_tracking, inbound_tracking)
+                )
+
+                # Insert Daklapack order to kit record
+                cur.execute(
+                    "INSERT INTO barcodes.daklapack_order_to_kit "
+                    "(dak_order_id, kit_uuid) "
+                    "VALUES (%s, %s)",
+                    (dak_order_id, kit_uuid)
+                )
+
+                # Insert barcode
+                cur.execute(
+                    "INSERT INTO barcodes.barcode (barcode, kit_id) "
+                    "VALUES (%s, %s)",
+                    (barcode, kit_id)
+                )
 
             admin_repo = AdminRepo(t)
 
-            kit_info = admin_repo.get_kit_by_barcode(['00001234'])
+            kit_info = admin_repo.get_kit_by_barcode([barcode])
             expected = [{
-                'barcode': '00001234',
-                'outbound_tracking': None,
-                'inbound_tracking': None,
-                'kit_id': 'test1'
+                'barcode': barcode,
+                'outbound_tracking': outbound_tracking,
+                'inbound_tracking': inbound_tracking,
+                'kit_id': kit_id,
+                'dak_order_id': dak_order_id
             }]
             self.assertEqual(kit_info, expected)
 

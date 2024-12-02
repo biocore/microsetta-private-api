@@ -555,7 +555,8 @@ class AdminRepo(BaseRepo):
 
     def get_barcodes_filter(self, kit_ids=None, emails=None,
                             outbound_tracking_numbers=None,
-                            inbound_tracking_numbers=None):
+                            inbound_tracking_numbers=None,
+                            dak_order_ids=None):
         """Obtain the barcodes based on different filtering criteria.
 
         Parameters
@@ -568,6 +569,8 @@ class AdminRepo(BaseRepo):
             List of outbound tracking numbers to obtain barcodes for.
         inbound_tracking_numbers : list, optional
             List of inbound tracking numbers to obtain barcodes for.
+        dak_order_ids : list, optional
+            List of Daklapack order IDs to obtain barcodes for
 
         Returns
         -------
@@ -604,6 +607,14 @@ class AdminRepo(BaseRepo):
             conditions.append("k.inbound_fedex_tracking IN %s")
             params.append(tuple(inbound_tracking_numbers))
 
+        if dak_order_ids:
+            query += """
+                JOIN barcodes.daklapack_order_to_kit dotk
+                ON dotk.kit_uuid = k.kit_uuid
+            """
+            conditions.append("dotk.dak_order_id IN %s")
+            params.append(tuple(dak_order_ids))
+
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
 
@@ -615,7 +626,7 @@ class AdminRepo(BaseRepo):
 
     def get_kit_by_barcode(self, barcodes):
         """Obtain the outbound tracking, inbound tracking numbers,
-        and kit ID associated with a list of barcodes.
+        kit ID, and Daklapack order ID associated with a list of barcodes.
 
         Parameters
         ----------
@@ -633,13 +644,18 @@ class AdminRepo(BaseRepo):
                 b.barcode,
                 k.outbound_fedex_tracking,
                 k.inbound_fedex_tracking,
-                k.kit_id
+                k.kit_id,
+                dotk.dak_order_id
             FROM
                 barcodes.barcode b
             JOIN
                 barcodes.kit k
             ON
                 b.kit_id = k.kit_id
+            LEFT JOIN
+                barcodes.daklapack_order_to_kit dotk
+            ON
+                dotk.kit_uuid = k.kit_uuid
             WHERE
                 b.barcode IN %s
         """
@@ -657,7 +673,8 @@ class AdminRepo(BaseRepo):
                     "barcode": row[0],
                     "outbound_tracking": row[1],
                     "inbound_tracking": row[2],
-                    "kit_id": row[3]
+                    "kit_id": row[3],
+                    "dak_order_id": row[4]
                 }
                 for row in rows
             ]
