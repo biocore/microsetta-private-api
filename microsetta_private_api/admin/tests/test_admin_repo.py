@@ -456,7 +456,7 @@ class AdminRepoTests(AdminTests):
             created = admin_repo.create_kits(2,
                                              3,
                                              'foo',
-                                             [[],[],[]],
+                                             [[], [], []],
                                              [output_id, ])
 
             exp = []
@@ -612,14 +612,14 @@ class AdminRepoTests(AdminTests):
                 admin_repo.create_kits(5,
                                        3,
                                        '',
-                                       [[],[],[]],
+                                       [[], [], []],
                                        [10000,
                                         SurveyTemplateRepo.VIOSCREEN_ID])
 
     def test_create_kits_success_not_microsetta(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            non_tmi = admin_repo.create_kits(5, 3, '', [[],[],[]], [33])
+            non_tmi = admin_repo.create_kits(5, 3, '', [[], [], []], [33])
             self.assertEqual(['created', ], list(non_tmi.keys()))
             self.assertEqual(len(non_tmi['created']), 5)
             for obj in non_tmi['created']:
@@ -646,7 +646,7 @@ class AdminRepoTests(AdminTests):
     def test_create_kits_success_is_microsetta(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            tmi = admin_repo.create_kits(4, 2, 'foo', [[],[]], [1])
+            tmi = admin_repo.create_kits(4, 2, 'foo', [[], []], [1])
             self.assertEqual(['created', ], list(tmi.keys()))
             self.assertEqual(len(tmi['created']), 4)
             for obj in tmi['created']:
@@ -1599,7 +1599,7 @@ class AdminRepoTests(AdminTests):
                     )
                     obs = cur.fetchone()
                     self.assertEqual(obs[0], 1)
-                
+
                 # Verify that kit_id_1 has exactly one more barcode in the
                 # barcodes.barcode table
                 cur.execute(
@@ -1677,7 +1677,7 @@ class AdminRepoTests(AdminTests):
                     )
                     obs = cur.fetchone()
                     self.assertEqual(obs[0], 1)
-                
+
                 # Verify that kit_id_1 has exactly one more barcode in the
                 # barcodes.barcode table
                 cur.execute(
@@ -1732,7 +1732,7 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             with self.assertRaises(psycopg2.errors.UniqueViolation):
-                res = admin_repo.add_barcodes_to_kits(kit_ids, barcodes)
+                admin_repo.add_barcodes_to_kits(kit_ids, barcodes)
 
     def test_get_barcodes_filter_kit_ids_success(self):
         with Transaction() as t:
@@ -1957,4 +1957,3 @@ class AdminRepoTests(AdminTests):
             admin_repo = AdminRepo(t)
             kit_info = admin_repo.get_kit_by_barcode(['nonexistent_barcode'])
             self.assertIsNone(kit_info)
-

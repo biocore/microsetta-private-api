@@ -350,7 +350,7 @@ def add_barcodes_to_kits(body, token_info):
                 code=422,
                 message=error_str
             ), 422
-        
+
         diag = admin_repo.add_barcodes_to_kits(kit_ids, barcodes)
         t.commit()
 

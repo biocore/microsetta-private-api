@@ -935,7 +935,7 @@ class AdminRepo(BaseRepo):
 
         new_barcodes = []
         kit_name_and_barcode_tuples_list = []
-        
+
         # Iterate through sample slots and use provided barcodes
         for barcode_list in barcodes:
             if len(barcode_list) > 0:
