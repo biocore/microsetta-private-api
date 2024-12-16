@@ -263,17 +263,42 @@ def create_kits(body, token_info):
     number_of_samples = body['number_of_samples']
     kit_prefix = body.get('kit_id_prefix', None)
     project_ids = body['project_ids']
-    user_barcodes = body.get('user_barcodes', [])
+    barcodes = body['barcodes']
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
 
+        # First, do some basic sanitation
+        errors = []
+        for barcode_list in barcodes:
+            x = 1
+            if len(barcode_list) != 0:
+                # If barcodes were provided for a given slot, ensure the
+                # quantity matches the number of kits
+                if len(barcode_list) != number_of_kits:
+                    errors.append(
+                        f'Incorrect number of barcodes given for Sample {x}'
+                    )
+
+                # And verify that the barcodes don't already exist
+                for barcode in barcode_list:
+                    diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
+                    if diag is not None:
+                        errors.append(f'Barcode {barcode} already exists')
+            x += 1
+
+        if len(errors) > 0:
+            error_str = "; ".join(errors)
+            return jsonify(code=422, message=error_str), 422
+
         try:
-            kits = admin_repo.create_kits(number_of_kits,
-                                          number_of_samples,
-                                          kit_prefix,
-                                          user_barcodes,
-                                          project_ids)
+            kits = admin_repo.create_kits(
+                number_of_kits,
+                number_of_samples,
+                kit_prefix,
+                barcodes,
+                project_ids
+            )
         except KeyError:
             return jsonify(code=422, message="Unable to create kits"), 422
         else:
@@ -282,91 +307,50 @@ def create_kits(body, token_info):
     return jsonify(kits), 201
 
 
-def handle_barcodes(body, token_info):
-    validate_admin_access(token_info)
-
-    kit_ids = body['kit_ids']
-
-    if isinstance(kit_ids, str):
-        kit_ids = [kit_ids]
-
-    with Transaction() as t:
-        kit_repo = KitRepo(t)
-        for kit_id in kit_ids:
-            diag = kit_repo.get_kit_all_samples(kit_id)
-            if diag is None:
-                return jsonify(f'Kit ID {kit_id} not found'), 404
-
-    action = body.get('action')
-
-    if action == 'create':
-        if 'generate_barcode_single' in body:
-            if body['generate_barcode_single']:
-                number_of_kits = 1
-                number_of_samples = 1
-        elif 'generate_barcodes' in body:
-            number_of_kits = (body['num_kits'])
-            number_of_samples = (body['num_samples'])
-        else:
-            number_of_kits = len(body['kit_ids'])
-            number_of_samples = 1
-
-        with Transaction() as t:
-            admin_repo = AdminRepo(t)
-
-            barcode = admin_repo._generate_novel_barcodes(
-                number_of_kits, number_of_samples, kit_names=kit_ids)
-
-            t.commit()
-
-        return jsonify(barcode[1]), 201
-
-    elif action == 'insert':
-        return insert_barcodes(body, token_info)
-
-    else:
-        return jsonify(code=404, message='Invalid action'), 404
-
-
-def insert_barcodes(body, token_info):
+def add_barcodes_to_kits(body, token_info):
     validate_admin_access(token_info)
 
     kit_ids = body['kit_ids']
     barcodes = body['barcodes']
+    generate_barcodes = body['generate_barcodes']
 
-    # Ensure kit_ids is a list, even if it's a single value
-    if isinstance(kit_ids, str):
-        kit_ids = [kit_ids]
-
-    with Transaction() as t:
-        admin_repo = AdminRepo(t)
-        for barcode in barcodes:
-            diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
-            if diag is not None:
-                return jsonify(f'Barcode {barcode} already exists'), 404
-
-    # Check if the lengths match
-    if len(kit_ids) != len(barcodes):
-        return jsonify("The number of kit IDs must "
-                       "match the number of barcodes"), 400
+    errors = []
 
     with Transaction() as t:
+        kit_repo = KitRepo(t)
         admin_repo = AdminRepo(t)
 
-        insertion_data = []
-        for kit_id, barcode in zip(kit_ids, barcodes):
-            diag = admin_repo.retrieve_diagnostics_by_kit_id(kit_id)
-            sample_info = diag['sample_diagnostic_info'][0]
-            if sample_info['projects_info']:
-                for project in sample_info['projects_info']:
-                    project_id = str(project['project_id'])
-                    insertion_data.append((kit_id, barcode, project_id))
+        # First, make sure all of the Kit IDs are valid
+        for kit_id in kit_ids:
+            diag = kit_repo.get_kit_all_samples(kit_id)
+            if diag is None:
+                errors.append(f'Kit ID {kit_id} not found')
 
-        admin_repo._insert_barcodes_to_existing_kit(insertion_data)
+        if generate_barcodes is False:
+            # Next, check that the Barcodes are unique if we're not generating
+            # novel ones
+            for barcode in barcodes:
+                diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
+                if diag is not None:
+                    errors.append(f'Barcode {barcode} already exists')
 
+            # And verify that the number of barcodes and kit IDs are equal
+            if len(barcodes) != len(kit_ids):
+                errors.append("Unequal number of Kit IDs and Barcodes")
+
+        # We found one or more issues with the supplied Kit IDs or Barcodes.
+        # Return the error message to microsetta-admin.
+        if len(errors) > 0:
+            error_str = "; ".join(errors)
+            return jsonify(
+                code=422,
+                message=error_str
+            ), 422
+        
+        diag = admin_repo.add_barcodes_to_kits(kit_ids, barcodes)
         t.commit()
 
-    return '', 204
+        return jsonify(diag), 201
 
 
 def get_account_events(account_id, token_info):

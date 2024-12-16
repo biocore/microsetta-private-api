@@ -152,7 +152,7 @@ class SampleTests(unittest.TestCase):
                 1,
                 1,
                 "UNITTEST",
-                None,
+                [[]],
                 [1]
             )
 

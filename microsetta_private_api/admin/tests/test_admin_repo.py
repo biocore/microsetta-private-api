@@ -456,7 +456,7 @@ class AdminRepoTests(AdminTests):
             created = admin_repo.create_kits(2,
                                              3,
                                              'foo',
-                                             None,
+                                             [[],[],[]],
                                              [output_id, ])
 
             exp = []
@@ -612,14 +612,14 @@ class AdminRepoTests(AdminTests):
                 admin_repo.create_kits(5,
                                        3,
                                        '',
-                                       None,
+                                       [[],[],[]],
                                        [10000,
                                         SurveyTemplateRepo.VIOSCREEN_ID])
 
     def test_create_kits_success_not_microsetta(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            non_tmi = admin_repo.create_kits(5, 3, '', None, [33])
+            non_tmi = admin_repo.create_kits(5, 3, '', [[],[],[]], [33])
             self.assertEqual(['created', ], list(non_tmi.keys()))
             self.assertEqual(len(non_tmi['created']), 5)
             for obj in non_tmi['created']:
@@ -646,7 +646,7 @@ class AdminRepoTests(AdminTests):
     def test_create_kits_success_is_microsetta(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            tmi = admin_repo.create_kits(4, 2, 'foo', None, [1])
+            tmi = admin_repo.create_kits(4, 2, 'foo', [[],[]], [1])
             self.assertEqual(['created', ], list(tmi.keys()))
             self.assertEqual(len(tmi['created']), 4)
             for obj in tmi['created']:
@@ -670,6 +670,63 @@ class AdminRepoTests(AdminTests):
                             (tuple(tmi_kits),))
                 observed = cur.fetchall()
                 self.assertEqual(len(observed), 4)
+
+    def test_create_kits_success_mix_provided_generated_barcodes(self):
+        # This test will confirm that AdminRepo.create_kits correctly places
+        # admin-provided barcodes in relation to intent. We'll do 1 kits with
+        # 3 samples. 2 samples will be admin-provided barcodes and 1 will be
+        # generated.
+
+        # Sample Slot 1
+        sample_1_barcodes = [
+            "2806d1ef-8992-4693-b977-1ae73b398b4c"
+        ]
+        # Sample Slot 2
+        sample_2_barcodes = [
+            "af6ab062-163c-4abd-96f5-848c4729f8b0"
+        ]
+        # Sample Slot 3 - generated
+        sample_3_barcodes = []
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            tmi = admin_repo.create_kits(
+                1,
+                3,
+                'foo',
+                [sample_1_barcodes, sample_2_barcodes, sample_3_barcodes],
+                [1]
+            )
+            self.assertEqual(['created', ], list(tmi.keys()))
+            self.assertEqual(len(tmi['created']), 1)
+            for obj in tmi['created']:
+                self.assertEqual(len(obj['sample_barcodes']), 3)
+                self.assertEqual({'kit_id', 'kit_uuid', 'box_id', 'address',
+                                  'outbound_fedex_tracking',
+                                  'inbound_fedex_tracking',
+                                  'sample_barcodes'}, set(obj))
+                self.assertTrue(obj['kit_id'].startswith('foo_'))
+                self.assertEqual(obj['kit_uuid'], obj['box_id'])
+                self.assertEqual(None, obj['address'])
+                self.assertEqual(None, obj['outbound_fedex_tracking'])
+                self.assertEqual(None, obj['inbound_fedex_tracking'])
+
+            # should be present in the ag tables
+            tmi_kits = [k['kit_id'] for k in tmi['created']]
+            with t.cursor() as cur:
+                cur.execute("SELECT supplied_kit_id "
+                            "FROM ag.ag_kit "
+                            "WHERE supplied_kit_id IN %s",
+                            (tuple(tmi_kits),))
+                observed = cur.fetchall()
+                self.assertEqual(len(observed), 1)
+
+            kit = tmi['created'][0]
+            # Assert that the provided barcodes are present
+            self.assertEqual(kit['sample_barcodes'][0], sample_1_barcodes[0])
+            self.assertEqual(kit['sample_barcodes'][1], sample_2_barcodes[0])
+            # And the last barcode starts with X per the generation algorithm
+            self.assertEqual(kit['sample_barcodes'][2][0], "X")
 
     def test_create_kit_success_is_microsetta(self):
         input_kit_name = "DM24-A3CF9"
@@ -1489,107 +1546,190 @@ class AdminRepoTests(AdminTests):
                 obs = cur.fetchone()
                 self.assertFalse(obs[0])
 
-    def test_generate_novel_barcodes_admin_success(self):
-        number_of_kits = 1
-        number_of_samples = 3
+    def test_add_barcodes_to_kits_generated_success(self):
+        # These two kit IDs are stable in the dev database and are TMI kits
+        kit_id_1 = "wiydx"
+        kit_id_2 = "TjrzA"
+        kit_ids = [kit_id_1, kit_id_2]
+        barcodes = []
 
         with Transaction() as t:
-            admin_repo = AdminRepo(t)
-
-            kit_names = admin_repo._generate_novel_kit_names(
-                number_of_kits, kit_prefix=None)
-
-            new_barcodes = admin_repo._generate_novel_barcodes(
-                number_of_kits, number_of_samples, kit_names)
-
-            self.assertEqual(len(new_barcodes[1]),
-                             number_of_kits * number_of_samples)
-            self.assertTrue(all(barcodes.startswith('X')
-                            for barcodes in new_barcodes[1]))
-
-    def test_generate_novel_barcodes_admin_failure(self):
-        number_of_kits = 0
-        number_of_samples = 3
-
-        with Transaction() as t:
-            admin_repo = AdminRepo(t)
-
-            kit_names = admin_repo._generate_novel_kit_names(
-                number_of_kits, kit_prefix=None)
-
-            new_barcodes = admin_repo._generate_novel_barcodes(
-                number_of_kits, number_of_samples, kit_names)
-
-            self.assertTrue(new_barcodes[1] == [], [])
-
-    def test_insert_barcodes_admin_success(self):
-        kit_name = 'test'
-        barcode = 'X00332312'
-        project_id = '1'
-        kit_name_barcode_prj_id_tuple = [(kit_name, barcode, project_id)]
-
-        with Transaction() as t:
-            admin_repo = AdminRepo(t)
-            admin_repo._insert_barcodes_to_existing_kit(
-                kit_name_barcode_prj_id_tuple
-            )
-
             with t.cursor() as cur:
+                # Establish counts for barcodes contained in our test kits
                 cur.execute(
-                    "SELECT barcode "
-                    "FROM barcodes.barcode "
-                    "WHERE kit_id = %s AND barcode = %s",
-                    (kit_name, barcode)
+                    "SELECT COUNT(*) FROM barcodes.barcode "
+                    "WHERE kit_id = %s",
+                    (kit_id_1,)
+                )
+                kit_id_1_barcode_count = cur.fetchone()[0]
+                cur.execute(
+                    "SELECT COUNT(*) FROM barcodes.barcode "
+                    "WHERE kit_id = %s",
+                    (kit_id_2,)
+                )
+                kit_id_2_barcode_count = cur.fetchone()[0]
+
+                admin_repo = AdminRepo(t)
+                res = admin_repo.add_barcodes_to_kits(kit_ids, barcodes)
+                for kit_id, barcode in res:
+                    # Verify that the barcode was created and is associated
+                    # with the kit ID
+                    cur.execute(
+                        "SELECT COUNT(*) FROM barcodes.barcode "
+                        "WHERE kit_id = %s AND barcode = %s",
+                        (kit_id, barcode)
+                    )
+                    obs = cur.fetchone()
+                    self.assertEqual(obs[0], 1)
+
+                    # Verify that the barcode is associated with Project 1
+                    cur.execute(
+                        "SELECT COUNT(*) FROM barcodes.project_barcode "
+                        "WHERE barcode = %s AND project_id = 1",
+                        (barcode, )
+                    )
+                    obs = cur.fetchone()
+                    self.assertEqual(obs[0], 1)
+
+                    # Verify that the barcode was added to ag.ag_kit_barcodes
+                    cur.execute(
+                        "SELECT COUNT(*) FROM ag.ag_kit_barcodes "
+                        "WHERE barcode = %s",
+                        (barcode, )
+                    )
+                    obs = cur.fetchone()
+                    self.assertEqual(obs[0], 1)
+                
+                # Verify that kit_id_1 has exactly one more barcode in the
+                # barcodes.barcode table
+                cur.execute(
+                    "SELECT COUNT(*) FROM barcodes.barcode "
+                    "WHERE kit_id = %s",
+                    (kit_id_1,)
                 )
                 obs = cur.fetchone()
-                self.assertIsNotNone(obs,
-                                     "Expected barcode not found in database")
+                self.assertEqual(obs[0], kit_id_1_barcode_count+1)
 
-    def test_insert_barcodes_admin_fail_nonexisting_kit(self):
-        # test that inserting barcodes to a non-existent kit fails
-        kit_name_barcode_prj_id_tuple = [['test1123', 'X00332312', '1']]
-
-        with Transaction() as t:
-            admin_repo = AdminRepo(t)
-            with self.assertRaises(psycopg2.errors.ForeignKeyViolation):
-                admin_repo._insert_barcodes_to_existing_kit(
-                    kit_name_barcode_prj_id_tuple)
-
-    def test_insert_barcodes_admin_fail_dup_barcodes(self):
-        # test that inserting duplicate barcode fails
-        kit_name_barcode_prj_id_tuple = [['test', '000000001', '1']]
-
-        with Transaction() as t:
-            admin_repo = AdminRepo(t)
-            with self.assertRaises(psycopg2.errors.UniqueViolation):
-                admin_repo._insert_barcodes_to_existing_kit(
-                    kit_name_barcode_prj_id_tuple)
-
-    def test_user_barcode_create_kit_success(self):
-        with Transaction() as t:
-            admin_repo = AdminRepo(t)
-            admin_repo.create_kits(1,
-                                   1,
-                                   '',
-                                   [['X99887769']],
-                                   [1])
-            with t.cursor() as cur:
+                # Verify that kit_id_2 has exactly one more barcode in the
+                # barcodes.barcode table
                 cur.execute(
-                    "SELECT barcode "
-                    "FROM barcodes.barcode "
-                    "WHERE barcode = %s",
-                    ('X99887769',)
+                    "SELECT COUNT(*) FROM barcodes.barcode "
+                    "WHERE kit_id = %s",
+                    (kit_id_2,)
                 )
-                obs = cur.fetchall()
-                self.assertEqual(obs[0][0], 'X99887769')
+                obs = cur.fetchone()
+                self.assertEqual(obs[0], kit_id_2_barcode_count+1)
 
-    def test_user_barcode_dup_create_kit_fail(self):
+    def test_add_barcodes_to_kits_provided_success(self):
+        # These two kit IDs are stable in the dev database and are TMI kits
+        kit_id_1 = "wiydx"
+        kit_id_2 = "TjrzA"
+        kit_ids = [kit_id_1, kit_id_2]
+
+        # Let's create some fake barcodes that won't exist in the database
+        barcode_1 = "cf2d5565-9c26-44f4-9aae-3e19d1cc78cf"
+        barcode_2 = "62596b88-bc63-4939-a8fd-7e53750808bc"
+        barcodes = [barcode_1, barcode_2]
+
+        with Transaction() as t:
+            with t.cursor() as cur:
+                # Establish counts for barcodes contained in our test kits
+                cur.execute(
+                    "SELECT COUNT(*) FROM barcodes.barcode "
+                    "WHERE kit_id = %s",
+                    (kit_id_1,)
+                )
+                kit_id_1_barcode_count = cur.fetchone()[0]
+                cur.execute(
+                    "SELECT COUNT(*) FROM barcodes.barcode "
+                    "WHERE kit_id = %s",
+                    (kit_id_2,)
+                )
+                kit_id_2_barcode_count = cur.fetchone()[0]
+
+                admin_repo = AdminRepo(t)
+                res = admin_repo.add_barcodes_to_kits(kit_ids, barcodes)
+                for kit_id, barcode in res:
+                    # Verify that the barcode was created and is associated
+                    # with the kit ID
+                    cur.execute(
+                        "SELECT COUNT(*) FROM barcodes.barcode "
+                        "WHERE kit_id = %s AND barcode = %s",
+                        (kit_id, barcode)
+                    )
+                    obs = cur.fetchone()
+                    self.assertEqual(obs[0], 1)
+
+                    # Verify that the barcode is associated with Project 1
+                    cur.execute(
+                        "SELECT COUNT(*) FROM barcodes.project_barcode "
+                        "WHERE barcode = %s AND project_id = 1",
+                        (barcode, )
+                    )
+                    obs = cur.fetchone()
+                    self.assertEqual(obs[0], 1)
+
+                    # Verify that the barcode was added to ag.ag_kit_barcodes
+                    cur.execute(
+                        "SELECT COUNT(*) FROM ag.ag_kit_barcodes "
+                        "WHERE barcode = %s",
+                        (barcode, )
+                    )
+                    obs = cur.fetchone()
+                    self.assertEqual(obs[0], 1)
+                
+                # Verify that kit_id_1 has exactly one more barcode in the
+                # barcodes.barcode table
+                cur.execute(
+                    "SELECT COUNT(*) FROM barcodes.barcode "
+                    "WHERE kit_id = %s",
+                    (kit_id_1,)
+                )
+                obs = cur.fetchone()
+                self.assertEqual(obs[0], kit_id_1_barcode_count+1)
+
+                # Verify that barcode_1 is associated with kit_id_1
+                cur.execute(
+                    "SELECT COUNT(*) FROM barcodes.barcode "
+                    "WHERE kit_id = %s AND barcode = %s",
+                    (kit_id_1, barcode_1)
+                )
+                obs = cur.fetchone()
+                self.assertEqual(obs[0], 1)
+
+                # Verify that kit_id_2 has exactly one more barcode in the
+                # barcodes.barcode table
+                cur.execute(
+                    "SELECT COUNT(*) FROM barcodes.barcode "
+                    "WHERE kit_id = %s",
+                    (kit_id_2,)
+                )
+                obs = cur.fetchone()
+                self.assertEqual(obs[0], kit_id_2_barcode_count+1)
+
+                # Verify that barcode_2 is associated with kit_id_2
+                cur.execute(
+                    "SELECT COUNT(*) FROM barcodes.barcode "
+                    "WHERE kit_id = %s AND barcode = %s",
+                    (kit_id_2, barcode_2)
+                )
+                obs = cur.fetchone()
+                self.assertEqual(obs[0], 1)
+
+    def test_add_barcodes_to_kits_provided_failure(self):
+        # This test confirms that if the admin provides duplicate barcodes in
+        # the upload, it will fail to insert
+        self.assertFalse(False)
+        # These two kit IDs are stable in the dev database and are TMI kits
+        kit_id_1 = "wiydx"
+        kit_id_2 = "TjrzA"
+        kit_ids = [kit_id_1, kit_id_2]
+
+        # This barcode doesn't exist in the database, but we'll try to use it
+        # twice
+        barcode_1 = "cf2d5565-9c26-44f4-9aae-3e19d1cc78cf"
+        barcodes = [barcode_1, barcode_1]
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            user_barcode = ['000000001']
             with self.assertRaises(psycopg2.errors.UniqueViolation):
-                admin_repo.create_kits(1,
-                                       1,
-                                       '',
-                                       [user_barcode],
-                                       [1])
+                res = admin_repo.add_barcodes_to_kits(kit_ids, barcodes)

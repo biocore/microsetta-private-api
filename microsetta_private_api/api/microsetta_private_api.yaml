@@ -2789,10 +2789,17 @@ paths:
                     type: array
                     items:
                       type: string
+                  barcodes:
+                    type: array
+                    items:
+                      type: array
+                      items:
+                        type: string
                 required:
                   - number_of_kits
                   - number_of_samples
                   - project_ids
+                  - barcodes
       responses:
         '201':
           description: Kit identifiers and associated samples were successfully created
@@ -2805,46 +2812,46 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
-  '/admin/add_barcodes':
+  '/admin/add_barcodes_to_kits':
     post:
-      operationId: microsetta_private_api.admin.admin_impl.handle_barcodes
+      operationId: microsetta_private_api.admin.admin_impl.add_barcodes_to_kits
       tags:
         - Admin
-      summary: Create or insert barcodes
-      description: Create barcodes for an existing kit or insert barcodes into the database
+      summary: Add barcodes to an existing kit
+      description: Add barcodes to an existing kit
       requestBody:
         content:
           application/json:
             schema:
               type: "object"
               properties:
-                action:
-                  type: string
-                  enum: [create, insert]
-                  description: Specify 'create' to generate new barcodes or 'insert' to insert provided barcodes
+                generate_barcodes:
+                  type: boolean
+                  description: Flag for whether barcodes are provided or must be generated
                 barcodes:
                   type: array
                   items:
                     type: string
-                  description: Barcodes to insert (required if action is 'insert')
-                kit_id:
-                  type: string
-                  description: Kit ID to associate the barcodes with (required if action is 'insert')
+                  description: Barcodes to insert, optional
+                kit_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: Kit IDs to associate the barcodes with
               required:
-                - action
+                - generate_barcodes
+                - kit_ids
       responses:
         '201':
-          description: Barcodes were successfully created or inserted
+          description: Barcodes were successfully added
           content:
             application/json:
               schema:
                 type: array
-        '204':
-          description: No data was returned
-        '404':
-          description: Kit ID not found or barcode already exists
-        '500':
-          description: Duplicate barcodes found (only relevant for insert action)
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
           
   '/admin/events/accounts/{account_id}':
     get:
