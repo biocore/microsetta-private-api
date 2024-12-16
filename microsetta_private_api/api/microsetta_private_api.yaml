@@ -3046,6 +3046,26 @@ paths:
                     # not using the defined schema for sample_barcode as it is
                     # readOnly
                     type: string
+                'kit_ids':
+                  type: array
+                  items:
+                    type: string
+                'emails':
+                  type: array
+                  items:
+                    type: string
+                'outbound_tracking_numbers':
+                  type: array
+                  items:
+                    type: string
+                'inbound_tracking_numbers':
+                  type: array
+                  items:
+                    type: string
+                'dak_order_ids':
+                  type: array
+                  items:
+                    type: string
       responses:
         '200':
           description: Return an object containing a list of dictionaries of sample status for requested accounts
