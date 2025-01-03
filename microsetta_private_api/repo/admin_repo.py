@@ -1718,3 +1718,25 @@ class AdminRepo(BaseRepo):
                 "SET perk_fulfillment_active = %s",
                 (new_state, )
             )
+
+    def check_exists_barcode(self, barcode):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT COUNT(barcode) "
+                "FROM barcodes.barcode "
+                "WHERE barcode = %s",
+                (barcode, )
+            )
+            res = cur.fetchone()
+            return True if res[0] > 0 else False
+
+    def check_exists_kit(self, kit_id):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT COUNT(kit_id) "
+                "FROM barcodes.kit "
+                "WHERE kit_id = %s",
+                (kit_id, )
+            )
+            res = cur.fetchone()
+            return True if res[0] > 0 else False

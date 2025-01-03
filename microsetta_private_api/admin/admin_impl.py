@@ -267,10 +267,20 @@ def create_kits(body, token_info):
     number_of_samples = body['number_of_samples']
     kit_prefix = body.get('kit_id_prefix', None)
     project_ids = body['project_ids']
+    # NB: The barcodes variable is a list of lists, structured with the notion
+    # of representing barcodes' constituent lists each representing one sample
+    # slot in the set of kits being created.
+    # len(barcodes) == number_of_samples && len(barcodes[x]) == number_of_kits
+    # This allows the creation of a set of kits with a mixture of
+    # system-generated and admin-provided barcodes.
     barcodes = body['barcodes']
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
+
+        # Lock the barcode table for the duration of checking the existience
+        # of barcodes, then (hopefully) creating/inserting new ones
+        t.lock_table("barcodes.barcode")
 
         # First, do some basic sanitation
         errors = []
@@ -286,8 +296,8 @@ def create_kits(body, token_info):
 
                 # And verify that the barcodes don't already exist
                 for barcode in barcode_list:
-                    diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
-                    if diag is not None:
+                    diag = admin_repo.check_exists_barcode(barcode)
+                    if diag is True:
                         errors.append(f'Barcode {barcode} already exists')
             x += 1
 
@@ -321,26 +331,34 @@ def add_barcodes_to_kits(body, token_info):
     errors = []
 
     with Transaction() as t:
-        kit_repo = KitRepo(t)
         admin_repo = AdminRepo(t)
+
+        # Lock the barcode table for the duration of checking the existience
+        # of barcodes, then (hopefully) adding them to kits
+        t.lock_table("barcodes.barcode")
 
         # First, make sure all of the Kit IDs are valid
         for kit_id in kit_ids:
-            diag = kit_repo.get_kit_all_samples(kit_id)
-            if diag is None:
+            diag = admin_repo.check_exists_kit(kit_id)
+            if diag is False:
                 errors.append(f'Kit ID {kit_id} not found')
 
         if generate_barcodes is False:
             # Next, check that the Barcodes are unique if we're not generating
             # novel ones
             for barcode in barcodes:
-                diag = admin_repo.retrieve_diagnostics_by_barcode(barcode)
-                if diag is not None:
+                diag = admin_repo.check_exists_barcode(barcode)
+                if diag is True:
                     errors.append(f'Barcode {barcode} already exists')
 
             # And verify that the number of barcodes and kit IDs are equal
             if len(barcodes) != len(kit_ids):
                 errors.append("Unequal number of Kit IDs and Barcodes")
+        else:
+            if len(barcodes) > 0:
+                errors.append(
+                    "Barcodes may not be both generated and provided"
+                )
 
         # We found one or more issues with the supplied Kit IDs or Barcodes.
         # Return the error message to microsetta-admin.

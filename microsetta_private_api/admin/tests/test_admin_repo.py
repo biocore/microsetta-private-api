@@ -679,11 +679,11 @@ class AdminRepoTests(AdminTests):
 
         # Sample Slot 1
         sample_1_barcodes = [
-            "2806d1ef-8992-4693-b977-1ae73b398b4c"
+            "thisisabarcode"
         ]
         # Sample Slot 2
         sample_2_barcodes = [
-            "af6ab062-163c-4abd-96f5-848c4729f8b0"
+            "thisisabarcodetoo"
         ]
         # Sample Slot 3 - generated
         sample_3_barcodes = []
@@ -1957,3 +1957,39 @@ class AdminRepoTests(AdminTests):
             admin_repo = AdminRepo(t)
             kit_info = admin_repo.get_kit_by_barcode(['nonexistent_barcode'])
             self.assertIsNone(kit_info)
+
+    def test_check_exists_barcode_true(self):
+        # This is a stable barcode in the dev database
+        barcode = "000004801"
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            bc_exists = admin_repo.check_exists_barcode(barcode)
+            self.assertTrue(bc_exists)
+
+    def test_check_exists_barcode_false(self):
+        # This is not a barcode in the database
+        barcode = "absenzelysium"
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            bc_exists = admin_repo.check_exists_barcode(barcode)
+            self.assertFalse(bc_exists)
+
+    def test_check_exists_kit_true(self):
+        # This is a stable kit ID in the dev database
+        kit_id = "DXHsj"
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            kit_exists = admin_repo.check_exists_kit(kit_id)
+            self.assertTrue(kit_exists)
+
+    def test_check_exists_kit_false(self):
+        # This is not a kit ID in the database
+        kit_id = "absenzelysium"
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            kit_exists = admin_repo.check_exists_kit(kit_id)
+            self.assertFalse(kit_exists)
