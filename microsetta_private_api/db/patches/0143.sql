@@ -1,3 +1,7 @@
+-- Survey question 521 is missing the "Unspecified" option, need to fix that
+INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (521, 'Unspecified', 0);
+
 -- Add question about understanding of 'microbiome' to Basic Information survey
 INSERT INTO ag.survey_question (survey_question_id, american, spanish, spain_spanish, question_shortname, retired, css_classes) VALUES (522, 'Which of the following best describes your level of exposure and understanding of the word ''microbiome'' prior to enrolling in this research study?', '¿Cuál de las siguientes opciones describe mejor su nivel de exposición y comprensión de la palabra ''microbioma'' antes de inscribirse en este estudio de investigación?', '¿Cuál de las siguientes opciones describe mejor su nivel de exposición y comprensión de la palabra ''microbioma'' antes de inscribirse en este estudio de investigación?', 'FAMILIARITY_WITH_MICROBIOME', FALSE, 'tmi-survey-radio-vertical');
 INSERT INTO ag.survey_question_response_type (survey_question_id, survey_response_type) VALUES (522, 'SINGLE');
@@ -8,6 +12,7 @@ INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('I was
 INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('I was already familiar with it, and I am actively trying to take care of my skin microbiome', 'Ya la conocía, y estoy intentando activamente cuidar el microbioma de mi piel', 'Ya la conocía, y estoy intentando activamente cuidar el microbioma de mi piel');
 INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('I was already familiar with it, and I am actively trying to take care of all my various microbiomes', 'Ya la conocía, y estoy tratando activamente de cuidar todos mis microbiomas', 'Ya la conocía, y estoy tratando activamente de cuidar todos mis microbiomas');
 INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (522, 'Unspecified', 0),
     (522, 'I was not familiar with it', 1),
     (522, 'I had heard of it, but I didn''t really know what it meant', 2),
     (522, 'I was already familiar with it', 3),
@@ -50,6 +55,7 @@ INSERT INTO ag.survey_question_response_type (survey_question_id, survey_respons
 INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('Less than 1 year', 'Menos de 1 año', 'Menos de 1 año');
 INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('More than 1 year', 'Más de 1 año', 'Más de 1 año');
 INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (523, 'Unspecified', 0),
     (523, 'Less than 1 year', 1),
     (523, 'More than 1 year', 2);
 INSERT INTO ag.group_questions (survey_group, survey_question_id, display_index) VALUES (-12, 523, 26);
@@ -58,6 +64,7 @@ INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response
 INSERT INTO ag.survey_question (survey_question_id, american, spanish, spain_spanish, question_shortname, retired, css_classes) VALUES (524, 'At any point in your life (even if you don''t currently smoke), did you smoke more than 5 packs of cigarettes per year?', 'En algún momento de su vida (incluso si actualmente no fuma), ¿fumó más de 5 paquetes de cigarrillos al año?', 'En algún momento de su vida (incluso si actualmente no fuma), ¿fumó más de 5 paquetes de cigarrillos al año?', 'SMOKING_FIVE_PACKS_YEAR_EVER', FALSE, 'tmi-survey-radio-horizontal');
 INSERT INTO ag.survey_question_response_type (survey_question_id, survey_response_type) VALUES (524, 'SINGLE');
 INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (524, 'Unspecified', 0),
     (524, 'Yes', 1),
     (524, 'No', 2),
     (524, 'Not sure', 3);
@@ -68,6 +75,7 @@ INSERT INTO ag.survey_question_response_type (survey_question_id, survey_respons
 INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('5 or fewer', '5 o menos', '5 o menos');
 INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('More than 20', 'Más de 20', 'Más de 20');
 INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (525, 'Unspecified', 0),
     (525, '5 or fewer', 1),
     (525, '6 to 10', 2),
     (525, '11 to 20', 3),
@@ -79,6 +87,7 @@ INSERT INTO ag.survey_question_triggers (survey_question_id, triggering_response
 INSERT INTO ag.survey_question (survey_question_id, american, spanish, spain_spanish, question_shortname, retired, css_classes) VALUES (526, 'On an average day, how many cigarettes do you (or did you) smoke?', 'En un día normal, ¿cuántos cigarrillos fuma (o fumaba)?', 'En un día normal, ¿cuántos cigarrillos fuma (o fumaba)?', 'SMOKING_AVERAGE_PER_DAY', FALSE, 'tmi-survey-radio-vertical tmi-survey-triggered-question');
 INSERT INTO ag.survey_question_response_type (survey_question_id, survey_response_type) VALUES (526, 'SINGLE');
 INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (526, 'Unspecified', 0),
     (526, '5 or fewer', 1),
     (526, '6 to 10', 2),
     (526, '11 to 20', 3),
@@ -153,6 +162,7 @@ INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('Puber
 INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('Reproductive maturity', 'Madurez reproductiva', 'Madurez reproductiva');
 INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('Menopause (at least 12 months have passed since the last menstrual period)', 'Menopausia (han pasado al menos 12 meses desde el último período menstrual)', 'Menopausia (han pasado al menos 12 meses desde el último período menstrual)');
 INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (527, 'Unspecified', 0),
     (527, 'Puberty', 1),
     (527, 'Reproductive maturity', 2),
     (527, 'Menopause (at least 12 months have passed since the last menstrual period)', 3),
@@ -164,6 +174,7 @@ INSERT INTO ag.survey_question (survey_question_id, american, spanish, spain_spa
 INSERT INTO ag.survey_question_response_type (survey_question_id, survey_response_type) VALUES (528, 'SINGLE');
 INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('I don''t know because I don''t currently have periods (e.g. due to hormonal contraceptives)', 'No lo sé porque actualmente no tengo períodos (por ejemplo, debido a los anticonceptivos hormonales)', 'No lo sé porque actualmente no tengo períodos (por ejemplo, debido a los anticonceptivos hormonales)');
 INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (528, 'Unspecified', 0),
     (528, 'Yes', 1),
     (528, 'No', 2),
     (528, 'Not sure', 3),
@@ -180,6 +191,7 @@ INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('Once 
 INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('Three or more times a week', 'Tres o más veces por semana', 'Tres o más veces por semana');
 INSERT INTO ag.survey_response (american, spanish, spain_spanish) VALUES ('I have never taken medicine to help me sleep', 'Nunca he tomado medicamentos para ayudarme a dormir', 'Nunca he tomado medicamentos para ayudarme a dormir');
 INSERT INTO ag.survey_question_response (survey_question_id, response, display_index) VALUES
+    (529, 'Unspecified', 0),
     (529, 'Not during the past month', 1),
     (529, 'Less than once a week', 2),
     (529, 'Once or twice a week', 3),
