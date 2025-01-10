@@ -1033,7 +1033,8 @@ class SurveyTemplateTests(unittest.TestCase):
         '148': '',
         '492': '',
         '493': '',
-        '502': ''
+        '502': '',
+        '522': ''
     }
 
     filled_survey_10a = {'22': 'I am right handed',
@@ -1048,7 +1049,8 @@ class SurveyTemplateTests(unittest.TestCase):
                          '148': '',
                          '492': '',
                          '493': '',
-                         '502': ''}
+                         '502': '',
+                         '522': ''}
 
     filled_survey_19a = {}
 
