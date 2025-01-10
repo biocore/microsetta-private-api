@@ -419,6 +419,8 @@ class IntegrationTests(TestCase):
                               SurveyTemplateRepo.ALLERGIES_ID,
                               SurveyTemplateRepo.DIET_ID,
                               SurveyTemplateRepo.DETAILED_DIET_ID,
+                              SurveyTemplateRepo.SKIN_ID,
+                              SurveyTemplateRepo.SKIN_HEALTH_DIAGNOSIS_ID,
                               SurveyTemplateRepo.OTHER_ID])
         self.assertListEqual([x["survey_template_id"] for x in doggy_surveys],
                              [2])
@@ -702,9 +704,9 @@ class IntegrationTests(TestCase):
                                  SurveyTemplateRepo.ALLERGIES_ID,
                                  SurveyTemplateRepo.DIET_ID,
                                  SurveyTemplateRepo.DETAILED_DIET_ID,
-                                 SurveyTemplateRepo.MIGRAINE_ID,
-                                 SurveyTemplateRepo.SURFERS_ID,
-                                 SurveyTemplateRepo.COVID19_ID):
+                                 SurveyTemplateRepo.SKIN_ID,
+                                 SurveyTemplateRepo.SKIN_HEALTH_DIAGNOSIS_ID,
+                                 SurveyTemplateRepo.OTHER_ID):
                 continue
 
             resp = self.client.get(
