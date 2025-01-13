@@ -367,8 +367,7 @@ HUMAN_SITE_INVARIANTS = {
         'env_material': 'sebum',
         'env_package': 'human-skin',
         'description': 'Microsetta Initiative Cheek sample',
-        'host_body_site': 'UBERON:skin of head'
-    }
+        'host_body_site': 'UBERON:skin of head'}
 }
 
 

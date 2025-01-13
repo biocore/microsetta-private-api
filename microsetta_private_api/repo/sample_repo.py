@@ -338,7 +338,6 @@ class SampleRepo(BaseRepo):
             sample_info.barcode_meta = {}
         self._update_barcode_meta(sample_info.id, sample_info.barcode_meta)
 
-
     def _update_barcode_meta(self, sample_id, barcode_meta):
         """Update barcode-specific metadata
 
@@ -366,10 +365,9 @@ class SampleRepo(BaseRepo):
                     (sample_id, fn, fv)
                 )
 
-
     def _get_barcode_meta(self, sample_id):
         """ Retrieve any barcode-specific metadata
-        
+
         Parameters
         ----------
         sample_id : str, uuid
@@ -392,7 +390,6 @@ class SampleRepo(BaseRepo):
             for row in rows:
                 return_dict[row['field_name']] = row['field_value']
             return return_dict
-
 
     def associate_sample(self, account_id, source_id, sample_id,
                          override_locked=False):
@@ -535,7 +532,7 @@ class SampleRepo(BaseRepo):
 
         Returns
         -------
-        True if all fields/values are valid, else False        
+        True if all fields/values are valid, else False
         """
 
         with self._transaction.dict_cursor() as cur:
