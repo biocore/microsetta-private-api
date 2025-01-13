@@ -3,6 +3,8 @@ from microsetta_private_api.repo.sample_repo import SampleRepo
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.transaction import Transaction
+from microsetta_private_api.model.sample import SampleInfo
+import datetime
 
 
 class SampleTests(unittest.TestCase):
@@ -167,6 +169,102 @@ class SampleTests(unittest.TestCase):
                 sample_barcode
             )
             self.assertEqual(kit_id, supplied_kit_id)
+
+    def test_validate_barcode_meta_pass(self):
+        with Transaction() as t:
+            sample_repo = SampleRepo(t)
+
+            # Build a barcode_meta dict matching what we expect for cheek
+            # samples with all fields completed
+            bc_meta = {
+                "sample_site_last_washed_date": "01/10/2025",
+                "sample_site_last_washed_time": "9:30 AM",
+                "sample_site_last_washed_product": "Face cleanser"
+            }
+            bc_valid = sample_repo.validate_barcode_meta(bc_meta)
+            self.assertTrue(bc_valid)
+
+    def test_validate_barcode_meta_fail(self):
+        with Transaction() as t:
+            sample_repo = SampleRepo(t)
+            # Try using an invalid field name
+            bc_meta = {
+                "my_life_story": "I've done stuff and things"
+            }
+            bc_valid = sample_repo.validate_barcode_meta(bc_meta)
+            self.assertFalse(bc_valid)
+
+            # Try using a valid field name with an invalid value
+            bc_meta = {
+                "sample_site_last_washed_product": "Chocolate ice cream"
+            }
+            bc_valid = sample_repo.validate_barcode_meta(bc_meta)
+            self.assertFalse(bc_valid)
+
+    def test_update_barcode_meta_via_update_info(self):
+        # We're going to use a stable sample and override_locked to test
+        # the barcode meta update via update_info()
+        account_id = "d8592c74-85ee-2135-e040-8a80115d6401"
+        source_id = "6845fded-7802-439b-b265-79f472a7a897"
+        sample_id = "d8592c74-85f0-2135-e040-8a80115d6401"
+        bc_meta = {
+            "sample_site_last_washed_date": "01/10/2025",
+            "sample_site_last_washed_time": "9:30 AM",
+            "sample_site_last_washed_product": "Face cleanser"
+        }
+        sample_info = SampleInfo(
+            sample_id,
+            datetime.datetime.now(),
+            "Stool",
+            "",
+            bc_meta
+        )
+
+        with Transaction() as t:
+            sample_repo = SampleRepo(t)
+            sample_repo.update_info(account_id, source_id, sample_info, True)
+
+            with t.dict_cursor() as cur:
+                for fn, fv in bc_meta.items():
+                    cur.execute(
+                        "SELECT field_value "
+                        "FROM ag.ag_kit_barcodes_metadata "
+                        "WHERE ag_kit_barcode_id = %s AND field_name = %s",
+                        (sample_info.id, fn)
+                    )
+                    row = cur.fetchone()
+                    self.assertEqual(
+                        row['field_value'],
+                        fv
+                    )
+
+    def test_get_barcode_meta(self):
+        # First, we need to set the barcode metadata. Same process as
+        # test_update_barcode_meta_via_update_info()
+        account_id = "d8592c74-85ee-2135-e040-8a80115d6401"
+        source_id = "6845fded-7802-439b-b265-79f472a7a897"
+        sample_id = "d8592c74-85f0-2135-e040-8a80115d6401"
+        bc_meta = {
+            "sample_site_last_washed_date": "01/10/2025",
+            "sample_site_last_washed_time": "9:30 AM",
+            "sample_site_last_washed_product": "Face cleanser"
+        }
+        sample_info = SampleInfo(
+            sample_id,
+            datetime.datetime.now(),
+            "Stool",
+            "",
+            bc_meta
+        )
+
+        with Transaction() as t:
+            sample_repo = SampleRepo(t)
+            sample_repo.update_info(account_id, source_id, sample_info, True)
+
+            # Then, we'll get the sample and confirm that the sample's
+            # barcode_meta property matches the above input
+            sample = sample_repo.get_sample(account_id, source_id, sample_id)
+            self.assertEqual(bc_meta, sample.barcode_meta)
 
 
 if __name__ == '__main__':

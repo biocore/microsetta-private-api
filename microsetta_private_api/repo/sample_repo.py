@@ -261,6 +261,10 @@ class SampleRepo(BaseRepo):
                 sample.kit_id = self._get_supplied_kit_id_by_sample(
                     sample.barcode
                 )
+                if sample is not None:
+                    sample.set_barcode_meta(
+                       self._get_barcode_meta(sample.id)
+                    )
                 samples.append(sample)
             return samples
 
@@ -276,7 +280,12 @@ class SampleRepo(BaseRepo):
             barcode = self._get_sample_barcode_from_id(sample_id)
             cur.execute(sql, (barcode, account_id, source_id, sample_id))
             sample_row = cur.fetchone()
-            return self._create_sample_obj(sample_row)
+            sample = self._create_sample_obj(sample_row)
+            if sample is not None:
+                sample.set_barcode_meta(
+                    self._get_barcode_meta(sample_id)
+                )
+            return sample
 
     def update_info(self, account_id, source_id, sample_info,
                     override_locked=False):
@@ -320,6 +329,70 @@ class SampleRepo(BaseRepo):
                             datetime.datetime.now(),
                             sample_info.id
                         ))
+
+        # NB: We run this even if the barcode_meta dict is empty, as that
+        # means the answers associated with the last sample update should be
+        # purged. This applies both to the normal sample update process, as
+        # well as dissociate_sample().
+        if sample_info.barcode_meta is None:
+            sample_info.barcode_meta = {}
+        self._update_barcode_meta(sample_info.id, sample_info.barcode_meta)
+
+
+    def _update_barcode_meta(self, sample_id, barcode_meta):
+        """Update barcode-specific metadata
+
+        NB: Since the fields are optional, this function takes the approach
+        of wiping all prior answers, then storing a new set of answers.
+
+        Parameters
+        ----------
+        sample_id : str, uuid
+            The associated sample ID for which to store metadata
+        barcode_meta : dict
+            The key:value pairs to store
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "DELETE FROM ag.ag_kit_barcodes_metadata "
+                "WHERE ag_kit_barcode_id = %s",
+                (sample_id, )
+            )
+            for fn, fv in barcode_meta.items():
+                cur.execute(
+                    "INSERT INTO ag.ag_kit_barcodes_metadata "
+                    "(ag_kit_barcode_id, field_name, field_value) "
+                    "VALUES (%s, %s, %s)",
+                    (sample_id, fn, fv)
+                )
+
+
+    def _get_barcode_meta(self, sample_id):
+        """ Retrieve any barcode-specific metadata
+        
+        Parameters
+        ----------
+        sample_id : str, uuid
+            The associated sample ID for which to retrieve metadata
+
+        Returns
+        -------
+        dict
+            The key:value pairs of metadata, or an empty dict
+        """
+        with self._transaction.dict_cursor() as cur:
+            cur.execute(
+                "SELECT field_name, field_value "
+                "FROM ag.ag_kit_barcodes_metadata "
+                "WHERE ag_kit_barcode_id = %s",
+                (sample_id, )
+            )
+            rows = cur.fetchall()
+            return_dict = {}
+            for row in rows:
+                return_dict[row['field_name']] = row['field_value']
+            return return_dict
+
 
     def associate_sample(self, account_id, source_id, sample_id,
                          override_locked=False):
@@ -451,3 +524,54 @@ class SampleRepo(BaseRepo):
                 raise RepoException("Invalid source / sample relation")
             else:
                 return True
+
+    def validate_barcode_meta(self, barcode_meta):
+        """ Validate the barcode_meta fields/values provided
+
+        Parameters
+        ----------
+        barcode_meta : dict
+            Key:Value pairings of field_name:field_value
+
+        Returns
+        -------
+        True if all fields/values are valid, else False        
+        """
+
+        with self._transaction.dict_cursor() as cur:
+            bc_valid = True
+            for fn, fv in barcode_meta.items():
+                cur.execute(
+                    "SELECT validation_type, validation_value "
+                    "FROM ag.ag_kit_barcodes_metadata_validation "
+                    "WHERE field_name = %s",
+                    (fn, )
+                )
+                if cur.rowcount != 1:
+                    # Invalid field name, that's bad
+                    bc_valid = False
+                else:
+                    v_row = cur.fetchone()
+                    # If this grows beyond its current scope, it might be
+                    # worth breaking out helper functions
+                    if v_row['validation_type'] == 'date_or_time':
+                        # Confirm that the value is either a valid date or
+                        # time based on the format mask in the database
+                        try:
+                            datetime.datetime.strptime(
+                                fv,
+                                v_row['validation_value']
+                            )
+                        except ValueError:
+                            bc_valid = False
+                    elif v_row['validation_type'] == 'set_value':
+                        # Confirm that the value is within the set list of
+                        # strings in the database
+                        v_list = v_row['validation_value'].split('|')
+                        if fv not in v_list:
+                            bc_valid = False
+                    else:
+                        # Unknown validation type, that's bad
+                        bc_valid = False
+
+            return bc_valid

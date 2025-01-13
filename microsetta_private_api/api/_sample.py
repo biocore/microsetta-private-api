@@ -141,6 +141,13 @@ def update_sample_association(account_id, source_id, sample_id, body,
         upper_limit = curdate + relativedelta(months=+1)
         is_admin = token_grants_admin_access(token_info)
 
+        # If the sample contains barcode_meta fields, validate them
+        barcode_meta = body.get('barcode_meta')
+        if barcode_meta is not None and len(barcode_meta) > 0:
+            valid_meta = sample_repo.validate_barcode_meta(barcode_meta)
+            if valid_meta is not True:
+                raise BadRequest("Invalid barcode_meta fields or values")
+
         # Allow admins to bypass the back-dating/forward-dating limits
         if (sample_datetime < lower_limit or sample_datetime > upper_limit)\
                 and not is_admin:
@@ -152,7 +159,8 @@ def update_sample_association(account_id, source_id, sample_id, body,
             sample_id,
             sample_datetime,
             sample_site,
-            body["sample_notes"]
+            body["sample_notes"],
+            barcode_meta
         )
 
         sample_repo.update_info(account_id, source_id, sample_info,

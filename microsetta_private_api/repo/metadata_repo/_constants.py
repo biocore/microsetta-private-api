@@ -237,7 +237,7 @@ HUMAN_SITE_INVARIANTS = {
         'host_body_habitat': 'UBERON:feces',
         'env_material': 'feces',
         'env_package': 'human-gut',
-        'description': 'American Gut Project Stool sample',
+        'description': 'Microsetta Initiative Stool sample',
         'host_body_site': 'UBERON:feces'},
     'Forehead': {
         'host_body_product': 'UBERON:sebum',
@@ -356,7 +356,19 @@ HUMAN_SITE_INVARIANTS = {
         'env_package': 'human-associated',
         'description': 'American Gut Project Ear wax sample',
         'empo_3': 'Animal secretion',
-        'host_body_site': 'UBERON:external auditory meatus'}
+        'host_body_site': 'UBERON:external auditory meatus'},
+    'Cheek': {
+        'host_body_product': 'UBERON:sebum',
+        'sample_type': 'Cheek',
+        'scientific_name': 'human skin metagenome',
+        'taxon_id': '539655',
+        'host_body_habitat': 'UBERON:skin',
+        'empo_3': 'Animal surface',
+        'env_material': 'sebum',
+        'env_package': 'human-skin',
+        'description': 'Microsetta Initiative Cheek sample',
+        'host_body_site': 'UBERON:skin of head'
+    }
 }
 
 

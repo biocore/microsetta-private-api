@@ -546,6 +546,10 @@ def _to_pandas_series(metadata, multiselect_map):
                     index.append(shortname)
                     values.append(answer)
 
+    for variable, value in sample_detail.barcode_meta.items():
+        index.append(variable)
+        values.append(value)
+
     for variable, value in sample_invariants.items():
         index.append(variable)
         values.append(value)
