@@ -60,7 +60,7 @@ def search_kit_id(token_info, kit_id):
         admin_repo = AdminRepo(t)
         diag = admin_repo.retrieve_diagnostics_by_kit_id(kit_id)
         if diag is None:
-            return jsonify(code=404, message="Kit ID not found"), 404
+            return jsonify(code=404, message=f'Kit ID {kit_id} not found'), 404
         return jsonify(diag), 200
 
 
@@ -267,19 +267,112 @@ def create_kits(body, token_info):
     number_of_samples = body['number_of_samples']
     kit_prefix = body.get('kit_id_prefix', None)
     project_ids = body['project_ids']
+    # NB: The barcodes variable is a list of lists, structured with the notion
+    # of representing barcodes' constituent lists each representing one sample
+    # slot in the set of kits being created.
+    # len(barcodes) == number_of_samples && len(barcodes[x]) == number_of_kits
+    # This allows the creation of a set of kits with a mixture of
+    # system-generated and admin-provided barcodes.
+    barcodes = body['barcodes']
 
     with Transaction() as t:
         admin_repo = AdminRepo(t)
 
+        # Lock the barcode table for the duration of checking the existience
+        # of barcodes, then (hopefully) creating/inserting new ones
+        t.lock_table("barcodes.barcode")
+
+        # First, do some basic sanitation
+        errors = []
+        for barcode_list in barcodes:
+            x = 1
+            if len(barcode_list) != 0:
+                # If barcodes were provided for a given slot, ensure the
+                # quantity matches the number of kits
+                if len(barcode_list) != number_of_kits:
+                    errors.append(
+                        f'Incorrect number of barcodes given for Sample {x}'
+                    )
+
+                # And verify that the barcodes don't already exist
+                for barcode in barcode_list:
+                    diag = admin_repo.check_exists_barcode(barcode)
+                    if diag is True:
+                        errors.append(f'Barcode {barcode} already exists')
+            x += 1
+
+        if len(errors) > 0:
+            error_str = "; ".join(errors)
+            return jsonify(code=422, message=error_str), 422
+
         try:
-            kits = admin_repo.create_kits(number_of_kits, number_of_samples,
-                                          kit_prefix, project_ids)
+            kits = admin_repo.create_kits(
+                number_of_kits,
+                number_of_samples,
+                kit_prefix,
+                barcodes,
+                project_ids
+            )
         except KeyError:
             return jsonify(code=422, message="Unable to create kits"), 422
         else:
             t.commit()
 
     return jsonify(kits), 201
+
+
+def add_barcodes_to_kits(body, token_info):
+    validate_admin_access(token_info)
+
+    kit_ids = body['kit_ids']
+    barcodes = body['barcodes']
+    generate_barcodes = body['generate_barcodes']
+
+    errors = []
+
+    with Transaction() as t:
+        admin_repo = AdminRepo(t)
+
+        # Lock the barcode table for the duration of checking the existience
+        # of barcodes, then (hopefully) adding them to kits
+        t.lock_table("barcodes.barcode")
+
+        # First, make sure all of the Kit IDs are valid
+        for kit_id in kit_ids:
+            diag = admin_repo.check_exists_kit(kit_id)
+            if diag is False:
+                errors.append(f'Kit ID {kit_id} not found')
+
+        if generate_barcodes is False:
+            # Next, check that the Barcodes are unique if we're not generating
+            # novel ones
+            for barcode in barcodes:
+                diag = admin_repo.check_exists_barcode(barcode)
+                if diag is True:
+                    errors.append(f'Barcode {barcode} already exists')
+
+            # And verify that the number of barcodes and kit IDs are equal
+            if len(barcodes) != len(kit_ids):
+                errors.append("Unequal number of Kit IDs and Barcodes")
+        else:
+            if len(barcodes) > 0:
+                errors.append(
+                    "Barcodes may not be both generated and provided"
+                )
+
+        # We found one or more issues with the supplied Kit IDs or Barcodes.
+        # Return the error message to microsetta-admin.
+        if len(errors) > 0:
+            error_str = "; ".join(errors)
+            return jsonify(
+                code=422,
+                message=error_str
+            ), 422
+
+        diag = admin_repo.add_barcodes_to_kits(kit_ids, barcodes)
+        t.commit()
+
+        return jsonify(diag), 201
 
 
 def get_account_events(account_id, token_info):
