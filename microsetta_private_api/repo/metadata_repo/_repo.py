@@ -74,7 +74,9 @@ def drop_private_columns(df):
     # sensitive in nature
     pm_remove = {c.lower() for c in df.columns if c.lower().startswith('pm_')}
 
-    remove = pm_remove | {c.lower() for c in EBI_REMOVE}
+    freetext_fields = {c.lower () for c in _get_freetext_fields()}
+
+    remove = pm_remove | {c.lower() for c in EBI_REMOVE} | freetext_fields
     to_drop = [c for c in df.columns if c.lower() in remove]
 
     return df.drop(columns=to_drop, inplace=False)
@@ -634,3 +636,24 @@ def _find_duplicates(barcodes):
         }
 
     return dups, error
+
+
+def _get_freetext_fields():
+    """ Retrieve a list of all free-text survey fields from the database
+    
+    Returns
+    -------
+    list of str
+        The question_shortname values for all free-text survey questions
+    """
+    with Transaction() as t:
+        with t.cursor() as cur:
+            cur.execute(
+                "SELECT sq.question_shortname "
+                "FROM ag.survey_question sq "
+                "INNER JOIN ag.survey_question_response_type sqrtype "
+                "ON sq.survey_question_id = sqrtype.survey_question_id "
+                "WHERE survey_response_type IN ('TEXT', 'STRING')"
+            )
+            rows = cur.fetchall()
+            return [x[0] for x in rows]
