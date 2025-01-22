@@ -18,6 +18,7 @@ import copy
 import secrets
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
+from microsetta_private_api.repo.sample_repo import SampleRepo
 
 
 class SurveyTemplateRepo(BaseRepo):
@@ -40,7 +41,8 @@ class SurveyTemplateRepo(BaseRepo):
     SURFERS_ID = 20
     COVID19_ID = 21
     OTHER_ID = 22
-    SBI_PROJECT_ID = 58
+    
+    SBI_COHORT_PROJECT_ID = 1
 
     SURVEY_INFO = {
         # For now, let's keep legacy survey info as well.
@@ -768,9 +770,8 @@ class SurveyTemplateRepo(BaseRepo):
 
     def create_skin_scoring_app_entry(self,
                                       account_id,
-                                      source_id,
-                                      language_tag,):
-        """Return a newly created Skin Scoring App ID
+                                      source_id):
+        """Return newly allocated skin scoring app credentials
 
         Parameters
         ----------
@@ -778,48 +779,68 @@ class SurveyTemplateRepo(BaseRepo):
             The account UUID
         source_id : str, UUID
             The source UUID
-        language_tag: str
-            The user's language tag
 
         Returns
         -------
-        str
-            The newly created Skin Scoring App ID
+        str or None
+            The username allocated to the source, or None if process fails
+        str or None
+            The password allocated to the source, or None if process fails
         """
-        characters = string.ascii_lowercase + string.digits
 
-        while True:
-            skin_scoring_app_id = ''.join(random.choices(characters, k=8))
+        with self._transaction.cursor() as cur:
+            # We need to lock both tables relevant to app credentials
+            self._transaction.lock_table("ag.skin_scoring_app_credentials")
+            self._transaction.lock_table("ag.skin_scoring_app_registry")
 
-            try:
-                with self._transaction.cursor() as cur:
-                    cur.execute("""INSERT INTO ag.skin_scoring_app_registry
-                                (skin_scoring_app_id, account_id,
-                                source_id, language_tag)
-                                VALUES (%s, %s, %s, %s)""",
-                                (skin_scoring_app_id, account_id,
-                                 source_id, language_tag))
+            cur.execute(
+                "SELECT app_username, app_password "
+                "FROM ag.skin_scoring_app_creentials "
+                "WHERE credentials_allocated = FALSE "
+                "LIMIT 1"
+            )
+            row = cur.fetchone()
+            if row is None:
+                # No credentials are available
+                return None, None
+            else:
+                app_username = row[0]
+                app_password = row[1]
 
-                    # Put a survey into ag_login_surveys
-                    cur.execute("INSERT INTO ag_login_surveys("
-                                "ag_login_id, "
-                                "survey_id, "
-                                "vioscreen_status, "
-                                "source_id, "
-                                "survey_template_id) "
-                                "VALUES(%s, %s, %s, %s, %s)",
-                                (account_id, skin_scoring_app_id, None,
-                                 source_id,
-                                 SurveyTemplateRepo.SKIN_SCORING_APP_ID))
+                # Mark the credentials as allocated
+                cur.execute(
+                    "UPDATE ag.skin_scoring_app_credentials "
+                    "SET credentials_allocated = TRUE "
+                    "WHERE app_username = %s",
+                    (app_username, )
+                )
 
-                    return skin_scoring_app_id
-            except psycopg2.IntegrityError:
-                self._transaction.rollback()
+                # Insert the credentials:source association
+                cur.execute(
+                    "INSERT INTO ag.skin_scoring_app_registry "
+                    "(app_username, account_id, source_id) "
+                    "VALUES (%s, %s, %s)",
+                    (app_username, account_id, source_id)
+                )
 
-    def get_skin_scoring_app_id_if_exists(self,
-                                          account_id,
-                                          source_id):
-        """Return a Skin Scoring App ID if one exists
+                # Put a survey into ag_login_surveys
+                cur.execute(
+                    "INSERT INTO ag.ag_login_surveys("
+                    "ag_login_id, survey_id, vioscreen_status, "
+                    "source_id, survey_template_id) "
+                    "VALUES(%s, %s, %s, %s, %s)",
+                    (account_id, app_username, None,
+                     source_id, SurveyTemplateRepo.SKIN_SCORING_APP_ID)
+                )
+
+                return app_username, app_password
+
+    def get_skin_scoring_app_credentials_if_exists(
+            self,
+            account_id,
+            source_id
+        ):
+        """Returns a Skin Scoring App username/password set if they exist
 
         Parameters
         ----------
@@ -831,20 +852,27 @@ class SurveyTemplateRepo(BaseRepo):
         Returns
         -------
         (str) or (None)
-            The associated Skin Scoring App ID
-            It's impossible to find one without the other
+            The associated Skin Scoring App username
+        (str) or (None)
+            The associated Skin Scoring App password
         """
         with self._transaction.cursor() as cur:
-            cur.execute("""SELECT skin_scoring_app_id
-                        FROM ag.skin_scoring_app_registry
-                        WHERE account_id=%s AND source_id=%s""",
-                        (account_id, source_id))
+            cur.execute(
+                """
+                SELECT ssac.app_username, ssac.app_password
+                FROM ag.skin_scoring_app_credentials ssac
+                INNER JOIN ag.skin_scoring_app_registry ssar
+                ON ssac.app_username = ssar.app_username
+                WHERE ssar.account_id=%s AND ssar.source_id=%s
+                """,
+                (account_id, source_id)
+            )
             res = cur.fetchone()
 
             if res is None:
-                return None
+                return None, None
             else:
-                return res[0]
+                return res[0], res[1]
 
     def get_vioscreen_sample_to_user(self):
         """Obtain a mapping of sample barcode to vioscreen user"""
@@ -1218,7 +1246,7 @@ class SurveyTemplateRepo(BaseRepo):
         getters = (self.get_myfoodrepo_id_if_exists,
                    self.get_polyphenol_ffq_id_if_exists,
                    self.get_spain_ffq_id_if_exists,
-                   self.get_skin_scoring_app_id_if_exists,
+                   self.get_skin_scoring_app_credentials_if_exists,
                    self.get_vioscreen_all_ids_if_exists)
 
         for get in getters:
@@ -1494,3 +1522,73 @@ class SurveyTemplateRepo(BaseRepo):
                 return False
 
         return True
+
+    def check_skin_scoring_app_credentials_available(self):
+        """ Checks whether any username/password pairings in the
+            ag.skin_scoring_app_credentials table are available to allocate
+
+        Returns
+        -------
+        bool
+            True if credentials are available, otherwise False
+        """
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT COUNT(app_username) "
+                "FROM ag.skin_scoring_app_credentials "
+                "WHERE credentials_allocated = FALSE"
+            )
+            row = cur.fetchone()
+            return True if row[0] > 0 else False
+
+    def check_display_skin_scoring_app(self, account_id, source_id):
+        """ Determines whether the skin scoring app external survey should
+            be included in the survey template IDs returned to the interface.
+            Two conditions must be met - the source must have a sample
+            associated with the SBI Sponsored Cohort project and there must be
+            unallocated credentials available. Any source that has already
+            been allocated credentials is exempt from those conditions.
+
+        Parameters
+        ----------
+        account_id : str or UUID
+            The account_id of the source we're checking
+        source_id : str or UUID
+            The source_id of the source we're checking
+            
+        Returns
+        -------
+        bool
+            True if the survey should be included, otherwise False
+        """
+        # Check if the participant already has credentials
+        username, _ = self.get_skin_scoring_app_credentials_if_exists(
+            account_id,
+            source_id
+        )
+
+        # No existing record, we need to check the two conditions for display
+        if username is None:
+            # Check 1 - do they have any samples associated with the SBI
+            # Cohort project
+            sample_repo = SampleRepo(self._transaction)
+            samples = sample_repo.get_samples_by_source(account_id, source_id)
+            if samples:
+                has_skin_sample = any(
+                    self.SBI_COHORT_PROJECT_ID
+                    in s.project_id for s in samples
+                )
+            else:
+                has_skin_sample = False
+
+            # Check 2 - are any credentials available
+            credentials = self.check_skin_scoring_app_credentials_available()
+
+            if has_skin_sample and credentials:
+                return True
+            else:
+                return False
+
+        # Existing record, we can return True
+        else:
+            return True

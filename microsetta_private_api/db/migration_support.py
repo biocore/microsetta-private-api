@@ -795,6 +795,35 @@ class MigrationSupport:
                     print("No mapping: " + ffq_id + " - " + barcode)
         TRN.execute()
 
+    @staticmethod
+    def migrate_144(TRN):
+        # We need to load the credentials that the vendor provided in CSV form
+        # Format is username, password and includes a header row
+        skin_app_credentials_path = SERVER_CONFIG["skin_app_credentials_path"]
+        if not os.path.exists(skin_app_credentials_path):
+            print(
+                "Credentials for app not found:" + skin_app_credentials_path
+            )
+            return
+
+        with open(skin_app_credentials_path) as csv_file:
+            csv_contents = csv.reader(csv_file)
+            header = True
+
+            for csv_row in csv_contents:
+                if header:
+                    header = False
+                    continue
+                app_username, app_password = csv_row
+
+                TRN.add(
+                    "INSERT INTO ag.skin_scoring_app_credentials "
+                    "(app_username, app_password) "
+                    "VALUES (%s, %s)",
+                    (app_username, app_password)
+                )
+        TRN.execute()
+
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
         "0050.sql": migrate_50.__func__,
@@ -806,7 +835,8 @@ class MigrationSupport:
         # "0082.sql": migrate_82.__func__
         # ...
         "0096.sql": migrate_96.__func__,
-        "0133.sql": migrate_133.__func__
+        "0133.sql": migrate_133.__func__,
+        "0144.sql": migrate_144.__func__
     }
 
     @classmethod

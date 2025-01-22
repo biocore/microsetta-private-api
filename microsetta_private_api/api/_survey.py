@@ -14,7 +14,7 @@ from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.vioscreen_repo import VioscreenRepo
 from microsetta_private_api.util import vioscreen, myfoodrepo, vue_adapter, \
-    polyphenol_ffq, skin_scoring_app
+    polyphenol_ffq
 from microsetta_private_api.util.vioscreen import VioscreenAdminAPI
 from microsetta_private_api.config_manager import SERVER_CONFIG
 
@@ -41,18 +41,6 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
         template_repo = SurveyTemplateRepo(t)
 
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
-            # Checking samples to see if any have
-            # permission to see Skin Scoring App survey
-            sample_repo = SampleRepo(t)
-            samples = sample_repo.get_samples_by_source(account_id, source_id)
-            if samples:
-                has_skin_sample = any(
-                    SurveyTemplateRepo.SBI_PROJECT_ID
-                    in s.project_id for s in samples
-                )
-            else:
-                has_skin_sample = False
-
             template_ids = [
                 SurveyTemplateRepo.VIOSCREEN_ID,
                 SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
@@ -68,7 +56,9 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
                 SurveyTemplateRepo.DETAILED_DIET_ID,
                 SurveyTemplateRepo.OTHER_ID
             ]
-            if has_skin_sample:
+            if template_repo.check_display_skin_scoring_app(
+                account_id, source_id
+            ):
                 template_ids.append(SurveyTemplateRepo.SKIN_SCORING_APP_ID)
 
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
@@ -202,21 +192,19 @@ def _remote_survey_url_spain_ffq(transaction, account_id, source_id):
 
 def _remote_survey_url_skin_scoring_app(transaction,
                                         account_id,
-                                        source_id,
-                                        language_tag):
+                                        source_id):
     st_repo = SurveyTemplateRepo(transaction)
 
-    skin_scoring_app_id = \
-        st_repo.get_skin_scoring_app_id_if_exists(account_id,
-                                                  source_id)
+    # Confirm that the user has credentials allocated
+    ssa_u, _ = st_repo.get_skin_scoring_app_credentials_if_exists(
+            account_id,
+            source_id
+        )
 
-    if skin_scoring_app_id is None:
-        skin_scoring_app_id = \
-            st_repo.create_skin_scoring_app_entry(account_id,
-                                                  source_id,
-                                                  language_tag)
-    return skin_scoring_app.gen_url(skin_scoring_app_id,
-                                    language_tag)
+    if ssa_u is None:
+        raise NotFound("Sorry, you were not allocated credentials")
+
+    return SERVER_CONFIG['skin_app_url']
 
 
 def read_survey_template(account_id, source_id, survey_template_id,
@@ -262,8 +250,7 @@ def read_survey_template(account_id, source_id, survey_template_id,
                     SurveyTemplateRepo.SKIN_SCORING_APP_ID:
                 url = _remote_survey_url_skin_scoring_app(t,
                                                           account_id,
-                                                          source_id,
-                                                          language_tag)
+                                                          source_id)
             else:
                 raise ValueError(f"Cannot generate URL for survey "
                                  f"{survey_template_id}")
@@ -543,3 +530,58 @@ def read_myfoodrepo_available_slots():
     resp = jsonify(code=200, number_of_available_slots=available,
                    total_number_of_slots=total)
     return resp, 200
+
+
+def get_skin_scoring_app_credentials(account_id, source_id, token_info):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        st_repo = SurveyTemplateRepo(t)
+        ssa_u, ssa_p = st_repo.get_skin_scoring_app_credentials_if_exists(
+            account_id, source_id
+        )
+        response_obj = {
+            "app_username": ssa_u,
+            "app_password": ssa_p
+        }
+        return jsonify(response_obj), 200
+
+
+def post_skin_scoring_app_credentials(account_id, source_id, token_info):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        st_repo = SurveyTemplateRepo(t)
+
+        # First, confirm that the source doesn't already have credentials
+        ssa_u, _ = st_repo.get_skin_scoring_app_credentials_if_exists(
+            account_id, source_id
+        )
+
+        # This shouldn't happen, but if it does, return an error
+        if ssa_u is not None:
+            return jsonify(
+                code=400,
+                message="Credentials already exist"
+            ), 400
+
+        # Now, try to allocate credentials and create an entry in the skin
+        # scoring app registry table
+        ssa_u, ssa_p = st_repo.get_skin_scoring_app_credentials_if_exists(
+            account_id, source_id
+        )
+
+        if ssa_u is None:
+            # No credentials were available
+            return jsonify(
+                code=404,
+                message="No credentials available"
+            ), 404
+        else:
+            # Credentials were successfully allocated
+            return jsonify(
+                {
+                    "app_username": ssa_u,
+                    "app_password": ssa_p
+                }
+            ), 201

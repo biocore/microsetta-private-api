@@ -411,24 +411,29 @@ class SurveyTemplateTests(unittest.TestCase):
                                                             TEST1_SOURCE_ID,
                                                             'en_US')
 
-    def test_get_skin_scoring_app_id_if_exists_true(self):
+    def test_get_skin_scoring_app_credentials_if_exists_true(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
-            test_ssa_id = template_repo.create_skin_scoring_app_entry(
-                TEST1_ACCOUNT_ID, TEST1_SOURCE_ID, 'en_US'
-            )
-            obs = template_repo.get_skin_scoring_app_id_if_exists(
-                TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
-            )
-            self.assertEqual(test_ssa_id, obs)
+            test_ssa_u, test_ssa_p =\
+                template_repo.create_skin_scoring_app_entry(
+                    TEST1_ACCOUNT_ID, TEST1_SOURCE_ID, 'en_US'
+                )
+            obs_ssa_u, obs_ssa_p =\
+                template_repo.get_skin_scoring_app_credentials_if_exists(
+                    TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
+                )
+            self.assertEqual(test_ssa_u, obs_ssa_u)
+            self.assertEqual(test_ssa_p, obs_ssa_p)
 
-    def test_get_skin_scoring_app_id_if_exists_false(self):
+    def test_get_skin_scoring_app_credentials_if_exists_false(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
-            obs = template_repo.get_skin_scoring_app_id_if_exists(
-                TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
-            )
-            self.assertEqual(obs, None)
+            obs_u, obs_p =\
+                template_repo.get_skin_scoring_app_credentials_if_exists(
+                    TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
+                )
+            self.assertEqual(obs_u, None)
+            self.assertEqual(obs_p, None)
 
     def test_create_vioscreen_id_valid(self):
         with Transaction() as t:
@@ -785,6 +790,50 @@ class SurveyTemplateTests(unittest.TestCase):
                 # prompted to update their surveys.
                 obs = s_t_r.check_prompt_survey_update(source_id)
                 self.assertTrue(obs)
+
+    def test_check_skin_scoring_app_credentials_available(self):
+        with Transaction() as t:
+            str = SurveyTemplateRepo(t)
+            with t.cursor() as cur:
+                # Insert a new credential pairing to ensure we have one record
+                # that's not allocated
+                cur.execute(
+                    "INSERT INTO ag.skin_scoring_app_credentials "
+                    "(app_username, app_password) "
+                    "VALUES ('microsettafoo','bar')"
+                )
+
+                # And confirm that the function to check availability
+                # returns True
+                obs = str.check_skin_scoring_app_credentials_available()
+                self.assertTrue(obs)
+
+                # Now, update all records to be allocated
+                cur.execute(
+                    "UPDATE ag.skin_scoring_app_credentials "
+                    "SET credentials_allocated = TRUE"
+                )
+
+                # And confirm that the function to check availability
+                # returns False
+                obs = str.check_skin_scoring_app_credentials_available()
+                self.assertFalse(obs)
+
+    def test_check_display_skin_scoring_app_true(self):
+        # Scenario 1 - the participant already has a username
+
+        # Scenario 2 - the participant does not have a username, but they do
+        # have a sample in the SBI Sponsored cohort and credentials are
+        # available to allocare
+        self.assertTrue(True)
+
+    def test_check_display_skin_scoring_app_false(self):
+        # Scenario 1 - the participant has a sample in the SBI Sponsored
+        # cohort, but no credentials are available
+
+        # Scenario 2 - credentials are available, but the participant doesn't
+        # have a sample in the SBI Sponsored cohort
+        self.assertFalse(False)
 
     filled_surveys = {
         "10": {
