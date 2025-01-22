@@ -332,7 +332,7 @@ class MetadataUtilTests(unittest.TestCase):
         obs = drop_private_columns(df)
         pdt.assert_frame_equal(obs, exp)
 
-    def test_drop_private_columns(self):
+    def test_drop_private_columns_freetext(self):
         # This test specifically asserts that the new code to drop free-text
         # fields works, even if those fields are not represented in the
         # EBI_REMOVE list

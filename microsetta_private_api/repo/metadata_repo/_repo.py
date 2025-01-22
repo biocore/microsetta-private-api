@@ -74,7 +74,7 @@ def drop_private_columns(df):
     # sensitive in nature
     pm_remove = {c.lower() for c in df.columns if c.lower().startswith('pm_')}
 
-    freetext_fields = {c.lower () for c in _get_freetext_fields()}
+    freetext_fields = {c.lower() for c in _get_freetext_fields()}
 
     remove = pm_remove | {c.lower() for c in EBI_REMOVE} | freetext_fields
     to_drop = [c for c in df.columns if c.lower() in remove]
@@ -640,7 +640,7 @@ def _find_duplicates(barcodes):
 
 def _get_freetext_fields():
     """ Retrieve a list of all free-text survey fields from the database
-    
+
     Returns
     -------
     list of str
