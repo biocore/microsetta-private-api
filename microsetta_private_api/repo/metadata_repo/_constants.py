@@ -359,15 +359,15 @@ HUMAN_SITE_INVARIANTS = {
         'host_body_site': 'UBERON:external auditory meatus'},
     'Cheek': {
         'host_body_product': 'UBERON:sebum',
-        'sample_type': 'Cheek',
+        'sample_type': 'skin of cheek',
         'scientific_name': 'human skin metagenome',
         'taxon_id': '539655',
         'host_body_habitat': 'UBERON:skin',
         'empo_3': 'Animal surface',
-        'env_material': 'sebum',
+        'env_material': 'sebum material',
         'env_package': 'human-skin',
-        'description': 'Microsetta Initiative Cheek sample',
-        'host_body_site': 'UBERON:skin of head'}
+        'description': 'Microsetta Initiative cheek skin sample',
+        'host_body_site': 'UBERON:skin of cheek'}
 }
 
 

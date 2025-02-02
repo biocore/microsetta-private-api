@@ -336,13 +336,21 @@ class SampleRepo(BaseRepo):
         # well as dissociate_sample().
         if sample_info.barcode_meta is None:
             sample_info.barcode_meta = {}
+        else:
+            b_m = self._validate_barcode_meta(
+                sample_info.site, sample_info.barcode_meta
+            )
+            if b_m is False:
+                raise RepoException("Invalid barcode_meta fields or values")
+            else:
+                sample_info.barcode_meta = b_m
         self._update_barcode_meta(sample_info.id, sample_info.barcode_meta)
 
     def _update_barcode_meta(self, sample_id, barcode_meta):
         """Update barcode-specific metadata
 
-        NB: Since the fields are optional, this function takes the approach
-        of wiping all prior answers, then storing a new set of answers.
+        NB: As with validation, deferring on a more elegant way to handle
+        table selection for where to store this data.
 
         Parameters
         ----------
@@ -352,17 +360,23 @@ class SampleRepo(BaseRepo):
             The key:value pairs to store
         """
         with self._transaction.cursor() as cur:
+            # First, delete existing values
             cur.execute(
-                "DELETE FROM ag.ag_kit_barcodes_metadata "
+                "DELETE FROM ag.ag_kit_barcodes_cheek "
                 "WHERE ag_kit_barcode_id = %s",
                 (sample_id, )
             )
-            for fn, fv in barcode_meta.items():
+            # Then, insert new values if the dict isn't empty
+            if len(barcode_meta) > 0:
                 cur.execute(
-                    "INSERT INTO ag.ag_kit_barcodes_metadata "
-                    "(ag_kit_barcode_id, field_name, field_value) "
-                    "VALUES (%s, %s, %s)",
-                    (sample_id, fn, fv)
+                    "INSERT INTO ag.ag_kit_barcodes_cheek "
+                    "(ag_kit_barcode_id, sample_site_last_washed_date, "
+                    "sample_site_last_washed_time, "
+                    "sample_site_last_washed_product) "
+                    "VALUES (%s, %s, %s, %s)",
+                    (sample_id, barcode_meta['sample_site_last_washed_date'],
+                    barcode_meta['sample_site_last_washed_time'],
+                    barcode_meta['sample_site_last_washed_product'])
                 )
 
     def _get_barcode_meta(self, sample_id):
@@ -376,20 +390,45 @@ class SampleRepo(BaseRepo):
         Returns
         -------
         dict
-            The key:value pairs of metadata, or an empty dict
+            The sample-specific metadata, or an empty dict
         """
         with self._transaction.dict_cursor() as cur:
             cur.execute(
-                "SELECT field_name, field_value "
-                "FROM ag.ag_kit_barcodes_metadata "
+                "SELECT sample_site_last_washed_date, "
+                "sample_site_last_washed_time, "
+                "sample_site_last_washed_product "
+                "FROM ag.ag_kit_barcodes_cheek "
                 "WHERE ag_kit_barcode_id = %s",
                 (sample_id, )
             )
-            rows = cur.fetchall()
-            return_dict = {}
-            for row in rows:
-                return_dict[row['field_name']] = row['field_value']
-            return return_dict
+            row = cur.fetchone()
+            if row is None:
+                return {}
+            else:
+                # We need to transform the date/time fields back to what the
+                # interface works with
+                ret_dict = {
+                    'sample_site_last_washed_date': row[
+                        'sample_site_last_washed_date'
+                    ],
+                    'sample_site_last_washed_time': row[
+                        'sample_site_last_washed_time'
+                    ],
+                    'sample_site_last_washed_product': row[
+                        'sample_site_last_washed_product'
+                    ]
+                }
+                if ret_dict['sample_site_last_washed_date'] is not None:
+                    ret_dict['sample_site_last_washed_date'] = \
+                        ret_dict['sample_site_last_washed_date'].strftime(
+                            "%m/%d/%Y"
+                        )
+                if ret_dict['sample_site_last_washed_time'] is not None:
+                    ret_dict['sample_site_last_washed_time'] = \
+                        ret_dict['sample_site_last_washed_time'].strftime(
+                            "%-I:%M %p"
+                        )
+                return ret_dict
 
     def associate_sample(self, account_id, source_id, sample_id,
                          override_locked=False):
@@ -522,53 +561,62 @@ class SampleRepo(BaseRepo):
             else:
                 return True
 
-    def validate_barcode_meta(self, barcode_meta):
+    def _validate_barcode_meta(self, sample_site, barcode_meta):
         """ Validate the barcode_meta fields/values provided
+
+        NB: I'm deferring on a more elegant validation system until/unless
+        we decide whether barcode-specific metadata will remain in one table
+        per sample site, a key-value pairing table, or something else.
 
         Parameters
         ----------
+        sample_site : str
+            The sample site
         barcode_meta : dict
             Key:Value pairings of field_name:field_value
 
         Returns
         -------
-        True if all fields/values are valid, else False
+        Dict with database-ready values if valid, else False
         """
 
+        # If the barcode_meta dict is empty, we can immediately pass it. This
+        # will allow the repo to purge existing values without adding a new
+        # record.
+        if len(barcode_meta) == 0:
+            return {}
+
+        # Only Cheek samples should have barcode_meta values. If it's not a
+        # Cheek sample, immediately fail it.
+        if sample_site != "Cheek":
+            return False
+
         with self._transaction.dict_cursor() as cur:
+            ret_dict = {}
             bc_valid = True
             for fn, fv in barcode_meta.items():
-                cur.execute(
-                    "SELECT validation_type, validation_value "
-                    "FROM ag.ag_kit_barcodes_metadata_validation "
-                    "WHERE field_name = %s",
-                    (fn, )
-                )
-                if cur.rowcount != 1:
-                    # Invalid field name, that's bad
-                    bc_valid = False
-                else:
-                    v_row = cur.fetchone()
-                    # If this grows beyond its current scope, it might be
-                    # worth breaking out helper functions
-                    if v_row['validation_type'] == 'date_or_time':
-                        # Confirm that the value is either a valid date or
-                        # time based on the format mask in the database
-                        try:
-                            datetime.datetime.strptime(
-                                fv,
-                                v_row['validation_value']
-                            )
-                        except ValueError:
-                            bc_valid = False
-                    elif v_row['validation_type'] == 'set_value':
-                        # Confirm that the value is within the set list of
-                        # strings in the database
-                        v_list = v_row['validation_value'].split('|')
-                        if fv not in v_list:
-                            bc_valid = False
-                    else:
-                        # Unknown validation type, that's bad
+                if fn == "sample_site_last_washed_date":
+                    try:
+                        ret_val = datetime.datetime.strptime(
+                            fv,
+                            "%m/%d/%Y"
+                        )
+                        ret_dict[fn] = ret_val
+                    except ValueError:
                         bc_valid = False
+                elif fn == "sample_site_last_washed_time":
+                    try:
+                        ret_val = datetime.datetime.strptime(
+                            fv,
+                            "%I:%M %p"
+                        )
+                        ret_dict[fn] = ret_val
+                    except ValueError:
+                        bc_valid = False
+                elif fn == "sample_site_last_washed_product":
+                    # The ENUM type in the database will validate the value
+                    ret_dict[fn] = fv
+                else:
+                    bc_valid = False
 
-            return bc_valid
+            return False if bc_valid is False else ret_dict

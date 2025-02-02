@@ -181,8 +181,13 @@ class SampleTests(unittest.TestCase):
                 "sample_site_last_washed_time": "9:30 AM",
                 "sample_site_last_washed_product": "Face cleanser"
             }
-            bc_valid = sample_repo.validate_barcode_meta(bc_meta)
-            self.assertTrue(bc_valid)
+            bc_valid = sample_repo._validate_barcode_meta("Cheek", bc_meta)
+            self.assertNotEqual(bc_valid, False)
+
+            # Confirm that empty dicts pass, regardless of site
+            bc_meta = {}
+            bc_valid = sample_repo._validate_barcode_meta("Stool", bc_meta)
+            self.assertEqual(bc_valid, {})
 
     def test_validate_barcode_meta_fail(self):
         with Transaction() as t:
@@ -191,14 +196,14 @@ class SampleTests(unittest.TestCase):
             bc_meta = {
                 "my_life_story": "I've done stuff and things"
             }
-            bc_valid = sample_repo.validate_barcode_meta(bc_meta)
+            bc_valid = sample_repo._validate_barcode_meta("Cheek", bc_meta)
             self.assertFalse(bc_valid)
 
-            # Try using a valid field name with an invalid value
+            # Try using an invalid site
             bc_meta = {
-                "sample_site_last_washed_product": "Chocolate ice cream"
+                "sample_site_last_washed_product": "Face cleanser"
             }
-            bc_valid = sample_repo.validate_barcode_meta(bc_meta)
+            bc_valid = sample_repo._validate_barcode_meta("Stool", bc_meta)
             self.assertFalse(bc_valid)
 
     def test_update_barcode_meta_via_update_info(self):
@@ -213,7 +218,7 @@ class SampleTests(unittest.TestCase):
         sample_info = SampleInfo(
             sample_id,
             datetime.datetime.now(),
-            "Stool",
+            "Cheek",
             "",
             bc_meta
         )
@@ -224,19 +229,8 @@ class SampleTests(unittest.TestCase):
             sample_repo = SampleRepo(t)
             sample_repo.update_info(account_id, source_id, sample_info, True)
 
-            with t.dict_cursor() as cur:
-                for fn, fv in bc_meta.items():
-                    cur.execute(
-                        "SELECT field_value "
-                        "FROM ag.ag_kit_barcodes_metadata "
-                        "WHERE ag_kit_barcode_id = %s AND field_name = %s",
-                        (sample_info.id, fn)
-                    )
-                    row = cur.fetchone()
-                    self.assertEqual(
-                        row['field_value'],
-                        fv
-                    )
+            sample = sample_repo.get_sample(account_id, source_id, sample_id)
+            self.assertEqual(bc_meta, sample.barcode_meta)
 
     def test_get_barcode_meta(self):
         # First, we need to set the barcode metadata. Same process as
@@ -250,7 +244,7 @@ class SampleTests(unittest.TestCase):
         sample_info = SampleInfo(
             sample_id,
             datetime.datetime.now(),
-            "Stool",
+            "Cheek",
             "",
             bc_meta
         )
@@ -264,6 +258,7 @@ class SampleTests(unittest.TestCase):
             # Then, we'll get the sample and confirm that the sample's
             # barcode_meta property matches the above input
             sample = sample_repo.get_sample(account_id, source_id, sample_id)
+            print(sample.barcode_meta)
             self.assertEqual(bc_meta, sample.barcode_meta)
 
 
