@@ -375,8 +375,8 @@ class SampleRepo(BaseRepo):
                     "sample_site_last_washed_product) "
                     "VALUES (%s, %s, %s, %s)",
                     (sample_id, barcode_meta['sample_site_last_washed_date'],
-                    barcode_meta['sample_site_last_washed_time'],
-                    barcode_meta['sample_site_last_washed_product'])
+                     barcode_meta['sample_site_last_washed_time'],
+                     barcode_meta['sample_site_last_washed_product'])
                 )
 
     def _get_barcode_meta(self, sample_id):
@@ -591,32 +591,31 @@ class SampleRepo(BaseRepo):
         if sample_site != "Cheek":
             return False
 
-        with self._transaction.dict_cursor() as cur:
-            ret_dict = {}
-            bc_valid = True
-            for fn, fv in barcode_meta.items():
-                if fn == "sample_site_last_washed_date":
-                    try:
-                        ret_val = datetime.datetime.strptime(
-                            fv,
-                            "%m/%d/%Y"
-                        )
-                        ret_dict[fn] = ret_val
-                    except ValueError:
-                        bc_valid = False
-                elif fn == "sample_site_last_washed_time":
-                    try:
-                        ret_val = datetime.datetime.strptime(
-                            fv,
-                            "%I:%M %p"
-                        )
-                        ret_dict[fn] = ret_val
-                    except ValueError:
-                        bc_valid = False
-                elif fn == "sample_site_last_washed_product":
-                    # The ENUM type in the database will validate the value
-                    ret_dict[fn] = fv
-                else:
+        ret_dict = {}
+        bc_valid = True
+        for fn, fv in barcode_meta.items():
+            if fn == "sample_site_last_washed_date":
+                try:
+                    ret_val = datetime.datetime.strptime(
+                        fv,
+                        "%m/%d/%Y"
+                    )
+                    ret_dict[fn] = ret_val
+                except ValueError:
                     bc_valid = False
+            elif fn == "sample_site_last_washed_time":
+                try:
+                    ret_val = datetime.datetime.strptime(
+                        fv,
+                        "%I:%M %p"
+                    )
+                    ret_dict[fn] = ret_val
+                except ValueError:
+                    bc_valid = False
+            elif fn == "sample_site_last_washed_product":
+                # The ENUM type in the database will validate the value
+                ret_dict[fn] = fv
+            else:
+                bc_valid = False
 
-            return False if bc_valid is False else ret_dict
+        return False if bc_valid is False else ret_dict
