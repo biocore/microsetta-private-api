@@ -567,9 +567,10 @@ def post_skin_scoring_app_credentials(account_id, source_id, token_info):
 
         # Now, try to allocate credentials and create an entry in the skin
         # scoring app registry table
-        ssa_u, ssa_p = st_repo.get_skin_scoring_app_credentials_if_exists(
+        ssa_u, ssa_p = st_repo.create_skin_scoring_app_entry(
             account_id, source_id
         )
+        t.commit()
 
         if ssa_u is None:
             # No credentials were available

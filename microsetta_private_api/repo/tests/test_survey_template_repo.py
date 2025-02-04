@@ -396,32 +396,97 @@ class SurveyTemplateTests(unittest.TestCase):
             self.assertEqual(obs, None)
 
     def test_create_skin_scoring_app_entry_valid(self):
+        dummy_user = 'test_username1010'
+        dummy_pass = 'test_password1010'
+
         with Transaction() as t:
-            template_repo = SurveyTemplateRepo(t)
-            obs = template_repo.create_skin_scoring_app_entry(TEST1_ACCOUNT_ID,
-                                                              TEST1_SOURCE_ID,
-                                                              'en_US')
-        self.assertEqual(len(obs), 8)
+            with t.cursor() as cur:
+                # Create a set of credentials to use
+                cur.execute(
+                    "INSERT INTO ag.skin_scoring_app_credentials "
+                    "(app_username, app_password) "
+                    "VALUES (%s, %s)",
+                    (dummy_user, dummy_pass)
+                )
+
+                template_repo = SurveyTemplateRepo(t)
+                obs_u, obs_p = template_repo.create_skin_scoring_app_entry(
+                    TEST1_ACCOUNT_ID,
+                    TEST1_SOURCE_ID,
+                )
+
+                # Assert that the function spit out the expected credentials
+                self.assertEqual(obs_u, dummy_user)
+                self.assertEqual(obs_p, dummy_pass)
+
+                # Assert that the credentials are marked as allocated
+                cur.execute(
+                    "SELECT credentials_allocated "
+                    "FROM ag.skin_scoring_app_credentials "
+                    "WHERE app_username = %s",
+                    (dummy_user,)
+                )
+                row = cur.fetchone()
+                self.assertEqual(row[0], True)
+
+                # Assert that the record is in ag.skin_scoring_app_registry
+                cur.execute(
+                    "SELECT COUNT(*) "
+                    "FROM ag.skin_scoring_app_registry "
+                    "WHERE app_username = %s AND source_id = %s",
+                    (dummy_user, TEST1_SOURCE_ID)
+                )
+                row = cur.fetchone()
+                self.assertEqual(row[0], 1)
 
     def test_create_skin_scoring_app_entry_invalid(self):
         with Transaction() as t:
+            with t.cursor() as cur:
+                # Mark all credentials as allocated, forcing the creation
+                # function to fail
+                cur.execute(
+                    "UPDATE ag.skin_scoring_app_credentials "
+                    "SET credentials_allocated = TRUE"
+                )
+
             template_repo = SurveyTemplateRepo(t)
-            with self.assertRaises(InvalidTextRepresentation):
-                template_repo.create_skin_scoring_app_entry('',
-                                                            TEST1_SOURCE_ID,
-                                                            'en_US')
+            obs_u, obs_p = template_repo.create_skin_scoring_app_entry(
+                TEST1_ACCOUNT_ID,
+                TEST1_SOURCE_ID
+            )
+            self.assertEqual(obs_u, None)
+            self.assertEqual(obs_p, None)
 
     def test_get_skin_scoring_app_credentials_if_exists_true(self):
+        dummy_user = 'test_username1010'
+        dummy_pass = 'test_password1010'
+
         with Transaction() as t:
+            with t.cursor() as cur:
+                # Create a set of credentials to use
+                cur.execute(
+                    "INSERT INTO ag.skin_scoring_app_credentials "
+                    "(app_username, app_password) "
+                    "VALUES (%s, %s)",
+                    (dummy_user, dummy_pass)
+                )
+
             template_repo = SurveyTemplateRepo(t)
             test_ssa_u, test_ssa_p =\
                 template_repo.create_skin_scoring_app_entry(
-                    TEST1_ACCOUNT_ID, TEST1_SOURCE_ID, 'en_US'
+                    TEST1_ACCOUNT_ID, TEST1_SOURCE_ID,
                 )
+
+            # Assert that we didn't just get None, None back
+            self.assertNotEqual(test_ssa_u, None)
+            self.assertNotEqual(test_ssa_p, None)
+
             obs_ssa_u, obs_ssa_p =\
                 template_repo.get_skin_scoring_app_credentials_if_exists(
                     TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
                 )
+            
+            # Assert that we're getting the same credentials back
             self.assertEqual(test_ssa_u, obs_ssa_u)
             self.assertEqual(test_ssa_p, obs_ssa_p)
 
@@ -820,20 +885,175 @@ class SurveyTemplateTests(unittest.TestCase):
                 self.assertFalse(obs)
 
     def test_check_display_skin_scoring_app_true(self):
-        # Scenario 1 - the participant already has a username
+        dummy_user = 'test_username1010'
+        dummy_pass = 'test_password1010'
+        with Transaction() as t:
+            with t.cursor() as cur:
+                # Create a set of credentials to use
+                cur.execute(
+                    "INSERT INTO ag.skin_scoring_app_credentials "
+                    "(app_username, app_password) "
+                    "VALUES (%s, %s)",
+                    (dummy_user, dummy_pass)
+                )
 
-        # Scenario 2 - the participant does not have a username, but they do
-        # have a sample in the SBI Sponsored cohort and credentials are
-        # available to allocare
-        self.assertTrue(True)
+            str = SurveyTemplateRepo(t)
+
+            # Scenario 1 - the participant does not have a username, but they do
+            # have a sample in the SBI Sponsored cohort and credentials are
+            # available to allocare
+            
+            # Assert that they do not have a username
+            obs_u, obs_p =\
+                str.get_skin_scoring_app_credentials_if_exists(
+                    TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
+                )
+            self.assertEqual(obs_u, None)
+            self.assertEqual(obs_p, None)
+
+            # Associate their sample with SBI
+            self._associate_sample_with_sbi(TEST1_SAMPLE_ID, True, t)
+
+            # And confirm that we should display the app to the source
+            obs = str.check_display_skin_scoring_app(
+                TEST1_ACCOUNT_ID,
+                TEST1_SOURCE_ID
+            )
+            self.assertTrue(obs)
+
+            # Scenario 2 - the participant already has a username
+            
+            # Allocate the participant a set of credentials
+            ssa_u, ssa_p = str.create_skin_scoring_app_entry(
+                TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
+            )
+            self.assertNotEqual(ssa_u, None)
+            self.assertNotEqual(ssa_p, None)
+
+            # Mark all other credentials as allocated
+            with t.cursor() as cur:
+                cur.execute(
+                    "UPDATE ag.skin_scoring_app_credentials "
+                    "SET credentials_allocated = TRUE"
+                )
+
+            # And confirm that we should still display the app
+            obs = str.check_display_skin_scoring_app(
+                TEST1_ACCOUNT_ID,
+                TEST1_SOURCE_ID
+            )
+            self.assertTrue(obs)
 
     def test_check_display_skin_scoring_app_false(self):
-        # Scenario 1 - the participant has a sample in the SBI Sponsored
-        # cohort, but no credentials are available
+        dummy_user = 'test_username1010'
+        dummy_pass = 'test_password1010'
+        with Transaction() as t:
+            with t.cursor() as cur:
+                # Create a set of credentials to use
+                cur.execute(
+                    "INSERT INTO ag.skin_scoring_app_credentials "
+                    "(app_username, app_password) "
+                    "VALUES (%s, %s)",
+                    (dummy_user, dummy_pass)
+                )
 
-        # Scenario 2 - credentials are available, but the participant doesn't
-        # have a sample in the SBI Sponsored cohort
-        self.assertFalse(False)
+            str = SurveyTemplateRepo(t)
+
+            # Scenario 1 - credentials are available, but the participant doesn't
+            # have a sample in the SBI Sponsored cohort
+
+            # Make sure they don't have a sample associated with SBI
+            self._associate_sample_with_sbi(TEST1_SAMPLE_ID, False, t)
+
+            # And confirm that we shouldn't display the app
+            obs = str.check_display_skin_scoring_app(
+                TEST1_ACCOUNT_ID,
+                TEST1_SOURCE_ID
+            )
+            self.assertFalse(obs)
+
+            # Scenario 2 - the participant has a sample in the SBI Sponsored
+            # cohort, but no credentials are available
+
+            # Associate their sample with SBI
+            self._associate_sample_with_sbi(TEST1_SAMPLE_ID, True, t)
+
+            # But mark all credentials as allocated
+            with t.cursor() as cur:
+                cur.execute(
+                    "UPDATE ag.skin_scoring_app_credentials "
+                    "SET credentials_allocated = TRUE"
+                )
+
+            # And confirm that we shouldn't display the app
+            obs = str.check_display_skin_scoring_app(
+                TEST1_ACCOUNT_ID,
+                TEST1_SOURCE_ID
+            )
+            self.assertFalse(obs)
+
+    def _associate_sample_with_sbi(self, sample_id, project_state, t):
+        # Helper function to temporarily associate a sample with SBI.
+        with t.cursor() as cur:
+            # NB: The real SBI cohort project doesn't exist in the development
+            # database. For the sake of not breaking these tests, we're going
+            # to check if it exists. If it doesn't, we'll create it.
+            cur.execute(
+                "SELECT COUNT(*) "
+                "FROM barcodes.project "
+                "WHERE project_id = %s",
+                (SurveyTemplateRepo.SBI_COHORT_PROJECT_ID,)
+            )
+            row = cur.fetchone()
+            if row[0] == 0:
+                cur.execute(
+                    "INSERT INTO barcodes.project "
+                    "(project_id, project, is_microsetta, bank_samples)"
+                    "VALUES (%s, 'SBI', %s, %s)",
+                    (SurveyTemplateRepo.SBI_COHORT_PROJECT_ID, True, True)
+                )
+
+            cur.execute(
+                "SELECT barcode "
+                "FROM ag.ag_kit_barcodes "
+                "WHERE ag_kit_barcode_id = %s",
+                (sample_id, )
+            )
+            row = cur.fetchone()
+            barcode = row[0]
+
+            if project_state is True:
+                # NB: Developing and visual testing is easiest with
+                # SBI_COHORT_PROJECT_ID set to 1 to leverage existing
+                # test data. If it's set that way, we don't need to insert
+                # a new record.
+                cur.execute(
+                    "SELECT COUNT(*) "
+                    "FROM barcodes.project_barcode "
+                    "WHERE project_id = %s AND barcode = %s",
+                    (SurveyTemplateRepo.SBI_COHORT_PROJECT_ID,
+                        barcode)
+                )
+                row = cur.fetchone()
+
+                if row[0] == 0:
+                    cur.execute(
+                        "INSERT INTO barcodes.project_barcode "
+                        "(project_id, barcode) "
+                        "VALUES (%s, %s)",
+                        (SurveyTemplateRepo.SBI_COHORT_PROJECT_ID,
+                        barcode)
+                    )
+            else:
+                # Delete any association between the barcode and the SBI
+                # project ID. This could leave the barcode with no project
+                # associations, but it's immaterial for these unit tests.
+                cur.execute(
+                    "DELETE FROM barcodes.project_barcode "
+                    "WHERE project_id = %s AND barcode = %s",
+                    (SurveyTemplateRepo.SBI_COHORT_PROJECT_ID,
+                        barcode)
+                )
 
     filled_surveys = {
         "10": {

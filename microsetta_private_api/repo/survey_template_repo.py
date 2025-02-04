@@ -42,7 +42,7 @@ class SurveyTemplateRepo(BaseRepo):
     COVID19_ID = 21
     OTHER_ID = 22
     
-    SBI_COHORT_PROJECT_ID = 1
+    SBI_COHORT_PROJECT_ID = 162
 
     SURVEY_INFO = {
         # For now, let's keep legacy survey info as well.
@@ -788,14 +788,14 @@ class SurveyTemplateRepo(BaseRepo):
             The password allocated to the source, or None if process fails
         """
 
-        with self._transaction.cursor() as cur:
-            # We need to lock both tables relevant to app credentials
-            self._transaction.lock_table("ag.skin_scoring_app_credentials")
-            self._transaction.lock_table("ag.skin_scoring_app_registry")
+        # We need to lock both tables relevant to app credentials
+        self._transaction.lock_table("skin_scoring_app_credentials")
+        self._transaction.lock_table("skin_scoring_app_registry")
 
+        with self._transaction.cursor() as cur:
             cur.execute(
                 "SELECT app_username, app_password "
-                "FROM ag.skin_scoring_app_creentials "
+                "FROM ag.skin_scoring_app_credentials "
                 "WHERE credentials_allocated = FALSE "
                 "LIMIT 1"
             )
