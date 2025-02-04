@@ -1,6 +1,3 @@
-import random
-import string
-import psycopg2
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
@@ -41,7 +38,7 @@ class SurveyTemplateRepo(BaseRepo):
     SURFERS_ID = 20
     COVID19_ID = 21
     OTHER_ID = 22
-    
+
     SBI_COHORT_PROJECT_ID = 162
 
     SURVEY_INFO = {
@@ -835,11 +832,9 @@ class SurveyTemplateRepo(BaseRepo):
 
                 return app_username, app_password
 
-    def get_skin_scoring_app_credentials_if_exists(
-            self,
-            account_id,
-            source_id
-        ):
+    def get_skin_scoring_app_credentials_if_exists(self,
+                                                   account_id,
+                                                   source_id):
         """Returns a Skin Scoring App username/password set if they exist
 
         Parameters
@@ -1555,7 +1550,7 @@ class SurveyTemplateRepo(BaseRepo):
             The account_id of the source we're checking
         source_id : str or UUID
             The source_id of the source we're checking
-            
+
         Returns
         -------
         bool

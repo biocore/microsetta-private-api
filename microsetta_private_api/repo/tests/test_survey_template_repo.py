@@ -485,7 +485,7 @@ class SurveyTemplateTests(unittest.TestCase):
                 template_repo.get_skin_scoring_app_credentials_if_exists(
                     TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
                 )
-            
+
             # Assert that we're getting the same credentials back
             self.assertEqual(test_ssa_u, obs_ssa_u)
             self.assertEqual(test_ssa_p, obs_ssa_p)
@@ -899,10 +899,10 @@ class SurveyTemplateTests(unittest.TestCase):
 
             str = SurveyTemplateRepo(t)
 
-            # Scenario 1 - the participant does not have a username, but they do
+            # Scenario 1 - the participant does not have a username, but they
             # have a sample in the SBI Sponsored cohort and credentials are
-            # available to allocare
-            
+            # available to allocate
+
             # Assert that they do not have a username
             obs_u, obs_p =\
                 str.get_skin_scoring_app_credentials_if_exists(
@@ -922,7 +922,7 @@ class SurveyTemplateTests(unittest.TestCase):
             self.assertTrue(obs)
 
             # Scenario 2 - the participant already has a username
-            
+
             # Allocate the participant a set of credentials
             ssa_u, ssa_p = str.create_skin_scoring_app_entry(
                 TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
@@ -959,8 +959,8 @@ class SurveyTemplateTests(unittest.TestCase):
 
             str = SurveyTemplateRepo(t)
 
-            # Scenario 1 - credentials are available, but the participant doesn't
-            # have a sample in the SBI Sponsored cohort
+            # Scenario 1 - credentials are available, but the participant
+            # doesn't have a sample in the SBI Sponsored cohort
 
             # Make sure they don't have a sample associated with SBI
             self._associate_sample_with_sbi(TEST1_SAMPLE_ID, False, t)
@@ -1042,7 +1042,7 @@ class SurveyTemplateTests(unittest.TestCase):
                         "(project_id, barcode) "
                         "VALUES (%s, %s)",
                         (SurveyTemplateRepo.SBI_COHORT_PROJECT_ID,
-                        barcode)
+                         barcode)
                     )
             else:
                 # Delete any association between the barcode and the SBI
