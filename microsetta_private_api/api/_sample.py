@@ -148,11 +148,15 @@ def update_sample_association(account_id, source_id, sample_id, body,
         # sample_site will not be present if its environmental. this will
         # default to None if the key is not present
         sample_site = body.get('sample_site')
+
+        barcode_meta = body.get('barcode_meta')
+
         sample_info = SampleInfo(
             sample_id,
             sample_datetime,
             sample_site,
-            body["sample_notes"]
+            body["sample_notes"],
+            barcode_meta
         )
 
         sample_repo.update_info(account_id, source_id, sample_info,

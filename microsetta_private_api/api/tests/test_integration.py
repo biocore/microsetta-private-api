@@ -1441,6 +1441,7 @@ class IntegrationTests(TestCase):
         if store_sample_site:
             fuzzy_info['sample_site'] = "Tears"
         fuzzy_info['sample_datetime'] = datetime.datetime.utcnow()
+        fuzzy_info['barcode_meta'] = {}
 
         # Many fields are not writable, each should individually cause failure.
         readonly_fields = [
