@@ -58,6 +58,13 @@ class SampleRepo(BaseRepo):
         LEFT JOIN ag.source
         ON ag.ag_kit_barcodes.source_id = ag.source.id"""
 
+    SAMPLE_SITE_LAST_WASHED_DATE_FORMAT = "%m/%d/%Y"
+    # NB: strptime() and strftime() treat the %I and %-I formats differently.
+    # To properly store and retrieve the time format, we use different formats
+    # for each function
+    SAMPLE_SITE_LAST_WASHED_TIME_FORMAT_STRPTIME = "%I:%M %p"
+    SAMPLE_SITE_LAST_WASHED_TIME_FORMAT_STRFTIME = "%-I:%M %p"
+
     def __init__(self, transaction):
         super().__init__(transaction)
 
@@ -93,7 +100,9 @@ class SampleRepo(BaseRepo):
         sample_projects = self._retrieve_projects(sample_barcode)
         sample_status = self.get_sample_status(sample_barcode, scan_timestamp)
 
-        return Sample.from_db(*sample_row, sample_projects, sample_status)
+        sample = Sample.from_db(*sample_row, sample_projects, sample_status)
+        sample.set_barcode_meta(self._get_barcode_meta(sample.id))
+        return sample
 
     # TODO: I'm still not entirely happy with the linking between samples and
     #  sources.  The new source_id is direct (and required for environmental
@@ -261,10 +270,6 @@ class SampleRepo(BaseRepo):
                 sample.kit_id = self._get_supplied_kit_id_by_sample(
                     sample.barcode
                 )
-                if sample is not None:
-                    sample.set_barcode_meta(
-                       self._get_barcode_meta(sample.id)
-                    )
                 samples.append(sample)
             return samples
 
@@ -281,10 +286,6 @@ class SampleRepo(BaseRepo):
             cur.execute(sql, (barcode, account_id, source_id, sample_id))
             sample_row = cur.fetchone()
             sample = self._create_sample_obj(sample_row)
-            if sample is not None:
-                sample.set_barcode_meta(
-                    self._get_barcode_meta(sample_id)
-                )
             return sample
 
     def update_info(self, account_id, source_id, sample_info,
@@ -421,12 +422,12 @@ class SampleRepo(BaseRepo):
                 if ret_dict['sample_site_last_washed_date'] is not None:
                     ret_dict['sample_site_last_washed_date'] = \
                         ret_dict['sample_site_last_washed_date'].strftime(
-                            "%m/%d/%Y"
+                            self.SAMPLE_SITE_LAST_WASHED_DATE_FORMAT
                         )
                 if ret_dict['sample_site_last_washed_time'] is not None:
                     ret_dict['sample_site_last_washed_time'] = \
                         ret_dict['sample_site_last_washed_time'].strftime(
-                            "%-I:%M %p"
+                            self.SAMPLE_SITE_LAST_WASHED_TIME_FORMAT_STRFTIME
                         )
                 return ret_dict
 
@@ -598,7 +599,7 @@ class SampleRepo(BaseRepo):
                 try:
                     ret_val = datetime.datetime.strptime(
                         fv,
-                        "%m/%d/%Y"
+                        self.SAMPLE_SITE_LAST_WASHED_DATE_FORMAT
                     )
                     ret_dict[fn] = ret_val
                 except ValueError:
@@ -607,7 +608,7 @@ class SampleRepo(BaseRepo):
                 try:
                     ret_val = datetime.datetime.strptime(
                         fv,
-                        "%I:%M %p"
+                        self.SAMPLE_SITE_LAST_WASHED_TIME_FORMAT_STRPTIME
                     )
                     ret_dict[fn] = ret_val
                 except ValueError:

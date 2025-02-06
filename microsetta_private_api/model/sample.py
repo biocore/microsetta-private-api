@@ -87,7 +87,7 @@ class Sample(ModelBase):
 # matches that of the association between a sample and a source
 class SampleInfo:
     def __init__(self, sample_id, datetime_collected, site, notes,
-                 barcode_meta=None):
+                 barcode_meta={}):
         self.id = sample_id
         # NB: datetime_collected may be None if sample not yet used
         self.datetime_collected = datetime_collected
