@@ -1,11 +1,11 @@
 -- The organization that hosts the skin-scoring app provides us with username
--- and password pairings for participants to access the app. We need to store
+-- and studycode pairings for participants to access the app. We need to store
 -- these pairings, as well as a flag for whether the pairing has been
 -- allocated to a participant. We explicitly store this flag to avoid reuse
 -- if sources (and their related survey databsase records) were to be deleted.
 CREATE TABLE ag.skin_scoring_app_credentials (
     app_username VARCHAR PRIMARY KEY,
-    app_password VARCHAR NOT NULL,
+    app_studycode VARCHAR NOT NULL,
     credentials_allocated BOOLEAN NOT NULL DEFAULT FALSE
 );
 

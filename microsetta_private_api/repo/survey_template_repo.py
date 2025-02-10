@@ -782,7 +782,7 @@ class SurveyTemplateRepo(BaseRepo):
         str or None
             The username allocated to the source, or None if process fails
         str or None
-            The password allocated to the source, or None if process fails
+            The studycode allocated to the source, or None if process fails
         """
 
         # We need to lock both tables relevant to app credentials
@@ -791,7 +791,7 @@ class SurveyTemplateRepo(BaseRepo):
 
         with self._transaction.cursor() as cur:
             cur.execute(
-                "SELECT app_username, app_password "
+                "SELECT app_username, app_studycode "
                 "FROM ag.skin_scoring_app_credentials "
                 "WHERE credentials_allocated = FALSE "
                 "LIMIT 1"
@@ -802,7 +802,7 @@ class SurveyTemplateRepo(BaseRepo):
                 return None, None
             else:
                 app_username = row[0]
-                app_password = row[1]
+                app_studycode = row[1]
 
                 # Mark the credentials as allocated
                 cur.execute(
@@ -830,12 +830,12 @@ class SurveyTemplateRepo(BaseRepo):
                      source_id, SurveyTemplateRepo.SKIN_SCORING_APP_ID)
                 )
 
-                return app_username, app_password
+                return app_username, app_studycode
 
     def get_skin_scoring_app_credentials_if_exists(self,
                                                    account_id,
                                                    source_id):
-        """Returns a Skin Scoring App username/password set if they exist
+        """Returns a Skin Scoring App username/studycode set if it exists
 
         Parameters
         ----------
@@ -846,15 +846,15 @@ class SurveyTemplateRepo(BaseRepo):
 
         Returns
         -------
-        (str) or (None)
+        str or None
             The associated Skin Scoring App username
-        (str) or (None)
-            The associated Skin Scoring App password
+        str or None
+            The associated Skin Scoring App studycode
         """
         with self._transaction.cursor() as cur:
             cur.execute(
                 """
-                SELECT ssac.app_username, ssac.app_password
+                SELECT ssac.app_username, ssac.app_studycode
                 FROM ag.skin_scoring_app_credentials ssac
                 INNER JOIN ag.skin_scoring_app_registry ssar
                 ON ssac.app_username = ssar.app_username
@@ -1519,7 +1519,7 @@ class SurveyTemplateRepo(BaseRepo):
         return True
 
     def check_skin_scoring_app_credentials_available(self):
-        """ Checks whether any username/password pairings in the
+        """ Checks whether any username/studycode pairings in the
             ag.skin_scoring_app_credentials table are available to allocate
 
         Returns
@@ -1571,7 +1571,7 @@ class SurveyTemplateRepo(BaseRepo):
             if samples:
                 has_skin_sample = any(
                     self.SBI_COHORT_PROJECT_ID
-                    in s.project_id for s in samples
+                    in s.get_project_ids() for s in samples
                 )
             else:
                 has_skin_sample = False

@@ -798,7 +798,7 @@ class MigrationSupport:
     @staticmethod
     def migrate_144(TRN):
         # We need to load the credentials that the vendor provided in CSV form
-        # Format is username, password and includes a header row
+        # Format is username, studycode and includes a header row
         skin_app_credentials_path = SERVER_CONFIG["skin_app_credentials_path"]
         if not os.path.exists(skin_app_credentials_path):
             print(
@@ -814,13 +814,13 @@ class MigrationSupport:
                 if header:
                     header = False
                     continue
-                app_username, app_password = csv_row
+                app_username, app_studycode = csv_row
 
                 TRN.add(
                     "INSERT INTO ag.skin_scoring_app_credentials "
-                    "(app_username, app_password) "
+                    "(app_username, app_studycode) "
                     "VALUES (%s, %s)",
-                    (app_username, app_password)
+                    (app_username, app_studycode)
                 )
         TRN.execute()
 

@@ -61,24 +61,36 @@ class SampleRepo(BaseRepo):
     def __init__(self, transaction):
         super().__init__(transaction)
 
-    def _retrieve_projects(self, sample_barcode):
+    def _retrieve_projects(self, sample_barcode, return_ids=False):
         with self._transaction.cursor() as cur:
-            # If there is a sample, we can look for the projects associated
-            #  with it.  We do this as a secondary query:
-            cur.execute("SELECT barcodes.project.project FROM "
-                        "barcodes.barcode "
-                        "LEFT JOIN "
-                        "barcodes.project_barcode "
-                        "ON "
-                        "barcodes.barcode.barcode = "
-                        "barcodes.project_barcode.barcode "
-                        "LEFT JOIN barcodes.project "
-                        "ON "
-                        "barcodes.project_barcode.project_id = "
-                        "barcodes.project.project_id "
-                        "WHERE "
-                        "barcodes.barcode.barcode = %s",
-                        (sample_barcode,))
+            if return_ids is True:
+                # If the caller wants the project IDs, we can directly
+                # query the project_barcode table
+                cur.execute(
+                    "SELECT project_id "
+                    "FROM barcodes.project_barcode "
+                    "WHERE barcode = %s",
+                    (sample_barcode,)
+                )
+            else:
+                # Otherwise, we defualt to the existing behavior of returning
+                # the project names.
+                # If there is a sample, we look for the projects associated
+                # with it.  We do this as a secondary query:
+                cur.execute("SELECT barcodes.project.project FROM "
+                            "barcodes.barcode "
+                            "LEFT JOIN "
+                            "barcodes.project_barcode "
+                            "ON "
+                            "barcodes.barcode.barcode = "
+                            "barcodes.project_barcode.barcode "
+                            "LEFT JOIN barcodes.project "
+                            "ON "
+                            "barcodes.project_barcode.project_id = "
+                            "barcodes.project.project_id "
+                            "WHERE "
+                            "barcodes.barcode.barcode = %s",
+                            (sample_barcode,))
 
             project_rows = cur.fetchall()
             sample_projects = [project[0] for project in project_rows]
@@ -91,9 +103,13 @@ class SampleRepo(BaseRepo):
         sample_barcode = sample_row[5]
         scan_timestamp = sample_row[6]
         sample_projects = self._retrieve_projects(sample_barcode)
+        sample_project_ids = self._retrieve_projects(
+            sample_barcode, return_ids=True
+        )
         sample_status = self.get_sample_status(sample_barcode, scan_timestamp)
 
-        return Sample.from_db(*sample_row, sample_projects, sample_status)
+        return Sample.from_db(*sample_row, sample_projects, sample_status,
+                              sample_project_ids=sample_project_ids)
 
     # TODO: I'm still not entirely happy with the linking between samples and
     #  sources.  The new source_id is direct (and required for environmental
@@ -261,9 +277,6 @@ class SampleRepo(BaseRepo):
                 sample.kit_id = self._get_supplied_kit_id_by_sample(
                     sample.barcode
                 )
-                sample.project_id = self._get_project_ids_by_sample(
-                    sample.barcode
-                )
                 samples.append(sample)
             return samples
 
@@ -409,19 +422,6 @@ class SampleRepo(BaseRepo):
             )
             row = cur.fetchone()
             return row[0]
-
-    def _get_project_ids_by_sample(self, sample_barcode):
-        with self._transaction.cursor() as cur:
-            cur.execute(
-                "SELECT project_id "
-                "FROM barcodes.project_barcode "
-                "WHERE barcode = %s",
-                (sample_barcode, )
-            )
-            rows = cur.fetchall()
-
-            project_ids = [row[0] for row in rows]
-            return project_ids
 
     def scrub(self, account_id, source_id, sample_id):
         """Wipe out free text information for a sample

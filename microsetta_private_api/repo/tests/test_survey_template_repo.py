@@ -397,27 +397,27 @@ class SurveyTemplateTests(unittest.TestCase):
 
     def test_create_skin_scoring_app_entry_valid(self):
         dummy_user = 'test_username1010'
-        dummy_pass = 'test_password1010'
+        dummy_sc = 'test_studycode1010'
 
         with Transaction() as t:
             with t.cursor() as cur:
                 # Create a set of credentials to use
                 cur.execute(
                     "INSERT INTO ag.skin_scoring_app_credentials "
-                    "(app_username, app_password) "
+                    "(app_username, app_studycode) "
                     "VALUES (%s, %s)",
-                    (dummy_user, dummy_pass)
+                    (dummy_user, dummy_sc)
                 )
 
                 template_repo = SurveyTemplateRepo(t)
-                obs_u, obs_p = template_repo.create_skin_scoring_app_entry(
+                obs_u, obs_s = template_repo.create_skin_scoring_app_entry(
                     TEST1_ACCOUNT_ID,
                     TEST1_SOURCE_ID,
                 )
 
                 # Assert that the function spit out the expected credentials
                 self.assertEqual(obs_u, dummy_user)
-                self.assertEqual(obs_p, dummy_pass)
+                self.assertEqual(obs_s, dummy_sc)
 
                 # Assert that the credentials are marked as allocated
                 cur.execute(
@@ -450,55 +450,55 @@ class SurveyTemplateTests(unittest.TestCase):
                 )
 
             template_repo = SurveyTemplateRepo(t)
-            obs_u, obs_p = template_repo.create_skin_scoring_app_entry(
+            obs_u, obs_s = template_repo.create_skin_scoring_app_entry(
                 TEST1_ACCOUNT_ID,
                 TEST1_SOURCE_ID
             )
             self.assertEqual(obs_u, None)
-            self.assertEqual(obs_p, None)
+            self.assertEqual(obs_s, None)
 
     def test_get_skin_scoring_app_credentials_if_exists_true(self):
         dummy_user = 'test_username1010'
-        dummy_pass = 'test_password1010'
+        dummy_sc = 'test_studycode1010'
 
         with Transaction() as t:
             with t.cursor() as cur:
                 # Create a set of credentials to use
                 cur.execute(
                     "INSERT INTO ag.skin_scoring_app_credentials "
-                    "(app_username, app_password) "
+                    "(app_username, app_studycode) "
                     "VALUES (%s, %s)",
-                    (dummy_user, dummy_pass)
+                    (dummy_user, dummy_sc)
                 )
 
             template_repo = SurveyTemplateRepo(t)
-            test_ssa_u, test_ssa_p =\
+            test_ssa_u, test_ssa_s =\
                 template_repo.create_skin_scoring_app_entry(
                     TEST1_ACCOUNT_ID, TEST1_SOURCE_ID,
                 )
 
             # Assert that we didn't just get None, None back
             self.assertNotEqual(test_ssa_u, None)
-            self.assertNotEqual(test_ssa_p, None)
+            self.assertNotEqual(test_ssa_s, None)
 
-            obs_ssa_u, obs_ssa_p =\
+            obs_ssa_u, obs_ssa_s =\
                 template_repo.get_skin_scoring_app_credentials_if_exists(
                     TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
                 )
 
             # Assert that we're getting the same credentials back
             self.assertEqual(test_ssa_u, obs_ssa_u)
-            self.assertEqual(test_ssa_p, obs_ssa_p)
+            self.assertEqual(test_ssa_s, obs_ssa_s)
 
     def test_get_skin_scoring_app_credentials_if_exists_false(self):
         with Transaction() as t:
             template_repo = SurveyTemplateRepo(t)
-            obs_u, obs_p =\
+            obs_u, obs_s =\
                 template_repo.get_skin_scoring_app_credentials_if_exists(
                     TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
                 )
             self.assertEqual(obs_u, None)
-            self.assertEqual(obs_p, None)
+            self.assertEqual(obs_s, None)
 
     def test_create_vioscreen_id_valid(self):
         with Transaction() as t:
@@ -864,7 +864,7 @@ class SurveyTemplateTests(unittest.TestCase):
                 # that's not allocated
                 cur.execute(
                     "INSERT INTO ag.skin_scoring_app_credentials "
-                    "(app_username, app_password) "
+                    "(app_username, app_studycode) "
                     "VALUES ('microsettafoo','bar')"
                 )
 
@@ -886,15 +886,15 @@ class SurveyTemplateTests(unittest.TestCase):
 
     def test_check_display_skin_scoring_app_true(self):
         dummy_user = 'test_username1010'
-        dummy_pass = 'test_password1010'
+        dummy_sc = 'test_studycode1010'
         with Transaction() as t:
             with t.cursor() as cur:
                 # Create a set of credentials to use
                 cur.execute(
                     "INSERT INTO ag.skin_scoring_app_credentials "
-                    "(app_username, app_password) "
+                    "(app_username, app_studycode) "
                     "VALUES (%s, %s)",
-                    (dummy_user, dummy_pass)
+                    (dummy_user, dummy_sc)
                 )
 
             str = SurveyTemplateRepo(t)
@@ -904,12 +904,12 @@ class SurveyTemplateTests(unittest.TestCase):
             # available to allocate
 
             # Assert that they do not have a username
-            obs_u, obs_p =\
+            obs_u, obs_s =\
                 str.get_skin_scoring_app_credentials_if_exists(
                     TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
                 )
             self.assertEqual(obs_u, None)
-            self.assertEqual(obs_p, None)
+            self.assertEqual(obs_s, None)
 
             # Associate their sample with SBI
             self._associate_sample_with_sbi(TEST1_SAMPLE_ID, True, t)
@@ -924,11 +924,11 @@ class SurveyTemplateTests(unittest.TestCase):
             # Scenario 2 - the participant already has a username
 
             # Allocate the participant a set of credentials
-            ssa_u, ssa_p = str.create_skin_scoring_app_entry(
+            ssa_u, ssa_s = str.create_skin_scoring_app_entry(
                 TEST1_ACCOUNT_ID, TEST1_SOURCE_ID
             )
             self.assertNotEqual(ssa_u, None)
-            self.assertNotEqual(ssa_p, None)
+            self.assertNotEqual(ssa_s, None)
 
             # Mark all other credentials as allocated
             with t.cursor() as cur:
@@ -946,15 +946,15 @@ class SurveyTemplateTests(unittest.TestCase):
 
     def test_check_display_skin_scoring_app_false(self):
         dummy_user = 'test_username1010'
-        dummy_pass = 'test_password1010'
+        dummy_sc = 'test_studycode1010'
         with Transaction() as t:
             with t.cursor() as cur:
                 # Create a set of credentials to use
                 cur.execute(
                     "INSERT INTO ag.skin_scoring_app_credentials "
-                    "(app_username, app_password) "
+                    "(app_username, app_studycode) "
                     "VALUES (%s, %s)",
-                    (dummy_user, dummy_pass)
+                    (dummy_user, dummy_sc)
                 )
 
             str = SurveyTemplateRepo(t)

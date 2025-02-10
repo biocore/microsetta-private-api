@@ -537,12 +537,12 @@ def get_skin_scoring_app_credentials(account_id, source_id, token_info):
 
     with Transaction() as t:
         st_repo = SurveyTemplateRepo(t)
-        ssa_u, ssa_p = st_repo.get_skin_scoring_app_credentials_if_exists(
+        ssa_u, ssa_s = st_repo.get_skin_scoring_app_credentials_if_exists(
             account_id, source_id
         )
         response_obj = {
             "app_username": ssa_u,
-            "app_password": ssa_p
+            "app_studycode": ssa_s
         }
         return jsonify(response_obj), 200
 
@@ -567,7 +567,7 @@ def post_skin_scoring_app_credentials(account_id, source_id, token_info):
 
         # Now, try to allocate credentials and create an entry in the skin
         # scoring app registry table
-        ssa_u, ssa_p = st_repo.create_skin_scoring_app_entry(
+        ssa_u, ssa_s = st_repo.create_skin_scoring_app_entry(
             account_id, source_id
         )
         t.commit()
@@ -583,6 +583,6 @@ def post_skin_scoring_app_credentials(account_id, source_id, token_info):
             return jsonify(
                 {
                     "app_username": ssa_u,
-                    "app_password": ssa_p
+                    "app_studycode": ssa_s
                 }
             ), 201

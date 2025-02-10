@@ -1045,7 +1045,7 @@ paths:
                   app_username:
                     type: string
                     nullable: true
-                  app_password:
+                  app_studycode:
                     type: string
                     nullable: true
         '401':
@@ -1071,7 +1071,7 @@ paths:
                 properties:
                   app_username:
                     type: string
-                  app_password:
+                  app_studycode:
                     type: string
         '400':
           description: 'Credentials already exist for source'
