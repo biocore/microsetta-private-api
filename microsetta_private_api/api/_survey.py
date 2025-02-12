@@ -34,31 +34,40 @@ def read_survey_templates(account_id, source_id, language_tag, token_info):
     with Transaction() as t:
         source_repo = SourceRepo(t)
         source = source_repo.get_source(account_id, source_id)
+
         if source is None:
             return jsonify(code=404, message="No source found"), 404
+
         template_repo = SurveyTemplateRepo(t)
+
         if source.source_type == Source.SOURCE_TYPE_HUMAN:
-            return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [
-                                SurveyTemplateRepo.VIOSCREEN_ID,
-                                SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
-                                SurveyTemplateRepo.SPAIN_FFQ_ID,
-                                SurveyTemplateRepo.BASIC_INFO_ID,
-                                SurveyTemplateRepo.AT_HOME_ID,
-                                SurveyTemplateRepo.LIFESTYLE_ID,
-                                SurveyTemplateRepo.GUT_ID,
-                                SurveyTemplateRepo.GENERAL_HEALTH_ID,
-                                SurveyTemplateRepo.HEALTH_DIAG_ID,
-                                SurveyTemplateRepo.ALLERGIES_ID,
-                                SurveyTemplateRepo.DIET_ID,
-                                SurveyTemplateRepo.DETAILED_DIET_ID,
-                                SurveyTemplateRepo.OTHER_ID
-                            ]]), 200
+            template_ids = [
+                SurveyTemplateRepo.VIOSCREEN_ID,
+                SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
+                SurveyTemplateRepo.SPAIN_FFQ_ID,
+                SurveyTemplateRepo.BASIC_INFO_ID,
+                SurveyTemplateRepo.AT_HOME_ID,
+                SurveyTemplateRepo.LIFESTYLE_ID,
+                SurveyTemplateRepo.GUT_ID,
+                SurveyTemplateRepo.GENERAL_HEALTH_ID,
+                SurveyTemplateRepo.HEALTH_DIAG_ID,
+                SurveyTemplateRepo.ALLERGIES_ID,
+                SurveyTemplateRepo.DIET_ID,
+                SurveyTemplateRepo.DETAILED_DIET_ID,
+                SurveyTemplateRepo.OTHER_ID
+            ]
+            if template_repo.check_display_skin_scoring_app(
+                account_id, source_id
+            ):
+                template_ids.append(SurveyTemplateRepo.SKIN_SCORING_APP_ID)
+
         elif source.source_type == Source.SOURCE_TYPE_ANIMAL:
-            return jsonify([template_repo.get_survey_template_link_info(x)
-                           for x in [2]]), 200
+            template_ids = [2]
         else:
-            return jsonify([]), 200
+            template_ids = []
+
+        return jsonify([template_repo.get_survey_template_link_info(x)
+                        for x in template_ids]), 200
 
 
 def _remote_survey_url_vioscreen(transaction, account_id, source_id,
@@ -181,6 +190,23 @@ def _remote_survey_url_spain_ffq(transaction, account_id, source_id):
     return SERVER_CONFIG['spain_ffq_url']
 
 
+def _remote_survey_url_skin_scoring_app(transaction,
+                                        account_id,
+                                        source_id):
+    st_repo = SurveyTemplateRepo(transaction)
+
+    # Confirm that the user has credentials allocated
+    ssa_u, _ = st_repo.get_skin_scoring_app_credentials_if_exists(
+            account_id,
+            source_id
+        )
+
+    if ssa_u is None:
+        raise NotFound("Sorry, you were not allocated credentials")
+
+    return SERVER_CONFIG['skin_app_url']
+
+
 def read_survey_template(account_id, source_id, survey_template_id,
                          language_tag, token_info, survey_redirect_url=None,
                          vioscreen_ext_sample_id=None,
@@ -220,6 +246,11 @@ def read_survey_template(account_id, source_id, survey_template_id,
                 url = _remote_survey_url_spain_ffq(t,
                                                    account_id,
                                                    source_id)
+            elif survey_template_id == \
+                    SurveyTemplateRepo.SKIN_SCORING_APP_ID:
+                url = _remote_survey_url_skin_scoring_app(t,
+                                                          account_id,
+                                                          source_id)
             else:
                 raise ValueError(f"Cannot generate URL for survey "
                                  f"{survey_template_id}")
@@ -499,3 +530,59 @@ def read_myfoodrepo_available_slots():
     resp = jsonify(code=200, number_of_available_slots=available,
                    total_number_of_slots=total)
     return resp, 200
+
+
+def get_skin_scoring_app_credentials(account_id, source_id, token_info):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        st_repo = SurveyTemplateRepo(t)
+        ssa_u, ssa_s = st_repo.get_skin_scoring_app_credentials_if_exists(
+            account_id, source_id
+        )
+        response_obj = {
+            "app_username": ssa_u,
+            "app_studycode": ssa_s
+        }
+        return jsonify(response_obj), 200
+
+
+def post_skin_scoring_app_credentials(account_id, source_id, token_info):
+    _validate_account_access(token_info, account_id)
+
+    with Transaction() as t:
+        st_repo = SurveyTemplateRepo(t)
+
+        # First, confirm that the source doesn't already have credentials
+        ssa_u, _ = st_repo.get_skin_scoring_app_credentials_if_exists(
+            account_id, source_id
+        )
+
+        # This shouldn't happen, but if it does, return an error
+        if ssa_u is not None:
+            return jsonify(
+                code=400,
+                message="Credentials already exist"
+            ), 400
+
+        # Now, try to allocate credentials and create an entry in the skin
+        # scoring app registry table
+        ssa_u, ssa_s = st_repo.create_skin_scoring_app_entry(
+            account_id, source_id
+        )
+        t.commit()
+
+        if ssa_u is None:
+            # No credentials were available
+            return jsonify(
+                code=404,
+                message="No credentials available"
+            ), 404
+        else:
+            # Credentials were successfully allocated
+            return jsonify(
+                {
+                    "app_username": ssa_u,
+                    "app_studycode": ssa_s
+                }
+            ), 201
