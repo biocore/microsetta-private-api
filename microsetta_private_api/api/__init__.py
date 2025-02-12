@@ -25,7 +25,8 @@ from ._survey import (
     read_survey_template, read_survey_templates, read_answered_survey,
     read_answered_surveys, submit_answered_survey,
     read_answered_survey_associations, top_food_report,
-    read_myfoodrepo_available_slots
+    read_myfoodrepo_available_slots, get_skin_scoring_app_credentials,
+    post_skin_scoring_app_credentials
 )
 from ._sample import (
     read_sample_association, associate_sample, read_sample_associations,
@@ -103,6 +104,8 @@ __all__ = [
     'read_answered_survey_associations',
     'top_food_report',
     'read_myfoodrepo_available_slots',
+    'get_skin_scoring_app_credentials',
+    'post_skin_scoring_app_credentials',
     'read_sample_association',
     'associate_sample',
     'read_sample_associations',
