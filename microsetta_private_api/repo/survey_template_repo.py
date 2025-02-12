@@ -38,6 +38,8 @@ class SurveyTemplateRepo(BaseRepo):
     SURFERS_ID = 20
     COVID19_ID = 21
     OTHER_ID = 22
+    SKIN_ID = 23
+    SKIN_HEALTH_DIAGNOSIS_ID = 24
 
     SBI_COHORT_PROJECT_ID = 162
 
@@ -190,6 +192,18 @@ class SurveyTemplateRepo(BaseRepo):
         OTHER_ID: SurveyTemplateLinkInfo(
             OTHER_ID,
             "Other",
+            "1.0",
+            "local"
+        ),
+        SKIN_ID: SurveyTemplateLinkInfo(
+            SKIN_ID,
+            "Skin",
+            "1.0",
+            "local"
+        ),
+        SKIN_HEALTH_DIAGNOSIS_ID: SurveyTemplateLinkInfo(
+            SKIN_HEALTH_DIAGNOSIS_ID,
+            "Skin Health Diagnosis",
             "1.0",
             "local"
         )
