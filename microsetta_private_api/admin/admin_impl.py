@@ -787,6 +787,7 @@ def list_barcode_query_fields(token_info):
             'input': 'select',
             'values': {
                 "Blood (skin prick)": "Blood (skin prick)",
+                "Cheek": "Cheek",
                 "Saliva": "Saliva",
                 "Ear wax": "Ear wax",
                 "Forehead": "Forehead",

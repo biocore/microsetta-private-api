@@ -3589,7 +3589,7 @@ components:
       nullable: true
     sample_site:
       enum: ["Blood (skin prick)", "Saliva", "Ear wax", "Forehead", "Fur", "Hair", "Left hand", "Left leg", "Mouth", "Nares", "Nasal mucus",
-             "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", null]
+             "Right hand", "Right leg", "Stool", "Tears", "Torso", "Vaginal mucus", "Cheek", null]
       example: "Stool"
     sample_edit_locked:
       type: boolean

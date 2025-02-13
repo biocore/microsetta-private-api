@@ -182,6 +182,7 @@ DUMMY_EMPTY_SAMPLE_INFO = {
     'account_id': None,
     'source_id': None,
     'sample_site': None,
+    'barcode_meta': {},
     'sample_project_ids': [1]}
 
 DUMMY_FILLED_SAMPLE_INFO = {
@@ -583,7 +584,8 @@ def create_dummy_sample_objects(filled=False):
         info_dict["sample_id"],
         datetime_obj,
         info_dict["sample_site"],
-        info_dict["sample_notes"]
+        info_dict["sample_notes"],
+        {}
     )
 
     sample = Sample(info_dict["sample_id"],
