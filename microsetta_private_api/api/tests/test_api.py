@@ -182,8 +182,8 @@ DUMMY_EMPTY_SAMPLE_INFO = {
     'account_id': None,
     'source_id': None,
     'sample_site': None,
-    'barcode_meta': {}
-}
+    'barcode_meta': {},
+    'sample_project_ids': [1]}
 
 DUMMY_FILLED_SAMPLE_INFO = {
     'sample_barcode': BARCODE,
@@ -197,7 +197,8 @@ DUMMY_FILLED_SAMPLE_INFO = {
     'sample_projects': ['American Gut Project'],
     'account_id': 'foobar',
     'source_id': 'foobarbaz',
-    'sample_site': 'Saliva'}
+    'sample_site': 'Saliva',
+    'sample_project_ids': [1]}
 
 ACCT_ID_KEY = "account_id"
 ACCT_TYPE_KEY = "account_type"
@@ -597,7 +598,8 @@ def create_dummy_sample_objects(filled=False):
                     info_dict['account_id'],
                     None,
                     info_dict["sample_projects"],
-                    None)
+                    None,
+                    sample_project_ids=info_dict["sample_project_ids"])
 
     return sample_info, sample
 # endregion help methods
@@ -2246,6 +2248,10 @@ class SampleTests(ApiTests):
         exp['source_id'] = SOURCE_ID_1
         exp['account_id'] = ACCT_ID_1
         exp['kit_id'] = None
+
+        # Remove the sample_project_ids element since we don't expect that
+        # to come out of the API
+        exp.pop("sample_project_ids")
 
         self.assertEqual(get_resp_obj, [exp])
 
