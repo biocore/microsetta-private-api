@@ -1772,7 +1772,7 @@ class VioscreenRepo(BaseRepo):
                 "    SELECT ffq_registration_code "
                 "    FROM campaign.ffq_registration_codes "
                 "    WHERE ffq_registration_code = %s AND "
-                "    registration_code_used IS NULL)",
+                "    registration_code_used IS NOT NULL)",
                 (ffq_code, )
             )
             return cur.fetchone()[0]
