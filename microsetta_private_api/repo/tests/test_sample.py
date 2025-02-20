@@ -184,6 +184,49 @@ class SampleTests(unittest.TestCase):
             bc_valid = sample_repo._validate_barcode_meta("Cheek", bc_meta)
             self.assertNotEqual(bc_valid, False)
 
+            # Test each scenario where only one field is present to confirm
+            # that any other field can be nullable
+            bc_meta = {
+                "sample_site_last_washed_date": "01/10/2025",
+                "sample_site_last_washed_time": "",
+                "sample_site_last_washed_product": ""
+            }
+            exp = {
+                "sample_site_last_washed_date": datetime.datetime(
+                    2025, 1, 10),
+                "sample_site_last_washed_time": None,
+                "sample_site_last_washed_product": None
+            }
+            bc_valid = sample_repo._validate_barcode_meta("Cheek", bc_meta)
+            self.assertEqual(bc_valid, exp)
+
+            bc_meta = {
+                "sample_site_last_washed_date": "",
+                "sample_site_last_washed_time": "9:30 AM",
+                "sample_site_last_washed_product": ""
+            }
+            exp = {
+                "sample_site_last_washed_date": None,
+                "sample_site_last_washed_time": datetime.datetime(
+                    1900, 1, 1, 9, 30),
+                "sample_site_last_washed_product": None
+            }
+            bc_valid = sample_repo._validate_barcode_meta("Cheek", bc_meta)
+            self.assertEqual(bc_valid, exp)
+
+            bc_meta = {
+                "sample_site_last_washed_date": "",
+                "sample_site_last_washed_time": "",
+                "sample_site_last_washed_product": "Face cleanser"
+            }
+            exp = {
+                "sample_site_last_washed_date": None,
+                "sample_site_last_washed_time": None,
+                "sample_site_last_washed_product": "Face cleanser"
+            }
+            bc_valid = sample_repo._validate_barcode_meta("Cheek", bc_meta)
+            self.assertEqual(bc_valid, exp)
+
             # Confirm that empty dicts pass, regardless of site
             bc_meta = {}
             bc_valid = sample_repo._validate_barcode_meta("Stool", bc_meta)
@@ -205,6 +248,24 @@ class SampleTests(unittest.TestCase):
             }
             bc_valid = sample_repo._validate_barcode_meta("Stool", bc_meta)
             self.assertFalse(bc_valid)
+
+            # Try using an invalid value for the date
+            bc_meta = {
+                "sample_site_last_washed_date": "Cookie monster",
+                "sample_site_last_washed_time": "",
+                "sample_site_last_washed_product": "Face cleanser"
+            }
+            bc_valid = sample_repo._validate_barcode_meta("Cheek", bc_meta)
+            self.assertEqual(bc_valid, False)
+
+            # Try using an invalid value for the time
+            bc_meta = {
+                "sample_site_last_washed_date": "",
+                "sample_site_last_washed_time": "Rosemary focaccia",
+                "sample_site_last_washed_product": "Face cleanser"
+            }
+            bc_valid = sample_repo._validate_barcode_meta("Cheek", bc_meta)
+            self.assertEqual(bc_valid, False)
 
     def test_update_barcode_meta_via_update_info(self):
         # We're going to use a stable sample and override_locked to test

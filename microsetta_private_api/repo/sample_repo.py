@@ -612,26 +612,39 @@ class SampleRepo(BaseRepo):
         bc_valid = True
         for fn, fv in barcode_meta.items():
             if fn == "sample_site_last_washed_date":
-                try:
-                    ret_val = datetime.datetime.strptime(
-                        fv,
-                        self.SAMPLE_SITE_LAST_WASHED_DATE_FORMAT
-                    )
-                    ret_dict[fn] = ret_val
-                except ValueError:
-                    bc_valid = False
+                if fv is None or len(fv) == 0:
+                    # Null value is acceptable, bypass format validation
+                    ret_dict[fn] = None
+                else:
+                    try:
+                        ret_val = datetime.datetime.strptime(
+                            fv,
+                            self.SAMPLE_SITE_LAST_WASHED_DATE_FORMAT
+                        )
+                        ret_dict[fn] = ret_val
+                    except ValueError:
+                        bc_valid = False
             elif fn == "sample_site_last_washed_time":
-                try:
-                    ret_val = datetime.datetime.strptime(
-                        fv,
-                        self.SAMPLE_SITE_LAST_WASHED_TIME_FORMAT_STRPTIME
-                    )
-                    ret_dict[fn] = ret_val
-                except ValueError:
-                    bc_valid = False
+                if fv is None or len(fv) == 0:
+                    # Null value is acceptable, bypass format validation
+                    ret_dict[fn] = None
+                else:
+                    try:
+                        ret_val = datetime.datetime.strptime(
+                            fv,
+                            self.SAMPLE_SITE_LAST_WASHED_TIME_FORMAT_STRPTIME
+                        )
+                        ret_dict[fn] = ret_val
+                    except ValueError:
+                        bc_valid = False
             elif fn == "sample_site_last_washed_product":
-                # The ENUM type in the database will validate the value
-                ret_dict[fn] = fv
+                if fv is None or len(fv) == 0:
+                    # Ensure that blank value - None/Null or "" - is passed on
+                    # as None
+                    ret_dict[fn] = None
+                else:
+                    # The ENUM type in the database will validate the value
+                    ret_dict[fn] = fv
             else:
                 bc_valid = False
 
