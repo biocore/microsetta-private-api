@@ -2847,10 +2847,17 @@ paths:
                     type: array
                     items:
                       type: string
+                  barcodes:
+                    type: array
+                    items:
+                      type: array
+                      items:
+                        type: string
                 required:
                   - number_of_kits
                   - number_of_samples
                   - project_ids
+                  - barcodes
       responses:
         '201':
           description: Kit identifiers and associated samples were successfully created
@@ -2863,6 +2870,47 @@ paths:
         '422':
           $ref: '#/components/responses/422UnprocessableEntity'
 
+  '/admin/add_barcodes_to_kits':
+    post:
+      operationId: microsetta_private_api.admin.admin_impl.add_barcodes_to_kits
+      tags:
+        - Admin
+      summary: Add barcodes to an existing kit
+      description: Add barcodes to an existing kit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                generate_barcodes:
+                  type: boolean
+                  description: Flag for whether barcodes are provided or must be generated
+                barcodes:
+                  type: array
+                  items:
+                    type: string
+                  description: Barcodes to insert, optional
+                kit_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: Kit IDs to associate the barcodes with
+              required:
+                - generate_barcodes
+                - kit_ids
+      responses:
+        '201':
+          description: Barcodes were successfully added
+          content:
+            application/json:
+              schema:
+                type: array
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntity'
+          
   '/admin/events/accounts/{account_id}':
     get:
       operationId: microsetta_private_api.admin.admin_impl.get_account_events
