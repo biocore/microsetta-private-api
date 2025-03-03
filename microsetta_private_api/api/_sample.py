@@ -61,6 +61,7 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         if sample is None:
             return jsonify(code=404, message="Sample not found"), 404
 
+    """
     qiita_body = {
         'sample_ids': ["10317." + str(sample.barcode)]
     }
@@ -86,20 +87,15 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         pass
     except BadRequestError:
         # How do I log these to gunicorn??
-        # app.logger.warning("Couldn't communicate with qiita", exc_info=True)
-        pass
+        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
     except ForbiddenError:
         # How do I log these to gunicorn??
-        # app.logger.warning("Couldn't communicate with qiita", exc_info=True)
-        pass
+        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
     except RuntimeError:
         # How do I log these to gunicorn??
-        # app.logger.warning("Couldn't communicate with qiita", exc_info=True)
+        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
         pass
-    except BaseException:
-        # app.logger.warning("Couldn't communicate with qiita", exc_info=True)
-        pass
-
+    """
     return jsonify(sample.to_api()),
 
 
