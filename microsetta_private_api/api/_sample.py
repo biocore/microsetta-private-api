@@ -94,6 +94,8 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         # How do I log these to gunicorn??
         app.logger.warning("Couldn't communicate with qiita", exc_info=True)
         raise
+    except Exception:
+        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
 
     return jsonify(sample.to_api()),
 
