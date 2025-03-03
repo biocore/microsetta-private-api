@@ -1,7 +1,7 @@
 import flask
 from flask import jsonify
-from qiita_client import NotFoundError, BadRequestError, \
-    ForbiddenError
+# from qiita_client import NotFoundError, BadRequestError, \
+#     ForbiddenError
 from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api.api._account import _validate_account_access
@@ -15,9 +15,9 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.util.util import fromisotime
 from microsetta_private_api.admin.admin_impl import token_grants_admin_access
-from microsetta_private_api.qiita import qclient
+# from microsetta_private_api.qiita import qclient
 
-from flask import current_app as app
+# from flask import current_app as app
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
