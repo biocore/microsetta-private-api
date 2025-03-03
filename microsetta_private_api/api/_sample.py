@@ -86,16 +86,19 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         pass
     except BadRequestError:
         # How do I log these to gunicorn??
-        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
+        # app.logger.warning("Couldn't communicate with qiita", exc_info=True)
+        pass
     except ForbiddenError:
         # How do I log these to gunicorn??
-        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
+        # app.logger.warning("Couldn't communicate with qiita", exc_info=True)
+        pass
     except RuntimeError:
         # How do I log these to gunicorn??
-        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
-        raise
+        # app.logger.warning("Couldn't communicate with qiita", exc_info=True)
+        pass
     except Exception:
-        app.logger.warning("Couldn't communicate with qiita", exc_info=True)
+        # app.logger.warning("Couldn't communicate with qiita", exc_info=True)
+        pass
 
     return jsonify(sample.to_api()),
 
