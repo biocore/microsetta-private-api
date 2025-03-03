@@ -15,7 +15,7 @@ from microsetta_private_api.repo.survey_answers_repo import SurveyAnswersRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.util.util import fromisotime
 from microsetta_private_api.admin.admin_impl import token_grants_admin_access
-# from microsetta_private_api.qiita import qclient
+from microsetta_private_api.qiita import qclient
 
 # from flask import current_app as app
 from datetime import datetime
@@ -245,3 +245,17 @@ def get_preparations(sample_barcode):
         preps = r.list_preparations(sample_barcode)
         preps_api = [p.to_api() for p in preps]
         return jsonify(preps_api), 200
+
+
+def use_qclient(sample_barcode):
+    # NB: Do not use this function. It's a temporary workaround to bypass
+    # qiita in production code, but keep the qclient import so that all of
+    # our tests won't break.
+    qiita_body = {
+        'sample_ids': ["10317." + str(sample_barcode)]
+    }
+
+    _ = qclient.post(
+        '/api/v1/study/10317/samples/status',
+        json=qiita_body
+    )
