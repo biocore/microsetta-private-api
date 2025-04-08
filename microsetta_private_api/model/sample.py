@@ -6,7 +6,7 @@ class Sample(ModelBase):
     def __init__(self, sample_id, datetime_collected, site, notes, barcode,
                  latest_scan_timestamp, source_id, account_id,
                  latest_sample_information_update, sample_projects,
-                 latest_scan_status, kit_id=None):
+                 latest_scan_status, kit_id=None, sample_project_ids=None):
         self.id = sample_id
         # NB: datetime_collected may be None if sample not yet used
         self.datetime_collected = datetime_collected
@@ -26,10 +26,19 @@ class Sample(ModelBase):
         self.account_id = account_id
 
         self.accession_urls = []
+        self.barcode_meta = {}
         self.kit_id = kit_id
+
+        self._sample_project_ids = sample_project_ids
 
     def set_accession_urls(self, accession_urls):
         self.accession_urls = accession_urls
+
+    def set_barcode_meta(self, barcode_meta):
+        self.barcode_meta = barcode_meta
+
+    def get_project_ids(self):
+        return self._sample_project_ids
 
     @property
     def edit_locked(self):
@@ -47,7 +56,8 @@ class Sample(ModelBase):
     def from_db(cls, sample_id, date_collected, time_collected,
                 site, notes, barcode, latest_scan_timestamp,
                 latest_sample_information_update, source_id,
-                account_id, sample_projects, latest_scan_status):
+                account_id, sample_projects, latest_scan_status,
+                sample_project_ids):
         datetime_collected = None
         # NB a sample may NOT have date and time collected if it has been sent
         # out but not yet used
@@ -56,7 +66,8 @@ class Sample(ModelBase):
                                                   time_collected)
         return cls(sample_id, datetime_collected, site, notes, barcode,
                    latest_scan_timestamp, latest_sample_information_update,
-                   source_id, account_id, sample_projects, latest_scan_status)
+                   source_id, account_id, sample_projects, latest_scan_status,
+                   sample_project_ids=sample_project_ids)
 
     def to_api(self):
         return {
@@ -74,14 +85,16 @@ class Sample(ModelBase):
             "account_id": self.account_id,
             "sample_projects": list(self.sample_projects),
             "accession_urls": self.accession_urls,
-            "kit_id": self.kit_id
+            "kit_id": self.kit_id,
+            "barcode_meta": self.barcode_meta
         }
 
 
 # A SampleInfo represents the set of end user editable fields whose lifetime
 # matches that of the association between a sample and a source
 class SampleInfo:
-    def __init__(self, sample_id, datetime_collected, site, notes):
+    def __init__(self, sample_id, datetime_collected, site, notes,
+                 barcode_meta=None):
         self.id = sample_id
         # NB: datetime_collected may be None if sample not yet used
         self.datetime_collected = datetime_collected
@@ -89,3 +102,8 @@ class SampleInfo:
         self.notes = notes
         # NB: site may be None if sample not yet used
         self.site = site
+
+        if barcode_meta is None:
+            self.barcode_meta = {}
+        else:
+            self.barcode_meta = barcode_meta

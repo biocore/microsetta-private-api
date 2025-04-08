@@ -1265,7 +1265,7 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             articles = admin_repo.get_daklapack_articles()
-            self.assertEqual(8, len(articles))
+            self.assertEqual(9, len(articles))
             first_article = articles[0]
             first_article.pop("dak_article_id")
             self.assertEqual(FIRST_LIVE_DAK_ARTICLE, first_article)
@@ -1274,7 +1274,7 @@ class AdminRepoTests(AdminTests):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
             articles = admin_repo.get_daklapack_articles(include_retired=True)
-            self.assertEqual(24, len(articles))
+            self.assertEqual(25, len(articles))
             first_article = articles[0]
             first_article.pop("dak_article_id")
             self.assertEqual(FIRST_DAK_ARTICLE, first_article)

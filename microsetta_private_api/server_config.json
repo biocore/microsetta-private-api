@@ -46,5 +46,7 @@
   "google_geocoding_url": "https://maps.googleapis.com/maps/api/geocode/json",
   "google_geocoding_key": "geocoding_key_placeholder",
   "japanese_ffqs_path_key": "/tmp/japanese_ffqs/key.csv",
-  "japanese_ffqs_path_reports": "/tmp/japanese_ffqs/"
+  "japanese_ffqs_path_reports": "/tmp/japanese_ffqs/",
+  "skin_app_credentials_path": "skin_app_credentials_placeholder",
+  "skin_app_url": "skin_app_url_placeholder"
 }
