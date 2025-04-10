@@ -959,6 +959,7 @@ def get_vioscreen_sample_to_user(token_info):
 
 
 def get_perk_fulfillment_state(token_info):
+    raise Exception(token_info)
     validate_admin_access(token_info)
     with Transaction() as t:
         admin_repo = AdminRepo(t)
