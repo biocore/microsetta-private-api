@@ -955,7 +955,9 @@ class AdminRepo(BaseRepo):
                     )
 
                 # Then, use those barcodes.
-                kit_barcode_tuples = list(zip(kit_names, sample_slot['barcodes']))
+                kit_barcode_tuples = list(
+                    zip(kit_names, sample_slot['barcodes'])
+                )
                 kit_name_and_barcode_tuples_list += kit_barcode_tuples
                 new_barcodes += sample_slot['barcodes']
             else:
