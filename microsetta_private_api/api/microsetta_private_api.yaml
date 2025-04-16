@@ -2847,17 +2847,22 @@ paths:
                     type: array
                     items:
                       type: string
-                  barcodes:
+                  barcodes_container:
                     type: array
                     items:
-                      type: array
-                      items:
-                        type: string
+                      type: "object"
+                      properties:
+                        admin_provided:
+                          type: boolean
+                        barcodes:
+                          type: array
+                          items:
+                            type: string
                 required:
                   - number_of_kits
                   - number_of_samples
                   - project_ids
-                  - barcodes
+                  - barcodes_container
       responses:
         '201':
           description: Kit identifiers and associated samples were successfully created

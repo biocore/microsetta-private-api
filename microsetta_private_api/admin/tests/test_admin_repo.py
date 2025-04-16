@@ -453,11 +453,26 @@ class AdminRepoTests(AdminTests):
             output_id = admin_repo.create_project(input)
 
             # create some fake kits
-            created = admin_repo.create_kits(2,
-                                             3,
-                                             'foo',
-                                             [[], [], []],
-                                             [output_id, ])
+            created = admin_repo.create_kits(
+                2,
+                3,
+                'foo',
+                [
+                    {
+                        'barcodes_provided': False,
+                        'barcodes': []
+                    },
+                    {
+                        'barcodes_provided': False,
+                        'barcodes': []
+                    },
+                    {
+                        'barcodes_provided': False,
+                        'barcodes': []
+                    }
+                ],
+                [output_id, ]
+            )
 
             exp = []
             for kit in created['created']:
@@ -609,17 +624,50 @@ class AdminRepoTests(AdminTests):
             admin_repo = AdminRepo(t)
 
             with self.assertRaisesRegex(KeyError, "does not exist"):
-                admin_repo.create_kits(5,
-                                       3,
-                                       '',
-                                       [[], [], []],
-                                       [10000,
-                                        SurveyTemplateRepo.VIOSCREEN_ID])
+                admin_repo.create_kits(
+                    5,
+                    3,
+                    '',
+                    [
+                        {
+                            'barcodes_provided': False,
+                            'barcodes': []
+                        },
+                        {
+                            'barcodes_provided': False,
+                            'barcodes': []
+                        },
+                        {
+                            'barcodes_provided': False,
+                            'barcodes': []
+                        }
+                    ],
+                    [10000, 10001]
+                )
 
     def test_create_kits_success_not_microsetta(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            non_tmi = admin_repo.create_kits(5, 3, '', [[], [], []], [33])
+            non_tmi = admin_repo.create_kits(
+                5,
+                3,
+                '',
+                [
+                    {
+                        'barcodes_provided': False,
+                        'barcodes': []
+                    },
+                    {
+                        'barcodes_provided': False,
+                        'barcodes': []
+                    },
+                    {
+                        'barcodes_provided': False,
+                        'barcodes': []
+                    }
+                ],
+                [33]
+            )
             self.assertEqual(['created', ], list(non_tmi.keys()))
             self.assertEqual(len(non_tmi['created']), 5)
             for obj in non_tmi['created']:
@@ -646,7 +694,22 @@ class AdminRepoTests(AdminTests):
     def test_create_kits_success_is_microsetta(self):
         with Transaction() as t:
             admin_repo = AdminRepo(t)
-            tmi = admin_repo.create_kits(4, 2, 'foo', [[], []], [1])
+            tmi = admin_repo.create_kits(
+                4,
+                2,
+                'foo',
+                [
+                    {
+                        'barcodes_provided': False,
+                        'barcodes': []
+                    },
+                    {
+                        'barcodes_provided': False,
+                        'barcodes': []
+                    }
+                ],
+                [1]
+            )
             self.assertEqual(['created', ], list(tmi.keys()))
             self.assertEqual(len(tmi['created']), 4)
             for obj in tmi['created']:
@@ -673,7 +736,7 @@ class AdminRepoTests(AdminTests):
 
     def test_create_kits_success_mix_provided_generated_barcodes(self):
         # This test will confirm that AdminRepo.create_kits correctly places
-        # admin-provided barcodes in relation to intent. We'll do 1 kits with
+        # admin-provided barcodes in relation to intent. We'll do 1 kit with
         # 3 samples. 2 samples will be admin-provided barcodes and 1 will be
         # generated.
 
@@ -685,8 +748,6 @@ class AdminRepoTests(AdminTests):
         sample_2_barcodes = [
             "thisisabarcodetoo"
         ]
-        # Sample Slot 3 - generated
-        sample_3_barcodes = []
 
         with Transaction() as t:
             admin_repo = AdminRepo(t)
@@ -694,7 +755,20 @@ class AdminRepoTests(AdminTests):
                 1,
                 3,
                 'foo',
-                [sample_1_barcodes, sample_2_barcodes, sample_3_barcodes],
+                [
+                    {
+                        'barcodes_provided': True,
+                        'barcodes': sample_1_barcodes
+                    },
+                    {
+                        'barcodes_provided': True,
+                        'barcodes': sample_2_barcodes
+                    },
+                    {
+                        'barcodes_provided': False,
+                        'barcodes': []
+                    },
+                ],
                 [1]
             )
             self.assertEqual(['created', ], list(tmi.keys()))
@@ -1993,3 +2067,12 @@ class AdminRepoTests(AdminTests):
             admin_repo = AdminRepo(t)
             kit_exists = admin_repo.check_exists_kit(kit_id)
             self.assertFalse(kit_exists)
+
+    def test_get_projects_by_kit_id(self):
+        # This is a stable kit ID in the dev database
+        kit_id = "DXHsj"
+
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+            kit_projects = admin_repo.get_projects_by_kit_id(kit_id)
+            self.assertEqual(kit_projects, [1])

@@ -140,6 +140,8 @@ KIT_OUTBOUND_KEY = "outbound_fedex_tracking"
 KIT_ADDRESS_KEY = "address"
 KIT_INBOUND_KEY = "inbound_fedex_tracking"
 
+UNASSIGNED_KIT_STR = "unassigned"
+
 
 def _make_statuses_sql(_):
     # Note: scans with multiple identical timestamps are quite unlikely
@@ -913,7 +915,7 @@ class AdminRepo(BaseRepo):
         return prefix + '_' + rand_name
 
     def create_kits(self, number_of_kits, number_of_samples, kit_prefix,
-                    barcodes, project_ids):
+                    barcodes_container, project_ids):
         """Create multiple kits, each with the same number of samples
 
         Parameters
@@ -924,9 +926,13 @@ class AdminRepo(BaseRepo):
             Number of samples that each kit will contain
         kit_prefix : str or None
             A prefix to put on to the kit IDs, this is optional.
-        barcodes : list of lists of str
-            User provided barcodes to use for the kits. If empty, barcodes
-            will be generated.
+        barcodes_container : list of dicts
+            Barcode information for the kits to be created. Each dict
+            represents a sample slot in the new kits and contains two items:
+            barcodes_provided : bool
+                Flag for whether the sample slot's barcodes are admin-provided
+            barcodes: list of str
+                If admin-provided, list of str. Else, an empty list
         project_ids : list of int
             Project ids the samples are to be associated with
         """
@@ -936,16 +942,25 @@ class AdminRepo(BaseRepo):
         new_barcodes = []
         kit_name_and_barcode_tuples_list = []
 
+        slots_to_generate = 0
         # Iterate through sample slots and use provided barcodes
-        for barcode_list in barcodes:
-            if len(barcode_list) > 0:
-                # Admin provided barcodes for this sample slot, use them
-                kit_barcode_tuples = list(zip(kit_names, barcode_list))
-                kit_name_and_barcode_tuples_list += kit_barcode_tuples
-                new_barcodes += barcode_list
+        for sample_slot in barcodes_container:
+            if sample_slot['barcodes_provided'] is True:
+                # Admin provided barcodes for this sample slot. First, we'll
+                # confirm that the admin provided the correct number of
+                # barcodes.
+                if len(sample_slot['barcodes']) != number_of_kits:
+                    raise RepoException(
+                        "Incorrect number of barcodes provided"
+                    )
 
-        # See if we need to generate barcodes
-        slots_to_generate = sum(1 for i in barcodes if len(i) == 0)
+                # Then, use those barcodes.
+                kit_barcode_tuples = list(zip(kit_names, sample_slot['barcodes']))
+                kit_name_and_barcode_tuples_list += kit_barcode_tuples
+                new_barcodes += sample_slot['barcodes']
+            else:
+                slots_to_generate += 1
+
         if slots_to_generate > 0:
             # Generate remaining barcodes
             kit_barcode_tuples, novel_barcodes = \
@@ -1043,7 +1058,7 @@ class AdminRepo(BaseRepo):
                     kit_name_and_barcode_tuples_list.append(
                         (name, new_barcodes[offset + i]))
 
-            return kit_name_and_barcode_tuples_list, new_barcodes
+        return kit_name_and_barcode_tuples_list, new_barcodes
 
     def add_barcodes_to_kits(self, kit_ids, barcodes):
         """Adds barcodes to supplied kits
@@ -1073,11 +1088,7 @@ class AdminRepo(BaseRepo):
 
         with self._transaction.cursor() as cur:
             for kit_id, barcode in kits_barcodes_tuples:
-                kit_d = self.retrieve_diagnostics_by_kit_id(kit_id)
-                ag_kit_id = kit_d['kit_id']
-
-                projects = kit_d['sample_diagnostic_info'][0]['projects_info']
-                project_ids = [x['project_id'] for x in projects]
+                project_ids = self.get_projects_by_kit_id(kit_id)
                 is_tmi = self._are_any_projects_tmi(project_ids)
 
                 barcode_projects = []
@@ -1087,8 +1098,8 @@ class AdminRepo(BaseRepo):
                 # Add barcodes to barcode table
                 cur.execute(
                     "INSERT INTO barcodes.barcode(kit_id, barcode, status) "
-                    "VALUES (%s, %s, 'unassigned')",
-                    (kit_id, barcode)
+                    "VALUES (%s, %s, %s)",
+                    (kit_id, barcode, UNASSIGNED_KIT_STR)
                 )
 
                 # Create project/barcode association(s)
@@ -1101,6 +1112,9 @@ class AdminRepo(BaseRepo):
 
                 # If any projects are TMI-oriented, add to ag_kit_barcodes
                 if is_tmi:
+                    kit_d = self.retrieve_diagnostics_by_kit_id(kit_id)
+                    ag_kit_id = kit_d['kit_id']
+
                     cur.execute(
                         "INSERT INTO ag.ag_kit_barcodes (ag_kit_id, barcode) "
                         "VALUES (%s, %s)",
@@ -1139,16 +1153,9 @@ class AdminRepo(BaseRepo):
         with self._transaction.cursor() as cur:
             # create barcode project associations
             barcode_projects = []
-            if isinstance(new_barcodes, list) and \
-                    all(isinstance(item, list) for item in new_barcodes):
-                for barcodes in new_barcodes:
-                    for barcode in barcodes:
-                        for prj_id in project_ids:
-                            barcode_projects.append((barcode, prj_id))
-            else:
-                for barcode in new_barcodes:
-                    for prj_id in project_ids:
-                        barcode_projects.append((barcode, prj_id))
+            for barcode in new_barcodes:
+                for prj_id in project_ids:
+                    barcode_projects.append((barcode, prj_id))
 
             # create kits in kit table
             new_kit_uuids = [str(uuid.uuid4()) for x in kit_names]
@@ -1162,7 +1169,7 @@ class AdminRepo(BaseRepo):
                             barcode_kit_inserts)
 
             # add new barcodes to barcode table
-            barcode_insertions = [(n, b, 'unassigned')
+            barcode_insertions = [(n, b, UNASSIGNED_KIT_STR)
                                   for n, b in kit_name_and_barcode_tuples_list]
             cur.executemany("INSERT INTO barcode (kit_id, barcode, status) "
                             "VALUES (%s, %s, %s)",
@@ -1245,6 +1252,7 @@ class AdminRepo(BaseRepo):
             Project ids that all barcodes in kit are to be associated with
         """
 
+        kit_names = [kit_name]
         address = None if address_dict is None else json.dumps(address_dict)
         kit_details = [{KIT_BOX_ID_KEY: box_id,
                        KIT_ADDRESS_KEY: address,
@@ -1252,7 +1260,6 @@ class AdminRepo(BaseRepo):
                        KIT_INBOUND_KEY: inbound_fedex_code}]
         kit_name_and_barcode_tuples_list = \
             [(kit_name, x) for x in barcodes_list]
-        kit_names = [kit_name]
 
         return self._create_kits(kit_names, barcodes_list,
                                  kit_name_and_barcode_tuples_list,
@@ -1740,3 +1747,15 @@ class AdminRepo(BaseRepo):
             )
             res = cur.fetchone()
             return True if res[0] > 0 else False
+
+    def get_projects_by_kit_id(self, kit_id):
+        with self._transaction.cursor() as cur:
+            cur.execute(
+                "SELECT DISTINCT(project_id) "
+                "FROM barcodes.project_barcode pb "
+                "INNER JOIN barcodes.barcode bc ON pb.barcode = bc.barcode "
+                " WHERE bc.kit_id = %s",
+                (kit_id, )
+            )
+            res = cur.fetchall()
+            return [x[0] for x in res]

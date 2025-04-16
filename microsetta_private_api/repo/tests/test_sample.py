@@ -154,7 +154,12 @@ class SampleTests(unittest.TestCase):
                 1,
                 1,
                 "UNITTEST",
-                [[]],
+                [
+                    {
+                        'barcodes_provided': False,
+                        'barcodes': []
+                    }
+                ],
                 [1]
             )
 
