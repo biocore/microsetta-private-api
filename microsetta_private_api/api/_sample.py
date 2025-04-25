@@ -1,7 +1,7 @@
 import flask
 from flask import jsonify
-# from qiita_client import NotFoundError, BadRequestError, \
-#     ForbiddenError
+from qiita_client import NotFoundError, BadRequestError, \
+    ForbiddenError
 from werkzeug.exceptions import BadRequest
 
 from microsetta_private_api.api._account import _validate_account_access
@@ -17,7 +17,7 @@ from microsetta_private_api.util.util import fromisotime
 from microsetta_private_api.admin.admin_impl import token_grants_admin_access
 from microsetta_private_api.qiita import qclient
 
-# from flask import current_app as app
+from flask import current_app as app
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -61,7 +61,6 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         if sample is None:
             return jsonify(code=404, message="Sample not found"), 404
 
-    """
     qiita_body = {
         'sample_ids': ["10317." + str(sample.barcode)]
     }
@@ -95,7 +94,7 @@ def read_sample_association(account_id, source_id, sample_id, token_info):
         # How do I log these to gunicorn??
         app.logger.warning("Couldn't communicate with qiita", exc_info=True)
         pass
-    """
+
     return jsonify(sample.to_api()),
 
 
@@ -245,17 +244,3 @@ def get_preparations(sample_barcode):
         preps = r.list_preparations(sample_barcode)
         preps_api = [p.to_api() for p in preps]
         return jsonify(preps_api), 200
-
-
-def use_qclient(sample_barcode):
-    # NB: Do not use this function. It's a temporary workaround to bypass
-    # qiita in production code, but keep the qclient import so that all of
-    # our tests won't break.
-    qiita_body = {
-        'sample_ids': ["10317." + str(sample_barcode)]
-    }
-
-    _ = qclient.post(
-        '/api/v1/study/10317/samples/status',
-        json=qiita_body
-    )
