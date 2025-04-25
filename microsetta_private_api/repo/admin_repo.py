@@ -553,7 +553,7 @@ class AdminRepo(BaseRepo):
                 cur.execute(query, [project_id, ])
                 return list([v[0] for v in cur.fetchall()])
 
-    def get_barcodes_filter(self, kit_ids=None, emails=None,
+    def get_barcodes_filter(self, kit_ids=None, box_ids=None, emails=None,
                             outbound_tracking_numbers=None,
                             inbound_tracking_numbers=None,
                             dak_order_ids=None):
@@ -563,6 +563,8 @@ class AdminRepo(BaseRepo):
         ----------
         kit_ids : list, optional
             List of kit IDs to obtain barcodes for.
+        box_ids : list, optional
+            List of box IDs to obtain barcodes for.
         emails : list, optional
             List of emails to obtain barcodes for.
         outbound_tracking_numbers : list, optional
@@ -589,6 +591,10 @@ class AdminRepo(BaseRepo):
         if kit_ids:
             conditions.append("k.kit_id IN %s")
             params.append(tuple(kit_ids))
+
+        if box_ids:
+            conditions.append("k.box_id IN %s")
+            params.append(tuple(box_ids))
 
         if emails:
             query += """
@@ -626,7 +632,8 @@ class AdminRepo(BaseRepo):
 
     def get_kit_by_barcode(self, barcodes):
         """Obtain the outbound tracking, inbound tracking numbers,
-        kit ID, and Daklapack order ID associated with a list of barcodes.
+        kit ID, box ID, and Daklapack order ID associated with a list of
+        barcodes.
 
         Parameters
         ----------
@@ -645,6 +652,7 @@ class AdminRepo(BaseRepo):
                 k.outbound_fedex_tracking,
                 k.inbound_fedex_tracking,
                 k.kit_id,
+                k.box_id,
                 dotk.dak_order_id
             FROM
                 barcodes.barcode b
@@ -674,7 +682,8 @@ class AdminRepo(BaseRepo):
                     "outbound_tracking": row[1],
                     "inbound_tracking": row[2],
                     "kit_id": row[3],
-                    "dak_order_id": row[4]
+                    "box_id": row[4],
+                    "dak_order_id": row[5]
                 }
                 for row in rows
             ]

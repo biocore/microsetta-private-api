@@ -17,6 +17,11 @@ def get_barcodes_by_kit_ids(kit_ids):
         return AdminRepo(t).get_barcodes_filter(kit_ids=kit_ids)
 
 
+def get_barcodes_by_box_ids(box_ids):
+    with Transaction() as t:
+        return AdminRepo(t).get_barcodes_filter(box_ids=box_ids)
+
+
 def get_barcodes_by_emails(emails):
     with Transaction() as t:
         return AdminRepo(t).get_barcodes_filter(emails=emails)
@@ -142,11 +147,13 @@ def per_sample(project, barcodes, strip_sampleid):
                 info = kit_by_barcode[0]
 
                 kit_id_name = info['kit_id']
+                box_id = info['box_id']
                 outbound_fedex_tracking = info['outbound_tracking']
                 inbound_fedex_tracking = info['inbound_tracking']
                 daklapack_order_id = info['dak_order_id']
             else:
                 kit_id_name = None
+                box_id = None
                 outbound_fedex_tracking = None
                 inbound_fedex_tracking = None
                 daklapack_order_id = None
@@ -171,6 +178,7 @@ def per_sample(project, barcodes, strip_sampleid):
                 "latest-scan-timestamp": latest_scan_timestamp,
                 "latest-scan-status": latest_scan_status,
                 "kit-id": kit_id_name,
+                "box-id": box_id,
                 "outbound-tracking": outbound_fedex_tracking,
                 "inbound-tracking": inbound_fedex_tracking,
                 "daklapack-order-id": daklapack_order_id
