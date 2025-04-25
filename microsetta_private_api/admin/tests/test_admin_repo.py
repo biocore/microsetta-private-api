@@ -1531,7 +1531,7 @@ class AdminRepoTests(AdminTests):
                     "VALUES (%s, %s)",
                     (barcode, kit_id)
                 )
-            
+
             admin_repo = AdminRepo(t)
 
             # Retrieve barcodes by Box ID
