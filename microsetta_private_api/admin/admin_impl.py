@@ -31,7 +31,7 @@ from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.admin.sample_summary import \
     get_barcodes_by_project_id,\
-    get_barcodes_by_kit_ids, get_barcodes_by_emails,\
+    get_barcodes_by_kit_ids, get_barcodes_by_box_ids, get_barcodes_by_emails,\
     get_barcodes_by_outbound_tracking_numbers,\
     get_barcodes_by_inbound_tracking_numbers, get_barcodes_by_dak_order_ids
 from microsetta_private_api.util.melissa import verify_address
@@ -511,6 +511,8 @@ def query_barcode_stats(body, token_info, strip_sampleid):
         barcodes = body["sample_barcodes"]
     elif 'kit_ids' in body:
         barcodes = get_barcodes_by_kit_ids(body["kit_ids"])
+    elif 'box_ids' in body:
+        barcodes = get_barcodes_by_box_ids(body["box_ids"])
     elif 'emails' in body:
         barcodes = get_barcodes_by_emails(body["emails"])
     elif 'outbound_tracking_numbers' in body:

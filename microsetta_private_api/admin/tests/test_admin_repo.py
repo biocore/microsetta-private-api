@@ -1511,6 +1511,47 @@ class AdminRepoTests(AdminTests):
             barcodes = admin_repo.get_barcodes_filter(kit_ids=['notarealkit'])
             self.assertEqual(barcodes, [])
 
+    def test_get_barcodes_filter_box_ids_success(self):
+        barcode = "barcode_20240422"
+        kit_id = "test_kit_20240422"
+        box_id = "box_id_20250422"
+
+        with Transaction() as t:
+            with t.cursor() as cur:
+                # Create kit with a known Box ID
+                cur.execute(
+                    "INSERT INTO barcodes.kit (kit_id, box_id) "
+                    "VALUES (%s, %s)",
+                    (kit_id, box_id)
+                )
+
+                # Add a barcode to that kit
+                cur.execute(
+                    "INSERT INTO barcodes.barcode (barcode, kit_id) "
+                    "VALUES (%s, %s)",
+                    (barcode, kit_id)
+                )
+
+            admin_repo = AdminRepo(t)
+
+            # Retrieve barcodes by Box ID
+            barcodes = admin_repo.get_barcodes_filter(box_ids=[box_id])
+
+            # Assert that the result is what we expect
+            self.assertEqual(barcodes, [barcode])
+
+    def test_get_barcodes_filter_box_ids_failure(self):
+        with Transaction() as t:
+            admin_repo = AdminRepo(t)
+
+            # Retrieve barcodes by a Box ID that doesn't exist
+            barcodes = admin_repo.get_barcodes_filter(
+                box_ids=["definitely_not_a_real_box_id_20250422"]
+            )
+
+            # Assert that the result is an empty list
+            self.assertEqual(barcodes, [])
+
     def test_get_barcodes_filter_emails_success(self):
         with Transaction() as t:
             setup_sql = """
@@ -1658,6 +1699,7 @@ class AdminRepoTests(AdminTests):
         outbound_tracking = 'FEDEX_OUT_1234'
         inbound_tracking = 'FEDEX_IN_5678'
         barcode = '00001234'
+        box_id = '0001e15f-4170-4b28-b111-191cd567c348'
 
         with Transaction() as t:
             with t.cursor() as cur:
@@ -1674,9 +1716,9 @@ class AdminRepoTests(AdminTests):
                     "INSERT INTO barcodes.kit "
                     "(kit_uuid, kit_id, box_id, outbound_fedex_tracking, "
                     "inbound_fedex_tracking) "
-                    "VALUES (%s, %s, '0001e15f-4170-4b28-b111-191cd567c348', "
-                    "%s, %s)",
-                    (kit_uuid, kit_id, outbound_tracking, inbound_tracking)
+                    "VALUES (%s, %s, %s, %s, %s)",
+                    (kit_uuid, kit_id, box_id, outbound_tracking,
+                     inbound_tracking)
                 )
 
                 # Insert Daklapack order to kit record
@@ -1702,6 +1744,7 @@ class AdminRepoTests(AdminTests):
                 'outbound_tracking': outbound_tracking,
                 'inbound_tracking': inbound_tracking,
                 'kit_id': kit_id,
+                'box_id': box_id,
                 'dak_order_id': dak_order_id
             }]
             self.assertEqual(kit_info, expected)
