@@ -37,10 +37,10 @@ def init_celery(celery, app):
            "task": "microsetta_private_api.admin.daklapack_polling.poll_dak_orders",  # noqa
            "schedule":  60 * 60 * 4  # every 4 hours
         },
-        # "update_qiita_metadata": {
-        #    "task": "microsetta_private_api.tasks.update_qiita_metadata",  # noqa
-        #    "schedule":  60 * 60 * 24  # every 24 hours
-        # },
+        "update_qiita_metadata": {
+           "task": "microsetta_private_api.tasks.update_qiita_metadata",  # noqa
+           "schedule":  60 * 60 * 24  # every 24 hours
+        },
         "pull_fundrazr_transactions": {
            "task": "microsetta_private_api.util.fundrazr.get_fundrazr_transactions",  # noqa
            "schedule": 60 * 60  # every hour
