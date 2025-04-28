@@ -553,10 +553,10 @@ class AdminRepo(BaseRepo):
                 cur.execute(query, [project_id, ])
                 return list([v[0] for v in cur.fetchall()])
 
-    def get_barcodes_filter(self, kit_ids=None, box_ids=None, emails=None,
+    def get_barcodes_filter(self, kit_ids=None, emails=None,
                             outbound_tracking_numbers=None,
                             inbound_tracking_numbers=None,
-                            dak_order_ids=None):
+                            dak_order_ids=None, box_ids=None):
         """Obtain the barcodes based on different filtering criteria.
 
         Parameters
