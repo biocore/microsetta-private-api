@@ -835,7 +835,7 @@ class MigrationSupport:
         if not os.path.exists(skin_preservation_kits_path):
             print("Barcode/Kit ID pairings not found for skin study kits")
             return
-        
+
         TMI_PROJ_ID = 118
         SBI_PROJ_ID = 162
 
