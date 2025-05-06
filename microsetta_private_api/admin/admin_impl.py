@@ -805,6 +805,7 @@ def list_barcode_query_fields(token_info):
                 "Stool": "Stool",
                 "Tears": "Tears",
                 "Torso": "Torso",
+                "Urine": "Urine",
                 "Vaginal mucus": "Vaginal mucus"
             },
             'operators': ['equal', 'not_equal', 'is_null', 'is_not_null']

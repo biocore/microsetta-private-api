@@ -367,8 +367,19 @@ HUMAN_SITE_INVARIANTS = {
         'env_material': 'sebum material',
         'env_package': 'human-skin',
         'description': 'Microsetta Initiative cheek skin sample',
-        'host_body_site': 'UBERON:skin of cheek'}
-}
+        'host_body_site': 'UBERON:skin of cheek'},
+    'Urine': {
+        'host_body_product': 'UBERON:urine',
+        'sample_type': 'Urine',
+        'scientific_name': 'human urinary tract metagenome',
+        'taxon_id': '2516875',
+        'host_body_habitat': 'UBERON:urine',
+        'empo_3': 'Animal secretion',
+        'env_material': 'urine',
+        'env_package': 'human-associated',
+        'description': 'American Gut Project Urine sample',
+        'host_body_site': 'UBERON:urine'}
+    }
 
 
 for site in HUMAN_SITE_INVARIANTS.values():
