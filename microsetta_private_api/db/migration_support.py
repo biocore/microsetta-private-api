@@ -824,6 +824,133 @@ class MigrationSupport:
                 )
         TRN.execute()
 
+    @staticmethod
+    def migrate_147(TRN):
+        # Create kits for the skin preservation study barcodes based on the
+        # barcode/kit ID pairings imported from a CSV file
+        # Format is barcode, kit_id
+        skin_preservation_kits_path = SERVER_CONFIG[
+            "skin_preservation_kits_path"
+        ]
+        if not os.path.exists(skin_preservation_kits_path):
+            print("Barcode/Kit ID pairings not found for skin study kits")
+            return
+
+        TMI_PROJ_ID = 118
+        SBI_PROJ_ID = 162
+
+        with open(skin_preservation_kits_path) as csv_file:
+            csv_contents = csv.reader(csv_file)
+            header = True
+
+            for csv_row in csv_contents:
+                if header:
+                    header = False
+                    continue
+                barcode, kit_id = csv_row
+                kit_uuid = str(uuid.uuid4())
+                ag_kit_id = str(uuid.uuid4())
+
+                # Create the kit
+                TRN.add(
+                    "INSERT INTO barcodes.kit "
+                    "(kit_uuid, kit_id, box_id) "
+                    "VALUES (%s, %s, %s)",
+                    (kit_uuid, kit_id, kit_uuid)
+                )
+
+                # Insert the barcode
+                TRN.add(
+                    "INSERT INTO barcodes.barcode "
+                    "(kit_id, barcode, status) "
+                    "VALUES (%s, %s, 'unassigned')",
+                    (kit_id, barcode)
+                )
+
+                # Associate the barcode with TMI and SBI projects
+                TRN.add(
+                    "INSERT INTO barcodes.project_barcode "
+                    "(barcode, project_id) "
+                    "VALUES (%s, %s)",
+                    (barcode, TMI_PROJ_ID)
+                )
+                TRN.add(
+                    "INSERT INTO barcodes.project_barcode "
+                    "(barcode, project_id) "
+                    "VALUES (%s, %s)",
+                    (barcode, SBI_PROJ_ID)
+                )
+
+                # Create record in ag.ag_kit
+                TRN.add(
+                    "INSERT INTO ag.ag_kit "
+                    "(ag_kit_id, supplied_kit_id, swabs_per_kit) "
+                    "VALUES (%s, %s, 1)",
+                    (ag_kit_id, kit_id)
+                )
+
+                # Create record in ag.ag_kit_barcodes
+                TRN.add(
+                    "INSERT INTO ag.ag_kit_barcodes "
+                    "(ag_kit_id, barcode) "
+                    "VALUES (%s, %s)",
+                    (ag_kit_id, barcode)
+                )
+
+        # Import barcodes for urine samples from CSV file. The kits already
+        # exist in the database, we're just adding the barcodes and
+        # associating them with the kits.
+        # Format is barcode, kit_id, ag_kit_id
+        urine_barcodes_path = SERVER_CONFIG["urine_barcodes_path"]
+        if not os.path.exists(urine_barcodes_path):
+            print("Barcode/Kit ID pairings not found for urine barcodes")
+            return
+
+        URINE_PROJ_ID = 158
+
+        with open(urine_barcodes_path) as csv_file:
+            csv_contents = csv.reader(csv_file)
+            header = True
+
+            for csv_row in csv_contents:
+                if header:
+                    header = False
+                    continue
+                barcode, kit_id, ag_kit_id = csv_row
+
+                # Insert the barcode
+                TRN.add(
+                    "INSERT INTO barcodes.barcode "
+                    "(kit_id, barcode, status) "
+                    "VALUES (%s, %s, 'unassigned')",
+                    (kit_id, barcode)
+                )
+
+                # Associate the barcode with the appropriate project
+                TRN.add(
+                    "INSERT INTO barcodes.project_barcode "
+                    "(barcode, project_id) "
+                    "VALUES (%s, %s)",
+                    (barcode, URINE_PROJ_ID)
+                )
+
+                # Update record in ag.ag_kit
+                TRN.add(
+                    "UPDATE ag.ag_kit "
+                    "SET swabs_per_kit = swabs_per_kit + 1 "
+                    "WHERE ag_kit_id = %s",
+                    (ag_kit_id, )
+                )
+
+                # Create record in ag.ag_kit_barcodes
+                TRN.add(
+                    "INSERT INTO ag.ag_kit_barcodes "
+                    "(ag_kit_id, barcode) "
+                    "VALUES (%s, %s)",
+                    (ag_kit_id, barcode)
+                )
+        TRN.execute()
+
     MIGRATION_LOOKUP = {
         "0048.sql": migrate_48.__func__,
         "0050.sql": migrate_50.__func__,
@@ -836,7 +963,8 @@ class MigrationSupport:
         # ...
         "0096.sql": migrate_96.__func__,
         "0133.sql": migrate_133.__func__,
-        "0144.sql": migrate_144.__func__
+        "0144.sql": migrate_144.__func__,
+        "0147.sql": migrate_147.__func__
     }
 
     @classmethod
