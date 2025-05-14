@@ -28,6 +28,7 @@ TEMPLATES_TO_IGNORE = {SurveyTemplateRepo.VIOSCREEN_ID,
                        SurveyTemplateRepo.MYFOODREPO_ID,
                        SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                        SurveyTemplateRepo.SPAIN_FFQ_ID,
+                       SurveyTemplateRepo.SKIN_SCORING_APP_ID,
                        None}
 
 # NOTE 2025-01-09: We're contractually bound to withhold all of the skin
