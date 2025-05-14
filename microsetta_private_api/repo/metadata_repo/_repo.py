@@ -836,7 +836,7 @@ def _expand_ebi_remove_fields(field_names):
 
         NB: I've set this up as a parameter (field_names) rather than directly
         using EBI_REMOVE to facilitate unit testing.
-    
+
     Parameters
     ----------
     field_names : list of str
