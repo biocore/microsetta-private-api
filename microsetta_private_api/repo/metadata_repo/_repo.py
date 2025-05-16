@@ -851,6 +851,10 @@ def _expand_ebi_remove_fields(field_names):
     with Transaction() as t:
         with t.cursor() as cur:
             for q_name in field_names:
+                # Add column name to the block list
+                cols_to_block.append(q_name)
+
+                # Query the database for information on the question
                 cur.execute(
                     "SELECT sqr.survey_response_type "
                     "FROM ag.survey_question_response_type sqr "
@@ -860,38 +864,23 @@ def _expand_ebi_remove_fields(field_names):
                     (q_name, )
                 )
                 r = cur.fetchone()
-                if r is None:
-                    # Didn't find a question, but we'll add the column name to
-                    # the block list to be safe
-                    cols_to_block.append(q_name)
-                else:
-                    if r[0] == "MULTIPLE":
-                        # Block the root column name
-                        cols_to_block.append(q_name)
+                if r is not None and r[0] == "MULTIPLE":
+                    # Grab the possible responses
+                    cur.execute(
+                        "SELECT sqr.response "
+                        "FROM ag.survey_question_response sqr "
+                        "INNER JOIN ag.survey_question sq "
+                        "ON sqr.survey_question_id "
+                        "= sq.survey_question_id "
+                        "WHERE sq.question_shortname ILIKE %s",
+                        (q_name, )
+                    )
+                    rows = cur.fetchall()
+                    for r in rows:
+                        # Build the new column name
+                        new_col_name = _build_col_name(q_name, r[0])
 
-                        # Then expand the column name to all possible
-                        # permutations and add them to the block list
-
-                        # First, grab the possible responses
-                        cur.execute(
-                            "SELECT sqr.response "
-                            "FROM ag.survey_question_response sqr "
-                            "INNER JOIN ag.survey_question sq "
-                            "ON sqr.survey_question_id "
-                            "= sq.survey_question_id "
-                            "WHERE sq.question_shortname ILIKE %s",
-                            (q_name, )
-                        )
-                        rows = cur.fetchall()
-                        for r in rows:
-                            # Build the new column name
-                            new_col_name = _build_col_name(q_name, r[0])
-
-                            # And append it to our block list
-                            cols_to_block.append(new_col_name)
-                    else:
-                        # Not a multiselect field, we can just add the column
-                        # name to the block list
-                        cols_to_block.append(q_name)
+                        # And append it to our block list
+                        cols_to_block.append(new_col_name)
 
     return cols_to_block
