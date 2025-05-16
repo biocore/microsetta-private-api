@@ -28,6 +28,7 @@ TEMPLATES_TO_IGNORE = {SurveyTemplateRepo.VIOSCREEN_ID,
                        SurveyTemplateRepo.MYFOODREPO_ID,
                        SurveyTemplateRepo.POLYPHENOL_FFQ_ID,
                        SurveyTemplateRepo.SPAIN_FFQ_ID,
+                       SurveyTemplateRepo.SKIN_SCORING_APP_ID,
                        None}
 
 # NOTE 2025-01-09: We're contractually bound to withhold all of the skin
@@ -237,8 +238,11 @@ def drop_private_columns(df):
     pm_remove = {c.lower() for c in df.columns if c.lower().startswith('pm_')}
 
     freetext_fields = {c.lower() for c in _get_freetext_fields()}
+    ebi_remove_expanded = {
+        c.lower() for c in _expand_ebi_remove_fields(EBI_REMOVE)
+    }
 
-    remove = pm_remove | {c.lower() for c in EBI_REMOVE} | freetext_fields
+    remove = pm_remove | ebi_remove_expanded | freetext_fields
     to_drop = [c for c in df.columns if c.lower() in remove]
 
     return df.drop(columns=to_drop, inplace=False)
@@ -823,3 +827,60 @@ def _get_freetext_fields():
             )
             rows = cur.fetchall()
             return [x[0] for x in rows]
+
+
+def _expand_ebi_remove_fields(field_names):
+    """ Some fields in the EBI_REMOVE list are multiselect. We need to expand
+        the list to include the column names for all possible responses, as
+        the column removal takes place after fields have been mapped.
+
+        NB: I've set this up as a parameter (field_names) rather than directly
+        using EBI_REMOVE to facilitate unit testing.
+
+    Parameters
+    ----------
+    field_names : list of str
+        The field names to check for multiselects and expand as-needed
+    Returns
+    -------
+    list of str
+        The column names to remove from output, including distinct column
+        names for all multiselect responses.
+    """
+    cols_to_block = []
+    with Transaction() as t:
+        with t.cursor() as cur:
+            for q_name in field_names:
+                # Add column name to the block list
+                cols_to_block.append(q_name)
+
+                # Query the database for information on the question
+                cur.execute(
+                    "SELECT sqr.survey_response_type "
+                    "FROM ag.survey_question_response_type sqr "
+                    "INNER JOIN ag.survey_question sq "
+                    "ON sqr.survey_question_id = sq.survey_question_id "
+                    "WHERE sq.question_shortname ILIKE %s",
+                    (q_name, )
+                )
+                r = cur.fetchone()
+                if r is not None and r[0] == "MULTIPLE":
+                    # Grab the possible responses
+                    cur.execute(
+                        "SELECT sqr.response "
+                        "FROM ag.survey_question_response sqr "
+                        "INNER JOIN ag.survey_question sq "
+                        "ON sqr.survey_question_id "
+                        "= sq.survey_question_id "
+                        "WHERE sq.question_shortname ILIKE %s",
+                        (q_name, )
+                    )
+                    rows = cur.fetchall()
+                    for r in rows:
+                        # Build the new column name
+                        new_col_name = _build_col_name(q_name, r[0])
+
+                        # And append it to our block list
+                        cols_to_block.append(new_col_name)
+
+    return cols_to_block
