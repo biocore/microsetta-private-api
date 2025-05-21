@@ -19,6 +19,7 @@ from microsetta_private_api.repo.metadata_repo._repo import (
     _find_best_answers,
     drop_private_columns,
     _get_freetext_fields,
+    _expand_ebi_remove_fields,
     EBI_REMOVE)
 from microsetta_private_api.repo.survey_template_repo import SurveyTemplateRepo
 from microsetta_private_api.model.account import Account
@@ -571,6 +572,67 @@ class MetadataUtilTests(unittest.TestCase):
         self.assertTrue("ABOUT_YOURSELF_TEXT" in freetext_fields)
         self.assertTrue("ALL_ROOMMATES" in freetext_fields)
         self.assertTrue("DIET_RESTRICTIONS" in freetext_fields)
+
+    def test_expand_ebi_remove_fields(self):
+        # First, let's assert that normal single-response fields are passed
+        # through as expected
+        col_names = ['ACNE_MEDICATION_OTC', 'SKIN_COLOR']
+        obs = _expand_ebi_remove_fields(col_names)
+        self.assertEqual(col_names, obs)
+
+        # Next, let's confirm that a multiselect field is expanded to include
+        # all options, and that the root question name is kept as well
+        col_names = ['SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES']
+        exp = [
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Abdomen',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Armpits',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Arms',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Back',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Chest',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Elbows',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Face',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Feet',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Hands',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Knees',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Legs',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Neck',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Other',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Scalp',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Unspecified'
+        ]
+        obs = _expand_ebi_remove_fields(col_names)
+        self.assertEqual(obs, exp)
+
+        # And lastly, confirm that a combination of single-response and
+        # multiselect fields works as expected
+        col_names = [
+            'ACNE_MEDICATION_OTC',
+            'SKIN_COLOR',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES'
+        ]
+        exp = [
+            'ACNE_MEDICATION_OTC',
+            'SKIN_COLOR',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Abdomen',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Armpits',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Arms',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Back',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Chest',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Elbows',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Face',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Feet',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Hands',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Knees',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Legs',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Neck',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Other',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Scalp',
+            'SKIN_CONDITIONS_RECENT_ACNE_BODY_SITES_Unspecified'
+        ]
+        obs = _expand_ebi_remove_fields(col_names)
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':
