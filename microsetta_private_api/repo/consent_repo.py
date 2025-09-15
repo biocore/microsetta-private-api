@@ -102,7 +102,7 @@ class ConsentRepo(BaseRepo):
             cur.execute("SELECT " + self.doc_read_cols + " FROM "
                         "consent_documents WHERE locale = %s"
                         " ORDER BY consent_type DESC, "
-                        "date_time DESC", (tag,))
+                        "version DESC", (tag,))
 
             r = cur.fetchall()
             consent_docs = [_row_to_consent_document(row) for row in r]
