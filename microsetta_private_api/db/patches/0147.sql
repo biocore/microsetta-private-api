@@ -1,6 +1,16 @@
 -- Consent documents have an account_id associated, with the idea that there may eventually be an administrative feature to update the contents.
 -- Until that's built, we use a stable dummy account whose ID is 000fc4cd-8fa4-db8b-e050-8a800c5d81b7, established in patch 0118.sql.
 
+-- First, we need to clone the contents of the consent documents's we're _not_ changing into a new version, which in this case will be the child_data and child_biospecimen consents.
+-- We made a conscious design decision to keep all consent documents at the same version, so we'll just do an INSERT INTO...SELECT FROM... statement for those types.
+
+INSERT INTO ag.consent_documents (consent_type, locale, date_time, consent_content, reconsent_required, account_id, version)
+    SELECT consent_type, locale, date_time, consent_content, 'true', account_id, 2
+    FROM ag.consent_documents
+    WHERE consent_type IN ('child_data', 'child_biospecimen');
+
+-- Then, we'll insert the contents of the new documents
+
 INSERT INTO ag.consent_documents (consent_type, locale, date_time, consent_content, reconsent_required, account_id, version)
     VALUES ('adolescent_data', 'en_US', NOW(), '<p class="consent_title">
     <strong>University of California San Diego</strong><br />
@@ -1078,7 +1088,7 @@ INSERT INTO ag.consent_documents (consent_type, locale, date_time, consent_conte
     Who is conducting the study, why have you been asked to participate, how were you selected, and what is the approximate number of participants in the study?
 </p>
 <p class="consent_content">
-    You are being invited to participate in a research study titled The Microsetta Initiative. This study is being done by Dr. Rob Knight from the University of California San Diego (UC San Diego). We are inviting you to participate in this study because you live in a location where you can receive a sampling kit. . There will be approximately 500,000 participants in the study from across the USA and from other countries around the world.
+    You are being invited to participate in a research study titled The Microsetta Initiative. This study is being done by Dr. Rob Knight from the University of California San Diego (UC San Diego). We are inviting you to participate in this study because you live in a location where you can receive a sampling kit. There will be approximately 500,000 participants in the study from across the USA and from other countries around the world.
 </p>
 <p class="consent_header">
     Why is this study being done and what will happen to you?
@@ -1686,7 +1696,7 @@ INSERT INTO ag.consent_documents (consent_type, locale, date_time, consent_conte
     Si su hijo participa en el estudio general, es decir, si lo inscribió a través del sitio web de colaboración colectiva de The Microsetta Initiative, no recibirá compensación económica por su participación.
 </p>
 <p class="consent_content">
-    Si su hijo/a participa en un subestudio específico y la inscripción en The Microsetta Initiative es una extensión para participar en un estudio complementario, podría recibir una compensación por su participación si completa todos los pasos requeridos, tal como le explicó el personal del estudio.
+    Si su hijo participa en un subestudio específico y la inscripción en The Microsetta Initiative es una extensión para participar en un estudio complementario, podría recibir una compensación por su participación si completa todos los pasos requeridos, tal como le explicó el personal del estudio. Se le proporcionará un documento aparte que explica las opciones de compensación.
 </p>
 <p class="consent_header">
     ¿Hay algún costo asociado con la participación en este estudio?
@@ -1825,7 +1835,7 @@ INSERT INTO ag.consent_documents (consent_type, locale, date_time, consent_conte
     Si su hijo participa en el estudio general, es decir, si lo inscribió a través del sitio web de colaboración colectiva de The Microsetta Initiative, no recibirá compensación económica por su participación.
 </p>
 <p class="consent_content">
-    Si su hijo/a participa en un subestudio específico y la inscripción en The Microsetta Initiative es una extensión para participar en un estudio complementario, podría recibir una compensación por su participación si completa todos los pasos requeridos, tal como le explicó el personal del estudio.
+    Si su hijo participa en un subestudio específico y la inscripción en The Microsetta Initiative es una extensión para participar en un estudio complementario, podría recibir una compensación por su participación si completa todos los pasos requeridos, tal como le explicó el personal del estudio. Se le proporcionará un documento aparte que explica las opciones de compensación.
 </p>
 <p class="consent_header">
     ¿Hay algún costo asociado con la participación en este estudio?
@@ -1889,7 +1899,7 @@ INSERT INTO ag.consent_documents (consent_type, locale, date_time, consent_conte
     Why is this study being done and what will happen to your child?
 </p>
 <p class="consent_content">
-    The purpose of this study is to assess more accurately the microbial differences between people and whether these differences can be attributed to factors such as lifestyle, diet, body type, age or the presence of associated diseases. Children like all humans have a unique microbiome and including them in the study will help elucidate the development of the microbiome. If you agree to allow your child to take part in this study, we will ask you to complete online surveys/questionnaires about your child such as their age, weight, height, lifestyle, diet, and if your child has certain medical or health conditions. You should expect to spend an average of 5-10 minutes on each survey, but some may take up to 30 minutes to complete. 
+    The purpose of this study is to assess more accurately the microbial differences between people and whether these differences can be attributed to factors such as lifestyle, diet, body type, age or the presence of associated diseases. Children, like all humans, have a unique microbiome and including them in the study will help elucidate the development of the microbiome. If you agree to allow your child to take part in this study, we will ask you to complete online surveys/questionnaires about your child such as their age, weight, height, lifestyle, diet, and if your child has certain medical or health conditions. You should expect to spend an average of 5-10 minutes on each survey, but some may take up to 30 minutes to complete. 
 </p>
 <p class="consent_header">
     What benefits can be reasonably expected?
