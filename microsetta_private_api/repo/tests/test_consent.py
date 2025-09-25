@@ -74,7 +74,7 @@ class ConsentRepoTests(unittest.TestCase):
                     "SELECT consent_id "
                     "FROM ag.consent_documents "
                     "WHERE locale = 'en_US' AND consent_type = 'adult_data' "
-                    "ORDER BY date_time DESC LIMIT 1"
+                    "ORDER BY version DESC LIMIT 1"
                 )
                 row = cur.fetchone()
                 self.adult_data_consent = row['consent_id']
@@ -84,7 +84,7 @@ class ConsentRepoTests(unittest.TestCase):
                     "FROM ag.consent_documents "
                     "WHERE locale = 'en_US' AND "
                     "consent_type = 'adult_biospecimen' "
-                    "ORDER BY date_time DESC LIMIT 1"
+                    "ORDER BY version DESC LIMIT 1"
                 )
                 row = cur.fetchone()
                 self.adult_bio_consent = row['consent_id']
@@ -93,7 +93,7 @@ class ConsentRepoTests(unittest.TestCase):
                     "SELECT consent_id "
                     "FROM ag.consent_documents "
                     "WHERE locale = 'en_US' AND consent_type = 'child_data' "
-                    "ORDER BY date_time DESC LIMIT 1"
+                    "ORDER BY version DESC LIMIT 1"
                 )
                 row = cur.fetchone()
                 self.child_data_consent = row['consent_id']
