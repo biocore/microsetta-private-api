@@ -1,3 +1,6 @@
+-- This update to the consent documents is primarily intended to add language allowing for compensation for specific sponsored cohorts who will use the Microsetta platform.
+-- If you have questions about the changes, please consult The Microsetta Initiative's IRB point of contact.
+
 -- Consent documents have an account_id associated, with the idea that there may eventually be an administrative feature to update the contents.
 -- Until that's built, we use a stable dummy account whose ID is 000fc4cd-8fa4-db8b-e050-8a800c5d81b7, established in patch 0118.sql.
 
