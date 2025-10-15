@@ -17,10 +17,10 @@ UPDATE ag.consent_documents
 -- Then, we'll tack the IRB protocol number, version, and expiration on. We need to do this in two steps, one for each language we support.
 -- English versions
 UPDATE ag.consent_documents
-    SET consent_content = consent_content || '<p class="consent_content">Protocol #141853 | v47 | Expires: January 22, 2026</p>'
+    SET consent_content = consent_content || '<p class="consent_content">Protocol #141853 | v48 | Expires: January 22, 2026</p>'
     WHERE version = 48 AND locale = 'en_US';
 
 -- Spanish versions
 UPDATE ag.consent_documents
-    SET consent_content = consent_content || '<p class="consent_content">Protocolo n.° 141853 | v47 | Caduca: 22 de enero de 2026</p>'
+    SET consent_content = consent_content || '<p class="consent_content">Protocolo n.° 141853 | v48 | Caduca: 22 de enero de 2026</p>'
     WHERE version = 48 AND locale IN ('es_MX', 'es_ES');
