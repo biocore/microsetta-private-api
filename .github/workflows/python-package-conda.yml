@@ -68,7 +68,7 @@ jobs:
         # PGPASSWORD is read by pg_restore, which is called by the build_db process. 
         export PGPASSWORD=postgres
         
-        conda create --yes -n test-microsetta-private python=3.9
+        conda create --yes -n test-microsetta-private python=3.9 setuptools=78
         conda activate test-microsetta-private
         conda install --yes --file ci/conda_requirements.txt
         pip install -r ci/pip_requirements.txt
