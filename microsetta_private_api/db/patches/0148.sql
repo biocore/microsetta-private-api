@@ -1,6 +1,7 @@
--- This update to the consent documents serves two purposes:
--- 1) We need to update the contaxt information in all consent documents.
--- 2) We need to add the IRB Protocol number, version, and expiration to all of the consent documents.
+-- This update to the consent documents serves three purposes:
+-- 1) Update the contaxt information in all consent documents.
+-- 2) Add the IRB Protocol number, version, and expiration to all of the consent documents.
+-- 3) Fix an oustanding typo in the English versions
 -- NOTE: With this patch, we're going to update our internal version number in the database to match the IRB protocol version.
 
 -- First, we'll create a new version of the documents that are a clone of the last version (v2, created in database patch 0147.sql)
@@ -66,3 +67,13 @@ UPDATE ag.consent_documents
 UPDATE ag.consent_documents
     SET consent_content = consent_content || '<p class="consent_content">Protocolo n.° 141853 | v48 | Caduca: 22 de enero de 2026</p>'
     WHERE version = 48 AND locale IN ('es_MX', 'es_ES');
+
+
+-- Lastly, we'll fix the outstanding typo in the English documents
+UPDATE ag.consent_documents
+    SET consent_content = REPLACE(
+                            consent_content,
+                            'You may contact UC San Diego Office of IRB Administration',
+                            'You may contact the UC San Diego Office of IRB Administration'
+                          )
+    WHERE version = 48 AND locale = 'en_US';
