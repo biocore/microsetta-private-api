@@ -1,5 +1,5 @@
 -- This update to the consent documents serves three purposes:
--- 1) Update the contaxt information in all consent documents.
+-- 1) Update the contact information in all consent documents.
 -- 2) Add the IRB Protocol number, version, and expiration to all of the consent documents.
 -- 3) Fix an oustanding typo in the English versions
 -- NOTE: With this patch, we're going to update our internal version number in the database to match the IRB protocol version.
