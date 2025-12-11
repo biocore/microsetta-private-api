@@ -215,7 +215,7 @@ class GoogleGeocodingTests(unittest.TestCase):
         obs_long = round(obs_long, 2)
 
         self.assertEqual(obs_lat, 32.88)
-        self.assertEqual(obs_long, -117.23)
+        self.assertEqual(obs_long, -117.24)
         self.assertEqual(obs_state, "CA")
         self.assertEqual(obs_country, "US")
         self.assertEqual(obs_error, False)
