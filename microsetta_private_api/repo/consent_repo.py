@@ -174,7 +174,7 @@ class ConsentRepo(BaseRepo):
                 "FROM ag.consent_audit ca "
                 "INNER JOIN ag.consent_documents cd "
                 "ON ca.{} = cd.consent_id "
-                "WHERE cd.version = %s "
+                "WHERE cd.version >= %s "
                 "AND cd.consent_type = %s "
                 "AND ca.source_id = %s"
             ).format(sql.Identifier(consent_join))
