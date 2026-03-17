@@ -58,8 +58,8 @@ class SurveyAnswersRepo(BaseRepo):
             else:
                 row = cur.fetchone()
                 if ts:
-                    return row['survey_template_id'], row['vioscreen_status'], \  # noqa
-                           row['creation_time']
+                    return (row['survey_template_id'], row['vioscreen_status'],
+                            row['creation_time'])
                 else:
                     return row['survey_template_id'], row['vioscreen_status']
 
