@@ -195,8 +195,10 @@ class HostAge(Transformer):
         birth_month_year = birth_month_year[not_null_map]
 
         # compute timedelta64 types, and express as year
+        # np.timedelta64(1, 'Y') is ambiguous and removed in pandas 2.x;
+        # use 365.25 days as the standard year length instead
         td = collection_timestamp - birth_month_year
-        td_as_year = (td / np.timedelta64(1, 'Y')).round(1)
+        td_as_year = (td.dt.days / 365.25).round(1)
         series.loc[not_null_map] = td_as_year
 
         return series
