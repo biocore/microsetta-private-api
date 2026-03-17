@@ -37,7 +37,7 @@ class TransformTests(unittest.TestCase):
                                     COLLECTION_TIMESTAMP, HOST_AGE,
                                     AGE_CAT])
         obs = apply_transforms(df, transforms)
-        pdt.assert_frame_equal(obs, exp, check_less_precise=True)
+        pdt.assert_frame_equal(obs, exp, rtol=1e-5)
 
     def test_apply_transforms_missing_column(self):
         # in this case, the dataframe that will be operated on does
