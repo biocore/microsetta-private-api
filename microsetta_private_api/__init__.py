@@ -1,1 +1,1 @@
-from microsetta_private_api._version import __version__
+from microsetta_private_api._version import __version__  # noqa

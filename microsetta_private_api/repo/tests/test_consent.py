@@ -4,7 +4,7 @@ from werkzeug.exceptions import NotFound
 from microsetta_private_api.repo.source_repo import SourceRepo
 from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.consent_repo import ConsentRepo
-from microsetta_private_api.model.consent import ConsentSignature,\
+from microsetta_private_api.model.consent import ConsentSignature, \
     HUMAN_CONSENT_ADULT
 from microsetta_private_api.model.source import HumanInfo, Source
 from microsetta_private_api.repo.account_repo import AccountRepo

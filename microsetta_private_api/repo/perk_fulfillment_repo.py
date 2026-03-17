@@ -8,7 +8,7 @@ from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.subscription import Subscription
 from microsetta_private_api.admin.admin_impl import\
     create_daklapack_order_internal
-from microsetta_private_api.model.daklapack_order import FEDEX_PROVIDER,\
+from microsetta_private_api.model.daklapack_order import FEDEX_PROVIDER, \
     FEDEX_2DAY_SHIPPING
 from microsetta_private_api.model.activation_code import ActivationCode
 from microsetta_private_api.tasks import send_email

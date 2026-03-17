@@ -2,7 +2,7 @@ import unittest
 from unittest import skipIf
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
-from microsetta_private_api.util.google_geocoding import geocode_address,\
+from microsetta_private_api.util.google_geocoding import geocode_address, \
     _construct_request_address, _parse_response
 from microsetta_private_api.model.address import Address
 

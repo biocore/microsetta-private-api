@@ -211,7 +211,7 @@ class RemovalQueueTests(unittest.TestCase):
                             "ag.account_removal_log")
                 rows = cur.fetchall()
                 self.assertEqual(len(rows), 1)
-                for account_id, admin_id, disposition, requested_on,\
+                for account_id, admin_id, disposition, requested_on, \
                         reviewed_on, delete_reason in rows:
                     # note this loop should only execute once.
                     self.assertEqual(account_id, self.acc.id)

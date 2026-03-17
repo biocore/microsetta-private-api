@@ -43,7 +43,7 @@ from microsetta_private_api.model.vioscreen import (
     VioscreenMPeds, VioscreenMPedsComponent,
     VioscreenFoodConsumption, VioscreenFoodConsumptionComponent
 )
-from microsetta_private_api.model.consent import HUMAN_CONSENT_CHILD,\
+from microsetta_private_api.model.consent import HUMAN_CONSENT_CHILD, \
     HUMAN_CONSENT_ADULT
 from microsetta_private_api.api.tests.test_integration import \
     _create_mock_kit, _remove_mock_kit, BARCODE, MOCK_SAMPLE_ID
