@@ -8,7 +8,7 @@ The private microservice depends on Postgres 9 or higher. For OSX users, we reco
 
 Create a new `conda` environment containing `flask` and other necessary packages: 
 
-`conda create --yes -n microsetta-private-api python=3.7`
+`conda create --yes -n microsetta-private-api python=3.11`
 
 Once the conda environment is created, activate it:
 
