@@ -1,3 +1,4 @@
+from psycopg2 import sql
 from werkzeug.exceptions import NotFound
 
 from microsetta_private_api.config_manager import SERVER_CONFIG
@@ -347,11 +348,13 @@ class SurveyTemplateRepo(BaseRepo):
             raise RepoException(f"{language_tag} is not supported.")
 
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT " +
-                        tag_to_col[language_tag] + " " +
+            cur.execute(
+                sql.SQL("SELECT {col} "
                         "FROM survey_group "
                         "WHERE "
-                        "group_order = %s", (group_id,))
+                        "group_order = %s").format(
+                    col=sql.Identifier(tag_to_col[language_tag])
+                ), (group_id,))
             row = cur.fetchone()
             if row is None:
                 return None
@@ -359,19 +362,20 @@ class SurveyTemplateRepo(BaseRepo):
 
     def _get_question_valid_responses(self, survey_question_id, language_tag):
         tag_to_col = {
-            localization.EN_US: "survey_response.american",
-            localization.EN_GB: "survey_response.british",
-            localization.ES_MX: "survey_response.spanish",
-            localization.ES_ES: "survey_response.spain_spanish",
-            localization.JA_JP: "survey_response.japanese"
+            localization.EN_US: ("survey_response", "american"),
+            localization.EN_GB: ("survey_response", "british"),
+            localization.ES_MX: ("survey_response", "spanish"),
+            localization.ES_ES: ("survey_response", "spain_spanish"),
+            localization.JA_JP: ("survey_response", "japanese")
         }
 
         if language_tag not in tag_to_col:
             raise RepoException(f"{language_tag} is not supported.")
 
+        tbl, col = tag_to_col[language_tag]
         with self._transaction.cursor() as cur:
-            cur.execute("SELECT " +
-                        tag_to_col[language_tag] + " "
+            cur.execute(
+                sql.SQL("SELECT {tbl_col} "
                         "FROM "
                         "survey_question_response "
                         "LEFT JOIN "
@@ -382,29 +386,37 @@ class SurveyTemplateRepo(BaseRepo):
                         "WHERE "
                         "survey_question_id = %s "
                         "ORDER BY "
-                        "display_index", (survey_question_id,))
+                        "display_index").format(
+                    tbl_col=sql.SQL("{}.{}").format(
+                        sql.Identifier(tbl), sql.Identifier(col))
+                ), (survey_question_id,))
             return [x[0] for x in cur.fetchall()]
 
     def _get_question_triggers(self, survey_question_id, language_tag):
         tag_to_col = {
-            localization.EN_US: "survey_response.american",
-            localization.EN_GB: "survey_response.british",
-            localization.ES_MX: "survey_response.spanish",
-            localization.ES_ES: "survey_response.spain_spanish",
-            localization.JA_JP: "survey_response.japanese"
+            localization.EN_US: ("survey_response", "american"),
+            localization.EN_GB: ("survey_response", "british"),
+            localization.ES_MX: ("survey_response", "spanish"),
+            localization.ES_ES: ("survey_response", "spain_spanish"),
+            localization.JA_JP: ("survey_response", "japanese")
         }
 
         if language_tag not in tag_to_col:
             raise RepoException(f"{language_tag} is not supported.")
 
+        tbl, col = tag_to_col[language_tag]
         with self._transaction.cursor() as cur:
             cur.execute(
-                "SELECT " + tag_to_col[language_tag] + ", "
-                "sqt.triggered_question "
-                "FROM survey_response "
-                "INNER JOIN survey_question_triggers sqt "
-                "ON sqt.triggering_response = survey_response.american "
-                "WHERE sqt.survey_question_id = %s ",
+                sql.SQL("SELECT {tbl_col}, "
+                        "sqt.triggered_question "
+                        "FROM survey_response "
+                        "INNER JOIN survey_question_triggers sqt "
+                        "ON sqt.triggering_response = "
+                        "survey_response.american "
+                        "WHERE sqt.survey_question_id = %s ").format(
+                    tbl_col=sql.SQL("{}.{}").format(
+                        sql.Identifier(tbl), sql.Identifier(col))
+                ),
                 (survey_question_id, )
             )
 
@@ -1092,10 +1104,13 @@ class SurveyTemplateRepo(BaseRepo):
                 for tbl in ('dietaryscore', 'eatingpatterns', 'foodcomponents',
                             'foodconsumption', 'foodconsumptioncomponents',
                             'percentenergy', 'supplements', 'mpeds'):
-                    tbl = f'ag.vioscreen_{tbl}'
-                    cur.execute("DELETE FROM " + tbl + " " +
-                                "WHERE sessionid IN %s",
-                                (sessions, ))
+                    cur.execute(
+                        sql.SQL("DELETE FROM {tbl} "
+                                "WHERE sessionid IN %s").format(
+                            tbl=sql.Identifier("ag",
+                                               f"vioscreen_{tbl}")
+                        ),
+                        (sessions, ))
                 cur.execute("""DELETE FROM ag.vioscreen_sessions
                                WHERE sessionid IN %s""",
                             (sessions, ))

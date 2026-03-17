@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2 import sql
 import json
 import datetime
 import uuid
@@ -703,33 +704,37 @@ class UserTransaction(BaseRepo):
             data.append(transaction_source)
 
         if include_anonymous:
-            anonymous_join = 'LEFT'
+            anonymous_join = sql.SQL('LEFT')
         else:
-            anonymous_join = 'INNER'
+            anonymous_join = sql.SQL('INNER')
 
         if len(clauses) > 0:
-            clauses = 'WHERE ' + ' AND '.join(clauses)
+            clauses = sql.SQL('WHERE ') + sql.SQL(' AND ').join(
+                [sql.SQL(c) for c in clauses])
             data = tuple(data)
         else:
-            clauses = ''
+            clauses = sql.SQL('')
             data = None
 
         if most_recent:
-            limit_or_not = 'ORDER BY created DESC LIMIT 1'
+            limit_or_not = sql.SQL('ORDER BY created DESC LIMIT 1')
         else:
-            limit_or_not = ''
+            limit_or_not = sql.SQL('')
 
-        sql = (f"""SELECT id
+        query = sql.SQL("""SELECT id
                    FROM campaign.transaction t
                    JOIN campaign.transaction_source_to_campaign tstc
                        USING (remote_campaign_id)
                    {anonymous_join} JOIN campaign.interested_users
                        USING (interested_user_id)
-                   {clauses} {limit_or_not}""",
-               data)
+                   {clauses} {limit_or_not}""").format(
+            anonymous_join=anonymous_join,
+            clauses=clauses,
+            limit_or_not=limit_or_not
+        )
 
         with self._transaction.cursor() as cur:
-            cur.execute(*sql)
+            cur.execute(query, data)
             res = cur.fetchall()
 
         if len(res) > 0:
