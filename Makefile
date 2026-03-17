@@ -1,5 +1,5 @@
 # shamelessly adapt https://github.com/qiime2/q2-emperor/blob/master/Makefile
-.PHONY: all lint test test-cov install dev clean distclean
+.PHONY: all lint test test-cov install dev clean distclean compile-catalog
 
 PYTHON ?= python
 
@@ -22,7 +22,10 @@ test-cov: all
 	py.test --cov=microsetta_private_api
 
 install: all
-	$(PYTHON) setup.py install
+	pip install .
+
+compile-catalog:
+	pybabel compile -d microsetta_private_api/translations
 
 dev: all
 	pip install -e .
