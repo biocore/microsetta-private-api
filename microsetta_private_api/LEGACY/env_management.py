@@ -193,7 +193,7 @@ def patch_db(patches_dir=PATCHES_DIR, verbose=False):
         for patch_fp in patch_files[next_patch_index:]:
             patch_filename = split(patch_fp)[-1]
 
-            with open(patch_fp, 'U') as patch_file:
+            with open(patch_fp) as patch_file:
                 if verbose:
                     print('\tApplying patch %s...' % patch_filename)
 
