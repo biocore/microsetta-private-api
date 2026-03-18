@@ -2,7 +2,6 @@ from datetime import datetime
 import pytz
 from microsetta_private_api.model.model_base import ModelBase
 from microsetta_private_api.model.address import Address
-import time
 
 
 # fundrazr fields
