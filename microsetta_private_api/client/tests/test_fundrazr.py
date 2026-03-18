@@ -38,7 +38,7 @@ class FundrazrClientTests(TestCase):
         print(f"  obs2 (2nd recent):  "
               f"  {obs2.to_api()}  ")
         for i, item in enumerate(items):
-            print(f, repr(item))
+            print(i, repr(item))
 
         # there should only be a single transaction newer than
         # second to last
