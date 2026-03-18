@@ -1,5 +1,5 @@
-from microsetta_private_api.model.consent import ConsentDocument,\
-    ConsentSignature, HUMAN_CONSENT_TODDLER, HUMAN_CONSENT_CHILD,\
+from microsetta_private_api.model.consent import ConsentDocument, \
+    ConsentSignature, HUMAN_CONSENT_TODDLER, HUMAN_CONSENT_CHILD, \
     HUMAN_CONSENT_ADOLESCENT, HUMAN_CONSENT_ADULT
 from microsetta_private_api.repo.base_repo import BaseRepo
 from werkzeug.exceptions import NotFound

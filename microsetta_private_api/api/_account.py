@@ -165,11 +165,11 @@ def update_account(account_id, body, token_info):
 JWT_SCHEMES = (
     {'key': AUTHROCKET_PUB_KEY,
      'algorithms': ["RS256"],
-     'verify': True,
+     'options': {'verify_signature': True},
      'issuer': 'https://authrocket.com'},
     {'key': CRONJOB_PUB_KEY,
      'algorithms': ["RS256"],
-     'verify': True,
+     'options': {'verify_signature': True},
      'issuer': 'https://microsetta.ucsd.edu'},
 )
 

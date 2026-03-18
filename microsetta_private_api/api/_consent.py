@@ -3,7 +3,7 @@ import uuid
 from microsetta_private_api import localization
 from microsetta_private_api.api._account import \
     _validate_account_access
-from microsetta_private_api.model.consent import ConsentSignature,\
+from microsetta_private_api.model.consent import ConsentSignature, \
     HUMAN_CONSENT_AGE_GROUPS
 from microsetta_private_api.repo.consent_repo import ConsentRepo
 from microsetta_private_api.repo.source_repo import SourceRepo

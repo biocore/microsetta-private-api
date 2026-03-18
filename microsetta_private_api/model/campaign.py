@@ -2,7 +2,6 @@ from datetime import datetime
 import pytz
 from microsetta_private_api.model.model_base import ModelBase
 from microsetta_private_api.model.address import Address
-import time
 
 
 # fundrazr fields
@@ -171,6 +170,7 @@ class Payment(ModelBase):
                  payer_email=None,
                  contact_email=None,
                  **kwargs):
+
         self.transaction_id = transaction_id
         self.created = created
         self.campaign_id = campaign_id
@@ -212,18 +212,18 @@ class Payment(ModelBase):
     def to_api(self):
         return {
             TRANSACTION_ID: self.transaction_id,
-            TRANSACTION_TYPE: self.transaction_type,
+            TRANSACTION_TYPE: self.TRANSACTION_TYPE,
             CREATED_TIMESTAMP: str(self.created),
             CAMPAIGN_ID: self.campaign_id,
             AMOUNT: self.amount,
             NET_AMOUNT: self.net_amount,
             CURRENCY: self.currency,
             PAYER_FIRST_NAME: self.payer_first_name,
-            PAYER_LAST_NAME: self.payer_lase_name,
+            PAYER_LAST_NAME: self.payer_last_name,
             PAYER_EMAIL: self.payer_email,
             CONTACT_EMAIL: self.contact_email,
-            SHIPPING_ADDRESS: self.shipping.to_api(),
-            FUNDRAZR_ACCOUNT_TYPE: self.fundrazr_account_type,
+            SHIPPING_ADDRESS: self.shipping_address.to_api(),
+            FUNDRAZR_ACCOUNT_TYPE: self.account,
             SUBSCRIBE_TO_UPDATES: self.subscribe_to_updates,
             PHONE_NUMBER: self.phone_number,
             MESSAGE: self.message,
@@ -298,7 +298,8 @@ class Payment(ModelBase):
 
     def created_as_unixts(self):
         """Express .created as a unix timestamp"""
-        return int(time.mktime(self.created.timetuple()))
+        localized_dt = self.created.astimezone(self._TZ_US_PACIFIC)
+        return int(localized_dt.timestamp())
 
 
 class FundRazrPayment(Payment):

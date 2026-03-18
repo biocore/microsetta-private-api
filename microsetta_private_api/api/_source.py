@@ -3,7 +3,7 @@ from datetime import date
 from flask import jsonify, make_response
 
 from microsetta_private_api.api._account import _validate_account_access
-from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG,\
+from microsetta_private_api.api.literals import SRC_NOT_FOUND_MSG, \
     SRC_NO_DELETE_MSG
 from microsetta_private_api.exceptions import RepoException
 from microsetta_private_api.model.source import Source, HumanInfo, NonHumanInfo

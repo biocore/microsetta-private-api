@@ -21,7 +21,7 @@ from microsetta_private_api.repo.transaction import Transaction
 from microsetta_private_api.repo.admin_repo import AdminRepo
 from microsetta_private_api.repo.campaign_repo import CampaignRepo
 from microsetta_private_api.repo.metadata_repo import retrieve_metadata
-from microsetta_private_api.tasks import send_email as celery_send_email,\
+from microsetta_private_api.tasks import send_email as celery_send_email, \
     per_sample_summary as celery_per_sample_summary
 from microsetta_private_api.admin.email_templates import EmailMessage
 from microsetta_private_api.util.redirects import build_login_redirect
@@ -30,9 +30,9 @@ from microsetta_private_api.admin.daklapack_communication import \
 from microsetta_private_api import localization
 from microsetta_private_api.admin.sample_summary import per_sample
 from microsetta_private_api.admin.sample_summary import \
-    get_barcodes_by_project_id,\
-    get_barcodes_by_kit_ids, get_barcodes_by_box_ids, get_barcodes_by_emails,\
-    get_barcodes_by_outbound_tracking_numbers,\
+    get_barcodes_by_project_id, \
+    get_barcodes_by_kit_ids, get_barcodes_by_box_ids, get_barcodes_by_emails, \
+    get_barcodes_by_outbound_tracking_numbers, \
     get_barcodes_by_inbound_tracking_numbers, get_barcodes_by_dak_order_ids
 from microsetta_private_api.util.melissa import verify_address
 from microsetta_private_api.util.query_builder_to_sql import build_condition

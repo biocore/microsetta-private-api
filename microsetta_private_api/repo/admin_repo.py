@@ -1509,11 +1509,15 @@ class AdminRepo(BaseRepo):
         return pulldown
 
     def get_daklapack_articles(self, include_retired=False):
-        retired_constraint = "" if include_retired else "WHERE retired = False"
-        cmd = f"SELECT dak_article_id, dak_article_code, short_description, " \
-              f"detailed_description " \
-              f"FROM barcodes.daklapack_article {retired_constraint} " \
-              f"ORDER BY daklapack_article.dak_article_code;"
+        if include_retired:
+            retired_constraint = sql.SQL("")
+        else:
+            retired_constraint = sql.SQL("WHERE retired = False")
+        cmd = sql.SQL("SELECT dak_article_id, dak_article_code, "
+                      "short_description, detailed_description "
+                      "FROM barcodes.daklapack_article {constraint} "
+                      "ORDER BY daklapack_article.dak_article_code"
+                      ).format(constraint=retired_constraint)
         with self._transaction.dict_cursor() as cur:
             cur.execute(cmd)
             rows = cur.fetchall()
