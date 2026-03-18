@@ -212,7 +212,7 @@ class Payment(ModelBase):
     def to_api(self):
         return {
             TRANSACTION_ID: self.transaction_id,
-            TRANSACTION_TYPE: self.transaction_type,
+            TRANSACTION_TYPE: self.TRANSACTION_TYPE,
             CREATED_TIMESTAMP: str(self.created),
             CAMPAIGN_ID: self.campaign_id,
             AMOUNT: self.amount,
