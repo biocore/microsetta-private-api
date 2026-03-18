@@ -31,15 +31,6 @@ class FundrazrClientTests(TestCase):
         timegen = self.c.payments(since=second_to_last)
         items = list(timegen)
 
-        # DEBUG: gather information about timestamp precision and item counts
-        print("\nDEBUG test_payments:")
-        print(f"  obs (most recent):  "
-              f"  {obs.to_api()}  ")
-        print(f"  obs2 (2nd recent):  "
-              f"  {obs2.to_api()}  ")
-        for i, item in enumerate(items):
-            print(i, repr(item))
-
         # there should only be a single transaction newer than
         # second to last
         self.assertEqual(len(items), 1)
