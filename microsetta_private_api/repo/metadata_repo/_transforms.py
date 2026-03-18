@@ -2,7 +2,6 @@ from ._constants import MISSING_VALUE, UNSPECIFIED
 from functools import reduce
 from operator import or_
 import pandas as pd
-import numpy as np
 
 
 WEIGHT_KG = 'weight_kg'

@@ -31,6 +31,22 @@ class FundrazrClientTests(TestCase):
         timegen = self.c.payments(since=second_to_last)
         items = list(timegen)
 
+        # DEBUG: gather information about timestamp precision and item counts
+        print("\nDEBUG test_payments:")
+        print(f"  obs (most recent):  id={obs.id!r}  "
+              f"created={obs.created!r}  "
+              f"unixts={obs.created_as_unixts()}")
+        print(f"  obs2 (2nd recent):  id={obs2.id!r}  "
+              f"created={obs2.created!r}  "
+              f"unixts={obs2.created_as_unixts()}")
+        print(f"  second_to_last unixts (after +1): {second_to_last + 1}")
+        print(f"  len(remainder)={len(remainder)}")
+        print(f"  len(items since obs2)={len(items)}")
+        for i, item in enumerate(items):
+            print(f"    items[{i}]: id={item.id!r}  "
+                  f"created={item.created!r}  "
+                  f"unixts={item.created_as_unixts()}")
+
         # there should only be a single transaction newer than
         # second to last
         self.assertEqual(len(items), 1)
