@@ -39,6 +39,7 @@ deploy:
 	conda create --yes -n $(ENV_NAME) python=$(PYTHON_VERSION) setuptools=78 && \
 	conda run -n $(ENV_NAME) conda install --yes --file ci/conda_requirements.txt && \
 	conda run -n $(ENV_NAME) pip install -r ci/pip_requirements.txt && \
+	if [ ! -d .git ]; then export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0; fi && \
 	conda run -n $(ENV_NAME) pip install -e . --no-deps
 
 clean:
